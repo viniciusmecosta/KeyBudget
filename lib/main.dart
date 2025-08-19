@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:key_budget/features/auth/view/register_screen.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -13,12 +14,6 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'KeyBudget',
-      home: Scaffold(
-        appBar: AppBar(title: const Text('KeyBudget')),
-        body: const Center(child: Text('Configuração Inicial Completa')),
-      ),
-    );
+    return const MaterialApp(title: 'KeyBudget', home: RegisterScreen());
   }
 }
