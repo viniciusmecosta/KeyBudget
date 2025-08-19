@@ -8,9 +8,11 @@ class AuthViewModel extends ChangeNotifier {
   final AuthRepository _authRepository = AuthRepository();
   bool _isLoading = false;
   String? _errorMessage;
+  User? _currentUser;
 
   bool get isLoading => _isLoading;
   String? get errorMessage => _errorMessage;
+  User? get currentUser => _currentUser;
 
   void _setLoading(bool value) {
     _isLoading = value;
@@ -50,7 +52,7 @@ class AuthViewModel extends ChangeNotifier {
         passwordHash: passwordHash,
       );
 
-      await _authRepository.register(newUser);
+      _currentUser = await _authRepository.register(newUser);
       _setLoading(false);
       return true;
     } catch (e) {
@@ -82,6 +84,7 @@ class AuthViewModel extends ChangeNotifier {
         return false;
       }
 
+      _currentUser = user;
       _setLoading(false);
       return true;
     } catch (e) {

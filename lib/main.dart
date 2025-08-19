@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:key_budget/app/config/app_theme.dart';
 import 'package:key_budget/features/auth/view/login_screen.dart';
 import 'package:key_budget/features/auth/viewmodel/auth_viewmodel.dart';
+import 'package:key_budget/features/expenses/viewmodel/expense_viewmodel.dart';
 import 'package:provider/provider.dart';
 
 Future<void> main() async {
@@ -9,8 +11,11 @@ Future<void> main() async {
   await dotenv.load(fileName: ".env");
 
   runApp(
-    ChangeNotifierProvider(
-      create: (context) => AuthViewModel(),
+    MultiProvider(
+      providers: [
+        ChangeNotifierProvider(create: (_) => AuthViewModel()),
+        ChangeNotifierProvider(create: (_) => ExpenseViewModel()),
+      ],
       child: const MyApp(),
     ),
   );
@@ -21,9 +26,10 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const MaterialApp(
+    return MaterialApp(
       title: 'KeyBudget',
-      home: LoginScreen(),
+      theme: AppTheme.theme,
+      home: const LoginScreen(),
     );
   }
 }
