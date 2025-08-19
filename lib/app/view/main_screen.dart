@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:key_budget/features/credentials/view/credentials_screen.dart';
 import 'package:key_budget/features/dashboard/view/dashboard_screen.dart';
 import 'package:key_budget/features/expenses/view/expenses_screen.dart';
 
@@ -15,8 +16,8 @@ class _MainScreenState extends State<MainScreen> {
   static const List<Widget> _widgetOptions = <Widget>[
     DashboardScreen(),
     ExpensesScreen(),
-    Text('Credenciais'),
-    Text('Usuário'), 
+    CredentialsScreen(),
+    Text('Usuário'),
   ];
 
   void _onItemTapped(int index) {
@@ -39,7 +40,8 @@ class _MainScreenState extends State<MainScreen> {
           BottomNavigationBarItem(icon: Icon(Icons.person), label: 'Perfil'),
         ],
         currentIndex: _selectedIndex,
-        onTap: _onItemTapped,// Garante que todos apareçam
+        onTap: _onItemTapped,
+        type: BottomNavigationBarType.fixed,
         selectedItemColor: Theme.of(context).colorScheme.primary,
         unselectedItemColor: Colors.grey,
       ),
