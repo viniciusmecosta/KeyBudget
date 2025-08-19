@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:key_budget/features/credentials/view/credentials_screen.dart';
 import 'package:key_budget/features/dashboard/view/dashboard_screen.dart';
 import 'package:key_budget/features/expenses/view/expenses_screen.dart';
+import 'package:key_budget/features/user/view/user_screen.dart';
 
 class MainScreen extends StatefulWidget {
   const MainScreen({super.key});
@@ -17,7 +18,7 @@ class _MainScreenState extends State<MainScreen> {
     DashboardScreen(),
     ExpensesScreen(),
     CredentialsScreen(),
-    Text('Usuário'),
+    UserScreen(),
   ];
 
   void _onItemTapped(int index) {
