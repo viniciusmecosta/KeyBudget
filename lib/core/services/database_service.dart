@@ -1,5 +1,5 @@
 import 'package:flutter_dotenv/flutter_dotenv.dart';
-import 'package:path/path.dart';
+import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 import 'package:sqflite_sqlcipher/sqflite.dart';
 
@@ -17,7 +17,7 @@ class DatabaseService {
 
   Future<Database> _initDatabase(String filePath) async {
     final dbPath = await getApplicationDocumentsDirectory();
-    final path = join(dbPath.path, filePath);
+    final path = p.join(dbPath.path, filePath); // Usando o prefixo 'p'
     final dbPassword = dotenv.env['DB_PASSWORD'];
 
     if (dbPassword == null) {

@@ -1,12 +1,20 @@
 import 'package:encrypt/encrypt.dart' as encrypt;
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 class EncryptionService {
-  final _key = encrypt.Key.fromUtf8('minha_chave_secreta_de_32_char');
-  final _iv = encrypt.IV.fromLength(16); // IV para AES
+  late final encrypt.Key _key;
+  final _iv = encrypt.IV.fromLength(16);
 
   late final encrypt.Encrypter _encrypter;
 
   EncryptionService() {
+    final keyString = dotenv.env['ENCRYPTION_KEY'];
+    if (keyString == null || keyString.length != 32) {
+      throw Exception(
+        "ENCRYPTION_KEY not found or is not 32 characters long in .env file",
+      );
+    }
+    _key = encrypt.Key.fromUtf8(keyString);
     _encrypter = encrypt.Encrypter(encrypt.AES(_key));
   }
 
