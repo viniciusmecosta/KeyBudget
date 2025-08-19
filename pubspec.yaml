@@ -1,7 +1,7 @@
 name: key_budget
 description: "KeyBudget Project"
 
-publish_to: 'vini'
+publish_to: "vini"
 version: 1.0.0+1
 
 environment:
@@ -10,13 +10,14 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
-  
+
   sqflite_sqlcipher: ^2.1.0
   flutter_secure_storage: ^9.0.0
   encrypt: ^5.0.3
   path_provider: ^2.1.2
   provider: ^6.1.2
-  flutter_dotenv: ^5.1.0 
+  flutter_dotenv: ^5.1.0
+  crypto: ^3.0.3
 
 dev_dependencies:
   flutter_test:
@@ -34,7 +35,6 @@ dev_dependencies:
 
 # The following section is specific to Flutter packages.
 flutter:
-
   # The following line ensures that the Material Icons font is
   # included with your application, so that you can use the icons in
   # the material Icons class.
