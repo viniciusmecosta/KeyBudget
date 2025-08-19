@@ -4,6 +4,7 @@ import 'package:key_budget/app/config/app_theme.dart';
 import 'package:key_budget/features/auth/view/login_screen.dart';
 import 'package:key_budget/features/auth/viewmodel/auth_viewmodel.dart';
 import 'package:key_budget/features/credentials/viewmodel/credential_viewmodel.dart';
+import 'package:key_budget/features/dashboard/viewmodel/dashboard_viewmodel.dart';
 import 'package:key_budget/features/expenses/viewmodel/expense_viewmodel.dart';
 import 'package:provider/provider.dart';
 
@@ -16,8 +17,9 @@ Future<void> main() async {
       providers: [
         ChangeNotifierProvider(create: (_) => AuthViewModel()),
         ChangeNotifierProvider(create: (_) => ExpenseViewModel()),
+        ChangeNotifierProvider(create: (_) => CredentialViewModel()),
         ChangeNotifierProvider(
-            create: (_) => CredentialViewModel()), // Adicione esta linha
+            create: (_) => DashboardViewModel()), 
       ],
       child: const MyApp(),
     ),
