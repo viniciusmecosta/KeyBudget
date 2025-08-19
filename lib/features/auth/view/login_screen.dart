@@ -1,24 +1,23 @@
 import 'package:flutter/material.dart';
+import 'package:key_budget/features/auth/view/register_screen.dart';
 import 'package:key_budget/features/auth/viewmodel/auth_viewmodel.dart';
 import 'package:key_budget/features/dashboard/view/dashboard_screen.dart';
 import 'package:provider/provider.dart';
 
-class RegisterScreen extends StatefulWidget {
-  const RegisterScreen({super.key});
+class LoginScreen extends StatefulWidget {
+  const LoginScreen({super.key});
 
   @override
-  State<RegisterScreen> createState() => _RegisterScreenState();
+  State<LoginScreen> createState() => _LoginScreenState();
 }
 
-class _RegisterScreenState extends State<RegisterScreen> {
+class _LoginScreenState extends State<LoginScreen> {
   final _formKey = GlobalKey<FormState>();
-  final _nameController = TextEditingController();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
 
   @override
   void dispose() {
-    _nameController.dispose();
     _emailController.dispose();
     _passwordController.dispose();
     super.dispose();
@@ -28,8 +27,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
     if (!_formKey.currentState!.validate()) return;
 
     final viewModel = Provider.of<AuthViewModel>(context, listen: false);
-    final success = await viewModel.registerUser(
-      name: _nameController.text,
+    final success = await viewModel.loginUser(
       email: _emailController.text,
       password: _passwordController.text,
     );
@@ -52,7 +50,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Criar Conta')),
+      appBar: AppBar(title: const Text('Login')),
       body: Center(
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(16.0),
@@ -61,16 +59,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                TextFormField(
-                  controller: _nameController,
-                  decoration: const InputDecoration(labelText: 'Nome'),
-                  validator:
-                      (value) =>
-                          (value == null || value.isEmpty)
-                              ? 'Insira seu nome'
-                              : null,
-                ),
-                const SizedBox(height: 16),
                 TextFormField(
                   controller: _emailController,
                   decoration: const InputDecoration(labelText: 'Email'),
@@ -88,8 +76,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   obscureText: true,
                   validator:
                       (value) =>
-                          (value == null || value.length < 6)
-                              ? 'A senha deve ter pelo menos 6 caracteres'
+                          (value == null || value.isEmpty)
+                              ? 'Insira sua senha'
                               : null,
                 ),
                 const SizedBox(height: 32),
@@ -99,13 +87,17 @@ class _RegisterScreenState extends State<RegisterScreen> {
                         ? const CircularProgressIndicator()
                         : ElevatedButton(
                           onPressed: _submit,
-                          child: const Text('Cadastrar'),
+                          child: const Text('Entrar'),
                         );
                   },
                 ),
                 TextButton(
-                  onPressed: () => Navigator.of(context).pop(),
-                  child: const Text('Já tem uma conta? Faça login'),
+                  onPressed: () {
+                    Navigator.of(context).push(
+                      MaterialPageRoute(builder: (_) => const RegisterScreen()),
+                    );
+                  },
+                  child: const Text('Não tem uma conta? Cadastre-se'),
                 ),
               ],
             ),
