@@ -18,20 +18,28 @@ class DatabaseManagementService {
 
   Future<bool> exportDatabase() async {
     try {
-      if (await Permission.storage.request().isGranted) {
-        final path = await _dbPath;
-        File dbFile = File(path);
-
-        if (await dbFile.exists()) {
-          Uint8List bytes = await dbFile.readAsBytes();
-          await FileSaver.instance.saveFile(
-            name: 'keybudget_backup_${DateTime.now().toIso8601String()}',
-            bytes: bytes,
-            fileExtension: 'db',
-            mimeType: MimeType.other,
-          );
-          return true;
+      if (Platform.isAndroid) {
+        var status = await Permission.storage.status;
+        if (status.isDenied) {
+          final result = await Permission.storage.request();
+          if (result.isDenied) {
+            return false;
+          }
         }
+      }
+
+      final path = await _dbPath;
+      File dbFile = File(path);
+
+      if (await dbFile.exists()) {
+        Uint8List bytes = await dbFile.readAsBytes();
+        await FileSaver.instance.saveFile(
+          name: 'keybudget_backup_${DateTime.now().toIso8601String()}',
+          bytes: bytes,
+          fileExtension: 'db',
+          mimeType: MimeType.other,
+        );
+        return true;
       }
       return false;
     } catch (e) {
