@@ -80,7 +80,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
               style: Theme.of(context)
                   .textTheme
                   .bodyMedium
-                  ?.copyWith(color: AppTheme.offWhite.withOpacity(0.7)),
+                  ?.copyWith(color: AppTheme.offWhite.withAlpha(180)),
             ),
           ],
         ),
@@ -219,7 +219,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
     final List<Color> colors = [
       AppTheme.accentTeal,
-      isDarkMode ? AppTheme.offWhite.withOpacity(0.8) : AppTheme.darkGrey,
+      isDarkMode ? AppTheme.offWhite.withAlpha(200) : AppTheme.darkGrey,
       theme.colorScheme.secondaryContainer,
       theme.colorScheme.tertiaryContainer,
     ];
@@ -229,9 +229,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
       fontSize: 14,
       fontWeight: FontWeight.bold,
       color: isDarkMode ? AppTheme.darkestGrey : AppTheme.offWhite,
-      shadows: [
+      shadows: const [
         Shadow(
-          color: isDarkMode ? Colors.white24 : Colors.black26,
+          color: Colors.black26,
           blurRadius: 2,
         )
       ],

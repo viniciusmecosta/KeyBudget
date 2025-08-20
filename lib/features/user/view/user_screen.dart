@@ -10,19 +10,20 @@ class UserScreen extends StatelessWidget {
 
   void _exportDatabase(BuildContext context) async {
     final managementService = DatabaseManagementService();
-    final scaffoldMessenger = ScaffoldMessenger.of(context);
 
     bool success = await managementService.exportDatabase();
 
+    if (!context.mounted) return;
+
     if (success) {
-      scaffoldMessenger.showSnackBar(
+      ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('Backup salvo com sucesso!'),
           backgroundColor: Colors.green,
         ),
       );
     } else {
-      scaffoldMessenger.showSnackBar(
+      ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: const Text('Falha ao exportar. Verifique as permissões.'),
           backgroundColor: Theme.of(context).colorScheme.error,
@@ -74,13 +75,14 @@ class UserScreen extends StatelessWidget {
 
   void _importDatabase(BuildContext context) async {
     final managementService = DatabaseManagementService();
-    final scaffoldMessenger = ScaffoldMessenger.of(context);
 
     final result = await managementService.importDatabase();
 
+    if (!context.mounted) return;
+
     switch (result) {
       case ImportResult.success:
-        scaffoldMessenger.showSnackBar(
+        ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
             content:
                 Text('Banco de dados importado! Por favor, reinicie o app.'),
@@ -90,7 +92,7 @@ class UserScreen extends StatelessWidget {
         );
         break;
       case ImportResult.failure:
-        scaffoldMessenger.showSnackBar(
+        ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: const Text(
                 'Falha na importação. O arquivo pode estar corrompido ou a senha ser inválida.'),
