@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import 'package:key_budget/app/widgets/empty_state_widget.dart';
 import 'package:key_budget/features/auth/viewmodel/auth_viewmodel.dart';
 import 'package:key_budget/features/credentials/view/add_credential_screen.dart';
@@ -182,7 +183,7 @@ class _CredentialsScreenState extends State<CredentialsScreen> {
                           ),
                         );
                       },
-                    );
+                    ).animate().fade(delay: (100 * index).ms).slideX();
                   },
                 );
               },
