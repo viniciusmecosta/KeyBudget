@@ -1,12 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:key_budget/app/config/app_providers.dart';
 import 'package:key_budget/app/config/app_theme.dart';
 import 'package:key_budget/app/view/auth_gate.dart';
-import 'package:key_budget/features/auth/viewmodel/auth_viewmodel.dart';
-import 'package:key_budget/features/credentials/viewmodel/credential_viewmodel.dart';
-import 'package:key_budget/features/dashboard/viewmodel/dashboard_viewmodel.dart';
-import 'package:key_budget/features/expenses/viewmodel/expense_viewmodel.dart';
 import 'package:provider/provider.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 
 Future<void> main() async {
   try {
@@ -15,12 +13,7 @@ Future<void> main() async {
 
     runApp(
       MultiProvider(
-        providers: [
-          ChangeNotifierProvider(create: (_) => AuthViewModel()),
-          ChangeNotifierProvider(create: (_) => ExpenseViewModel()),
-          ChangeNotifierProvider(create: (_) => CredentialViewModel()),
-          ChangeNotifierProvider(create: (_) => DashboardViewModel()),
-        ],
+        providers: appProviders,
         child: const MyApp(),
       ),
     );
@@ -37,6 +30,16 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       title: 'KeyBudget',
       theme: AppTheme.theme,
+      debugShowCheckedModeBanner: false,
+      localizationsDelegates: const [
+        GlobalMaterialLocalizations.delegate,
+        GlobalWidgetsLocalizations.delegate,
+        GlobalCupertinoLocalizations.delegate,
+      ],
+      supportedLocales: const [
+        Locale('pt', 'BR'),
+      ],
+      locale: const Locale('pt', 'BR'),
       home: const AuthGate(),
     );
   }
@@ -49,6 +52,7 @@ class ErrorScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
+      debugShowCheckedModeBanner: false,
       home: Scaffold(
         body: Padding(
           padding: const EdgeInsets.all(16.0),
