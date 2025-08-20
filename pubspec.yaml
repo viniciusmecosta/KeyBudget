@@ -28,6 +28,7 @@ dependencies:
   file_picker: ^10.3.1
   csv: ^6.0.0
   flutter_animate: ^4.5.0
+  flutter_launcher_icons: ^0.13.1
 
 dev_dependencies:
   flutter_test:
@@ -40,3 +41,8 @@ flutter:
 
   assets:
     - assets/.env
+
+flutter_launcher_icons:
+  android: true
+  ios: false
+  image_path: "assets/icon/logo.png"
