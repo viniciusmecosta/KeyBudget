@@ -40,7 +40,7 @@ extension ExpenseCategoryExtension on ExpenseCategory {
         return Icons.local_pizza;
       case ExpenseCategory.agua:
         return Icons.water_drop;
-      case ExpenseCategory.roupa: 
+      case ExpenseCategory.roupa:
         return Icons.checkroom;
       case ExpenseCategory.lazer:
         return Icons.local_mall;

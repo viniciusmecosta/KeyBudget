@@ -3,6 +3,8 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:key_budget/app/config/app_providers.dart';
 import 'package:key_budget/app/config/app_theme.dart';
 import 'package:key_budget/app/view/auth_gate.dart';
+import 'package:key_budget/app/view/lock_screen.dart';
+import 'package:key_budget/core/services/app_lock_service.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 
@@ -22,8 +24,37 @@ Future<void> main() async {
   }
 }
 
-class MyApp extends StatelessWidget {
+class MyApp extends StatefulWidget {
   const MyApp({super.key});
+
+  @override
+  State<MyApp> createState() => _MyAppState();
+}
+
+class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    super.didChangeAppLifecycleState(state);
+    final appLockService = Provider.of<AppLockService>(context, listen: false);
+    if (state == AppLifecycleState.paused ||
+        state == AppLifecycleState.inactive) {
+      appLockService.startLockTimer();
+    } else if (state == AppLifecycleState.resumed) {
+      appLockService.cancelLockTimer();
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -42,7 +73,17 @@ class MyApp extends StatelessWidget {
         Locale('pt', 'BR'),
       ],
       locale: const Locale('pt', 'BR'),
-      home: const AuthGate(),
+      home: Consumer<AppLockService>(
+        builder: (context, appLock, child) {
+          return Stack(
+            children: [
+              child!,
+              if (appLock.isLocked) const LockScreen(),
+            ],
+          );
+        },
+        child: const AuthGate(),
+      ),
     );
   }
 }
