@@ -1,6 +1,6 @@
 name: key_budget
 description: "KeyBudget Project"
-publish_to: "none"
+publish_to: "vinicius.menezes"
 version: 1.0.0+1
 
 environment:
@@ -8,6 +8,8 @@ environment:
 
 dependencies:
   flutter:
+    sdk: flutter
+  flutter_localizations:
     sdk: flutter
 
   sqflite_sqlcipher: ^2.1.0
