@@ -16,8 +16,6 @@ class CredentialsScreen extends StatefulWidget {
 }
 
 class _CredentialsScreenState extends State<CredentialsScreen> {
-  final TextEditingController _searchController = TextEditingController();
-
   @override
   void initState() {
     super.initState();
@@ -28,12 +26,6 @@ class _CredentialsScreenState extends State<CredentialsScreen> {
             .fetchCredentials(authViewModel.currentUser!.id!);
       }
     });
-  }
-
-  @override
-  void dispose() {
-    _searchController.dispose();
-    super.dispose();
   }
 
   void _import(BuildContext context) async {
@@ -117,33 +109,13 @@ class _CredentialsScreenState extends State<CredentialsScreen> {
       ),
       body: Column(
         children: [
-          Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: TextField(
-              controller: _searchController,
-              decoration: InputDecoration(
-                labelText: 'Buscar por local, login ou email...',
-                prefixIcon: const Icon(Icons.search),
-                suffixIcon: _searchController.text.isNotEmpty
-                    ? IconButton(
-                        icon: const Icon(Icons.clear),
-                        onPressed: () {
-                          _searchController.clear();
-                          viewModel.setSearchText('');
-                        },
-                      )
-                    : null,
-              ),
-              onChanged: (value) => viewModel.setSearchText(value),
-            ),
-          ),
           Expanded(
             child: Consumer<CredentialViewModel>(
               builder: (context, vm, child) {
                 if (vm.isLoading) {
                   return const Center(child: CircularProgressIndicator());
                 }
-                if (vm.filteredCredentials.isEmpty) {
+                if (vm.allCredentials.isEmpty) {
                   return EmptyStateWidget(
                     icon: Icons.key_off,
                     message: 'Nenhuma credencial encontrada.',
@@ -154,9 +126,9 @@ class _CredentialsScreenState extends State<CredentialsScreen> {
                   );
                 }
                 return ListView.builder(
-                  itemCount: vm.filteredCredentials.length,
+                  itemCount: vm.allCredentials.length,
                   itemBuilder: (context, index) {
-                    final credential = vm.filteredCredentials[index];
+                    final credential = vm.allCredentials[index];
                     return ListTile(
                       leading: CircleAvatar(
                         backgroundImage: credential.logoPath != null &&

@@ -102,6 +102,40 @@ class AuthViewModel extends ChangeNotifier {
     }
   }
 
+  Future<bool> updateUser({
+    required String name,
+    String? phoneNumber,
+    String? avatarPath,
+    String? newPassword,
+  }) async {
+    _setLoading(true);
+    _setErrorMessage(null);
+
+    try {
+      String passwordHash = _currentUser!.passwordHash;
+      if (newPassword != null && newPassword.isNotEmpty) {
+        passwordHash = _hashPassword(newPassword);
+      }
+
+      final updatedUser = _currentUser!.copyWith(
+        name: name,
+        phoneNumber: phoneNumber,
+        avatarPath: avatarPath,
+        passwordHash: passwordHash,
+      );
+
+      await _authRepository.updateUser(updatedUser);
+      _currentUser = updatedUser;
+      notifyListeners();
+      _setLoading(false);
+      return true;
+    } catch (e) {
+      _setErrorMessage('Ocorreu um erro ao atualizar o perfil.');
+      _setLoading(false);
+      return false;
+    }
+  }
+
   Future<bool> authenticateWithBiometrics() async {
     _setLoading(true);
     final lastUserId = await _localAuthService.getLastUser();

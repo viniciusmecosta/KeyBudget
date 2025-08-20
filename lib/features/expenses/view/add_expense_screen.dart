@@ -16,6 +16,7 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
   final _formKey = GlobalKey<FormState>();
   final _amountController = TextEditingController();
   final _motivationController = TextEditingController();
+  final _locationController = TextEditingController();
   DateTime _selectedDate = DateTime.now();
   ExpenseCategory? _selectedCategory;
   bool _isSaving = false;
@@ -24,6 +25,7 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
   void dispose() {
     _amountController.dispose();
     _motivationController.dispose();
+    _locationController.dispose();
     super.dispose();
   }
 
@@ -59,6 +61,8 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
       motivation: _motivationController.text.isNotEmpty
           ? _motivationController.text
           : null,
+      location:
+          _locationController.text.isNotEmpty ? _locationController.text : null,
     );
 
     expenseViewModel.addExpense(newExpense).whenComplete(() {
@@ -73,6 +77,7 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
         _formKey.currentState?.reset();
         _amountController.clear();
         _motivationController.clear();
+        _locationController.clear();
         setState(() {
           _selectedDate = DateTime.now();
           _selectedCategory = null;
@@ -125,6 +130,12 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
                 controller: _motivationController,
                 decoration:
                     const InputDecoration(labelText: 'Motivação (opcional)'),
+              ),
+              const SizedBox(height: 16),
+              TextFormField(
+                controller: _locationController,
+                decoration:
+                    const InputDecoration(labelText: 'Local (opcional)'),
               ),
               const SizedBox(height: 16),
               Row(

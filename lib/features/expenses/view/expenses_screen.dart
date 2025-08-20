@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
+import 'package:intl/intl.dart';
 import 'package:key_budget/app/widgets/empty_state_widget.dart';
 import 'package:key_budget/core/models/expense_category.dart';
 import 'package:key_budget/features/auth/viewmodel/auth_viewmodel.dart';
@@ -106,8 +107,8 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
         .where((exp) =>
             exp.date.year == _selectedMonth.year &&
             exp.date.month == _selectedMonth.month)
-        .toList()
-      ..sort((a, b) => b.date.compareTo(a.date));
+        .toList();
+    monthlyExpenses.sort((a, b) => b.date.compareTo(a.date));
 
     final totalValue = monthlyExpenses.fold<double>(
       0.0,
@@ -174,9 +175,11 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
                     final expense = monthlyExpenses[index];
                     return ListTile(
                       leading: Icon(expense.category?.icon ?? Icons.category),
-                      title: Text(expense.motivation ?? 'Gasto Geral'),
-                      subtitle: Text(
-                          expense.category?.displayName ?? 'Sem categoria'),
+                      title: Text(expense.location?.isNotEmpty == true
+                          ? expense.location!
+                          : (expense.category?.displayName ?? 'Gasto Geral')),
+                      subtitle:
+                          Text(DateFormat('dd/MM/yyyy').format(expense.date)),
                       trailing: Text(
                         'R\$ ${expense.amount.toStringAsFixed(2)}',
                         style: TextStyle(

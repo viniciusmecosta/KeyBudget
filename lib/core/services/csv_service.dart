@@ -29,13 +29,14 @@ class CsvService {
 
   Future<bool> exportExpenses(List<Expense> expenses) async {
     List<List<dynamic>> rows = [];
-    rows.add(['date', 'amount', 'category', 'motivation']);
+    rows.add(['date', 'amount', 'category', 'motivation', 'location']);
     for (var exp in expenses) {
       rows.add([
         exp.date.toIso8601String(),
         exp.amount,
         exp.category ?? '',
-        exp.motivation ?? ''
+        exp.motivation ?? '',
+        exp.location ?? ''
       ]);
     }
 

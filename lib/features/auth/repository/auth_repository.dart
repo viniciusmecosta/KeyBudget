@@ -46,4 +46,14 @@ class AuthRepository {
     }
     return null;
   }
+
+  Future<int> updateUser(User user) async {
+    final db = await _dbService.database;
+    return await db.update(
+      'users',
+      user.toMap(),
+      where: 'id = ?',
+      whereArgs: [user.id],
+    );
+  }
 }
