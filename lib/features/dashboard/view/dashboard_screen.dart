@@ -28,12 +28,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
   @override
   Widget build(BuildContext context) {
     final viewModel = Provider.of<DashboardViewModel>(context);
-    final theme = Theme.of(context);
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Dashboard'),
-      ),
+      appBar: AppBar(title: const Text('Dashboard')),
       body: viewModel.isLoading
           ? const Center(child: CircularProgressIndicator())
           : RefreshIndicator(
@@ -51,6 +48,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   _buildCredentialCard(context, viewModel.credentialCount),
                   const SizedBox(height: 24),
                   _buildChartSection(context, viewModel),
+                  const SizedBox(height: 24),
+                  _buildBarChartSection(context, viewModel),
                 ],
               ),
             ),
@@ -59,7 +58,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
   Widget _buildCredentialCard(BuildContext context, int count) {
     return Card(
-      color: AppTheme.darkGrey,
+      color: Theme.of(context).brightness == Brightness.dark
+          ? AppTheme.darkGrey
+          : AppTheme.darkestGrey,
       child: Padding(
         padding: const EdgeInsets.all(20.0),
         child: Column(
@@ -95,13 +96,21 @@ class _DashboardScreenState extends State<DashboardScreen> {
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             Text(
-              'Gastos por Categoria',
+              'Gastos no Mês',
               style: Theme.of(context).textTheme.headlineSmall,
             ),
             _buildMonthSelector(context, viewModel),
           ],
         ),
-        const SizedBox(height: 24),
+        const SizedBox(height: 8),
+        Text(
+          'Total: R\$ ${viewModel.totalAmountForMonth.toStringAsFixed(2)}',
+          style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                color: Theme.of(context).colorScheme.primary,
+                fontWeight: FontWeight.bold,
+              ),
+        ),
+        const SizedBox(height: 16),
         if (viewModel.expensesByCategoryForMonth.isEmpty)
           const Center(
             child: Padding(
@@ -121,6 +130,59 @@ class _DashboardScreenState extends State<DashboardScreen> {
               ),
             ),
           ),
+      ],
+    );
+  }
+
+  Widget _buildBarChartSection(
+      BuildContext context, DashboardViewModel viewModel) {
+    final monthlyTotals = viewModel.monthlyExpenseTotals;
+    if (monthlyTotals.isEmpty) return const SizedBox.shrink();
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text('Histórico Mensal',
+            style: Theme.of(context).textTheme.headlineSmall),
+        const SizedBox(height: 16),
+        SizedBox(
+          height: 200,
+          child: BarChart(
+            BarChartData(
+              alignment: BarChartAlignment.spaceAround,
+              barGroups: monthlyTotals.entries.map((entry) {
+                final dateParts = entry.key.split('-');
+                final month = int.parse(dateParts[1]);
+                return BarChartGroupData(
+                  x: month,
+                  barRods: [
+                    BarChartRodData(
+                      toY: entry.value,
+                      color: Theme.of(context).colorScheme.primary,
+                      width: 16,
+                      borderRadius: BorderRadius.circular(4),
+                    ),
+                  ],
+                );
+              }).toList(),
+              titlesData: FlTitlesData(
+                bottomTitles: AxisTitles(
+                    sideTitles: SideTitles(
+                        showTitles: true,
+                        getTitlesWidget: (value, meta) =>
+                            Text(value.toInt().toString()))),
+                leftTitles: AxisTitles(
+                    sideTitles: SideTitles(showTitles: true, reservedSize: 40)),
+                topTitles:
+                    const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                rightTitles:
+                    const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+              ),
+              gridData: const FlGridData(show: true),
+              borderData: FlBorderData(show: false),
+            ),
+          ),
+        ),
       ],
     );
   }

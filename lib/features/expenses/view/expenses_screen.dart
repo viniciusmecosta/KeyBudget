@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:key_budget/app/widgets/empty_state_widget.dart';
+import 'package:key_budget/core/models/expense_category.dart';
 import 'package:key_budget/features/auth/viewmodel/auth_viewmodel.dart';
 import 'package:key_budget/features/expenses/view/add_expense_screen.dart';
 import 'package:key_budget/features/expenses/view/expense_detail_screen.dart';
@@ -14,6 +16,9 @@ class ExpensesScreen extends StatefulWidget {
 }
 
 class _ExpensesScreenState extends State<ExpensesScreen> {
+  final TextEditingController _searchController = TextEditingController();
+  DateTime _selectedMonth = DateTime(DateTime.now().year, DateTime.now().month);
+
   @override
   void initState() {
     super.initState();
@@ -24,6 +29,12 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
             .fetchExpenses(authViewModel.currentUser!.id!);
       }
     });
+  }
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
   }
 
   void _import(BuildContext context) async {
@@ -40,6 +51,14 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final viewModel = Provider.of<ExpenseViewModel>(context);
+
+    final monthlyExpenses = viewModel.filteredExpenses
+        .where((exp) =>
+            exp.date.year == _selectedMonth.year &&
+            exp.date.month == _selectedMonth.month)
+        .toList();
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('Meus Gastos'),
@@ -61,49 +80,113 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
           ),
         ],
       ),
-      body: Consumer<ExpenseViewModel>(
-        builder: (context, viewModel, child) {
-          if (viewModel.isLoading) {
-            return const Center(child: CircularProgressIndicator());
-          }
-          if (viewModel.expenses.isEmpty) {
-            return const Center(
-              child: Text('Nenhuma despesa cadastrada.'),
-            );
-          }
-          return ListView.builder(
-            itemCount: viewModel.expenses.length,
-            itemBuilder: (context, index) {
-              final expense = viewModel.expenses[index];
-              return ListTile(
-                title: Text(expense.motivation ?? 'Gasto Geral'),
-                subtitle: Text(
-                    '${expense.date.day}/${expense.date.month}/${expense.date.year}'),
-                trailing: Text(
-                  'R\$ ${expense.amount.toStringAsFixed(2)}',
-                  style: TextStyle(
-                      color: Theme.of(context).colorScheme.error,
-                      fontWeight: FontWeight.bold),
-                ),
-                onTap: () {
-                  Navigator.of(context).push(
-                    MaterialPageRoute(
-                      builder: (_) => ExpenseDetailScreen(expense: expense),
-                    ),
+      body: Column(
+        children: [
+          Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: TextField(
+              controller: _searchController,
+              decoration: InputDecoration(
+                labelText: 'Buscar por motivação ou categoria...',
+                prefixIcon: const Icon(Icons.search),
+                suffixIcon: _searchController.text.isNotEmpty
+                    ? IconButton(
+                        icon: const Icon(Icons.clear),
+                        onPressed: () {
+                          _searchController.clear();
+                          viewModel.setSearchText('');
+                        },
+                      )
+                    : null,
+              ),
+              onChanged: (value) => viewModel.setSearchText(value),
+            ),
+          ),
+          _buildMonthSelector(context, viewModel),
+          Expanded(
+            child: Consumer<ExpenseViewModel>(
+              builder: (context, vm, child) {
+                if (vm.isLoading) {
+                  return const Center(child: CircularProgressIndicator());
+                }
+                if (monthlyExpenses.isEmpty) {
+                  return EmptyStateWidget(
+                    icon: Icons.money_off,
+                    message: 'Nenhuma despesa encontrada para este mês.',
+                    buttonText: 'Adicionar Despesa',
+                    onButtonPressed: () => Navigator.of(context).push(
+                        MaterialPageRoute(
+                            builder: (_) => const AddExpenseScreen())),
                   );
-                },
-              );
-            },
-          );
-        },
+                }
+                return ListView.builder(
+                  itemCount: monthlyExpenses.length,
+                  itemBuilder: (context, index) {
+                    final expense = monthlyExpenses[index];
+                    return ListTile(
+                      leading: Icon(expense.category?.icon ?? Icons.category),
+                      title: Text(expense.motivation ?? 'Gasto Geral'),
+                      subtitle: Text(
+                          expense.category?.displayName ?? 'Sem categoria'),
+                      trailing: Text(
+                        'R\$ ${expense.amount.toStringAsFixed(2)}',
+                        style: TextStyle(
+                            color: Theme.of(context).colorScheme.error,
+                            fontWeight: FontWeight.bold),
+                      ),
+                      onTap: () {
+                        Navigator.of(context).push(
+                          MaterialPageRoute(
+                            builder: (_) =>
+                                ExpenseDetailScreen(expense: expense),
+                          ),
+                        );
+                      },
+                    );
+                  },
+                );
+              },
+            ),
+          ),
+        ],
       ),
       floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          Navigator.of(context).push(
-            MaterialPageRoute(builder: (_) => const AddExpenseScreen()),
-          );
-        },
+        onPressed: () => Navigator.of(context)
+            .push(MaterialPageRoute(builder: (_) => const AddExpenseScreen())),
         child: const Icon(Icons.add),
+      ),
+    );
+  }
+
+  Widget _buildMonthSelector(BuildContext context, ExpenseViewModel viewModel) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          IconButton(
+            icon: const Icon(Icons.chevron_left),
+            onPressed: () {
+              setState(() {
+                _selectedMonth =
+                    DateTime(_selectedMonth.year, _selectedMonth.month - 1);
+              });
+            },
+          ),
+          Text(
+            '${_selectedMonth.month}/${_selectedMonth.year}',
+            style: Theme.of(context).textTheme.titleLarge,
+          ),
+          IconButton(
+            icon: const Icon(Icons.chevron_right),
+            onPressed: () {
+              setState(() {
+                _selectedMonth =
+                    DateTime(_selectedMonth.year, _selectedMonth.month + 1);
+              });
+            },
+          ),
+        ],
       ),
     );
   }

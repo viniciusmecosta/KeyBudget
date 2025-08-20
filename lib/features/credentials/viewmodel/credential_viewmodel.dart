@@ -9,11 +9,33 @@ class CredentialViewModel extends ChangeNotifier {
   final EncryptionService _encryptionService = EncryptionService();
   final CsvService _csvService = CsvService();
 
-  List<Credential> _credentials = [];
+  List<Credential> _allCredentials = [];
   bool _isLoading = false;
+  String _searchText = '';
 
-  List<Credential> get credentials => _credentials;
+  List<Credential> get allCredentials => _allCredentials;
   bool get isLoading => _isLoading;
+
+  List<Credential> get filteredCredentials {
+    if (_searchText.isEmpty) {
+      return _allCredentials;
+    }
+    return _allCredentials.where((cred) {
+      final locationMatch =
+          cred.location.toLowerCase().contains(_searchText.toLowerCase());
+      final loginMatch =
+          cred.login.toLowerCase().contains(_searchText.toLowerCase());
+      final emailMatch =
+          cred.email?.toLowerCase().contains(_searchText.toLowerCase()) ??
+              false;
+      return locationMatch || loginMatch || emailMatch;
+    }).toList();
+  }
+
+  void setSearchText(String text) {
+    _searchText = text;
+    notifyListeners();
+  }
 
   void _setLoading(bool value) {
     _isLoading = value;
@@ -22,7 +44,7 @@ class CredentialViewModel extends ChangeNotifier {
 
   Future<void> fetchCredentials(int userId) async {
     _setLoading(true);
-    _credentials = await _repository.getCredentialsForUser(userId);
+    _allCredentials = await _repository.getCredentialsForUser(userId);
     _setLoading(false);
   }
 
@@ -77,7 +99,7 @@ class CredentialViewModel extends ChangeNotifier {
       email: email,
       phoneNumber: phoneNumber,
       notes: notes,
-      logoPath: logoPath,
+      logoPath: logoPath ?? originalCredential.logoPath,
     );
 
     await _repository.updateCredential(updatedCredential);
@@ -90,7 +112,7 @@ class CredentialViewModel extends ChangeNotifier {
   }
 
   Future<bool> exportCredentialsToCsv() async {
-    return await _csvService.exportCredentials(_credentials);
+    return await _csvService.exportCredentials(_allCredentials);
   }
 
   Future<int> importCredentialsFromCsv(int userId) async {
