@@ -7,16 +7,15 @@ class AuthRepository {
 
   Future<User> register(User user) async {
     final db = await _dbService.database;
-    final id = await db.insert(
-      'users',
-      user.toMap(),
-      conflictAlgorithm: ConflictAlgorithm.replace,
-    );
+    final id = await db.insert('users', user.toMap(),
+        conflictAlgorithm: ConflictAlgorithm.replace);
     return User(
       id: id,
       name: user.name,
       email: user.email,
       passwordHash: user.passwordHash,
+      avatarPath: user.avatarPath,
+      phoneNumber: user.phoneNumber,
     );
   }
 
@@ -26,6 +25,20 @@ class AuthRepository {
       'users',
       where: 'email = ?',
       whereArgs: [email],
+    );
+
+    if (maps.isNotEmpty) {
+      return User.fromMap(maps.first);
+    }
+    return null;
+  }
+
+  Future<User?> getUserById(int id) async {
+    final db = await _dbService.database;
+    final maps = await db.query(
+      'users',
+      where: 'id = ?',
+      whereArgs: [id],
     );
 
     if (maps.isNotEmpty) {
