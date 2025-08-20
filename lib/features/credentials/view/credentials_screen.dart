@@ -26,6 +26,33 @@ class _CredentialsScreenState extends State<CredentialsScreen> {
     });
   }
 
+  void _import(BuildContext context) async {
+    final viewModel = Provider.of<CredentialViewModel>(context, listen: false);
+    final authViewModel = Provider.of<AuthViewModel>(context, listen: false);
+    final scaffoldMessenger = ScaffoldMessenger.of(context);
+
+    final count = await viewModel
+        .importCredentialsFromCsv(authViewModel.currentUser!.id!);
+    scaffoldMessenger.showSnackBar(SnackBar(
+        content: Text('$count credenciais importadas com sucesso!'),
+        backgroundColor: Colors.green));
+  }
+
+  void _export(BuildContext context) async {
+    final viewModel = Provider.of<CredentialViewModel>(context, listen: false);
+    final scaffoldMessenger = ScaffoldMessenger.of(context);
+
+    final success = await viewModel.exportCredentialsToCsv();
+    if (success) {
+      scaffoldMessenger.showSnackBar(const SnackBar(
+          content: Text('Credenciais exportadas com sucesso!'),
+          backgroundColor: Colors.green));
+    } else {
+      scaffoldMessenger.showSnackBar(const SnackBar(
+          content: Text('Falha ao exportar.'), backgroundColor: Colors.red));
+    }
+  }
+
   void _showDecryptedPassword(BuildContext context, String encryptedPassword) {
     final viewModel = Provider.of<CredentialViewModel>(context, listen: false);
     final decryptedPassword = viewModel.decryptPassword(encryptedPassword);
@@ -62,6 +89,20 @@ class _CredentialsScreenState extends State<CredentialsScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Minhas Credenciais'),
+        actions: [
+          PopupMenuButton(
+            itemBuilder: (context) => [
+              const PopupMenuItem(
+                  value: 'import', child: Text('Importar de CSV')),
+              const PopupMenuItem(
+                  value: 'export', child: Text('Exportar para CSV')),
+            ],
+            onSelected: (value) {
+              if (value == 'import') _import(context);
+              if (value == 'export') _export(context);
+            },
+          ),
+        ],
       ),
       body: Consumer<CredentialViewModel>(
         builder: (context, viewModel, child) {

@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:key_budget/core/models/credential_model.dart';
+import 'package:key_budget/core/services/csv_service.dart';
 import 'package:key_budget/core/services/encryption_service.dart';
 import 'package:key_budget/features/credentials/repository/credential_repository.dart';
 
 class CredentialViewModel extends ChangeNotifier {
   final CredentialRepository _repository = CredentialRepository();
   final EncryptionService _encryptionService = EncryptionService();
+  final CsvService _csvService = CsvService();
 
   List<Credential> _credentials = [];
   bool _isLoading = false;
@@ -85,6 +87,35 @@ class CredentialViewModel extends ChangeNotifier {
   Future<void> deleteCredential(int id, int userId) async {
     await _repository.deleteCredential(id);
     await fetchCredentials(userId);
+  }
+
+  Future<bool> exportCredentialsToCsv() async {
+    return await _csvService.exportCredentials(_credentials);
+  }
+
+  Future<int> importCredentialsFromCsv(int userId) async {
+    final data = await _csvService.importCsv();
+    if (data == null) return 0;
+
+    int count = 0;
+    for (var row in data) {
+      final plainPassword = row['password']?.toString() ?? '';
+      if (plainPassword.isEmpty) continue;
+
+      final newCredential = Credential(
+        userId: userId,
+        location: row['location']?.toString() ?? 'N/A',
+        login: row['login']?.toString() ?? 'N/A',
+        encryptedPassword: _encryptionService.encryptData(plainPassword),
+        email: row['email']?.toString(),
+        phoneNumber: row['phone_number']?.toString(),
+        notes: row['notes']?.toString(),
+      );
+      await _repository.addCredential(newCredential);
+      count++;
+    }
+    await fetchCredentials(userId);
+    return count;
   }
 
   String decryptPassword(String encryptedPassword) {
