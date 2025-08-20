@@ -4,6 +4,7 @@ import 'package:csv/csv.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:file_saver/file_saver.dart';
 import 'package:key_budget/core/models/credential_model.dart';
+import 'package:key_budget/core/models/expense_category.dart';
 import 'package:key_budget/core/models/expense_model.dart';
 import 'package:permission_handler/permission_handler.dart';
 
@@ -34,7 +35,7 @@ class CsvService {
       rows.add([
         exp.date.toIso8601String(),
         exp.amount,
-        exp.category ?? '',
+        exp.category?.displayName ?? '',
         exp.motivation ?? '',
         exp.location ?? ''
       ]);
@@ -82,7 +83,17 @@ class CsvService {
   }
 
   Future<bool> _saveCsvFile(String baseName, String data) async {
-    if (await Permission.storage.request().isGranted) {
+    try {
+      if (Platform.isAndroid) {
+        var status = await Permission.storage.status;
+        if (status.isDenied) {
+          final result = await Permission.storage.request();
+          if (result.isDenied) {
+            return false;
+          }
+        }
+      }
+
       final bytes = utf8.encode(data);
       await FileSaver.instance.saveFile(
         name: '${baseName}_${DateTime.now().toIso8601String()}',
@@ -91,7 +102,8 @@ class CsvService {
         mimeType: MimeType.csv,
       );
       return true;
+    } catch (e) {
+      return false;
     }
-    return false;
   }
 }
