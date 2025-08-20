@@ -10,7 +10,6 @@ class ExpenseViewModel extends ChangeNotifier {
 
   List<Expense> _allExpenses = [];
   bool _isLoading = false;
-  String _searchText = '';
   List<ExpenseCategory> _selectedCategories = [];
 
   List<Expense> get allExpenses => _allExpenses;
@@ -28,25 +27,7 @@ class ExpenseViewModel extends ChangeNotifier {
           .toList();
     }
 
-    if (_searchText.isNotEmpty) {
-      filtered = filtered.where((exp) {
-        final motivationMatch =
-            exp.motivation?.toLowerCase().contains(_searchText.toLowerCase()) ??
-                false;
-        final categoryMatch = exp.category?.displayName
-                .toLowerCase()
-                .contains(_searchText.toLowerCase()) ??
-            false;
-        return motivationMatch || categoryMatch;
-      }).toList();
-    }
-
     return filtered;
-  }
-
-  void setSearchText(String text) {
-    _searchText = text;
-    notifyListeners();
   }
 
   void setCategoryFilter(List<ExpenseCategory> categories) {
@@ -55,7 +36,6 @@ class ExpenseViewModel extends ChangeNotifier {
   }
 
   void clearFilters() {
-    _searchText = '';
     _selectedCategories = [];
     notifyListeners();
   }
@@ -113,6 +93,7 @@ class ExpenseViewModel extends ChangeNotifier {
             (e) => e.name == row['category']?.toString(),
             orElse: () => ExpenseCategory.outros),
         motivation: row['motivation']?.toString(),
+        location: row['location']?.toString(),
       );
       await _repository.addExpense(newExpense);
       count++;

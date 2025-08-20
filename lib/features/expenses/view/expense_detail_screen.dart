@@ -16,6 +16,7 @@ class _ExpenseDetailScreenState extends State<ExpenseDetailScreen> {
   final _formKey = GlobalKey<FormState>();
   late TextEditingController _amountController;
   late TextEditingController _motivationController;
+  late TextEditingController _locationController;
   late DateTime _selectedDate;
   late ExpenseCategory? _selectedCategory;
   bool _isEditing = false;
@@ -28,6 +29,7 @@ class _ExpenseDetailScreenState extends State<ExpenseDetailScreen> {
         TextEditingController(text: widget.expense.amount.toStringAsFixed(2));
     _motivationController =
         TextEditingController(text: widget.expense.motivation);
+    _locationController = TextEditingController(text: widget.expense.location);
     _selectedDate = widget.expense.date;
     _selectedCategory = widget.expense.category;
   }
@@ -36,6 +38,7 @@ class _ExpenseDetailScreenState extends State<ExpenseDetailScreen> {
   void dispose() {
     _amountController.dispose();
     _motivationController.dispose();
+    _locationController.dispose();
     super.dispose();
   }
 
@@ -53,6 +56,8 @@ class _ExpenseDetailScreenState extends State<ExpenseDetailScreen> {
       motivation: _motivationController.text.isNotEmpty
           ? _motivationController.text
           : null,
+      location:
+          _locationController.text.isNotEmpty ? _locationController.text : null,
     );
 
     Provider.of<ExpenseViewModel>(context, listen: false)
@@ -159,6 +164,12 @@ class _ExpenseDetailScreenState extends State<ExpenseDetailScreen> {
                 decoration: const InputDecoration(labelText: 'Motivação'),
                 enabled: _isEditing,
                 maxLines: 3,
+              ),
+              const SizedBox(height: 16),
+              TextFormField(
+                controller: _locationController,
+                decoration: const InputDecoration(labelText: 'Local'),
+                enabled: _isEditing,
               ),
               const SizedBox(height: 16),
               if (_isEditing)

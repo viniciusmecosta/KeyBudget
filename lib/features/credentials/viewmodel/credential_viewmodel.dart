@@ -11,31 +11,9 @@ class CredentialViewModel extends ChangeNotifier {
 
   List<Credential> _allCredentials = [];
   bool _isLoading = false;
-  String _searchText = '';
 
   List<Credential> get allCredentials => _allCredentials;
   bool get isLoading => _isLoading;
-
-  List<Credential> get filteredCredentials {
-    if (_searchText.isEmpty) {
-      return _allCredentials;
-    }
-    return _allCredentials.where((cred) {
-      final locationMatch =
-          cred.location.toLowerCase().contains(_searchText.toLowerCase());
-      final loginMatch =
-          cred.login.toLowerCase().contains(_searchText.toLowerCase());
-      final emailMatch =
-          cred.email?.toLowerCase().contains(_searchText.toLowerCase()) ??
-              false;
-      return locationMatch || loginMatch || emailMatch;
-    }).toList();
-  }
-
-  void setSearchText(String text) {
-    _searchText = text;
-    notifyListeners();
-  }
 
   void _setLoading(bool value) {
     _isLoading = value;

@@ -15,6 +15,24 @@ class User {
     this.phoneNumber,
   });
 
+  User copyWith({
+    int? id,
+    String? name,
+    String? email,
+    String? passwordHash,
+    String? avatarPath,
+    String? phoneNumber,
+  }) {
+    return User(
+      id: id ?? this.id,
+      name: name ?? this.name,
+      email: email ?? this.email,
+      passwordHash: passwordHash ?? this.passwordHash,
+      avatarPath: avatarPath ?? this.avatarPath,
+      phoneNumber: phoneNumber ?? this.phoneNumber,
+    );
+  }
+
   Map<String, dynamic> toMap() {
     return {
       'id': id,

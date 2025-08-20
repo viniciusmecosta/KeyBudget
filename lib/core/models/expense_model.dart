@@ -7,6 +7,7 @@ class Expense {
   final DateTime date;
   final ExpenseCategory? category;
   final String? motivation;
+  final String? location;
 
   Expense({
     this.id,
@@ -15,6 +16,7 @@ class Expense {
     required this.date,
     this.category,
     this.motivation,
+    this.location,
   });
 
   Map<String, dynamic> toMap() {
@@ -25,6 +27,7 @@ class Expense {
       'date': date.toIso8601String(),
       'category': category?.name,
       'motivation': motivation,
+      'location': location,
     };
   }
 
@@ -38,6 +41,7 @@ class Expense {
           ? ExpenseCategory.values.firstWhere((e) => e.name == map['category'])
           : null,
       motivation: map['motivation'],
+      location: map['location'],
     );
   }
 }
