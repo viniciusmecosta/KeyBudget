@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:key_budget/core/models/expense_category.dart';
 import 'package:key_budget/core/models/expense_model.dart';
 import 'package:key_budget/features/expenses/viewmodel/expense_viewmodel.dart';
 import 'package:provider/provider.dart';
@@ -14,26 +15,26 @@ class ExpenseDetailScreen extends StatefulWidget {
 class _ExpenseDetailScreenState extends State<ExpenseDetailScreen> {
   final _formKey = GlobalKey<FormState>();
   late TextEditingController _amountController;
-  late TextEditingController _categoryController;
   late TextEditingController _motivationController;
   late DateTime _selectedDate;
+  late ExpenseCategory? _selectedCategory;
   bool _isEditing = false;
+  bool _isSaving = false;
 
   @override
   void initState() {
     super.initState();
     _amountController =
         TextEditingController(text: widget.expense.amount.toStringAsFixed(2));
-    _categoryController = TextEditingController(text: widget.expense.category);
     _motivationController =
         TextEditingController(text: widget.expense.motivation);
     _selectedDate = widget.expense.date;
+    _selectedCategory = widget.expense.category;
   }
 
   @override
   void dispose() {
     _amountController.dispose();
-    _categoryController.dispose();
     _motivationController.dispose();
     super.dispose();
   }
@@ -41,13 +42,14 @@ class _ExpenseDetailScreenState extends State<ExpenseDetailScreen> {
   void _saveChanges() {
     if (!_formKey.currentState!.validate()) return;
 
+    setState(() => _isSaving = true);
+
     final updatedExpense = Expense(
       id: widget.expense.id,
       userId: widget.expense.userId,
-      amount: double.parse(_amountController.text),
+      amount: double.parse(_amountController.text.replaceAll(',', '.')),
       date: _selectedDate,
-      category:
-          _categoryController.text.isNotEmpty ? _categoryController.text : null,
+      category: _selectedCategory,
       motivation: _motivationController.text.isNotEmpty
           ? _motivationController.text
           : null,
@@ -55,8 +57,11 @@ class _ExpenseDetailScreenState extends State<ExpenseDetailScreen> {
 
     Provider.of<ExpenseViewModel>(context, listen: false)
         .updateExpense(updatedExpense)
-        .then((_) {
-      if (mounted) Navigator.of(context).pop();
+        .whenComplete(() {
+      if (mounted) {
+        setState(() => _isSaving = false);
+        Navigator.of(context).pop();
+      }
     });
   }
 
@@ -129,10 +134,24 @@ class _ExpenseDetailScreenState extends State<ExpenseDetailScreen> {
                     value!.isEmpty ? 'Campo obrigatório' : null,
               ),
               const SizedBox(height: 16),
-              TextFormField(
-                controller: _categoryController,
+              DropdownButtonFormField<ExpenseCategory>(
+                value: _selectedCategory,
                 decoration: const InputDecoration(labelText: 'Categoria'),
-                enabled: _isEditing,
+                items: ExpenseCategory.values.map((category) {
+                  return DropdownMenuItem(
+                    value: category,
+                    child: Row(
+                      children: [
+                        Icon(category.icon, size: 20),
+                        const SizedBox(width: 8),
+                        Text(category.displayName),
+                      ],
+                    ),
+                  );
+                }).toList(),
+                onChanged: _isEditing
+                    ? (value) => setState(() => _selectedCategory = value)
+                    : null,
               ),
               const SizedBox(height: 16),
               TextFormField(
@@ -142,6 +161,17 @@ class _ExpenseDetailScreenState extends State<ExpenseDetailScreen> {
                 maxLines: 3,
               ),
               const SizedBox(height: 16),
+              if (_isEditing)
+                ElevatedButton(
+                  onPressed: _isSaving ? null : _saveChanges,
+                  child: _isSaving
+                      ? const SizedBox(
+                          height: 24,
+                          width: 24,
+                          child: CircularProgressIndicator(
+                              color: Colors.white, strokeWidth: 2.0))
+                      : const Text('Salvar Alterações'),
+                )
             ],
           ),
         ),

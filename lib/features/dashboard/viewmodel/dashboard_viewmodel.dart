@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:key_budget/core/models/expense_category.dart';
 import 'package:key_budget/core/models/expense_model.dart';
 import 'package:key_budget/features/credentials/repository/credential_repository.dart';
 import 'package:key_budget/features/expenses/repository/expense_repository.dart';
@@ -18,6 +19,22 @@ class DashboardViewModel extends ChangeNotifier {
   Map<String, double> get expensesByCategoryForMonth =>
       _expensesByCategoryForMonth;
   DateTime get selectedMonth => _selectedMonth;
+
+  double get totalAmountForMonth {
+    return _expensesByCategoryForMonth.values
+        .fold(0.0, (sum, amount) => sum + amount);
+  }
+
+  Map<String, double> get monthlyExpenseTotals {
+    Map<String, double> totals = {};
+    for (var expense in _allExpenses) {
+      String monthKey =
+          '${expense.date.year}-${expense.date.month.toString().padLeft(2, '0')}';
+      totals.update(monthKey, (value) => value + expense.amount,
+          ifAbsent: () => expense.amount);
+    }
+    return totals;
+  }
 
   void _setLoading(bool loading) {
     _isLoading = loading;
@@ -45,7 +62,7 @@ class DashboardViewModel extends ChangeNotifier {
 
     _expensesByCategoryForMonth = {};
     for (var expense in filteredExpenses) {
-      final category = expense.category ?? 'Outros';
+      final category = expense.category?.displayName ?? 'Outros';
       _expensesByCategoryForMonth.update(
           category, (value) => value + expense.amount,
           ifAbsent: () => expense.amount);
