@@ -49,6 +49,61 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
         backgroundColor: Colors.green));
   }
 
+  void _showCategoryFilter() {
+    final viewModel = Provider.of<ExpenseViewModel>(context, listen: false);
+    showModalBottomSheet(
+      context: context,
+      builder: (context) {
+        return StatefulBuilder(
+          builder: (BuildContext context, StateSetter setModalState) {
+            return Column(
+              children: [
+                Padding(
+                  padding: const EdgeInsets.all(8.0),
+                  child: Text('Filtrar por Categoria',
+                      style: Theme.of(context).textTheme.titleLarge),
+                ),
+                Expanded(
+                  child: ListView(
+                    children: ExpenseCategory.values.map((category) {
+                      final isSelected =
+                          viewModel.selectedCategories.contains(category);
+                      return CheckboxListTile(
+                        title: Text(category.displayName),
+                        value: isSelected,
+                        onChanged: (bool? value) {
+                          var currentSelection = List<ExpenseCategory>.from(
+                              viewModel.selectedCategories);
+                          if (value == true) {
+                            currentSelection.add(category);
+                          } else {
+                            currentSelection.remove(category);
+                          }
+                          viewModel.setCategoryFilter(currentSelection);
+                          setModalState(() {});
+                        },
+                      );
+                    }).toList(),
+                  ),
+                ),
+                Padding(
+                  padding: const EdgeInsets.all(8.0),
+                  child: TextButton(
+                    onPressed: () {
+                      viewModel.clearFilters();
+                      Navigator.of(context).pop();
+                    },
+                    child: const Text('Limpar Filtros'),
+                  ),
+                )
+              ],
+            );
+          },
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final viewModel = Provider.of<ExpenseViewModel>(context);
@@ -58,11 +113,16 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
             exp.date.year == _selectedMonth.year &&
             exp.date.month == _selectedMonth.month)
         .toList();
+    monthlyExpenses.sort((a, b) => b.date.compareTo(a.date));
 
     return Scaffold(
       appBar: AppBar(
         title: const Text('Meus Gastos'),
         actions: [
+          IconButton(
+            icon: const Icon(Icons.filter_list),
+            onPressed: _showCategoryFilter,
+          ),
           PopupMenuButton(
             itemBuilder: (context) => [
               const PopupMenuItem(

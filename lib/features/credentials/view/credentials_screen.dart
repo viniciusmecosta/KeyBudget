@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:key_budget/app/widgets/empty_state_widget.dart';
@@ -9,7 +10,6 @@ import 'package:provider/provider.dart';
 
 class CredentialsScreen extends StatefulWidget {
   const CredentialsScreen({super.key});
-
   @override
   State<CredentialsScreen> createState() => _CredentialsScreenState();
 }
@@ -157,7 +157,16 @@ class _CredentialsScreenState extends State<CredentialsScreen> {
                   itemBuilder: (context, index) {
                     final credential = vm.filteredCredentials[index];
                     return ListTile(
-                      leading: const Icon(Icons.vpn_key_outlined),
+                      leading: CircleAvatar(
+                        backgroundImage: credential.logoPath != null &&
+                                credential.logoPath!.isNotEmpty
+                            ? FileImage(File(credential.logoPath!))
+                            : null,
+                        child: credential.logoPath == null ||
+                                credential.logoPath!.isEmpty
+                            ? const Icon(Icons.vpn_key_outlined)
+                            : null,
+                      ),
                       title: Text(credential.location),
                       subtitle: Text(credential.login),
                       trailing: IconButton(

@@ -1,5 +1,7 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:key_budget/core/models/credential_model.dart';
+import 'package:key_budget/features/credentials/view/widgets/logo_picker.dart';
 import 'package:key_budget/features/credentials/viewmodel/credential_viewmodel.dart';
 import 'package:provider/provider.dart';
 
@@ -19,7 +21,9 @@ class _CredentialDetailScreenState extends State<CredentialDetailScreen> {
   late TextEditingController _emailController;
   late TextEditingController _phoneController;
   late TextEditingController _notesController;
+  String? _logoPath;
   bool _isEditing = false;
+  bool _isSaving = false;
 
   @override
   void initState() {
@@ -32,6 +36,7 @@ class _CredentialDetailScreenState extends State<CredentialDetailScreen> {
     _phoneController =
         TextEditingController(text: widget.credential.phoneNumber);
     _notesController = TextEditingController(text: widget.credential.notes);
+    _logoPath = widget.credential.logoPath;
   }
 
   @override
@@ -48,6 +53,8 @@ class _CredentialDetailScreenState extends State<CredentialDetailScreen> {
   void _saveChanges() {
     if (!_formKey.currentState!.validate()) return;
 
+    setState(() => _isSaving = true);
+
     Provider.of<CredentialViewModel>(context, listen: false)
         .updateCredential(
       originalCredential: widget.credential,
@@ -57,9 +64,13 @@ class _CredentialDetailScreenState extends State<CredentialDetailScreen> {
       email: _emailController.text,
       phoneNumber: _phoneController.text,
       notes: _notesController.text,
+      logoPath: _logoPath,
     )
-        .then((_) {
-      if (mounted) Navigator.of(context).pop();
+        .whenComplete(() {
+      if (mounted) {
+        setState(() => _isSaving = false);
+        Navigator.of(context).pop();
+      }
     });
   }
 
@@ -106,7 +117,7 @@ class _CredentialDetailScreenState extends State<CredentialDetailScreen> {
               onPressed: _deleteCredential,
             ),
           IconButton(
-            icon: Icon(_isEditing ? Icons.save : Icons.edit),
+            icon: Icon(_isEditing ? Icons.check : Icons.edit),
             onPressed: () {
               if (_isEditing) {
                 _saveChanges();
@@ -123,6 +134,26 @@ class _CredentialDetailScreenState extends State<CredentialDetailScreen> {
           key: _formKey,
           child: ListView(
             children: [
+              Center(
+                child: _isEditing
+                    ? LogoPicker(
+                        initialImagePath: _logoPath,
+                        onImageSelected: (path) {
+                          _logoPath = path;
+                        },
+                      )
+                    : CircleAvatar(
+                        radius: 40,
+                        backgroundImage:
+                            _logoPath != null && _logoPath!.isNotEmpty
+                                ? FileImage(File(_logoPath!))
+                                : null,
+                        child: _logoPath == null || _logoPath!.isEmpty
+                            ? const Icon(Icons.vpn_key_outlined, size: 30)
+                            : null,
+                      ),
+              ),
+              const SizedBox(height: 24),
               TextFormField(
                 controller: _locationController,
                 decoration: const InputDecoration(labelText: 'Local/Serviço *'),
@@ -171,6 +202,18 @@ class _CredentialDetailScreenState extends State<CredentialDetailScreen> {
                 enabled: _isEditing,
                 maxLines: 3,
               ),
+              const SizedBox(height: 24),
+              if (_isEditing)
+                ElevatedButton(
+                  onPressed: _isSaving ? null : _saveChanges,
+                  child: _isSaving
+                      ? const SizedBox(
+                          height: 24,
+                          width: 24,
+                          child: CircularProgressIndicator(
+                              color: Colors.white, strokeWidth: 2.0))
+                      : const Text('Salvar Alterações'),
+                )
             ],
           ),
         ),
