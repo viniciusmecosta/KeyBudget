@@ -17,7 +17,6 @@ class ExpensesScreen extends StatefulWidget {
 }
 
 class _ExpensesScreenState extends State<ExpensesScreen> {
-  final TextEditingController _searchController = TextEditingController();
   DateTime _selectedMonth = DateTime(DateTime.now().year, DateTime.now().month);
 
   @override
@@ -30,12 +29,6 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
             .fetchExpenses(authViewModel.currentUser!.id!);
       }
     });
-  }
-
-  @override
-  void dispose() {
-    _searchController.dispose();
-    super.dispose();
   }
 
   void _import(BuildContext context) async {
@@ -113,8 +106,13 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
         .where((exp) =>
             exp.date.year == _selectedMonth.year &&
             exp.date.month == _selectedMonth.month)
-        .toList();
-    monthlyExpenses.sort((a, b) => b.date.compareTo(a.date));
+        .toList()
+      ..sort((a, b) => b.date.compareTo(a.date));
+
+    final totalValue = monthlyExpenses.fold<double>(
+      0.0,
+      (sum, exp) => sum + exp.amount,
+    );
 
     return Scaffold(
       appBar: AppBar(
@@ -143,27 +141,17 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
       ),
       body: Column(
         children: [
+          _buildMonthSelector(context),
           Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: TextField(
-              controller: _searchController,
-              decoration: InputDecoration(
-                labelText: 'Buscar por motivação ou categoria...',
-                prefixIcon: const Icon(Icons.search),
-                suffixIcon: _searchController.text.isNotEmpty
-                    ? IconButton(
-                        icon: const Icon(Icons.clear),
-                        onPressed: () {
-                          _searchController.clear();
-                          viewModel.setSearchText('');
-                        },
-                      )
-                    : null,
-              ),
-              onChanged: (value) => viewModel.setSearchText(value),
+            padding: const EdgeInsets.symmetric(vertical: 8.0),
+            child: Text(
+              'Total: R\$ ${totalValue.toStringAsFixed(2)}',
+              style: Theme.of(context)
+                  .textTheme
+                  .titleLarge
+                  ?.copyWith(fontWeight: FontWeight.bold),
             ),
           ),
-          _buildMonthSelector(context, viewModel),
           Expanded(
             child: Consumer<ExpenseViewModel>(
               builder: (context, vm, child) {
@@ -219,7 +207,7 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
     );
   }
 
-  Widget _buildMonthSelector(BuildContext context, ExpenseViewModel viewModel) {
+  Widget _buildMonthSelector(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
       child: Row(

@@ -13,7 +13,7 @@ enum ImportResult { success, failure, noFileSelected }
 class DatabaseManagementService {
   Future<String> get _dbPath async {
     final dbFolder = await getApplicationDocumentsDirectory();
-    return p.join(dbFolder.path, 'keybudget_v2.db');
+    return p.join(dbFolder.path, 'keybudget.db');
   }
 
   Future<bool> exportDatabase() async {
