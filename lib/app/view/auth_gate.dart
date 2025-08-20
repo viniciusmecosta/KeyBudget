@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:key_budget/app/view/main_screen.dart';
-import 'package:key_budget/core/services/local_auth_service.dart';
 import 'package:key_budget/features/auth/view/login_screen.dart';
 import 'package:key_budget/features/auth/viewmodel/auth_viewmodel.dart';
 import 'package:provider/provider.dart';
