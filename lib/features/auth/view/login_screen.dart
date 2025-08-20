@@ -35,8 +35,7 @@ class _LoginScreenState extends State<LoginScreen> {
     if (mounted) {
       if (success) {
         Navigator.of(context).pushReplacement(
-          MaterialPageRoute(builder: (_) => const MainScreen())
-        );
+            MaterialPageRoute(builder: (_) => const MainScreen()));
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -63,22 +62,18 @@ class _LoginScreenState extends State<LoginScreen> {
                   controller: _emailController,
                   decoration: const InputDecoration(labelText: 'Email'),
                   keyboardType: TextInputType.emailAddress,
-                  validator:
-                      (value) =>
-                          (value == null || !value.contains('@'))
-                              ? 'Insira um email válido'
-                              : null,
+                  validator: (value) => (value == null || !value.contains('@'))
+                      ? 'Insira um email válido'
+                      : null,
                 ),
                 const SizedBox(height: 16),
                 TextFormField(
                   controller: _passwordController,
                   decoration: const InputDecoration(labelText: 'Senha'),
                   obscureText: true,
-                  validator:
-                      (value) =>
-                          (value == null || value.isEmpty)
-                              ? 'Insira sua senha'
-                              : null,
+                  validator: (value) => (value == null || value.isEmpty)
+                      ? 'Insira sua senha'
+                      : null,
                 ),
                 const SizedBox(height: 32),
                 Consumer<AuthViewModel>(
@@ -86,9 +81,9 @@ class _LoginScreenState extends State<LoginScreen> {
                     return viewModel.isLoading
                         ? const CircularProgressIndicator()
                         : ElevatedButton(
-                          onPressed: _submit,
-                          child: const Text('Entrar'),
-                        );
+                            onPressed: _submit,
+                            child: const Text('Entrar'),
+                          );
                   },
                 ),
                 TextButton(

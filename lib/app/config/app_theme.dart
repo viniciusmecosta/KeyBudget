@@ -9,10 +9,8 @@ class AppTheme {
   static final ThemeData theme = ThemeData(
     useMaterial3: true,
     brightness: Brightness.light,
-
     scaffoldBackgroundColor: offWhite,
     primaryColor: accentBlue,
-
     colorScheme: const ColorScheme.light(
       primary: accentBlue,
       onPrimary: offWhite,
@@ -25,7 +23,6 @@ class AppTheme {
       error: Colors.redAccent,
       onError: offWhite,
     ),
-
     appBarTheme: const AppBarTheme(
       backgroundColor: offWhite,
       foregroundColor: darkGrey,
@@ -39,12 +36,10 @@ class AppTheme {
         color: darkGrey,
       ),
     ),
-
     textTheme: const TextTheme(
       bodyLarge: TextStyle(color: darkGrey),
       bodyMedium: TextStyle(color: darkGrey),
     ),
-
     elevatedButtonTheme: ElevatedButtonThemeData(
       style: ElevatedButton.styleFrom(
         backgroundColor: accentBlue,
@@ -54,7 +49,6 @@ class AppTheme {
         textStyle: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
       ),
     ),
-
     inputDecorationTheme: InputDecorationTheme(
       border: OutlineInputBorder(
         borderRadius: BorderRadius.circular(8),
