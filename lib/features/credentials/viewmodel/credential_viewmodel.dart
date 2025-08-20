@@ -49,6 +49,35 @@ class CredentialViewModel extends ChangeNotifier {
     await fetchCredentials(userId);
   }
 
+  Future<void> updateCredential({
+    required Credential originalCredential,
+    required String location,
+    required String login,
+    String? newPlainPassword,
+    String? email,
+    String? phoneNumber,
+    String? notes,
+  }) async {
+    String passwordToSave = originalCredential.encryptedPassword;
+    if (newPlainPassword != null && newPlainPassword.isNotEmpty) {
+      passwordToSave = _encryptionService.encryptData(newPlainPassword);
+    }
+
+    final updatedCredential = Credential(
+      id: originalCredential.id,
+      userId: originalCredential.userId,
+      location: location,
+      login: login,
+      encryptedPassword: passwordToSave,
+      email: email,
+      phoneNumber: phoneNumber,
+      notes: notes,
+    );
+
+    await _repository.updateCredential(updatedCredential);
+    await fetchCredentials(originalCredential.userId);
+  }
+
   Future<void> deleteCredential(int id, int userId) async {
     await _repository.deleteCredential(id);
     await fetchCredentials(userId);

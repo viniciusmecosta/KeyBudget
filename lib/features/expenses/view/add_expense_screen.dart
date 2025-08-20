@@ -15,12 +15,15 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
   final _formKey = GlobalKey<FormState>();
   final _descriptionController = TextEditingController();
   final _amountController = TextEditingController();
+  final _categoryController =
+      TextEditingController();
   DateTime _selectedDate = DateTime.now();
 
   @override
   void dispose() {
     _descriptionController.dispose();
     _amountController.dispose();
+    _categoryController.dispose();
     super.dispose();
   }
 
@@ -50,10 +53,24 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
       description: _descriptionController.text,
       amount: double.parse(_amountController.text),
       date: _selectedDate,
+      category:
+          _categoryController.text.isNotEmpty ? _categoryController.text : null,
     );
 
     expenseViewModel.addExpense(newExpense).then((_) {
-      Navigator.of(context).pop();
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: const Text('Despesa salva com sucesso!'),
+          backgroundColor: Colors.green,
+        ),
+      );
+      _formKey.currentState?.reset();
+      _descriptionController.clear();
+      _amountController.clear();
+      _categoryController.clear();
+      setState(() {
+        _selectedDate = DateTime.now();
+      });
     });
   }
 
@@ -76,11 +93,18 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
               const SizedBox(height: 16),
               TextFormField(
                 controller: _amountController,
-                decoration: const InputDecoration(labelText: 'Valor'),
+                decoration:
+                    const InputDecoration(labelText: 'Valor (ex: 50.99)'),
                 keyboardType:
                     const TextInputType.numberWithOptions(decimal: true),
                 validator: (value) =>
                     value!.isEmpty ? 'Campo obrigatório' : null,
+              ),
+              const SizedBox(height: 16),
+              TextFormField(
+                controller: _categoryController,
+                decoration: const InputDecoration(
+                    labelText: 'Categoria (ex: Lazer, Contas)'),
               ),
               const SizedBox(height: 16),
               Row(
@@ -99,7 +123,7 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
               ElevatedButton(
                 onPressed: _submit,
                 child: const Text('Salvar Despesa'),
-              )
+              ),
             ],
           ),
         ),

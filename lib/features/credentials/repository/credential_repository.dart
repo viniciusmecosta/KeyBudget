@@ -22,6 +22,16 @@ class CredentialRepository {
     });
   }
 
+  Future<int> updateCredential(Credential credential) async {
+    final db = await _dbService.database;
+    return await db.update(
+      'credentials',
+      credential.toMap(),
+      where: 'id = ?',
+      whereArgs: [credential.id],
+    );
+  }
+
   Future<int> deleteCredential(int id) async {
     final db = await _dbService.database;
     return await db.delete(
