@@ -11,18 +11,21 @@ class ExpenseViewModel extends ChangeNotifier {
   List<Expense> _allExpenses = [];
   bool _isLoading = false;
   String _searchText = '';
-  ExpenseCategory? _selectedCategory;
+  List<ExpenseCategory> _selectedCategories = [];
 
   List<Expense> get allExpenses => _allExpenses;
   bool get isLoading => _isLoading;
-  ExpenseCategory? get selectedCategory => _selectedCategory;
+  List<ExpenseCategory> get selectedCategories => _selectedCategories;
 
   List<Expense> get filteredExpenses {
     List<Expense> filtered = List.from(_allExpenses);
 
-    if (_selectedCategory != null) {
-      filtered =
-          filtered.where((exp) => exp.category == _selectedCategory).toList();
+    if (_selectedCategories.isNotEmpty) {
+      filtered = filtered
+          .where((exp) =>
+              exp.category != null &&
+              _selectedCategories.contains(exp.category))
+          .toList();
     }
 
     if (_searchText.isNotEmpty) {
@@ -46,14 +49,14 @@ class ExpenseViewModel extends ChangeNotifier {
     notifyListeners();
   }
 
-  void setCategoryFilter(ExpenseCategory? category) {
-    _selectedCategory = category;
+  void setCategoryFilter(List<ExpenseCategory> categories) {
+    _selectedCategories = categories;
     notifyListeners();
   }
 
   void clearFilters() {
     _searchText = '';
-    _selectedCategory = null;
+    _selectedCategories = [];
     notifyListeners();
   }
 
