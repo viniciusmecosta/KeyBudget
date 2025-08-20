@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:key_budget/features/auth/viewmodel/auth_viewmodel.dart';
 import 'package:key_budget/features/expenses/view/add_expense_screen.dart';
 import 'package:key_budget/features/expenses/view/expense_detail_screen.dart';
+import 'package:key_budget/features/expenses/view/export_expenses_screen.dart';
 import 'package:key_budget/features/expenses/viewmodel/expense_viewmodel.dart';
 import 'package:provider/provider.dart';
 
@@ -25,11 +26,40 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
     });
   }
 
+  void _import(BuildContext context) async {
+    final viewModel = Provider.of<ExpenseViewModel>(context, listen: false);
+    final authViewModel = Provider.of<AuthViewModel>(context, listen: false);
+    final scaffoldMessenger = ScaffoldMessenger.of(context);
+
+    final count =
+        await viewModel.importExpensesFromCsv(authViewModel.currentUser!.id!);
+    scaffoldMessenger.showSnackBar(SnackBar(
+        content: Text('$count despesas importadas com sucesso!'),
+        backgroundColor: Colors.green));
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Meus Gastos'),
+        actions: [
+          PopupMenuButton(
+            itemBuilder: (context) => [
+              const PopupMenuItem(
+                  value: 'import', child: Text('Importar de CSV')),
+              const PopupMenuItem(
+                  value: 'export', child: Text('Exportar para CSV')),
+            ],
+            onSelected: (value) {
+              if (value == 'import') _import(context);
+              if (value == 'export') {
+                Navigator.of(context).push(MaterialPageRoute(
+                    builder: (_) => const ExportExpensesScreen()));
+              }
+            },
+          ),
+        ],
       ),
       body: Consumer<ExpenseViewModel>(
         builder: (context, viewModel, child) {
