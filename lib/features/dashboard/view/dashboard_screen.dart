@@ -28,6 +28,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
   @override
   Widget build(BuildContext context) {
     final viewModel = Provider.of<DashboardViewModel>(context);
+    final theme = Theme.of(context);
 
     return Scaffold(
       appBar: AppBar(
@@ -47,23 +48,23 @@ class _DashboardScreenState extends State<DashboardScreen> {
               child: ListView(
                 padding: const EdgeInsets.all(16.0),
                 children: [
-                  _buildCredentialCard(viewModel.credentialCount),
+                  _buildCredentialCard(context, viewModel.credentialCount),
                   const SizedBox(height: 24),
-                  _buildChartSection(viewModel),
+                  _buildChartSection(context, viewModel),
                 ],
               ),
             ),
     );
   }
 
-  Widget _buildCredentialCard(int count) {
+  Widget _buildCredentialCard(BuildContext context, int count) {
     return Card(
       color: AppTheme.darkGrey,
       child: Padding(
         padding: const EdgeInsets.all(20.0),
         child: Column(
           children: [
-            const Icon(Icons.key, color: AppTheme.accentBlue, size: 32),
+            const Icon(Icons.key, color: AppTheme.accentTeal, size: 32),
             const SizedBox(height: 8),
             Text(
               '$count',
@@ -77,7 +78,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
               style: Theme.of(context)
                   .textTheme
                   .bodyMedium
-                  ?.copyWith(color: AppTheme.softGrey),
+                  ?.copyWith(color: AppTheme.offWhite.withOpacity(0.7)),
             ),
           ],
         ),
@@ -85,7 +86,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
     );
   }
 
-  Widget _buildChartSection(DashboardViewModel viewModel) {
+  Widget _buildChartSection(
+      BuildContext context, DashboardViewModel viewModel) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -96,7 +98,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
               'Gastos por Categoria',
               style: Theme.of(context).textTheme.headlineSmall,
             ),
-            _buildMonthSelector(viewModel),
+            _buildMonthSelector(context, viewModel),
           ],
         ),
         const SizedBox(height: 24),
@@ -113,7 +115,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
             child: PieChart(
               PieChartData(
                 sections: _generatePieChartSections(
-                    viewModel.expensesByCategoryForMonth),
+                    context, viewModel.expensesByCategoryForMonth),
                 sectionsSpace: 2,
                 centerSpaceRadius: 40,
               ),
@@ -123,9 +125,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
     );
   }
 
-  Widget _buildMonthSelector(DashboardViewModel viewModel) {
+  Widget _buildMonthSelector(
+      BuildContext context, DashboardViewModel viewModel) {
     return DropdownButton<DateTime>(
       value: viewModel.selectedMonth,
+      dropdownColor: Theme.of(context).colorScheme.surface,
       onChanged: (DateTime? newValue) {
         if (newValue != null) {
           viewModel.filterExpensesByMonth(newValue);
@@ -136,22 +140,39 @@ class _DashboardScreenState extends State<DashboardScreen> {
             DateTime(DateTime.now().year, DateTime.now().month - index);
         return DropdownMenuItem<DateTime>(
           value: month,
-          child: Text('${month.month}/${month.year}'),
+          child: Text(
+            '${month.month}/${month.year}',
+            style: Theme.of(context).textTheme.bodyMedium,
+          ),
         );
       }),
     );
   }
 
   List<PieChartSectionData> _generatePieChartSections(
-      Map<String, double> data) {
+      BuildContext context, Map<String, double> data) {
+    final theme = Theme.of(context);
+    final isDarkMode = theme.brightness == Brightness.dark;
+
     final List<Color> colors = [
-      AppTheme.accentBlue,
-      AppTheme.softGrey.withOpacity(0.8),
-      Colors.teal,
-      Colors.orange,
-      Colors.indigo,
+      AppTheme.accentTeal,
+      isDarkMode ? AppTheme.offWhite.withOpacity(0.8) : AppTheme.darkGrey,
+      theme.colorScheme.secondaryContainer,
+      theme.colorScheme.tertiaryContainer,
     ];
     int colorIndex = 0;
+
+    final titleStyle = TextStyle(
+      fontSize: 14,
+      fontWeight: FontWeight.bold,
+      color: isDarkMode ? AppTheme.darkestGrey : AppTheme.offWhite,
+      shadows: [
+        Shadow(
+          color: isDarkMode ? Colors.white24 : Colors.black26,
+          blurRadius: 2,
+        )
+      ],
+    );
 
     return data.entries.map((entry) {
       final sectionColor = colors[colorIndex % colors.length];
@@ -162,12 +183,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
         value: entry.value,
         title: entry.key,
         radius: 100,
-        titleStyle: const TextStyle(
-          fontSize: 14,
-          fontWeight: FontWeight.bold,
-          color: AppTheme.darkGrey,
-          shadows: [Shadow(color: Colors.white, blurRadius: 2)],
-        ),
+        titleStyle: titleStyle,
       );
     }).toList();
   }
