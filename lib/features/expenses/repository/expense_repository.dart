@@ -22,6 +22,16 @@ class ExpenseRepository {
     });
   }
 
+  Future<int> updateExpense(Expense expense) async {
+    final db = await _dbService.database;
+    return await db.update(
+      'expenses',
+      expense.toMap(),
+      where: 'id = ?',
+      whereArgs: [expense.id],
+    );
+  }
+
   Future<int> deleteExpense(int id) async {
     final db = await _dbService.database;
     return await db.delete(

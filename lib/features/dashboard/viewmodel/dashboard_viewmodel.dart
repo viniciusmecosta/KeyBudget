@@ -1,15 +1,23 @@
 import 'package:flutter/material.dart';
 import 'package:key_budget/core/models/expense_model.dart';
+import 'package:key_budget/features/credentials/repository/credential_repository.dart';
 import 'package:key_budget/features/expenses/repository/expense_repository.dart';
 
 class DashboardViewModel extends ChangeNotifier {
   final ExpenseRepository _expenseRepository = ExpenseRepository();
+  final CredentialRepository _credentialRepository = CredentialRepository();
 
   bool _isLoading = false;
-  Map<String, double> _expenseByCategory = {};
+  int _credentialCount = 0;
+  List<Expense> _allExpenses = [];
+  Map<String, double> _expensesByCategoryForMonth = {};
+  DateTime _selectedMonth = DateTime(DateTime.now().year, DateTime.now().month);
 
   bool get isLoading => _isLoading;
-  Map<String, double> get expenseByCategory => _expenseByCategory;
+  int get credentialCount => _credentialCount;
+  Map<String, double> get expensesByCategoryForMonth =>
+      _expensesByCategoryForMonth;
+  DateTime get selectedMonth => _selectedMonth;
 
   void _setLoading(bool loading) {
     _isLoading = loading;
@@ -19,18 +27,29 @@ class DashboardViewModel extends ChangeNotifier {
   Future<void> fetchDashboardData(int userId) async {
     _setLoading(true);
 
-    final expenses = await _expenseRepository.getExpensesForUser(userId);
-    _processExpenses(expenses);
+    final credentials =
+        await _credentialRepository.getCredentialsForUser(userId);
+    _credentialCount = credentials.length;
+
+    _allExpenses = await _expenseRepository.getExpensesForUser(userId);
+    filterExpensesByMonth(_selectedMonth);
 
     _setLoading(false);
   }
 
-  void _processExpenses(List<Expense> expenses) {
-    _expenseByCategory = {};
-    for (var expense in expenses) {
+  void filterExpensesByMonth(DateTime month) {
+    _selectedMonth = month;
+    final filteredExpenses = _allExpenses.where((exp) {
+      return exp.date.year == month.year && exp.date.month == month.month;
+    }).toList();
+
+    _expensesByCategoryForMonth = {};
+    for (var expense in filteredExpenses) {
       final category = expense.category ?? 'Outros';
-      _expenseByCategory.update(category, (value) => value + expense.amount,
+      _expensesByCategoryForMonth.update(
+          category, (value) => value + expense.amount,
           ifAbsent: () => expense.amount);
     }
+    notifyListeners();
   }
 }

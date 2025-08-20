@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:key_budget/core/models/expense_model.dart';
 import 'package:key_budget/features/auth/viewmodel/auth_viewmodel.dart';
 import 'package:key_budget/features/expenses/view/add_expense_screen.dart';
+import 'package:key_budget/features/expenses/view/expense_detail_screen.dart';
 import 'package:key_budget/features/expenses/viewmodel/expense_viewmodel.dart';
 import 'package:provider/provider.dart';
 
@@ -50,9 +52,17 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
                     '${expense.date.day}/${expense.date.month}/${expense.date.year}'),
                 trailing: Text(
                   'R\$ ${expense.amount.toStringAsFixed(2)}',
-                  style: const TextStyle(
-                      color: Colors.red, fontWeight: FontWeight.bold),
+                  style: TextStyle(
+                      color: Theme.of(context).colorScheme.error,
+                      fontWeight: FontWeight.bold),
                 ),
+                onTap: () {
+                  Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (_) => ExpenseDetailScreen(expense: expense),
+                    ),
+                  );
+                },
               );
             },
           );
