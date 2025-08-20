@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import 'package:key_budget/app/widgets/empty_state_widget.dart';
 import 'package:key_budget/core/models/expense_category.dart';
 import 'package:key_budget/features/auth/viewmodel/auth_viewmodel.dart';
@@ -202,7 +203,7 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
                           ),
                         );
                       },
-                    );
+                    ).animate().fade(delay: (100 * index).ms).slideX();
                   },
                 );
               },
