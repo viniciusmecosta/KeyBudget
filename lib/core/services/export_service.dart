@@ -10,7 +10,7 @@ class ExportService {
     try {
       if (await Permission.storage.request().isGranted) {
         final dbFolder = await getApplicationDocumentsDirectory();
-        final dbPath = p.join(dbFolder.path, 'keybudget_v2.db');
+        final dbPath = p.join(dbFolder.path, 'keybudget.db');
         File dbFile = File(dbPath);
 
         if (await dbFile.exists()) {
