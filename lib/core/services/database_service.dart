@@ -17,7 +17,7 @@ class DatabaseService {
 
   Future<Database> _initDatabase(String filePath) async {
     final dbPath = await getApplicationDocumentsDirectory();
-    final path = p.join(dbPath.path, filePath); // Usando o prefixo 'p'
+    final path = p.join(dbPath.path, filePath);
     final dbPassword = dotenv.env['DB_PASSWORD'];
 
     if (dbPassword == null) {
@@ -48,10 +48,10 @@ class DatabaseService {
       CREATE TABLE expenses (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         user_id INTEGER NOT NULL,
-        description TEXT NOT NULL,
         amount REAL NOT NULL,
         date TEXT NOT NULL,
         category TEXT,
+        motivation TEXT,
         FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE
       )
     ''');

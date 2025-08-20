@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:key_budget/app/view/main_screen.dart';
+import 'package:key_budget/features/auth/view/widgets/avatar_picker.dart';
 import 'package:key_budget/features/auth/viewmodel/auth_viewmodel.dart';
 import 'package:provider/provider.dart';
 
@@ -14,14 +15,17 @@ class _RegisterScreenState extends State<RegisterScreen> {
   final _formKey = GlobalKey<FormState>();
   final _nameController = TextEditingController();
   final _emailController = TextEditingController();
+  final _phoneController = TextEditingController();
   final _passwordController = TextEditingController();
   final _confirmPasswordController = TextEditingController();
+  String? _avatarPath;
   bool _isPasswordVisible = false;
 
   @override
   void dispose() {
     _nameController.dispose();
     _emailController.dispose();
+    _phoneController.dispose();
     _passwordController.dispose();
     _confirmPasswordController.dispose();
     super.dispose();
@@ -35,6 +39,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
       name: _nameController.text,
       email: _emailController.text,
       password: _passwordController.text,
+      phoneNumber:
+          _phoneController.text.isNotEmpty ? _phoneController.text : null,
+      avatarPath: _avatarPath,
     );
 
     if (mounted) {
@@ -65,9 +72,13 @@ class _RegisterScreenState extends State<RegisterScreen> {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
+                AvatarPicker(onImageSelected: (path) {
+                  _avatarPath = path;
+                }),
+                const SizedBox(height: 24),
                 TextFormField(
                   controller: _nameController,
-                  decoration: const InputDecoration(labelText: 'Nome'),
+                  decoration: const InputDecoration(labelText: 'Nome *'),
                   validator: (value) => (value == null || value.isEmpty)
                       ? 'Insira seu nome'
                       : null,
@@ -75,7 +86,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 const SizedBox(height: 16),
                 TextFormField(
                   controller: _emailController,
-                  decoration: const InputDecoration(labelText: 'Email'),
+                  decoration: const InputDecoration(labelText: 'Email *'),
                   keyboardType: TextInputType.emailAddress,
                   validator: (value) => (value == null || !value.contains('@'))
                       ? 'Insira um email válido'
@@ -83,21 +94,23 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 ),
                 const SizedBox(height: 16),
                 TextFormField(
+                  controller: _phoneController,
+                  decoration:
+                      const InputDecoration(labelText: 'Número (opcional)'),
+                  keyboardType: TextInputType.phone,
+                ),
+                const SizedBox(height: 16),
+                TextFormField(
                   controller: _passwordController,
                   obscureText: !_isPasswordVisible,
                   decoration: InputDecoration(
-                    labelText: 'Senha',
+                    labelText: 'Senha *',
                     suffixIcon: IconButton(
-                      icon: Icon(
-                        _isPasswordVisible
-                            ? Icons.visibility_off
-                            : Icons.visibility,
-                      ),
-                      onPressed: () {
-                        setState(() {
-                          _isPasswordVisible = !_isPasswordVisible;
-                        });
-                      },
+                      icon: Icon(_isPasswordVisible
+                          ? Icons.visibility_off
+                          : Icons.visibility),
+                      onPressed: () => setState(
+                          () => _isPasswordVisible = !_isPasswordVisible),
                     ),
                   ),
                   validator: (value) => (value == null || value.length < 6)
@@ -109,13 +122,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   controller: _confirmPasswordController,
                   obscureText: !_isPasswordVisible,
                   decoration:
-                      const InputDecoration(labelText: 'Confirmar Senha'),
-                  validator: (value) {
-                    if (value != _passwordController.text) {
-                      return 'As senhas não coincidem';
-                    }
-                    return null;
-                  },
+                      const InputDecoration(labelText: 'Confirmar Senha *'),
+                  validator: (value) => value != _passwordController.text
+                      ? 'As senhas não coincidem'
+                      : null,
                 ),
                 const SizedBox(height: 32),
                 Consumer<AuthViewModel>(

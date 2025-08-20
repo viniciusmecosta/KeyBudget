@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:key_budget/features/auth/view/login_screen.dart';
 import 'package:key_budget/features/auth/viewmodel/auth_viewmodel.dart';
@@ -20,9 +21,14 @@ class UserScreen extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            const CircleAvatar(
+            CircleAvatar(
               radius: 50,
-              child: Icon(Icons.person, size: 50),
+              backgroundImage: user?.avatarPath != null
+                  ? FileImage(File(user!.avatarPath!))
+                  : null,
+              child: user?.avatarPath == null
+                  ? const Icon(Icons.person, size: 50)
+                  : null,
             ),
             const SizedBox(height: 16),
             Center(
@@ -37,10 +43,17 @@ class UserScreen extends StatelessWidget {
                 style: Theme.of(context).textTheme.bodyMedium,
               ),
             ),
+            if (user?.phoneNumber != null && user!.phoneNumber!.isNotEmpty)
+              Center(
+                child: Text(
+                  user.phoneNumber!,
+                  style: Theme.of(context).textTheme.bodyMedium,
+                ),
+              ),
             const Spacer(),
             ElevatedButton(
               style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.redAccent,
+                backgroundColor: Theme.of(context).colorScheme.error,
               ),
               onPressed: () {
                 Navigator.of(context).pushAndRemoveUntil(

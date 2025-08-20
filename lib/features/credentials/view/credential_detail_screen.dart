@@ -59,12 +59,39 @@ class _CredentialDetailScreenState extends State<CredentialDetailScreen> {
       notes: _notesController.text,
     )
         .then((_) {
-      Navigator.of(context).pop();
+      if (mounted) Navigator.of(context).pop();
     });
   }
 
   void _deleteCredential() {
-
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Confirmar Exclusão'),
+        content:
+            const Text('Você tem certeza que deseja excluir esta credencial?'),
+        actions: [
+          TextButton(
+            child: const Text('Cancelar'),
+            onPressed: () => Navigator.of(ctx).pop(),
+          ),
+          TextButton(
+            child: const Text('Excluir'),
+            onPressed: () {
+              Provider.of<CredentialViewModel>(context, listen: false)
+                  .deleteCredential(
+                      widget.credential.id!, widget.credential.userId)
+                  .then((_) {
+                if (mounted) {
+                  Navigator.of(ctx).pop();
+                  Navigator.of(context).pop();
+                }
+              });
+            },
+          ),
+        ],
+      ),
+    );
   }
 
   @override
@@ -76,7 +103,7 @@ class _CredentialDetailScreenState extends State<CredentialDetailScreen> {
           if (!_isEditing)
             IconButton(
               icon: const Icon(Icons.delete),
-              onPressed: () {},
+              onPressed: _deleteCredential,
             ),
           IconButton(
             icon: Icon(_isEditing ? Icons.save : Icons.edit),
@@ -84,9 +111,7 @@ class _CredentialDetailScreenState extends State<CredentialDetailScreen> {
               if (_isEditing) {
                 _saveChanges();
               } else {
-                setState(() {
-                  _isEditing = true;
-                });
+                setState(() => _isEditing = true);
               }
             },
           ),

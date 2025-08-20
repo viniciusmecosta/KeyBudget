@@ -13,17 +13,16 @@ class AddExpenseScreen extends StatefulWidget {
 
 class _AddExpenseScreenState extends State<AddExpenseScreen> {
   final _formKey = GlobalKey<FormState>();
-  final _descriptionController = TextEditingController();
   final _amountController = TextEditingController();
-  final _categoryController =
-      TextEditingController();
+  final _categoryController = TextEditingController();
+  final _motivationController = TextEditingController();
   DateTime _selectedDate = DateTime.now();
 
   @override
   void dispose() {
-    _descriptionController.dispose();
     _amountController.dispose();
     _categoryController.dispose();
+    _motivationController.dispose();
     super.dispose();
   }
 
@@ -50,24 +49,26 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
 
     final newExpense = Expense(
       userId: authViewModel.currentUser!.id!,
-      description: _descriptionController.text,
       amount: double.parse(_amountController.text),
       date: _selectedDate,
       category:
           _categoryController.text.isNotEmpty ? _categoryController.text : null,
+      motivation: _motivationController.text.isNotEmpty
+          ? _motivationController.text
+          : null,
     );
 
     expenseViewModel.addExpense(newExpense).then((_) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: const Text('Despesa salva com sucesso!'),
+        const SnackBar(
+          content: Text('Despesa salva com sucesso!'),
           backgroundColor: Colors.green,
         ),
       );
       _formKey.currentState?.reset();
-      _descriptionController.clear();
       _amountController.clear();
       _categoryController.clear();
+      _motivationController.clear();
       setState(() {
         _selectedDate = DateTime.now();
       });
@@ -85,16 +86,9 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
           child: Column(
             children: [
               TextFormField(
-                controller: _descriptionController,
-                decoration: const InputDecoration(labelText: 'Descrição'),
-                validator: (value) =>
-                    value!.isEmpty ? 'Campo obrigatório' : null,
-              ),
-              const SizedBox(height: 16),
-              TextFormField(
                 controller: _amountController,
                 decoration:
-                    const InputDecoration(labelText: 'Valor (ex: 50.99)'),
+                    const InputDecoration(labelText: 'Valor (ex: 50.99) *'),
                 keyboardType:
                     const TextInputType.numberWithOptions(decimal: true),
                 validator: (value) =>
@@ -103,8 +97,14 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
               const SizedBox(height: 16),
               TextFormField(
                 controller: _categoryController,
-                decoration: const InputDecoration(
-                    labelText: 'Categoria (ex: Lazer, Contas)'),
+                decoration:
+                    const InputDecoration(labelText: 'Categoria (opcional)'),
+              ),
+              const SizedBox(height: 16),
+              TextFormField(
+                controller: _motivationController,
+                decoration:
+                    const InputDecoration(labelText: 'Motivação (opcional)'),
               ),
               const SizedBox(height: 16),
               Row(
