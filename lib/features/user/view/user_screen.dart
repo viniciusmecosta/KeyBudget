@@ -56,6 +56,7 @@ class UserScreen extends StatelessWidget {
                 backgroundColor: Theme.of(context).colorScheme.error,
               ),
               onPressed: () {
+                Provider.of<AuthViewModel>(context, listen: false).logout();
                 Navigator.of(context).pushAndRemoveUntil(
                   MaterialPageRoute(builder: (_) => const LoginScreen()),
                   (route) => false,

@@ -2,10 +2,12 @@ import 'dart:convert';
 import 'package:crypto/crypto.dart';
 import 'package:flutter/material.dart';
 import 'package:key_budget/core/models/user_model.dart';
+import 'package:key_budget/core/services/local_auth_service.dart';
 import 'package:key_budget/features/auth/repository/auth_repository.dart';
 
 class AuthViewModel extends ChangeNotifier {
   final AuthRepository _authRepository = AuthRepository();
+  final LocalAuthService _localAuthService = LocalAuthService();
   bool _isLoading = false;
   String? _errorMessage;
   User? _currentUser;
@@ -57,6 +59,7 @@ class AuthViewModel extends ChangeNotifier {
       );
 
       _currentUser = await _authRepository.register(newUser);
+      await _localAuthService.saveLastUser(_currentUser!.id.toString());
       _setLoading(false);
       return true;
     } catch (e) {
@@ -89,6 +92,7 @@ class AuthViewModel extends ChangeNotifier {
       }
 
       _currentUser = user;
+      await _localAuthService.saveLastUser(user.id.toString());
       _setLoading(false);
       return true;
     } catch (e) {
@@ -96,5 +100,30 @@ class AuthViewModel extends ChangeNotifier {
       _setLoading(false);
       return false;
     }
+  }
+
+  Future<bool> authenticateWithBiometrics() async {
+    _setLoading(true);
+    final lastUserId = await _localAuthService.getLastUser();
+    if (lastUserId == null) {
+      _setLoading(false);
+      return false;
+    }
+
+    final isAuthenticated = await _localAuthService.authenticate();
+    if (isAuthenticated) {
+      _currentUser = await _authRepository.getUserById(int.parse(lastUserId));
+      _setLoading(false);
+      return _currentUser != null;
+    }
+
+    _setLoading(false);
+    return false;
+  }
+
+  Future<void> logout() async {
+    _currentUser = null;
+    await _localAuthService.clearLastUser();
+    notifyListeners();
   }
 }
