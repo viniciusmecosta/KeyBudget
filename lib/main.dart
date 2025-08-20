@@ -10,7 +10,7 @@ import 'package:provider/provider.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await dotenv.load(fileName: ".env");
+  await dotenv.load(fileName: "assets/.env");
 
   runApp(
     MultiProvider(
@@ -18,8 +18,7 @@ Future<void> main() async {
         ChangeNotifierProvider(create: (_) => AuthViewModel()),
         ChangeNotifierProvider(create: (_) => ExpenseViewModel()),
         ChangeNotifierProvider(create: (_) => CredentialViewModel()),
-        ChangeNotifierProvider(
-            create: (_) => DashboardViewModel()), 
+        ChangeNotifierProvider(create: (_) => DashboardViewModel()),
       ],
       child: const MyApp(),
     ),
