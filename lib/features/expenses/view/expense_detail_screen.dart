@@ -107,7 +107,7 @@ class _ExpenseDetailScreenState extends State<ExpenseDetailScreen> {
               onPressed: _deleteExpense,
             ),
           IconButton(
-            icon: Icon(_isEditing ? Icons.save : Icons.edit),
+            icon: Icon(_isEditing ? Icons.check : Icons.edit),
             onPressed: () {
               if (_isEditing) {
                 _saveChanges();
@@ -135,7 +135,7 @@ class _ExpenseDetailScreenState extends State<ExpenseDetailScreen> {
               ),
               const SizedBox(height: 16),
               DropdownButtonFormField<ExpenseCategory>(
-                value: _selectedCategory,
+                initialValue: _selectedCategory,
                 decoration: const InputDecoration(labelText: 'Categoria'),
                 items: ExpenseCategory.values.map((category) {
                   return DropdownMenuItem(
