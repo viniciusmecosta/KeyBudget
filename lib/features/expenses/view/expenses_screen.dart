@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:key_budget/core/models/expense_model.dart';
 import 'package:key_budget/features/auth/viewmodel/auth_viewmodel.dart';
 import 'package:key_budget/features/expenses/view/add_expense_screen.dart';
 import 'package:key_budget/features/expenses/view/expense_detail_screen.dart';
@@ -47,7 +46,7 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
             itemBuilder: (context, index) {
               final expense = viewModel.expenses[index];
               return ListTile(
-                title: Text(expense.description),
+                title: Text(expense.motivation ?? 'Gasto Geral'),
                 subtitle: Text(
                     '${expense.date.day}/${expense.date.month}/${expense.date.year}'),
                 trailing: Text(

@@ -33,6 +33,8 @@ class AuthViewModel extends ChangeNotifier {
     required String name,
     required String email,
     required String password,
+    String? phoneNumber,
+    String? avatarPath,
   }) async {
     _setLoading(true);
     _setErrorMessage(null);
@@ -50,6 +52,8 @@ class AuthViewModel extends ChangeNotifier {
         name: name,
         email: email,
         passwordHash: passwordHash,
+        phoneNumber: phoneNumber,
+        avatarPath: avatarPath,
       );
 
       _currentUser = await _authRepository.register(newUser);

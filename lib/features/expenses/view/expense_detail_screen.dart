@@ -13,28 +13,28 @@ class ExpenseDetailScreen extends StatefulWidget {
 
 class _ExpenseDetailScreenState extends State<ExpenseDetailScreen> {
   final _formKey = GlobalKey<FormState>();
-  late TextEditingController _descriptionController;
   late TextEditingController _amountController;
   late TextEditingController _categoryController;
+  late TextEditingController _motivationController;
   late DateTime _selectedDate;
   bool _isEditing = false;
 
   @override
   void initState() {
     super.initState();
-    _descriptionController =
-        TextEditingController(text: widget.expense.description);
     _amountController =
-        TextEditingController(text: widget.expense.amount.toString());
+        TextEditingController(text: widget.expense.amount.toStringAsFixed(2));
     _categoryController = TextEditingController(text: widget.expense.category);
+    _motivationController =
+        TextEditingController(text: widget.expense.motivation);
     _selectedDate = widget.expense.date;
   }
 
   @override
   void dispose() {
-    _descriptionController.dispose();
     _amountController.dispose();
     _categoryController.dispose();
+    _motivationController.dispose();
     super.dispose();
   }
 
@@ -44,17 +44,19 @@ class _ExpenseDetailScreenState extends State<ExpenseDetailScreen> {
     final updatedExpense = Expense(
       id: widget.expense.id,
       userId: widget.expense.userId,
-      description: _descriptionController.text,
       amount: double.parse(_amountController.text),
       date: _selectedDate,
       category:
           _categoryController.text.isNotEmpty ? _categoryController.text : null,
+      motivation: _motivationController.text.isNotEmpty
+          ? _motivationController.text
+          : null,
     );
 
     Provider.of<ExpenseViewModel>(context, listen: false)
         .updateExpense(updatedExpense)
         .then((_) {
-      Navigator.of(context).pop();
+      if (mounted) Navigator.of(context).pop();
     });
   }
 
@@ -76,8 +78,10 @@ class _ExpenseDetailScreenState extends State<ExpenseDetailScreen> {
               Provider.of<ExpenseViewModel>(context, listen: false)
                   .deleteExpense(widget.expense.id!, widget.expense.userId)
                   .then((_) {
-                Navigator.of(ctx).pop(); 
-                Navigator.of(context).pop(); 
+                if (mounted) {
+                  Navigator.of(ctx).pop();
+                  Navigator.of(context).pop();
+                }
               });
             },
           ),
@@ -103,9 +107,7 @@ class _ExpenseDetailScreenState extends State<ExpenseDetailScreen> {
               if (_isEditing) {
                 _saveChanges();
               } else {
-                setState(() {
-                  _isEditing = true;
-                });
+                setState(() => _isEditing = true);
               }
             },
           ),
@@ -118,16 +120,8 @@ class _ExpenseDetailScreenState extends State<ExpenseDetailScreen> {
           child: ListView(
             children: [
               TextFormField(
-                controller: _descriptionController,
-                decoration: const InputDecoration(labelText: 'Descrição'),
-                enabled: _isEditing,
-                validator: (value) =>
-                    value!.isEmpty ? 'Campo obrigatório' : null,
-              ),
-              const SizedBox(height: 16),
-              TextFormField(
                 controller: _amountController,
-                decoration: const InputDecoration(labelText: 'Valor'),
+                decoration: const InputDecoration(labelText: 'Valor *'),
                 keyboardType:
                     const TextInputType.numberWithOptions(decimal: true),
                 enabled: _isEditing,
@@ -139,6 +133,13 @@ class _ExpenseDetailScreenState extends State<ExpenseDetailScreen> {
                 controller: _categoryController,
                 decoration: const InputDecoration(labelText: 'Categoria'),
                 enabled: _isEditing,
+              ),
+              const SizedBox(height: 16),
+              TextFormField(
+                controller: _motivationController,
+                decoration: const InputDecoration(labelText: 'Motivação'),
+                enabled: _isEditing,
+                maxLines: 3,
               ),
               const SizedBox(height: 16),
             ],

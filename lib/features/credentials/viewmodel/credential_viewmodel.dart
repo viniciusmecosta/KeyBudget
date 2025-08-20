@@ -32,6 +32,7 @@ class CredentialViewModel extends ChangeNotifier {
     String? email,
     String? phoneNumber,
     String? notes,
+    String? logoPath,
   }) async {
     final encryptedPassword = _encryptionService.encryptData(plainPassword);
 
@@ -43,6 +44,7 @@ class CredentialViewModel extends ChangeNotifier {
       email: email,
       phoneNumber: phoneNumber,
       notes: notes,
+      logoPath: logoPath,
     );
 
     await _repository.addCredential(newCredential);
@@ -57,6 +59,7 @@ class CredentialViewModel extends ChangeNotifier {
     String? email,
     String? phoneNumber,
     String? notes,
+    String? logoPath,
   }) async {
     String passwordToSave = originalCredential.encryptedPassword;
     if (newPlainPassword != null && newPlainPassword.isNotEmpty) {
@@ -72,6 +75,7 @@ class CredentialViewModel extends ChangeNotifier {
       email: email,
       phoneNumber: phoneNumber,
       notes: notes,
+      logoPath: logoPath,
     );
 
     await _repository.updateCredential(updatedCredential);
