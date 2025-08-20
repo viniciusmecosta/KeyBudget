@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:key_budget/core/models/credential_model.dart';
 import 'package:key_budget/features/credentials/view/widgets/logo_picker.dart';
 import 'package:key_budget/features/credentials/viewmodel/credential_viewmodel.dart';
@@ -24,6 +25,8 @@ class _CredentialDetailScreenState extends State<CredentialDetailScreen> {
   String? _logoPath;
   bool _isEditing = false;
   bool _isSaving = false;
+  bool _isPasswordVisible = false;
+  late String _decryptedPassword;
 
   @override
   void initState() {
@@ -37,6 +40,10 @@ class _CredentialDetailScreenState extends State<CredentialDetailScreen> {
         TextEditingController(text: widget.credential.phoneNumber);
     _notesController = TextEditingController(text: widget.credential.notes);
     _logoPath = widget.credential.logoPath;
+
+    _decryptedPassword =
+        Provider.of<CredentialViewModel>(context, listen: false)
+            .decryptPassword(widget.credential.encryptedPassword);
   }
 
   @override
@@ -48,6 +55,13 @@ class _CredentialDetailScreenState extends State<CredentialDetailScreen> {
     _phoneController.dispose();
     _notesController.dispose();
     super.dispose();
+  }
+
+  void _copyToClipboard(String text) {
+    Clipboard.setData(ClipboardData(text: text));
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Copiado para a área de transferência!')),
+    );
   }
 
   void _saveChanges() {
@@ -156,7 +170,16 @@ class _CredentialDetailScreenState extends State<CredentialDetailScreen> {
               const SizedBox(height: 24),
               TextFormField(
                 controller: _locationController,
-                decoration: const InputDecoration(labelText: 'Local/Serviço *'),
+                decoration: InputDecoration(
+                  labelText: 'Local/Serviço *',
+                  suffixIcon: !_isEditing
+                      ? IconButton(
+                          icon: const Icon(Icons.copy, size: 20),
+                          onPressed: () =>
+                              _copyToClipboard(_locationController.text),
+                        )
+                      : null,
+                ),
                 enabled: _isEditing,
                 validator: (value) =>
                     value!.isEmpty ? 'Campo obrigatório' : null,
@@ -164,7 +187,16 @@ class _CredentialDetailScreenState extends State<CredentialDetailScreen> {
               const SizedBox(height: 16),
               TextFormField(
                 controller: _loginController,
-                decoration: const InputDecoration(labelText: 'Login/Usuário *'),
+                decoration: InputDecoration(
+                  labelText: 'Login/Usuário *',
+                  suffixIcon: !_isEditing
+                      ? IconButton(
+                          icon: const Icon(Icons.copy, size: 20),
+                          onPressed: () =>
+                              _copyToClipboard(_loginController.text),
+                        )
+                      : null,
+                ),
                 enabled: _isEditing,
                 validator: (value) =>
                     value!.isEmpty ? 'Campo obrigatório' : null,
@@ -177,28 +209,82 @@ class _CredentialDetailScreenState extends State<CredentialDetailScreen> {
                       labelText:
                           'Nova Senha (deixe em branco para não alterar)'),
                   obscureText: true,
+                )
+              else
+                TextFormField(
+                  readOnly: true,
+                  controller: TextEditingController(
+                      text: _isPasswordVisible
+                          ? _decryptedPassword
+                          : '••••••••••'),
+                  obscureText: !_isPasswordVisible,
+                  decoration: InputDecoration(
+                    labelText: 'Senha',
+                    suffixIcon: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        IconButton(
+                          icon: Icon(
+                              _isPasswordVisible
+                                  ? Icons.visibility_off
+                                  : Icons.visibility,
+                              size: 20),
+                          onPressed: () => setState(
+                              () => _isPasswordVisible = !_isPasswordVisible),
+                        ),
+                        IconButton(
+                          icon: const Icon(Icons.copy, size: 20),
+                          onPressed: () => _copyToClipboard(_decryptedPassword),
+                        ),
+                      ],
+                    ),
+                  ),
                 ),
               const SizedBox(height: 16),
               TextFormField(
                 controller: _emailController,
-                decoration:
-                    const InputDecoration(labelText: 'Email (opcional)'),
+                decoration: InputDecoration(
+                  labelText: 'Email',
+                  suffixIcon: !_isEditing && _emailController.text.isNotEmpty
+                      ? IconButton(
+                          icon: const Icon(Icons.copy, size: 20),
+                          onPressed: () =>
+                              _copyToClipboard(_emailController.text),
+                        )
+                      : null,
+                ),
                 enabled: _isEditing,
                 keyboardType: TextInputType.emailAddress,
               ),
               const SizedBox(height: 16),
               TextFormField(
                 controller: _phoneController,
-                decoration:
-                    const InputDecoration(labelText: 'Número (opcional)'),
+                decoration: InputDecoration(
+                  labelText: 'Número',
+                  suffixIcon: !_isEditing && _phoneController.text.isNotEmpty
+                      ? IconButton(
+                          icon: const Icon(Icons.copy, size: 20),
+                          onPressed: () =>
+                              _copyToClipboard(_phoneController.text),
+                        )
+                      : null,
+                ),
                 enabled: _isEditing,
                 keyboardType: TextInputType.phone,
               ),
               const SizedBox(height: 16),
               TextFormField(
                 controller: _notesController,
-                decoration:
-                    const InputDecoration(labelText: 'Observações (opcional)'),
+                decoration: InputDecoration(
+                  labelText: 'Observações',
+                  suffixIcon: !_isEditing && _notesController.text.isNotEmpty
+                      ? IconButton(
+                          icon: const Icon(Icons.copy, size: 20),
+                          onPressed: () =>
+                              _copyToClipboard(_notesController.text),
+                        )
+                      : null,
+                ),
                 enabled: _isEditing,
                 maxLines: 3,
               ),
