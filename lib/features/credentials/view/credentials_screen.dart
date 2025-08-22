@@ -88,7 +88,7 @@ class _CredentialsScreenState extends State<CredentialsScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final viewModel = Provider.of<CredentialViewModel>(context);
+    Provider.of<CredentialViewModel>(context);
     return Scaffold(
       appBar: AppBar(
         title: const Text('Minhas Credenciais'),
