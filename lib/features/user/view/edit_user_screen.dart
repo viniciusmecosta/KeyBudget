@@ -1,4 +1,3 @@
-import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:key_budget/features/auth/view/widgets/avatar_picker.dart';
 import 'package:key_budget/features/auth/viewmodel/auth_viewmodel.dart';
