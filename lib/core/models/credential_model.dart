@@ -1,6 +1,5 @@
 class Credential {
-  final int? id;
-  final int userId;
+  final String? id;
   final String location;
   final String login;
   final String encryptedPassword;
@@ -11,7 +10,6 @@ class Credential {
 
   Credential({
     this.id,
-    required this.userId,
     required this.location,
     required this.login,
     required this.encryptedPassword,
@@ -23,8 +21,6 @@ class Credential {
 
   Map<String, dynamic> toMap() {
     return {
-      'id': id,
-      'user_id': userId,
       'location': location,
       'login': login,
       'encrypted_password': encryptedPassword,
@@ -35,10 +31,9 @@ class Credential {
     };
   }
 
-  factory Credential.fromMap(Map<String, dynamic> map) {
+  factory Credential.fromMap(Map<String, dynamic> map, String id) {
     return Credential(
-      id: map['id'],
-      userId: map['user_id'],
+      id: id,
       location: map['location'],
       login: map['login'],
       encryptedPassword: map['encrypted_password'],

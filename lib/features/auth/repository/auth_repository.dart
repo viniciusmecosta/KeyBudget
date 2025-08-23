@@ -1,59 +1,78 @@
+import 'package:firebase_auth/firebase_auth.dart' as firebase;
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter/foundation.dart';
 import 'package:key_budget/core/models/user_model.dart';
-import 'package:key_budget/core/services/database_service.dart';
-import 'package:sqflite_sqlcipher/sqflite.dart';
 
 class AuthRepository {
-  final DatabaseService _dbService = DatabaseService.instance;
+  final firebase.FirebaseAuth _firebaseAuth = firebase.FirebaseAuth.instance;
+  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
-  Future<User> register(User user) async {
-    final db = await _dbService.database;
-    final id = await db.insert('users', user.toMap(),
-        conflictAlgorithm: ConflictAlgorithm.replace);
-    return User(
-      id: id,
-      name: user.name,
-      email: user.email,
-      passwordHash: user.passwordHash,
-      avatarPath: user.avatarPath,
-      phoneNumber: user.phoneNumber,
-    );
+  Stream<User?> get onAuthStateChanged {
+    return _firebaseAuth.authStateChanges().asyncMap((firebaseUser) async {
+      if (firebaseUser == null) {
+        return null;
+      }
+      return await getUserProfile(firebaseUser.uid);
+    });
   }
 
-  Future<User?> getUserByEmail(String email) async {
-    final db = await _dbService.database;
-    final maps = await db.query(
-      'users',
-      where: 'email = ?',
-      whereArgs: [email],
-    );
-
-    if (maps.isNotEmpty) {
-      return User.fromMap(maps.first);
+  Future<User?> getUserProfile(String uid) async {
+    try {
+      final doc = await _firestore.collection('users').doc(uid).get();
+      if (doc.exists) {
+        return User.fromMap(doc.data()!);
+      }
+      return null;
+    } catch (e) {
+      if (kDebugMode) {
+        print("Error getting user profile: $e");
+      }
+      return null;
     }
-    return null;
   }
 
-  Future<User?> getUserById(int id) async {
-    final db = await _dbService.database;
-    final maps = await db.query(
-      'users',
-      where: 'id = ?',
-      whereArgs: [id],
+  Future<firebase.UserCredential> signInWithEmail(
+      String email, String password) async {
+    return await _firebaseAuth.signInWithEmailAndPassword(
+      email: email,
+      password: password,
     );
-
-    if (maps.isNotEmpty) {
-      return User.fromMap(maps.first);
-    }
-    return null;
   }
 
-  Future<int> updateUser(User user) async {
-    final db = await _dbService.database;
-    return await db.update(
-      'users',
-      user.toMap(),
-      where: 'id = ?',
-      whereArgs: [user.id],
+  Future<firebase.UserCredential> signUpWithEmail({
+    required String name,
+    required String email,
+    required String password,
+    String? phoneNumber,
+    String? avatarPath,
+  }) async {
+    final userCredential = await _firebaseAuth.createUserWithEmailAndPassword(
+      email: email,
+      password: password,
     );
+
+    final newUser = User(
+      id: userCredential.user!.uid,
+      name: name,
+      email: email,
+      phoneNumber: phoneNumber,
+      avatarPath: avatarPath,
+    );
+
+    await _firestore.collection('users').doc(newUser.id).set(newUser.toMap());
+
+    return userCredential;
+  }
+
+  Future<void> updateUserProfile(User user) async {
+    await _firestore.collection('users').doc(user.id).update(user.toMap());
+  }
+
+  Future<void> signOut() async {
+    await _firebaseAuth.signOut();
+  }
+
+  firebase.User? getCurrentFirebaseUser() {
+    return _firebaseAuth.currentUser;
   }
 }

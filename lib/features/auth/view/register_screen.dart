@@ -35,8 +35,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
   void _submit() async {
     if (!_formKey.currentState!.validate()) return;
 
-    final viewModel = Provider.of<AuthViewModel>(context, listen: false);
-    final success = await viewModel.registerUser(
+    final authViewModel = Provider.of<AuthViewModel>(context, listen: false);
+
+    final success = await authViewModel.registerUser(
       name: _nameController.text,
       email: _emailController.text,
       password: _passwordController.text,
@@ -53,7 +54,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(viewModel.errorMessage ?? 'Erro desconhecido'),
+            content: Text(authViewModel.errorMessage ?? 'Erro desconhecido'),
             backgroundColor: Theme.of(context).colorScheme.error,
           ),
         );
