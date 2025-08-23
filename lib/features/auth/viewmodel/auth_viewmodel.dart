@@ -86,6 +86,31 @@ class AuthViewModel extends ChangeNotifier {
     }
   }
 
+  Future<bool> loginWithGoogle() async {
+    _setLoading(true);
+    _setErrorMessage(null);
+
+    try {
+      final credential = await _authRepository.signInWithGoogle();
+      if (credential != null) {
+        final user = credential.user;
+        if (user != null && user.email != null) {
+          await _localAuthService.saveCredentials(user.email!, user.uid);
+        }
+        return true;
+      }
+      return false;
+    } on firebase.FirebaseAuthException catch (e) {
+      _setErrorMessage(_mapAuthError(e.code));
+      return false;
+    } catch (e) {
+      _setErrorMessage('Ocorreu um erro desconhecido.');
+      return false;
+    } finally {
+      _setLoading(false);
+    }
+  }
+
   Future<bool> authenticateWithBiometrics() async {
     final canAuth = await _localAuthService.canAuthenticate();
     if (!canAuth) return false;

@@ -13,7 +13,7 @@ class UserScreen extends StatelessWidget {
   void _exportAllData(BuildContext context) async {
     final scaffoldMessenger = ScaffoldMessenger.of(context);
     final credViewModel =
-        Provider.of<CredentialViewModel>(context, listen: false);
+    Provider.of<CredentialViewModel>(context, listen: false);
     final expViewModel = Provider.of<ExpenseViewModel>(context, listen: false);
 
     final credSuccess = await credViewModel.exportCredentialsToCsv();
@@ -55,6 +55,21 @@ class UserScreen extends StatelessWidget {
         builder: (context, authViewModel, child) {
           final user = authViewModel.currentUser;
           final avatarPath = user?.avatarPath;
+          ImageProvider? imageProvider;
+
+          if (avatarPath != null && avatarPath.isNotEmpty) {
+            // Verifica se o caminho é uma URL
+            if (Uri.tryParse(avatarPath)?.isAbsolute == true) {
+              imageProvider = NetworkImage(avatarPath);
+            } else {
+              // Se não for uma URL, assume que é Base64
+              try {
+                imageProvider = MemoryImage(base64Decode(avatarPath));
+              } catch (e) {
+                imageProvider = null;
+              }
+            }
+          }
 
           return Padding(
             padding: const EdgeInsets.all(16.0),
@@ -63,10 +78,8 @@ class UserScreen extends StatelessWidget {
               children: [
                 CircleAvatar(
                   radius: 50,
-                  backgroundImage: avatarPath != null && avatarPath.isNotEmpty
-                      ? MemoryImage(base64Decode(avatarPath))
-                      : null,
-                  child: avatarPath == null || avatarPath.isEmpty
+                  backgroundImage: imageProvider,
+                  child: imageProvider == null
                       ? const Icon(Icons.person, size: 50)
                       : null,
                 ),
@@ -105,7 +118,7 @@ class UserScreen extends StatelessWidget {
                     Provider.of<AuthViewModel>(context, listen: false).logout();
                     Navigator.of(context).pushAndRemoveUntil(
                       MaterialPageRoute(builder: (_) => const LoginScreen()),
-                      (route) => false,
+                          (route) => false,
                     );
                   },
                   child: const Text('Sair'),

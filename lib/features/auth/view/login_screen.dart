@@ -59,7 +59,21 @@ class _LoginScreenState extends State<LoginScreen> {
         ),
       );
     }
+  }
 
+  void _submitGoogle() async {
+    final authViewModel = Provider.of<AuthViewModel>(context, listen: false);
+
+    final success = await authViewModel.loginWithGoogle();
+
+    if (mounted && !success) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(authViewModel.errorMessage ?? 'Erro desconhecido'),
+          backgroundColor: Theme.of(context).colorScheme.error,
+        ),
+      );
+    }
   }
 
   @override
@@ -96,9 +110,19 @@ class _LoginScreenState extends State<LoginScreen> {
                   builder: (context, viewModel, child) {
                     return viewModel.isLoading
                         ? const CircularProgressIndicator()
-                        : ElevatedButton(
-                      onPressed: _submit,
-                      child: const Text('Entrar'),
+                        : Column(
+                      children: [
+                        ElevatedButton(
+                          onPressed: _submit,
+                          child: const Text('Entrar'),
+                        ),
+                        const SizedBox(height: 16),
+                        OutlinedButton.icon(
+                          onPressed: _submitGoogle,
+                          icon: const Icon(Icons.g_mobiledata),
+                          label: const Text('Entrar com Google'),
+                        ),
+                      ],
                     );
                   },
                 ),
