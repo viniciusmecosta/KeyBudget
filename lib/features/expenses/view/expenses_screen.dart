@@ -27,9 +27,17 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
       final authViewModel = Provider.of<AuthViewModel>(context, listen: false);
       if (authViewModel.currentUser != null) {
         Provider.of<ExpenseViewModel>(context, listen: false)
-            .fetchExpenses(authViewModel.currentUser!.id!);
+            .fetchExpenses(authViewModel.currentUser!.id);
       }
     });
+  }
+
+  Future<void> _handleRefresh() async {
+    final authViewModel = Provider.of<AuthViewModel>(context, listen: false);
+    if (mounted && authViewModel.currentUser != null) {
+      await Provider.of<ExpenseViewModel>(context, listen: false)
+          .fetchExpenses(authViewModel.currentUser!.id);
+    }
   }
 
   void _import(BuildContext context) async {
@@ -38,7 +46,8 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
     final scaffoldMessenger = ScaffoldMessenger.of(context);
 
     final count =
-        await viewModel.importExpensesFromCsv(authViewModel.currentUser!.id!);
+        await viewModel.importExpensesFromCsv(authViewModel.currentUser!.id);
+    if (!mounted) return;
     scaffoldMessenger.showSnackBar(SnackBar(
         content: Text('$count despesas importadas com sucesso!'),
         backgroundColor: Colors.green));
@@ -140,67 +149,80 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
           ),
         ],
       ),
-      body: Column(
-        children: [
-          _buildMonthSelector(context),
-          Padding(
-            padding: const EdgeInsets.symmetric(vertical: 8.0),
-            child: Text(
-              'Total: R\$ ${totalValue.toStringAsFixed(2)}',
-              style: Theme.of(context)
-                  .textTheme
-                  .titleLarge
-                  ?.copyWith(fontWeight: FontWeight.bold),
+      body: RefreshIndicator(
+        onRefresh: _handleRefresh,
+        child: Column(
+          children: [
+            _buildMonthSelector(context),
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 8.0),
+              child: Text(
+                'Total: R\$ ${totalValue.toStringAsFixed(2)}',
+                style: Theme.of(context)
+                    .textTheme
+                    .titleLarge
+                    ?.copyWith(fontWeight: FontWeight.bold),
+              ),
             ),
-          ),
-          Expanded(
-            child: Consumer<ExpenseViewModel>(
-              builder: (context, vm, child) {
-                if (vm.isLoading) {
-                  return const Center(child: CircularProgressIndicator());
-                }
-                if (monthlyExpenses.isEmpty) {
-                  return EmptyStateWidget(
-                    icon: Icons.money_off,
-                    message: 'Nenhuma despesa encontrada para este mês.',
-                    buttonText: 'Adicionar Despesa',
-                    onButtonPressed: () => Navigator.of(context).push(
-                        MaterialPageRoute(
-                            builder: (_) => const AddExpenseScreen())),
-                  );
-                }
-                return ListView.builder(
-                  itemCount: monthlyExpenses.length,
-                  itemBuilder: (context, index) {
-                    final expense = monthlyExpenses[index];
-                    return ListTile(
-                      leading: Icon(expense.category?.icon ?? Icons.category),
-                      title: Text(expense.location?.isNotEmpty == true
-                          ? expense.location!
-                          : (expense.category?.displayName ?? 'Gasto Geral')),
-                      subtitle:
-                          Text(DateFormat('dd/MM/yyyy').format(expense.date)),
-                      trailing: Text(
-                        'R\$ ${expense.amount.toStringAsFixed(2)}',
-                        style: TextStyle(
-                            color: Theme.of(context).colorScheme.error,
-                            fontWeight: FontWeight.bold),
-                      ),
-                      onTap: () {
-                        Navigator.of(context).push(
-                          MaterialPageRoute(
-                            builder: (_) =>
-                                ExpenseDetailScreen(expense: expense),
+            Expanded(
+              child: Consumer<ExpenseViewModel>(
+                builder: (context, vm, child) {
+                  if (vm.isLoading) {
+                    return const Center(child: CircularProgressIndicator());
+                  }
+                  if (monthlyExpenses.isEmpty) {
+                    return LayoutBuilder(builder: (context, constraints) {
+                      return SingleChildScrollView(
+                        physics: const AlwaysScrollableScrollPhysics(),
+                        child: ConstrainedBox(
+                          constraints:
+                              BoxConstraints(minHeight: constraints.maxHeight),
+                          child: EmptyStateWidget(
+                            icon: Icons.money_off,
+                            message:
+                                'Nenhuma despesa encontrada para este mês.',
+                            buttonText: 'Adicionar Despesa',
+                            onButtonPressed: () => Navigator.of(context).push(
+                                MaterialPageRoute(
+                                    builder: (_) => const AddExpenseScreen())),
                           ),
-                        );
-                      },
-                    ).animate().fade(delay: (100 * index).ms).slideX();
-                  },
-                );
-              },
+                        ),
+                      );
+                    });
+                  }
+                  return ListView.builder(
+                    itemCount: monthlyExpenses.length,
+                    itemBuilder: (context, index) {
+                      final expense = monthlyExpenses[index];
+                      return ListTile(
+                        leading: Icon(expense.category?.icon ?? Icons.category),
+                        title: Text(expense.location?.isNotEmpty == true
+                            ? expense.location!
+                            : (expense.category?.displayName ?? 'Gasto Geral')),
+                        subtitle:
+                            Text(DateFormat('dd/MM/yyyy').format(expense.date)),
+                        trailing: Text(
+                          'R\$ ${expense.amount.toStringAsFixed(2)}',
+                          style: TextStyle(
+                              color: Theme.of(context).colorScheme.error,
+                              fontWeight: FontWeight.bold),
+                        ),
+                        onTap: () {
+                          Navigator.of(context).push(
+                            MaterialPageRoute(
+                              builder: (_) =>
+                                  ExpenseDetailScreen(expense: expense),
+                            ),
+                          );
+                        },
+                      ).animate().fade(delay: (100 * index).ms).slideX();
+                    },
+                  );
+                },
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () => Navigator.of(context)

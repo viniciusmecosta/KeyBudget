@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import 'package:key_budget/core/models/expense_category.dart';
 import 'package:key_budget/core/models/expense_model.dart';
 import 'package:key_budget/features/auth/viewmodel/auth_viewmodel.dart';
@@ -44,7 +45,7 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
     }
   }
 
-  void _submit() {
+  void _submit() async {
     if (!_formKey.currentState!.validate()) return;
 
     setState(() => _isSaving = true);
@@ -52,9 +53,9 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
     final expenseViewModel =
         Provider.of<ExpenseViewModel>(context, listen: false);
     final authViewModel = Provider.of<AuthViewModel>(context, listen: false);
+    final userId = authViewModel.currentUser!.id;
 
     final newExpense = Expense(
-      userId: authViewModel.currentUser!.id!,
       amount: double.parse(_amountController.text.replaceAll(',', '.')),
       date: _selectedDate,
       category: _selectedCategory,
@@ -65,25 +66,18 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
           _locationController.text.isNotEmpty ? _locationController.text : null,
     );
 
-    expenseViewModel.addExpense(newExpense).whenComplete(() {
-      if (mounted) {
-        setState(() => _isSaving = false);
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Despesa salva com sucesso!'),
-            backgroundColor: Colors.green,
-          ),
-        );
-        _formKey.currentState?.reset();
-        _amountController.clear();
-        _motivationController.clear();
-        _locationController.clear();
-        setState(() {
-          _selectedDate = DateTime.now();
-          _selectedCategory = null;
-        });
-      }
-    });
+    await expenseViewModel.addExpense(userId, newExpense);
+
+    if (mounted) {
+      setState(() => _isSaving = false);
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Despesa salva com sucesso!'),
+          backgroundColor: Colors.green,
+        ),
+      );
+      Navigator.of(context).pop();
+    }
   }
 
   @override
@@ -103,11 +97,11 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
                 keyboardType:
                     const TextInputType.numberWithOptions(decimal: true),
                 validator: (value) =>
-                    value!.isEmpty ? 'Campo obrigatório' : null,
+                    value == null || value.isEmpty ? 'Campo obrigatório' : null,
               ),
               const SizedBox(height: 16),
               DropdownButtonFormField<ExpenseCategory>(
-                initialValue: _selectedCategory,
+                value: _selectedCategory,
                 decoration: const InputDecoration(labelText: 'Categoria'),
                 items: ExpenseCategory.values.map((category) {
                   return DropdownMenuItem(
@@ -142,7 +136,7 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Text(
-                    'Data: ${_selectedDate.day}/${_selectedDate.month}/${_selectedDate.year}',
+                    'Data: ${DateFormat('dd/MM/yyyy').format(_selectedDate)}',
                     style: Theme.of(context).textTheme.titleMedium,
                   ),
                   TextButton(

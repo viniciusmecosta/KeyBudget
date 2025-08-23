@@ -1,4 +1,4 @@
-import 'dart:io';
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_animate/flutter_animate.dart';
@@ -23,9 +23,17 @@ class _CredentialsScreenState extends State<CredentialsScreen> {
       final authViewModel = Provider.of<AuthViewModel>(context, listen: false);
       if (authViewModel.currentUser != null) {
         Provider.of<CredentialViewModel>(context, listen: false)
-            .fetchCredentials(authViewModel.currentUser!.id!);
+            .fetchCredentials(authViewModel.currentUser!.id);
       }
     });
+  }
+
+  Future<void> _handleRefresh() async {
+    final authViewModel = Provider.of<AuthViewModel>(context, listen: false);
+    if (mounted && authViewModel.currentUser != null) {
+      await Provider.of<CredentialViewModel>(context, listen: false)
+          .fetchCredentials(authViewModel.currentUser!.id);
+    }
   }
 
   void _import(BuildContext context) async {
@@ -33,8 +41,8 @@ class _CredentialsScreenState extends State<CredentialsScreen> {
     final authViewModel = Provider.of<AuthViewModel>(context, listen: false);
     final scaffoldMessenger = ScaffoldMessenger.of(context);
 
-    final count = await viewModel
-        .importCredentialsFromCsv(authViewModel.currentUser!.id!);
+    final count =
+        await viewModel.importCredentialsFromCsv(authViewModel.currentUser!.id);
     scaffoldMessenger.showSnackBar(SnackBar(
         content: Text('$count credenciais importadas com sucesso!'),
         backgroundColor: Colors.green));
@@ -88,7 +96,6 @@ class _CredentialsScreenState extends State<CredentialsScreen> {
 
   @override
   Widget build(BuildContext context) {
-    Provider.of<CredentialViewModel>(context);
     return Scaffold(
       appBar: AppBar(
         title: const Text('Minhas Credenciais'),
@@ -107,61 +114,74 @@ class _CredentialsScreenState extends State<CredentialsScreen> {
           ),
         ],
       ),
-      body: Column(
-        children: [
-          Expanded(
-            child: Consumer<CredentialViewModel>(
-              builder: (context, vm, child) {
-                if (vm.isLoading) {
-                  return const Center(child: CircularProgressIndicator());
-                }
-                if (vm.allCredentials.isEmpty) {
-                  return EmptyStateWidget(
-                    icon: Icons.key_off,
-                    message: 'Nenhuma credencial encontrada.',
-                    buttonText: 'Adicionar Credencial',
-                    onButtonPressed: () => Navigator.of(context).push(
-                        MaterialPageRoute(
-                            builder: (_) => const AddCredentialScreen())),
-                  );
-                }
-                return ListView.builder(
-                  itemCount: vm.allCredentials.length,
-                  itemBuilder: (context, index) {
-                    final credential = vm.allCredentials[index];
-                    return ListTile(
-                      leading: CircleAvatar(
-                        backgroundImage: credential.logoPath != null &&
-                                credential.logoPath!.isNotEmpty
-                            ? FileImage(File(credential.logoPath!))
-                            : null,
-                        child: credential.logoPath == null ||
-                                credential.logoPath!.isEmpty
-                            ? const Icon(Icons.vpn_key_outlined)
-                            : null,
-                      ),
-                      title: Text(credential.location),
-                      subtitle: Text(credential.login),
-                      trailing: IconButton(
-                        icon: const Icon(Icons.visibility),
-                        onPressed: () => _showDecryptedPassword(
-                            context, credential.encryptedPassword),
-                      ),
-                      onTap: () {
-                        Navigator.of(context).push(
-                          MaterialPageRoute(
-                            builder: (_) =>
-                                CredentialDetailScreen(credential: credential),
+      body: RefreshIndicator(
+        onRefresh: _handleRefresh,
+        child: Column(
+          children: [
+            Expanded(
+              child: Consumer<CredentialViewModel>(
+                builder: (context, vm, child) {
+                  if (vm.isLoading) {
+                    return const Center(child: CircularProgressIndicator());
+                  }
+                  if (vm.allCredentials.isEmpty) {
+                    return LayoutBuilder(builder: (context, constraints) {
+                      return SingleChildScrollView(
+                        physics: const AlwaysScrollableScrollPhysics(),
+                        child: ConstrainedBox(
+                          constraints:
+                              BoxConstraints(minHeight: constraints.maxHeight),
+                          child: EmptyStateWidget(
+                            icon: Icons.key_off,
+                            message: 'Nenhuma credencial encontrada.',
+                            buttonText: 'Adicionar Credencial',
+                            onButtonPressed: () => Navigator.of(context).push(
+                                MaterialPageRoute(
+                                    builder: (_) =>
+                                        const AddCredentialScreen())),
                           ),
-                        );
-                      },
-                    ).animate().fade(delay: (100 * index).ms).slideX();
-                  },
-                );
-              },
+                        ),
+                      );
+                    });
+                  }
+                  return ListView.builder(
+                    itemCount: vm.allCredentials.length,
+                    itemBuilder: (context, index) {
+                      final credential = vm.allCredentials[index];
+                      final logoPath = credential.logoPath;
+                      return ListTile(
+                        leading: CircleAvatar(
+                          backgroundImage:
+                              logoPath != null && logoPath.isNotEmpty
+                                  ? MemoryImage(base64Decode(logoPath))
+                                  : null,
+                          child: logoPath == null || logoPath.isEmpty
+                              ? const Icon(Icons.vpn_key_outlined)
+                              : null,
+                        ),
+                        title: Text(credential.location),
+                        subtitle: Text(credential.login),
+                        trailing: IconButton(
+                          icon: const Icon(Icons.visibility),
+                          onPressed: () => _showDecryptedPassword(
+                              context, credential.encryptedPassword),
+                        ),
+                        onTap: () {
+                          Navigator.of(context).push(
+                            MaterialPageRoute(
+                              builder: (_) => CredentialDetailScreen(
+                                  credential: credential),
+                            ),
+                          );
+                        },
+                      ).animate().fade(delay: (100 * index).ms).slideX();
+                    },
+                  );
+                },
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () => Navigator.of(context).push(

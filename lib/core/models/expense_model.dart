@@ -1,8 +1,7 @@
 import 'package:key_budget/core/models/expense_category.dart';
 
 class Expense {
-  final int? id;
-  final int userId;
+  final String? id;
   final double amount;
   final DateTime date;
   final ExpenseCategory? category;
@@ -11,7 +10,6 @@ class Expense {
 
   Expense({
     this.id,
-    required this.userId,
     required this.amount,
     required this.date,
     this.category,
@@ -21,8 +19,6 @@ class Expense {
 
   Map<String, dynamic> toMap() {
     return {
-      'id': id,
-      'user_id': userId,
       'amount': amount,
       'date': date.toIso8601String(),
       'category': category?.name,
@@ -31,10 +27,9 @@ class Expense {
     };
   }
 
-  factory Expense.fromMap(Map<String, dynamic> map) {
+  factory Expense.fromMap(Map<String, dynamic> map, String id) {
     return Expense(
-      id: map['id'],
-      userId: map['user_id'],
+      id: id,
       amount: map['amount'],
       date: DateTime.parse(map['date']),
       category: map['category'] != null

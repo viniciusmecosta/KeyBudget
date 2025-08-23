@@ -20,14 +20,14 @@ class CredentialViewModel extends ChangeNotifier {
     notifyListeners();
   }
 
-  Future<void> fetchCredentials(int userId) async {
+  Future<void> fetchCredentials(String userId) async {
     _setLoading(true);
     _allCredentials = await _repository.getCredentialsForUser(userId);
     _setLoading(false);
   }
 
   Future<void> addCredential({
-    required int userId,
+    required String userId,
     required String location,
     required String login,
     required String plainPassword,
@@ -39,7 +39,6 @@ class CredentialViewModel extends ChangeNotifier {
     final encryptedPassword = _encryptionService.encryptData(plainPassword);
 
     final newCredential = Credential(
-      userId: userId,
       location: location,
       login: login,
       encryptedPassword: encryptedPassword,
@@ -49,11 +48,12 @@ class CredentialViewModel extends ChangeNotifier {
       logoPath: logoPath,
     );
 
-    await _repository.addCredential(newCredential);
+    await _repository.addCredential(userId, newCredential);
     await fetchCredentials(userId);
   }
 
   Future<void> updateCredential({
+    required String userId,
     required Credential originalCredential,
     required String location,
     required String login,
@@ -70,7 +70,6 @@ class CredentialViewModel extends ChangeNotifier {
 
     final updatedCredential = Credential(
       id: originalCredential.id,
-      userId: originalCredential.userId,
       location: location,
       login: login,
       encryptedPassword: passwordToSave,
@@ -80,12 +79,12 @@ class CredentialViewModel extends ChangeNotifier {
       logoPath: logoPath ?? originalCredential.logoPath,
     );
 
-    await _repository.updateCredential(updatedCredential);
-    await fetchCredentials(originalCredential.userId);
+    await _repository.updateCredential(userId, updatedCredential);
+    await fetchCredentials(userId);
   }
 
-  Future<void> deleteCredential(int id, int userId) async {
-    await _repository.deleteCredential(id);
+  Future<void> deleteCredential(String userId, String credentialId) async {
+    await _repository.deleteCredential(userId, credentialId);
     await fetchCredentials(userId);
   }
 
@@ -93,7 +92,7 @@ class CredentialViewModel extends ChangeNotifier {
     return await _csvService.exportCredentials(_allCredentials);
   }
 
-  Future<int> importCredentialsFromCsv(int userId) async {
+  Future<int> importCredentialsFromCsv(String userId) async {
     final data = await _csvService.importCsv();
     if (data == null) return 0;
 
@@ -103,7 +102,6 @@ class CredentialViewModel extends ChangeNotifier {
       if (plainPassword.isEmpty) continue;
 
       final newCredential = Credential(
-        userId: userId,
         location: row['location']?.toString() ?? 'N/A',
         login: row['login']?.toString() ?? 'N/A',
         encryptedPassword: _encryptionService.encryptData(plainPassword),
@@ -111,7 +109,7 @@ class CredentialViewModel extends ChangeNotifier {
         phoneNumber: row['phone_number']?.toString(),
         notes: row['notes']?.toString(),
       );
-      await _repository.addCredential(newCredential);
+      await _repository.addCredential(userId, newCredential);
       count++;
     }
     await fetchCredentials(userId);

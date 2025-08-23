@@ -1,108 +1,38 @@
-import 'dart:io';
+import 'dart:convert';
 import 'package:flutter/material.dart';
-import 'package:key_budget/core/services/database_management_service.dart';
 import 'package:key_budget/features/auth/view/login_screen.dart';
 import 'package:key_budget/features/auth/viewmodel/auth_viewmodel.dart';
+import 'package:key_budget/features/credentials/viewmodel/credential_viewmodel.dart';
+import 'package:key_budget/features/expenses/viewmodel/expense_viewmodel.dart';
 import 'package:key_budget/features/user/view/edit_user_screen.dart';
 import 'package:provider/provider.dart';
 
 class UserScreen extends StatelessWidget {
   const UserScreen({super.key});
 
-  void _exportDatabase(BuildContext context) async {
-    final managementService = DatabaseManagementService();
+  void _exportAllData(BuildContext context) async {
+    final scaffoldMessenger = ScaffoldMessenger.of(context);
+    final credViewModel =
+        Provider.of<CredentialViewModel>(context, listen: false);
+    final expViewModel = Provider.of<ExpenseViewModel>(context, listen: false);
 
-    bool success = await managementService.exportDatabase();
+    final credSuccess = await credViewModel.exportCredentialsToCsv();
+    final expSuccess = await expViewModel.exportExpensesToCsv(null, null);
 
-    if (!context.mounted) return;
-
-    if (success) {
-      ScaffoldMessenger.of(context).showSnackBar(
+    if (credSuccess && expSuccess) {
+      scaffoldMessenger.showSnackBar(
         const SnackBar(
-          content: Text('Backup salvo com sucesso!'),
+          content: Text('Dados exportados com sucesso!'),
           backgroundColor: Colors.green,
         ),
       );
     } else {
-      ScaffoldMessenger.of(context).showSnackBar(
+      scaffoldMessenger.showSnackBar(
         SnackBar(
-          content: const Text('Falha ao exportar. Verifique as permissões.'),
+          content: const Text('Ocorreu um erro ao exportar os dados.'),
           backgroundColor: Theme.of(context).colorScheme.error,
         ),
       );
-    }
-  }
-
-  void _showImportDialog(BuildContext context) {
-    final confirmationController = TextEditingController();
-
-    showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (ctx) => AlertDialog(
-        title: const Text('Atenção! Ação Irreversível'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const Text(
-                'Importar um banco de dados substituirá TODOS os seus dados atuais. Esta ação não pode ser desfeita.\n\nPara confirmar, digite "CONFIRMAR" no campo abaixo.'),
-            const SizedBox(height: 16),
-            TextField(
-              controller: confirmationController,
-              decoration: const InputDecoration(
-                labelText: 'Digite para confirmar',
-              ),
-            ),
-          ],
-        ),
-        actions: [
-          TextButton(
-            child: const Text('Cancelar'),
-            onPressed: () => Navigator.of(ctx).pop(),
-          ),
-          TextButton(
-            child: const Text('Importar'),
-            onPressed: () {
-              if (confirmationController.text == 'CONFIRMAR') {
-                Navigator.of(ctx).pop();
-                _importDatabase(context);
-              }
-            },
-          ),
-        ],
-      ),
-    );
-  }
-
-  void _importDatabase(BuildContext context) async {
-    final managementService = DatabaseManagementService();
-
-    final result = await managementService.importDatabase();
-
-    if (!context.mounted) return;
-
-    switch (result) {
-      case ImportResult.success:
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content:
-                Text('Banco de dados importado! Por favor, reinicie o app.'),
-            backgroundColor: Colors.green,
-            duration: Duration(seconds: 5),
-          ),
-        );
-        break;
-      case ImportResult.failure:
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: const Text(
-                'Falha na importação. O arquivo pode estar corrompido ou a senha ser inválida.'),
-            backgroundColor: Theme.of(context).colorScheme.error,
-          ),
-        );
-        break;
-      case ImportResult.noFileSelected:
-        break;
     }
   }
 
@@ -124,6 +54,7 @@ class UserScreen extends StatelessWidget {
       body: Consumer<AuthViewModel>(
         builder: (context, authViewModel, child) {
           final user = authViewModel.currentUser;
+          final avatarPath = user?.avatarPath;
 
           return Padding(
             padding: const EdgeInsets.all(16.0),
@@ -132,11 +63,10 @@ class UserScreen extends StatelessWidget {
               children: [
                 CircleAvatar(
                   radius: 50,
-                  backgroundImage:
-                      user?.avatarPath != null && user!.avatarPath!.isNotEmpty
-                          ? FileImage(File(user.avatarPath!))
-                          : null,
-                  child: user?.avatarPath == null || user!.avatarPath!.isEmpty
+                  backgroundImage: avatarPath != null && avatarPath.isNotEmpty
+                      ? MemoryImage(base64Decode(avatarPath))
+                      : null,
+                  child: avatarPath == null || avatarPath.isEmpty
                       ? const Icon(Icons.person, size: 50)
                       : null,
                 ),
@@ -162,15 +92,9 @@ class UserScreen extends StatelessWidget {
                   ),
                 const Spacer(),
                 ElevatedButton.icon(
-                  icon: const Icon(Icons.upload_file),
-                  label: const Text('Importar Banco de Dados'),
-                  onPressed: () => _showImportDialog(context),
-                ),
-                const SizedBox(height: 8),
-                ElevatedButton.icon(
                   icon: const Icon(Icons.download),
-                  label: const Text('Exportar Banco de Dados'),
-                  onPressed: () => _exportDatabase(context),
+                  label: const Text('Exportar Meus Dados (CSV)'),
+                  onPressed: () => _exportAllData(context),
                 ),
                 const SizedBox(height: 8),
                 ElevatedButton(
