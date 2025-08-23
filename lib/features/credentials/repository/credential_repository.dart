@@ -1,43 +1,38 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:key_budget/core/models/credential_model.dart';
-import 'package:key_budget/core/services/database_service.dart';
 
 class CredentialRepository {
-  final DatabaseService _dbService = DatabaseService.instance;
+  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
-  Future<int> addCredential(Credential credential) async {
-    final db = await _dbService.database;
-    return await db.insert('credentials', credential.toMap());
+  CollectionReference<Credential> _getCredentialsCollection(String userId) {
+    return _firestore
+        .collection('users')
+        .doc(userId)
+        .collection('credentials')
+        .withConverter<Credential>(
+          fromFirestore: (snapshots, _) =>
+              Credential.fromMap(snapshots.data()!, snapshots.id),
+          toFirestore: (credential, _) => credential.toMap(),
+        );
   }
 
-  Future<List<Credential>> getCredentialsForUser(int userId) async {
-    final db = await _dbService.database;
-    final List<Map<String, dynamic>> maps = await db.query(
-      'credentials',
-      where: 'user_id = ?',
-      whereArgs: [userId],
-      orderBy: 'location ASC',
-    );
-    return List.generate(maps.length, (i) {
-      return Credential.fromMap(maps[i]);
-    });
+  Future<void> addCredential(String userId, Credential credential) async {
+    await _getCredentialsCollection(userId).add(credential);
   }
 
-  Future<int> updateCredential(Credential credential) async {
-    final db = await _dbService.database;
-    return await db.update(
-      'credentials',
-      credential.toMap(),
-      where: 'id = ?',
-      whereArgs: [credential.id],
-    );
+  Future<List<Credential>> getCredentialsForUser(String userId) async {
+    final querySnapshot =
+        await _getCredentialsCollection(userId).orderBy('location').get();
+    return querySnapshot.docs.map((doc) => doc.data()).toList();
   }
 
-  Future<int> deleteCredential(int id) async {
-    final db = await _dbService.database;
-    return await db.delete(
-      'credentials',
-      where: 'id = ?',
-      whereArgs: [id],
-    );
+  Future<void> updateCredential(String userId, Credential credential) async {
+    await _getCredentialsCollection(userId)
+        .doc(credential.id)
+        .update(credential.toMap());
+  }
+
+  Future<void> deleteCredential(String userId, String credentialId) async {
+    await _getCredentialsCollection(userId).doc(credentialId).delete();
   }
 }

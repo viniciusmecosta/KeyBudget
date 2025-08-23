@@ -1,25 +1,22 @@
 class User {
-  final int? id;
+  final String id;
   final String name;
   final String email;
-  final String passwordHash;
   final String? avatarPath;
   final String? phoneNumber;
 
   User({
-    this.id,
+    required this.id,
     required this.name,
     required this.email,
-    required this.passwordHash,
     this.avatarPath,
     this.phoneNumber,
   });
 
   User copyWith({
-    int? id,
+    String? id,
     String? name,
     String? email,
-    String? passwordHash,
     String? avatarPath,
     String? phoneNumber,
   }) {
@@ -27,7 +24,6 @@ class User {
       id: id ?? this.id,
       name: name ?? this.name,
       email: email ?? this.email,
-      passwordHash: passwordHash ?? this.passwordHash,
       avatarPath: avatarPath ?? this.avatarPath,
       phoneNumber: phoneNumber ?? this.phoneNumber,
     );
@@ -38,7 +34,6 @@ class User {
       'id': id,
       'name': name,
       'email': email,
-      'password_hash': passwordHash,
       'avatar_path': avatarPath,
       'phone_number': phoneNumber,
     };
@@ -49,7 +44,6 @@ class User {
       id: map['id'],
       name: map['name'],
       email: map['email'],
-      passwordHash: map['password_hash'],
       avatarPath: map['avatar_path'],
       phoneNumber: map['phone_number'],
     );

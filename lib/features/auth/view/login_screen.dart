@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:key_budget/app/view/main_screen.dart';
 import 'package:key_budget/features/auth/view/register_screen.dart';
-import 'package:key_budget/features/auth/viewmodel/auth_viewmodel.dart';
 import 'package:provider/provider.dart';
+import 'package:key_budget/features/auth/viewmodel/auth_viewmodel.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -17,32 +16,63 @@ class _LoginScreenState extends State<LoginScreen> {
   final _passwordController = TextEditingController();
 
   @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _tryBiometricAuth();
+    });
+  }
+
+  @override
   void dispose() {
     _emailController.dispose();
     _passwordController.dispose();
     super.dispose();
   }
 
+  Future<void> _tryBiometricAuth() async {
+    final authViewModel = Provider.of<AuthViewModel>(context, listen: false);
+
+    if (authViewModel.currentUser == null) {
+      final success = await authViewModel.authenticateWithBiometrics();
+      if (success && mounted) {
+
+      }
+    }
+  }
+
   void _submit() async {
     if (!_formKey.currentState!.validate()) return;
 
-    final viewModel = Provider.of<AuthViewModel>(context, listen: false);
-    final success = await viewModel.loginUser(
+    final authViewModel = Provider.of<AuthViewModel>(context, listen: false);
+
+    final success = await authViewModel.loginUser(
       email: _emailController.text,
       password: _passwordController.text,
     );
 
-    if (mounted) {
-      if (success) {
-        Navigator.of(context).pushReplacement(
-            MaterialPageRoute(builder: (_) => const MainScreen()));
-      } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(viewModel.errorMessage ?? 'Erro desconhecido'),
-          ),
-        );
-      }
+    if (mounted && !success) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(authViewModel.errorMessage ?? 'Erro desconhecido'),
+          backgroundColor: Theme.of(context).colorScheme.error,
+        ),
+      );
+    }
+  }
+
+  void _submitGoogle() async {
+    final authViewModel = Provider.of<AuthViewModel>(context, listen: false);
+
+    final success = await authViewModel.loginWithGoogle();
+
+    if (mounted && !success) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(authViewModel.errorMessage ?? 'Erro desconhecido'),
+          backgroundColor: Theme.of(context).colorScheme.error,
+        ),
+      );
     }
   }
 
@@ -75,15 +105,25 @@ class _LoginScreenState extends State<LoginScreen> {
                       ? 'Insira sua senha'
                       : null,
                 ),
-                const SizedBox(height: 32),
+                const SizedBox(height: 24),
                 Consumer<AuthViewModel>(
                   builder: (context, viewModel, child) {
                     return viewModel.isLoading
                         ? const CircularProgressIndicator()
-                        : ElevatedButton(
-                            onPressed: _submit,
-                            child: const Text('Entrar'),
-                          );
+                        : Column(
+                      children: [
+                        ElevatedButton(
+                          onPressed: _submit,
+                          child: const Text('Entrar'),
+                        ),
+                        const SizedBox(height: 16),
+                        OutlinedButton.icon(
+                          onPressed: _submitGoogle,
+                          icon: const Icon(Icons.g_mobiledata),
+                          label: const Text('Entrar com Google'),
+                        ),
+                      ],
+                    );
                   },
                 ),
                 TextButton(

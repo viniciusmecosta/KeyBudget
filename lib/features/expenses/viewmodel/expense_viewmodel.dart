@@ -45,24 +45,24 @@ class ExpenseViewModel extends ChangeNotifier {
     notifyListeners();
   }
 
-  Future<void> fetchExpenses(int userId) async {
+  Future<void> fetchExpenses(String userId) async {
     _setLoading(true);
     _allExpenses = await _repository.getExpensesForUser(userId);
     _setLoading(false);
   }
 
-  Future<void> addExpense(Expense expense) async {
-    await _repository.addExpense(expense);
-    await fetchExpenses(expense.userId);
+  Future<void> addExpense(String userId, Expense expense) async {
+    await _repository.addExpense(userId, expense);
+    await fetchExpenses(userId);
   }
 
-  Future<void> updateExpense(Expense expense) async {
-    await _repository.updateExpense(expense);
-    await fetchExpenses(expense.userId);
+  Future<void> updateExpense(String userId, Expense expense) async {
+    await _repository.updateExpense(userId, expense);
+    await fetchExpenses(userId);
   }
 
-  Future<void> deleteExpense(int id, int userId) async {
-    await _repository.deleteExpense(id);
+  Future<void> deleteExpense(String userId, String expenseId) async {
+    await _repository.deleteExpense(userId, expenseId);
     await fetchExpenses(userId);
   }
 
@@ -78,14 +78,13 @@ class ExpenseViewModel extends ChangeNotifier {
     return await _csvService.exportExpenses(expensesToExport);
   }
 
-  Future<int> importExpensesFromCsv(int userId) async {
+  Future<int> importExpensesFromCsv(String userId) async {
     final data = await _csvService.importCsv();
     if (data == null) return 0;
 
     int count = 0;
     for (var row in data) {
       final newExpense = Expense(
-        userId: userId,
         date:
             DateTime.tryParse(row['date']?.toString() ?? '') ?? DateTime.now(),
         amount: double.tryParse(row['amount']?.toString() ?? '0.0') ?? 0.0,
@@ -95,7 +94,7 @@ class ExpenseViewModel extends ChangeNotifier {
         motivation: row['motivation']?.toString(),
         location: row['location']?.toString(),
       );
-      await _repository.addExpense(newExpense);
+      await _repository.addExpense(userId, newExpense);
       count++;
     }
     await fetchExpenses(userId);

@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import 'package:key_budget/core/models/expense_category.dart';
 import 'package:key_budget/core/models/expense_model.dart';
+import 'package:key_budget/features/auth/viewmodel/auth_viewmodel.dart';
 import 'package:key_budget/features/expenses/viewmodel/expense_viewmodel.dart';
 import 'package:provider/provider.dart';
 
@@ -42,14 +44,16 @@ class _ExpenseDetailScreenState extends State<ExpenseDetailScreen> {
     super.dispose();
   }
 
-  void _saveChanges() {
+  void _saveChanges() async {
     if (!_formKey.currentState!.validate()) return;
 
     setState(() => _isSaving = true);
 
+    final authViewModel = Provider.of<AuthViewModel>(context, listen: false);
+    final userId = authViewModel.currentUser!.id;
+
     final updatedExpense = Expense(
       id: widget.expense.id,
-      userId: widget.expense.userId,
       amount: double.parse(_amountController.text.replaceAll(',', '.')),
       date: _selectedDate,
       category: _selectedCategory,
@@ -60,14 +64,13 @@ class _ExpenseDetailScreenState extends State<ExpenseDetailScreen> {
           _locationController.text.isNotEmpty ? _locationController.text : null,
     );
 
-    Provider.of<ExpenseViewModel>(context, listen: false)
-        .updateExpense(updatedExpense)
-        .whenComplete(() {
-      if (mounted) {
-        setState(() => _isSaving = false);
-        Navigator.of(context).pop();
-      }
-    });
+    await Provider.of<ExpenseViewModel>(context, listen: false)
+        .updateExpense(userId, updatedExpense);
+
+    if (mounted) {
+      setState(() => _isSaving = false);
+      Navigator.of(context).pop();
+    }
   }
 
   void _deleteExpense() {
@@ -84,15 +87,19 @@ class _ExpenseDetailScreenState extends State<ExpenseDetailScreen> {
           ),
           TextButton(
             child: const Text('Excluir'),
-            onPressed: () {
-              Provider.of<ExpenseViewModel>(context, listen: false)
-                  .deleteExpense(widget.expense.id!, widget.expense.userId)
-                  .then((_) {
-                if (mounted) {
-                  Navigator.of(ctx).pop();
-                  Navigator.of(context).pop();
-                }
-              });
+            onPressed: () async {
+              final authViewModel =
+                  Provider.of<AuthViewModel>(context, listen: false);
+              final userId = authViewModel.currentUser!.id;
+
+              Navigator.of(ctx).pop();
+
+              await Provider.of<ExpenseViewModel>(context, listen: false)
+                  .deleteExpense(userId, widget.expense.id!);
+
+              if (mounted) {
+                Navigator.of(context).pop();
+              }
             },
           ),
         ],
@@ -136,11 +143,11 @@ class _ExpenseDetailScreenState extends State<ExpenseDetailScreen> {
                     const TextInputType.numberWithOptions(decimal: true),
                 enabled: _isEditing,
                 validator: (value) =>
-                    value!.isEmpty ? 'Campo obrigatório' : null,
+                    value == null || value.isEmpty ? 'Campo obrigatório' : null,
               ),
               const SizedBox(height: 16),
               DropdownButtonFormField<ExpenseCategory>(
-                initialValue: _selectedCategory,
+                value: _selectedCategory,
                 decoration: const InputDecoration(labelText: 'Categoria'),
                 items: ExpenseCategory.values.map((category) {
                   return DropdownMenuItem(
@@ -172,6 +179,28 @@ class _ExpenseDetailScreenState extends State<ExpenseDetailScreen> {
                 enabled: _isEditing,
               ),
               const SizedBox(height: 16),
+              ListTile(
+                title: const Text('Data'),
+                subtitle: Text(DateFormat('dd/MM/yyyy').format(_selectedDate)),
+                trailing: _isEditing ? const Icon(Icons.calendar_today) : null,
+                onTap: !_isEditing
+                    ? null
+                    : () async {
+                        final pickedDate = await showDatePicker(
+                          context: context,
+                          initialDate: _selectedDate,
+                          firstDate: DateTime(2000),
+                          lastDate: DateTime.now(),
+                          locale: const Locale('pt', 'BR'),
+                        );
+                        if (pickedDate != null && pickedDate != _selectedDate) {
+                          setState(() {
+                            _selectedDate = pickedDate;
+                          });
+                        }
+                      },
+              ),
+              const SizedBox(height: 24),
               if (_isEditing)
                 ElevatedButton(
                   onPressed: _isSaving ? null : _saveChanges,
