@@ -5,12 +5,15 @@ import 'package:key_budget/app/config/app_theme.dart';
 import 'package:key_budget/app/view/auth_gate.dart';
 import 'package:key_budget/app/view/lock_screen.dart';
 import 'package:key_budget/core/services/app_lock_service.dart';
+import 'package:key_budget/features/auth/viewmodel/auth_viewmodel.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:firebase_core/firebase_core.dart';
 
 Future<void> main() async {
   try {
     WidgetsFlutterBinding.ensureInitialized();
+    await Firebase.initializeApp();
     await dotenv.load(fileName: "assets/.env");
 
     runApp(
@@ -48,11 +51,10 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
   void didChangeAppLifecycleState(AppLifecycleState state) {
     super.didChangeAppLifecycleState(state);
     final appLockService = Provider.of<AppLockService>(context, listen: false);
-    if (state == AppLifecycleState.paused ||
-        state == AppLifecycleState.inactive) {
-      appLockService.startLockTimer();
-    } else if (state == AppLifecycleState.resumed) {
-      appLockService.cancelLockTimer();
+    final authViewModel = Provider.of<AuthViewModel>(context, listen: false);
+
+    if (state == AppLifecycleState.paused && authViewModel.currentUser != null) {
+      appLockService.lockApp();
     }
   }
 

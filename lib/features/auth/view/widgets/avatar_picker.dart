@@ -1,4 +1,4 @@
-import 'dart:io';
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 
@@ -17,26 +17,40 @@ class AvatarPicker extends StatefulWidget {
 }
 
 class _AvatarPickerState extends State<AvatarPicker> {
-  File? _image;
+  String? _imageBase64;
 
   @override
   void initState() {
     super.initState();
-    if (widget.initialImagePath != null) {
-      _image = File(widget.initialImagePath!);
-    }
+    _imageBase64 = widget.initialImagePath;
   }
 
   Future<void> _pickImage() async {
     final picker = ImagePicker();
-    final pickedFile = await picker.pickImage(source: ImageSource.gallery);
+    final pickedFile = await picker.pickImage(
+      source: ImageSource.gallery,
+      maxWidth: 200,
+      imageQuality: 70,
+    );
 
     if (pickedFile != null) {
+      final imageBytes = await pickedFile.readAsBytes();
+      final base64String = base64Encode(imageBytes);
       setState(() {
-        _image = File(pickedFile.path);
+        _imageBase64 = base64String;
       });
-      widget.onImageSelected(pickedFile.path);
+      widget.onImageSelected(base64String);
     }
+  }
+
+  ImageProvider? _getImageProvider() {
+    if (_imageBase64 == null || _imageBase64!.isEmpty) return null;
+
+    if (_imageBase64!.startsWith('http')) {
+      return NetworkImage(_imageBase64!);
+    }
+
+    return MemoryImage(base64Decode(_imageBase64!));
   }
 
   @override
@@ -46,8 +60,8 @@ class _AvatarPickerState extends State<AvatarPicker> {
       child: CircleAvatar(
         radius: 50,
         backgroundColor: Theme.of(context).colorScheme.secondary,
-        backgroundImage: _image != null ? FileImage(_image!) : null,
-        child: _image == null
+        backgroundImage: _getImageProvider(),
+        child: _imageBase64 == null
             ? const Icon(Icons.add_a_photo, size: 40, color: Colors.white)
             : null,
       ),

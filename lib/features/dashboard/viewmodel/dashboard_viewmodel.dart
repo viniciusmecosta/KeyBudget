@@ -41,7 +41,7 @@ class DashboardViewModel extends ChangeNotifier {
     notifyListeners();
   }
 
-  Future<void> fetchDashboardData(int userId) async {
+  Future<void> fetchDashboardData(String userId) async {
     _setLoading(true);
 
     final credentials =

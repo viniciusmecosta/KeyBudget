@@ -1,40 +1,57 @@
-import 'package:flutter/services.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:local_auth/local_auth.dart';
 
 class LocalAuthService {
+  final LocalAuthentication _auth = LocalAuthentication();
   final _storage = const FlutterSecureStorage();
-  final _localAuth = LocalAuthentication();
-  static const _lastUserKey = 'last_user_id';
+  static const _emailKey = 'last_user_email';
+  static const _passwordKey = 'last_user_password';
 
-  Future<void> saveLastUser(String userId) async {
-    await _storage.write(key: _lastUserKey, value: userId);
-  }
+  Future<bool> canAuthenticate() async {
+    try {
+      final bool canAuthenticateWithBiometrics = await _auth.canCheckBiometrics;
+      final List<BiometricType> availableBiometrics =
+          await _auth.getAvailableBiometrics();
 
-  Future<String?> getLastUser() async {
-    return await _storage.read(key: _lastUserKey);
-  }
-
-  Future<void> clearLastUser() async {
-    await _storage.delete(key: _lastUserKey);
+      return canAuthenticateWithBiometrics && availableBiometrics.isNotEmpty;
+    } catch (e) {
+      return false;
+    }
   }
 
   Future<bool> authenticate() async {
+    final bool canAuth = await canAuthenticate();
+    if (!canAuth) return false;
+
     try {
-      final isAvailable = await _localAuth.canCheckBiometrics;
-      if (!isAvailable) {
-        return false;
-      }
-      return await _localAuth.authenticate(
-        localizedReason: 'Autentique para acessar o KeyBudget',
+      return await _auth.authenticate(
+        localizedReason: 'Por favor, autentique-se para aceder à aplicação',
         options: const AuthenticationOptions(
-          biometricOnly: false,
-          useErrorDialogs: true,
           stickyAuth: true,
+          biometricOnly: false,
         ),
       );
-    } on PlatformException {
+    } catch (e) {
       return false;
     }
+  }
+
+  Future<void> saveCredentials(String email, String password) async {
+    await _storage.write(key: _emailKey, value: email);
+    await _storage.write(key: _passwordKey, value: password);
+  }
+
+  Future<Map<String, String>?> getCredentials() async {
+    final email = await _storage.read(key: _emailKey);
+    final password = await _storage.read(key: _passwordKey);
+    if (email != null && password != null) {
+      return {'email': email, 'password': password};
+    }
+    return null;
+  }
+
+  Future<void> clearCredentials() async {
+    await _storage.delete(key: _emailKey);
+    await _storage.delete(key: _passwordKey);
   }
 }

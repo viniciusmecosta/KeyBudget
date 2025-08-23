@@ -1,7 +1,8 @@
-import 'dart:io';
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:key_budget/core/models/credential_model.dart';
+import 'package:key_budget/features/auth/viewmodel/auth_viewmodel.dart';
 import 'package:key_budget/features/credentials/view/widgets/logo_picker.dart';
 import 'package:key_budget/features/credentials/viewmodel/credential_viewmodel.dart';
 import 'package:provider/provider.dart';
@@ -68,9 +69,12 @@ class _CredentialDetailScreenState extends State<CredentialDetailScreen> {
     if (!_formKey.currentState!.validate()) return;
 
     setState(() => _isSaving = true);
+    final authViewModel = Provider.of<AuthViewModel>(context, listen: false);
+    final userId = authViewModel.currentUser!.id;
 
     Provider.of<CredentialViewModel>(context, listen: false)
         .updateCredential(
+      userId: userId,
       originalCredential: widget.credential,
       location: _locationController.text,
       login: _loginController.text,
@@ -103,9 +107,11 @@ class _CredentialDetailScreenState extends State<CredentialDetailScreen> {
           TextButton(
             child: const Text('Excluir'),
             onPressed: () {
+              final authViewModel =
+                  Provider.of<AuthViewModel>(context, listen: false);
+              final userId = authViewModel.currentUser!.id;
               Provider.of<CredentialViewModel>(context, listen: false)
-                  .deleteCredential(
-                      widget.credential.id!, widget.credential.userId)
+                  .deleteCredential(userId, widget.credential.id!)
                   .then((_) {
                 if (mounted) {
                   Navigator.of(ctx).pop();
@@ -121,6 +127,10 @@ class _CredentialDetailScreenState extends State<CredentialDetailScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final imageProvider = _logoPath != null && _logoPath!.isNotEmpty
+        ? MemoryImage(base64Decode(_logoPath!))
+        : null;
+
     return Scaffold(
       appBar: AppBar(
         title: Text(_isEditing ? 'Editar Credencial' : 'Detalhes'),
@@ -153,16 +163,15 @@ class _CredentialDetailScreenState extends State<CredentialDetailScreen> {
                     ? LogoPicker(
                         initialImagePath: _logoPath,
                         onImageSelected: (path) {
-                          _logoPath = path;
+                          setState(() {
+                            _logoPath = path;
+                          });
                         },
                       )
                     : CircleAvatar(
                         radius: 40,
-                        backgroundImage:
-                            _logoPath != null && _logoPath!.isNotEmpty
-                                ? FileImage(File(_logoPath!))
-                                : null,
-                        child: _logoPath == null || _logoPath!.isEmpty
+                        backgroundImage: imageProvider,
+                        child: imageProvider == null
                             ? const Icon(Icons.vpn_key_outlined, size: 30)
                             : null,
                       ),
