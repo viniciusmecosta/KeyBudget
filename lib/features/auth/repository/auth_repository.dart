@@ -2,10 +2,12 @@ import 'package:firebase_auth/firebase_auth.dart' as firebase;
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/foundation.dart';
 import 'package:key_budget/core/models/user_model.dart';
+import 'package:google_sign_in/google_sign_in.dart';
 
 class AuthRepository {
   final firebase.FirebaseAuth _firebaseAuth = firebase.FirebaseAuth.instance;
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  final GoogleSignIn _googleSignIn = GoogleSignIn();
 
   Stream<User?> get onAuthStateChanged {
     return _firebaseAuth.authStateChanges().asyncMap((firebaseUser) async {
@@ -64,11 +66,48 @@ class AuthRepository {
     return userCredential;
   }
 
+  Future<firebase.UserCredential?> signInWithGoogle() async {
+    try {
+      final GoogleSignInAccount? googleUser = await _googleSignIn.signIn();
+      if (googleUser == null) {
+        return null;
+      }
+
+      final GoogleSignInAuthentication googleAuth =
+      await googleUser.authentication;
+      final firebase.AuthCredential credential = firebase.GoogleAuthProvider.credential(
+        accessToken: googleAuth.accessToken,
+        idToken: googleAuth.idToken,
+      );
+
+      final userCredential = await _firebaseAuth.signInWithCredential(credential);
+      final userExists = await getUserProfile(userCredential.user!.uid);
+
+      if (userExists == null) {
+        final newUser = User(
+          id: userCredential.user!.uid,
+          name: userCredential.user!.displayName ?? '',
+          email: userCredential.user!.email ?? '',
+          avatarPath: userCredential.user!.photoURL,
+        );
+        await _firestore.collection('users').doc(newUser.id).set(newUser.toMap());
+      }
+
+      return userCredential;
+    } catch (e) {
+      if (kDebugMode) {
+        print("Error during Google sign-in: $e");
+      }
+      rethrow;
+    }
+  }
+
   Future<void> updateUserProfile(User user) async {
     await _firestore.collection('users').doc(user.id).update(user.toMap());
   }
 
   Future<void> signOut() async {
+    await _googleSignIn.signOut();
     await _firebaseAuth.signOut();
   }
 
