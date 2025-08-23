@@ -58,11 +58,9 @@ class UserScreen extends StatelessWidget {
           ImageProvider? imageProvider;
 
           if (avatarPath != null && avatarPath.isNotEmpty) {
-            // Verifica se o caminho é uma URL
             if (Uri.tryParse(avatarPath)?.isAbsolute == true) {
               imageProvider = NetworkImage(avatarPath);
             } else {
-              // Se não for uma URL, assume que é Base64
               try {
                 imageProvider = MemoryImage(base64Decode(avatarPath));
               } catch (e) {
@@ -76,12 +74,24 @@ class UserScreen extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                CircleAvatar(
-                  radius: 50,
-                  backgroundImage: imageProvider,
-                  child: imageProvider == null
-                      ? const Icon(Icons.person, size: 50)
-                      : null,
+                Center(
+                  child: Container(
+                    width: 100,
+                    height: 100,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: Theme.of(context).colorScheme.secondary,
+                      image: imageProvider != null
+                          ? DecorationImage(
+                        image: imageProvider,
+                        fit: BoxFit.cover,
+                      )
+                          : null,
+                    ),
+                    child: imageProvider == null
+                        ? const Icon(Icons.person, size: 50)
+                        : null,
+                  ),
                 ),
                 const SizedBox(height: 16),
                 Center(
