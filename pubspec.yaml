@@ -33,6 +33,7 @@ dependencies:
   local_auth: ^2.3.0
   flutter_launcher_icons: ^0.14.4
   google_sign_in: ^6.1.6
+  flutter_masked_text2: ^0.9.1
 
 dev_dependencies:
   flutter_test:

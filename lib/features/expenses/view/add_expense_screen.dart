@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_masked_text2/flutter_masked_text2.dart';
 import 'package:intl/intl.dart';
 import 'package:key_budget/core/models/expense_category.dart';
 import 'package:key_budget/core/models/expense_model.dart';
@@ -15,7 +16,8 @@ class AddExpenseScreen extends StatefulWidget {
 
 class _AddExpenseScreenState extends State<AddExpenseScreen> {
   final _formKey = GlobalKey<FormState>();
-  final _amountController = TextEditingController();
+  final _amountController = MoneyMaskedTextController(
+      decimalSeparator: ',', thousandSeparator: '.', leftSymbol: 'R\$ ');
   final _motivationController = TextEditingController();
   final _locationController = TextEditingController();
   DateTime _selectedDate = DateTime.now();
@@ -47,6 +49,15 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
 
   void _submit() async {
     if (!_formKey.currentState!.validate()) return;
+    if (_amountController.numberValue == 0) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('O valor não pode ser zero.'),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    }
 
     setState(() => _isSaving = true);
 
@@ -56,7 +67,7 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
     final userId = authViewModel.currentUser!.id;
 
     final newExpense = Expense(
-      amount: double.parse(_amountController.text.replaceAll(',', '.')),
+      amount: _amountController.numberValue,
       date: _selectedDate,
       category: _selectedCategory,
       motivation: _motivationController.text.isNotEmpty
@@ -92,12 +103,18 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
             children: [
               TextFormField(
                 controller: _amountController,
-                decoration:
-                    const InputDecoration(labelText: 'Valor (ex: 50.99) *'),
+                decoration: const InputDecoration(labelText: 'Valor *'),
                 keyboardType:
                     const TextInputType.numberWithOptions(decimal: true),
-                validator: (value) =>
-                    value == null || value.isEmpty ? 'Campo obrigatório' : null,
+                validator: (value) {
+                  if (value == null || value.isEmpty) {
+                    return 'Campo obrigatório';
+                  }
+                  if (_amountController.numberValue <= 0) {
+                    return 'O valor deve ser maior que zero';
+                  }
+                  return null;
+                },
               ),
               const SizedBox(height: 16),
               DropdownButtonFormField<ExpenseCategory>(
