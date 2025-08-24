@@ -1,4 +1,4 @@
-package com.example.key_budget
+package com.vinicius.key_budget
 
 import io.flutter.embedding.android.FlutterFragmentActivity
 
