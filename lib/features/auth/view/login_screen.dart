@@ -86,7 +86,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   color: AppTheme.pink,
                 ),
               ).animate()
-                  .fadeIn(duration: 400.ms)
+                  .fadeIn(duration: 200.ms)
                   .slideY(begin: -0.4, end: 0),
 
               const SizedBox(height: 8),
@@ -95,7 +95,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 style: theme.textTheme.bodyMedium?.copyWith(
                   color: theme.colorScheme.onSurface.withOpacity(0.7),
                 ),
-              ).animate().fadeIn(duration: 600.ms),
+              ).animate().fadeIn(duration: 300.ms),
               const SizedBox(height: 32),
               Card(
                 elevation: 6,
@@ -181,7 +181,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 ),
               )
                   .animate()
-                  .fadeIn(duration: 500.ms)
+                  .fadeIn(duration: 250.ms)
                   .scale(begin: const Offset(0.9, 0.9), end: const Offset(1.0, 1.0)),
               const SizedBox(height: 20),
               TextButton(
@@ -192,7 +192,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 },
                 child: const Text("Não tem uma conta? Cadastre-se"),
               ).animate()
-                  .fadeIn(duration: 600.ms)
+                  .fadeIn(duration: 300.ms)
                   .slideY(begin: 0.3, end: 0),
 
             ],

@@ -176,7 +176,7 @@ class _CredentialsScreenState extends State<CredentialsScreen> {
                   ),
                 )
                     .animate()
-                    .fadeIn(delay: (20 * index).ms, duration: 100.ms)
+                    .fadeIn(delay: (30 * index).ms, duration: 150.ms)
                     .slideY(begin: 0.1, end: 0);
               },
             );
@@ -190,11 +190,11 @@ class _CredentialsScreenState extends State<CredentialsScreen> {
         label: const Text("Nova Credencial"),
       )
           .animate()
-          .scaleXY(begin: 0.9, end: 1.0, duration: 200.ms)
+          .scaleXY(begin: 0.9, end: 1.0, duration: 150.ms)
           .then(delay: 50.ms)
-          .scaleXY(end: 1.05, duration: 300.ms)
+          .scaleXY(end: 1.05, duration: 200.ms)
           .then()
-          .scaleXY(end: 1.0, duration: 300.ms),
+          .scaleXY(end: 1.0, duration: 200.ms),
     );
   }
 }
