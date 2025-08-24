@@ -74,13 +74,15 @@ class AuthRepository {
       }
 
       final GoogleSignInAuthentication googleAuth =
-      await googleUser.authentication;
-      final firebase.AuthCredential credential = firebase.GoogleAuthProvider.credential(
+          await googleUser.authentication;
+      final firebase.AuthCredential credential =
+          firebase.GoogleAuthProvider.credential(
         accessToken: googleAuth.accessToken,
         idToken: googleAuth.idToken,
       );
 
-      final userCredential = await _firebaseAuth.signInWithCredential(credential);
+      final userCredential =
+          await _firebaseAuth.signInWithCredential(credential);
       final userExists = await getUserProfile(userCredential.user!.uid);
 
       if (userExists == null) {
@@ -90,7 +92,10 @@ class AuthRepository {
           email: userCredential.user!.email ?? '',
           avatarPath: userCredential.user!.photoURL,
         );
-        await _firestore.collection('users').doc(newUser.id).set(newUser.toMap());
+        await _firestore
+            .collection('users')
+            .doc(newUser.id)
+            .set(newUser.toMap());
       }
 
       return userCredential;

@@ -47,6 +47,7 @@ flutter:
     - assets/
     - assets/.env
     - assets/icon/
+    - assets/data/
 
 
 flutter_launcher_icons:

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:key_budget/core/models/credential_model.dart';
 import 'package:key_budget/core/services/csv_service.dart';
+import 'package:key_budget/core/services/data_import_service.dart';
 import 'package:key_budget/core/services/encryption_service.dart';
 import 'package:key_budget/features/credentials/repository/credential_repository.dart';
 
@@ -8,6 +9,7 @@ class CredentialViewModel extends ChangeNotifier {
   final CredentialRepository _repository = CredentialRepository();
   final EncryptionService _encryptionService = EncryptionService();
   final CsvService _csvService = CsvService();
+  final DataImportService _dataImportService = DataImportService();
 
   List<Credential> _allCredentials = [];
   bool _isLoading = false;
@@ -113,6 +115,14 @@ class CredentialViewModel extends ChangeNotifier {
       count++;
     }
     await fetchCredentials(userId);
+    return count;
+  }
+
+  Future<int> importCredentialsFromJson(String userId) async {
+    _setLoading(true);
+    final count = await _dataImportService.importCredentialsFromJson(userId);
+    await fetchCredentials(userId);
+    _setLoading(false);
     return count;
   }
 
