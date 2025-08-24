@@ -1,7 +1,6 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
-import 'package:key_budget/app/config/app_theme.dart';
 import 'package:key_budget/features/auth/view/login_screen.dart';
 import 'package:key_budget/features/auth/viewmodel/auth_viewmodel.dart';
 import 'package:key_budget/features/credentials/viewmodel/credential_viewmodel.dart';
@@ -164,28 +163,38 @@ class UserScreen extends StatelessWidget {
                   ),
                 )
                     .animate()
-                    .fadeIn(duration: 200.ms)
-                    .scaleXY(begin: 0.8, end: 1.0),
+                    .fadeIn(duration: 160.ms)
+                    .scaleXY(begin: 0.8, end: 1.0)
+                    .shimmer(duration: 600.ms, delay: 200.ms),
                 const SizedBox(height: 16),
                 Center(
                   child: Text(
                     user?.name ?? 'Usuário',
                     style: Theme.of(context).textTheme.headlineSmall,
                   ),
-                ).animate().fadeIn(delay: 100.ms, duration: 200.ms),
+                )
+                    .animate()
+                    .fadeIn(delay: 80.ms, duration: 160.ms)
+                    .slideX(begin: -0.1, end: 0),
                 Center(
                   child: Text(
                     user?.email ?? '',
                     style: Theme.of(context).textTheme.bodyMedium,
                   ),
-                ).animate().fadeIn(delay: 200.ms, duration: 200.ms),
+                )
+                    .animate()
+                    .fadeIn(delay: 160.ms, duration: 160.ms)
+                    .slideX(begin: -0.1, end: 0),
                 if (user?.phoneNumber != null && user!.phoneNumber!.isNotEmpty)
                   Center(
                     child: Text(
                       user.phoneNumber!,
                       style: Theme.of(context).textTheme.bodyMedium,
                     ),
-                  ).animate().fadeIn(delay: 300.ms, duration: 200.ms),
+                  )
+                      .animate()
+                      .fadeIn(delay: 240.ms, duration: 160.ms)
+                      .slideX(begin: -0.1, end: 0),
                 const Spacer(),
                 ElevatedButton(
                   style: ElevatedButton.styleFrom(
@@ -223,8 +232,9 @@ class UserScreen extends StatelessWidget {
                   child: const Text('Sair'),
                 )
                     .animate()
-                    .fadeIn(delay: 400.ms, duration: 200.ms)
-                    .scaleXY(begin: 0.9, end: 1.0),
+                    .fadeIn(delay: 320.ms, duration: 160.ms)
+                    .scaleXY(begin: 0.9, end: 1.0)
+                    .shake(hz: 3, duration: 300.ms),
               ],
             ),
           );
