@@ -32,7 +32,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
   @override
   Widget build(BuildContext context) {
     final viewModel = Provider.of<DashboardViewModel>(context);
-    final navigationViewModel = Provider.of<NavigationViewModel>(context, listen: false);
+    final navigationViewModel =
+    Provider.of<NavigationViewModel>(context, listen: false);
 
     return Scaffold(
       appBar: AppBar(
@@ -81,13 +82,22 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   ),
                 ),
               ],
-            ),
+            )
+                .animate()
+                .fadeIn(duration: 150.ms)
+                .slideY(begin: 0.1, end: 0, curve: Curves.easeOut),
             const SizedBox(height: 24),
-            _buildBarChartSection(context, viewModel),
+            _buildBarChartSection(context, viewModel)
+                .animate()
+                .fadeIn(delay: 50.ms, duration: 200.ms)
+                .slideY(begin: 0.1, end: 0, curve: Curves.easeOut),
             const SizedBox(height: 24),
-            _buildRecentActivitySection(context, viewModel),
+            _buildRecentActivitySection(context, viewModel)
+                .animate()
+                .fadeIn(delay: 100.ms, duration: 200.ms)
+                .slideY(begin: 0.1, end: 0, curve: Curves.easeOut),
           ],
-        ).animate().fade(duration: 500.ms),
+        ),
       ),
     );
   }
@@ -195,12 +205,12 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     },
                   ),
                 ),
-                leftTitles: const AxisTitles(
-                    sideTitles: SideTitles(showTitles: false)),
-                topTitles: const AxisTitles(
-                    sideTitles: SideTitles(showTitles: false)),
-                rightTitles: const AxisTitles(
-                    sideTitles: SideTitles(showTitles: false)),
+                leftTitles:
+                const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                topTitles:
+                const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                rightTitles:
+                const AxisTitles(sideTitles: SideTitles(showTitles: false)),
               ),
               gridData: FlGridData(
                 show: true,
@@ -258,7 +268,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
             style: theme.textTheme.headlineSmall
                 ?.copyWith(fontWeight: FontWeight.w600)),
         const SizedBox(height: 16),
-        ...recentExpenses.map((expense) => _buildActivityTile(context, expense)),
+        ...recentExpenses
+            .map((expense) => _buildActivityTile(context, expense)),
       ],
     );
   }

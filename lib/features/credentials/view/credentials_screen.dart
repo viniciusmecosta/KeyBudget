@@ -42,7 +42,7 @@ class _CredentialsScreenState extends State<CredentialsScreen> {
     final scaffoldMessenger = ScaffoldMessenger.of(context);
 
     final count =
-        await viewModel.importCredentialsFromCsv(authViewModel.currentUser!.id);
+    await viewModel.importCredentialsFromCsv(authViewModel.currentUser!.id);
     scaffoldMessenger.showSnackBar(SnackBar(
         content: Text('$count credenciais importadas com sucesso!'),
         backgroundColor: Colors.green));
@@ -79,7 +79,7 @@ class _CredentialsScreenState extends State<CredentialsScreen> {
               ScaffoldMessenger.of(context).showSnackBar(
                 const SnackBar(
                     content:
-                        Text('Senha copiada para a área de transferência')),
+                    Text('Senha copiada para a área de transferência')),
               );
               Navigator.of(context).pop();
             },
@@ -130,7 +130,7 @@ class _CredentialsScreenState extends State<CredentialsScreen> {
                         physics: const AlwaysScrollableScrollPhysics(),
                         child: ConstrainedBox(
                           constraints:
-                              BoxConstraints(minHeight: constraints.maxHeight),
+                          BoxConstraints(minHeight: constraints.maxHeight),
                           child: EmptyStateWidget(
                             icon: Icons.key_off,
                             message: 'Nenhuma credencial encontrada.',
@@ -138,7 +138,7 @@ class _CredentialsScreenState extends State<CredentialsScreen> {
                             onButtonPressed: () => Navigator.of(context).push(
                                 MaterialPageRoute(
                                     builder: (_) =>
-                                        const AddCredentialScreen())),
+                                    const AddCredentialScreen())),
                           ),
                         ),
                       );
@@ -152,9 +152,9 @@ class _CredentialsScreenState extends State<CredentialsScreen> {
                       return ListTile(
                         leading: CircleAvatar(
                           backgroundImage:
-                              logoPath != null && logoPath.isNotEmpty
-                                  ? MemoryImage(base64Decode(logoPath))
-                                  : null,
+                          logoPath != null && logoPath.isNotEmpty
+                              ? MemoryImage(base64Decode(logoPath))
+                              : null,
                           child: logoPath == null || logoPath.isEmpty
                               ? const Icon(Icons.vpn_key_outlined)
                               : null,
@@ -174,7 +174,7 @@ class _CredentialsScreenState extends State<CredentialsScreen> {
                             ),
                           );
                         },
-                      ).animate().fade(delay: (100 * index).ms).slideX();
+                      ).animate().fadeIn(delay: (20 * index).ms, duration: 100.ms).slideY(begin: 0.1, end: 0);
                     },
                   );
                 },
@@ -187,7 +187,7 @@ class _CredentialsScreenState extends State<CredentialsScreen> {
         onPressed: () => Navigator.of(context).push(
             MaterialPageRoute(builder: (_) => const AddCredentialScreen())),
         child: const Icon(Icons.add),
-      ),
+      ).animate().scale(delay: 50.ms, duration: 50.ms),
     );
   }
 }

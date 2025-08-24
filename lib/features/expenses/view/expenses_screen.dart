@@ -46,7 +46,7 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
     final scaffoldMessenger = ScaffoldMessenger.of(context);
 
     final count =
-        await viewModel.importExpensesFromCsv(authViewModel.currentUser!.id);
+    await viewModel.importExpensesFromCsv(authViewModel.currentUser!.id);
     if (!mounted) return;
     scaffoldMessenger.showSnackBar(SnackBar(
         content: Text('$count despesas importadas com sucesso!'),
@@ -71,7 +71,7 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
                   child: ListView(
                     children: ExpenseCategory.values.map((category) {
                       final isSelected =
-                          viewModel.selectedCategories.contains(category);
+                      viewModel.selectedCategories.contains(category);
                       return CheckboxListTile(
                         title: Text(category.displayName),
                         value: isSelected,
@@ -114,14 +114,14 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
 
     final monthlyExpenses = viewModel.filteredExpenses
         .where((exp) =>
-            exp.date.year == _selectedMonth.year &&
-            exp.date.month == _selectedMonth.month)
+    exp.date.year == _selectedMonth.year &&
+        exp.date.month == _selectedMonth.month)
         .toList();
     monthlyExpenses.sort((a, b) => b.date.compareTo(a.date));
 
     final totalValue = monthlyExpenses.fold<double>(
       0.0,
-      (sum, exp) => sum + exp.amount,
+          (sum, exp) => sum + exp.amount,
     );
 
     return Scaffold(
@@ -176,11 +176,11 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
                         physics: const AlwaysScrollableScrollPhysics(),
                         child: ConstrainedBox(
                           constraints:
-                              BoxConstraints(minHeight: constraints.maxHeight),
+                          BoxConstraints(minHeight: constraints.maxHeight),
                           child: EmptyStateWidget(
                             icon: Icons.money_off,
                             message:
-                                'Nenhuma despesa encontrada para este mês.',
+                            'Nenhuma despesa encontrada para este mês.',
                             buttonText: 'Adicionar Despesa',
                             onButtonPressed: () => Navigator.of(context).push(
                                 MaterialPageRoute(
@@ -200,7 +200,7 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
                             ? expense.location!
                             : (expense.category?.displayName ?? 'Gasto Geral')),
                         subtitle:
-                            Text(DateFormat('dd/MM/yyyy').format(expense.date)),
+                        Text(DateFormat('dd/MM/yyyy').format(expense.date)),
                         trailing: Text(
                           'R\$ ${expense.amount.toStringAsFixed(2)}',
                           style: TextStyle(
@@ -215,7 +215,7 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
                             ),
                           );
                         },
-                      ).animate().fade(delay: (100 * index).ms).slideX();
+                      ).animate().fadeIn(delay: (20 * index).ms, duration: 100.ms).slideY(begin: 0.1, end: 0);
                     },
                   );
                 },
@@ -228,7 +228,7 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
         onPressed: () => Navigator.of(context)
             .push(MaterialPageRoute(builder: (_) => const AddExpenseScreen())),
         child: const Icon(Icons.add),
-      ),
+      ).animate().scale(delay: 100.ms, duration: 150.ms),
     );
   }
 
@@ -248,7 +248,7 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
             },
           ),
           Text(
-            '${_selectedMonth.month}/${_selectedMonth.year}',
+            DateFormat.yMMMM('pt_BR').format(_selectedMonth),
             style: Theme.of(context).textTheme.titleLarge,
           ),
           IconButton(
