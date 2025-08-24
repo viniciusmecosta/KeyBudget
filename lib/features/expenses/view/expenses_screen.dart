@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:intl/intl.dart';
-import 'package:provider/provider.dart';
 import 'package:key_budget/app/widgets/empty_state_widget.dart';
 import 'package:key_budget/core/models/expense_category.dart';
 import 'package:key_budget/features/auth/viewmodel/auth_viewmodel.dart';
@@ -9,6 +8,7 @@ import 'package:key_budget/features/expenses/view/add_expense_screen.dart';
 import 'package:key_budget/features/expenses/view/expense_detail_screen.dart';
 import 'package:key_budget/features/expenses/view/export_expenses_screen.dart';
 import 'package:key_budget/features/expenses/viewmodel/expense_viewmodel.dart';
+import 'package:provider/provider.dart';
 
 class ExpensesScreen extends StatefulWidget {
   const ExpensesScreen({super.key});
@@ -123,6 +123,15 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
     );
   }
 
+  String _formatMonthYear(DateTime date) {
+    final now = DateTime.now();
+    if (date.year == now.year) {
+      return DateFormat.MMMM('pt_BR').format(date);
+    } else {
+      return DateFormat.yMMMM('pt_BR').format(date);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final viewModel = Provider.of<ExpenseViewModel>(context);
@@ -176,34 +185,35 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
                 borderRadius: BorderRadius.circular(16),
               ),
               child: Container(
-                padding:
-                const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+                width: double.infinity,
+                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
                 decoration: BoxDecoration(
-                  gradient: const LinearGradient(
-                    colors: [Color(0xFF6A11CB), Color(0xFF2575FC)],
+                  gradient: LinearGradient(
+                    colors: [
+                      Theme.of(context).colorScheme.primary.withOpacity(0.6),
+                      Theme.of(context).colorScheme.primary
+                    ],
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
                   ),
                   borderRadius: BorderRadius.circular(16),
                 ),
-                child: Column(
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Text(
                       'Total do mês',
-                      style: Theme.of(context)
-                          .textTheme
-                          .bodyLarge
-                          ?.copyWith(color: Colors.white70),
+                      style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                        color: Colors.white70,
+                        fontWeight: FontWeight.w500,
+                      ),
                     ),
-                    const SizedBox(height: 6),
                     Text(
                       'R\$ ${totalValue.toStringAsFixed(2)}',
-                      style: Theme.of(context)
-                          .textTheme
-                          .headlineMedium
-                          ?.copyWith(
-                          fontWeight: FontWeight.bold,
-                          color: Colors.white),
+                      style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                      ),
                     ),
                   ],
                 ),
@@ -227,8 +237,8 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
                     );
                   }
                   return ListView.builder(
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 12, vertical: 8),
+                    padding:
+                    const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                     itemCount: monthlyExpenses.length,
                     itemBuilder: (context, index) {
                       final expense = monthlyExpenses[index];
@@ -320,7 +330,7 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
             },
           ),
           Text(
-            DateFormat.yMMMM('pt_BR').format(_selectedMonth),
+            _formatMonthYear(_selectedMonth),
             style: Theme.of(context)
                 .textTheme
                 .titleLarge
