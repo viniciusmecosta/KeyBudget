@@ -1,14 +1,17 @@
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
+import 'package:intl/intl.dart';
 import 'package:key_budget/app/config/app_theme.dart';
+import 'package:key_budget/app/viewmodel/navigation_viewmodel.dart';
+import 'package:key_budget/core/models/expense_model.dart';
 import 'package:key_budget/features/auth/viewmodel/auth_viewmodel.dart';
 import 'package:key_budget/features/dashboard/viewmodel/dashboard_viewmodel.dart';
 import 'package:provider/provider.dart';
+import 'package:key_budget/core/models/expense_category.dart';
 
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
-
   @override
   State<DashboardScreen> createState() => _DashboardScreenState();
 }
@@ -29,9 +32,13 @@ class _DashboardScreenState extends State<DashboardScreen> {
   @override
   Widget build(BuildContext context) {
     final viewModel = Provider.of<DashboardViewModel>(context);
+    final navigationViewModel =
+        Provider.of<NavigationViewModel>(context, listen: false);
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Dashboard')),
+      appBar: AppBar(
+        title: const Text('Dashboard'),
+      ),
       body: viewModel.isLoading
           ? const Center(child: CircularProgressIndicator())
           : RefreshIndicator(
@@ -46,41 +53,89 @@ class _DashboardScreenState extends State<DashboardScreen> {
               child: ListView(
                 padding: const EdgeInsets.all(16.0),
                 children: [
-                  _buildCredentialCard(context, viewModel.credentialCount),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: GestureDetector(
+                          onTap: () => navigationViewModel.selectedIndex = 1,
+                          child: _buildInfoCard(
+                            context,
+                            title: 'Gasto no Mês',
+                            value:
+                                'R\$ ${viewModel.totalAmountForMonth.toStringAsFixed(2)}',
+                            icon: Icons.monetization_on,
+                            color: AppTheme.pink,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 16),
+                      Expanded(
+                        child: GestureDetector(
+                          onTap: () => navigationViewModel.selectedIndex = 2,
+                          child: _buildInfoCard(
+                            context,
+                            title: 'Credenciais',
+                            value: viewModel.credentialCount.toString(),
+                            icon: Icons.key,
+                            color: AppTheme.blue,
+                          ),
+                        ),
+                      ),
+                    ],
+                  )
+                      .animate()
+                      .fadeIn(duration: 150.ms)
+                      .slideY(begin: 0.1, end: 0, curve: Curves.easeOut),
                   const SizedBox(height: 24),
-                  _buildChartSection(context, viewModel),
+                  _buildBarChartSection(context, viewModel)
+                      .animate()
+                      .fadeIn(delay: 100.ms, duration: 200.ms)
+                      .slideY(begin: 0.1, end: 0, curve: Curves.easeOut),
                   const SizedBox(height: 24),
-                  _buildBarChartSection(context, viewModel),
+                  _buildRecentActivitySection(context, viewModel)
+                      .animate()
+                      .fadeIn(delay: 150.ms, duration: 200.ms)
+                      .slideY(begin: 0.1, end: 0, curve: Curves.easeOut),
                 ],
-              ).animate().fade(duration: 500.ms),
+              ),
             ),
     );
   }
 
-  Widget _buildCredentialCard(BuildContext context, int count) {
+  Widget _buildInfoCard(BuildContext context,
+      {required String title,
+      required String value,
+      required IconData icon,
+      required Color color}) {
+    final theme = Theme.of(context);
     return Card(
-      color: Theme.of(context).brightness == Brightness.dark
-          ? AppTheme.darkGrey
-          : AppTheme.darkestGrey,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      elevation: 6,
+      color: theme.brightness == Brightness.dark
+          ? AppTheme.darkBlue.withOpacity(0.85)
+          : AppTheme.offWhite,
       child: Padding(
-        padding: const EdgeInsets.all(20.0),
+        padding: const EdgeInsets.all(18.0),
         child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Icon(Icons.key, color: AppTheme.accentTeal, size: 32),
-            const SizedBox(height: 8),
-            Text(
-              '$count',
-              style: Theme.of(context)
-                  .textTheme
-                  .headlineMedium
-                  ?.copyWith(color: AppTheme.offWhite),
+            CircleAvatar(
+              radius: 22,
+              backgroundColor: color.withOpacity(0.15),
+              child: Icon(icon, color: color, size: 28),
             ),
+            const SizedBox(height: 12),
             Text(
-              'Credenciais Salvas',
-              style: Theme.of(context)
-                  .textTheme
-                  .bodyMedium
-                  ?.copyWith(color: AppTheme.offWhite.withAlpha(180)),
+              title,
+              style: theme.textTheme.bodyMedium?.copyWith(
+                color: theme.textTheme.bodyMedium?.color?.withOpacity(0.7),
+              ),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              value,
+              style: theme.textTheme.headlineSmall
+                  ?.copyWith(fontWeight: FontWeight.bold),
             ),
           ],
         ),
@@ -88,99 +143,108 @@ class _DashboardScreenState extends State<DashboardScreen> {
     );
   }
 
-  Widget _buildChartSection(
-      BuildContext context, DashboardViewModel viewModel) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Text(
-              'Gastos no Mês',
-              style: Theme.of(context).textTheme.headlineSmall,
-            ),
-            _buildMonthSelector(context, viewModel),
-          ],
-        ),
-        const SizedBox(height: 8),
-        Text(
-          'Total: R\$ ${viewModel.totalAmountForMonth.toStringAsFixed(2)}',
-          style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                color: Theme.of(context).colorScheme.primary,
-                fontWeight: FontWeight.bold,
-              ),
-        ),
-        const SizedBox(height: 16),
-        if (viewModel.expensesByCategoryForMonth.isEmpty)
-          const Center(
-            child: Padding(
-              padding: EdgeInsets.all(40.0),
-              child: Text('Nenhum gasto neste mês.'),
-            ),
-          )
-        else
-          SizedBox(
-            height: 250,
-            child: PieChart(
-              PieChartData(
-                sections: _generatePieChartSections(
-                    context, viewModel.expensesByCategoryForMonth),
-                sectionsSpace: 2,
-                centerSpaceRadius: 40,
-              ),
-            ),
-          ),
-      ],
-    );
-  }
-
   Widget _buildBarChartSection(
       BuildContext context, DashboardViewModel viewModel) {
-    final monthlyTotals = viewModel.monthlyExpenseTotals;
+    final monthlyTotals = viewModel.lastSixMonthsExpenseTotals;
+    final theme = Theme.of(context);
     if (monthlyTotals.isEmpty) return const SizedBox.shrink();
+
+    final chartData = monthlyTotals.entries.toList();
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text('Histórico Mensal',
-            style: Theme.of(context).textTheme.headlineSmall),
+            style: theme.textTheme.headlineSmall
+                ?.copyWith(fontWeight: FontWeight.w600)),
         const SizedBox(height: 16),
         SizedBox(
-          height: 200,
+          height: 240,
           child: BarChart(
             BarChartData(
               alignment: BarChartAlignment.spaceAround,
-              barGroups: monthlyTotals.entries.map((entry) {
-                final dateParts = entry.key.split('-');
-                final month = int.parse(dateParts[1]);
-                return BarChartGroupData(
-                  x: month,
-                  barRods: [
-                    BarChartRodData(
-                      toY: entry.value,
-                      color: Theme.of(context).colorScheme.primary,
-                      width: 16,
-                      borderRadius: BorderRadius.circular(4),
-                    ),
-                  ],
-                );
-              }).toList(),
+              barTouchData: BarTouchData(
+                enabled: true,
+                touchTooltipData: BarTouchTooltipData(
+                  tooltipPadding:
+                      const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                  tooltipMargin: 8,
+                  getTooltipItem: (group, groupIndex, rod, rodIndex) {
+                    final value = rod.toY;
+                    return BarTooltipItem(
+                      'R\$ ${value.toStringAsFixed(2)}',
+                      const TextStyle(
+                        color: AppTheme.offWhite,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 14,
+                      ),
+                    );
+                  },
+                ),
+              ),
               titlesData: FlTitlesData(
+                show: true,
                 bottomTitles: AxisTitles(
-                    sideTitles: SideTitles(
-                        showTitles: true,
-                        getTitlesWidget: (value, meta) =>
-                            Text(value.toInt().toString()))),
-                leftTitles: AxisTitles(
-                    sideTitles: SideTitles(showTitles: true, reservedSize: 40)),
+                  sideTitles: SideTitles(
+                    showTitles: true,
+                    reservedSize: 32,
+                    getTitlesWidget: (value, meta) {
+                      final index = value.toInt();
+                      if (index < 0 || index >= chartData.length) {
+                        return const SizedBox.shrink();
+                      }
+                      final date = chartData[index].key;
+                      return Padding(
+                        padding: const EdgeInsets.only(top: 8.0),
+                        child: Text(
+                          DateFormat('MMM', 'pt_BR').format(date),
+                          style: theme.textTheme.bodySmall
+                              ?.copyWith(fontWeight: FontWeight.w500),
+                        ),
+                      );
+                    },
+                  ),
+                ),
+                leftTitles:
+                    const AxisTitles(sideTitles: SideTitles(showTitles: false)),
                 topTitles:
                     const AxisTitles(sideTitles: SideTitles(showTitles: false)),
                 rightTitles:
                     const AxisTitles(sideTitles: SideTitles(showTitles: false)),
               ),
-              gridData: const FlGridData(show: true),
+              gridData: FlGridData(
+                show: true,
+                drawVerticalLine: false,
+                getDrawingHorizontalLine: (value) => FlLine(
+                  color: theme.dividerColor.withOpacity(0.1),
+                  strokeWidth: 1,
+                ),
+              ),
               borderData: FlBorderData(show: false),
+              barGroups: List.generate(chartData.length, (index) {
+                final item = chartData[index];
+                return BarChartGroupData(
+                  x: index,
+                  barRods: [
+                    BarChartRodData(
+                      toY: item.value,
+                      gradient: LinearGradient(
+                        colors: [
+                          AppTheme.pink.withOpacity(0.9),
+                          AppTheme.pink.withOpacity(0.6)
+                        ],
+                        begin: Alignment.bottomCenter,
+                        end: Alignment.topCenter,
+                      ),
+                      width: 22,
+                      borderRadius: const BorderRadius.only(
+                        topLeft: Radius.circular(8),
+                        topRight: Radius.circular(8),
+                      ),
+                    ),
+                  ],
+                );
+              }),
             ),
           ),
         ),
@@ -188,66 +252,57 @@ class _DashboardScreenState extends State<DashboardScreen> {
     );
   }
 
-  Widget _buildMonthSelector(
+  Widget _buildRecentActivitySection(
       BuildContext context, DashboardViewModel viewModel) {
-    return DropdownButton<DateTime>(
-      value: viewModel.selectedMonth,
-      dropdownColor: Theme.of(context).colorScheme.surface,
-      onChanged: (DateTime? newValue) {
-        if (newValue != null) {
-          viewModel.filterExpensesByMonth(newValue);
-        }
-      },
-      items: List.generate(12, (index) {
-        final month =
-            DateTime(DateTime.now().year, DateTime.now().month - index);
-        return DropdownMenuItem<DateTime>(
-          value: month,
-          child: Text(
-            '${month.month}/${month.year}',
-            style: Theme.of(context).textTheme.bodyMedium,
-          ),
-        );
-      }),
+    final recentExpenses = viewModel.recentExpenses;
+    final theme = Theme.of(context);
+
+    if (recentExpenses.isEmpty) {
+      return const SizedBox.shrink();
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text('Últimas Atividades',
+            style: theme.textTheme.headlineSmall
+                ?.copyWith(fontWeight: FontWeight.w600)),
+        const SizedBox(height: 16),
+        ...recentExpenses
+            .map((expense) => _buildActivityTile(context, expense)),
+      ],
     );
   }
 
-  List<PieChartSectionData> _generatePieChartSections(
-      BuildContext context, Map<String, double> data) {
+  Widget _buildActivityTile(BuildContext context, Expense expense) {
     final theme = Theme.of(context);
-    final isDarkMode = theme.brightness == Brightness.dark;
-
-    final List<Color> colors = [
-      AppTheme.accentTeal,
-      isDarkMode ? AppTheme.offWhite.withAlpha(200) : AppTheme.darkGrey,
-      theme.colorScheme.secondaryContainer,
-      theme.colorScheme.tertiaryContainer,
-    ];
-    int colorIndex = 0;
-
-    final titleStyle = TextStyle(
-      fontSize: 14,
-      fontWeight: FontWeight.bold,
-      color: isDarkMode ? AppTheme.darkestGrey : AppTheme.offWhite,
-      shadows: const [
-        Shadow(
-          color: Colors.black26,
-          blurRadius: 2,
-        )
-      ],
+    return Card(
+      margin: const EdgeInsets.only(bottom: 12),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      elevation: 2,
+      color: theme.brightness == Brightness.dark
+          ? AppTheme.darkBlue.withOpacity(0.85)
+          : AppTheme.offWhite,
+      child: ListTile(
+        leading: CircleAvatar(
+          backgroundColor: AppTheme.pink.withOpacity(0.1),
+          child: Icon(expense.category?.icon ?? Icons.category,
+              color: AppTheme.pink),
+        ),
+        title: Text(
+          expense.location?.isNotEmpty == true
+              ? expense.location!
+              : (expense.category?.displayName ?? 'Gasto Geral'),
+          style:
+              theme.textTheme.bodyLarge?.copyWith(fontWeight: FontWeight.bold),
+        ),
+        subtitle: Text(DateFormat('dd/MM/yyyy').format(expense.date)),
+        trailing: Text(
+          '- R\$ ${expense.amount.toStringAsFixed(2)}',
+          style: theme.textTheme.bodyMedium
+              ?.copyWith(fontWeight: FontWeight.bold, color: AppTheme.pink),
+        ),
+      ),
     );
-
-    return data.entries.map((entry) {
-      final sectionColor = colors[colorIndex % colors.length];
-      colorIndex++;
-
-      return PieChartSectionData(
-        color: sectionColor,
-        value: entry.value,
-        title: entry.key,
-        radius: 100,
-        titleStyle: titleStyle,
-      );
-    }).toList();
   }
 }

@@ -53,7 +53,8 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
     final appLockService = Provider.of<AppLockService>(context, listen: false);
     final authViewModel = Provider.of<AuthViewModel>(context, listen: false);
 
-    if (state == AppLifecycleState.paused && authViewModel.currentUser != null) {
+    if (state == AppLifecycleState.paused &&
+        authViewModel.currentUser != null) {
       appLockService.lockApp();
     }
   }

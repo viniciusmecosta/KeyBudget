@@ -18,15 +18,24 @@ class EncryptionService {
   }
 
   late final encrypt.Encrypter _encrypter;
-  final _iv = encrypt.IV.fromLength(16);
 
   String encryptData(String plainText) {
-    final encrypted = _encrypter.encrypt(plainText, iv: _iv);
-    return encrypted.base64;
+    final iv = encrypt.IV.fromSecureRandom(16);
+    final encrypted = _encrypter.encrypt(plainText, iv: iv);
+    return '${iv.base64}:${encrypted.base64}';
   }
 
   String decryptData(String encryptedText) {
-    final encrypted = encrypt.Encrypted.fromBase64(encryptedText);
-    return _encrypter.decrypt(encrypted, iv: _iv);
+    try {
+      final parts = encryptedText.split(':');
+      if (parts.length != 2) {
+        throw Exception("Invalid encrypted text format");
+      }
+      final iv = encrypt.IV.fromBase64(parts[0]);
+      final encrypted = encrypt.Encrypted.fromBase64(parts[1]);
+      return _encrypter.decrypt(encrypted, iv: iv);
+    } catch (e) {
+      return 'ERRO_DECRIPT';
+    }
   }
 }
