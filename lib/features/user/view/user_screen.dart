@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import 'package:key_budget/app/config/app_theme.dart';
 import 'package:key_budget/features/auth/view/login_screen.dart';
 import 'package:key_budget/features/auth/viewmodel/auth_viewmodel.dart';
@@ -72,21 +73,14 @@ class UserScreen extends StatelessWidget {
     final count = await expViewModel.importAllExpensesFromJson(userId);
     Navigator.of(context).pop();
 
-    if (count > 0) {
-      scaffoldMessenger.showSnackBar(
-        SnackBar(
-          content: Text('$count despesas importadas com sucesso!'),
-          backgroundColor: Colors.green,
-        ),
-      );
-    } else {
-      scaffoldMessenger.showSnackBar(
-        SnackBar(
-          content: const Text('Nenhuma despesa foi importada.'),
-          backgroundColor: Theme.of(context).colorScheme.error,
-        ),
-      );
-    }
+    scaffoldMessenger.showSnackBar(
+      SnackBar(
+        content: Text(count > 0
+            ? '$count despesas importadas com sucesso!'
+            : 'Nenhuma despesa foi importada.'),
+        backgroundColor: count > 0 ? Colors.green : Theme.of(context).colorScheme.error,
+      ),
+    );
   }
 
   void _importCredentialsData(BuildContext context) async {
@@ -100,21 +94,14 @@ class UserScreen extends StatelessWidget {
     final count = await credViewModel.importCredentialsFromJson(userId);
     Navigator.of(context).pop();
 
-    if (count > 0) {
-      scaffoldMessenger.showSnackBar(
-        SnackBar(
-          content: Text('$count credenciais importadas com sucesso!'),
-          backgroundColor: Colors.green,
-        ),
-      );
-    } else {
-      scaffoldMessenger.showSnackBar(
-        SnackBar(
-          content: const Text('Nenhuma credencial foi importada.'),
-          backgroundColor: Theme.of(context).colorScheme.error,
-        ),
-      );
-    }
+    scaffoldMessenger.showSnackBar(
+      SnackBar(
+        content: Text(count > 0
+            ? '$count credenciais importadas com sucesso!'
+            : 'Nenhuma credencial foi importada.'),
+        backgroundColor: count > 0 ? Colors.green : Theme.of(context).colorScheme.error,
+      ),
+    );
   }
 
   @override
@@ -173,42 +160,61 @@ class UserScreen extends StatelessWidget {
                         ? const Icon(Icons.person, size: 50)
                         : null,
                   ),
-                ),
+                ).animate().fadeIn(duration: 400.ms).scaleXY(begin: 0.8, end: 1.0),
                 const SizedBox(height: 16),
                 Center(
                   child: Text(
                     user?.name ?? 'Usuário',
                     style: Theme.of(context).textTheme.headlineSmall,
                   ),
-                ),
+                ).animate().fadeIn(delay: 100.ms, duration: 400.ms),
                 Center(
                   child: Text(
                     user?.email ?? '',
                     style: Theme.of(context).textTheme.bodyMedium,
                   ),
-                ),
+                ).animate().fadeIn(delay: 200.ms, duration: 400.ms),
                 if (user?.phoneNumber != null && user!.phoneNumber!.isNotEmpty)
                   Center(
                     child: Text(
                       user.phoneNumber!,
                       style: Theme.of(context).textTheme.bodyMedium,
                     ),
-                  ),
+                  ).animate().fadeIn(delay: 300.ms, duration: 400.ms),
                 const Spacer(),
-                const SizedBox(height: 8),
                 ElevatedButton(
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Theme.of(context).colorScheme.error,
+                    padding: const EdgeInsets.symmetric(vertical: 16),
                   ),
                   onPressed: () {
-                    Provider.of<AuthViewModel>(context, listen: false).logout();
-                    Navigator.of(context).pushAndRemoveUntil(
-                      MaterialPageRoute(builder: (_) => const LoginScreen()),
-                          (route) => false,
+                    showDialog(
+                      context: context,
+                      builder: (_) => AlertDialog(
+                        title: const Text("Confirmar Logout"),
+                        content: const Text("Deseja realmente sair do aplicativo?"),
+                        actions: [
+                          TextButton(
+                            onPressed: () => Navigator.of(context).pop(),
+                            child: const Text("Cancelar"),
+                          ),
+                          ElevatedButton(
+                            onPressed: () {
+                              Provider.of<AuthViewModel>(context, listen: false).logout();
+                              Navigator.of(context).pushAndRemoveUntil(
+                                MaterialPageRoute(builder: (_) => const LoginScreen()),
+                                    (route) => false,
+                              );
+                            },
+                            child: const Text("Sair"),
+                          ),
+                        ],
+                      ),
                     );
                   },
                   child: const Text('Sair'),
-                ),
+                ).animate().fadeIn(delay: 400.ms, duration: 400.ms).scaleXY(begin: 0.9, end: 1.0),
+
               ],
             ),
           );
