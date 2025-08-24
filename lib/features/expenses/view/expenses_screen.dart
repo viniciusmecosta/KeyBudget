@@ -48,24 +48,39 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
     final count =
         await viewModel.importExpensesFromCsv(authViewModel.currentUser!.id);
     if (!mounted) return;
-    scaffoldMessenger.showSnackBar(SnackBar(
+    scaffoldMessenger.showSnackBar(
+      SnackBar(
         content: Text('$count despesas importadas com sucesso!'),
-        backgroundColor: Colors.green));
+        backgroundColor: Colors.green,
+      ),
+    );
   }
 
   void _showCategoryFilter() {
     final viewModel = Provider.of<ExpenseViewModel>(context, listen: false);
     showModalBottomSheet(
       context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
       builder: (context) {
         return StatefulBuilder(
-          builder: (BuildContext context, StateSetter setModalState) {
+          builder: (context, setModalState) {
             return Column(
               children: [
-                Padding(
-                  padding: const EdgeInsets.all(8.0),
-                  child: Text('Filtrar por Categoria',
-                      style: Theme.of(context).textTheme.titleLarge),
+                const SizedBox(height: 12),
+                Container(
+                  height: 5,
+                  width: 50,
+                  decoration: BoxDecoration(
+                    color: Colors.grey.shade400,
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                ),
+                const SizedBox(height: 16),
+                Text(
+                  'Filtrar por Categoria',
+                  style: Theme.of(context).textTheme.titleLarge,
                 ),
                 Expanded(
                   child: ListView(
@@ -75,8 +90,8 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
                       return CheckboxListTile(
                         title: Text(category.displayName),
                         value: isSelected,
-                        onChanged: (bool? value) {
-                          var currentSelection = List<ExpenseCategory>.from(
+                        onChanged: (value) {
+                          final currentSelection = List<ExpenseCategory>.from(
                               viewModel.selectedCategories);
                           if (value == true) {
                             currentSelection.add(category);
@@ -108,6 +123,15 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
     );
   }
 
+  String _formatMonthYear(DateTime date) {
+    final now = DateTime.now();
+    if (date.year == now.year) {
+      return DateFormat.MMMM('pt_BR').format(date);
+    } else {
+      return DateFormat.yMMMM('pt_BR').format(date);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final viewModel = Provider.of<ExpenseViewModel>(context);
@@ -116,8 +140,8 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
         .where((exp) =>
             exp.date.year == _selectedMonth.year &&
             exp.date.month == _selectedMonth.month)
-        .toList();
-    monthlyExpenses.sort((a, b) => b.date.compareTo(a.date));
+        .toList()
+      ..sort((a, b) => b.date.compareTo(a.date));
 
     final totalValue = monthlyExpenses.fold<double>(
       0.0,
@@ -129,21 +153,21 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
         title: const Text('Meus Gastos'),
         actions: [
           IconButton(
-            icon: const Icon(Icons.filter_list),
+            icon: const Icon(Icons.filter_list_rounded),
             onPressed: _showCategoryFilter,
           ),
           PopupMenuButton(
-            itemBuilder: (context) => [
-              const PopupMenuItem(
-                  value: 'import', child: Text('Importar de CSV')),
-              const PopupMenuItem(
-                  value: 'export', child: Text('Exportar para CSV')),
+            itemBuilder: (context) => const [
+              PopupMenuItem(value: 'import', child: Text('Importar de CSV')),
+              PopupMenuItem(value: 'export', child: Text('Exportar para CSV')),
             ],
             onSelected: (value) {
               if (value == 'import') _import(context);
               if (value == 'export') {
-                Navigator.of(context).push(MaterialPageRoute(
-                    builder: (_) => const ExportExpensesScreen()));
+                Navigator.of(context).push(
+                  MaterialPageRoute(
+                      builder: (_) => const ExportExpensesScreen()),
+                );
               }
             },
           ),
@@ -154,16 +178,49 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
         child: Column(
           children: [
             _buildMonthSelector(context),
-            Padding(
-              padding: const EdgeInsets.symmetric(vertical: 8.0),
-              child: Text(
-                'Total: R\$ ${totalValue.toStringAsFixed(2)}',
-                style: Theme.of(context)
-                    .textTheme
-                    .titleLarge
-                    ?.copyWith(fontWeight: FontWeight.bold),
+            Card(
+              elevation: 3,
+              margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16),
               ),
-            ),
+              child: Container(
+                width: double.infinity,
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [
+                      Theme.of(context).colorScheme.primary.withOpacity(0.6),
+                      Theme.of(context).colorScheme.primary
+                    ],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      'Total do mês',
+                      style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                            color: Colors.white70,
+                            fontWeight: FontWeight.w500,
+                          ),
+                    ),
+                    Text(
+                      'R\$ ${totalValue.toStringAsFixed(2)}',
+                      style:
+                          Theme.of(context).textTheme.headlineMedium?.copyWith(
+                                fontWeight: FontWeight.bold,
+                                color: Colors.white,
+                              ),
+                    ),
+                  ],
+                ),
+              ),
+            ).animate().fadeIn(duration: 200.ms).slideY(begin: -0.2, end: 0),
             Expanded(
               child: Consumer<ExpenseViewModel>(
                 builder: (context, vm, child) {
@@ -171,51 +228,71 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
                     return const Center(child: CircularProgressIndicator());
                   }
                   if (monthlyExpenses.isEmpty) {
-                    return LayoutBuilder(builder: (context, constraints) {
-                      return SingleChildScrollView(
-                        physics: const AlwaysScrollableScrollPhysics(),
-                        child: ConstrainedBox(
-                          constraints:
-                              BoxConstraints(minHeight: constraints.maxHeight),
-                          child: EmptyStateWidget(
-                            icon: Icons.money_off,
-                            message:
-                                'Nenhuma despesa encontrada para este mês.',
-                            buttonText: 'Adicionar Despesa',
-                            onButtonPressed: () => Navigator.of(context).push(
-                                MaterialPageRoute(
-                                    builder: (_) => const AddExpenseScreen())),
-                          ),
-                        ),
-                      );
-                    });
+                    return EmptyStateWidget(
+                      icon: Icons.money_off,
+                      message: 'Nenhuma despesa encontrada para este mês.',
+                      buttonText: 'Adicionar Despesa',
+                      onButtonPressed: () => Navigator.of(context).push(
+                        MaterialPageRoute(
+                            builder: (_) => const AddExpenseScreen()),
+                      ),
+                    );
                   }
                   return ListView.builder(
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                     itemCount: monthlyExpenses.length,
                     itemBuilder: (context, index) {
                       final expense = monthlyExpenses[index];
-                      return ListTile(
-                        leading: Icon(expense.category?.icon ?? Icons.category),
-                        title: Text(expense.location?.isNotEmpty == true
-                            ? expense.location!
-                            : (expense.category?.displayName ?? 'Gasto Geral')),
-                        subtitle:
-                            Text(DateFormat('dd/MM/yyyy').format(expense.date)),
-                        trailing: Text(
-                          'R\$ ${expense.amount.toStringAsFixed(2)}',
-                          style: TextStyle(
-                              color: Theme.of(context).colorScheme.error,
-                              fontWeight: FontWeight.bold),
+                      return Card(
+                        margin: const EdgeInsets.symmetric(
+                            horizontal: 4, vertical: 6),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(14),
                         ),
-                        onTap: () {
-                          Navigator.of(context).push(
-                            MaterialPageRoute(
-                              builder: (_) =>
-                                  ExpenseDetailScreen(expense: expense),
+                        elevation: 2,
+                        child: ListTile(
+                          leading: CircleAvatar(
+                            backgroundColor: Theme.of(context)
+                                .colorScheme
+                                .primary
+                                .withOpacity(0.15),
+                            child: Icon(
+                              expense.category?.icon ?? Icons.category,
+                              color: Theme.of(context).colorScheme.primary,
                             ),
-                          );
-                        },
-                      ).animate().fade(delay: (100 * index).ms).slideX();
+                          ),
+                          title: Text(
+                            expense.location?.isNotEmpty == true
+                                ? expense.location!
+                                : (expense.category?.displayName ??
+                                    'Gasto Geral'),
+                            style: const TextStyle(fontWeight: FontWeight.w600),
+                          ),
+                          subtitle: Text(
+                            DateFormat('dd/MM/yyyy').format(expense.date),
+                          ),
+                          trailing: Text(
+                            'R\$ ${expense.amount.toStringAsFixed(2)}',
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              color: Theme.of(context).colorScheme.error,
+                              fontSize: 18,
+                            ),
+                          ),
+                          onTap: () {
+                            Navigator.of(context).push(
+                              MaterialPageRoute(
+                                builder: (_) =>
+                                    ExpenseDetailScreen(expense: expense),
+                              ),
+                            );
+                          },
+                        ),
+                      )
+                          .animate()
+                          .fadeIn(delay: (50 * index).ms, duration: 200.ms)
+                          .slideX(begin: 0.1, end: 0);
                     },
                   );
                 },
@@ -224,17 +301,24 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
           ],
         ),
       ),
-      floatingActionButton: FloatingActionButton(
+      floatingActionButton: FloatingActionButton.extended(
         onPressed: () => Navigator.of(context)
             .push(MaterialPageRoute(builder: (_) => const AddExpenseScreen())),
-        child: const Icon(Icons.add),
-      ),
+        icon: const Icon(Icons.add),
+        label: const Text("Nova Despesa"),
+      )
+          .animate()
+          .scaleXY(begin: 0.9, end: 1.0, duration: 150.ms)
+          .then(delay: 200.ms)
+          .scaleXY(end: 1.05, duration: 300.ms)
+          .then()
+          .scaleXY(end: 1.0, duration: 300.ms),
     );
   }
 
   Widget _buildMonthSelector(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
@@ -248,8 +332,11 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
             },
           ),
           Text(
-            '${_selectedMonth.month}/${_selectedMonth.year}',
-            style: Theme.of(context).textTheme.titleLarge,
+            _formatMonthYear(_selectedMonth),
+            style: Theme.of(context)
+                .textTheme
+                .titleLarge
+                ?.copyWith(fontWeight: FontWeight.bold),
           ),
           IconButton(
             icon: const Icon(Icons.chevron_right),

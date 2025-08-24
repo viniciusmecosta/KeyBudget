@@ -205,11 +205,12 @@ class _ExpenseDetailScreenState extends State<ExpenseDetailScreen> {
                 ElevatedButton(
                   onPressed: _isSaving ? null : _saveChanges,
                   child: _isSaving
-                      ? const SizedBox(
+                      ? SizedBox(
                           height: 24,
                           width: 24,
                           child: CircularProgressIndicator(
-                              color: Colors.white, strokeWidth: 2.0))
+                              color: Theme.of(context).colorScheme.onPrimary,
+                              strokeWidth: 2.0))
                       : const Text('Salvar Alterações'),
                 )
             ],

@@ -2,11 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:key_budget/core/models/expense_category.dart';
 import 'package:key_budget/core/models/expense_model.dart';
 import 'package:key_budget/core/services/csv_service.dart';
+import 'package:key_budget/core/services/data_import_service.dart';
 import 'package:key_budget/features/expenses/repository/expense_repository.dart';
 
 class ExpenseViewModel extends ChangeNotifier {
   final ExpenseRepository _repository = ExpenseRepository();
   final CsvService _csvService = CsvService();
+  final DataImportService _dataImportService = DataImportService();
 
   List<Expense> _allExpenses = [];
   bool _isLoading = false;
@@ -98,6 +100,14 @@ class ExpenseViewModel extends ChangeNotifier {
       count++;
     }
     await fetchExpenses(userId);
+    return count;
+  }
+
+  Future<int> importAllExpensesFromJson(String userId) async {
+    _setLoading(true);
+    final count = await _dataImportService.importExpensesFromJsons(userId);
+    await fetchExpenses(userId);
+    _setLoading(false);
     return count;
   }
 }

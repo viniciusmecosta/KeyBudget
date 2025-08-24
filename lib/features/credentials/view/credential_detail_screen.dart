@@ -28,6 +28,7 @@ class _CredentialDetailScreenState extends State<CredentialDetailScreen> {
   bool _isSaving = false;
   bool _isPasswordVisible = false;
   late String _decryptedPassword;
+  bool _decryptionError = false;
 
   @override
   void initState() {
@@ -45,6 +46,11 @@ class _CredentialDetailScreenState extends State<CredentialDetailScreen> {
     _decryptedPassword =
         Provider.of<CredentialViewModel>(context, listen: false)
             .decryptPassword(widget.credential.encryptedPassword);
+
+    if (_decryptedPassword == 'ERRO_DECRIPT') {
+      _decryptionError = true;
+      _decryptedPassword = 'Falha ao decifrar';
+    }
   }
 
   @override
@@ -59,6 +65,13 @@ class _CredentialDetailScreenState extends State<CredentialDetailScreen> {
   }
 
   void _copyToClipboard(String text) {
+    if (_decryptionError) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+            content: Text('Não é possível copiar a senha com erro.')),
+      );
+      return;
+    }
     Clipboard.setData(ClipboardData(text: text));
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(content: Text('Copiado para a área de transferência!')),
@@ -229,6 +242,9 @@ class _CredentialDetailScreenState extends State<CredentialDetailScreen> {
                   obscureText: !_isPasswordVisible,
                   decoration: InputDecoration(
                     labelText: 'Senha',
+                    errorText: _decryptionError
+                        ? 'Erro nos dados. Edite e salve novamente.'
+                        : null,
                     suffixIcon: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
@@ -302,11 +318,12 @@ class _CredentialDetailScreenState extends State<CredentialDetailScreen> {
                 ElevatedButton(
                   onPressed: _isSaving ? null : _saveChanges,
                   child: _isSaving
-                      ? const SizedBox(
+                      ? SizedBox(
                           height: 24,
                           width: 24,
                           child: CircularProgressIndicator(
-                              color: Colors.white, strokeWidth: 2.0))
+                              color: Theme.of(context).colorScheme.onPrimary,
+                              strokeWidth: 2.0))
                       : const Text('Salvar Alterações'),
                 )
             ],

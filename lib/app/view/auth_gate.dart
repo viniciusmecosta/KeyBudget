@@ -15,7 +15,6 @@ class AuthGate extends StatelessWidget {
       return const Scaffold(body: Center(child: CircularProgressIndicator()));
     }
 
-
     return authViewModel.currentUser != null
         ? const AuthWrapper()
         : const LoginScreen();
