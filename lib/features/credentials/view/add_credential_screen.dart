@@ -40,7 +40,7 @@ class _AddCredentialScreenState extends State<AddCredentialScreen> {
     setState(() => _isSaving = true);
 
     final credentialViewModel =
-        Provider.of<CredentialViewModel>(context, listen: false);
+    Provider.of<CredentialViewModel>(context, listen: false);
     final authViewModel = Provider.of<AuthViewModel>(context, listen: false);
 
     credentialViewModel
@@ -51,7 +51,7 @@ class _AddCredentialScreenState extends State<AddCredentialScreen> {
       plainPassword: _passwordController.text,
       email: _emailController.text.isNotEmpty ? _emailController.text : null,
       phoneNumber:
-          _phoneController.text.isNotEmpty ? _phoneController.text : null,
+      _phoneController.text.isNotEmpty ? _phoneController.text : null,
       notes: _notesController.text.isNotEmpty ? _notesController.text : null,
       logoPath: _logoPath,
     )
@@ -83,14 +83,14 @@ class _AddCredentialScreenState extends State<AddCredentialScreen> {
                 controller: _locationController,
                 decoration: const InputDecoration(labelText: 'Local/Serviço *'),
                 validator: (value) =>
-                    value!.isEmpty ? 'Campo obrigatório' : null,
+                value!.isEmpty ? 'Campo obrigatório' : null,
               ),
               const SizedBox(height: 16),
               TextFormField(
                 controller: _loginController,
                 decoration: const InputDecoration(labelText: 'Login/Usuário *'),
                 validator: (value) =>
-                    value!.isEmpty ? 'Campo obrigatório' : null,
+                value!.isEmpty ? 'Campo obrigatório' : null,
               ),
               const SizedBox(height: 16),
               TextFormField(
@@ -110,38 +110,39 @@ class _AddCredentialScreenState extends State<AddCredentialScreen> {
                   ),
                 ),
                 validator: (value) =>
-                    value!.isEmpty ? 'Campo obrigatório' : null,
+                value!.isEmpty ? 'Campo obrigatório' : null,
               ),
               const SizedBox(height: 16),
               TextFormField(
                 controller: _emailController,
                 decoration:
-                    const InputDecoration(labelText: 'Email (opcional)'),
+                const InputDecoration(labelText: 'Email (opcional)'),
                 keyboardType: TextInputType.emailAddress,
               ),
               const SizedBox(height: 16),
               TextFormField(
                 controller: _phoneController,
                 decoration:
-                    const InputDecoration(labelText: 'Número (opcional)'),
+                const InputDecoration(labelText: 'Número (opcional)'),
                 keyboardType: TextInputType.phone,
               ),
               const SizedBox(height: 16),
               TextFormField(
                 controller: _notesController,
                 decoration:
-                    const InputDecoration(labelText: 'Observações (opcional)'),
+                const InputDecoration(labelText: 'Observações (opcional)'),
                 maxLines: 3,
               ),
               const SizedBox(height: 32),
               ElevatedButton(
                 onPressed: _isSaving ? null : _submit,
                 child: _isSaving
-                    ? const SizedBox(
-                        height: 24,
-                        width: 24,
-                        child: CircularProgressIndicator(
-                            color: Colors.white, strokeWidth: 2.0))
+                    ? SizedBox(
+                    height: 24,
+                    width: 24,
+                    child: CircularProgressIndicator(
+                        color: Theme.of(context).colorScheme.onPrimary,
+                        strokeWidth: 2.0))
                     : const Text('Salvar Credencial'),
               ),
             ],

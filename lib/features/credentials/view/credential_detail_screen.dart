@@ -111,7 +111,7 @@ class _CredentialDetailScreenState extends State<CredentialDetailScreen> {
       builder: (ctx) => AlertDialog(
         title: const Text('Confirmar Exclusão'),
         content:
-            const Text('Você tem certeza que deseja excluir esta credencial?'),
+        const Text('Você tem certeza que deseja excluir esta credencial?'),
         actions: [
           TextButton(
             child: const Text('Cancelar'),
@@ -121,7 +121,7 @@ class _CredentialDetailScreenState extends State<CredentialDetailScreen> {
             child: const Text('Excluir'),
             onPressed: () {
               final authViewModel =
-                  Provider.of<AuthViewModel>(context, listen: false);
+              Provider.of<AuthViewModel>(context, listen: false);
               final userId = authViewModel.currentUser!.id;
               Provider.of<CredentialViewModel>(context, listen: false)
                   .deleteCredential(userId, widget.credential.id!)
@@ -174,20 +174,20 @@ class _CredentialDetailScreenState extends State<CredentialDetailScreen> {
               Center(
                 child: _isEditing
                     ? LogoPicker(
-                        initialImagePath: _logoPath,
-                        onImageSelected: (path) {
-                          setState(() {
-                            _logoPath = path;
-                          });
-                        },
-                      )
+                  initialImagePath: _logoPath,
+                  onImageSelected: (path) {
+                    setState(() {
+                      _logoPath = path;
+                    });
+                  },
+                )
                     : CircleAvatar(
-                        radius: 40,
-                        backgroundImage: imageProvider,
-                        child: imageProvider == null
-                            ? const Icon(Icons.vpn_key_outlined, size: 30)
-                            : null,
-                      ),
+                  radius: 40,
+                  backgroundImage: imageProvider,
+                  child: imageProvider == null
+                      ? const Icon(Icons.vpn_key_outlined, size: 30)
+                      : null,
+                ),
               ),
               const SizedBox(height: 24),
               TextFormField(
@@ -196,15 +196,15 @@ class _CredentialDetailScreenState extends State<CredentialDetailScreen> {
                   labelText: 'Local/Serviço *',
                   suffixIcon: !_isEditing
                       ? IconButton(
-                          icon: const Icon(Icons.copy, size: 20),
-                          onPressed: () =>
-                              _copyToClipboard(_locationController.text),
-                        )
+                    icon: const Icon(Icons.copy, size: 20),
+                    onPressed: () =>
+                        _copyToClipboard(_locationController.text),
+                  )
                       : null,
                 ),
                 enabled: _isEditing,
                 validator: (value) =>
-                    value!.isEmpty ? 'Campo obrigatório' : null,
+                value!.isEmpty ? 'Campo obrigatório' : null,
               ),
               const SizedBox(height: 16),
               TextFormField(
@@ -213,15 +213,15 @@ class _CredentialDetailScreenState extends State<CredentialDetailScreen> {
                   labelText: 'Login/Usuário *',
                   suffixIcon: !_isEditing
                       ? IconButton(
-                          icon: const Icon(Icons.copy, size: 20),
-                          onPressed: () =>
-                              _copyToClipboard(_loginController.text),
-                        )
+                    icon: const Icon(Icons.copy, size: 20),
+                    onPressed: () =>
+                        _copyToClipboard(_loginController.text),
+                  )
                       : null,
                 ),
                 enabled: _isEditing,
                 validator: (value) =>
-                    value!.isEmpty ? 'Campo obrigatório' : null,
+                value!.isEmpty ? 'Campo obrigatório' : null,
               ),
               const SizedBox(height: 16),
               if (_isEditing)
@@ -229,7 +229,7 @@ class _CredentialDetailScreenState extends State<CredentialDetailScreen> {
                   controller: _newPasswordController,
                   decoration: const InputDecoration(
                       labelText:
-                          'Nova Senha (deixe em branco para não alterar)'),
+                      'Nova Senha (deixe em branco para não alterar)'),
                   obscureText: true,
                 )
               else
@@ -255,7 +255,7 @@ class _CredentialDetailScreenState extends State<CredentialDetailScreen> {
                                   : Icons.visibility,
                               size: 20),
                           onPressed: () => setState(
-                              () => _isPasswordVisible = !_isPasswordVisible),
+                                  () => _isPasswordVisible = !_isPasswordVisible),
                         ),
                         IconButton(
                           icon: const Icon(Icons.copy, size: 20),
@@ -272,10 +272,10 @@ class _CredentialDetailScreenState extends State<CredentialDetailScreen> {
                   labelText: 'Email',
                   suffixIcon: !_isEditing && _emailController.text.isNotEmpty
                       ? IconButton(
-                          icon: const Icon(Icons.copy, size: 20),
-                          onPressed: () =>
-                              _copyToClipboard(_emailController.text),
-                        )
+                    icon: const Icon(Icons.copy, size: 20),
+                    onPressed: () =>
+                        _copyToClipboard(_emailController.text),
+                  )
                       : null,
                 ),
                 enabled: _isEditing,
@@ -288,10 +288,10 @@ class _CredentialDetailScreenState extends State<CredentialDetailScreen> {
                   labelText: 'Número',
                   suffixIcon: !_isEditing && _phoneController.text.isNotEmpty
                       ? IconButton(
-                          icon: const Icon(Icons.copy, size: 20),
-                          onPressed: () =>
-                              _copyToClipboard(_phoneController.text),
-                        )
+                    icon: const Icon(Icons.copy, size: 20),
+                    onPressed: () =>
+                        _copyToClipboard(_phoneController.text),
+                  )
                       : null,
                 ),
                 enabled: _isEditing,
@@ -304,10 +304,10 @@ class _CredentialDetailScreenState extends State<CredentialDetailScreen> {
                   labelText: 'Observações',
                   suffixIcon: !_isEditing && _notesController.text.isNotEmpty
                       ? IconButton(
-                          icon: const Icon(Icons.copy, size: 20),
-                          onPressed: () =>
-                              _copyToClipboard(_notesController.text),
-                        )
+                    icon: const Icon(Icons.copy, size: 20),
+                    onPressed: () =>
+                        _copyToClipboard(_notesController.text),
+                  )
                       : null,
                 ),
                 enabled: _isEditing,
@@ -318,11 +318,12 @@ class _CredentialDetailScreenState extends State<CredentialDetailScreen> {
                 ElevatedButton(
                   onPressed: _isSaving ? null : _saveChanges,
                   child: _isSaving
-                      ? const SizedBox(
-                          height: 24,
-                          width: 24,
-                          child: CircularProgressIndicator(
-                              color: Colors.white, strokeWidth: 2.0))
+                      ? SizedBox(
+                      height: 24,
+                      width: 24,
+                      child: CircularProgressIndicator(
+                          color: Theme.of(context).colorScheme.onPrimary,
+                          strokeWidth: 2.0))
                       : const Text('Salvar Alterações'),
                 )
             ],
