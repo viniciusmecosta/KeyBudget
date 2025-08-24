@@ -98,7 +98,7 @@ class _CredentialsScreenState extends State<CredentialsScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Minhas Credenciais'),
+        title: const Text('Credenciais'),
         actions: [
           PopupMenuButton(
             itemBuilder: (context) => [
@@ -185,7 +185,7 @@ class _CredentialsScreenState extends State<CredentialsScreen> {
                   ),
                 )
                     .animate()
-                    .fadeIn(delay: (30 * index).ms, duration: 120.ms)
+                    .fadeIn(duration: 120.ms)
                     .slideY(begin: 0.2, end: 0)
                     .slideX(begin: -0.1, end: 0);
               },

@@ -46,11 +46,11 @@ extension ExpenseCategoryExtension on ExpenseCategory {
       case ExpenseCategory.roupa:
         return Icons.checkroom;
       case ExpenseCategory.lazer:
-        return Icons.local_mall;
-        case ExpenseCategory.farmacia:
-          return Icons.local_pharmacy_rounded;
+        return Icons.shopping_bag;
+      case ExpenseCategory.farmacia:
+        return Icons.medication_rounded;
       case ExpenseCategory.outros:
-        return Icons.category;
+        return Icons.category_rounded;
     }
   }
 }

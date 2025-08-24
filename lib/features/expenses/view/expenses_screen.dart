@@ -152,7 +152,7 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Meus Gastos'),
+        title: const Text('Despesas'),
         actions: [
           IconButton(
             icon: const Icon(Icons.filter_list_rounded),
@@ -297,7 +297,7 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
                         ),
                       )
                           .animate()
-                          .fadeIn(delay: (40 * index).ms, duration: 160.ms)
+                          .fadeIn(duration: 160.ms)
                           .slideX(begin: 0.2, end: 0)
                           .scaleXY(begin: 0.95, end: 1.0);
                     },
