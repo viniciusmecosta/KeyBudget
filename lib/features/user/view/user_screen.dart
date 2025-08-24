@@ -109,7 +109,7 @@ class UserScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Perfil e Configurações'),
+        title: const Text('Meu Perfil'),
         actions: [
           IconButton(
             icon: const Icon(Icons.edit),
