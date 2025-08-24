@@ -42,7 +42,7 @@ class _CredentialsScreenState extends State<CredentialsScreen> {
     final scaffoldMessenger = ScaffoldMessenger.of(context);
 
     final count =
-    await viewModel.importCredentialsFromCsv(authViewModel.currentUser!.id);
+        await viewModel.importCredentialsFromCsv(authViewModel.currentUser!.id);
     scaffoldMessenger.showSnackBar(SnackBar(
         content: Text('$count credenciais importadas com sucesso!'),
         backgroundColor: Colors.green));
@@ -79,7 +79,7 @@ class _CredentialsScreenState extends State<CredentialsScreen> {
               ScaffoldMessenger.of(context).showSnackBar(
                 const SnackBar(
                     content:
-                    Text('Senha copiada para a área de transferência')),
+                        Text('Senha copiada para a área de transferência')),
               );
               Navigator.of(context).pop();
             },
@@ -102,8 +102,10 @@ class _CredentialsScreenState extends State<CredentialsScreen> {
         actions: [
           PopupMenuButton(
             itemBuilder: (context) => [
-              const PopupMenuItem(value: 'import', child: Text('Importar de CSV')),
-              const PopupMenuItem(value: 'export', child: Text('Exportar para CSV')),
+              const PopupMenuItem(
+                  value: 'import', child: Text('Importar de CSV')),
+              const PopupMenuItem(
+                  value: 'export', child: Text('Exportar para CSV')),
             ],
             onSelected: (value) {
               if (value == 'import') _import(context);
@@ -124,13 +126,15 @@ class _CredentialsScreenState extends State<CredentialsScreen> {
                 return SingleChildScrollView(
                   physics: const AlwaysScrollableScrollPhysics(),
                   child: ConstrainedBox(
-                    constraints: BoxConstraints(minHeight: constraints.maxHeight),
+                    constraints:
+                        BoxConstraints(minHeight: constraints.maxHeight),
                     child: EmptyStateWidget(
                       icon: Icons.key_off,
                       message: 'Nenhuma credencial encontrada.',
                       buttonText: 'Adicionar Credencial',
                       onButtonPressed: () => Navigator.of(context).push(
-                          MaterialPageRoute(builder: (_) => const AddCredentialScreen())),
+                          MaterialPageRoute(
+                              builder: (_) => const AddCredentialScreen())),
                     ),
                   ),
                 );
@@ -143,19 +147,24 @@ class _CredentialsScreenState extends State<CredentialsScreen> {
                 final credential = vm.allCredentials[index];
                 final logoPath = credential.logoPath;
                 return Card(
-                  margin: const EdgeInsets.symmetric(horizontal: 4, vertical: 6),
+                  margin:
+                      const EdgeInsets.symmetric(horizontal: 4, vertical: 6),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(14),
                   ),
                   elevation: 2,
                   child: ListTile(
                     leading: CircleAvatar(
-                      backgroundColor: Theme.of(context).colorScheme.primary.withOpacity(0.15),
+                      backgroundColor: Theme.of(context)
+                          .colorScheme
+                          .primary
+                          .withOpacity(0.15),
                       backgroundImage: logoPath != null && logoPath.isNotEmpty
                           ? MemoryImage(base64Decode(logoPath))
                           : null,
                       child: logoPath == null || logoPath.isEmpty
-                          ? Icon(Icons.vpn_key_outlined, color: Theme.of(context).colorScheme.primary)
+                          ? Icon(Icons.vpn_key_outlined,
+                              color: Theme.of(context).colorScheme.primary)
                           : null,
                     ),
                     title: Text(credential.location),
@@ -168,8 +177,8 @@ class _CredentialsScreenState extends State<CredentialsScreen> {
                     onTap: () {
                       Navigator.of(context).push(
                         MaterialPageRoute(
-                          builder: (_) => CredentialDetailScreen(
-                              credential: credential),
+                          builder: (_) =>
+                              CredentialDetailScreen(credential: credential),
                         ),
                       );
                     },
@@ -184,8 +193,8 @@ class _CredentialsScreenState extends State<CredentialsScreen> {
         ),
       ),
       floatingActionButton: FloatingActionButton.extended(
-        onPressed: () => Navigator.of(context)
-            .push(MaterialPageRoute(builder: (_) => const AddCredentialScreen())),
+        onPressed: () => Navigator.of(context).push(
+            MaterialPageRoute(builder: (_) => const AddCredentialScreen())),
         icon: const Icon(Icons.add),
         label: const Text("Nova Credencial"),
       )

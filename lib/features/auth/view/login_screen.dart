@@ -85,10 +85,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   fontWeight: FontWeight.bold,
                   color: AppTheme.pink,
                 ),
-              ).animate()
-                  .fadeIn(duration: 200.ms)
-                  .slideY(begin: -0.4, end: 0),
-
+              ).animate().fadeIn(duration: 200.ms).slideY(begin: -0.4, end: 0),
               const SizedBox(height: 8),
               Text(
                 "Gerencie seus gastos com segurança",
@@ -104,7 +101,8 @@ class _LoginScreenState extends State<LoginScreen> {
                 ),
                 color: theme.colorScheme.surface,
                 child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 28),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 20, vertical: 28),
                   child: Form(
                     key: _formKey,
                     child: Column(
@@ -117,9 +115,9 @@ class _LoginScreenState extends State<LoginScreen> {
                           ),
                           keyboardType: TextInputType.emailAddress,
                           validator: (value) =>
-                          (value == null || !value.contains('@'))
-                              ? 'Insira um email válido'
-                              : null,
+                              (value == null || !value.contains('@'))
+                                  ? 'Insira um email válido'
+                                  : null,
                         ),
                         const SizedBox(height: 20),
                         TextFormField(
@@ -129,8 +127,7 @@ class _LoginScreenState extends State<LoginScreen> {
                             prefixIcon: Icon(Icons.lock_outline),
                           ),
                           obscureText: true,
-                          validator: (value) =>
-                          (value == null || value.isEmpty)
+                          validator: (value) => (value == null || value.isEmpty)
                               ? 'Insira sua senha'
                               : null,
                         ),
@@ -140,49 +137,46 @@ class _LoginScreenState extends State<LoginScreen> {
                             return viewModel.isLoading
                                 ? const CircularProgressIndicator()
                                 : Column(
-                              children: [
-                                SizedBox(
-                                  width: double.infinity,
-                                  child: ElevatedButton(
-                                    onPressed: _submit,
-                                    child: const Text('Entrar'),
-                                  ),
-                                ),
-                                const SizedBox(height: 16),
-                                SizedBox(
-                                  width: double.infinity,
-                                  child: OutlinedButton.icon(
-                                    onPressed: _submitGoogle,
-                                    icon: const Icon(
-                                      Icons.g_mobiledata,
-                                      size: 28,
-                                      color: AppTheme.pink,
-                                    ),
-                                    label: const Text(
-                                        'Entrar com Google'),
-                                    style: OutlinedButton.styleFrom(
-                                      side: const BorderSide(
-                                          color: AppTheme.pink,
-                                          width: 2),
-                                      shape: RoundedRectangleBorder(
-                                        borderRadius:
-                                        BorderRadius.circular(8),
+                                    children: [
+                                      SizedBox(
+                                        width: double.infinity,
+                                        child: ElevatedButton(
+                                          onPressed: _submit,
+                                          child: const Text('Entrar'),
+                                        ),
                                       ),
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            );
+                                      const SizedBox(height: 16),
+                                      SizedBox(
+                                        width: double.infinity,
+                                        child: OutlinedButton.icon(
+                                          onPressed: _submitGoogle,
+                                          icon: const Icon(
+                                            Icons.g_mobiledata,
+                                            size: 28,
+                                            color: AppTheme.pink,
+                                          ),
+                                          label:
+                                              const Text('Entrar com Google'),
+                                          style: OutlinedButton.styleFrom(
+                                            side: const BorderSide(
+                                                color: AppTheme.pink, width: 2),
+                                            shape: RoundedRectangleBorder(
+                                              borderRadius:
+                                                  BorderRadius.circular(8),
+                                            ),
+                                          ),
+                                        ),
+                                      ),
+                                    ],
+                                  );
                           },
                         ),
                       ],
                     ),
                   ),
                 ),
-              )
-                  .animate()
-                  .fadeIn(duration: 250.ms)
-                  .scale(begin: const Offset(0.9, 0.9), end: const Offset(1.0, 1.0)),
+              ).animate().fadeIn(duration: 250.ms).scale(
+                  begin: const Offset(0.9, 0.9), end: const Offset(1.0, 1.0)),
               const SizedBox(height: 20),
               TextButton(
                 onPressed: () {
@@ -191,10 +185,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   );
                 },
                 child: const Text("Não tem uma conta? Cadastre-se"),
-              ).animate()
-                  .fadeIn(duration: 300.ms)
-                  .slideY(begin: 0.3, end: 0),
-
+              ).animate().fadeIn(duration: 300.ms).slideY(begin: 0.3, end: 0),
             ],
           ),
         ),

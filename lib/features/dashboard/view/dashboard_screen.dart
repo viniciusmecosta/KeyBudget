@@ -33,7 +33,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
   Widget build(BuildContext context) {
     final viewModel = Provider.of<DashboardViewModel>(context);
     final navigationViewModel =
-    Provider.of<NavigationViewModel>(context, listen: false);
+        Provider.of<NavigationViewModel>(context, listen: false);
 
     return Scaffold(
       appBar: AppBar(
@@ -42,71 +42,71 @@ class _DashboardScreenState extends State<DashboardScreen> {
       body: viewModel.isLoading
           ? const Center(child: CircularProgressIndicator())
           : RefreshIndicator(
-        onRefresh: () async {
-          final authViewModel =
-          Provider.of<AuthViewModel>(context, listen: false);
-          if (authViewModel.currentUser != null) {
-            await viewModel
-                .fetchDashboardData(authViewModel.currentUser!.id!);
-          }
-        },
-        child: ListView(
-          padding: const EdgeInsets.all(16.0),
-          children: [
-            Row(
-              children: [
-                Expanded(
-                  child: GestureDetector(
-                    onTap: () => navigationViewModel.selectedIndex = 1,
-                    child: _buildInfoCard(
-                      context,
-                      title: 'Gasto no Mês',
-                      value:
-                      'R\$ ${viewModel.totalAmountForMonth.toStringAsFixed(2)}',
-                      icon: Icons.monetization_on,
-                      color: AppTheme.pink,
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 16),
-                Expanded(
-                  child: GestureDetector(
-                    onTap: () => navigationViewModel.selectedIndex = 2,
-                    child: _buildInfoCard(
-                      context,
-                      title: 'Credenciais',
-                      value: viewModel.credentialCount.toString(),
-                      icon: Icons.key,
-                      color: AppTheme.blue,
-                    ),
-                  ),
-                ),
-              ],
-            )
-                .animate()
-                .fadeIn(duration: 150.ms)
-                .slideY(begin: 0.1, end: 0, curve: Curves.easeOut),
-            const SizedBox(height: 24),
-            _buildBarChartSection(context, viewModel)
-                .animate()
-                .fadeIn(delay: 100.ms, duration: 200.ms)
-                .slideY(begin: 0.1, end: 0, curve: Curves.easeOut),
-            const SizedBox(height: 24),
-            _buildRecentActivitySection(context, viewModel)
-                .animate()
-                .fadeIn(delay: 150.ms, duration: 200.ms)
-                .slideY(begin: 0.1, end: 0, curve: Curves.easeOut),
-          ],
-        ),
-      ),
+              onRefresh: () async {
+                final authViewModel =
+                    Provider.of<AuthViewModel>(context, listen: false);
+                if (authViewModel.currentUser != null) {
+                  await viewModel
+                      .fetchDashboardData(authViewModel.currentUser!.id!);
+                }
+              },
+              child: ListView(
+                padding: const EdgeInsets.all(16.0),
+                children: [
+                  Row(
+                    children: [
+                      Expanded(
+                        child: GestureDetector(
+                          onTap: () => navigationViewModel.selectedIndex = 1,
+                          child: _buildInfoCard(
+                            context,
+                            title: 'Gasto no Mês',
+                            value:
+                                'R\$ ${viewModel.totalAmountForMonth.toStringAsFixed(2)}',
+                            icon: Icons.monetization_on,
+                            color: AppTheme.pink,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 16),
+                      Expanded(
+                        child: GestureDetector(
+                          onTap: () => navigationViewModel.selectedIndex = 2,
+                          child: _buildInfoCard(
+                            context,
+                            title: 'Credenciais',
+                            value: viewModel.credentialCount.toString(),
+                            icon: Icons.key,
+                            color: AppTheme.blue,
+                          ),
+                        ),
+                      ),
+                    ],
+                  )
+                      .animate()
+                      .fadeIn(duration: 150.ms)
+                      .slideY(begin: 0.1, end: 0, curve: Curves.easeOut),
+                  const SizedBox(height: 24),
+                  _buildBarChartSection(context, viewModel)
+                      .animate()
+                      .fadeIn(delay: 100.ms, duration: 200.ms)
+                      .slideY(begin: 0.1, end: 0, curve: Curves.easeOut),
+                  const SizedBox(height: 24),
+                  _buildRecentActivitySection(context, viewModel)
+                      .animate()
+                      .fadeIn(delay: 150.ms, duration: 200.ms)
+                      .slideY(begin: 0.1, end: 0, curve: Curves.easeOut),
+                ],
+              ),
+            ),
     );
   }
 
   Widget _buildInfoCard(BuildContext context,
       {required String title,
-        required String value,
-        required IconData icon,
-        required Color color}) {
+      required String value,
+      required IconData icon,
+      required Color color}) {
     final theme = Theme.of(context);
     return Card(
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
@@ -167,7 +167,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 enabled: true,
                 touchTooltipData: BarTouchTooltipData(
                   tooltipPadding:
-                  const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                      const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                   tooltipMargin: 8,
                   getTooltipItem: (group, groupIndex, rod, rodIndex) {
                     final value = rod.toY;
@@ -206,11 +206,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   ),
                 ),
                 leftTitles:
-                const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                    const AxisTitles(sideTitles: SideTitles(showTitles: false)),
                 topTitles:
-                const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                    const AxisTitles(sideTitles: SideTitles(showTitles: false)),
                 rightTitles:
-                const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                    const AxisTitles(sideTitles: SideTitles(showTitles: false)),
               ),
               gridData: FlGridData(
                 show: true,
@@ -293,7 +293,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
           expense.location?.isNotEmpty == true
               ? expense.location!
               : (expense.category?.displayName ?? 'Gasto Geral'),
-          style: theme.textTheme.bodyLarge?.copyWith(fontWeight: FontWeight.bold),
+          style:
+              theme.textTheme.bodyLarge?.copyWith(fontWeight: FontWeight.bold),
         ),
         subtitle: Text(DateFormat('dd/MM/yyyy').format(expense.date)),
         trailing: Text(

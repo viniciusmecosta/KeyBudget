@@ -63,7 +63,7 @@ class _AvatarPickerState extends State<AvatarPicker> {
         backgroundImage: _getImageProvider(),
         child: _imageBase64 == null
             ? Icon(Icons.add_a_photo,
-            size: 40, color: Theme.of(context).colorScheme.onSecondary)
+                size: 40, color: Theme.of(context).colorScheme.onSecondary)
             : null,
       ),
     );
