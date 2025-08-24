@@ -46,7 +46,7 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
     final scaffoldMessenger = ScaffoldMessenger.of(context);
 
     final count =
-    await viewModel.importExpensesFromCsv(authViewModel.currentUser!.id);
+        await viewModel.importExpensesFromCsv(authViewModel.currentUser!.id);
     if (!mounted) return;
     scaffoldMessenger.showSnackBar(
       SnackBar(
@@ -86,7 +86,7 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
                   child: ListView(
                     children: ExpenseCategory.values.map((category) {
                       final isSelected =
-                      viewModel.selectedCategories.contains(category);
+                          viewModel.selectedCategories.contains(category);
                       return CheckboxListTile(
                         title: Text(category.displayName),
                         value: isSelected,
@@ -138,14 +138,14 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
 
     final monthlyExpenses = viewModel.filteredExpenses
         .where((exp) =>
-    exp.date.year == _selectedMonth.year &&
-        exp.date.month == _selectedMonth.month)
+            exp.date.year == _selectedMonth.year &&
+            exp.date.month == _selectedMonth.month)
         .toList()
       ..sort((a, b) => b.date.compareTo(a.date));
 
     final totalValue = monthlyExpenses.fold<double>(
       0.0,
-          (sum, exp) => sum + exp.amount,
+      (sum, exp) => sum + exp.amount,
     );
 
     return Scaffold(
@@ -186,7 +186,8 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
               ),
               child: Container(
                 width: double.infinity,
-                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
                     colors: [
@@ -204,16 +205,17 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
                     Text(
                       'Total do mês',
                       style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                        color: Colors.white70,
-                        fontWeight: FontWeight.w500,
-                      ),
+                            color: Colors.white70,
+                            fontWeight: FontWeight.w500,
+                          ),
                     ),
                     Text(
                       'R\$ ${totalValue.toStringAsFixed(2)}',
-                      style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                        fontWeight: FontWeight.bold,
-                        color: Colors.white,
-                      ),
+                      style:
+                          Theme.of(context).textTheme.headlineMedium?.copyWith(
+                                fontWeight: FontWeight.bold,
+                                color: Colors.white,
+                              ),
                     ),
                   ],
                 ),
@@ -238,7 +240,7 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
                   }
                   return ListView.builder(
                     padding:
-                    const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                        const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                     itemCount: monthlyExpenses.length,
                     itemBuilder: (context, index) {
                       final expense = monthlyExpenses[index];
@@ -264,7 +266,7 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
                             expense.location?.isNotEmpty == true
                                 ? expense.location!
                                 : (expense.category?.displayName ??
-                                'Gasto Geral'),
+                                    'Gasto Geral'),
                             style: const TextStyle(fontWeight: FontWeight.w600),
                           ),
                           subtitle: Text(

@@ -94,7 +94,7 @@ class AuthViewModel extends ChangeNotifier {
       final credential = await _authRepository.signInWithGoogle();
       if (credential != null) {
         _currentUser =
-        await _authRepository.getUserProfile(credential.user!.uid);
+            await _authRepository.getUserProfile(credential.user!.uid);
         final user = credential.user;
         if (user != null && user.email != null) {
           await _localAuthService.saveCredentials(user.email!, user.uid);

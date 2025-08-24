@@ -4,5 +4,4 @@ class Assets {
 
   static const String assets = 'assets/.env';
   static const String iconLogo = 'assets/icon/logo.png';
-
 }

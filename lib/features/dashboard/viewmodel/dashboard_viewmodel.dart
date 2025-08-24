@@ -72,7 +72,7 @@ class DashboardViewModel extends ChangeNotifier {
     _setLoading(true);
 
     final credentials =
-    await _credentialRepository.getCredentialsForUser(userId);
+        await _credentialRepository.getCredentialsForUser(userId);
     _credentialCount = credentials.length;
 
     _allExpenses = await _expenseRepository.getExpensesForUser(userId);

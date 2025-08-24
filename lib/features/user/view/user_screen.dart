@@ -38,7 +38,7 @@ class UserScreen extends StatelessWidget {
     _showLoadingDialog(context, "Exportando dados...");
     final scaffoldMessenger = ScaffoldMessenger.of(context);
     final credViewModel =
-    Provider.of<CredentialViewModel>(context, listen: false);
+        Provider.of<CredentialViewModel>(context, listen: false);
     final expViewModel = Provider.of<ExpenseViewModel>(context, listen: false);
 
     final credSuccess = await credViewModel.exportCredentialsToCsv();
@@ -78,7 +78,8 @@ class UserScreen extends StatelessWidget {
         content: Text(count > 0
             ? '$count despesas importadas com sucesso!'
             : 'Nenhuma despesa foi importada.'),
-        backgroundColor: count > 0 ? Colors.green : Theme.of(context).colorScheme.error,
+        backgroundColor:
+            count > 0 ? Colors.green : Theme.of(context).colorScheme.error,
       ),
     );
   }
@@ -87,7 +88,7 @@ class UserScreen extends StatelessWidget {
     _showLoadingDialog(context, "Importando credenciais...");
     final scaffoldMessenger = ScaffoldMessenger.of(context);
     final credViewModel =
-    Provider.of<CredentialViewModel>(context, listen: false);
+        Provider.of<CredentialViewModel>(context, listen: false);
     final authViewModel = Provider.of<AuthViewModel>(context, listen: false);
     final userId = authViewModel.currentUser!.id;
 
@@ -99,7 +100,8 @@ class UserScreen extends StatelessWidget {
         content: Text(count > 0
             ? '$count credenciais importadas com sucesso!'
             : 'Nenhuma credencial foi importada.'),
-        backgroundColor: count > 0 ? Colors.green : Theme.of(context).colorScheme.error,
+        backgroundColor:
+            count > 0 ? Colors.green : Theme.of(context).colorScheme.error,
       ),
     );
   }
@@ -151,16 +153,19 @@ class UserScreen extends StatelessWidget {
                       color: Theme.of(context).colorScheme.secondary,
                       image: imageProvider != null
                           ? DecorationImage(
-                        image: imageProvider,
-                        fit: BoxFit.cover,
-                      )
+                              image: imageProvider,
+                              fit: BoxFit.cover,
+                            )
                           : null,
                     ),
                     child: imageProvider == null
                         ? const Icon(Icons.person, size: 50)
                         : null,
                   ),
-                ).animate().fadeIn(duration: 200.ms).scaleXY(begin: 0.8, end: 1.0),
+                )
+                    .animate()
+                    .fadeIn(duration: 200.ms)
+                    .scaleXY(begin: 0.8, end: 1.0),
                 const SizedBox(height: 16),
                 Center(
                   child: Text(
@@ -192,7 +197,8 @@ class UserScreen extends StatelessWidget {
                       context: context,
                       builder: (_) => AlertDialog(
                         title: const Text("Confirmar Logout"),
-                        content: const Text("Deseja realmente sair do aplicativo?"),
+                        content:
+                            const Text("Deseja realmente sair do aplicativo?"),
                         actions: [
                           TextButton(
                             onPressed: () => Navigator.of(context).pop(),
@@ -200,10 +206,12 @@ class UserScreen extends StatelessWidget {
                           ),
                           ElevatedButton(
                             onPressed: () {
-                              Provider.of<AuthViewModel>(context, listen: false).logout();
+                              Provider.of<AuthViewModel>(context, listen: false)
+                                  .logout();
                               Navigator.of(context).pushAndRemoveUntil(
-                                MaterialPageRoute(builder: (_) => const LoginScreen()),
-                                    (route) => false,
+                                MaterialPageRoute(
+                                    builder: (_) => const LoginScreen()),
+                                (route) => false,
                               );
                             },
                             child: const Text("Sair"),
@@ -213,8 +221,10 @@ class UserScreen extends StatelessWidget {
                     );
                   },
                   child: const Text('Sair'),
-                ).animate().fadeIn(delay: 400.ms, duration: 200.ms).scaleXY(begin: 0.9, end: 1.0),
-
+                )
+                    .animate()
+                    .fadeIn(delay: 400.ms, duration: 200.ms)
+                    .scaleXY(begin: 0.9, end: 1.0),
               ],
             ),
           );
