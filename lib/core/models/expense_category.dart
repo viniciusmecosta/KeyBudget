@@ -7,7 +7,8 @@ enum ExpenseCategory {
   lazer,
   roupa,
   agua,
-  outros,
+  farmacia,
+  outros
 }
 
 extension ExpenseCategoryExtension on ExpenseCategory {
@@ -25,6 +26,8 @@ extension ExpenseCategoryExtension on ExpenseCategory {
         return 'Alimentação';
       case ExpenseCategory.lazer:
         return 'Lazer';
+      case ExpenseCategory.farmacia:
+        return 'Farmácia';
       case ExpenseCategory.outros:
         return 'Outros';
     }
@@ -44,6 +47,8 @@ extension ExpenseCategoryExtension on ExpenseCategory {
         return Icons.checkroom;
       case ExpenseCategory.lazer:
         return Icons.local_mall;
+        case ExpenseCategory.farmacia:
+          return Icons.local_pharmacy_rounded;
       case ExpenseCategory.outros:
         return Icons.category;
     }
