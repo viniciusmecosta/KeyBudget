@@ -160,27 +160,27 @@ class UserScreen extends StatelessWidget {
                         ? const Icon(Icons.person, size: 50)
                         : null,
                   ),
-                ).animate().fadeIn(duration: 400.ms).scaleXY(begin: 0.8, end: 1.0),
+                ).animate().fadeIn(duration: 200.ms).scaleXY(begin: 0.8, end: 1.0),
                 const SizedBox(height: 16),
                 Center(
                   child: Text(
                     user?.name ?? 'Usuário',
                     style: Theme.of(context).textTheme.headlineSmall,
                   ),
-                ).animate().fadeIn(delay: 100.ms, duration: 400.ms),
+                ).animate().fadeIn(delay: 100.ms, duration: 200.ms),
                 Center(
                   child: Text(
                     user?.email ?? '',
                     style: Theme.of(context).textTheme.bodyMedium,
                   ),
-                ).animate().fadeIn(delay: 200.ms, duration: 400.ms),
+                ).animate().fadeIn(delay: 200.ms, duration: 200.ms),
                 if (user?.phoneNumber != null && user!.phoneNumber!.isNotEmpty)
                   Center(
                     child: Text(
                       user.phoneNumber!,
                       style: Theme.of(context).textTheme.bodyMedium,
                     ),
-                  ).animate().fadeIn(delay: 300.ms, duration: 400.ms),
+                  ).animate().fadeIn(delay: 300.ms, duration: 200.ms),
                 const Spacer(),
                 ElevatedButton(
                   style: ElevatedButton.styleFrom(
@@ -213,7 +213,7 @@ class UserScreen extends StatelessWidget {
                     );
                   },
                   child: const Text('Sair'),
-                ).animate().fadeIn(delay: 400.ms, duration: 400.ms).scaleXY(begin: 0.9, end: 1.0),
+                ).animate().fadeIn(delay: 400.ms, duration: 200.ms).scaleXY(begin: 0.9, end: 1.0),
 
               ],
             ),
