@@ -35,9 +35,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
     if (authViewModel.currentUser == null) {
       final success = await authViewModel.authenticateWithBiometrics();
-      if (success && mounted) {
-
-      }
+      if (success && mounted) {}
     }
   }
 
@@ -111,19 +109,19 @@ class _LoginScreenState extends State<LoginScreen> {
                     return viewModel.isLoading
                         ? const CircularProgressIndicator()
                         : Column(
-                      children: [
-                        ElevatedButton(
-                          onPressed: _submit,
-                          child: const Text('Entrar'),
-                        ),
-                        const SizedBox(height: 16),
-                        OutlinedButton.icon(
-                          onPressed: _submitGoogle,
-                          icon: const Icon(Icons.g_mobiledata),
-                          label: const Text('Entrar com Google'),
-                        ),
-                      ],
-                    );
+                            children: [
+                              ElevatedButton(
+                                onPressed: _submit,
+                                child: const Text('Entrar'),
+                              ),
+                              const SizedBox(height: 16),
+                              OutlinedButton.icon(
+                                onPressed: _submitGoogle,
+                                icon: const Icon(Icons.g_mobiledata),
+                                label: const Text('Entrar com Google'),
+                              ),
+                            ],
+                          );
                   },
                 ),
                 TextButton(

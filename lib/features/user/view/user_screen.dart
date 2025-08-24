@@ -10,14 +10,39 @@ import 'package:provider/provider.dart';
 class UserScreen extends StatelessWidget {
   const UserScreen({super.key});
 
+  void _showLoadingDialog(BuildContext context, String message) {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (BuildContext context) {
+        return Dialog(
+          child: Padding(
+            padding: const EdgeInsets.all(20.0),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const CircularProgressIndicator(),
+                const SizedBox(width: 20),
+                Text(message),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
   void _exportAllData(BuildContext context) async {
+    _showLoadingDialog(context, "Exportando dados...");
     final scaffoldMessenger = ScaffoldMessenger.of(context);
     final credViewModel =
-    Provider.of<CredentialViewModel>(context, listen: false);
+        Provider.of<CredentialViewModel>(context, listen: false);
     final expViewModel = Provider.of<ExpenseViewModel>(context, listen: false);
 
     final credSuccess = await credViewModel.exportCredentialsToCsv();
     final expSuccess = await expViewModel.exportExpensesToCsv(null, null);
+
+    Navigator.of(context).pop();
 
     if (credSuccess && expSuccess) {
       scaffoldMessenger.showSnackBar(
@@ -30,6 +55,61 @@ class UserScreen extends StatelessWidget {
       scaffoldMessenger.showSnackBar(
         SnackBar(
           content: const Text('Ocorreu um erro ao exportar os dados.'),
+          backgroundColor: Theme.of(context).colorScheme.error,
+        ),
+      );
+    }
+  }
+
+  void _importExpensesData(BuildContext context) async {
+    _showLoadingDialog(context, "Importando despesas...");
+    final scaffoldMessenger = ScaffoldMessenger.of(context);
+    final expViewModel = Provider.of<ExpenseViewModel>(context, listen: false);
+    final authViewModel = Provider.of<AuthViewModel>(context, listen: false);
+    final userId = authViewModel.currentUser!.id;
+
+    final count = await expViewModel.importAllExpensesFromJson(userId);
+    Navigator.of(context).pop();
+
+    if (count > 0) {
+      scaffoldMessenger.showSnackBar(
+        SnackBar(
+          content: Text('$count despesas importadas com sucesso!'),
+          backgroundColor: Colors.green,
+        ),
+      );
+    } else {
+      scaffoldMessenger.showSnackBar(
+        SnackBar(
+          content: const Text('Nenhuma despesa foi importada.'),
+          backgroundColor: Theme.of(context).colorScheme.error,
+        ),
+      );
+    }
+  }
+
+  void _importCredentialsData(BuildContext context) async {
+    _showLoadingDialog(context, "Importando credenciais...");
+    final scaffoldMessenger = ScaffoldMessenger.of(context);
+    final credViewModel =
+        Provider.of<CredentialViewModel>(context, listen: false);
+    final authViewModel = Provider.of<AuthViewModel>(context, listen: false);
+    final userId = authViewModel.currentUser!.id;
+
+    final count = await credViewModel.importCredentialsFromJson(userId);
+    Navigator.of(context).pop();
+
+    if (count > 0) {
+      scaffoldMessenger.showSnackBar(
+        SnackBar(
+          content: Text('$count credenciais importadas com sucesso!'),
+          backgroundColor: Colors.green,
+        ),
+      );
+    } else {
+      scaffoldMessenger.showSnackBar(
+        SnackBar(
+          content: const Text('Nenhuma credencial foi importada.'),
           backgroundColor: Theme.of(context).colorScheme.error,
         ),
       );
@@ -83,9 +163,9 @@ class UserScreen extends StatelessWidget {
                       color: Theme.of(context).colorScheme.secondary,
                       image: imageProvider != null
                           ? DecorationImage(
-                        image: imageProvider,
-                        fit: BoxFit.cover,
-                      )
+                              image: imageProvider,
+                              fit: BoxFit.cover,
+                            )
                           : null,
                     ),
                     child: imageProvider == null
@@ -115,6 +195,24 @@ class UserScreen extends StatelessWidget {
                   ),
                 const Spacer(),
                 ElevatedButton.icon(
+                  icon: const Icon(Icons.upload_file),
+                  label: const Text('Importar Despesas (JSON)'),
+                  onPressed: () => _importExpensesData(context),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.orange,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                ElevatedButton.icon(
+                  icon: const Icon(Icons.vpn_key),
+                  label: const Text('Importar Credenciais (JSON)'),
+                  onPressed: () => _importCredentialsData(context),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.blue,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                ElevatedButton.icon(
                   icon: const Icon(Icons.download),
                   label: const Text('Exportar Meus Dados (CSV)'),
                   onPressed: () => _exportAllData(context),
@@ -128,7 +226,7 @@ class UserScreen extends StatelessWidget {
                     Provider.of<AuthViewModel>(context, listen: false).logout();
                     Navigator.of(context).pushAndRemoveUntil(
                       MaterialPageRoute(builder: (_) => const LoginScreen()),
-                          (route) => false,
+                      (route) => false,
                     );
                   },
                   child: const Text('Sair'),
