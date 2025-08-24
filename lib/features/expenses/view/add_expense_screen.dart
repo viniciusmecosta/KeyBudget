@@ -51,7 +51,7 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
     setState(() => _isSaving = true);
 
     final expenseViewModel =
-        Provider.of<ExpenseViewModel>(context, listen: false);
+    Provider.of<ExpenseViewModel>(context, listen: false);
     final authViewModel = Provider.of<AuthViewModel>(context, listen: false);
     final userId = authViewModel.currentUser!.id;
 
@@ -63,7 +63,7 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
           ? _motivationController.text
           : null,
       location:
-          _locationController.text.isNotEmpty ? _locationController.text : null,
+      _locationController.text.isNotEmpty ? _locationController.text : null,
     );
 
     await expenseViewModel.addExpense(userId, newExpense);
@@ -93,11 +93,11 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
               TextFormField(
                 controller: _amountController,
                 decoration:
-                    const InputDecoration(labelText: 'Valor (ex: 50.99) *'),
+                const InputDecoration(labelText: 'Valor (ex: 50.99) *'),
                 keyboardType:
-                    const TextInputType.numberWithOptions(decimal: true),
+                const TextInputType.numberWithOptions(decimal: true),
                 validator: (value) =>
-                    value == null || value.isEmpty ? 'Campo obrigatório' : null,
+                value == null || value.isEmpty ? 'Campo obrigatório' : null,
               ),
               const SizedBox(height: 16),
               DropdownButtonFormField<ExpenseCategory>(
@@ -123,13 +123,13 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
               TextFormField(
                 controller: _motivationController,
                 decoration:
-                    const InputDecoration(labelText: 'Motivação (opcional)'),
+                const InputDecoration(labelText: 'Motivação (opcional)'),
               ),
               const SizedBox(height: 16),
               TextFormField(
                 controller: _locationController,
                 decoration:
-                    const InputDecoration(labelText: 'Local (opcional)'),
+                const InputDecoration(labelText: 'Local (opcional)'),
               ),
               const SizedBox(height: 16),
               Row(
@@ -149,11 +149,12 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
               ElevatedButton(
                 onPressed: _isSaving ? null : _submit,
                 child: _isSaving
-                    ? const SizedBox(
-                        height: 24,
-                        width: 24,
-                        child: CircularProgressIndicator(
-                            color: Colors.white, strokeWidth: 2.0))
+                    ? SizedBox(
+                    height: 24,
+                    width: 24,
+                    child: CircularProgressIndicator(
+                        color: Theme.of(context).colorScheme.onPrimary,
+                        strokeWidth: 2.0))
                     : const Text('Salvar Despesa'),
               ),
             ],

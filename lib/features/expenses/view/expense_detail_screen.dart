@@ -61,7 +61,7 @@ class _ExpenseDetailScreenState extends State<ExpenseDetailScreen> {
           ? _motivationController.text
           : null,
       location:
-          _locationController.text.isNotEmpty ? _locationController.text : null,
+      _locationController.text.isNotEmpty ? _locationController.text : null,
     );
 
     await Provider.of<ExpenseViewModel>(context, listen: false)
@@ -79,7 +79,7 @@ class _ExpenseDetailScreenState extends State<ExpenseDetailScreen> {
       builder: (ctx) => AlertDialog(
         title: const Text('Confirmar Exclusão'),
         content:
-            const Text('Você tem certeza que deseja excluir esta despesa?'),
+        const Text('Você tem certeza que deseja excluir esta despesa?'),
         actions: [
           TextButton(
             child: const Text('Cancelar'),
@@ -89,7 +89,7 @@ class _ExpenseDetailScreenState extends State<ExpenseDetailScreen> {
             child: const Text('Excluir'),
             onPressed: () async {
               final authViewModel =
-                  Provider.of<AuthViewModel>(context, listen: false);
+              Provider.of<AuthViewModel>(context, listen: false);
               final userId = authViewModel.currentUser!.id;
 
               Navigator.of(ctx).pop();
@@ -140,10 +140,10 @@ class _ExpenseDetailScreenState extends State<ExpenseDetailScreen> {
                 controller: _amountController,
                 decoration: const InputDecoration(labelText: 'Valor *'),
                 keyboardType:
-                    const TextInputType.numberWithOptions(decimal: true),
+                const TextInputType.numberWithOptions(decimal: true),
                 enabled: _isEditing,
                 validator: (value) =>
-                    value == null || value.isEmpty ? 'Campo obrigatório' : null,
+                value == null || value.isEmpty ? 'Campo obrigatório' : null,
               ),
               const SizedBox(height: 16),
               DropdownButtonFormField<ExpenseCategory>(
@@ -186,30 +186,31 @@ class _ExpenseDetailScreenState extends State<ExpenseDetailScreen> {
                 onTap: !_isEditing
                     ? null
                     : () async {
-                        final pickedDate = await showDatePicker(
-                          context: context,
-                          initialDate: _selectedDate,
-                          firstDate: DateTime(2000),
-                          lastDate: DateTime.now(),
-                          locale: const Locale('pt', 'BR'),
-                        );
-                        if (pickedDate != null && pickedDate != _selectedDate) {
-                          setState(() {
-                            _selectedDate = pickedDate;
-                          });
-                        }
-                      },
+                  final pickedDate = await showDatePicker(
+                    context: context,
+                    initialDate: _selectedDate,
+                    firstDate: DateTime(2000),
+                    lastDate: DateTime.now(),
+                    locale: const Locale('pt', 'BR'),
+                  );
+                  if (pickedDate != null && pickedDate != _selectedDate) {
+                    setState(() {
+                      _selectedDate = pickedDate;
+                    });
+                  }
+                },
               ),
               const SizedBox(height: 24),
               if (_isEditing)
                 ElevatedButton(
                   onPressed: _isSaving ? null : _saveChanges,
                   child: _isSaving
-                      ? const SizedBox(
-                          height: 24,
-                          width: 24,
-                          child: CircularProgressIndicator(
-                              color: Colors.white, strokeWidth: 2.0))
+                      ? SizedBox(
+                      height: 24,
+                      width: 24,
+                      child: CircularProgressIndicator(
+                          color: Theme.of(context).colorScheme.onPrimary,
+                          strokeWidth: 2.0))
                       : const Text('Salvar Alterações'),
                 )
             ],

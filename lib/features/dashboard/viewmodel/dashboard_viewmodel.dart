@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import 'package:key_budget/core/models/expense_category.dart';
 import 'package:key_budget/core/models/expense_model.dart';
 import 'package:key_budget/features/credentials/repository/credential_repository.dart';
@@ -21,8 +22,11 @@ class DashboardViewModel extends ChangeNotifier {
   DateTime get selectedMonth => _selectedMonth;
 
   double get totalAmountForMonth {
-    return _expensesByCategoryForMonth.values
-        .fold(0.0, (sum, amount) => sum + amount);
+    final filteredExpenses = _allExpenses.where((exp) {
+      return exp.date.year == _selectedMonth.year &&
+          exp.date.month == _selectedMonth.month;
+    }).toList();
+    return filteredExpenses.fold(0.0, (sum, item) => sum + item.amount);
   }
 
   Map<String, double> get monthlyExpenseTotals {
@@ -36,6 +40,29 @@ class DashboardViewModel extends ChangeNotifier {
     return totals;
   }
 
+  Map<DateTime, double> get lastSixMonthsExpenseTotals {
+    final Map<DateTime, double> totals = {};
+    final now = DateTime.now();
+
+    for (int i = 5; i >= 0; i--) {
+      final month = DateTime(now.year, now.month - i, 1);
+      totals[month] = 0.0;
+    }
+
+    for (var expense in _allExpenses) {
+      final expenseMonth = DateTime(expense.date.year, expense.date.month, 1);
+      if (totals.containsKey(expenseMonth)) {
+        totals[expenseMonth] = totals[expenseMonth]! + expense.amount;
+      }
+    }
+    return totals;
+  }
+
+  List<Expense> get recentExpenses {
+    _allExpenses.sort((a, b) => b.date.compareTo(a.date));
+    return _allExpenses.take(5).toList();
+  }
+
   void _setLoading(bool loading) {
     _isLoading = loading;
     notifyListeners();
@@ -45,7 +72,7 @@ class DashboardViewModel extends ChangeNotifier {
     _setLoading(true);
 
     final credentials =
-        await _credentialRepository.getCredentialsForUser(userId);
+    await _credentialRepository.getCredentialsForUser(userId);
     _credentialCount = credentials.length;
 
     _allExpenses = await _expenseRepository.getExpensesForUser(userId);

@@ -50,10 +50,10 @@ class _EditUserScreenState extends State<EditUserScreen> {
     final success = await viewModel.updateUser(
       name: _nameController.text,
       phoneNumber:
-          _phoneController.text.isNotEmpty ? _phoneController.text : null,
+      _phoneController.text.isNotEmpty ? _phoneController.text : null,
       avatarPath: _avatarPath,
       newPassword:
-          _passwordController.text.isNotEmpty ? _passwordController.text : null,
+      _passwordController.text.isNotEmpty ? _passwordController.text : null,
     );
 
     if (mounted) {
@@ -100,13 +100,13 @@ class _EditUserScreenState extends State<EditUserScreen> {
                 controller: _nameController,
                 decoration: const InputDecoration(labelText: 'Nome *'),
                 validator: (value) =>
-                    (value == null || value.isEmpty) ? 'Insira seu nome' : null,
+                (value == null || value.isEmpty) ? 'Insira seu nome' : null,
               ),
               const SizedBox(height: 16),
               TextFormField(
                 controller: _phoneController,
                 decoration:
-                    const InputDecoration(labelText: 'Número (opcional)'),
+                const InputDecoration(labelText: 'Número (opcional)'),
                 keyboardType: TextInputType.phone,
               ),
               const SizedBox(height: 16),
@@ -132,7 +132,7 @@ class _EditUserScreenState extends State<EditUserScreen> {
                         ? Icons.visibility_off
                         : Icons.visibility),
                     onPressed: () => setState(
-                        () => _isPasswordVisible = !_isPasswordVisible),
+                            () => _isPasswordVisible = !_isPasswordVisible),
                   ),
                 ),
                 validator: (value) {
@@ -153,7 +153,7 @@ class _EditUserScreenState extends State<EditUserScreen> {
                         ? Icons.visibility_off
                         : Icons.visibility),
                     onPressed: () => setState(() =>
-                        _isConfirmPasswordVisible = !_isConfirmPasswordVisible),
+                    _isConfirmPasswordVisible = !_isConfirmPasswordVisible),
                   ),
                 ),
                 validator: (value) => value != _passwordController.text
@@ -164,11 +164,12 @@ class _EditUserScreenState extends State<EditUserScreen> {
               ElevatedButton(
                 onPressed: _isSaving ? null : _submit,
                 child: _isSaving
-                    ? const SizedBox(
-                        height: 24,
-                        width: 24,
-                        child: CircularProgressIndicator(
-                            color: Colors.white, strokeWidth: 2.0))
+                    ? SizedBox(
+                    height: 24,
+                    width: 24,
+                    child: CircularProgressIndicator(
+                        color: Theme.of(context).colorScheme.onPrimary,
+                        strokeWidth: 2.0))
                     : const Text('Salvar Alterações'),
               ),
             ],

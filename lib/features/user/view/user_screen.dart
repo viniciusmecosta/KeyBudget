@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:key_budget/app/config/app_theme.dart';
 import 'package:key_budget/features/auth/view/login_screen.dart';
 import 'package:key_budget/features/auth/viewmodel/auth_viewmodel.dart';
 import 'package:key_budget/features/credentials/viewmodel/credential_viewmodel.dart';
@@ -36,7 +37,7 @@ class UserScreen extends StatelessWidget {
     _showLoadingDialog(context, "Exportando dados...");
     final scaffoldMessenger = ScaffoldMessenger.of(context);
     final credViewModel =
-        Provider.of<CredentialViewModel>(context, listen: false);
+    Provider.of<CredentialViewModel>(context, listen: false);
     final expViewModel = Provider.of<ExpenseViewModel>(context, listen: false);
 
     final credSuccess = await credViewModel.exportCredentialsToCsv();
@@ -92,7 +93,7 @@ class UserScreen extends StatelessWidget {
     _showLoadingDialog(context, "Importando credenciais...");
     final scaffoldMessenger = ScaffoldMessenger.of(context);
     final credViewModel =
-        Provider.of<CredentialViewModel>(context, listen: false);
+    Provider.of<CredentialViewModel>(context, listen: false);
     final authViewModel = Provider.of<AuthViewModel>(context, listen: false);
     final userId = authViewModel.currentUser!.id;
 
@@ -163,9 +164,9 @@ class UserScreen extends StatelessWidget {
                       color: Theme.of(context).colorScheme.secondary,
                       image: imageProvider != null
                           ? DecorationImage(
-                              image: imageProvider,
-                              fit: BoxFit.cover,
-                            )
+                        image: imageProvider,
+                        fit: BoxFit.cover,
+                      )
                           : null,
                     ),
                     child: imageProvider == null
@@ -199,7 +200,8 @@ class UserScreen extends StatelessWidget {
                   label: const Text('Importar Despesas (JSON)'),
                   onPressed: () => _importExpensesData(context),
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.orange,
+                      backgroundColor: AppTheme.blue,
+                      foregroundColor: AppTheme.offWhite
                   ),
                 ),
                 const SizedBox(height: 8),
@@ -208,7 +210,8 @@ class UserScreen extends StatelessWidget {
                   label: const Text('Importar Credenciais (JSON)'),
                   onPressed: () => _importCredentialsData(context),
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.blue,
+                    backgroundColor: AppTheme.lightBlue,
+                    foregroundColor: AppTheme.darkBlue,
                   ),
                 ),
                 const SizedBox(height: 8),
@@ -226,7 +229,7 @@ class UserScreen extends StatelessWidget {
                     Provider.of<AuthViewModel>(context, listen: false).logout();
                     Navigator.of(context).pushAndRemoveUntil(
                       MaterialPageRoute(builder: (_) => const LoginScreen()),
-                      (route) => false,
+                          (route) => false,
                     );
                   },
                   child: const Text('Sair'),
