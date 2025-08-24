@@ -17,6 +17,9 @@ class DashboardScreen extends StatefulWidget {
 }
 
 class _DashboardScreenState extends State<DashboardScreen> {
+  final _currencyFormatter =
+  NumberFormat.currency(locale: 'pt_BR', symbol: 'R\$');
+
   @override
   void initState() {
     super.initState();
@@ -33,7 +36,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
   Widget build(BuildContext context) {
     final viewModel = Provider.of<DashboardViewModel>(context);
     final navigationViewModel =
-        Provider.of<NavigationViewModel>(context, listen: false);
+    Provider.of<NavigationViewModel>(context, listen: false);
 
     return Scaffold(
       appBar: AppBar(
@@ -42,74 +45,74 @@ class _DashboardScreenState extends State<DashboardScreen> {
       body: viewModel.isLoading
           ? const Center(child: CircularProgressIndicator())
           : RefreshIndicator(
-              onRefresh: () async {
-                final authViewModel =
-                    Provider.of<AuthViewModel>(context, listen: false);
-                if (authViewModel.currentUser != null) {
-                  await viewModel
-                      .fetchDashboardData(authViewModel.currentUser!.id!);
-                }
-              },
-              child: ListView(
-                padding: const EdgeInsets.all(16.0),
-                children: [
-                  Row(
-                    children: [
-                      Expanded(
-                        child: GestureDetector(
-                          onTap: () => navigationViewModel.selectedIndex = 1,
-                          child: _buildInfoCard(
-                            context,
-                            title: 'Gasto no Mês',
-                            value:
-                                'R\$ ${viewModel.totalAmountForMonth.toStringAsFixed(2)}',
-                            icon: Icons.monetization_on,
-                            color: AppTheme.pink,
-                          ),
-                        ),
-                      ),
-                      const SizedBox(width: 16),
-                      Expanded(
-                        child: GestureDetector(
-                          onTap: () => navigationViewModel.selectedIndex = 2,
-                          child: _buildInfoCard(
-                            context,
-                            title: 'Credenciais',
-                            value: viewModel.credentialCount.toString(),
-                            icon: Icons.key,
-                            color: AppTheme.blue,
-                          ),
-                        ),
-                      ),
-                    ],
-                  )
-                      .animate()
-                      .fadeIn(duration: 120.ms)
-                      .slideY(begin: 0.2, end: 0, curve: Curves.easeOut)
-                      .scaleXY(begin: 0.95, end: 1.0),
-                  const SizedBox(height: 24),
-                  _buildBarChartSection(context, viewModel)
-                      .animate()
-                      .fadeIn(delay: 80.ms, duration: 160.ms)
-                      .slideY(begin: 0.2, end: 0, curve: Curves.easeOut)
-                      .scaleXY(begin: 0.95, end: 1.0),
-                  const SizedBox(height: 24),
-                  _buildRecentActivitySection(context, viewModel)
-                      .animate()
-                      .fadeIn(delay: 120.ms, duration: 160.ms)
-                      .slideY(begin: 0.2, end: 0, curve: Curves.easeOut)
-                      .scaleXY(begin: 0.95, end: 1.0),
-                ],
-              ),
-            ),
+        onRefresh: () async {
+          final authViewModel =
+          Provider.of<AuthViewModel>(context, listen: false);
+          if (authViewModel.currentUser != null) {
+            await viewModel
+                .fetchDashboardData(authViewModel.currentUser!.id!);
+          }
+        },
+        child: ListView(
+          padding: const EdgeInsets.all(16.0),
+          children: [
+            Row(
+              children: [
+                Expanded(
+                  child: GestureDetector(
+                    onTap: () => navigationViewModel.selectedIndex = 1,
+                    child: _buildInfoCard(
+                      context,
+                      title: 'Gasto no Mês',
+                      value: _currencyFormatter
+                          .format(viewModel.totalAmountForMonth),
+                      icon: Icons.monetization_on,
+                      color: AppTheme.pink,
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: GestureDetector(
+                    onTap: () => navigationViewModel.selectedIndex = 2,
+                    child: _buildInfoCard(
+                      context,
+                      title: 'Credenciais',
+                      value: viewModel.credentialCount.toString(),
+                      icon: Icons.key,
+                      color: AppTheme.blue,
+                    ),
+                  ),
+                ),
+              ],
+            )
+                .animate()
+                .fadeIn(duration: 120.ms)
+                .slideY(begin: 0.2, end: 0, curve: Curves.easeOut)
+                .scaleXY(begin: 0.95, end: 1.0),
+            const SizedBox(height: 24),
+            _buildBarChartSection(context, viewModel)
+                .animate()
+                .fadeIn(delay: 80.ms, duration: 160.ms)
+                .slideY(begin: 0.2, end: 0, curve: Curves.easeOut)
+                .scaleXY(begin: 0.95, end: 1.0),
+            const SizedBox(height: 24),
+            _buildRecentActivitySection(context, viewModel)
+                .animate()
+                .fadeIn(delay: 120.ms, duration: 160.ms)
+                .slideY(begin: 0.2, end: 0, curve: Curves.easeOut)
+                .scaleXY(begin: 0.95, end: 1.0),
+          ],
+        ),
+      ),
     );
   }
 
   Widget _buildInfoCard(BuildContext context,
       {required String title,
-      required String value,
-      required IconData icon,
-      required Color color}) {
+        required String value,
+        required IconData icon,
+        required Color color}) {
     final theme = Theme.of(context);
     return Card(
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
@@ -170,12 +173,12 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 enabled: true,
                 touchTooltipData: BarTouchTooltipData(
                   tooltipPadding:
-                      const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                  const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                   tooltipMargin: 8,
                   getTooltipItem: (group, groupIndex, rod, rodIndex) {
                     final value = rod.toY;
                     return BarTooltipItem(
-                      'R\$ ${value.toStringAsFixed(2)}',
+                      _currencyFormatter.format(value),
                       const TextStyle(
                         color: AppTheme.offWhite,
                         fontWeight: FontWeight.bold,
@@ -209,11 +212,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   ),
                 ),
                 leftTitles:
-                    const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                const AxisTitles(sideTitles: SideTitles(showTitles: false)),
                 topTitles:
-                    const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                const AxisTitles(sideTitles: SideTitles(showTitles: false)),
                 rightTitles:
-                    const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                const AxisTitles(sideTitles: SideTitles(showTitles: false)),
               ),
               gridData: FlGridData(
                 show: true,
@@ -297,11 +300,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
               ? expense.location!
               : (expense.category?.displayName ?? 'Gasto Geral'),
           style:
-              theme.textTheme.bodyLarge?.copyWith(fontWeight: FontWeight.bold),
+          theme.textTheme.bodyLarge?.copyWith(fontWeight: FontWeight.bold),
         ),
         subtitle: Text(DateFormat('dd/MM/yyyy').format(expense.date)),
         trailing: Text(
-          '- R\$ ${expense.amount.toStringAsFixed(2)}',
+          '- ${_currencyFormatter.format(expense.amount)}',
           style: theme.textTheme.bodyMedium
               ?.copyWith(fontWeight: FontWeight.bold, color: AppTheme.pink),
         ),

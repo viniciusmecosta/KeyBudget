@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_masked_text2/flutter_masked_text2.dart';
 import 'package:intl/intl.dart';
 import 'package:key_budget/core/models/expense_category.dart';
 import 'package:key_budget/core/models/expense_model.dart';
@@ -16,19 +17,24 @@ class ExpenseDetailScreen extends StatefulWidget {
 
 class _ExpenseDetailScreenState extends State<ExpenseDetailScreen> {
   final _formKey = GlobalKey<FormState>();
-  late TextEditingController _amountController;
+  late MoneyMaskedTextController _amountController;
   late TextEditingController _motivationController;
   late TextEditingController _locationController;
   late DateTime _selectedDate;
   late ExpenseCategory? _selectedCategory;
   bool _isEditing = false;
   bool _isSaving = false;
+  final _currencyFormatter =
+      NumberFormat.currency(locale: 'pt_BR', symbol: 'R\$');
 
   @override
   void initState() {
     super.initState();
-    _amountController =
-        TextEditingController(text: widget.expense.amount.toStringAsFixed(2));
+    _amountController = MoneyMaskedTextController(
+        decimalSeparator: ',',
+        thousandSeparator: '.',
+        leftSymbol: 'R\$ ',
+        initialValue: widget.expense.amount);
     _motivationController =
         TextEditingController(text: widget.expense.motivation);
     _locationController = TextEditingController(text: widget.expense.location);
@@ -46,6 +52,15 @@ class _ExpenseDetailScreenState extends State<ExpenseDetailScreen> {
 
   void _saveChanges() async {
     if (!_formKey.currentState!.validate()) return;
+    if (_amountController.numberValue == 0) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('O valor não pode ser zero.'),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    }
 
     setState(() => _isSaving = true);
 
@@ -54,7 +69,7 @@ class _ExpenseDetailScreenState extends State<ExpenseDetailScreen> {
 
     final updatedExpense = Expense(
       id: widget.expense.id,
-      amount: double.parse(_amountController.text.replaceAll(',', '.')),
+      amount: _amountController.numberValue,
       date: _selectedDate,
       category: _selectedCategory,
       motivation: _motivationController.text.isNotEmpty
@@ -137,13 +152,25 @@ class _ExpenseDetailScreenState extends State<ExpenseDetailScreen> {
           child: ListView(
             children: [
               TextFormField(
-                controller: _amountController,
+                controller: _isEditing
+                    ? _amountController
+                    : TextEditingController(
+                        text: _currencyFormatter.format(widget.expense.amount)),
                 decoration: const InputDecoration(labelText: 'Valor *'),
                 keyboardType:
                     const TextInputType.numberWithOptions(decimal: true),
                 enabled: _isEditing,
-                validator: (value) =>
-                    value == null || value.isEmpty ? 'Campo obrigatório' : null,
+                validator: (value) {
+                  if (_isEditing) {
+                    if (value == null || value.isEmpty) {
+                      return 'Campo obrigatório';
+                    }
+                    if (_amountController.numberValue <= 0) {
+                      return 'O valor deve ser maior que zero';
+                    }
+                  }
+                  return null;
+                },
               ),
               const SizedBox(height: 16),
               DropdownButtonFormField<ExpenseCategory>(

@@ -19,6 +19,8 @@ class ExpensesScreen extends StatefulWidget {
 
 class _ExpensesScreenState extends State<ExpensesScreen> {
   DateTime _selectedMonth = DateTime(DateTime.now().year, DateTime.now().month);
+  final _currencyFormatter =
+      NumberFormat.currency(locale: 'pt_BR', symbol: 'R\$');
 
   @override
   void initState() {
@@ -210,7 +212,7 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
                           ),
                     ),
                     Text(
-                      'R\$ ${totalValue.toStringAsFixed(2)}',
+                      _currencyFormatter.format(totalValue),
                       style:
                           Theme.of(context).textTheme.headlineMedium?.copyWith(
                                 fontWeight: FontWeight.bold,
@@ -277,7 +279,7 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
                             DateFormat('dd/MM/yyyy').format(expense.date),
                           ),
                           trailing: Text(
-                            'R\$ ${expense.amount.toStringAsFixed(2)}',
+                            _currencyFormatter.format(expense.amount),
                             style: TextStyle(
                               fontWeight: FontWeight.bold,
                               color: Theme.of(context).colorScheme.error,
