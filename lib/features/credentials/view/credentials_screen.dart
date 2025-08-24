@@ -102,10 +102,8 @@ class _CredentialsScreenState extends State<CredentialsScreen> {
         actions: [
           PopupMenuButton(
             itemBuilder: (context) => [
-              const PopupMenuItem(
-                  value: 'import', child: Text('Importar de CSV')),
-              const PopupMenuItem(
-                  value: 'export', child: Text('Exportar para CSV')),
+              const PopupMenuItem(value: 'import', child: Text('Importar de CSV')),
+              const PopupMenuItem(value: 'export', child: Text('Exportar para CSV')),
             ],
             onSelected: (value) {
               if (value == 'import') _import(context);
@@ -116,78 +114,87 @@ class _CredentialsScreenState extends State<CredentialsScreen> {
       ),
       body: RefreshIndicator(
         onRefresh: _handleRefresh,
-        child: Column(
-          children: [
-            Expanded(
-              child: Consumer<CredentialViewModel>(
-                builder: (context, vm, child) {
-                  if (vm.isLoading) {
-                    return const Center(child: CircularProgressIndicator());
-                  }
-                  if (vm.allCredentials.isEmpty) {
-                    return LayoutBuilder(builder: (context, constraints) {
-                      return SingleChildScrollView(
-                        physics: const AlwaysScrollableScrollPhysics(),
-                        child: ConstrainedBox(
-                          constraints:
-                          BoxConstraints(minHeight: constraints.maxHeight),
-                          child: EmptyStateWidget(
-                            icon: Icons.key_off,
-                            message: 'Nenhuma credencial encontrada.',
-                            buttonText: 'Adicionar Credencial',
-                            onButtonPressed: () => Navigator.of(context).push(
-                                MaterialPageRoute(
-                                    builder: (_) =>
-                                    const AddCredentialScreen())),
-                          ),
+        child: Consumer<CredentialViewModel>(
+          builder: (context, vm, child) {
+            if (vm.isLoading) {
+              return const Center(child: CircularProgressIndicator());
+            }
+            if (vm.allCredentials.isEmpty) {
+              return LayoutBuilder(builder: (context, constraints) {
+                return SingleChildScrollView(
+                  physics: const AlwaysScrollableScrollPhysics(),
+                  child: ConstrainedBox(
+                    constraints: BoxConstraints(minHeight: constraints.maxHeight),
+                    child: EmptyStateWidget(
+                      icon: Icons.key_off,
+                      message: 'Nenhuma credencial encontrada.',
+                      buttonText: 'Adicionar Credencial',
+                      onButtonPressed: () => Navigator.of(context).push(
+                          MaterialPageRoute(builder: (_) => const AddCredentialScreen())),
+                    ),
+                  ),
+                );
+              });
+            }
+            return ListView.builder(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+              itemCount: vm.allCredentials.length,
+              itemBuilder: (context, index) {
+                final credential = vm.allCredentials[index];
+                final logoPath = credential.logoPath;
+                return Card(
+                  margin: const EdgeInsets.symmetric(horizontal: 4, vertical: 6),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(14),
+                  ),
+                  elevation: 2,
+                  child: ListTile(
+                    leading: CircleAvatar(
+                      backgroundColor: Theme.of(context).colorScheme.primary.withOpacity(0.15),
+                      backgroundImage: logoPath != null && logoPath.isNotEmpty
+                          ? MemoryImage(base64Decode(logoPath))
+                          : null,
+                      child: logoPath == null || logoPath.isEmpty
+                          ? Icon(Icons.vpn_key_outlined, color: Theme.of(context).colorScheme.primary)
+                          : null,
+                    ),
+                    title: Text(credential.location),
+                    subtitle: Text(credential.login),
+                    trailing: IconButton(
+                      icon: const Icon(Icons.visibility),
+                      onPressed: () => _showDecryptedPassword(
+                          context, credential.encryptedPassword),
+                    ),
+                    onTap: () {
+                      Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder: (_) => CredentialDetailScreen(
+                              credential: credential),
                         ),
                       );
-                    });
-                  }
-                  return ListView.builder(
-                    itemCount: vm.allCredentials.length,
-                    itemBuilder: (context, index) {
-                      final credential = vm.allCredentials[index];
-                      final logoPath = credential.logoPath;
-                      return ListTile(
-                        leading: CircleAvatar(
-                          backgroundImage:
-                          logoPath != null && logoPath.isNotEmpty
-                              ? MemoryImage(base64Decode(logoPath))
-                              : null,
-                          child: logoPath == null || logoPath.isEmpty
-                              ? const Icon(Icons.vpn_key_outlined)
-                              : null,
-                        ),
-                        title: Text(credential.location),
-                        subtitle: Text(credential.login),
-                        trailing: IconButton(
-                          icon: const Icon(Icons.visibility),
-                          onPressed: () => _showDecryptedPassword(
-                              context, credential.encryptedPassword),
-                        ),
-                        onTap: () {
-                          Navigator.of(context).push(
-                            MaterialPageRoute(
-                              builder: (_) => CredentialDetailScreen(
-                                  credential: credential),
-                            ),
-                          );
-                        },
-                      ).animate().fadeIn(delay: (20 * index).ms, duration: 100.ms).slideY(begin: 0.1, end: 0);
                     },
-                  );
-                },
-              ),
-            ),
-          ],
+                  ),
+                )
+                    .animate()
+                    .fadeIn(delay: (20 * index).ms, duration: 100.ms)
+                    .slideY(begin: 0.1, end: 0);
+              },
+            );
+          },
         ),
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () => Navigator.of(context).push(
-            MaterialPageRoute(builder: (_) => const AddCredentialScreen())),
-        child: const Icon(Icons.add),
-      ).animate().scale(delay: 50.ms, duration: 50.ms),
+      floatingActionButton: FloatingActionButton.extended(
+        onPressed: () => Navigator.of(context)
+            .push(MaterialPageRoute(builder: (_) => const AddCredentialScreen())),
+        icon: const Icon(Icons.add),
+        label: const Text("Nova Credencial"),
+      )
+          .animate()
+          .scaleXY(begin: 0.9, end: 1.0, duration: 200.ms)
+          .then(delay: 50.ms)
+          .scaleXY(end: 1.05, duration: 300.ms)
+          .then()
+          .scaleXY(end: 1.0, duration: 300.ms),
     );
   }
 }
