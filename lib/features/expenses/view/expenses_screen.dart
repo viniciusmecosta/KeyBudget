@@ -20,7 +20,7 @@ class ExpensesScreen extends StatefulWidget {
 class _ExpensesScreenState extends State<ExpensesScreen> {
   DateTime _selectedMonth = DateTime(DateTime.now().year, DateTime.now().month);
   final _currencyFormatter =
-      NumberFormat.currency(locale: 'pt_BR', symbol: 'R\$');
+  NumberFormat.currency(locale: 'pt_BR', symbol: 'R\$');
 
   @override
   void initState() {
@@ -48,7 +48,7 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
     final scaffoldMessenger = ScaffoldMessenger.of(context);
 
     final count =
-        await viewModel.importExpensesFromCsv(authViewModel.currentUser!.id);
+    await viewModel.importExpensesFromCsv(authViewModel.currentUser!.id);
     if (!mounted) return;
     scaffoldMessenger.showSnackBar(
       SnackBar(
@@ -88,7 +88,7 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
                   child: ListView(
                     children: ExpenseCategory.values.map((category) {
                       final isSelected =
-                          viewModel.selectedCategories.contains(category);
+                      viewModel.selectedCategories.contains(category);
                       return CheckboxListTile(
                         title: Text(category.displayName),
                         value: isSelected,
@@ -137,17 +137,18 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
   @override
   Widget build(BuildContext context) {
     final viewModel = Provider.of<ExpenseViewModel>(context);
+    final theme = Theme.of(context);
 
     final monthlyExpenses = viewModel.filteredExpenses
         .where((exp) =>
-            exp.date.year == _selectedMonth.year &&
-            exp.date.month == _selectedMonth.month)
+    exp.date.year == _selectedMonth.year &&
+        exp.date.month == _selectedMonth.month)
         .toList()
       ..sort((a, b) => b.date.compareTo(a.date));
 
     final totalValue = monthlyExpenses.fold<double>(
       0.0,
-      (sum, exp) => sum + exp.amount,
+          (sum, exp) => sum + exp.amount,
     );
 
     return Scaffold(
@@ -181,20 +182,18 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
           children: [
             _buildMonthSelector(context),
             Card(
-              elevation: 3,
               margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(16),
-              ),
+              elevation: 4,
+              shadowColor: theme.primaryColor.withOpacity(0.2),
               child: Container(
                 width: double.infinity,
                 padding:
-                    const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
+                const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
                     colors: [
-                      Theme.of(context).colorScheme.primary.withOpacity(0.6),
-                      Theme.of(context).colorScheme.primary
+                      theme.primaryColor,
+                      theme.primaryColor.withOpacity(0.7)
                     ],
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
@@ -206,27 +205,18 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
                   children: [
                     Text(
                       'Total do mês',
-                      style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                            color: Colors.white70,
-                            fontWeight: FontWeight.w500,
-                          ),
+                      style: theme.textTheme.bodyLarge
+                          ?.copyWith(color: Colors.white70),
                     ),
                     Text(
                       _currencyFormatter.format(totalValue),
-                      style:
-                          Theme.of(context).textTheme.headlineMedium?.copyWith(
-                                fontWeight: FontWeight.bold,
-                                color: Colors.white,
-                              ),
+                      style: theme.textTheme.headlineMedium
+                          ?.copyWith(color: Colors.white),
                     ),
                   ],
                 ),
               ),
-            )
-                .animate()
-                .fadeIn(duration: 160.ms)
-                .slideY(begin: -0.3, end: 0)
-                .scaleXY(begin: 0.9, end: 1.0),
+            ).animate().fadeIn(duration: 250.ms).slideY(begin: -0.3),
             Expanded(
               child: Consumer<ExpenseViewModel>(
                 builder: (context, vm, child) {
@@ -245,35 +235,30 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
                     );
                   }
                   return ListView.builder(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 12, vertical: 8),
                     itemCount: monthlyExpenses.length,
                     itemBuilder: (context, index) {
                       final expense = monthlyExpenses[index];
                       return Card(
                         margin: const EdgeInsets.symmetric(
                             horizontal: 4, vertical: 6),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(14),
-                        ),
-                        elevation: 2,
                         child: ListTile(
                           leading: CircleAvatar(
-                            backgroundColor: Theme.of(context)
-                                .colorScheme
-                                .primary
-                                .withOpacity(0.15),
+                            backgroundColor:
+                            theme.primaryColor.withOpacity(0.15),
                             child: Icon(
                               expense.category?.icon ?? Icons.category,
-                              color: Theme.of(context).colorScheme.primary,
+                              color: theme.primaryColor,
                             ),
                           ),
                           title: Text(
                             expense.location?.isNotEmpty == true
                                 ? expense.location!
                                 : (expense.category?.displayName ??
-                                    'Gasto Geral'),
-                            style: const TextStyle(fontWeight: FontWeight.w600),
+                                'Gasto Geral'),
+                            style:
+                            const TextStyle(fontWeight: FontWeight.w600),
                           ),
                           subtitle: Text(
                             DateFormat('dd/MM/yyyy').format(expense.date),
@@ -282,8 +267,7 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
                             _currencyFormatter.format(expense.amount),
                             style: TextStyle(
                               fontWeight: FontWeight.bold,
-                              color: Theme.of(context).colorScheme.error,
-                              fontSize: 18,
+                              color: theme.colorScheme.error,
                             ),
                           ),
                           onTap: () {
@@ -295,13 +279,9 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
                             );
                           },
                         ),
-                      )
-                          .animate()
-                          .fadeIn(duration: 160.ms)
-                          .slideX(begin: 0.2, end: 0)
-                          .scaleXY(begin: 0.95, end: 1.0);
+                      );
                     },
-                  );
+                  ).animate().fadeIn(duration: 300.ms, delay: 200.ms);
                 },
               ),
             ),
@@ -313,13 +293,7 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
             .push(MaterialPageRoute(builder: (_) => const AddExpenseScreen())),
         icon: const Icon(Icons.add),
         label: const Text("Nova Despesa"),
-      )
-          .animate()
-          .scaleXY(begin: 0.9, end: 1.0, duration: 120.ms)
-          .then(delay: 160.ms)
-          .scaleXY(end: 1.05, duration: 240.ms)
-          .then()
-          .scaleXY(end: 1.0, duration: 240.ms),
+      ).animate().scale(duration: 250.ms),
     );
   }
 
@@ -327,7 +301,7 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       child: Row(
-        mainAxisAlignment: MainAxisAlignment.center,
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           IconButton(
             icon: const Icon(Icons.chevron_left),
