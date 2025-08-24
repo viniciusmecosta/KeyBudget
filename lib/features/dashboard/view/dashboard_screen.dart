@@ -84,18 +84,21 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     ],
                   )
                       .animate()
-                      .fadeIn(duration: 150.ms)
-                      .slideY(begin: 0.1, end: 0, curve: Curves.easeOut),
+                      .fadeIn(duration: 120.ms)
+                      .slideY(begin: 0.2, end: 0, curve: Curves.easeOut)
+                      .scaleXY(begin: 0.95, end: 1.0),
                   const SizedBox(height: 24),
                   _buildBarChartSection(context, viewModel)
                       .animate()
-                      .fadeIn(delay: 100.ms, duration: 200.ms)
-                      .slideY(begin: 0.1, end: 0, curve: Curves.easeOut),
+                      .fadeIn(delay: 80.ms, duration: 160.ms)
+                      .slideY(begin: 0.2, end: 0, curve: Curves.easeOut)
+                      .scaleXY(begin: 0.95, end: 1.0),
                   const SizedBox(height: 24),
                   _buildRecentActivitySection(context, viewModel)
                       .animate()
-                      .fadeIn(delay: 150.ms, duration: 200.ms)
-                      .slideY(begin: 0.1, end: 0, curve: Curves.easeOut),
+                      .fadeIn(delay: 120.ms, duration: 160.ms)
+                      .slideY(begin: 0.2, end: 0, curve: Curves.easeOut)
+                      .scaleXY(begin: 0.95, end: 1.0),
                 ],
               ),
             ),

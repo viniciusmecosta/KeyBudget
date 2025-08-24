@@ -220,7 +220,11 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
                   ],
                 ),
               ),
-            ).animate().fadeIn(duration: 200.ms).slideY(begin: -0.2, end: 0),
+            )
+                .animate()
+                .fadeIn(duration: 160.ms)
+                .slideY(begin: -0.3, end: 0)
+                .scaleXY(begin: 0.9, end: 1.0),
             Expanded(
               child: Consumer<ExpenseViewModel>(
                 builder: (context, vm, child) {
@@ -291,8 +295,9 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
                         ),
                       )
                           .animate()
-                          .fadeIn(delay: (50 * index).ms, duration: 200.ms)
-                          .slideX(begin: 0.1, end: 0);
+                          .fadeIn(delay: (40 * index).ms, duration: 160.ms)
+                          .slideX(begin: 0.2, end: 0)
+                          .scaleXY(begin: 0.95, end: 1.0);
                     },
                   );
                 },
@@ -308,11 +313,11 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
         label: const Text("Nova Despesa"),
       )
           .animate()
-          .scaleXY(begin: 0.9, end: 1.0, duration: 150.ms)
-          .then(delay: 200.ms)
-          .scaleXY(end: 1.05, duration: 300.ms)
+          .scaleXY(begin: 0.9, end: 1.0, duration: 120.ms)
+          .then(delay: 160.ms)
+          .scaleXY(end: 1.05, duration: 240.ms)
           .then()
-          .scaleXY(end: 1.0, duration: 300.ms),
+          .scaleXY(end: 1.0, duration: 240.ms),
     );
   }
 
