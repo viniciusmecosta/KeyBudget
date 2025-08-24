@@ -42,7 +42,7 @@ class _CredentialsScreenState extends State<CredentialsScreen> {
     final scaffoldMessenger = ScaffoldMessenger.of(context);
 
     final count =
-        await viewModel.importCredentialsFromCsv(authViewModel.currentUser!.id);
+    await viewModel.importCredentialsFromCsv(authViewModel.currentUser!.id);
     scaffoldMessenger.showSnackBar(SnackBar(
         content: Text('$count credenciais importadas com sucesso!'),
         backgroundColor: Colors.green));
@@ -79,7 +79,7 @@ class _CredentialsScreenState extends State<CredentialsScreen> {
               ScaffoldMessenger.of(context).showSnackBar(
                 const SnackBar(
                     content:
-                        Text('Senha copiada para a área de transferência')),
+                    Text('Senha copiada para a área de transferência')),
               );
               Navigator.of(context).pop();
             },
@@ -127,7 +127,7 @@ class _CredentialsScreenState extends State<CredentialsScreen> {
                   physics: const AlwaysScrollableScrollPhysics(),
                   child: ConstrainedBox(
                     constraints:
-                        BoxConstraints(minHeight: constraints.maxHeight),
+                    BoxConstraints(minHeight: constraints.maxHeight),
                     child: EmptyStateWidget(
                       icon: Icons.key_off,
                       message: 'Nenhuma credencial encontrada.',
@@ -148,29 +148,26 @@ class _CredentialsScreenState extends State<CredentialsScreen> {
                 final logoPath = credential.logoPath;
                 return Card(
                   margin:
-                      const EdgeInsets.symmetric(horizontal: 4, vertical: 6),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(14),
-                  ),
-                  elevation: 2,
+                  const EdgeInsets.symmetric(horizontal: 4, vertical: 6),
                   child: ListTile(
                     leading: CircleAvatar(
                       backgroundColor: Theme.of(context)
                           .colorScheme
-                          .primary
+                          .secondary
                           .withOpacity(0.15),
                       backgroundImage: logoPath != null && logoPath.isNotEmpty
                           ? MemoryImage(base64Decode(logoPath))
                           : null,
                       child: logoPath == null || logoPath.isEmpty
                           ? Icon(Icons.vpn_key_outlined,
-                              color: Theme.of(context).colorScheme.primary)
+                          color: Theme.of(context).colorScheme.secondary)
                           : null,
                     ),
-                    title: Text(credential.location),
+                    title: Text(credential.location,
+                        style: const TextStyle(fontWeight: FontWeight.w600)),
                     subtitle: Text(credential.login),
                     trailing: IconButton(
-                      icon: const Icon(Icons.visibility),
+                      icon: const Icon(Icons.visibility_outlined),
                       onPressed: () => _showDecryptedPassword(
                           context, credential.encryptedPassword),
                     ),
@@ -183,13 +180,9 @@ class _CredentialsScreenState extends State<CredentialsScreen> {
                       );
                     },
                   ),
-                )
-                    .animate()
-                    .fadeIn(duration: 120.ms)
-                    .slideY(begin: 0.2, end: 0)
-                    .slideX(begin: -0.1, end: 0);
+                );
               },
-            );
+            ).animate().fadeIn(duration: 300.ms, delay: 200.ms);
           },
         ),
       ),
@@ -198,13 +191,7 @@ class _CredentialsScreenState extends State<CredentialsScreen> {
             MaterialPageRoute(builder: (_) => const AddCredentialScreen())),
         icon: const Icon(Icons.add),
         label: const Text("Nova Credencial"),
-      )
-          .animate()
-          .scaleXY(begin: 0.9, end: 1.0, duration: 120.ms)
-          .then(delay: 40.ms)
-          .scaleXY(end: 1.05, duration: 160.ms)
-          .then()
-          .scaleXY(end: 1.0, duration: 160.ms),
+      ).animate().scale(duration: 250.ms),
     );
   }
 }
