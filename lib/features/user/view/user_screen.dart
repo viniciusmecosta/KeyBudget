@@ -195,31 +195,6 @@ class UserScreen extends StatelessWidget {
                     ),
                   ),
                 const Spacer(),
-                ElevatedButton.icon(
-                  icon: const Icon(Icons.upload_file),
-                  label: const Text('Importar Despesas (JSON)'),
-                  onPressed: () => _importExpensesData(context),
-                  style: ElevatedButton.styleFrom(
-                      backgroundColor: AppTheme.blue,
-                      foregroundColor: AppTheme.offWhite
-                  ),
-                ),
-                const SizedBox(height: 8),
-                ElevatedButton.icon(
-                  icon: const Icon(Icons.vpn_key),
-                  label: const Text('Importar Credenciais (JSON)'),
-                  onPressed: () => _importCredentialsData(context),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: AppTheme.lightBlue,
-                    foregroundColor: AppTheme.darkBlue,
-                  ),
-                ),
-                const SizedBox(height: 8),
-                ElevatedButton.icon(
-                  icon: const Icon(Icons.download),
-                  label: const Text('Exportar Meus Dados (CSV)'),
-                  onPressed: () => _exportAllData(context),
-                ),
                 const SizedBox(height: 8),
                 ElevatedButton(
                   style: ElevatedButton.styleFrom(

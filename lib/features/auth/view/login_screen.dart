@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import 'package:key_budget/features/auth/view/register_screen.dart';
 import 'package:provider/provider.dart';
 import 'package:key_budget/features/auth/viewmodel/auth_viewmodel.dart';
@@ -109,19 +110,19 @@ class _LoginScreenState extends State<LoginScreen> {
                     return viewModel.isLoading
                         ? const CircularProgressIndicator()
                         : Column(
-                            children: [
-                              ElevatedButton(
-                                onPressed: _submit,
-                                child: const Text('Entrar'),
-                              ),
-                              const SizedBox(height: 16),
-                              OutlinedButton.icon(
-                                onPressed: _submitGoogle,
-                                icon: const Icon(Icons.g_mobiledata),
-                                label: const Text('Entrar com Google'),
-                              ),
-                            ],
-                          );
+                      children: [
+                        ElevatedButton(
+                          onPressed: _submit,
+                          child: const Text('Entrar'),
+                        ),
+                        const SizedBox(height: 16),
+                        OutlinedButton.icon(
+                          onPressed: _submitGoogle,
+                          icon: const Icon(Icons.g_mobiledata),
+                          label: const Text('Entrar com Google'),
+                        ),
+                      ],
+                    );
                   },
                 ),
                 TextButton(
@@ -133,7 +134,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   child: const Text('Não tem uma conta? Cadastre-se'),
                 ),
               ],
-            ),
+            ).animate().fadeIn(duration: 150.ms),
           ),
         ),
       ),
