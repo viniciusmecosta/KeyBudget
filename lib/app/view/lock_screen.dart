@@ -29,15 +29,17 @@ class _LockScreenState extends State<LockScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     return Scaffold(
       body: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Icon(Icons.lock_outline, size: 80),
+            Icon(Icons.lock_outline,
+                size: 80, color: theme.colorScheme.primary),
             const SizedBox(height: 24),
-            const Text('KeyBudget está bloqueado',
-                style: TextStyle(fontSize: 22)),
+            Text('KeyBudget está bloqueado',
+                style: theme.textTheme.headlineSmall),
             const SizedBox(height: 16),
             ElevatedButton.icon(
               onPressed: _authenticate,

@@ -58,16 +58,16 @@ class _LogoPickerState extends State<LogoPicker> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     return GestureDetector(
       onTap: _pickImage,
       child: CircleAvatar(
         radius: 40,
-        backgroundColor: Theme.of(context).colorScheme.secondaryContainer,
+        backgroundColor: theme.colorScheme.secondary.withOpacity(0.1),
         backgroundImage: _getImageProvider(),
         child: _imageBase64 == null
             ? Icon(Icons.add_photo_alternate_outlined,
-                size: 30,
-                color: Theme.of(context).colorScheme.onSecondaryContainer)
+                size: 30, color: theme.colorScheme.secondary)
             : null,
       ),
     );

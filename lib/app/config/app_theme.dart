@@ -12,6 +12,7 @@ class AppTheme {
   static const Color darkSurface = Color(0xFF1E1E2D);
   static const Color onDarkSurface = Color(0xFFF5F5F7);
   static const Color success = Color(0xFF28A745);
+  static const Color error = Color(0xFFDC3545);
 
   static final ThemeData lightTheme = ThemeData(
     useMaterial3: true,
@@ -20,18 +21,18 @@ class AppTheme {
     primaryColor: primary,
     colorScheme: const ColorScheme.light(
       primary: primary,
-      onPrimary: Colors.white,
+      onPrimary: surface,
       secondary: secondary,
-      onSecondary: Colors.white,
+      onSecondary: surface,
       surface: surface,
       onSurface: onSurface,
       background: background,
       onBackground: onSurface,
-      error: Colors.redAccent,
-      onError: Colors.white,
+      error: error,
+      onError: surface,
       brightness: Brightness.light,
     ).copyWith(
-      secondaryContainer: Colors.green,
+      secondaryContainer: success,
     ),
     textTheme: GoogleFonts.interTextTheme(ThemeData.light().textTheme).copyWith(
       headlineMedium: const TextStyle(
@@ -52,7 +53,7 @@ class AppTheme {
     elevatedButtonTheme: ElevatedButtonThemeData(
       style: ElevatedButton.styleFrom(
         backgroundColor: primary,
-        foregroundColor: Colors.white,
+        foregroundColor: surface,
         padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         textStyle: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
@@ -62,7 +63,7 @@ class AppTheme {
     ),
     inputDecorationTheme: InputDecorationTheme(
       filled: true,
-      fillColor: Colors.black.withOpacity(0.05),
+      fillColor: onSurface.withOpacity(0.05),
       border: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12),
         borderSide: BorderSide.none,
@@ -76,6 +77,7 @@ class AppTheme {
       ),
       color: surface,
     ),
+    shadowColor: onSurface.withOpacity(0.1),
   );
 
   static final ThemeData darkTheme = ThemeData(
@@ -92,8 +94,8 @@ class AppTheme {
       onSurface: onDarkSurface,
       background: darkBackground,
       onBackground: onDarkSurface,
-      error: Colors.redAccent,
-      onError: Colors.white,
+      error: error,
+      onError: surface,
       brightness: Brightness.dark,
     ).copyWith(secondaryContainer: success),
     textTheme: GoogleFonts.interTextTheme(ThemeData.dark().textTheme).copyWith(
@@ -125,7 +127,7 @@ class AppTheme {
     ),
     inputDecorationTheme: InputDecorationTheme(
       filled: true,
-      fillColor: Colors.white.withOpacity(0.08),
+      fillColor: onDarkSurface.withOpacity(0.08),
       border: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12),
         borderSide: BorderSide.none,
@@ -139,5 +141,6 @@ class AppTheme {
       ),
       color: darkSurface,
     ),
+    shadowColor: onDarkSurface.withOpacity(0.1),
   );
 }

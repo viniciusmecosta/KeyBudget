@@ -31,6 +31,7 @@ class _ExportExpensesScreenState extends State<ExportExpensesScreen> {
   void _export(BuildContext context, {bool all = false}) async {
     final viewModel = Provider.of<ExpenseViewModel>(context, listen: false);
     final scaffoldMessenger = ScaffoldMessenger.of(context);
+    final theme = Theme.of(context);
 
     bool success;
     if (all) {
@@ -45,13 +46,13 @@ class _ExportExpensesScreenState extends State<ExportExpensesScreen> {
     }
 
     if (success) {
-      scaffoldMessenger.showSnackBar(const SnackBar(
-          content: Text('Arquivo CSV exportado com sucesso!'),
-          backgroundColor: Colors.green));
+      scaffoldMessenger.showSnackBar(SnackBar(
+          content: const Text('Arquivo CSV exportado com sucesso!'),
+          backgroundColor: theme.colorScheme.secondaryContainer));
     } else {
-      scaffoldMessenger.showSnackBar(const SnackBar(
-          content: Text('Falha ao exportar arquivo.'),
-          backgroundColor: Colors.red));
+      scaffoldMessenger.showSnackBar(SnackBar(
+          content: const Text('Falha ao exportar arquivo.'),
+          backgroundColor: theme.colorScheme.error));
     }
   }
 

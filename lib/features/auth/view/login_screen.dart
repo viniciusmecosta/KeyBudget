@@ -118,9 +118,9 @@ class _LoginScreenState extends State<LoginScreen> {
                         ),
                         keyboardType: TextInputType.emailAddress,
                         validator: (value) =>
-                        (value == null || !value.contains('@'))
-                            ? 'Insira um email válido'
-                            : null,
+                            (value == null || !value.contains('@'))
+                                ? 'Insira um email válido'
+                                : null,
                       ),
                       const SizedBox(height: 20),
                       TextFormField(
@@ -130,8 +130,7 @@ class _LoginScreenState extends State<LoginScreen> {
                           prefixIcon: Icon(Icons.lock_outline),
                         ),
                         obscureText: true,
-                        validator: (value) =>
-                        (value == null || value.isEmpty)
+                        validator: (value) => (value == null || value.isEmpty)
                             ? 'Insira sua senha'
                             : null,
                       ),
@@ -147,28 +146,28 @@ class _LoginScreenState extends State<LoginScreen> {
                     return viewModel.isLoading
                         ? const CircularProgressIndicator()
                         : Column(
-                      children: [
-                        SizedBox(
-                          width: double.infinity,
-                          child: ElevatedButton(
-                            onPressed: _submit,
-                            child: const Text('Entrar'),
-                          ),
-                        ),
-                        const SizedBox(height: 16),
-                        SizedBox(
-                          width: double.infinity,
-                          child: OutlinedButton.icon(
-                            onPressed: _submitGoogle,
-                            icon: const Icon(
-                              Icons.g_mobiledata,
-                              size: 28,
-                            ),
-                            label: const Text('Entrar com Google'),
-                          ),
-                        ),
-                      ],
-                    );
+                            children: [
+                              SizedBox(
+                                width: double.infinity,
+                                child: ElevatedButton(
+                                  onPressed: _submit,
+                                  child: const Text('Entrar'),
+                                ),
+                              ),
+                              const SizedBox(height: 16),
+                              SizedBox(
+                                width: double.infinity,
+                                child: OutlinedButton.icon(
+                                  onPressed: _submitGoogle,
+                                  icon: const Icon(
+                                    Icons.g_mobiledata,
+                                    size: 28,
+                                  ),
+                                  label: const Text('Entrar com Google'),
+                                ),
+                              ),
+                            ],
+                          );
                   },
                 )
                     .animate()
