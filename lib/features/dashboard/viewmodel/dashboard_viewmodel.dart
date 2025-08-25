@@ -96,4 +96,13 @@ class DashboardViewModel extends ChangeNotifier {
     }
     notifyListeners();
   }
+
+  void clearData() {
+    _isLoading = false;
+    _credentialCount = 0;
+    _allExpenses = [];
+    _expensesByCategoryForMonth = {};
+    _selectedMonth = DateTime(DateTime.now().year, DateTime.now().month);
+    notifyListeners();
+  }
 }

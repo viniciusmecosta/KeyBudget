@@ -9,4 +9,9 @@ class NavigationViewModel extends ChangeNotifier {
     _selectedIndex = index;
     notifyListeners();
   }
+
+  void clearData() {
+    _selectedIndex = 0;
+    notifyListeners();
+  }
 }

@@ -20,7 +20,7 @@ class ExpensesScreen extends StatefulWidget {
 class _ExpensesScreenState extends State<ExpensesScreen> {
   DateTime _selectedMonth = DateTime(DateTime.now().year, DateTime.now().month);
   final _currencyFormatter =
-      NumberFormat.currency(locale: 'pt_BR', symbol: 'R\$');
+  NumberFormat.currency(locale: 'pt_BR', symbol: 'R\$');
 
   @override
   void initState() {
@@ -49,7 +49,7 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
     final theme = Theme.of(context);
 
     final count =
-        await viewModel.importExpensesFromCsv(authViewModel.currentUser!.id);
+    await viewModel.importExpensesFromCsv(authViewModel.currentUser!.id);
     if (!mounted) return;
     scaffoldMessenger.showSnackBar(
       SnackBar(
@@ -91,7 +91,7 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
                   child: ListView(
                     children: ExpenseCategory.values.map((category) {
                       final isSelected =
-                          viewModel.selectedCategories.contains(category);
+                      viewModel.selectedCategories.contains(category);
                       return CheckboxListTile(
                         title: Text(category.displayName),
                         value: isSelected,
@@ -130,11 +130,17 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
 
   String _formatMonthYear(DateTime date) {
     final now = DateTime.now();
+    String formattedDate;
+
     if (date.year == now.year) {
-      return DateFormat.MMMM('pt_BR').format(date);
+      formattedDate = DateFormat.MMMM('pt_BR').format(date);
     } else {
-      return DateFormat.yMMMM('pt_BR').format(date);
+      formattedDate = DateFormat.yMMMM('pt_BR').format(date);
     }
+    // Adiciona a capitalização aqui
+    return formattedDate.isNotEmpty
+        ? formattedDate[0].toUpperCase() + formattedDate.substring(1)
+        : '';
   }
 
   @override
@@ -144,14 +150,14 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
 
     final monthlyExpenses = viewModel.filteredExpenses
         .where((exp) =>
-            exp.date.year == _selectedMonth.year &&
-            exp.date.month == _selectedMonth.month)
+    exp.date.year == _selectedMonth.year &&
+        exp.date.month == _selectedMonth.month)
         .toList()
       ..sort((a, b) => b.date.compareTo(a.date));
 
     final totalValue = monthlyExpenses.fold<double>(
       0.0,
-      (sum, exp) => sum + exp.amount,
+          (sum, exp) => sum + exp.amount,
     );
 
     return Scaffold(
@@ -191,7 +197,7 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
               child: Container(
                 width: double.infinity,
                 padding:
-                    const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
+                const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
                     colors: [
@@ -239,7 +245,7 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
                   }
                   return ListView.builder(
                     padding:
-                        const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                    const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                     itemCount: monthlyExpenses.length,
                     itemBuilder: (context, index) {
                       final expense = monthlyExpenses[index];
@@ -249,7 +255,7 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
                         child: ListTile(
                           leading: CircleAvatar(
                             backgroundColor:
-                                theme.primaryColor.withOpacity(0.15),
+                            theme.primaryColor.withOpacity(0.15),
                             child: Icon(
                               expense.category?.icon ?? Icons.category,
                               color: theme.primaryColor,
@@ -259,7 +265,7 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
                             expense.location?.isNotEmpty == true
                                 ? expense.location!
                                 : (expense.category?.displayName ??
-                                    'Gasto Geral'),
+                                'Gasto Geral'),
                             style: const TextStyle(fontWeight: FontWeight.w600),
                           ),
                           subtitle: Text(

@@ -110,4 +110,10 @@ class ExpenseViewModel extends ChangeNotifier {
     _setLoading(false);
     return count;
   }
+
+  void clearData() {
+    _allExpenses = [];
+    _selectedCategories = [];
+    notifyListeners();
+  }
 }

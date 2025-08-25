@@ -129,4 +129,9 @@ class CredentialViewModel extends ChangeNotifier {
   String decryptPassword(String encryptedPassword) {
     return _encryptionService.decryptData(encryptedPassword);
   }
+
+  void clearData() {
+    _allCredentials = [];
+    notifyListeners();
+  }
 }
