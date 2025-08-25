@@ -1,12 +1,13 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
-import 'package:key_budget/features/auth/view/login_screen.dart';
+import 'package:key_budget/app/viewmodel/navigation_viewmodel.dart';
 import 'package:key_budget/features/auth/viewmodel/auth_viewmodel.dart';
 import 'package:key_budget/features/credentials/viewmodel/credential_viewmodel.dart';
 import 'package:key_budget/features/expenses/viewmodel/expense_viewmodel.dart';
 import 'package:key_budget/features/user/view/edit_user_screen.dart';
 import 'package:provider/provider.dart';
+import 'package:key_budget/features/dashboard/viewmodel/dashboard_viewmodel.dart';
 
 class UserScreen extends StatelessWidget {
   const UserScreen({super.key});
@@ -224,13 +225,23 @@ class UserScreen extends StatelessWidget {
                           ),
                           ElevatedButton(
                             onPressed: () {
+                              Navigator.of(context).pop();
+
+                              Provider.of<DashboardViewModel>(context,
+                                      listen: false)
+                                  .clearData();
+                              Provider.of<ExpenseViewModel>(context,
+                                      listen: false)
+                                  .clearData();
+                              Provider.of<CredentialViewModel>(context,
+                                      listen: false)
+                                  .clearData();
+                              Provider.of<NavigationViewModel>(context,
+                                      listen: false)
+                                  .clearData();
+
                               Provider.of<AuthViewModel>(context, listen: false)
                                   .logout();
-                              Navigator.of(context).pushAndRemoveUntil(
-                                MaterialPageRoute(
-                                    builder: (_) => const LoginScreen()),
-                                (route) => false,
-                              );
                             },
                             child: const Text("Sair"),
                           ),
