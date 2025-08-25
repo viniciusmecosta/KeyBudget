@@ -40,26 +40,29 @@ class _CredentialsScreenState extends State<CredentialsScreen> {
     final viewModel = Provider.of<CredentialViewModel>(context, listen: false);
     final authViewModel = Provider.of<AuthViewModel>(context, listen: false);
     final scaffoldMessenger = ScaffoldMessenger.of(context);
+    final theme = Theme.of(context);
 
     final count =
-    await viewModel.importCredentialsFromCsv(authViewModel.currentUser!.id);
+        await viewModel.importCredentialsFromCsv(authViewModel.currentUser!.id);
     scaffoldMessenger.showSnackBar(SnackBar(
         content: Text('$count credenciais importadas com sucesso!'),
-        backgroundColor: Colors.green));
+        backgroundColor: theme.colorScheme.secondaryContainer));
   }
 
   void _export(BuildContext context) async {
     final viewModel = Provider.of<CredentialViewModel>(context, listen: false);
     final scaffoldMessenger = ScaffoldMessenger.of(context);
+    final theme = Theme.of(context);
 
     final success = await viewModel.exportCredentialsToCsv();
     if (success) {
-      scaffoldMessenger.showSnackBar(const SnackBar(
-          content: Text('Credenciais exportadas com sucesso!'),
-          backgroundColor: Colors.green));
+      scaffoldMessenger.showSnackBar(SnackBar(
+          content: const Text('Credenciais exportadas com sucesso!'),
+          backgroundColor: theme.colorScheme.secondaryContainer));
     } else {
-      scaffoldMessenger.showSnackBar(const SnackBar(
-          content: Text('Falha ao exportar.'), backgroundColor: Colors.red));
+      scaffoldMessenger.showSnackBar(SnackBar(
+          content: const Text('Falha ao exportar.'),
+          backgroundColor: theme.colorScheme.error));
     }
   }
 
@@ -79,7 +82,7 @@ class _CredentialsScreenState extends State<CredentialsScreen> {
               ScaffoldMessenger.of(context).showSnackBar(
                 const SnackBar(
                     content:
-                    Text('Senha copiada para a área de transferência')),
+                        Text('Senha copiada para a área de transferência')),
               );
               Navigator.of(context).pop();
             },
@@ -127,7 +130,7 @@ class _CredentialsScreenState extends State<CredentialsScreen> {
                   physics: const AlwaysScrollableScrollPhysics(),
                   child: ConstrainedBox(
                     constraints:
-                    BoxConstraints(minHeight: constraints.maxHeight),
+                        BoxConstraints(minHeight: constraints.maxHeight),
                     child: EmptyStateWidget(
                       icon: Icons.key_off,
                       message: 'Nenhuma credencial encontrada.',
@@ -148,7 +151,7 @@ class _CredentialsScreenState extends State<CredentialsScreen> {
                 final logoPath = credential.logoPath;
                 return Card(
                   margin:
-                  const EdgeInsets.symmetric(horizontal: 4, vertical: 6),
+                      const EdgeInsets.symmetric(horizontal: 4, vertical: 6),
                   child: ListTile(
                     leading: CircleAvatar(
                       backgroundColor: Theme.of(context)
@@ -160,7 +163,7 @@ class _CredentialsScreenState extends State<CredentialsScreen> {
                           : null,
                       child: logoPath == null || logoPath.isEmpty
                           ? Icon(Icons.vpn_key_outlined,
-                          color: Theme.of(context).colorScheme.secondary)
+                              color: Theme.of(context).colorScheme.secondary)
                           : null,
                     ),
                     title: Text(credential.location,

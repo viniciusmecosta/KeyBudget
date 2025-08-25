@@ -55,15 +55,16 @@ class _AvatarPickerState extends State<AvatarPicker> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     return GestureDetector(
       onTap: _pickImage,
       child: CircleAvatar(
         radius: 50,
-        backgroundColor: Theme.of(context).colorScheme.secondary,
+        backgroundColor: theme.colorScheme.secondary,
         backgroundImage: _getImageProvider(),
         child: _imageBase64 == null
             ? Icon(Icons.add_a_photo,
-                size: 40, color: Theme.of(context).colorScheme.onSecondary)
+                size: 40, color: theme.colorScheme.onSecondary)
             : null,
       ),
     );

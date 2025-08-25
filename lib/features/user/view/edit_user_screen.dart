@@ -46,6 +46,7 @@ class _EditUserScreenState extends State<EditUserScreen> {
 
     setState(() => _isSaving = true);
     final viewModel = Provider.of<AuthViewModel>(context, listen: false);
+    final theme = Theme.of(context);
 
     final success = await viewModel.updateUser(
       name: _nameController.text,
@@ -60,9 +61,9 @@ class _EditUserScreenState extends State<EditUserScreen> {
       setState(() => _isSaving = false);
       if (success) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Perfil atualizado com sucesso!'),
-            backgroundColor: Colors.green,
+          SnackBar(
+            content: const Text('Perfil atualizado com sucesso!'),
+            backgroundColor: theme.colorScheme.secondaryContainer,
           ),
         );
         Navigator.of(context).pop();
@@ -70,7 +71,7 @@ class _EditUserScreenState extends State<EditUserScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(viewModel.errorMessage ?? 'Erro desconhecido'),
-            backgroundColor: Theme.of(context).colorScheme.error,
+            backgroundColor: theme.colorScheme.error,
           ),
         );
       }

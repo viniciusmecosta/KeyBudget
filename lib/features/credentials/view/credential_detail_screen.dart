@@ -67,8 +67,9 @@ class _CredentialDetailScreenState extends State<CredentialDetailScreen> {
   void _copyToClipboard(String text) {
     if (_decryptionError) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-            content: Text('Não é possível copiar a senha com erro.')),
+        SnackBar(
+            content: const Text('Não é possível copiar a senha com erro.'),
+            backgroundColor: Theme.of(context).colorScheme.error),
       );
       return;
     }
@@ -140,6 +141,7 @@ class _CredentialDetailScreenState extends State<CredentialDetailScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     final imageProvider = _logoPath != null && _logoPath!.isNotEmpty
         ? MemoryImage(base64Decode(_logoPath!))
         : null;
@@ -184,8 +186,11 @@ class _CredentialDetailScreenState extends State<CredentialDetailScreen> {
                     : CircleAvatar(
                         radius: 40,
                         backgroundImage: imageProvider,
+                        backgroundColor:
+                            theme.colorScheme.secondary.withOpacity(0.1),
                         child: imageProvider == null
-                            ? const Icon(Icons.vpn_key_outlined, size: 30)
+                            ? Icon(Icons.vpn_key_outlined,
+                                size: 30, color: theme.colorScheme.secondary)
                             : null,
                       ),
               ),
@@ -322,7 +327,7 @@ class _CredentialDetailScreenState extends State<CredentialDetailScreen> {
                           height: 24,
                           width: 24,
                           child: CircularProgressIndicator(
-                              color: Theme.of(context).colorScheme.onPrimary,
+                              color: theme.colorScheme.onPrimary,
                               strokeWidth: 2.0))
                       : const Text('Salvar Alterações'),
                 )

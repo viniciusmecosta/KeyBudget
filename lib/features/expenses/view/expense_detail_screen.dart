@@ -52,11 +52,13 @@ class _ExpenseDetailScreenState extends State<ExpenseDetailScreen> {
 
   void _saveChanges() async {
     if (!_formKey.currentState!.validate()) return;
+    final theme = Theme.of(context);
+
     if (_amountController.numberValue == 0) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('O valor não pode ser zero.'),
-          backgroundColor: Colors.red,
+        SnackBar(
+          content: const Text('O valor não pode ser zero.'),
+          backgroundColor: theme.colorScheme.error,
         ),
       );
       return;

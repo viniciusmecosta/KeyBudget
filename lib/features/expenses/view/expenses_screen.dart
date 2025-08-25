@@ -20,7 +20,7 @@ class ExpensesScreen extends StatefulWidget {
 class _ExpensesScreenState extends State<ExpensesScreen> {
   DateTime _selectedMonth = DateTime(DateTime.now().year, DateTime.now().month);
   final _currencyFormatter =
-  NumberFormat.currency(locale: 'pt_BR', symbol: 'R\$');
+      NumberFormat.currency(locale: 'pt_BR', symbol: 'R\$');
 
   @override
   void initState() {
@@ -46,20 +46,23 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
     final viewModel = Provider.of<ExpenseViewModel>(context, listen: false);
     final authViewModel = Provider.of<AuthViewModel>(context, listen: false);
     final scaffoldMessenger = ScaffoldMessenger.of(context);
+    final theme = Theme.of(context);
 
     final count =
-    await viewModel.importExpensesFromCsv(authViewModel.currentUser!.id);
+        await viewModel.importExpensesFromCsv(authViewModel.currentUser!.id);
     if (!mounted) return;
     scaffoldMessenger.showSnackBar(
       SnackBar(
         content: Text('$count despesas importadas com sucesso!'),
-        backgroundColor: Colors.green,
+        backgroundColor: theme.colorScheme.secondaryContainer,
       ),
     );
   }
 
   void _showCategoryFilter() {
     final viewModel = Provider.of<ExpenseViewModel>(context, listen: false);
+    final theme = Theme.of(context);
+
     showModalBottomSheet(
       context: context,
       shape: const RoundedRectangleBorder(
@@ -75,20 +78,20 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
                   height: 5,
                   width: 50,
                   decoration: BoxDecoration(
-                    color: Colors.grey.shade400,
+                    color: theme.dividerColor,
                     borderRadius: BorderRadius.circular(20),
                   ),
                 ),
                 const SizedBox(height: 16),
                 Text(
                   'Filtrar por Categoria',
-                  style: Theme.of(context).textTheme.titleLarge,
+                  style: theme.textTheme.titleLarge,
                 ),
                 Expanded(
                   child: ListView(
                     children: ExpenseCategory.values.map((category) {
                       final isSelected =
-                      viewModel.selectedCategories.contains(category);
+                          viewModel.selectedCategories.contains(category);
                       return CheckboxListTile(
                         title: Text(category.displayName),
                         value: isSelected,
@@ -141,14 +144,14 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
 
     final monthlyExpenses = viewModel.filteredExpenses
         .where((exp) =>
-    exp.date.year == _selectedMonth.year &&
-        exp.date.month == _selectedMonth.month)
+            exp.date.year == _selectedMonth.year &&
+            exp.date.month == _selectedMonth.month)
         .toList()
       ..sort((a, b) => b.date.compareTo(a.date));
 
     final totalValue = monthlyExpenses.fold<double>(
       0.0,
-          (sum, exp) => sum + exp.amount,
+      (sum, exp) => sum + exp.amount,
     );
 
     return Scaffold(
@@ -188,11 +191,11 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
               child: Container(
                 width: double.infinity,
                 padding:
-                const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
+                    const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
                     colors: [
-                      theme.primaryColor,
+                      theme.colorScheme.primary,
                       theme.primaryColor.withOpacity(0.7)
                     ],
                     begin: Alignment.topLeft,
@@ -205,13 +208,13 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
                   children: [
                     Text(
                       'Total do mês',
-                      style: theme.textTheme.bodyLarge
-                          ?.copyWith(color: Colors.white70),
+                      style: theme.textTheme.bodyLarge?.copyWith(
+                          color: theme.colorScheme.onPrimary.withOpacity(0.8)),
                     ),
                     Text(
                       _currencyFormatter.format(totalValue),
                       style: theme.textTheme.headlineMedium
-                          ?.copyWith(color: Colors.white),
+                          ?.copyWith(color: theme.colorScheme.onPrimary),
                     ),
                   ],
                 ),
@@ -235,8 +238,8 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
                     );
                   }
                   return ListView.builder(
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 12, vertical: 8),
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                     itemCount: monthlyExpenses.length,
                     itemBuilder: (context, index) {
                       final expense = monthlyExpenses[index];
@@ -246,7 +249,7 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
                         child: ListTile(
                           leading: CircleAvatar(
                             backgroundColor:
-                            theme.primaryColor.withOpacity(0.15),
+                                theme.primaryColor.withOpacity(0.15),
                             child: Icon(
                               expense.category?.icon ?? Icons.category,
                               color: theme.primaryColor,
@@ -256,16 +259,15 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
                             expense.location?.isNotEmpty == true
                                 ? expense.location!
                                 : (expense.category?.displayName ??
-                                'Gasto Geral'),
-                            style:
-                            const TextStyle(fontWeight: FontWeight.w600),
+                                    'Gasto Geral'),
+                            style: const TextStyle(fontWeight: FontWeight.w600),
                           ),
                           subtitle: Text(
                             DateFormat('dd/MM/yyyy').format(expense.date),
                           ),
                           trailing: Text(
-                            _currencyFormatter.format(expense.amount),
-                            style: TextStyle(
+                            '- ${_currencyFormatter.format(expense.amount)}',
+                            style: theme.textTheme.titleMedium?.copyWith(
                               fontWeight: FontWeight.bold,
                               color: theme.colorScheme.error,
                             ),

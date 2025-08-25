@@ -49,11 +49,13 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
 
   void _submit() async {
     if (!_formKey.currentState!.validate()) return;
+    final theme = Theme.of(context);
+
     if (_amountController.numberValue == 0) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('O valor não pode ser zero.'),
-          backgroundColor: Colors.red,
+        SnackBar(
+          content: const Text('O valor não pode ser zero.'),
+          backgroundColor: theme.colorScheme.error,
         ),
       );
       return;
@@ -82,9 +84,9 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
     if (mounted) {
       setState(() => _isSaving = false);
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Despesa salva com sucesso!'),
-          backgroundColor: Colors.green,
+        SnackBar(
+          content: const Text('Despesa salva com sucesso!'),
+          backgroundColor: theme.colorScheme.secondaryContainer,
         ),
       );
       Navigator.of(context).pop();

@@ -18,7 +18,7 @@ class DashboardScreen extends StatefulWidget {
 
 class _DashboardScreenState extends State<DashboardScreen> {
   final _currencyFormatter =
-  NumberFormat.currency(locale: 'pt_BR', symbol: 'R\$');
+      NumberFormat.currency(locale: 'pt_BR', symbol: 'R\$');
 
   @override
   void initState() {
@@ -37,7 +37,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
     final viewModel = Provider.of<DashboardViewModel>(context);
     final authViewModel = Provider.of<AuthViewModel>(context);
     final navigationViewModel =
-    Provider.of<NavigationViewModel>(context, listen: false);
+        Provider.of<NavigationViewModel>(context, listen: false);
     final theme = Theme.of(context);
     final user = authViewModel.currentUser;
 
@@ -63,41 +63,41 @@ class _DashboardScreenState extends State<DashboardScreen> {
       body: viewModel.isLoading
           ? const Center(child: CircularProgressIndicator())
           : RefreshIndicator(
-        onRefresh: () async {
-          if (user != null) {
-            await viewModel.fetchDashboardData(user.id);
-          }
-        },
-        child: ListView(
-          padding: const EdgeInsets.all(16.0),
-          children: [
-            _buildTotalBalanceCard(context, viewModel),
-            const SizedBox(height: 24),
-            _buildInfoCard(
-              context,
-              title: 'Credenciais Salvas',
-              value: viewModel.credentialCount.toString(),
-              icon: Icons.key_rounded,
-              color: AppTheme.secondary,
-              onTap: () => navigationViewModel.selectedIndex = 2,
-            )
-                .animate()
-                .fadeIn(duration: 300.ms, delay: 200.ms)
-                .slideY(begin: 0.3),
-            const SizedBox(height: 24),
-            _buildSectionTitle(context, 'Histórico Mensal'),
-            const SizedBox(height: 16),
-            _buildBarChartSection(context, viewModel)
-                .animate()
-                .fadeIn(duration: 300.ms, delay: 300.ms)
-                .slideY(begin: 0.3),
-            const SizedBox(height: 24),
-            _buildSectionTitle(context, 'Últimas Atividades'),
-            const SizedBox(height: 16),
-            _buildRecentActivitySection(context, viewModel),
-          ],
-        ),
-      ),
+              onRefresh: () async {
+                if (user != null) {
+                  await viewModel.fetchDashboardData(user.id);
+                }
+              },
+              child: ListView(
+                padding: const EdgeInsets.all(16.0),
+                children: [
+                  _buildTotalBalanceCard(context, viewModel),
+                  const SizedBox(height: 24),
+                  _buildInfoCard(
+                    context,
+                    title: 'Credenciais Salvas',
+                    value: viewModel.credentialCount.toString(),
+                    icon: Icons.key_rounded,
+                    color: theme.colorScheme.secondary,
+                    onTap: () => navigationViewModel.selectedIndex = 2,
+                  )
+                      .animate()
+                      .fadeIn(duration: 300.ms, delay: 200.ms)
+                      .slideY(begin: 0.3),
+                  const SizedBox(height: 24),
+                  _buildSectionTitle(context, 'Histórico Mensal'),
+                  const SizedBox(height: 16),
+                  _buildBarChartSection(context, viewModel)
+                      .animate()
+                      .fadeIn(duration: 300.ms, delay: 300.ms)
+                      .slideY(begin: 0.3),
+                  const SizedBox(height: 24),
+                  _buildSectionTitle(context, 'Últimas Atividades'),
+                  const SizedBox(height: 16),
+                  _buildRecentActivitySection(context, viewModel),
+                ],
+              ),
+            ),
     );
   }
 
@@ -106,13 +106,16 @@ class _DashboardScreenState extends State<DashboardScreen> {
     final theme = Theme.of(context);
     return Card(
       elevation: 8,
-      shadowColor: AppTheme.primary.withOpacity(0.3),
+      shadowColor: theme.colorScheme.primary.withOpacity(0.3),
       child: Container(
         padding: const EdgeInsets.all(24),
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(16),
           gradient: LinearGradient(
-            colors: [AppTheme.primary, AppTheme.primaryVariant],
+            colors: [
+              theme.colorScheme.primary,
+              Theme.of(context).primaryColorLight
+            ],
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
           ),
@@ -123,14 +126,15 @@ class _DashboardScreenState extends State<DashboardScreen> {
             Text(
               'Gasto Total do Mês',
               style: theme.textTheme.titleMedium?.copyWith(
-                color: Colors.white.withOpacity(0.8),
+                color: theme.colorScheme.onPrimary.withOpacity(0.8),
               ),
             ),
             const SizedBox(height: 8),
             Text(
               _currencyFormatter.format(viewModel.totalAmountForMonth),
-              style: theme.textTheme.headlineLarge
-                  ?.copyWith(fontWeight: FontWeight.bold, color: Colors.white),
+              style: theme.textTheme.headlineLarge?.copyWith(
+                  fontWeight: FontWeight.bold,
+                  color: theme.colorScheme.onPrimary),
             ),
           ],
         ),
@@ -140,10 +144,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
   Widget _buildInfoCard(BuildContext context,
       {required String title,
-        required String value,
-        required IconData icon,
-        required Color color,
-        required VoidCallback onTap}) {
+      required String value,
+      required IconData icon,
+      required Color color,
+      required VoidCallback onTap}) {
     final theme = Theme.of(context);
     return GestureDetector(
       onTap: onTap,
@@ -165,7 +169,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     title,
                     style: theme.textTheme.bodyMedium?.copyWith(
                       color:
-                      theme.textTheme.bodyMedium?.color?.withOpacity(0.7),
+                          theme.textTheme.bodyMedium?.color?.withOpacity(0.7),
                     ),
                   ),
                   const SizedBox(height: 4),
@@ -213,8 +217,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 final value = rod.toY;
                 return BarTooltipItem(
                   _currencyFormatter.format(value),
-                  const TextStyle(
-                    color: Colors.white,
+                  TextStyle(
+                    color: theme.colorScheme.onSecondary,
                     fontWeight: FontWeight.bold,
                   ),
                 );
@@ -244,11 +248,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
               ),
             ),
             leftTitles:
-            const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                const AxisTitles(sideTitles: SideTitles(showTitles: false)),
             topTitles:
-            const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                const AxisTitles(sideTitles: SideTitles(showTitles: false)),
             rightTitles:
-            const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                const AxisTitles(sideTitles: SideTitles(showTitles: false)),
           ),
           gridData: const FlGridData(show: false),
           borderData: FlBorderData(show: false),
@@ -261,8 +265,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   toY: item.value,
                   gradient: LinearGradient(
                     colors: [
-                      AppTheme.secondary,
-                      AppTheme.secondary.withOpacity(0.5)
+                      theme.colorScheme.secondary,
+                      theme.colorScheme.secondary.withOpacity(0.5)
                     ],
                     begin: Alignment.bottomCenter,
                     end: Alignment.topCenter,
@@ -298,16 +302,16 @@ class _DashboardScreenState extends State<DashboardScreen> {
       margin: const EdgeInsets.only(bottom: 12),
       child: ListTile(
         leading: CircleAvatar(
-          backgroundColor: AppTheme.primary.withOpacity(0.1),
+          backgroundColor: theme.colorScheme.primary.withOpacity(0.1),
           child: Icon(expense.category?.icon ?? Icons.category,
-              color: AppTheme.primary),
+              color: theme.colorScheme.primary),
         ),
         title: Text(
           expense.location?.isNotEmpty == true
               ? expense.location!
               : (expense.category?.displayName ?? 'Gasto Geral'),
           style:
-          theme.textTheme.bodyLarge?.copyWith(fontWeight: FontWeight.bold),
+              theme.textTheme.bodyLarge?.copyWith(fontWeight: FontWeight.bold),
         ),
         subtitle: Text(DateFormat('dd/MM/yyyy').format(expense.date)),
         trailing: Text(

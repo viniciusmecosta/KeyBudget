@@ -99,6 +99,8 @@ class ErrorScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
+      theme: AppTheme.lightTheme,
+      darkTheme: AppTheme.darkTheme,
       home: Scaffold(
         body: Padding(
           padding: const EdgeInsets.all(16.0),
@@ -106,6 +108,10 @@ class ErrorScreen extends StatelessWidget {
             child: Text(
               'Ocorreu um erro crítico na inicialização:\n\n$error',
               textAlign: TextAlign.center,
+              style: Theme.of(context)
+                  .textTheme
+                  .bodyLarge
+                  ?.copyWith(color: Theme.of(context).colorScheme.error),
             ),
           ),
         ),

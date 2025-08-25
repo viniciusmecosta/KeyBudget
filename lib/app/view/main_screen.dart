@@ -37,7 +37,7 @@ class _MainScreenState extends State<MainScreen> {
           boxShadow: [
             BoxShadow(
               blurRadius: 20,
-              color: Colors.black.withOpacity(.1),
+              color: theme.shadowColor,
             )
           ],
         ),
@@ -50,8 +50,7 @@ class _MainScreenState extends State<MainScreen> {
               gap: 8,
               activeColor: theme.colorScheme.primary,
               iconSize: 24,
-              padding:
-              const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
               duration: const Duration(milliseconds: 400),
               tabBackgroundColor: theme.colorScheme.primary.withOpacity(0.1),
               color: theme.colorScheme.onSurface.withOpacity(0.6),

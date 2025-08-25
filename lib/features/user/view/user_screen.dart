@@ -36,6 +36,7 @@ class UserScreen extends StatelessWidget {
   void _exportAllData(BuildContext context) async {
     _showLoadingDialog(context, "Exportando dados...");
     final scaffoldMessenger = ScaffoldMessenger.of(context);
+    final theme = Theme.of(context);
     final credViewModel =
         Provider.of<CredentialViewModel>(context, listen: false);
     final expViewModel = Provider.of<ExpenseViewModel>(context, listen: false);
@@ -47,16 +48,16 @@ class UserScreen extends StatelessWidget {
 
     if (credSuccess && expSuccess) {
       scaffoldMessenger.showSnackBar(
-        const SnackBar(
-          content: Text('Dados exportados com sucesso!'),
-          backgroundColor: Colors.green,
+        SnackBar(
+          content: const Text('Dados exportados com sucesso!'),
+          backgroundColor: theme.colorScheme.secondaryContainer,
         ),
       );
     } else {
       scaffoldMessenger.showSnackBar(
         SnackBar(
           content: const Text('Ocorreu um erro ao exportar os dados.'),
-          backgroundColor: Theme.of(context).colorScheme.error,
+          backgroundColor: theme.colorScheme.error,
         ),
       );
     }
@@ -65,6 +66,7 @@ class UserScreen extends StatelessWidget {
   void _importExpensesData(BuildContext context) async {
     _showLoadingDialog(context, "Importando despesas...");
     final scaffoldMessenger = ScaffoldMessenger.of(context);
+    final theme = Theme.of(context);
     final expViewModel = Provider.of<ExpenseViewModel>(context, listen: false);
     final authViewModel = Provider.of<AuthViewModel>(context, listen: false);
     final userId = authViewModel.currentUser!.id;
@@ -77,8 +79,9 @@ class UserScreen extends StatelessWidget {
         content: Text(count > 0
             ? '$count despesas importadas com sucesso!'
             : 'Nenhuma despesa foi importada.'),
-        backgroundColor:
-            count > 0 ? Colors.green : Theme.of(context).colorScheme.error,
+        backgroundColor: count > 0
+            ? theme.colorScheme.secondaryContainer
+            : theme.colorScheme.error,
       ),
     );
   }
@@ -86,6 +89,7 @@ class UserScreen extends StatelessWidget {
   void _importCredentialsData(BuildContext context) async {
     _showLoadingDialog(context, "Importando credenciais...");
     final scaffoldMessenger = ScaffoldMessenger.of(context);
+    final theme = Theme.of(context);
     final credViewModel =
         Provider.of<CredentialViewModel>(context, listen: false);
     final authViewModel = Provider.of<AuthViewModel>(context, listen: false);
@@ -99,14 +103,17 @@ class UserScreen extends StatelessWidget {
         content: Text(count > 0
             ? '$count credenciais importadas com sucesso!'
             : 'Nenhuma credencial foi importada.'),
-        backgroundColor:
-            count > 0 ? Colors.green : Theme.of(context).colorScheme.error,
+        backgroundColor: count > 0
+            ? theme.colorScheme.secondaryContainer
+            : theme.colorScheme.error,
       ),
     );
   }
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('Meu Perfil'),
@@ -149,7 +156,7 @@ class UserScreen extends StatelessWidget {
                     height: 100,
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
-                      color: Theme.of(context).colorScheme.secondary,
+                      color: theme.colorScheme.secondary,
                       image: imageProvider != null
                           ? DecorationImage(
                               image: imageProvider,
@@ -158,7 +165,8 @@ class UserScreen extends StatelessWidget {
                           : null,
                     ),
                     child: imageProvider == null
-                        ? const Icon(Icons.person, size: 50)
+                        ? Icon(Icons.person,
+                            size: 50, color: theme.colorScheme.onSecondary)
                         : null,
                   ),
                 )
@@ -170,7 +178,7 @@ class UserScreen extends StatelessWidget {
                 Center(
                   child: Text(
                     user?.name ?? 'Usuário',
-                    style: Theme.of(context).textTheme.headlineSmall,
+                    style: theme.textTheme.headlineSmall,
                   ),
                 )
                     .animate()
@@ -179,7 +187,7 @@ class UserScreen extends StatelessWidget {
                 Center(
                   child: Text(
                     user?.email ?? '',
-                    style: Theme.of(context).textTheme.bodyMedium,
+                    style: theme.textTheme.bodyMedium,
                   ),
                 )
                     .animate()
@@ -189,7 +197,7 @@ class UserScreen extends StatelessWidget {
                   Center(
                     child: Text(
                       user.phoneNumber!,
-                      style: Theme.of(context).textTheme.bodyMedium,
+                      style: theme.textTheme.bodyMedium,
                     ),
                   )
                       .animate()
@@ -198,7 +206,8 @@ class UserScreen extends StatelessWidget {
                 const Spacer(),
                 ElevatedButton(
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: Theme.of(context).colorScheme.error,
+                    backgroundColor: theme.colorScheme.error,
+                    foregroundColor: theme.colorScheme.onError,
                     padding: const EdgeInsets.symmetric(vertical: 16),
                   ),
                   onPressed: () {
