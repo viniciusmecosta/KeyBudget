@@ -137,7 +137,6 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
     } else {
       formattedDate = DateFormat.yMMMM('pt_BR').format(date);
     }
-    // Adiciona a capitalização aqui
     return formattedDate.isNotEmpty
         ? formattedDate[0].toUpperCase() + formattedDate.substring(1)
         : '';
@@ -249,6 +248,15 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
                     itemCount: monthlyExpenses.length,
                     itemBuilder: (context, index) {
                       final expense = monthlyExpenses[index];
+                      final formattedDate =
+                          DateFormat('d, EEEE', 'pt_BR').format(expense.date);
+                      final parts = formattedDate.split(',');
+                      final dayOfWeekPart =
+                          parts.length > 1 ? parts[1].trim() : '';
+                      final displayDate = dayOfWeekPart.isNotEmpty
+                          ? '${parts[0]}, ${dayOfWeekPart[0].toUpperCase()}${dayOfWeekPart.substring(1)}'
+                          : formattedDate;
+
                       return Card(
                         margin: const EdgeInsets.symmetric(
                             horizontal: 4, vertical: 6),
@@ -268,9 +276,7 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
                                     'Gasto Geral'),
                             style: const TextStyle(fontWeight: FontWeight.w600),
                           ),
-                          subtitle: Text(
-                            DateFormat('dd/MM/yyyy').format(expense.date),
-                          ),
+                          subtitle: Text(displayDate),
                           trailing: Text(
                             '- ${_currencyFormatter.format(expense.amount)}',
                             style: theme.textTheme.titleMedium?.copyWith(
