@@ -14,6 +14,9 @@ class AppTheme {
   static const Color success = Color(0xFF28A745);
   static const Color error = Color(0xFFDC3545);
 
+  static const Color positiveChange = Color(0xFFE57373);
+  static const Color negativeChange = Color(0xFF81C784);
+
   static final List<Color> chartColors = [
     const Color(0xFFF4A261),
     const Color(0xFF2A9D8F),

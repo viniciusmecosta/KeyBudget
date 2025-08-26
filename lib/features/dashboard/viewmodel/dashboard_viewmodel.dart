@@ -31,6 +31,25 @@ class DashboardViewModel extends ChangeNotifier {
     return filteredExpenses.fold(0.0, (sum, item) => sum + item.amount);
   }
 
+  double get averageOfPreviousMonths {
+    final Map<String, double> monthlyTotals = {};
+    for (var expense in _allExpenses) {
+      if (expense.date.isBefore(_selectedMonth)) {
+        final monthKey = '${expense.date.year}-${expense.date.month}';
+        monthlyTotals.update(monthKey, (value) => value + expense.amount,
+            ifAbsent: () => expense.amount);
+      }
+    }
+    if (monthlyTotals.isEmpty) return 0.0;
+    return monthlyTotals.values.reduce((a, b) => a + b) / monthlyTotals.length;
+  }
+
+  double get percentageChangeFromAverage {
+    final average = averageOfPreviousMonths;
+    if (average == 0) return 0.0;
+    return ((totalAmountForMonth - average) / average) * 100;
+  }
+
   List<Expense> get recentExpenses {
     _allExpenses.sort((a, b) => b.date.compareTo(a.date));
     return _allExpenses.take(5).toList();
