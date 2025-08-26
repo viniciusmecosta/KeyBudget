@@ -1,6 +1,5 @@
 import 'dart:math';
 
-
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
@@ -22,6 +21,7 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
       NumberFormat.currency(locale: 'pt_BR', symbol: 'R\$');
   final _currencyFormatterNoCents =
       NumberFormat.currency(locale: 'pt_BR', symbol: 'R\$', decimalDigits: 0);
+  int _touchedPieIndex = -1;
 
   @override
   void initState() {
@@ -115,14 +115,10 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
   }
 
   double _getRoundedMaxValue(double maxValue) {
-    if (maxValue < 0) return 500;
-    if (maxValue == 0) return 500;
+    if (maxValue <= 0) return 500;
     const step = 500.0;
     double rounded = (maxValue / step).ceil() * step;
-    if (rounded == maxValue) {
-      rounded += step;
-    }
-    return rounded;
+    return rounded == maxValue ? rounded + step : rounded;
   }
 
   Widget _buildLineChart(BuildContext context, AnalysisViewModel viewModel) {
@@ -144,9 +140,7 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
         .entries
         .map((entry) => FlSpot(entry.key.toDouble(), entry.value.value))
         .toList();
-
-    final maxValue =
-        spots.isEmpty ? 0.0 : spots.map((spot) => spot.y).reduce(max);
+    final maxValue = spots.map((spot) => spot.y).reduce(max);
     final roundedMaxValue = _getRoundedMaxValue(maxValue);
 
     return Column(
@@ -181,16 +175,10 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
                 show: true,
                 drawVerticalLine: true,
                 horizontalInterval: 500,
-                getDrawingHorizontalLine: (value) {
-                  return FlLine(
-                      color: theme.dividerColor.withOpacity(0.1),
-                      strokeWidth: 1);
-                },
-                getDrawingVerticalLine: (value) {
-                  return FlLine(
-                      color: theme.dividerColor.withOpacity(0.1),
-                      strokeWidth: 1);
-                },
+                getDrawingHorizontalLine: (value) => FlLine(
+                    color: theme.dividerColor.withOpacity(0.1), strokeWidth: 1),
+                getDrawingVerticalLine: (value) => FlLine(
+                    color: theme.dividerColor.withOpacity(0.1), strokeWidth: 1),
               ),
               titlesData: FlTitlesData(
                 show: true,
@@ -205,9 +193,8 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
                     interval: 1,
                     getTitlesWidget: (value, meta) {
                       final index = value.toInt();
-                      if (index >= chartEntries.length || index % 2 != 0) {
+                      if (index >= chartEntries.length || index.isOdd)
                         return const SizedBox.shrink();
-                      }
                       final date =
                           DateFormat('yyyy-MM').parse(chartEntries[index].key);
                       return Padding(
@@ -238,6 +225,20 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
               maxX: 11,
               minY: 0,
               maxY: roundedMaxValue,
+              lineTouchData: LineTouchData(
+                touchTooltipData: LineTouchTooltipData(
+                  getTooltipColor: (_) => Colors.blueGrey.withOpacity(0.8),
+                  getTooltipItems: (touchedSpots) {
+                    return touchedSpots.map((spot) {
+                      return LineTooltipItem(
+                        _currencyFormatter.format(spot.y),
+                        const TextStyle(
+                            color: Colors.white, fontWeight: FontWeight.bold),
+                      );
+                    }).toList();
+                  },
+                ),
+              ),
               lineBarsData: [
                 LineChartBarData(
                   spots: spots,
@@ -249,12 +250,10 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
                   dotData: const FlDotData(show: false),
                   belowBarData: BarAreaData(
                     show: true,
-                    gradient: LinearGradient(
-                      colors: [
-                        AppTheme.primary.withOpacity(0.2),
-                        AppTheme.secondary.withOpacity(0.2)
-                      ],
-                    ),
+                    gradient: LinearGradient(colors: [
+                      AppTheme.primary.withOpacity(0.2),
+                      AppTheme.secondary.withOpacity(0.2),
+                    ]),
                   ),
                 ),
               ],
@@ -267,55 +266,49 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
 
   Widget _buildCategoryMonthSelector(
       BuildContext context, AnalysisViewModel viewModel) {
-    final availableMonths = viewModel.availableMonthsForFilter;
-    if (availableMonths.isEmpty || viewModel.selectedMonthForCategory == null) {
+    if (viewModel.availableMonthsForFilter.isEmpty ||
+        viewModel.selectedMonthForCategory == null) {
       return const SizedBox.shrink();
     }
-
     return ActionChip(
       avatar: const Icon(Icons.calendar_today, size: 18),
       label: Text(
         DateFormat.yMMMM('pt_BR').format(viewModel.selectedMonthForCategory!),
         style: const TextStyle(fontWeight: FontWeight.bold),
       ),
-      onPressed: () {
-        showModalBottomSheet(
-          context: context,
-          backgroundColor: Theme.of(context).cardColor,
-          builder: (BuildContext bc) {
-            return Container(
-              padding: const EdgeInsets.all(8),
-              child: SizedBox(
-                height: 300,
-                child: ListView.builder(
-                  itemCount: availableMonths.length,
-                  itemBuilder: (context, index) {
-                    final month = availableMonths[index];
-                    return ListTile(
-                      title: Text(
-                        DateFormat.yMMMM('pt_BR').format(month),
-                        style: TextStyle(
-                            color:
-                                Theme.of(context).textTheme.bodyLarge?.color),
-                      ),
-                      onTap: () {
-                        viewModel.setSelectedMonthForCategory(month);
-                        Navigator.pop(context);
-                      },
-                    );
-                  },
-                ),
+      onPressed: () => _showMonthPicker(context, viewModel),
+    );
+  }
+
+  void _showMonthPicker(BuildContext context, AnalysisViewModel viewModel) {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Theme.of(context).cardColor,
+      builder: (bc) => SizedBox(
+        height: 300,
+        child: ListView.builder(
+          itemCount: viewModel.availableMonthsForFilter.length,
+          itemBuilder: (context, index) {
+            final month = viewModel.availableMonthsForFilter[index];
+            return ListTile(
+              title: Text(
+                DateFormat.yMMMM('pt_BR').format(month),
+                style: TextStyle(
+                    color: Theme.of(context).textTheme.bodyLarge?.color),
               ),
+              onTap: () {
+                viewModel.setSelectedMonthForCategory(month);
+                Navigator.pop(context);
+              },
             );
           },
-        );
-      },
+        ),
+      ),
     );
   }
 
   Widget _buildCategoryBreakdown(
-      BuildContext context, AnalysisViewModel viewModel,
-      {Key? key}) {
+      BuildContext context, AnalysisViewModel viewModel) {
     final theme = Theme.of(context);
     final data = viewModel.expensesByCategoryForSelectedMonth;
 
@@ -326,9 +319,9 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
     }
 
     final total = data.values.fold(0.0, (sum, item) => sum + item);
+    final chartData = data.entries.toList();
 
     return Card(
-      key: key,
       elevation: 0,
       color: Colors.transparent,
       child: Padding(
@@ -341,18 +334,35 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
                 flex: 2,
                 child: PieChart(
                   PieChartData(
+                    pieTouchData: PieTouchData(
+                      touchCallback: (event, pieTouchResponse) {
+                        setState(() {
+                          if (!event.isInterestedForInteractions ||
+                              pieTouchResponse?.touchedSection == null) {
+                            _touchedPieIndex = -1;
+                            return;
+                          }
+                          _touchedPieIndex = pieTouchResponse!
+                              .touchedSection!.touchedSectionIndex;
+                        });
+                      },
+                    ),
                     sectionsSpace: 4,
                     centerSpaceRadius: 30,
-                    sections: data.entries.map((entry) {
-                      final category = entry.key;
-                      final value = entry.value;
+                    sections: List.generate(chartData.length, (i) {
+                      final isTouched = i == _touchedPieIndex;
+                      final entry = chartData[i];
                       return PieChartSectionData(
-                        color: category.getColor(theme),
-                        value: value,
+                        color: entry.key.getColor(theme),
+                        value: entry.value,
                         title: '',
-                        radius: 40,
+                        radius: isTouched ? 50 : 40,
+                        badgeWidget: isTouched
+                            ? _buildBadge(entry.key.displayName, theme)
+                            : null,
+                        badgePositionPercentageOffset: .98,
                       );
-                    }).toList(),
+                    }),
                   ),
                 ),
               ),
@@ -384,14 +394,27 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
     );
   }
 
+  Widget _buildBadge(String text, ThemeData theme) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      decoration: BoxDecoration(
+        color: Colors.black.withOpacity(0.75),
+        borderRadius: BorderRadius.circular(6),
+      ),
+      child: Text(
+        text,
+        textAlign: TextAlign.center,
+        style: const TextStyle(color: Colors.white, fontSize: 12),
+      ),
+    );
+  }
+
   Widget _buildIndicator(
       {required Color color,
       required String text,
       required double value,
       required double percentage}) {
-    final formattedValue =
-        NumberFormat.currency(locale: 'pt_BR', symbol: 'R\$', decimalDigits: 2)
-            .format(value);
+    final formattedValue = _currencyFormatter.format(value);
     return Row(
       children: <Widget>[
         Container(
