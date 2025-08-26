@@ -28,35 +28,6 @@ class DashboardViewModel extends ChangeNotifier {
     return filteredExpenses.fold(0.0, (sum, item) => sum + item.amount);
   }
 
-  Map<String, double> get monthlyExpenseTotals {
-    Map<String, double> totals = {};
-    for (var expense in _allExpenses) {
-      String monthKey =
-          '${expense.date.year}-${expense.date.month.toString().padLeft(2, '0')}';
-      totals.update(monthKey, (value) => value + expense.amount,
-          ifAbsent: () => expense.amount);
-    }
-    return totals;
-  }
-
-  Map<DateTime, double> get lastSixMonthsExpenseTotals {
-    final Map<DateTime, double> totals = {};
-    final now = DateTime.now();
-
-    for (int i = 5; i >= 0; i--) {
-      final month = DateTime(now.year, now.month - i, 1);
-      totals[month] = 0.0;
-    }
-
-    for (var expense in _allExpenses) {
-      final expenseMonth = DateTime(expense.date.year, expense.date.month, 1);
-      if (totals.containsKey(expenseMonth)) {
-        totals[expenseMonth] = totals[expenseMonth]! + expense.amount;
-      }
-    }
-    return totals;
-  }
-
   List<Expense> get recentExpenses {
     _allExpenses.sort((a, b) => b.date.compareTo(a.date));
     return _allExpenses.take(5).toList();

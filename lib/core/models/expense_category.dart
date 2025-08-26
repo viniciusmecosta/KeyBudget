@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../../app/config/app_theme.dart';
+
 enum ExpenseCategory {
   internet,
   pizza,
@@ -52,5 +54,10 @@ extension ExpenseCategoryExtension on ExpenseCategory {
       case ExpenseCategory.outros:
         return Icons.category_rounded;
     }
+  }
+
+  Color getColor(ThemeData theme) {
+    final index = ExpenseCategory.values.indexOf(this);
+    return AppTheme.chartColors[index % AppTheme.chartColors.length];
   }
 }

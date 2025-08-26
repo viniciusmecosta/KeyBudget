@@ -14,12 +14,23 @@ class AppTheme {
   static const Color success = Color(0xFF28A745);
   static const Color error = Color(0xFFDC3545);
 
+  static final List<Color> chartColors = [
+    const Color(0xFFF4A261),
+    const Color(0xFF2A9D8F),
+    const Color(0xFFE76F51),
+    const Color(0xFF264653),
+    const Color(0xFFE9C46A),
+    const Color(0xFF9B5DE5),
+    const Color(0xFF00B295),
+    const Color(0xFFF15BB5),
+  ];
+
   static final ThemeData lightTheme = ThemeData(
     useMaterial3: true,
     brightness: Brightness.light,
     scaffoldBackgroundColor: background,
     primaryColor: primary,
-    colorScheme: const ColorScheme.light(
+    colorScheme: ColorScheme.light(
       primary: primary,
       onPrimary: surface,
       secondary: secondary,
@@ -31,6 +42,7 @@ class AppTheme {
       error: error,
       onError: surface,
       brightness: Brightness.light,
+      tertiary: chartColors[5],
     ).copyWith(
       secondaryContainer: success,
     ),
@@ -85,7 +97,7 @@ class AppTheme {
     brightness: Brightness.dark,
     scaffoldBackgroundColor: darkBackground,
     primaryColor: primaryVariant,
-    colorScheme: const ColorScheme.dark(
+    colorScheme: ColorScheme.dark(
       primary: primaryVariant,
       onPrimary: onDarkSurface,
       secondary: secondary,
@@ -97,6 +109,7 @@ class AppTheme {
       error: error,
       onError: surface,
       brightness: Brightness.dark,
+      tertiary: chartColors[5],
     ).copyWith(secondaryContainer: success),
     textTheme: GoogleFonts.interTextTheme(ThemeData.dark().textTheme).copyWith(
       headlineMedium: const TextStyle(
