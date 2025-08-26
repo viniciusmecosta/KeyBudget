@@ -123,7 +123,7 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
 
   Widget _buildLineChart(BuildContext context, AnalysisViewModel viewModel) {
     final theme = Theme.of(context);
-    final data = viewModel.last12MonthsData;
+    final data = viewModel.last6MonthsData;
     final chartEntries = data.entries.toList();
 
     if (chartEntries.isEmpty || chartEntries.every((e) => e.value == 0)) {
@@ -138,8 +138,12 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
     final spots = chartEntries
         .asMap()
         .entries
-        .map((entry) => FlSpot(entry.key.toDouble(), entry.value.value))
+        .map((entry) => FlSpot(
+              entry.key.toDouble(),
+              entry.value.value,
+            ))
         .toList();
+
     final maxValue = spots.map((spot) => spot.y).reduce(max);
     final roundedMaxValue = _getRoundedMaxValue(maxValue);
 
@@ -150,8 +154,8 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
           children: [
             IconButton(
               icon: const Icon(Icons.chevron_left),
-              onPressed: viewModel.canGoToPreviousYear
-                  ? () => viewModel.changeYear(-1)
+              onPressed: viewModel.canGoToPreviousPeriod
+                  ? () => viewModel.changePeriod(1)
                   : null,
             ),
             Text(
@@ -160,8 +164,8 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
             ),
             IconButton(
               icon: const Icon(Icons.chevron_right),
-              onPressed: viewModel.canGoToNextYear
-                  ? () => viewModel.changeYear(1)
+              onPressed: viewModel.canGoToNextPeriod
+                  ? () => viewModel.changePeriod(-1)
                   : null,
             ),
           ],
@@ -189,18 +193,24 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
                 bottomTitles: AxisTitles(
                   sideTitles: SideTitles(
                     showTitles: true,
-                    reservedSize: 30,
+                    reservedSize: 20,
                     interval: 1,
                     getTitlesWidget: (value, meta) {
                       final index = value.toInt();
-                      if (index >= chartEntries.length || index.isOdd)
+                      if (index < 0 || index >= chartEntries.length) {
                         return const SizedBox.shrink();
+                      }
                       final date =
                           DateFormat('yyyy-MM').parse(chartEntries[index].key);
                       return Padding(
-                        padding: const EdgeInsets.only(top: 8.0),
-                        child: Text(DateFormat('MMM', 'pt_BR').format(date),
-                            style: theme.textTheme.bodySmall),
+                        padding: const EdgeInsets.only(top: 6),
+                        child: Text(
+                          DateFormat('MMM', 'pt_BR')
+                              .format(date)
+                              .substring(0, 3),
+                          style:
+                              theme.textTheme.bodySmall!.copyWith(fontSize: 10),
+                        ),
                       );
                     },
                   ),
@@ -222,7 +232,7 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
               ),
               borderData: FlBorderData(show: false),
               minX: 0,
-              maxX: 11,
+              maxX: 5,
               minY: 0,
               maxY: roundedMaxValue,
               lineTouchData: LineTouchData(
