@@ -7,6 +7,8 @@ import 'package:provider/provider.dart';
 import 'package:provider/single_child_widget.dart';
 import 'package:key_budget/app/viewmodel/navigation_viewmodel.dart';
 
+import '../../features/analysis/viewmodel/analysis_viewmodel.dart';
+
 List<SingleChildWidget> appProviders = [
   ChangeNotifierProvider(create: (_) => AuthViewModel()),
   ChangeNotifierProvider(create: (_) => ExpenseViewModel()),
@@ -14,4 +16,5 @@ List<SingleChildWidget> appProviders = [
   ChangeNotifierProvider(create: (_) => DashboardViewModel()),
   ChangeNotifierProvider(create: (_) => AppLockService()),
   ChangeNotifierProvider(create: (_) => NavigationViewModel()),
+  ChangeNotifierProvider(create: (_) => AnalysisViewModel()),
 ];

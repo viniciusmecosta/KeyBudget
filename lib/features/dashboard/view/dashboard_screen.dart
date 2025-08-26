@@ -1,13 +1,13 @@
-import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:intl/intl.dart';
 import 'package:key_budget/app/viewmodel/navigation_viewmodel.dart';
+import 'package:key_budget/core/models/expense_category.dart';
 import 'package:key_budget/core/models/expense_model.dart';
+import 'package:key_budget/features/analysis/view/analysis_screen.dart';
 import 'package:key_budget/features/auth/viewmodel/auth_viewmodel.dart';
 import 'package:key_budget/features/dashboard/viewmodel/dashboard_viewmodel.dart';
 import 'package:provider/provider.dart';
-import 'package:key_budget/core/models/expense_category.dart';
 
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
@@ -72,24 +72,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 children: [
                   _buildTotalBalanceCard(context, viewModel),
                   const SizedBox(height: 24),
-                  _buildInfoCard(
-                    context,
-                    title: 'Credenciais Salvas',
-                    value: viewModel.credentialCount.toString(),
-                    icon: Icons.key_rounded,
-                    color: theme.colorScheme.secondary,
-                    onTap: () => navigationViewModel.selectedIndex = 2,
-                  )
-                      .animate()
-                      .fadeIn(duration: 300.ms, delay: 200.ms)
-                      .slideY(begin: 0.3),
-                  const SizedBox(height: 24),
-                  _buildSectionTitle(context, 'Histórico Mensal'),
-                  const SizedBox(height: 16),
-                  _buildBarChartSection(context, viewModel)
-                      .animate()
-                      .fadeIn(duration: 300.ms, delay: 300.ms)
-                      .slideY(begin: 0.3),
+                  _buildInfoRow(context, viewModel, navigationViewModel),
                   const SizedBox(height: 24),
                   _buildSectionTitle(context, 'Últimas Atividades'),
                   const SizedBox(height: 16),
@@ -141,6 +124,38 @@ class _DashboardScreenState extends State<DashboardScreen> {
     ).animate().fadeIn(duration: 300.ms).slideY(begin: 0.3);
   }
 
+  Widget _buildInfoRow(BuildContext context, DashboardViewModel viewModel,
+      NavigationViewModel navigationViewModel) {
+    return Row(
+      children: [
+        Expanded(
+          child: _buildInfoCard(
+            context,
+            title: 'Credenciais',
+            value: viewModel.credentialCount.toString(),
+            icon: Icons.key_rounded,
+            color: Theme.of(context).colorScheme.secondary,
+            onTap: () => navigationViewModel.selectedIndex = 2,
+          ),
+        ),
+        const SizedBox(width: 16),
+        Expanded(
+          child: _buildInfoCard(
+            context,
+            title: 'Análise Geral',
+            value: 'Ver Gráficos',
+            icon: Icons.analytics_outlined,
+            color: Theme.of(context).colorScheme.tertiary,
+            onTap: () {
+              Navigator.of(context).push(
+                  MaterialPageRoute(builder: (_) => const AnalysisScreen()));
+            },
+          ),
+        ),
+      ],
+    ).animate().fadeIn(duration: 300.ms, delay: 200.ms).slideY(begin: 0.3);
+  }
+
   Widget _buildInfoCard(BuildContext context,
       {required String title,
       required String value,
@@ -153,31 +168,27 @@ class _DashboardScreenState extends State<DashboardScreen> {
       child: Card(
         child: Padding(
           padding: const EdgeInsets.all(18.0),
-          child: Row(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               CircleAvatar(
                 radius: 22,
                 backgroundColor: color.withOpacity(0.15),
                 child: Icon(icon, color: color, size: 28),
               ),
-              const SizedBox(width: 16),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    title,
-                    style: theme.textTheme.bodyMedium?.copyWith(
-                      color:
-                          theme.textTheme.bodyMedium?.color?.withOpacity(0.7),
-                    ),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    value,
-                    style: theme.textTheme.headlineSmall
-                        ?.copyWith(fontWeight: FontWeight.bold),
-                  ),
-                ],
+              const SizedBox(height: 12),
+              Text(
+                title,
+                style: theme.textTheme.bodyMedium?.copyWith(
+                  color: theme.textTheme.bodyMedium?.color?.withOpacity(0.7),
+                ),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                value,
+                style: theme.textTheme.titleLarge
+                    ?.copyWith(fontWeight: FontWeight.bold),
+                overflow: TextOverflow.ellipsis,
               ),
             ],
           ),
@@ -194,91 +205,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
           .titleLarge
           ?.copyWith(fontWeight: FontWeight.bold),
     ).animate().fadeIn(duration: 250.ms).slideX(begin: -0.2);
-  }
-
-  Widget _buildBarChartSection(
-      BuildContext context, DashboardViewModel viewModel) {
-    final monthlyTotals = viewModel.lastSixMonthsExpenseTotals;
-    final theme = Theme.of(context);
-    if (monthlyTotals.isEmpty) return const SizedBox.shrink();
-
-    final chartData = monthlyTotals.entries.toList();
-
-    return SizedBox(
-      height: 200,
-      child: BarChart(
-        BarChartData(
-          alignment: BarChartAlignment.spaceAround,
-          barTouchData: BarTouchData(
-            enabled: true,
-            touchTooltipData: BarTouchTooltipData(
-              getTooltipItem: (group, groupIndex, rod, rodIndex) {
-                final value = rod.toY;
-                return BarTooltipItem(
-                  _currencyFormatter.format(value),
-                  TextStyle(
-                    color: theme.colorScheme.onSecondary,
-                    fontWeight: FontWeight.bold,
-                  ),
-                );
-              },
-            ),
-          ),
-          titlesData: FlTitlesData(
-            show: true,
-            bottomTitles: AxisTitles(
-              sideTitles: SideTitles(
-                showTitles: true,
-                reservedSize: 32,
-                getTitlesWidget: (value, meta) {
-                  final index = value.toInt();
-                  if (index < 0 || index >= chartData.length) {
-                    return const SizedBox.shrink();
-                  }
-                  final date = chartData[index].key;
-                  return Padding(
-                    padding: const EdgeInsets.only(top: 8.0),
-                    child: Text(
-                      DateFormat('MMM', 'pt_BR').format(date),
-                      style: theme.textTheme.bodySmall,
-                    ),
-                  );
-                },
-              ),
-            ),
-            leftTitles:
-                const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-            topTitles:
-                const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-            rightTitles:
-                const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-          ),
-          gridData: const FlGridData(show: false),
-          borderData: FlBorderData(show: false),
-          barGroups: List.generate(chartData.length, (index) {
-            final item = chartData[index];
-            return BarChartGroupData(
-              x: index,
-              barRods: [
-                BarChartRodData(
-                  toY: item.value,
-                  gradient: LinearGradient(
-                    colors: [
-                      theme.colorScheme.secondary,
-                      theme.colorScheme.secondary.withOpacity(0.5)
-                    ],
-                    begin: Alignment.bottomCenter,
-                    end: Alignment.topCenter,
-                  ),
-                  width: 20,
-                  borderRadius: const BorderRadius.all(Radius.circular(6)),
-                ),
-              ],
-            );
-          }),
-        ),
-      ),
-    );
   }
 
   Widget _buildRecentActivitySection(
