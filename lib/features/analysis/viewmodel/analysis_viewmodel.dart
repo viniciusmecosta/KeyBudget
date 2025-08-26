@@ -16,6 +16,22 @@ class AnalysisViewModel extends ChangeNotifier {
   DateTime? get selectedMonthForCategory => _selectedMonthForCategory;
   int get yearOffset => _yearOffset;
 
+  bool get canGoToPreviousYear {
+    if (_allExpenses.isEmpty) return false;
+    final firstExpenseDate = _allExpenses.first.date;
+    final now = DateTime.now();
+    final targetYear = now.year + _yearOffset;
+    return targetYear > firstExpenseDate.year;
+  }
+
+  bool get canGoToNextYear {
+    if (_allExpenses.isEmpty) return false;
+    final lastExpenseDate = _allExpenses.last.date;
+    final now = DateTime.now();
+    final targetYear = now.year + _yearOffset;
+    return targetYear < lastExpenseDate.year;
+  }
+
   void _setLoading(bool value) {
     _isLoading = value;
     notifyListeners();
@@ -45,7 +61,11 @@ class AnalysisViewModel extends ChangeNotifier {
   }
 
   void changeYear(int direction) {
-    _yearOffset += direction;
+    if (direction > 0 && canGoToNextYear) {
+      _yearOffset += direction;
+    } else if (direction < 0 && canGoToPreviousYear) {
+      _yearOffset += direction;
+    }
     notifyListeners();
   }
 

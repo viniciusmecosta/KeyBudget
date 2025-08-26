@@ -1,3 +1,6 @@
+import 'dart:math';
+
+
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
@@ -6,7 +9,6 @@ import 'package:key_budget/core/models/expense_category.dart';
 import 'package:key_budget/features/analysis/viewmodel/analysis_viewmodel.dart';
 import 'package:key_budget/features/auth/viewmodel/auth_viewmodel.dart';
 import 'package:provider/provider.dart';
-import 'dart:math';
 
 class AnalysisScreen extends StatefulWidget {
   const AnalysisScreen({super.key});
@@ -105,21 +107,22 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
   }
 
   Widget _buildSectionTitle(BuildContext context, String title) {
-    return Text(
-      title,
-      style: Theme.of(context)
-          .textTheme
-          .titleLarge
-          ?.copyWith(fontWeight: FontWeight.bold),
-    );
+    return Text(title,
+        style: Theme.of(context)
+            .textTheme
+            .titleLarge
+            ?.copyWith(fontWeight: FontWeight.bold));
   }
 
   double _getRoundedMaxValue(double maxValue) {
-    if (maxValue <= 0) return 1000;
-    if (maxValue < 1000) return 1000;
-    if (maxValue < 2000) return 2000;
-    final step = 1000;
-    return (maxValue / step).ceil() * step.toDouble();
+    if (maxValue < 0) return 500;
+    if (maxValue == 0) return 500;
+    const step = 500.0;
+    double rounded = (maxValue / step).ceil() * step;
+    if (rounded == maxValue) {
+      rounded += step;
+    }
+    return rounded;
   }
 
   Widget _buildLineChart(BuildContext context, AnalysisViewModel viewModel) {
@@ -153,7 +156,9 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
           children: [
             IconButton(
               icon: const Icon(Icons.chevron_left),
-              onPressed: () => viewModel.changeYear(-1),
+              onPressed: viewModel.canGoToPreviousYear
+                  ? () => viewModel.changeYear(-1)
+                  : null,
             ),
             Text(
               '${DateFormat.yMMM('pt_BR').format(firstMonth)} - ${DateFormat.yMMM('pt_BR').format(lastMonth)}',
@@ -161,7 +166,9 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
             ),
             IconButton(
               icon: const Icon(Icons.chevron_right),
-              onPressed: () => viewModel.changeYear(1),
+              onPressed: viewModel.canGoToNextYear
+                  ? () => viewModel.changeYear(1)
+                  : null,
             ),
           ],
         ),
@@ -173,19 +180,16 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
               gridData: FlGridData(
                 show: true,
                 drawVerticalLine: true,
-                horizontalInterval:
-                    roundedMaxValue > 0 ? roundedMaxValue / 4 : 1,
+                horizontalInterval: 500,
                 getDrawingHorizontalLine: (value) {
                   return FlLine(
-                    color: theme.dividerColor.withOpacity(0.1),
-                    strokeWidth: 1,
-                  );
+                      color: theme.dividerColor.withOpacity(0.1),
+                      strokeWidth: 1);
                 },
                 getDrawingVerticalLine: (value) {
                   return FlLine(
-                    color: theme.dividerColor.withOpacity(0.1),
-                    strokeWidth: 1,
-                  );
+                      color: theme.dividerColor.withOpacity(0.1),
+                      strokeWidth: 1);
                 },
               ),
               titlesData: FlTitlesData(
@@ -217,13 +221,11 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
                 leftTitles: AxisTitles(
                   sideTitles: SideTitles(
                     showTitles: true,
-                    interval: roundedMaxValue > 0 ? roundedMaxValue / 4 : 1,
+                    interval: 500,
                     getTitlesWidget: (value, meta) {
-                      if (value == meta.max && meta.max != 0) {
-                        return const SizedBox.shrink();
-                      }
+                      final inK = value / 1000;
                       return Text(
-                          '${(value / 1000).toStringAsFixed(value > 0 && value < 1000 ? 1 : 0)}k',
+                          '${inK.toStringAsFixed(1).replaceAll('.0', '')}k',
                           style: theme.textTheme.bodySmall,
                           textAlign: TextAlign.left);
                     },
@@ -241,8 +243,7 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
                   spots: spots,
                   isCurved: true,
                   gradient: const LinearGradient(
-                    colors: [AppTheme.primary, AppTheme.secondary],
-                  ),
+                      colors: [AppTheme.primary, AppTheme.secondary]),
                   barWidth: 5,
                   isStrokeCapRound: true,
                   dotData: const FlDotData(show: false),
@@ -280,21 +281,30 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
       onPressed: () {
         showModalBottomSheet(
           context: context,
-          builder: (context) {
-            return SizedBox(
-              height: 300,
-              child: ListView.builder(
-                itemCount: availableMonths.length,
-                itemBuilder: (context, index) {
-                  final month = availableMonths[index];
-                  return ListTile(
-                    title: Text(DateFormat.yMMMM('pt_BR').format(month)),
-                    onTap: () {
-                      viewModel.setSelectedMonthForCategory(month);
-                      Navigator.pop(context);
-                    },
-                  );
-                },
+          backgroundColor: Theme.of(context).cardColor,
+          builder: (BuildContext bc) {
+            return Container(
+              padding: const EdgeInsets.all(8),
+              child: SizedBox(
+                height: 300,
+                child: ListView.builder(
+                  itemCount: availableMonths.length,
+                  itemBuilder: (context, index) {
+                    final month = availableMonths[index];
+                    return ListTile(
+                      title: Text(
+                        DateFormat.yMMMM('pt_BR').format(month),
+                        style: TextStyle(
+                            color:
+                                Theme.of(context).textTheme.bodyLarge?.color),
+                      ),
+                      onTap: () {
+                        viewModel.setSelectedMonthForCategory(month);
+                        Navigator.pop(context);
+                      },
+                    );
+                  },
+                ),
               ),
             );
           },
@@ -320,11 +330,10 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
     return Card(
       key: key,
       elevation: 0,
-      color: theme.cardColor,
+      color: Colors.transparent,
       child: Padding(
         padding: const EdgeInsets.all(16.0),
         child: SizedBox(
-          // Envolve a Row com um SizedBox para dar uma altura fixa
           height: 180,
           child: Row(
             children: [
@@ -375,41 +384,34 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
     );
   }
 
-  Widget _buildIndicator({
-    required Color color,
-    required String text,
-    required double value,
-    required double percentage,
-  }) {
+  Widget _buildIndicator(
+      {required Color color,
+      required String text,
+      required double value,
+      required double percentage}) {
+    final formattedValue =
+        NumberFormat.currency(locale: 'pt_BR', symbol: 'R\$', decimalDigits: 2)
+            .format(value);
     return Row(
       children: <Widget>[
         Container(
-          width: 12,
-          height: 12,
-          decoration: BoxDecoration(
-            shape: BoxShape.circle,
-            color: color,
-          ),
-        ),
+            width: 12,
+            height: 12,
+            decoration: BoxDecoration(shape: BoxShape.circle, color: color)),
         const SizedBox(width: 8),
         Expanded(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              Text(text,
+                  style: const TextStyle(
+                      fontSize: 14, fontWeight: FontWeight.bold),
+                  overflow: TextOverflow.ellipsis),
               Text(
-                text,
-                style: const TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.bold,
-                ),
-                overflow: TextOverflow.ellipsis,
-              ),
-              Text(
-                '${_currencyFormatterNoCents.format(value)} (${percentage.toStringAsFixed(1)}%)',
+                '$formattedValue (${percentage.toStringAsFixed(1)}%)',
                 style: TextStyle(
-                  fontSize: 12,
-                  color: Theme.of(context).textTheme.bodySmall?.color,
-                ),
+                    fontSize: 12,
+                    color: Theme.of(context).textTheme.bodySmall?.color),
               ),
             ],
           ),
