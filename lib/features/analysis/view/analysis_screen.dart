@@ -49,6 +49,8 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
               padding: const EdgeInsets.all(16.0),
               children: [
                 _buildTotalsRow(context, viewModel),
+                const SizedBox(height: 16),
+                _buildAverageCard(context, viewModel),
                 const SizedBox(height: 24),
                 _buildSectionTitle(context, 'Histórico Mensal'),
                 const SizedBox(height: 8),
@@ -75,6 +77,59 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
             child: _buildTotalCard(context, 'Neste Mês',
                 viewModel.totalCurrentMonth, AppTheme.secondary)),
       ],
+    );
+  }
+
+  Widget _buildAverageCard(BuildContext context, AnalysisViewModel viewModel) {
+    final theme = Theme.of(context);
+    final percentageChange = viewModel.percentageChangeFromLastMonth;
+    final hasPreviousMonth = viewModel.lastMonthExpense > 0;
+
+    final isIncrease = percentageChange >= 0;
+    final changeText =
+        '${isIncrease ? '+' : '-'} ${percentageChange.abs().toStringAsFixed(1)}%';
+    final changeColor =
+        isIncrease ? AppTheme.positiveChange : AppTheme.negativeChange;
+
+    return Card(
+      color: theme.colorScheme.tertiary.withOpacity(0.1),
+      elevation: 0,
+      child: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text('Média Mensal',
+                style: theme.textTheme.bodyLarge
+                    ?.copyWith(color: theme.colorScheme.tertiary)),
+            const SizedBox(height: 8),
+            Text(
+              _currencyFormatterNoCents.format(viewModel.averageMonthlyExpense),
+              style: theme.textTheme.headlineSmall?.copyWith(
+                  fontWeight: FontWeight.bold,
+                  color: theme.colorScheme.tertiary),
+            ),
+            if (hasPreviousMonth) ...[
+              const SizedBox(height: 4),
+              Row(
+                children: [
+                  Icon(
+                    isIncrease ? Icons.arrow_upward : Icons.arrow_downward,
+                    color: changeColor,
+                    size: 16,
+                  ),
+                  const SizedBox(width: 4),
+                  Text(
+                    changeText,
+                    style: theme.textTheme.bodyMedium?.copyWith(
+                        fontWeight: FontWeight.bold, color: changeColor),
+                  )
+                ],
+              )
+            ],
+          ],
+        ),
+      ),
     );
   }
 

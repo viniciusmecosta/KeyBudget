@@ -87,6 +87,13 @@ class _DashboardScreenState extends State<DashboardScreen> {
   Widget _buildTotalBalanceCard(
       BuildContext context, DashboardViewModel viewModel) {
     final theme = Theme.of(context);
+    final percentageChange = viewModel.percentageChangeFromAverage;
+    final hasPreviousMonths = viewModel.averageOfPreviousMonths > 0;
+
+    final isIncrease = percentageChange >= 0;
+    final formattedPercentage =
+        '${isIncrease ? '+' : '-'} ${percentageChange.abs().toStringAsFixed(1)}%';
+
     return Card(
       elevation: 8,
       shadowColor: theme.colorScheme.primary.withOpacity(0.3),
@@ -119,6 +126,23 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   fontWeight: FontWeight.bold,
                   color: theme.colorScheme.onPrimary),
             ),
+            if (hasPreviousMonths) ...[
+              const SizedBox(height: 8),
+              Row(
+                children: [
+                  Icon(isIncrease ? Icons.arrow_upward : Icons.arrow_downward,
+                      color: theme.colorScheme.onPrimary, size: 16),
+                  const SizedBox(width: 4),
+                  Text(
+                    '$formattedPercentage vs média',
+                    style: theme.textTheme.bodyMedium?.copyWith(
+                      color: theme.colorScheme.onPrimary,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ],
+              ),
+            ],
           ],
         ),
       ),

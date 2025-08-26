@@ -74,6 +74,36 @@ class AnalysisViewModel extends ChangeNotifier {
         .fold(0.0, (sum, item) => sum + item.amount);
   }
 
+  Map<String, double> get monthlyTotals {
+    final Map<String, double> data = {};
+    for (var expense in _allExpenses) {
+      final monthKey = DateFormat('yyyy-MM').format(expense.date);
+      data.update(monthKey, (value) => value + expense.amount,
+          ifAbsent: () => expense.amount);
+    }
+    return data;
+  }
+
+  double get averageMonthlyExpense {
+    final totals = monthlyTotals;
+    if (totals.isEmpty) return 0.0;
+    return totals.values.reduce((a, b) => a + b) / totals.length;
+  }
+
+  double get lastMonthExpense {
+    final now = DateTime.now();
+    final lastMonth = DateTime(now.year, now.month - 1);
+    final lastMonthKey = DateFormat('yyyy-MM').format(lastMonth);
+    return monthlyTotals[lastMonthKey] ?? 0.0;
+  }
+
+  double get percentageChangeFromLastMonth {
+    final lastMonth = lastMonthExpense;
+    final currentMonth = totalCurrentMonth;
+    if (lastMonth == 0) return 0.0;
+    return ((currentMonth - lastMonth) / lastMonth) * 100;
+  }
+
   Map<String, double> get last6MonthsData {
     final Map<String, double> data = {};
     final now = DateTime.now();
