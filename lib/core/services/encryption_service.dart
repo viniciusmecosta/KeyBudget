@@ -3,9 +3,11 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 class EncryptionService {
   static final EncryptionService _instance = EncryptionService._internal();
+
   factory EncryptionService() {
     return _instance;
   }
+
   EncryptionService._internal() {
     final keyString = dotenv.env['ENCRYPTION_KEY'];
     if (keyString == null || keyString.length != 32) {

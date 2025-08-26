@@ -15,6 +15,7 @@ class CredentialViewModel extends ChangeNotifier {
   bool _isLoading = false;
 
   List<Credential> get allCredentials => _allCredentials;
+
   bool get isLoading => _isLoading;
 
   void _setLoading(bool value) {

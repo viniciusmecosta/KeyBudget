@@ -9,6 +9,7 @@ import 'package:provider/provider.dart';
 
 class ExpenseDetailScreen extends StatefulWidget {
   final Expense expense;
+
   const ExpenseDetailScreen({super.key, required this.expense});
 
   @override

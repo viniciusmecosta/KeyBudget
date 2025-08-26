@@ -15,9 +15,12 @@ class DashboardViewModel extends ChangeNotifier {
   DateTime _selectedMonth = DateTime(DateTime.now().year, DateTime.now().month);
 
   bool get isLoading => _isLoading;
+
   int get credentialCount => _credentialCount;
+
   Map<String, double> get expensesByCategoryForMonth =>
       _expensesByCategoryForMonth;
+
   DateTime get selectedMonth => _selectedMonth;
 
   double get totalAmountForMonth {
