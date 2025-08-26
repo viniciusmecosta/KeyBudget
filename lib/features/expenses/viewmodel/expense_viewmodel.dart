@@ -15,7 +15,9 @@ class ExpenseViewModel extends ChangeNotifier {
   List<ExpenseCategory> _selectedCategories = [];
 
   List<Expense> get allExpenses => _allExpenses;
+
   bool get isLoading => _isLoading;
+
   List<ExpenseCategory> get selectedCategories => _selectedCategories;
 
   List<Expense> get filteredExpenses {

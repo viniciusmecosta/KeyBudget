@@ -1,8 +1,8 @@
-import 'package:firebase_auth/firebase_auth.dart' as firebase;
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart' as firebase;
 import 'package:flutter/foundation.dart';
-import 'package:key_budget/core/models/user_model.dart';
 import 'package:google_sign_in/google_sign_in.dart';
+import 'package:key_budget/core/models/user_model.dart';
 
 class AuthRepository {
   final firebase.FirebaseAuth _firebaseAuth = firebase.FirebaseAuth.instance;

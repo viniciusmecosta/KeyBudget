@@ -1,4 +1,5 @@
 import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_animate/flutter_animate.dart';
@@ -11,6 +12,7 @@ import 'package:provider/provider.dart';
 
 class CredentialsScreen extends StatefulWidget {
   const CredentialsScreen({super.key});
+
   @override
   State<CredentialsScreen> createState() => _CredentialsScreenState();
 }

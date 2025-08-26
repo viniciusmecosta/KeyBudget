@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:google_nav_bar/google_nav_bar.dart';
 import 'package:key_budget/app/viewmodel/navigation_viewmodel.dart';
 import 'package:key_budget/features/credentials/view/credentials_screen.dart';
 import 'package:key_budget/features/dashboard/view/dashboard_screen.dart';
 import 'package:key_budget/features/expenses/view/expenses_screen.dart';
 import 'package:key_budget/features/user/view/user_screen.dart';
 import 'package:provider/provider.dart';
-import 'package:google_nav_bar/google_nav_bar.dart';
 
 class MainScreen extends StatefulWidget {
   const MainScreen({super.key});

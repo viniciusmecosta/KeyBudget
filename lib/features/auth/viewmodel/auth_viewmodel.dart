@@ -1,8 +1,8 @@
+import 'package:firebase_auth/firebase_auth.dart' as firebase;
 import 'package:flutter/material.dart';
 import 'package:key_budget/core/models/user_model.dart';
 import 'package:key_budget/core/services/local_auth_service.dart';
 import 'package:key_budget/features/auth/repository/auth_repository.dart';
-import 'package:firebase_auth/firebase_auth.dart' as firebase;
 
 class AuthViewModel extends ChangeNotifier {
   final AuthRepository _authRepository = AuthRepository();
@@ -13,7 +13,9 @@ class AuthViewModel extends ChangeNotifier {
   User? _currentUser;
 
   bool get isLoading => _isLoading;
+
   String? get errorMessage => _errorMessage;
+
   User? get currentUser => _currentUser;
 
   AuthViewModel() {

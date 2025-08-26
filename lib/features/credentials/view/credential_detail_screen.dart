@@ -1,4 +1,5 @@
 import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:key_budget/core/models/credential_model.dart';
@@ -9,6 +10,7 @@ import 'package:provider/provider.dart';
 
 class CredentialDetailScreen extends StatefulWidget {
   final Credential credential;
+
   const CredentialDetailScreen({super.key, required this.credential});
 
   @override

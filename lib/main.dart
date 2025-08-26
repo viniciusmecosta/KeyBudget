@@ -1,5 +1,7 @@
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:key_budget/app/config/app_providers.dart';
 import 'package:key_budget/app/config/app_theme.dart';
 import 'package:key_budget/app/view/auth_gate.dart';
@@ -7,8 +9,6 @@ import 'package:key_budget/app/view/lock_screen.dart';
 import 'package:key_budget/core/services/app_lock_service.dart';
 import 'package:key_budget/features/auth/viewmodel/auth_viewmodel.dart';
 import 'package:provider/provider.dart';
-import 'package:flutter_localizations/flutter_localizations.dart';
-import 'package:firebase_core/firebase_core.dart';
 
 Future<void> main() async {
   try {
@@ -93,6 +93,7 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
 
 class ErrorScreen extends StatelessWidget {
   final String error;
+
   const ErrorScreen({super.key, required this.error});
 
   @override
