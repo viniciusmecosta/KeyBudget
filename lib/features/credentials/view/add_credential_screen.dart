@@ -25,14 +25,39 @@ class _AddCredentialScreenState extends State<AddCredentialScreen> {
   bool _isSaving = false;
 
   @override
+  void initState() {
+    super.initState();
+    _loginController.addListener(_updateFields);
+  }
+
+  @override
   void dispose() {
     _locationController.dispose();
+    _loginController.removeListener(_updateFields);
     _loginController.dispose();
     _passwordController.dispose();
     _emailController.dispose();
     _phoneController.dispose();
     _notesController.dispose();
     super.dispose();
+  }
+
+  void _updateFields() {
+    final text = _loginController.text;
+    final isEmail = RegExp(r'^[^@]+@[^@]+\.[^@]+').hasMatch(text);
+    final isPhone = RegExp(r'^[0-9]+$').hasMatch(text);
+
+    if (text.isEmpty) {
+      _emailController.clear();
+      _phoneController.clear();
+    } else {
+      if (isEmail) {
+        _emailController.text = text;
+      }
+      if (isPhone) {
+        _phoneController.text = text;
+      }
+    }
   }
 
   void _submit() {
