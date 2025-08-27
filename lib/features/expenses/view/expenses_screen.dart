@@ -32,7 +32,7 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
         Provider.of<CategoryViewModel>(context, listen: false)
             .fetchCategories(authViewModel.currentUser!.id);
         Provider.of<ExpenseViewModel>(context, listen: false)
-            .fetchExpenses(authViewModel.currentUser!.id);
+            .listenToExpenses(authViewModel.currentUser!.id);
       }
     });
   }
@@ -40,8 +40,8 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
   Future<void> _handleRefresh() async {
     final authViewModel = Provider.of<AuthViewModel>(context, listen: false);
     if (mounted && authViewModel.currentUser != null) {
-      await Provider.of<ExpenseViewModel>(context, listen: false)
-          .fetchExpenses(authViewModel.currentUser!.id);
+      Provider.of<ExpenseViewModel>(context, listen: false)
+          .listenToExpenses(authViewModel.currentUser!.id);
     }
   }
 
