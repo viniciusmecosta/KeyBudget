@@ -95,7 +95,7 @@ class CredentialViewModel extends ChangeNotifier {
       email: email,
       phoneNumber: phoneNumber,
       notes: notes,
-      logoPath: logoPath ?? originalCredential.logoPath,
+      logoPath: logoPath,
     );
     await _repository.updateCredential(userId, updatedCredential);
   }
