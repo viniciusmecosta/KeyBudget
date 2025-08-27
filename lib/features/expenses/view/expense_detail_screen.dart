@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_masked_text2/flutter_masked_text2.dart';
 import 'package:intl/intl.dart';
+import 'package:key_budget/app/widgets/category_autocomplete_field.dart';
 import 'package:key_budget/core/models/expense_category.dart';
 import 'package:key_budget/core/models/expense_model.dart';
 import 'package:key_budget/features/auth/viewmodel/auth_viewmodel.dart';
@@ -127,6 +128,9 @@ class _ExpenseDetailScreenState extends State<ExpenseDetailScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final expenseViewModel =
+        Provider.of<ExpenseViewModel>(context, listen: false);
+
     return Scaffold(
       appBar: AppBar(
         title: Text(_isEditing ? 'Editar Despesa' : 'Detalhes da Despesa'),
@@ -192,22 +196,51 @@ class _ExpenseDetailScreenState extends State<ExpenseDetailScreen> {
                   );
                 }).toList(),
                 onChanged: _isEditing
-                    ? (value) => setState(() => _selectedCategory = value)
+                    ? (value) {
+                        setState(() {
+                          _selectedCategory = value;
+                        });
+                      }
                     : null,
               ),
               const SizedBox(height: 16),
-              TextFormField(
-                controller: _motivationController,
-                decoration: const InputDecoration(labelText: 'Motivação'),
-                enabled: _isEditing,
-                maxLines: 3,
-              ),
+              if (_isEditing)
+                CategoryAutocompleteField(
+                  key: ValueKey('motivation_${_selectedCategory?.name}'),
+                  label: 'Motivação',
+                  controller: _motivationController,
+                  optionsBuilder: () => expenseViewModel
+                      .getUniqueMotivationsForCategory(_selectedCategory),
+                  onSelected: (selection) {
+                    _motivationController.text = selection;
+                  },
+                  maxLines: 3,
+                )
+              else
+                TextFormField(
+                  controller: _motivationController,
+                  decoration: const InputDecoration(labelText: 'Motivação'),
+                  enabled: false,
+                  maxLines: 3,
+                ),
               const SizedBox(height: 16),
-              TextFormField(
-                controller: _locationController,
-                decoration: const InputDecoration(labelText: 'Local'),
-                enabled: _isEditing,
-              ),
+              if (_isEditing)
+                CategoryAutocompleteField(
+                  key: ValueKey('location_${_selectedCategory?.name}'),
+                  label: 'Local',
+                  controller: _locationController,
+                  optionsBuilder: () => expenseViewModel
+                      .getUniqueLocationsForCategory(_selectedCategory),
+                  onSelected: (selection) {
+                    _locationController.text = selection;
+                  },
+                )
+              else
+                TextFormField(
+                  controller: _locationController,
+                  decoration: const InputDecoration(labelText: 'Local'),
+                  enabled: false,
+                ),
               const SizedBox(height: 16),
               ListTile(
                 title: const Text('Data'),

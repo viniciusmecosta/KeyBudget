@@ -3,6 +3,7 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'package:intl/intl.dart';
 import 'package:key_budget/app/widgets/empty_state_widget.dart';
 import 'package:key_budget/core/models/expense_category.dart';
+import 'package:key_budget/core/models/expense_model.dart';
 import 'package:key_budget/features/auth/viewmodel/auth_viewmodel.dart';
 import 'package:key_budget/features/expenses/view/add_expense_screen.dart';
 import 'package:key_budget/features/expenses/view/expense_detail_screen.dart';
@@ -144,20 +145,13 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final viewModel = Provider.of<ExpenseViewModel>(context);
     final theme = Theme.of(context);
-
-    final monthlyExpenses = viewModel.filteredExpenses
-        .where((exp) =>
-            exp.date.year == _selectedMonth.year &&
-            exp.date.month == _selectedMonth.month)
-        .toList()
-      ..sort((a, b) => b.date.compareTo(a.date));
-
-    final totalValue = monthlyExpenses.fold<double>(
-      0.0,
-      (sum, exp) => sum + exp.amount,
-    );
+    final totalValue = context.select<ExpenseViewModel, double>((viewModel) =>
+        viewModel.filteredExpenses
+            .where((exp) =>
+                exp.date.year == _selectedMonth.year &&
+                exp.date.month == _selectedMonth.month)
+            .fold<double>(0.0, (sum, exp) => sum + exp.amount));
 
     return Scaffold(
       appBar: AppBar(
@@ -226,9 +220,18 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
               ),
             ).animate().fadeIn(duration: 250.ms).slideY(begin: -0.3),
             Expanded(
-              child: Consumer<ExpenseViewModel>(
-                builder: (context, vm, child) {
-                  if (vm.isLoading) {
+              child: Selector<ExpenseViewModel, List<Expense>>(
+                selector: (_, vm) => vm.filteredExpenses
+                    .where((exp) =>
+                        exp.date.year == _selectedMonth.year &&
+                        exp.date.month == _selectedMonth.month)
+                    .toList()
+                  ..sort((a, b) => b.date.compareTo(a.date)),
+                builder: (context, monthlyExpenses, child) {
+                  final isLoading = context
+                      .select<ExpenseViewModel, bool>((vm) => vm.isLoading);
+
+                  if (isLoading) {
                     return const Center(child: CircularProgressIndicator());
                   }
                   if (monthlyExpenses.isEmpty) {

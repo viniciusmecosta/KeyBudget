@@ -168,7 +168,7 @@ class _CredentialDetailScreenState extends State<CredentialDetailScreen> {
               onPressed: _deleteCredential,
             ),
           IconButton(
-            icon: Icon(_isEditing ? Icons.save : Icons.edit),
+            icon: Icon(_isEditing ? Icons.check : Icons.edit),
             onPressed: () {
               if (_isEditing) {
                 _saveChanges();

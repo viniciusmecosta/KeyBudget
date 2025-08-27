@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_masked_text2/flutter_masked_text2.dart';
 import 'package:intl/intl.dart';
+import 'package:key_budget/app/widgets/category_autocomplete_field.dart';
 import 'package:key_budget/core/models/expense_category.dart';
 import 'package:key_budget/core/models/expense_model.dart';
 import 'package:key_budget/features/auth/viewmodel/auth_viewmodel.dart';
@@ -95,6 +96,9 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final expenseViewModel =
+        Provider.of<ExpenseViewModel>(context, listen: false);
+
     return Scaffold(
       appBar: AppBar(title: const Text('Adicionar Despesa')),
       body: Padding(
@@ -135,18 +139,34 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
                   );
                 }).toList(),
                 onChanged: (value) {
-                  setState(() => _selectedCategory = value);
+                  setState(() {
+                    _selectedCategory = value;
+                    _motivationController.clear();
+                    _locationController.clear();
+                  });
                 },
               ),
               const SizedBox(height: 16),
-              TextFormField(
+              CategoryAutocompleteField(
+                key: ValueKey('motivation_${_selectedCategory?.name}'),
+                label: 'Motivação',
                 controller: _motivationController,
-                decoration: const InputDecoration(labelText: 'Motivação'),
+                optionsBuilder: () => expenseViewModel
+                    .getUniqueMotivationsForCategory(_selectedCategory),
+                onSelected: (selection) {
+                  _motivationController.text = selection;
+                },
               ),
               const SizedBox(height: 16),
-              TextFormField(
+              CategoryAutocompleteField(
+                key: ValueKey('location_${_selectedCategory?.name}'),
+                label: 'Local',
                 controller: _locationController,
-                decoration: const InputDecoration(labelText: 'Local'),
+                optionsBuilder: () => expenseViewModel
+                    .getUniqueLocationsForCategory(_selectedCategory),
+                onSelected: (selection) {
+                  _locationController.text = selection;
+                },
               ),
               const SizedBox(height: 16),
               Row(

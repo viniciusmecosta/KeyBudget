@@ -26,6 +26,12 @@ class AppTheme {
     const Color(0xFF9B5DE5),
     const Color(0xFF00B295),
     const Color(0xFFF15BB5),
+    const Color(0xFF00BBF9),
+    const Color(0xFFFEE440),
+    const Color(0xFF52B69A),
+    const Color(0xFFF72585),
+    const Color(0xFF3A86FF),
+    const Color(0xFFFB5607),
   ];
 
   static final ThemeData lightTheme = ThemeData(
