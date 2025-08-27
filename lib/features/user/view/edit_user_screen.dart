@@ -106,8 +106,7 @@ class _EditUserScreenState extends State<EditUserScreen> {
               const SizedBox(height: 16),
               TextFormField(
                 controller: _phoneController,
-                decoration:
-                    const InputDecoration(labelText: 'Número (opcional)'),
+                decoration: const InputDecoration(labelText: 'Número'),
                 keyboardType: TextInputType.phone,
               ),
               const SizedBox(height: 16),

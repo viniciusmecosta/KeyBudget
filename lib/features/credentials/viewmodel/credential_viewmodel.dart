@@ -12,9 +12,11 @@ class CredentialViewModel extends ChangeNotifier {
   final DataImportService _dataImportService = DataImportService();
 
   List<Credential> _allCredentials = [];
+  List<String> _userCredentialLogos = [];
   bool _isLoading = false;
 
   List<Credential> get allCredentials => _allCredentials;
+  List<String> get userCredentialLogos => _userCredentialLogos;
 
   bool get isLoading => _isLoading;
 
@@ -26,7 +28,13 @@ class CredentialViewModel extends ChangeNotifier {
   Future<void> fetchCredentials(String userId) async {
     _setLoading(true);
     _allCredentials = await _repository.getCredentialsForUser(userId);
+    await fetchUserCredentialLogos(userId);
     _setLoading(false);
+  }
+
+  Future<void> fetchUserCredentialLogos(String userId) async {
+    _userCredentialLogos = await _repository.getUniqueLogoPathsForUser(userId);
+    notifyListeners();
   }
 
   Future<void> addCredential({
@@ -133,6 +141,7 @@ class CredentialViewModel extends ChangeNotifier {
 
   void clearData() {
     _allCredentials = [];
+    _userCredentialLogos = [];
     notifyListeners();
   }
 }

@@ -141,14 +141,12 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
               const SizedBox(height: 16),
               TextFormField(
                 controller: _motivationController,
-                decoration:
-                    const InputDecoration(labelText: 'Motivação (opcional)'),
+                decoration: const InputDecoration(labelText: 'Motivação'),
               ),
               const SizedBox(height: 16),
               TextFormField(
                 controller: _locationController,
-                decoration:
-                    const InputDecoration(labelText: 'Local (opcional)'),
+                decoration: const InputDecoration(labelText: 'Local'),
               ),
               const SizedBox(height: 16),
               Row(

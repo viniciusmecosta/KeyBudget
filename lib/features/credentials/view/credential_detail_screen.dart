@@ -1,10 +1,9 @@
-import 'dart:convert';
-
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:key_budget/core/models/credential_model.dart';
 import 'package:key_budget/features/auth/viewmodel/auth_viewmodel.dart';
 import 'package:key_budget/features/credentials/view/widgets/logo_picker.dart';
+import 'package:key_budget/features/credentials/view/widgets/saved_logos_screen.dart';
 import 'package:key_budget/features/credentials/viewmodel/credential_viewmodel.dart';
 import 'package:provider/provider.dart';
 
@@ -21,7 +20,7 @@ class _CredentialDetailScreenState extends State<CredentialDetailScreen> {
   final _formKey = GlobalKey<FormState>();
   late TextEditingController _locationController;
   late TextEditingController _loginController;
-  late TextEditingController _newPasswordController;
+  late TextEditingController _passwordController;
   late TextEditingController _emailController;
   late TextEditingController _phoneController;
   late TextEditingController _notesController;
@@ -29,45 +28,42 @@ class _CredentialDetailScreenState extends State<CredentialDetailScreen> {
   bool _isEditing = false;
   bool _isSaving = false;
   bool _isPasswordVisible = false;
-  late String _decryptedPassword;
   bool _decryptionError = false;
 
   @override
   void initState() {
     super.initState();
+    final decryptedPassword =
+        Provider.of<CredentialViewModel>(context, listen: false)
+            .decryptPassword(widget.credential.encryptedPassword);
+
+    _decryptionError = decryptedPassword == 'ERRO_DECRIPT';
+
     _locationController =
         TextEditingController(text: widget.credential.location);
     _loginController = TextEditingController(text: widget.credential.login);
-    _newPasswordController = TextEditingController();
+    _passwordController = TextEditingController(
+        text: _decryptionError ? 'Falha ao decifrar' : decryptedPassword);
     _emailController = TextEditingController(text: widget.credential.email);
     _phoneController =
         TextEditingController(text: widget.credential.phoneNumber);
     _notesController = TextEditingController(text: widget.credential.notes);
     _logoPath = widget.credential.logoPath;
-
-    _decryptedPassword =
-        Provider.of<CredentialViewModel>(context, listen: false)
-            .decryptPassword(widget.credential.encryptedPassword);
-
-    if (_decryptedPassword == 'ERRO_DECRIPT') {
-      _decryptionError = true;
-      _decryptedPassword = 'Falha ao decifrar';
-    }
   }
 
   @override
   void dispose() {
     _locationController.dispose();
     _loginController.dispose();
-    _newPasswordController.dispose();
+    _passwordController.dispose();
     _emailController.dispose();
     _phoneController.dispose();
     _notesController.dispose();
     super.dispose();
   }
 
-  void _copyToClipboard(String text) {
-    if (_decryptionError) {
+  void _copyToClipboard(String text, {bool isPassword = false}) {
+    if (isPassword && _decryptionError) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
             content: const Text('Não é possível copiar a senha com erro.'),
@@ -94,7 +90,7 @@ class _CredentialDetailScreenState extends State<CredentialDetailScreen> {
       originalCredential: widget.credential,
       location: _locationController.text,
       login: _loginController.text,
-      newPlainPassword: _newPasswordController.text,
+      newPlainPassword: _passwordController.text,
       email: _emailController.text,
       phoneNumber: _phoneController.text,
       notes: _notesController.text,
@@ -102,7 +98,10 @@ class _CredentialDetailScreenState extends State<CredentialDetailScreen> {
     )
         .whenComplete(() {
       if (mounted) {
-        setState(() => _isSaving = false);
+        setState(() {
+          _isSaving = false;
+          _isEditing = false;
+        });
         Navigator.of(context).pop();
       }
     });
@@ -141,12 +140,23 @@ class _CredentialDetailScreenState extends State<CredentialDetailScreen> {
     );
   }
 
+  void _selectSavedLogo() async {
+    final selectedLogo = await Navigator.of(context).push<String>(
+      MaterialPageRoute(
+        builder: (_) => const SavedLogosScreen(),
+      ),
+    );
+
+    if (selectedLogo != null) {
+      setState(() {
+        _logoPath = selectedLogo;
+      });
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final imageProvider = _logoPath != null && _logoPath!.isNotEmpty
-        ? MemoryImage(base64Decode(_logoPath!))
-        : null;
 
     return Scaffold(
       appBar: AppBar(
@@ -158,7 +168,7 @@ class _CredentialDetailScreenState extends State<CredentialDetailScreen> {
               onPressed: _deleteCredential,
             ),
           IconButton(
-            icon: Icon(_isEditing ? Icons.check : Icons.edit),
+            icon: Icon(_isEditing ? Icons.save : Icons.edit),
             onPressed: () {
               if (_isEditing) {
                 _saveChanges();
@@ -176,149 +186,158 @@ class _CredentialDetailScreenState extends State<CredentialDetailScreen> {
           child: ListView(
             children: [
               Center(
-                child: _isEditing
-                    ? LogoPicker(
-                        initialImagePath: _logoPath,
-                        onImageSelected: (path) {
-                          setState(() {
-                            _logoPath = path;
-                          });
-                        },
-                      )
-                    : CircleAvatar(
-                        radius: 40,
-                        backgroundImage: imageProvider,
-                        backgroundColor:
-                            theme.colorScheme.secondary.withOpacity(0.1),
-                        child: imageProvider == null
-                            ? Icon(Icons.vpn_key_outlined,
-                                size: 30, color: theme.colorScheme.secondary)
-                            : null,
-                      ),
+                child: LogoPicker(
+                  initialImagePath: _logoPath,
+                  onImageSelected: (path) {
+                    if (_isEditing) {
+                      setState(() {
+                        _logoPath = path;
+                      });
+                    }
+                  },
+                ),
               ),
+              if (_isEditing) ...[
+                const SizedBox(height: 8),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    TextButton.icon(
+                      onPressed: _selectSavedLogo,
+                      icon: const Icon(Icons.collections_bookmark_outlined,
+                          size: 18),
+                      label: const Text('Escolher Salva'),
+                    ),
+                    const SizedBox(width: 8),
+                    TextButton.icon(
+                      onPressed: () {
+                        setState(() {
+                          _logoPath = null;
+                        });
+                      },
+                      icon: const Icon(Icons.no_photography_outlined, size: 18),
+                      label: const Text('Remover'),
+                      style: TextButton.styleFrom(
+                          foregroundColor: theme.colorScheme.error),
+                    ),
+                  ],
+                ),
+              ],
               const SizedBox(height: 24),
               TextFormField(
                 controller: _locationController,
+                readOnly: !_isEditing,
                 decoration: InputDecoration(
                   labelText: 'Local/Serviço *',
-                  suffixIcon: !_isEditing
-                      ? IconButton(
+                  suffixIcon: _isEditing
+                      ? null
+                      : IconButton(
                           icon: const Icon(Icons.copy, size: 20),
                           onPressed: () =>
                               _copyToClipboard(_locationController.text),
-                        )
-                      : null,
+                        ),
                 ),
-                enabled: _isEditing,
                 validator: (value) =>
                     value!.isEmpty ? 'Campo obrigatório' : null,
               ),
               const SizedBox(height: 16),
               TextFormField(
                 controller: _loginController,
+                readOnly: !_isEditing,
                 decoration: InputDecoration(
                   labelText: 'Login/Usuário *',
-                  suffixIcon: !_isEditing
-                      ? IconButton(
+                  suffixIcon: _isEditing
+                      ? null
+                      : IconButton(
                           icon: const Icon(Icons.copy, size: 20),
                           onPressed: () =>
                               _copyToClipboard(_loginController.text),
-                        )
-                      : null,
+                        ),
                 ),
-                enabled: _isEditing,
                 validator: (value) =>
                     value!.isEmpty ? 'Campo obrigatório' : null,
               ),
               const SizedBox(height: 16),
-              if (_isEditing)
-                TextFormField(
-                  controller: _newPasswordController,
-                  decoration: const InputDecoration(
-                      labelText:
-                          'Nova Senha (deixe em branco para não alterar)'),
-                  obscureText: true,
-                )
-              else
-                TextFormField(
-                  readOnly: true,
-                  controller: TextEditingController(
-                      text: _isPasswordVisible
-                          ? _decryptedPassword
-                          : '••••••••••'),
-                  obscureText: !_isPasswordVisible,
-                  decoration: InputDecoration(
-                    labelText: 'Senha',
-                    errorText: _decryptionError
-                        ? 'Erro nos dados. Edite e salve novamente.'
-                        : null,
-                    suffixIcon: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        IconButton(
-                          icon: Icon(
-                              _isPasswordVisible
-                                  ? Icons.visibility_off
-                                  : Icons.visibility,
-                              size: 20),
-                          onPressed: () => setState(
-                              () => _isPasswordVisible = !_isPasswordVisible),
+              TextFormField(
+                controller: _passwordController,
+                readOnly: !_isEditing,
+                obscureText: !_isPasswordVisible,
+                decoration: InputDecoration(
+                  labelText: 'Senha',
+                  errorText: _decryptionError && !_isEditing
+                      ? 'Erro ao decifrar.'
+                      : null,
+                  suffixIcon: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      IconButton(
+                        icon: Icon(
+                          _isPasswordVisible
+                              ? Icons.visibility_off
+                              : Icons.visibility,
+                          size: 20,
                         ),
+                        onPressed: () => setState(
+                            () => _isPasswordVisible = !_isPasswordVisible),
+                      ),
+                      if (!_isEditing)
                         IconButton(
                           icon: const Icon(Icons.copy, size: 20),
-                          onPressed: () => _copyToClipboard(_decryptedPassword),
+                          onPressed: () => _copyToClipboard(
+                              _passwordController.text,
+                              isPassword: true),
                         ),
-                      ],
-                    ),
+                    ],
                   ),
                 ),
+              ),
               const SizedBox(height: 16),
               TextFormField(
                 controller: _emailController,
+                readOnly: !_isEditing,
                 decoration: InputDecoration(
                   labelText: 'Email',
-                  suffixIcon: !_isEditing && _emailController.text.isNotEmpty
-                      ? IconButton(
+                  suffixIcon: _isEditing || _emailController.text.isEmpty
+                      ? null
+                      : IconButton(
                           icon: const Icon(Icons.copy, size: 20),
                           onPressed: () =>
                               _copyToClipboard(_emailController.text),
-                        )
-                      : null,
+                        ),
                 ),
-                enabled: _isEditing,
                 keyboardType: TextInputType.emailAddress,
               ),
               const SizedBox(height: 16),
               TextFormField(
                 controller: _phoneController,
+                readOnly: !_isEditing,
                 decoration: InputDecoration(
                   labelText: 'Número',
-                  suffixIcon: !_isEditing && _phoneController.text.isNotEmpty
-                      ? IconButton(
+                  suffixIcon: _isEditing || _phoneController.text.isEmpty
+                      ? null
+                      : IconButton(
                           icon: const Icon(Icons.copy, size: 20),
                           onPressed: () =>
                               _copyToClipboard(_phoneController.text),
-                        )
-                      : null,
+                        ),
                 ),
-                enabled: _isEditing,
                 keyboardType: TextInputType.phone,
               ),
               const SizedBox(height: 16),
               TextFormField(
                 controller: _notesController,
+                readOnly: !_isEditing,
+                maxLines: 3,
                 decoration: InputDecoration(
                   labelText: 'Observações',
-                  suffixIcon: !_isEditing && _notesController.text.isNotEmpty
-                      ? IconButton(
+                  suffixIcon: _isEditing || _notesController.text.isEmpty
+                      ? null
+                      : IconButton(
                           icon: const Icon(Icons.copy, size: 20),
                           onPressed: () =>
                               _copyToClipboard(_notesController.text),
-                        )
-                      : null,
+                        ),
                 ),
-                enabled: _isEditing,
-                maxLines: 3,
               ),
               const SizedBox(height: 24),
               if (_isEditing)
