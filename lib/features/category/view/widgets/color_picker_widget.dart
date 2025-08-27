@@ -3,6 +3,7 @@ import 'package:flutter_colorpicker/flutter_colorpicker.dart';
 
 class ColorPickerWidget extends StatefulWidget {
   final Color? initialColor;
+
   const ColorPickerWidget({super.key, this.initialColor});
 
   @override

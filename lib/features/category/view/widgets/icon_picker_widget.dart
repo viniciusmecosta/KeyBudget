@@ -6,11 +6,26 @@ class IconPickerWidget extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final List<IconData> icons = [
-      Icons.restaurant, Icons.wifi, Icons.local_pizza, Icons.water_drop,
-      Icons.checkroom, Icons.shopping_bag, Icons.medication, Icons.shopping_cart,
-      Icons.directions_bus, Icons.category, Icons.home, Icons.pets,
-      Icons.phone_android, Icons.school, Icons.fitness_center, Icons.card_giftcard,
-      Icons.movie, Icons.lightbulb, Icons.flight, Icons.build,
+      Icons.restaurant,
+      Icons.wifi,
+      Icons.local_pizza,
+      Icons.water_drop,
+      Icons.checkroom,
+      Icons.shopping_bag,
+      Icons.medication,
+      Icons.shopping_cart,
+      Icons.directions_bus,
+      Icons.category,
+      Icons.home,
+      Icons.pets,
+      Icons.phone_android,
+      Icons.school,
+      Icons.fitness_center,
+      Icons.card_giftcard,
+      Icons.movie,
+      Icons.lightbulb,
+      Icons.flight,
+      Icons.build,
     ];
 
     return AlertDialog(

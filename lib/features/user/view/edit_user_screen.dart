@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:key_budget/features/auth/view/widgets/avatar_picker.dart';
 import 'package:key_budget/features/auth/viewmodel/auth_viewmodel.dart';
+import 'package:key_budget/features/dashboard/viewmodel/dashboard_viewmodel.dart';
 import 'package:provider/provider.dart';
 
 class EditUserScreen extends StatefulWidget {
@@ -47,6 +48,7 @@ class _EditUserScreenState extends State<EditUserScreen> {
     setState(() => _isSaving = true);
     final viewModel = Provider.of<AuthViewModel>(context, listen: false);
     final theme = Theme.of(context);
+    final userId = viewModel.currentUser!.id;
 
     final success = await viewModel.updateUser(
       name: _nameController.text,
@@ -58,7 +60,13 @@ class _EditUserScreenState extends State<EditUserScreen> {
     );
 
     if (mounted) {
+      if (success) {
+        Provider.of<DashboardViewModel>(context, listen: false)
+            .loadDashboardData(userId);
+      }
+
       setState(() => _isSaving = false);
+
       if (success) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(

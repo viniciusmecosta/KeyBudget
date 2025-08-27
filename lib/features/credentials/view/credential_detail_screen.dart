@@ -5,6 +5,7 @@ import 'package:key_budget/features/auth/viewmodel/auth_viewmodel.dart';
 import 'package:key_budget/features/credentials/view/widgets/logo_picker.dart';
 import 'package:key_budget/features/credentials/view/widgets/saved_logos_screen.dart';
 import 'package:key_budget/features/credentials/viewmodel/credential_viewmodel.dart';
+import 'package:key_budget/features/dashboard/viewmodel/dashboard_viewmodel.dart';
 import 'package:provider/provider.dart';
 
 class CredentialDetailScreen extends StatefulWidget {
@@ -99,14 +100,14 @@ class _CredentialDetailScreenState extends State<CredentialDetailScreen> {
     );
   }
 
-  void _saveChanges() {
+  void _saveChanges() async {
     if (!_formKey.currentState!.validate()) return;
 
     setState(() => _isSaving = true);
     final authViewModel = Provider.of<AuthViewModel>(context, listen: false);
     final userId = authViewModel.currentUser!.id;
 
-    Provider.of<CredentialViewModel>(context, listen: false)
+    await Provider.of<CredentialViewModel>(context, listen: false)
         .updateCredential(
       userId: userId,
       originalCredential: widget.credential,
@@ -117,16 +118,20 @@ class _CredentialDetailScreenState extends State<CredentialDetailScreen> {
       phoneNumber: _phoneController.text,
       notes: _notesController.text,
       logoPath: _logoPath,
-    )
-        .whenComplete(() {
-      if (mounted) {
-        setState(() {
-          _isSaving = false;
-          _isEditing = false;
-        });
-        Navigator.of(context).pop();
-      }
-    });
+    );
+
+    if (mounted) {
+      Provider.of<DashboardViewModel>(context, listen: false)
+          .loadDashboardData(userId);
+    }
+
+    if (mounted) {
+      setState(() {
+        _isSaving = false;
+        _isEditing = false;
+      });
+      Navigator.of(context).pop();
+    }
   }
 
   void _deleteCredential() {
@@ -143,18 +148,19 @@ class _CredentialDetailScreenState extends State<CredentialDetailScreen> {
           ),
           TextButton(
             child: const Text('Excluir'),
-            onPressed: () {
+            onPressed: () async {
               final authViewModel =
                   Provider.of<AuthViewModel>(context, listen: false);
               final userId = authViewModel.currentUser!.id;
-              Provider.of<CredentialViewModel>(context, listen: false)
-                  .deleteCredential(userId, widget.credential.id!)
-                  .then((_) {
-                if (mounted) {
-                  Navigator.of(ctx).pop();
-                  Navigator.of(context).pop();
-                }
-              });
+              await Provider.of<CredentialViewModel>(context, listen: false)
+                  .deleteCredential(userId, widget.credential.id!);
+
+              if (mounted) {
+                Provider.of<DashboardViewModel>(context, listen: false)
+                    .loadDashboardData(userId);
+                Navigator.of(ctx).pop();
+                Navigator.of(context).pop();
+              }
             },
           ),
         ],

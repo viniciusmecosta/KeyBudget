@@ -9,6 +9,7 @@ class CategoryViewModel extends ChangeNotifier {
   bool _isLoading = false;
 
   List<ExpenseCategory> get categories => _categories;
+
   bool get isLoading => _isLoading;
 
   void _setLoading(bool value) {

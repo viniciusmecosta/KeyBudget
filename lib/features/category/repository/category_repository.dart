@@ -10,10 +10,10 @@ class CategoryRepository {
         .doc(userId)
         .collection('categories')
         .withConverter<ExpenseCategory>(
-      fromFirestore: (snapshots, _) =>
-          ExpenseCategory.fromMap(snapshots.data()!, snapshots.id),
-      toFirestore: (category, _) => category.toMap(),
-    );
+          fromFirestore: (snapshots, _) =>
+              ExpenseCategory.fromMap(snapshots.data()!, snapshots.id),
+          toFirestore: (category, _) => category.toMap(),
+        );
   }
 
   Future<void> addCategory(String userId, ExpenseCategory category) async {
@@ -22,7 +22,7 @@ class CategoryRepository {
 
   Future<List<ExpenseCategory>> getCategoriesForUser(String userId) async {
     final querySnapshot =
-    await _getCategoriesCollection(userId).orderBy('name').get();
+        await _getCategoriesCollection(userId).orderBy('name').get();
     return querySnapshot.docs.map((doc) => doc.data()).toList();
   }
 

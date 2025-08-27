@@ -49,10 +49,8 @@ class AuthRepository {
       print('Ensuring categories exist for user: $userId');
     }
     try {
-      final categoriesCollection = _firestore
-          .collection('users')
-          .doc(userId)
-          .collection('categories');
+      final categoriesCollection =
+          _firestore.collection('users').doc(userId).collection('categories');
       final existingCategories = await categoriesCollection.limit(1).get();
 
       if (existingCategories.docs.isNotEmpty) {
@@ -142,15 +140,15 @@ class AuthRepository {
       }
 
       final GoogleSignInAuthentication googleAuth =
-      await googleUser.authentication;
+          await googleUser.authentication;
       final firebase.AuthCredential credential =
-      firebase.GoogleAuthProvider.credential(
+          firebase.GoogleAuthProvider.credential(
         accessToken: googleAuth.accessToken,
         idToken: googleAuth.idToken,
       );
 
       final userCredential =
-      await _firebaseAuth.signInWithCredential(credential);
+          await _firebaseAuth.signInWithCredential(credential);
       final userId = userCredential.user!.uid;
       final userExists = await getUserProfile(userId);
 

@@ -51,7 +51,7 @@ class DataImportService {
         print('Iniciando importação de credenciais...');
       }
       final String fileContent =
-      await rootBundle.loadString('assets/data/credentials.json');
+          await rootBundle.loadString('assets/data/credentials.json');
       final List<dynamic> jsonData = json.decode(fileContent);
 
       int totalImported = 0;
