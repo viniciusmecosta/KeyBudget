@@ -3,9 +3,11 @@ import 'package:flutter_masked_text2/flutter_masked_text2.dart';
 import 'package:intl/intl.dart';
 import 'package:key_budget/app/widgets/category_autocomplete_field.dart';
 import 'package:key_budget/core/models/expense_model.dart';
+import 'package:key_budget/features/analysis/viewmodel/analysis_viewmodel.dart';
 import 'package:key_budget/features/auth/viewmodel/auth_viewmodel.dart';
 import 'package:key_budget/features/category/view/categories_screen.dart';
 import 'package:key_budget/features/category/viewmodel/category_viewmodel.dart';
+import 'package:key_budget/features/dashboard/viewmodel/dashboard_viewmodel.dart';
 import 'package:key_budget/features/expenses/viewmodel/expense_viewmodel.dart';
 import 'package:provider/provider.dart';
 
@@ -101,6 +103,13 @@ class _ExpenseDetailScreenState extends State<ExpenseDetailScreen> {
         .updateExpense(userId, updatedExpense);
 
     if (mounted) {
+      Provider.of<DashboardViewModel>(context, listen: false)
+          .loadDashboardData(userId);
+      Provider.of<AnalysisViewModel>(context, listen: false)
+          .loadAnalysisData(userId);
+    }
+
+    if (mounted) {
       setState(() => _isSaving = false);
       Navigator.of(context).pop();
     }
@@ -129,6 +138,13 @@ class _ExpenseDetailScreenState extends State<ExpenseDetailScreen> {
 
               await Provider.of<ExpenseViewModel>(context, listen: false)
                   .deleteExpense(userId, widget.expense.id!);
+
+              if (mounted) {
+                Provider.of<DashboardViewModel>(context, listen: false)
+                    .loadDashboardData(userId);
+                Provider.of<AnalysisViewModel>(context, listen: false)
+                    .loadAnalysisData(userId);
+              }
 
               if (mounted) {
                 Navigator.of(context).pop();
@@ -200,9 +216,7 @@ class _ExpenseDetailScreenState extends State<ExpenseDetailScreen> {
                 value: _selectedCategoryId,
                 decoration: const InputDecoration(labelText: 'Categoria'),
                 isExpanded: false,
-                // Impede que o dropdown se expanda
                 menuMaxHeight: MediaQuery.of(context).size.height * 0.4,
-                // Altura máxima
                 borderRadius: BorderRadius.circular(12),
                 dropdownColor: theme.cardColor,
                 items: [

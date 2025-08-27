@@ -3,9 +3,11 @@ import 'package:flutter_masked_text2/flutter_masked_text2.dart';
 import 'package:intl/intl.dart';
 import 'package:key_budget/app/widgets/category_autocomplete_field.dart';
 import 'package:key_budget/core/models/expense_model.dart';
+import 'package:key_budget/features/analysis/viewmodel/analysis_viewmodel.dart';
 import 'package:key_budget/features/auth/viewmodel/auth_viewmodel.dart';
 import 'package:key_budget/features/category/view/categories_screen.dart';
 import 'package:key_budget/features/category/viewmodel/category_viewmodel.dart';
+import 'package:key_budget/features/dashboard/viewmodel/dashboard_viewmodel.dart';
 import 'package:key_budget/features/expenses/viewmodel/expense_viewmodel.dart';
 import 'package:provider/provider.dart';
 
@@ -55,7 +57,7 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
     if (!_formKey.currentState!.validate()) return;
     final theme = Theme.of(context);
     final categoryViewModel =
-    Provider.of<CategoryViewModel>(context, listen: false);
+        Provider.of<CategoryViewModel>(context, listen: false);
 
     if (_amountController.numberValue == 0) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -79,7 +81,7 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
     }
 
     final expenseViewModel =
-    Provider.of<ExpenseViewModel>(context, listen: false);
+        Provider.of<ExpenseViewModel>(context, listen: false);
     final authViewModel = Provider.of<AuthViewModel>(context, listen: false);
     final userId = authViewModel.currentUser!.id;
 
@@ -91,10 +93,17 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
           ? _motivationController.text
           : null,
       location:
-      _locationController.text.isNotEmpty ? _locationController.text : null,
+          _locationController.text.isNotEmpty ? _locationController.text : null,
     );
 
     await expenseViewModel.addExpense(userId, newExpense);
+
+    if (mounted) {
+      Provider.of<DashboardViewModel>(context, listen: false)
+          .loadDashboardData(userId);
+      Provider.of<AnalysisViewModel>(context, listen: false)
+          .loadAnalysisData(userId);
+    }
 
     if (mounted) {
       setState(() => _isSaving = false);
@@ -111,7 +120,7 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
   @override
   Widget build(BuildContext context) {
     final expenseViewModel =
-    Provider.of<ExpenseViewModel>(context, listen: false);
+        Provider.of<ExpenseViewModel>(context, listen: false);
     final categoryViewModel = Provider.of<CategoryViewModel>(context);
     final theme = Theme.of(context);
 
@@ -127,7 +136,7 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
                 controller: _amountController,
                 decoration: const InputDecoration(labelText: 'Valor *'),
                 keyboardType:
-                const TextInputType.numberWithOptions(decimal: true),
+                    const TextInputType.numberWithOptions(decimal: true),
                 validator: (value) {
                   if (value == null || value.isEmpty) {
                     return 'Campo obrigatório';
@@ -142,8 +151,8 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
               DropdownButtonFormField<String?>(
                 value: _selectedCategoryId,
                 decoration: const InputDecoration(labelText: 'Categoria'),
-                isExpanded: false, // Impede que o dropdown se expanda
-                menuMaxHeight: MediaQuery.of(context).size.height * 0.4, // Altura máxima
+                isExpanded: false,
+                menuMaxHeight: MediaQuery.of(context).size.height * 0.4,
                 borderRadius: BorderRadius.circular(12),
                 dropdownColor: theme.cardColor,
                 items: [
@@ -152,8 +161,7 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
                       value: category.id,
                       child: Row(
                         children: [
-                          Icon(category.icon,
-                              size: 22, color: category.color),
+                          Icon(category.icon, size: 22, color: category.color),
                           const SizedBox(width: 12),
                           Text(category.name),
                         ],
@@ -183,12 +191,17 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
                 ],
                 onChanged: (value) async {
                   if (value == _manageCategoriesValue) {
-                    final userId = Provider.of<AuthViewModel>(context, listen: false).currentUser?.id;
+                    final userId =
+                        Provider.of<AuthViewModel>(context, listen: false)
+                            .currentUser
+                            ?.id;
                     await Navigator.of(context).push(MaterialPageRoute(
                       builder: (_) => const CategoriesScreen(),
                     ));
-                    if(userId != null && mounted) {
-                      await Provider.of<CategoryViewModel>(context, listen: false).fetchCategories(userId);
+                    if (userId != null && mounted) {
+                      await Provider.of<CategoryViewModel>(context,
+                              listen: false)
+                          .fetchCategories(userId);
                     }
                   } else {
                     setState(() {
@@ -240,11 +253,11 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
                 onPressed: _isSaving ? null : _submit,
                 child: _isSaving
                     ? SizedBox(
-                    height: 24,
-                    width: 24,
-                    child: CircularProgressIndicator(
-                        color: theme.colorScheme.onPrimary,
-                        strokeWidth: 2.0))
+                        height: 24,
+                        width: 24,
+                        child: CircularProgressIndicator(
+                            color: theme.colorScheme.onPrimary,
+                            strokeWidth: 2.0))
                     : const Text('Salvar Despesa'),
               ),
             ],

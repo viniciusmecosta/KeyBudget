@@ -2,14 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../app/config/app_theme.dart';
 
-enum ExpenseCategory {
-  alimentacao,
-  lazer,
-  roupa,
-  farmacia,
-  transporte,
-  outros
-}
+enum ExpenseCategory { alimentacao, lazer, roupa, farmacia, transporte, outros }
 
 extension ExpenseCategoryExtension on ExpenseCategory {
   String get displayName {

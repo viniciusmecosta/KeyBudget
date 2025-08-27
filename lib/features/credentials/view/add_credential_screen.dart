@@ -3,6 +3,7 @@ import 'package:key_budget/features/auth/viewmodel/auth_viewmodel.dart';
 import 'package:key_budget/features/credentials/view/widgets/logo_picker.dart';
 import 'package:key_budget/features/credentials/view/widgets/saved_logos_screen.dart';
 import 'package:key_budget/features/credentials/viewmodel/credential_viewmodel.dart';
+import 'package:key_budget/features/dashboard/viewmodel/dashboard_viewmodel.dart';
 import 'package:provider/provider.dart';
 
 class AddCredentialScreen extends StatefulWidget {
@@ -60,7 +61,7 @@ class _AddCredentialScreenState extends State<AddCredentialScreen> {
     }
   }
 
-  void _submit() {
+  void _submit() async {
     if (!_formKey.currentState!.validate()) return;
 
     setState(() => _isSaving = true);
@@ -68,10 +69,10 @@ class _AddCredentialScreenState extends State<AddCredentialScreen> {
     final credentialViewModel =
         Provider.of<CredentialViewModel>(context, listen: false);
     final authViewModel = Provider.of<AuthViewModel>(context, listen: false);
+    final userId = authViewModel.currentUser!.id;
 
-    credentialViewModel
-        .addCredential(
-      userId: authViewModel.currentUser!.id,
+    await credentialViewModel.addCredential(
+      userId: userId,
       location: _locationController.text,
       login: _loginController.text,
       plainPassword: _passwordController.text,
@@ -80,13 +81,17 @@ class _AddCredentialScreenState extends State<AddCredentialScreen> {
           _phoneController.text.isNotEmpty ? _phoneController.text : null,
       notes: _notesController.text.isNotEmpty ? _notesController.text : null,
       logoPath: _logoPath,
-    )
-        .whenComplete(() {
-      if (mounted) {
-        setState(() => _isSaving = false);
-        Navigator.of(context).pop();
-      }
-    });
+    );
+
+    if (mounted) {
+      Provider.of<DashboardViewModel>(context, listen: false)
+          .loadDashboardData(userId);
+    }
+
+    if (mounted) {
+      setState(() => _isSaving = false);
+      Navigator.of(context).pop();
+    }
   }
 
   void _selectSavedLogo() async {

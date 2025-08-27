@@ -14,6 +14,7 @@ class ExpenseCategory {
   });
 
   IconData get icon => IconData(iconCodePoint, fontFamily: 'MaterialIcons');
+
   Color get color => Color(colorValue);
 
   Map<String, dynamic> toMap() {
