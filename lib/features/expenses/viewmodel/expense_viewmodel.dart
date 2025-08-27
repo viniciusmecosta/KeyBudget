@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:key_budget/core/models/expense_model.dart';
 import 'package:key_budget/core/services/csv_service.dart';
@@ -12,6 +14,7 @@ class ExpenseViewModel extends ChangeNotifier {
   List<Expense> _allExpenses = [];
   bool _isLoading = false;
   List<String> _selectedCategoryIds = [];
+  StreamSubscription? _expensesSubscription;
 
   List<Expense> get allExpenses => _allExpenses;
 
@@ -48,25 +51,26 @@ class ExpenseViewModel extends ChangeNotifier {
     notifyListeners();
   }
 
-  Future<void> fetchExpenses(String userId) async {
+  void listenToExpenses(String userId) {
     _setLoading(true);
-    _allExpenses = await _repository.getExpensesForUser(userId);
-    _setLoading(false);
+    _expensesSubscription?.cancel();
+    _expensesSubscription =
+        _repository.getExpensesStreamForUser(userId).listen((expenses) {
+      _allExpenses = expenses;
+      _setLoading(false);
+    });
   }
 
   Future<void> addExpense(String userId, Expense expense) async {
     await _repository.addExpense(userId, expense);
-    await fetchExpenses(userId);
   }
 
   Future<void> updateExpense(String userId, Expense expense) async {
     await _repository.updateExpense(userId, expense);
-    await fetchExpenses(userId);
   }
 
   Future<void> deleteExpense(String userId, String expenseId) async {
     await _repository.deleteExpense(userId, expenseId);
-    await fetchExpenses(userId);
   }
 
   Future<bool> exportExpensesToCsv(DateTime? start, DateTime? end) async {
@@ -91,7 +95,6 @@ class ExpenseViewModel extends ChangeNotifier {
         date:
             DateTime.tryParse(row['date']?.toString() ?? '') ?? DateTime.now(),
         amount: double.tryParse(row['amount']?.toString() ?? '0.0') ?? 0.0,
-        // TODO: Handle category import properly, maybe by name
         categoryId: null,
         motivation: row['motivation']?.toString(),
         location: row['location']?.toString(),
@@ -99,14 +102,12 @@ class ExpenseViewModel extends ChangeNotifier {
       await _repository.addExpense(userId, newExpense);
       count++;
     }
-    await fetchExpenses(userId);
     return count;
   }
 
   Future<int> importAllExpensesFromJson(String userId) async {
     _setLoading(true);
     final count = await _dataImportService.importExpensesFromJsons(userId);
-    await fetchExpenses(userId);
     _setLoading(false);
     return count;
   }
@@ -158,8 +159,15 @@ class ExpenseViewModel extends ChangeNotifier {
   }
 
   void clearData() {
+    _expensesSubscription?.cancel();
     _allExpenses = [];
     _selectedCategoryIds = [];
     notifyListeners();
+  }
+
+  @override
+  void dispose() {
+    _expensesSubscription?.cancel();
+    super.dispose();
   }
 }

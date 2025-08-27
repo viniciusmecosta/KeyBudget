@@ -20,6 +20,13 @@ class CredentialRepository {
     await _getCredentialsCollection(userId).add(credential);
   }
 
+  Stream<List<Credential>> getCredentialsStreamForUser(String userId) {
+    final querySnapshot =
+        _getCredentialsCollection(userId).orderBy('location').snapshots();
+    return querySnapshot
+        .map((snapshot) => snapshot.docs.map((doc) => doc.data()).toList());
+  }
+
   Future<List<Credential>> getCredentialsForUser(String userId) async {
     final querySnapshot =
         await _getCredentialsCollection(userId).orderBy('location').get();
