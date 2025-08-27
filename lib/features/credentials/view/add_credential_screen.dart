@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:key_budget/features/auth/viewmodel/auth_viewmodel.dart';
 import 'package:key_budget/features/credentials/view/widgets/logo_picker.dart';
+import 'package:key_budget/features/credentials/view/widgets/saved_logos_screen.dart';
 import 'package:key_budget/features/credentials/viewmodel/credential_viewmodel.dart';
+import 'package:key_budget/features/dashboard/viewmodel/dashboard_viewmodel.dart';
 import 'package:provider/provider.dart';
 
 class AddCredentialScreen extends StatefulWidget {
@@ -24,8 +26,15 @@ class _AddCredentialScreenState extends State<AddCredentialScreen> {
   bool _isSaving = false;
 
   @override
+  void initState() {
+    super.initState();
+    _loginController.addListener(_updateFields);
+  }
+
+  @override
   void dispose() {
     _locationController.dispose();
+    _loginController.removeListener(_updateFields);
     _loginController.dispose();
     _passwordController.dispose();
     _emailController.dispose();
@@ -34,7 +43,25 @@ class _AddCredentialScreenState extends State<AddCredentialScreen> {
     super.dispose();
   }
 
-  void _submit() {
+  void _updateFields() {
+    final text = _loginController.text;
+    final isEmail = RegExp(r'^[^@]+@[^@]+\.[^@]+').hasMatch(text);
+    final isPhone = RegExp(r'^[0-9]+$').hasMatch(text);
+
+    if (text.isEmpty) {
+      _emailController.clear();
+      _phoneController.clear();
+    } else {
+      if (isEmail) {
+        _emailController.text = text;
+      }
+      if (isPhone) {
+        _phoneController.text = text;
+      }
+    }
+  }
+
+  void _submit() async {
     if (!_formKey.currentState!.validate()) return;
 
     setState(() => _isSaving = true);
@@ -42,10 +69,10 @@ class _AddCredentialScreenState extends State<AddCredentialScreen> {
     final credentialViewModel =
         Provider.of<CredentialViewModel>(context, listen: false);
     final authViewModel = Provider.of<AuthViewModel>(context, listen: false);
+    final userId = authViewModel.currentUser!.id;
 
-    credentialViewModel
-        .addCredential(
-      userId: authViewModel.currentUser!.id!,
+    await credentialViewModel.addCredential(
+      userId: userId,
       location: _locationController.text,
       login: _loginController.text,
       plainPassword: _passwordController.text,
@@ -54,13 +81,31 @@ class _AddCredentialScreenState extends State<AddCredentialScreen> {
           _phoneController.text.isNotEmpty ? _phoneController.text : null,
       notes: _notesController.text.isNotEmpty ? _notesController.text : null,
       logoPath: _logoPath,
-    )
-        .whenComplete(() {
-      if (mounted) {
-        setState(() => _isSaving = false);
-        Navigator.of(context).pop();
-      }
-    });
+    );
+
+    if (mounted) {
+      Provider.of<DashboardViewModel>(context, listen: false)
+          .loadDashboardData(userId);
+    }
+
+    if (mounted) {
+      setState(() => _isSaving = false);
+      Navigator.of(context).pop();
+    }
+  }
+
+  void _selectSavedLogo() async {
+    final selectedLogo = await Navigator.of(context).push<String>(
+      MaterialPageRoute(
+        builder: (_) => const SavedLogosScreen(),
+      ),
+    );
+
+    if (selectedLogo != null) {
+      setState(() {
+        _logoPath = selectedLogo;
+      });
+    }
   }
 
   @override
@@ -74,9 +119,40 @@ class _AddCredentialScreenState extends State<AddCredentialScreen> {
           child: ListView(
             children: [
               Center(
-                child: LogoPicker(onImageSelected: (path) {
-                  _logoPath = path;
-                }),
+                child: LogoPicker(
+                  initialImagePath: _logoPath,
+                  onImageSelected: (path) {
+                    setState(() {
+                      _logoPath = path;
+                    });
+                  },
+                ),
+              ),
+              const SizedBox(height: 8),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  TextButton.icon(
+                    onPressed: _selectSavedLogo,
+                    icon: const Icon(Icons.collections_bookmark_outlined,
+                        size: 18),
+                    label: const Text('Escolher Salva'),
+                  ),
+                  if (_logoPath != null) ...[
+                    const SizedBox(width: 8),
+                    TextButton.icon(
+                      onPressed: () {
+                        setState(() {
+                          _logoPath = null;
+                        });
+                      },
+                      icon: const Icon(Icons.no_photography_outlined, size: 18),
+                      label: const Text('Remover'),
+                      style: TextButton.styleFrom(
+                          foregroundColor: Theme.of(context).colorScheme.error),
+                    ),
+                  ]
+                ],
               ),
               const SizedBox(height: 24),
               TextFormField(
@@ -115,22 +191,19 @@ class _AddCredentialScreenState extends State<AddCredentialScreen> {
               const SizedBox(height: 16),
               TextFormField(
                 controller: _emailController,
-                decoration:
-                    const InputDecoration(labelText: 'Email (opcional)'),
+                decoration: const InputDecoration(labelText: 'Email'),
                 keyboardType: TextInputType.emailAddress,
               ),
               const SizedBox(height: 16),
               TextFormField(
                 controller: _phoneController,
-                decoration:
-                    const InputDecoration(labelText: 'Número (opcional)'),
+                decoration: const InputDecoration(labelText: 'Número'),
                 keyboardType: TextInputType.phone,
               ),
               const SizedBox(height: 16),
               TextFormField(
                 controller: _notesController,
-                decoration:
-                    const InputDecoration(labelText: 'Observações (opcional)'),
+                decoration: const InputDecoration(labelText: 'Observações'),
                 maxLines: 3,
               ),
               const SizedBox(height: 32),

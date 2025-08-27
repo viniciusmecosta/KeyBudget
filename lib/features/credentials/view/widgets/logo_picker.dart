@@ -23,9 +23,16 @@ class _LogoPickerState extends State<LogoPicker> {
   @override
   void initState() {
     super.initState();
-    if (widget.initialImagePath != null &&
-        widget.initialImagePath!.isNotEmpty) {
-      _imageBase64 = widget.initialImagePath;
+    _imageBase64 = widget.initialImagePath;
+  }
+
+  @override
+  void didUpdateWidget(covariant LogoPicker oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.initialImagePath != oldWidget.initialImagePath) {
+      setState(() {
+        _imageBase64 = widget.initialImagePath;
+      });
     }
   }
 
@@ -49,12 +56,11 @@ class _LogoPickerState extends State<LogoPicker> {
 
   ImageProvider? _getImageProvider() {
     if (_imageBase64 == null || _imageBase64!.isEmpty) return null;
-
-    if (_imageBase64!.startsWith('http')) {
-      return NetworkImage(_imageBase64!);
+    try {
+      return MemoryImage(base64Decode(_imageBase64!));
+    } catch (e) {
+      return null;
     }
-
-    return MemoryImage(base64Decode(_imageBase64!));
   }
 
   @override

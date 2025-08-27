@@ -2,10 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:intl/intl.dart';
 import 'package:key_budget/app/viewmodel/navigation_viewmodel.dart';
-import 'package:key_budget/core/models/expense_category.dart';
 import 'package:key_budget/core/models/expense_model.dart';
 import 'package:key_budget/features/analysis/view/analysis_screen.dart';
 import 'package:key_budget/features/auth/viewmodel/auth_viewmodel.dart';
+import 'package:key_budget/features/category/viewmodel/category_viewmodel.dart';
 import 'package:key_budget/features/dashboard/viewmodel/dashboard_viewmodel.dart';
 import 'package:provider/provider.dart';
 
@@ -24,12 +24,16 @@ class _DashboardScreenState extends State<DashboardScreen> {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      final authViewModel = Provider.of<AuthViewModel>(context, listen: false);
-      if (authViewModel.currentUser != null) {
-        Provider.of<DashboardViewModel>(context, listen: false)
-            .fetchDashboardData(authViewModel.currentUser!.id!);
-      }
+      _fetchData();
     });
+  }
+
+  Future<void> _fetchData() async {
+    final authViewModel = Provider.of<AuthViewModel>(context, listen: false);
+    if (authViewModel.currentUser != null && mounted) {
+      await Provider.of<DashboardViewModel>(context, listen: false)
+          .loadDashboardData(authViewModel.currentUser!.id);
+    }
   }
 
   @override
@@ -63,11 +67,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
       body: viewModel.isLoading
           ? const Center(child: CircularProgressIndicator())
           : RefreshIndicator(
-              onRefresh: () async {
-                if (user != null) {
-                  await viewModel.fetchDashboardData(user.id);
-                }
-              },
+              onRefresh: _fetchData,
               child: ListView(
                 padding: const EdgeInsets.all(16.0),
                 children: [
@@ -87,6 +87,13 @@ class _DashboardScreenState extends State<DashboardScreen> {
   Widget _buildTotalBalanceCard(
       BuildContext context, DashboardViewModel viewModel) {
     final theme = Theme.of(context);
+    final percentageChange = viewModel.percentageChangeFromAverage;
+    final hasPreviousMonths = viewModel.averageOfPreviousMonths > 0;
+
+    final isIncrease = percentageChange >= 0;
+    final formattedPercentage =
+        '${isIncrease ? '+' : '-'} ${percentageChange.abs().toStringAsFixed(1)}%';
+
     return Card(
       elevation: 8,
       shadowColor: theme.colorScheme.primary.withOpacity(0.3),
@@ -119,6 +126,23 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   fontWeight: FontWeight.bold,
                   color: theme.colorScheme.onPrimary),
             ),
+            if (hasPreviousMonths) ...[
+              const SizedBox(height: 8),
+              Row(
+                children: [
+                  Icon(isIncrease ? Icons.arrow_upward : Icons.arrow_downward,
+                      color: theme.colorScheme.onPrimary, size: 16),
+                  const SizedBox(width: 4),
+                  Text(
+                    '$formattedPercentage vs média',
+                    style: theme.textTheme.bodyMedium?.copyWith(
+                      color: theme.colorScheme.onPrimary,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ],
+              ),
+            ],
           ],
         ),
       ),
@@ -224,18 +248,22 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
   Widget _buildActivityTile(BuildContext context, Expense expense) {
     final theme = Theme.of(context);
+    final category = Provider.of<CategoryViewModel>(context, listen: false)
+        .getCategoryById(expense.categoryId);
+
     return Card(
       margin: const EdgeInsets.only(bottom: 12),
       child: ListTile(
         leading: CircleAvatar(
-          backgroundColor: theme.colorScheme.primary.withOpacity(0.1),
-          child: Icon(expense.category?.icon ?? Icons.category,
-              color: theme.colorScheme.primary),
+          backgroundColor:
+              (category?.color ?? theme.colorScheme.primary).withOpacity(0.1),
+          child: Icon(category?.icon ?? Icons.category,
+              color: category?.color ?? theme.colorScheme.primary),
         ),
         title: Text(
           expense.location?.isNotEmpty == true
               ? expense.location!
-              : (expense.category?.displayName ?? 'Gasto Geral'),
+              : (category?.name ?? 'Gasto Geral'),
           style:
               theme.textTheme.bodyLarge?.copyWith(fontWeight: FontWeight.bold),
         ),

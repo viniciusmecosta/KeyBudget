@@ -5,7 +5,6 @@ import 'package:csv/csv.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:file_saver/file_saver.dart';
 import 'package:key_budget/core/models/credential_model.dart';
-import 'package:key_budget/core/models/expense_category.dart';
 import 'package:key_budget/core/models/expense_model.dart';
 import 'package:permission_handler/permission_handler.dart';
 
@@ -31,12 +30,12 @@ class CsvService {
 
   Future<bool> exportExpenses(List<Expense> expenses) async {
     List<List<dynamic>> rows = [];
-    rows.add(['date', 'amount', 'category', 'motivation', 'location']);
+    rows.add(['date', 'amount', 'categoryId', 'motivation', 'location']);
     for (var exp in expenses) {
       rows.add([
         exp.date.toIso8601String(),
         exp.amount,
-        exp.category?.displayName ?? '',
+        exp.categoryId ?? '',
         exp.motivation ?? '',
         exp.location ?? ''
       ]);

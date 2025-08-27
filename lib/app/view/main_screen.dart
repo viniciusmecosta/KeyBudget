@@ -28,8 +28,9 @@ class _MainScreenState extends State<MainScreen> {
     final theme = Theme.of(context);
 
     return Scaffold(
-      body: Center(
-        child: _widgetOptions.elementAt(navigationViewModel.selectedIndex),
+      body: IndexedStack(
+        index: navigationViewModel.selectedIndex,
+        children: _widgetOptions,
       ),
       bottomNavigationBar: Container(
         decoration: BoxDecoration(

@@ -20,6 +20,15 @@ class ExpenseRepository {
     await _getExpensesCollection(userId).add(expense);
   }
 
+  Stream<List<Expense>> getExpensesStreamForUser(String userId) {
+    final querySnapshot = _getExpensesCollection(userId)
+        .orderBy('date', descending: true)
+        .snapshots();
+
+    return querySnapshot
+        .map((snapshot) => snapshot.docs.map((doc) => doc.data()).toList());
+  }
+
   Future<List<Expense>> getExpensesForUser(String userId) async {
     final querySnapshot = await _getExpensesCollection(userId)
         .orderBy('date', descending: true)
