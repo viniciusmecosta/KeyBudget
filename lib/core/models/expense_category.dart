@@ -10,6 +10,8 @@ enum ExpenseCategory {
   roupa,
   agua,
   farmacia,
+  supermercado,
+  transporte,
   outros
 }
 
@@ -30,6 +32,10 @@ extension ExpenseCategoryExtension on ExpenseCategory {
         return 'Lazer';
       case ExpenseCategory.farmacia:
         return 'Farmácia';
+      case ExpenseCategory.supermercado:
+        return 'Supermercado';
+      case ExpenseCategory.transporte:
+        return 'Transporte';
       case ExpenseCategory.outros:
         return 'Outros';
     }
@@ -51,6 +57,10 @@ extension ExpenseCategoryExtension on ExpenseCategory {
         return Icons.shopping_bag;
       case ExpenseCategory.farmacia:
         return Icons.medication_rounded;
+      case ExpenseCategory.supermercado:
+        return Icons.shopping_cart;
+      case ExpenseCategory.transporte:
+        return Icons.directions_bus;
       case ExpenseCategory.outros:
         return Icons.category_rounded;
     }

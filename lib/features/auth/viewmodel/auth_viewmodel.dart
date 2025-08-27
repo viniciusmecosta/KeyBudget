@@ -1,8 +1,13 @@
 import 'package:firebase_auth/firebase_auth.dart' as firebase;
 import 'package:flutter/material.dart';
+import 'package:key_budget/app/viewmodel/navigation_viewmodel.dart';
 import 'package:key_budget/core/models/user_model.dart';
 import 'package:key_budget/core/services/local_auth_service.dart';
 import 'package:key_budget/features/auth/repository/auth_repository.dart';
+import 'package:key_budget/features/credentials/viewmodel/credential_viewmodel.dart';
+import 'package:key_budget/features/dashboard/viewmodel/dashboard_viewmodel.dart';
+import 'package:key_budget/features/expenses/viewmodel/expense_viewmodel.dart';
+import 'package:provider/provider.dart';
 
 class AuthViewModel extends ChangeNotifier {
   final AuthRepository _authRepository = AuthRepository();
@@ -165,7 +170,12 @@ class AuthViewModel extends ChangeNotifier {
     }
   }
 
-  Future<void> logout() async {
+  Future<void> logout(BuildContext context) async {
+    context.read<DashboardViewModel>().clearData();
+    context.read<ExpenseViewModel>().clearData();
+    context.read<CredentialViewModel>().clearData();
+    context.read<NavigationViewModel>().clearData();
+
     await _authRepository.signOut();
     await _localAuthService.clearCredentials();
   }

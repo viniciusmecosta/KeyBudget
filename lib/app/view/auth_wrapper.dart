@@ -31,7 +31,7 @@ class _AuthWrapperState extends State<AuthWrapper> {
 
     if (!canAuth) {
       if (mounted) {
-        await authViewModel.logout();
+        await authViewModel.logout(context);
       }
       return;
     }
@@ -44,7 +44,7 @@ class _AuthWrapperState extends State<AuthWrapper> {
       });
 
       if (_status == AuthStatus.failed) {
-        await authViewModel.logout();
+        await authViewModel.logout(context);
       }
     }
   }

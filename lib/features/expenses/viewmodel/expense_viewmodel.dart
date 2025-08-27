@@ -113,6 +113,52 @@ class ExpenseViewModel extends ChangeNotifier {
     return count;
   }
 
+  List<String> getUniqueLocationsForCategory(ExpenseCategory? category) {
+    if (category == null) return [];
+    final locations = _allExpenses
+        .where((exp) =>
+            exp.category == category &&
+            exp.location != null &&
+            exp.location!.isNotEmpty)
+        .map((exp) => exp.location!)
+        .toList();
+
+    if (locations.isEmpty) return [];
+
+    final frequencyMap = <String, int>{};
+    for (var location in locations) {
+      frequencyMap[location] = (frequencyMap[location] ?? 0) + 1;
+    }
+
+    final sortedLocations = frequencyMap.entries.toList()
+      ..sort((a, b) => b.value.compareTo(a.value));
+
+    return sortedLocations.map((e) => e.key).take(3).toList();
+  }
+
+  List<String> getUniqueMotivationsForCategory(ExpenseCategory? category) {
+    if (category == null) return [];
+    final motivations = _allExpenses
+        .where((exp) =>
+            exp.category == category &&
+            exp.motivation != null &&
+            exp.motivation!.isNotEmpty)
+        .map((exp) => exp.motivation!)
+        .toList();
+
+    if (motivations.isEmpty) return [];
+
+    final frequencyMap = <String, int>{};
+    for (var motivation in motivations) {
+      frequencyMap[motivation] = (frequencyMap[motivation] ?? 0) + 1;
+    }
+
+    final sortedMotivations = frequencyMap.entries.toList()
+      ..sort((a, b) => b.value.compareTo(a.value));
+
+    return sortedMotivations.map((e) => e.key).take(3).toList();
+  }
+
   void clearData() {
     _allExpenses = [];
     _selectedCategories = [];
