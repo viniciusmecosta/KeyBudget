@@ -2,10 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:intl/intl.dart';
 import 'package:key_budget/app/viewmodel/navigation_viewmodel.dart';
-import 'package:key_budget/core/models/expense_category.dart';
 import 'package:key_budget/core/models/expense_model.dart';
 import 'package:key_budget/features/analysis/view/analysis_screen.dart';
 import 'package:key_budget/features/auth/viewmodel/auth_viewmodel.dart';
+import 'package:key_budget/features/category/viewmodel/category_viewmodel.dart';
 import 'package:key_budget/features/dashboard/viewmodel/dashboard_viewmodel.dart';
 import 'package:provider/provider.dart';
 
@@ -24,12 +24,16 @@ class _DashboardScreenState extends State<DashboardScreen> {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      final authViewModel = Provider.of<AuthViewModel>(context, listen: false);
-      if (authViewModel.currentUser != null) {
-        Provider.of<DashboardViewModel>(context, listen: false)
-            .fetchDashboardData(authViewModel.currentUser!.id!);
-      }
+      _fetchData();
     });
+  }
+
+  Future<void> _fetchData() async {
+    final authViewModel = Provider.of<AuthViewModel>(context, listen: false);
+    if (authViewModel.currentUser != null && mounted) {
+      await Provider.of<DashboardViewModel>(context, listen: false)
+          .loadDashboardData(authViewModel.currentUser!.id);
+    }
   }
 
   @override
@@ -63,11 +67,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
       body: viewModel.isLoading
           ? const Center(child: CircularProgressIndicator())
           : RefreshIndicator(
-              onRefresh: () async {
-                if (user != null) {
-                  await viewModel.fetchDashboardData(user.id);
-                }
-              },
+              onRefresh: _fetchData,
               child: ListView(
                 padding: const EdgeInsets.all(16.0),
                 children: [
@@ -248,18 +248,22 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
   Widget _buildActivityTile(BuildContext context, Expense expense) {
     final theme = Theme.of(context);
+    final category = Provider.of<CategoryViewModel>(context, listen: false)
+        .getCategoryById(expense.categoryId);
+
     return Card(
       margin: const EdgeInsets.only(bottom: 12),
       child: ListTile(
         leading: CircleAvatar(
-          backgroundColor: theme.colorScheme.primary.withOpacity(0.1),
-          child: Icon(expense.category?.icon ?? Icons.category,
-              color: theme.colorScheme.primary),
+          backgroundColor:
+              (category?.color ?? theme.colorScheme.primary).withOpacity(0.1),
+          child: Icon(category?.icon ?? Icons.category,
+              color: category?.color ?? theme.colorScheme.primary),
         ),
         title: Text(
           expense.location?.isNotEmpty == true
               ? expense.location!
-              : (expense.category?.displayName ?? 'Gasto Geral'),
+              : (category?.name ?? 'Gasto Geral'),
           style:
               theme.textTheme.bodyLarge?.copyWith(fontWeight: FontWeight.bold),
         ),

@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:key_budget/core/models/expense_category.dart';
 import 'package:key_budget/core/models/expense_model.dart';
 import 'package:key_budget/core/services/csv_service.dart';
 import 'package:key_budget/core/services/data_import_service.dart';
@@ -12,35 +11,35 @@ class ExpenseViewModel extends ChangeNotifier {
 
   List<Expense> _allExpenses = [];
   bool _isLoading = false;
-  List<ExpenseCategory> _selectedCategories = [];
+  List<String> _selectedCategoryIds = [];
 
   List<Expense> get allExpenses => _allExpenses;
 
   bool get isLoading => _isLoading;
 
-  List<ExpenseCategory> get selectedCategories => _selectedCategories;
+  List<String> get selectedCategoryIds => _selectedCategoryIds;
 
   List<Expense> get filteredExpenses {
     List<Expense> filtered = List.from(_allExpenses);
 
-    if (_selectedCategories.isNotEmpty) {
+    if (_selectedCategoryIds.isNotEmpty) {
       filtered = filtered
           .where((exp) =>
-              exp.category != null &&
-              _selectedCategories.contains(exp.category))
+      exp.categoryId != null &&
+          _selectedCategoryIds.contains(exp.categoryId))
           .toList();
     }
 
     return filtered;
   }
 
-  void setCategoryFilter(List<ExpenseCategory> categories) {
-    _selectedCategories = categories;
+  void setCategoryFilter(List<String> categoryIds) {
+    _selectedCategoryIds = categoryIds;
     notifyListeners();
   }
 
   void clearFilters() {
-    _selectedCategories = [];
+    _selectedCategoryIds = [];
     notifyListeners();
   }
 
@@ -75,8 +74,8 @@ class ExpenseViewModel extends ChangeNotifier {
     if (start != null && end != null) {
       expensesToExport = _allExpenses
           .where((exp) =>
-              exp.date.isAfter(start.subtract(const Duration(days: 1))) &&
-              exp.date.isBefore(end.add(const Duration(days: 1))))
+      exp.date.isAfter(start.subtract(const Duration(days: 1))) &&
+          exp.date.isBefore(end.add(const Duration(days: 1))))
           .toList();
     }
     return await _csvService.exportExpenses(expensesToExport);
@@ -90,11 +89,10 @@ class ExpenseViewModel extends ChangeNotifier {
     for (var row in data) {
       final newExpense = Expense(
         date:
-            DateTime.tryParse(row['date']?.toString() ?? '') ?? DateTime.now(),
+        DateTime.tryParse(row['date']?.toString() ?? '') ?? DateTime.now(),
         amount: double.tryParse(row['amount']?.toString() ?? '0.0') ?? 0.0,
-        category: ExpenseCategory.values.firstWhere(
-            (e) => e.name == row['category']?.toString(),
-            orElse: () => ExpenseCategory.outros),
+        // TODO: Handle category import properly, maybe by name
+        categoryId: null,
         motivation: row['motivation']?.toString(),
         location: row['location']?.toString(),
       );
@@ -113,13 +111,13 @@ class ExpenseViewModel extends ChangeNotifier {
     return count;
   }
 
-  List<String> getUniqueLocationsForCategory(ExpenseCategory? category) {
-    if (category == null) return [];
+  List<String> getUniqueLocationsForCategory(String? categoryId) {
+    if (categoryId == null) return [];
     final locations = _allExpenses
         .where((exp) =>
-            exp.category == category &&
-            exp.location != null &&
-            exp.location!.isNotEmpty)
+    exp.categoryId == categoryId &&
+        exp.location != null &&
+        exp.location!.isNotEmpty)
         .map((exp) => exp.location!)
         .toList();
 
@@ -136,13 +134,13 @@ class ExpenseViewModel extends ChangeNotifier {
     return sortedLocations.map((e) => e.key).take(3).toList();
   }
 
-  List<String> getUniqueMotivationsForCategory(ExpenseCategory? category) {
-    if (category == null) return [];
+  List<String> getUniqueMotivationsForCategory(String? categoryId) {
+    if (categoryId == null) return [];
     final motivations = _allExpenses
         .where((exp) =>
-            exp.category == category &&
-            exp.motivation != null &&
-            exp.motivation!.isNotEmpty)
+    exp.categoryId == categoryId &&
+        exp.motivation != null &&
+        exp.motivation!.isNotEmpty)
         .map((exp) => exp.motivation!)
         .toList();
 
@@ -161,7 +159,7 @@ class ExpenseViewModel extends ChangeNotifier {
 
   void clearData() {
     _allExpenses = [];
-    _selectedCategories = [];
+    _selectedCategoryIds = [];
     notifyListeners();
   }
 }

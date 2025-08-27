@@ -4,6 +4,7 @@ import 'package:key_budget/app/viewmodel/navigation_viewmodel.dart';
 import 'package:key_budget/core/models/user_model.dart';
 import 'package:key_budget/core/services/local_auth_service.dart';
 import 'package:key_budget/features/auth/repository/auth_repository.dart';
+import 'package:key_budget/features/category/viewmodel/category_viewmodel.dart';
 import 'package:key_budget/features/credentials/viewmodel/credential_viewmodel.dart';
 import 'package:key_budget/features/dashboard/viewmodel/dashboard_viewmodel.dart';
 import 'package:key_budget/features/expenses/viewmodel/expense_viewmodel.dart';
@@ -79,7 +80,8 @@ class AuthViewModel extends ChangeNotifier {
     _setErrorMessage(null);
 
     try {
-      await _authRepository.signInWithEmail(email, password);
+      final credential = await _authRepository.signInWithEmail(email, password);
+      await _authRepository.ensureCategoriesExist(credential.user!.uid);
       await _localAuthService.saveCredentials(email, password);
       return true;
     } on firebase.FirebaseAuthException catch (e) {
@@ -102,6 +104,7 @@ class AuthViewModel extends ChangeNotifier {
       if (credential != null) {
         final user = credential.user;
         if (user != null && user.email != null) {
+          await _authRepository.ensureCategoriesExist(user.uid);
           await _localAuthService.saveCredentials(user.email!, user.uid);
         }
         return true;
@@ -175,6 +178,7 @@ class AuthViewModel extends ChangeNotifier {
     context.read<ExpenseViewModel>().clearData();
     context.read<CredentialViewModel>().clearData();
     context.read<NavigationViewModel>().clearData();
+    context.read<CategoryViewModel>().clearData();
 
     await _authRepository.signOut();
     await _localAuthService.clearCredentials();

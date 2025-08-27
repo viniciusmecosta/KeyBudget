@@ -2,9 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:intl/intl.dart';
 import 'package:key_budget/app/widgets/empty_state_widget.dart';
-import 'package:key_budget/core/models/expense_category.dart';
+import 'package:key_budget/core/models/expense_category_model.dart';
 import 'package:key_budget/core/models/expense_model.dart';
 import 'package:key_budget/features/auth/viewmodel/auth_viewmodel.dart';
+import 'package:key_budget/features/category/viewmodel/category_viewmodel.dart';
 import 'package:key_budget/features/expenses/view/add_expense_screen.dart';
 import 'package:key_budget/features/expenses/view/expense_detail_screen.dart';
 import 'package:key_budget/features/expenses/view/export_expenses_screen.dart';
@@ -21,7 +22,7 @@ class ExpensesScreen extends StatefulWidget {
 class _ExpensesScreenState extends State<ExpensesScreen> {
   DateTime _selectedMonth = DateTime(DateTime.now().year, DateTime.now().month);
   final _currencyFormatter =
-      NumberFormat.currency(locale: 'pt_BR', symbol: 'R\$');
+  NumberFormat.currency(locale: 'pt_BR', symbol: 'R\$');
 
   @override
   void initState() {
@@ -29,6 +30,8 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final authViewModel = Provider.of<AuthViewModel>(context, listen: false);
       if (authViewModel.currentUser != null) {
+        Provider.of<CategoryViewModel>(context, listen: false)
+            .fetchCategories(authViewModel.currentUser!.id);
         Provider.of<ExpenseViewModel>(context, listen: false)
             .fetchExpenses(authViewModel.currentUser!.id);
       }
@@ -50,7 +53,7 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
     final theme = Theme.of(context);
 
     final count =
-        await viewModel.importExpensesFromCsv(authViewModel.currentUser!.id);
+    await viewModel.importExpensesFromCsv(authViewModel.currentUser!.id);
     if (!mounted) return;
     scaffoldMessenger.showSnackBar(
       SnackBar(
@@ -61,7 +64,8 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
   }
 
   void _showCategoryFilter() {
-    final viewModel = Provider.of<ExpenseViewModel>(context, listen: false);
+    final expenseViewModel = Provider.of<ExpenseViewModel>(context, listen: false);
+    final categoryViewModel = Provider.of<CategoryViewModel>(context, listen: false);
     final theme = Theme.of(context);
 
     showModalBottomSheet(
@@ -90,21 +94,21 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
                 ),
                 Expanded(
                   child: ListView(
-                    children: ExpenseCategory.values.map((category) {
+                    children: categoryViewModel.categories.map((category) {
                       final isSelected =
-                          viewModel.selectedCategories.contains(category);
+                      expenseViewModel.selectedCategoryIds.contains(category.id);
                       return CheckboxListTile(
-                        title: Text(category.displayName),
+                        title: Text(category.name),
                         value: isSelected,
                         onChanged: (value) {
-                          final currentSelection = List<ExpenseCategory>.from(
-                              viewModel.selectedCategories);
+                          final currentSelection = List<String>.from(
+                              expenseViewModel.selectedCategoryIds);
                           if (value == true) {
-                            currentSelection.add(category);
+                            currentSelection.add(category.id!);
                           } else {
-                            currentSelection.remove(category);
+                            currentSelection.remove(category.id);
                           }
-                          viewModel.setCategoryFilter(currentSelection);
+                          expenseViewModel.setCategoryFilter(currentSelection);
                           setModalState(() {});
                         },
                       );
@@ -115,7 +119,7 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
                   padding: const EdgeInsets.all(8.0),
                   child: TextButton(
                     onPressed: () {
-                      viewModel.clearFilters();
+                      expenseViewModel.clearFilters();
                       Navigator.of(context).pop();
                     },
                     child: const Text('Limpar Filtros'),
@@ -149,9 +153,10 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
     final totalValue = context.select<ExpenseViewModel, double>((viewModel) =>
         viewModel.filteredExpenses
             .where((exp) =>
-                exp.date.year == _selectedMonth.year &&
-                exp.date.month == _selectedMonth.month)
+        exp.date.year == _selectedMonth.year &&
+            exp.date.month == _selectedMonth.month)
             .fold<double>(0.0, (sum, exp) => sum + exp.amount));
+    final categoryViewModel = context.watch<CategoryViewModel>();
 
     return Scaffold(
       appBar: AppBar(
@@ -190,7 +195,7 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
               child: Container(
                 width: double.infinity,
                 padding:
-                    const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
+                const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
                     colors: [
@@ -223,15 +228,15 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
               child: Selector<ExpenseViewModel, List<Expense>>(
                 selector: (_, vm) => vm.filteredExpenses
                     .where((exp) =>
-                        exp.date.year == _selectedMonth.year &&
-                        exp.date.month == _selectedMonth.month)
+                exp.date.year == _selectedMonth.year &&
+                    exp.date.month == _selectedMonth.month)
                     .toList()
                   ..sort((a, b) => b.date.compareTo(a.date)),
                 builder: (context, monthlyExpenses, child) {
                   final isLoading = context
                       .select<ExpenseViewModel, bool>((vm) => vm.isLoading);
 
-                  if (isLoading) {
+                  if (isLoading || categoryViewModel.isLoading) {
                     return const Center(child: CircularProgressIndicator());
                   }
                   if (monthlyExpenses.isEmpty) {
@@ -247,15 +252,16 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
                   }
                   return ListView.builder(
                     padding:
-                        const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                    const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                     itemCount: monthlyExpenses.length,
                     itemBuilder: (context, index) {
                       final expense = monthlyExpenses[index];
+                      final category = categoryViewModel.getCategoryById(expense.categoryId);
                       final formattedDate =
-                          DateFormat('d, EEEE', 'pt_BR').format(expense.date);
+                      DateFormat('d, EEEE', 'pt_BR').format(expense.date);
                       final parts = formattedDate.split(',');
                       final dayOfWeekPart =
-                          parts.length > 1 ? parts[1].trim() : '';
+                      parts.length > 1 ? parts[1].trim() : '';
                       final displayDate = dayOfWeekPart.isNotEmpty
                           ? '${parts[0]}, ${dayOfWeekPart[0].toUpperCase()}${dayOfWeekPart.substring(1)}'
                           : formattedDate;
@@ -266,17 +272,16 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
                         child: ListTile(
                           leading: CircleAvatar(
                             backgroundColor:
-                                theme.primaryColor.withOpacity(0.15),
+                            (category?.color ?? theme.primaryColor).withOpacity(0.15),
                             child: Icon(
-                              expense.category?.icon ?? Icons.category,
-                              color: theme.primaryColor,
+                              category?.icon ?? Icons.category,
+                              color: category?.color ?? theme.primaryColor,
                             ),
                           ),
                           title: Text(
                             expense.location?.isNotEmpty == true
                                 ? expense.location!
-                                : (expense.category?.displayName ??
-                                    'Gasto Geral'),
+                                : (category?.name ?? 'Gasto Geral'),
                             style: const TextStyle(fontWeight: FontWeight.w600),
                           ),
                           subtitle: Text(displayDate),
