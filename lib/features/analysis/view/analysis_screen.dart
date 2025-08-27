@@ -4,7 +4,6 @@ import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:key_budget/app/config/app_theme.dart';
-import 'package:key_budget/core/models/expense_category.dart';
 import 'package:key_budget/features/analysis/viewmodel/analysis_viewmodel.dart';
 import 'package:key_budget/features/auth/viewmodel/auth_viewmodel.dart';
 import 'package:provider/provider.dart';
@@ -18,21 +17,25 @@ class AnalysisScreen extends StatefulWidget {
 
 class _AnalysisScreenState extends State<AnalysisScreen> {
   final _currencyFormatter =
-      NumberFormat.currency(locale: 'pt_BR', symbol: 'R\$');
+  NumberFormat.currency(locale: 'pt_BR', symbol: 'R\$');
   final _currencyFormatterNoCents =
-      NumberFormat.currency(locale: 'pt_BR', symbol: 'R\$', decimalDigits: 0);
+  NumberFormat.currency(locale: 'pt_BR', symbol: 'R\$', decimalDigits: 0);
   int _touchedPieIndex = -1;
 
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      final authViewModel = Provider.of<AuthViewModel>(context, listen: false);
-      if (authViewModel.currentUser != null) {
-        Provider.of<AnalysisViewModel>(context, listen: false)
-            .fetchExpenses(authViewModel.currentUser!.id);
-      }
+      _fetchData();
     });
+  }
+
+  Future<void> _fetchData() async {
+    final authViewModel = Provider.of<AuthViewModel>(context, listen: false);
+    if (authViewModel.currentUser != null && mounted) {
+      await Provider.of<AnalysisViewModel>(context, listen: false)
+          .loadAnalysisData(authViewModel.currentUser!.id);
+    }
   }
 
   @override
@@ -46,23 +49,23 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
       body: viewModel.isLoading
           ? const Center(child: CircularProgressIndicator())
           : ListView(
-              padding: const EdgeInsets.all(16.0),
-              children: [
-                _buildTotalsRow(context, viewModel),
-                const SizedBox(height: 16),
-                _buildAverageCard(context, viewModel),
-                const SizedBox(height: 24),
-                _buildSectionTitle(context, 'Histórico Mensal'),
-                const SizedBox(height: 8),
-                _buildLineChart(context, viewModel),
-                const SizedBox(height: 24),
-                _buildSectionTitle(context, 'Categorias no Mês'),
-                const SizedBox(height: 8),
-                _buildCategoryMonthSelector(context, viewModel),
-                const SizedBox(height: 16),
-                _buildCategoryBreakdown(context, viewModel),
-              ],
-            ),
+        padding: const EdgeInsets.all(16.0),
+        children: [
+          _buildTotalsRow(context, viewModel),
+          const SizedBox(height: 16),
+          _buildAverageCard(context, viewModel),
+          const SizedBox(height: 24),
+          _buildSectionTitle(context, 'Histórico Mensal'),
+          const SizedBox(height: 8),
+          _buildLineChart(context, viewModel),
+          const SizedBox(height: 24),
+          _buildSectionTitle(context, 'Categorias no Mês'),
+          const SizedBox(height: 8),
+          _buildCategoryMonthSelector(context, viewModel),
+          const SizedBox(height: 16),
+          _buildCategoryBreakdown(context, viewModel),
+        ],
+      ),
     );
   }
 
@@ -89,7 +92,7 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
     final changeText =
         '${isIncrease ? '+' : '-'} ${percentageChange.abs().toStringAsFixed(1)}%';
     final changeColor =
-        isIncrease ? AppTheme.positiveChange : AppTheme.negativeChange;
+    isIncrease ? AppTheme.positiveChange : AppTheme.negativeChange;
 
     return Card(
       color: theme.colorScheme.tertiary.withOpacity(0.1),
@@ -194,9 +197,9 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
         .asMap()
         .entries
         .map((entry) => FlSpot(
-              entry.key.toDouble(),
-              entry.value.value,
-            ))
+      entry.key.toDouble(),
+      entry.value.value,
+    ))
         .toList();
 
     final maxValue = spots.map((spot) => spot.y).reduce(max);
@@ -242,9 +245,9 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
               titlesData: FlTitlesData(
                 show: true,
                 rightTitles:
-                    const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                const AxisTitles(sideTitles: SideTitles(showTitles: false)),
                 topTitles:
-                    const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                const AxisTitles(sideTitles: SideTitles(showTitles: false)),
                 bottomTitles: AxisTitles(
                   sideTitles: SideTitles(
                     showTitles: true,
@@ -256,7 +259,7 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
                         return const SizedBox.shrink();
                       }
                       final date =
-                          DateFormat('yyyy-MM').parse(chartEntries[index].key);
+                      DateFormat('yyyy-MM').parse(chartEntries[index].key);
                       return Padding(
                         padding: const EdgeInsets.only(top: 6),
                         child: Text(
@@ -264,7 +267,7 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
                               .format(date)
                               .substring(0, 3),
                           style:
-                              theme.textTheme.bodySmall!.copyWith(fontSize: 10),
+                          theme.textTheme.bodySmall!.copyWith(fontSize: 10),
                         ),
                       );
                     },
@@ -392,7 +395,7 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
       child: Padding(
         padding: const EdgeInsets.all(16.0),
         child: SizedBox(
-          height: 180,
+          height: 220, // Aumentado para dar mais espaço
           child: Row(
             children: [
               Expanded(
@@ -418,12 +421,12 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
                       final isTouched = i == _touchedPieIndex;
                       final entry = chartData[i];
                       return PieChartSectionData(
-                        color: entry.key.getColor(theme),
+                        color: entry.key.color,
                         value: entry.value,
                         title: '',
-                        radius: isTouched ? 50 : 40,
+                        radius: isTouched ? 60 : 50, // Aumentado o raio
                         badgeWidget: isTouched
-                            ? _buildBadge(entry.key.displayName, theme)
+                            ? _buildBadge(entry.key.name, theme)
                             : null,
                         badgePositionPercentageOffset: .98,
                       );
@@ -434,17 +437,15 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
               const SizedBox(width: 20),
               Expanded(
                 flex: 3,
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  crossAxisAlignment: CrossAxisAlignment.start,
+                child: ListView(
                   children: data.entries.map((entry) {
                     final percentage =
-                        total > 0 ? (entry.value / total) * 100 : 0.0;
+                    total > 0 ? (entry.value / total) * 100 : 0.0;
                     return Padding(
                       padding: const EdgeInsets.symmetric(vertical: 4.0),
                       child: _buildIndicator(
-                        color: entry.key.getColor(theme),
-                        text: entry.key.displayName,
+                        color: entry.key.color,
+                        text: entry.key.name,
                         value: entry.value,
                         percentage: percentage,
                       ),
@@ -476,9 +477,9 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
 
   Widget _buildIndicator(
       {required Color color,
-      required String text,
-      required double value,
-      required double percentage}) {
+        required String text,
+        required double value,
+        required double percentage}) {
     final formattedValue = _currencyFormatter.format(value);
     return Row(
       children: <Widget>[

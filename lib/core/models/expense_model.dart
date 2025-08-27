@@ -1,10 +1,8 @@
-import 'package:key_budget/core/models/expense_category.dart';
-
 class Expense {
   final String? id;
   final double amount;
   final DateTime date;
-  final ExpenseCategory? category;
+  final String? categoryId;
   final String? motivation;
   final String? location;
 
@@ -12,7 +10,7 @@ class Expense {
     this.id,
     required this.amount,
     required this.date,
-    this.category,
+    this.categoryId,
     this.motivation,
     this.location,
   });
@@ -21,7 +19,7 @@ class Expense {
     return {
       'amount': amount,
       'date': date.toIso8601String(),
-      'category': category?.name,
+      'categoryId': categoryId,
       'motivation': motivation,
       'location': location,
     };
@@ -32,9 +30,7 @@ class Expense {
       id: id,
       amount: map['amount'],
       date: DateTime.parse(map['date']),
-      category: map['category'] != null
-          ? ExpenseCategory.values.firstWhere((e) => e.name == map['category'])
-          : null,
+      categoryId: map['categoryId'],
       motivation: map['motivation'],
       location: map['location'],
     );

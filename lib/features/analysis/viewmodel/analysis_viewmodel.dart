@@ -1,16 +1,20 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import 'package:key_budget/core/models/expense_category.dart';
+import 'package:key_budget/core/models/expense_category_model.dart';
 import 'package:key_budget/core/models/expense_model.dart';
+import 'package:key_budget/features/category/viewmodel/category_viewmodel.dart';
 import 'package:key_budget/features/expenses/repository/expense_repository.dart';
 
 class AnalysisViewModel extends ChangeNotifier {
   final ExpenseRepository _expenseRepository = ExpenseRepository();
+  CategoryViewModel categoryViewModel;
 
   List<Expense> _allExpenses = [];
   bool _isLoading = false;
   DateTime? _selectedMonthForCategory;
   int _periodOffset = 0;
+
+  AnalysisViewModel({required this.categoryViewModel});
 
   bool get isLoading => _isLoading;
 
@@ -35,16 +39,20 @@ class AnalysisViewModel extends ChangeNotifier {
     notifyListeners();
   }
 
-  Future<void> fetchExpenses(String userId) async {
+  Future<void> loadAnalysisData(String userId) async {
     _setLoading(true);
+
+    await categoryViewModel.fetchCategories(userId);
     _allExpenses = await _expenseRepository.getExpensesForUser(userId);
     _allExpenses.sort((a, b) => a.date.compareTo(b.date));
+
     if (availableMonthsForFilter.isNotEmpty) {
       _selectedMonthForCategory = availableMonthsForFilter.first;
     } else {
       final now = DateTime.now();
       _selectedMonthForCategory = DateTime(now.year, now.month);
     }
+
     _setLoading(false);
   }
 
@@ -147,13 +155,17 @@ class AnalysisViewModel extends ChangeNotifier {
   Map<ExpenseCategory, double> get expensesByCategoryForSelectedMonth {
     final Map<ExpenseCategory, double> totals = {};
     if (_selectedMonthForCategory == null) return totals;
+
     final monthExpenses = _allExpenses.where((exp) =>
         exp.date.year == _selectedMonthForCategory!.year &&
         exp.date.month == _selectedMonthForCategory!.month);
+
     for (var expense in monthExpenses) {
-      final category = expense.category ?? ExpenseCategory.outros;
-      totals.update(category, (value) => value + expense.amount,
-          ifAbsent: () => expense.amount);
+      final category = categoryViewModel.getCategoryById(expense.categoryId);
+      if (category != null) {
+        totals.update(category, (value) => value + expense.amount,
+            ifAbsent: () => expense.amount);
+      }
     }
     return totals;
   }

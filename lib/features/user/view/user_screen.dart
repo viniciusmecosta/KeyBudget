@@ -1,7 +1,6 @@
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
-import 'package:flutter_animate/flutter_animate.dart';
 import 'package:key_budget/features/auth/viewmodel/auth_viewmodel.dart';
 import 'package:key_budget/features/user/view/edit_user_screen.dart';
 import 'package:provider/provider.dart';
@@ -68,40 +67,27 @@ class UserScreen extends StatelessWidget {
                             size: 50, color: theme.colorScheme.onSecondary)
                         : null,
                   ),
-                )
-                    .animate()
-                    .fadeIn(duration: 160.ms)
-                    .scaleXY(begin: 0.8, end: 1.0)
-                    .shimmer(duration: 600.ms, delay: 200.ms),
+                ),
                 const SizedBox(height: 16),
                 Center(
                   child: Text(
                     user?.name ?? 'Usuário',
                     style: theme.textTheme.headlineSmall,
                   ),
-                )
-                    .animate()
-                    .fadeIn(delay: 80.ms, duration: 160.ms)
-                    .slideX(begin: -0.1, end: 0),
+                ),
                 Center(
                   child: Text(
                     user?.email ?? '',
                     style: theme.textTheme.bodyMedium,
                   ),
-                )
-                    .animate()
-                    .fadeIn(delay: 160.ms, duration: 160.ms)
-                    .slideX(begin: -0.1, end: 0),
+                ),
                 if (user?.phoneNumber != null && user!.phoneNumber!.isNotEmpty)
                   Center(
                     child: Text(
                       user.phoneNumber!,
                       style: theme.textTheme.bodyMedium,
                     ),
-                  )
-                      .animate()
-                      .fadeIn(delay: 240.ms, duration: 160.ms)
-                      .slideX(begin: -0.1, end: 0),
+                  ),
                 const Spacer(),
                 ElevatedButton(
                   style: ElevatedButton.styleFrom(
@@ -134,11 +120,7 @@ class UserScreen extends StatelessWidget {
                     );
                   },
                   child: const Text('Sair'),
-                )
-                    .animate()
-                    .fadeIn(delay: 320.ms, duration: 160.ms)
-                    .scaleXY(begin: 0.9, end: 1.0)
-                    .shake(hz: 3, duration: 300.ms),
+                ),
               ],
             ),
           );
