@@ -20,6 +20,13 @@ class CredentialRepository {
     await _getCredentialsCollection(userId).add(credential);
   }
 
+  Stream<List<Credential>> getCredentialsStreamForUser(String userId) {
+    final querySnapshot =
+        _getCredentialsCollection(userId).orderBy('location').snapshots();
+    return querySnapshot
+        .map((snapshot) => snapshot.docs.map((doc) => doc.data()).toList());
+  }
+
   Future<List<Credential>> getCredentialsForUser(String userId) async {
     final querySnapshot =
         await _getCredentialsCollection(userId).orderBy('location').get();
@@ -34,5 +41,16 @@ class CredentialRepository {
 
   Future<void> deleteCredential(String userId, String credentialId) async {
     await _getCredentialsCollection(userId).doc(credentialId).delete();
+  }
+
+  Future<List<String>> getUniqueLogoPathsForUser(String userId) async {
+    final querySnapshot = await _getCredentialsCollection(userId).get();
+    final logoPaths = querySnapshot.docs
+        .map((doc) => doc.data().logoPath)
+        .whereType<String>()
+        .where((path) => path.isNotEmpty)
+        .toSet()
+        .toList();
+    return logoPaths;
   }
 }

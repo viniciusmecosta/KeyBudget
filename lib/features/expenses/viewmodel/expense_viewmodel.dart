@@ -1,5 +1,6 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
-import 'package:key_budget/core/models/expense_category.dart';
 import 'package:key_budget/core/models/expense_model.dart';
 import 'package:key_budget/core/services/csv_service.dart';
 import 'package:key_budget/core/services/data_import_service.dart';
@@ -12,35 +13,36 @@ class ExpenseViewModel extends ChangeNotifier {
 
   List<Expense> _allExpenses = [];
   bool _isLoading = false;
-  List<ExpenseCategory> _selectedCategories = [];
+  List<String> _selectedCategoryIds = [];
+  StreamSubscription? _expensesSubscription;
 
   List<Expense> get allExpenses => _allExpenses;
 
   bool get isLoading => _isLoading;
 
-  List<ExpenseCategory> get selectedCategories => _selectedCategories;
+  List<String> get selectedCategoryIds => _selectedCategoryIds;
 
   List<Expense> get filteredExpenses {
     List<Expense> filtered = List.from(_allExpenses);
 
-    if (_selectedCategories.isNotEmpty) {
+    if (_selectedCategoryIds.isNotEmpty) {
       filtered = filtered
           .where((exp) =>
-              exp.category != null &&
-              _selectedCategories.contains(exp.category))
+              exp.categoryId != null &&
+              _selectedCategoryIds.contains(exp.categoryId))
           .toList();
     }
 
     return filtered;
   }
 
-  void setCategoryFilter(List<ExpenseCategory> categories) {
-    _selectedCategories = categories;
+  void setCategoryFilter(List<String> categoryIds) {
+    _selectedCategoryIds = categoryIds;
     notifyListeners();
   }
 
   void clearFilters() {
-    _selectedCategories = [];
+    _selectedCategoryIds = [];
     notifyListeners();
   }
 
@@ -49,25 +51,26 @@ class ExpenseViewModel extends ChangeNotifier {
     notifyListeners();
   }
 
-  Future<void> fetchExpenses(String userId) async {
+  void listenToExpenses(String userId) {
     _setLoading(true);
-    _allExpenses = await _repository.getExpensesForUser(userId);
-    _setLoading(false);
+    _expensesSubscription?.cancel();
+    _expensesSubscription =
+        _repository.getExpensesStreamForUser(userId).listen((expenses) {
+      _allExpenses = expenses;
+      _setLoading(false);
+    });
   }
 
   Future<void> addExpense(String userId, Expense expense) async {
     await _repository.addExpense(userId, expense);
-    await fetchExpenses(userId);
   }
 
   Future<void> updateExpense(String userId, Expense expense) async {
     await _repository.updateExpense(userId, expense);
-    await fetchExpenses(userId);
   }
 
   Future<void> deleteExpense(String userId, String expenseId) async {
     await _repository.deleteExpense(userId, expenseId);
-    await fetchExpenses(userId);
   }
 
   Future<bool> exportExpensesToCsv(DateTime? start, DateTime? end) async {
@@ -92,30 +95,79 @@ class ExpenseViewModel extends ChangeNotifier {
         date:
             DateTime.tryParse(row['date']?.toString() ?? '') ?? DateTime.now(),
         amount: double.tryParse(row['amount']?.toString() ?? '0.0') ?? 0.0,
-        category: ExpenseCategory.values.firstWhere(
-            (e) => e.name == row['category']?.toString(),
-            orElse: () => ExpenseCategory.outros),
+        categoryId: null,
         motivation: row['motivation']?.toString(),
         location: row['location']?.toString(),
       );
       await _repository.addExpense(userId, newExpense);
       count++;
     }
-    await fetchExpenses(userId);
     return count;
   }
 
   Future<int> importAllExpensesFromJson(String userId) async {
     _setLoading(true);
     final count = await _dataImportService.importExpensesFromJsons(userId);
-    await fetchExpenses(userId);
     _setLoading(false);
     return count;
   }
 
+  List<String> getUniqueLocationsForCategory(String? categoryId) {
+    if (categoryId == null) return [];
+    final locations = _allExpenses
+        .where((exp) =>
+            exp.categoryId == categoryId &&
+            exp.location != null &&
+            exp.location!.isNotEmpty)
+        .map((exp) => exp.location!)
+        .toList();
+
+    if (locations.isEmpty) return [];
+
+    final frequencyMap = <String, int>{};
+    for (var location in locations) {
+      frequencyMap[location] = (frequencyMap[location] ?? 0) + 1;
+    }
+
+    final sortedLocations = frequencyMap.entries.toList()
+      ..sort((a, b) => b.value.compareTo(a.value));
+
+    return sortedLocations.map((e) => e.key).take(3).toList();
+  }
+
+  List<String> getUniqueMotivationsForCategory(String? categoryId) {
+    if (categoryId == null) return [];
+    final motivations = _allExpenses
+        .where((exp) =>
+            exp.categoryId == categoryId &&
+            exp.motivation != null &&
+            exp.motivation!.isNotEmpty)
+        .map((exp) => exp.motivation!)
+        .toList();
+
+    if (motivations.isEmpty) return [];
+
+    final frequencyMap = <String, int>{};
+    for (var motivation in motivations) {
+      frequencyMap[motivation] = (frequencyMap[motivation] ?? 0) + 1;
+    }
+
+    final sortedMotivations = frequencyMap.entries.toList()
+      ..sort((a, b) => b.value.compareTo(a.value));
+
+    return sortedMotivations.map((e) => e.key).take(3).toList();
+  }
+
   void clearData() {
+    _expensesSubscription?.cancel();
     _allExpenses = [];
-    _selectedCategories = [];
+    _selectedCategoryIds = [];
     notifyListeners();
+  }
+
+  @override
+  void dispose() {
+    _expensesSubscription?.cancel();
+    super.dispose();
   }
 }

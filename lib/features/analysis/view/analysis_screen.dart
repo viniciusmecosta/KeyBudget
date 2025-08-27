@@ -4,7 +4,6 @@ import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:key_budget/app/config/app_theme.dart';
-import 'package:key_budget/core/models/expense_category.dart';
 import 'package:key_budget/features/analysis/viewmodel/analysis_viewmodel.dart';
 import 'package:key_budget/features/auth/viewmodel/auth_viewmodel.dart';
 import 'package:provider/provider.dart';
@@ -27,12 +26,16 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      final authViewModel = Provider.of<AuthViewModel>(context, listen: false);
-      if (authViewModel.currentUser != null) {
-        Provider.of<AnalysisViewModel>(context, listen: false)
-            .fetchExpenses(authViewModel.currentUser!.id);
-      }
+      _fetchData();
     });
+  }
+
+  Future<void> _fetchData() async {
+    final authViewModel = Provider.of<AuthViewModel>(context, listen: false);
+    if (authViewModel.currentUser != null && mounted) {
+      await Provider.of<AnalysisViewModel>(context, listen: false)
+          .loadAnalysisData(authViewModel.currentUser!.id);
+    }
   }
 
   @override
@@ -49,6 +52,8 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
               padding: const EdgeInsets.all(16.0),
               children: [
                 _buildTotalsRow(context, viewModel),
+                const SizedBox(height: 16),
+                _buildAverageCard(context, viewModel),
                 const SizedBox(height: 24),
                 _buildSectionTitle(context, 'Histórico Mensal'),
                 const SizedBox(height: 8),
@@ -75,6 +80,59 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
             child: _buildTotalCard(context, 'Neste Mês',
                 viewModel.totalCurrentMonth, AppTheme.secondary)),
       ],
+    );
+  }
+
+  Widget _buildAverageCard(BuildContext context, AnalysisViewModel viewModel) {
+    final theme = Theme.of(context);
+    final percentageChange = viewModel.percentageChangeFromLastMonth;
+    final hasPreviousMonth = viewModel.lastMonthExpense > 0;
+
+    final isIncrease = percentageChange >= 0;
+    final changeText =
+        '${isIncrease ? '+' : '-'} ${percentageChange.abs().toStringAsFixed(1)}%';
+    final changeColor =
+        isIncrease ? AppTheme.positiveChange : AppTheme.negativeChange;
+
+    return Card(
+      color: theme.colorScheme.tertiary.withOpacity(0.1),
+      elevation: 0,
+      child: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text('Média Mensal',
+                style: theme.textTheme.bodyLarge
+                    ?.copyWith(color: theme.colorScheme.tertiary)),
+            const SizedBox(height: 8),
+            Text(
+              _currencyFormatterNoCents.format(viewModel.averageMonthlyExpense),
+              style: theme.textTheme.headlineSmall?.copyWith(
+                  fontWeight: FontWeight.bold,
+                  color: theme.colorScheme.tertiary),
+            ),
+            if (hasPreviousMonth) ...[
+              const SizedBox(height: 4),
+              Row(
+                children: [
+                  Icon(
+                    isIncrease ? Icons.arrow_upward : Icons.arrow_downward,
+                    color: changeColor,
+                    size: 16,
+                  ),
+                  const SizedBox(width: 4),
+                  Text(
+                    changeText,
+                    style: theme.textTheme.bodyMedium?.copyWith(
+                        fontWeight: FontWeight.bold, color: changeColor),
+                  )
+                ],
+              )
+            ],
+          ],
+        ),
+      ),
     );
   }
 
@@ -337,7 +395,7 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
       child: Padding(
         padding: const EdgeInsets.all(16.0),
         child: SizedBox(
-          height: 180,
+          height: 220, // Aumentado para dar mais espaço
           child: Row(
             children: [
               Expanded(
@@ -363,12 +421,13 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
                       final isTouched = i == _touchedPieIndex;
                       final entry = chartData[i];
                       return PieChartSectionData(
-                        color: entry.key.getColor(theme),
+                        color: entry.key.color,
                         value: entry.value,
                         title: '',
-                        radius: isTouched ? 50 : 40,
+                        radius: isTouched ? 60 : 50,
+                        // Aumentado o raio
                         badgeWidget: isTouched
-                            ? _buildBadge(entry.key.displayName, theme)
+                            ? _buildBadge(entry.key.name, theme)
                             : null,
                         badgePositionPercentageOffset: .98,
                       );
@@ -379,17 +438,15 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
               const SizedBox(width: 20),
               Expanded(
                 flex: 3,
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  crossAxisAlignment: CrossAxisAlignment.start,
+                child: ListView(
                   children: data.entries.map((entry) {
                     final percentage =
                         total > 0 ? (entry.value / total) * 100 : 0.0;
                     return Padding(
                       padding: const EdgeInsets.symmetric(vertical: 4.0),
                       child: _buildIndicator(
-                        color: entry.key.getColor(theme),
-                        text: entry.key.displayName,
+                        color: entry.key.color,
+                        text: entry.key.name,
                         value: entry.value,
                         percentage: percentage,
                       ),

@@ -25,7 +25,7 @@ class _CredentialsScreenState extends State<CredentialsScreen> {
       final authViewModel = Provider.of<AuthViewModel>(context, listen: false);
       if (authViewModel.currentUser != null) {
         Provider.of<CredentialViewModel>(context, listen: false)
-            .fetchCredentials(authViewModel.currentUser!.id);
+            .listenToCredentials(authViewModel.currentUser!.id);
       }
     });
   }
@@ -33,8 +33,8 @@ class _CredentialsScreenState extends State<CredentialsScreen> {
   Future<void> _handleRefresh() async {
     final authViewModel = Provider.of<AuthViewModel>(context, listen: false);
     if (mounted && authViewModel.currentUser != null) {
-      await Provider.of<CredentialViewModel>(context, listen: false)
-          .fetchCredentials(authViewModel.currentUser!.id);
+      Provider.of<CredentialViewModel>(context, listen: false)
+          .listenToCredentials(authViewModel.currentUser!.id);
     }
   }
 

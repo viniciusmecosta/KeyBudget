@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:key_budget/core/models/credential_model.dart';
 import 'package:key_budget/core/services/csv_service.dart';
@@ -12,9 +14,13 @@ class CredentialViewModel extends ChangeNotifier {
   final DataImportService _dataImportService = DataImportService();
 
   List<Credential> _allCredentials = [];
+  List<String> _userCredentialLogos = [];
   bool _isLoading = false;
+  StreamSubscription? _credentialsSubscription;
 
   List<Credential> get allCredentials => _allCredentials;
+
+  List<String> get userCredentialLogos => _userCredentialLogos;
 
   bool get isLoading => _isLoading;
 
@@ -23,10 +29,24 @@ class CredentialViewModel extends ChangeNotifier {
     notifyListeners();
   }
 
-  Future<void> fetchCredentials(String userId) async {
+  void listenToCredentials(String userId) {
     _setLoading(true);
-    _allCredentials = await _repository.getCredentialsForUser(userId);
-    _setLoading(false);
+    _credentialsSubscription?.cancel();
+    _credentialsSubscription =
+        _repository.getCredentialsStreamForUser(userId).listen((credentials) {
+      _allCredentials = credentials;
+      _updateUniqueLogos();
+      _setLoading(false);
+    });
+  }
+
+  void _updateUniqueLogos() {
+    _userCredentialLogos = _allCredentials
+        .map((cred) => cred.logoPath)
+        .whereType<String>()
+        .where((path) => path.isNotEmpty)
+        .toSet()
+        .toList();
   }
 
   Future<void> addCredential({
@@ -40,7 +60,6 @@ class CredentialViewModel extends ChangeNotifier {
     String? logoPath,
   }) async {
     final encryptedPassword = _encryptionService.encryptData(plainPassword);
-
     final newCredential = Credential(
       location: location,
       login: login,
@@ -50,9 +69,7 @@ class CredentialViewModel extends ChangeNotifier {
       notes: notes,
       logoPath: logoPath,
     );
-
     await _repository.addCredential(userId, newCredential);
-    await fetchCredentials(userId);
   }
 
   Future<void> updateCredential({
@@ -70,7 +87,6 @@ class CredentialViewModel extends ChangeNotifier {
     if (newPlainPassword != null && newPlainPassword.isNotEmpty) {
       passwordToSave = _encryptionService.encryptData(newPlainPassword);
     }
-
     final updatedCredential = Credential(
       id: originalCredential.id,
       location: location,
@@ -81,14 +97,11 @@ class CredentialViewModel extends ChangeNotifier {
       notes: notes,
       logoPath: logoPath ?? originalCredential.logoPath,
     );
-
     await _repository.updateCredential(userId, updatedCredential);
-    await fetchCredentials(userId);
   }
 
   Future<void> deleteCredential(String userId, String credentialId) async {
     await _repository.deleteCredential(userId, credentialId);
-    await fetchCredentials(userId);
   }
 
   Future<bool> exportCredentialsToCsv() async {
@@ -98,12 +111,10 @@ class CredentialViewModel extends ChangeNotifier {
   Future<int> importCredentialsFromCsv(String userId) async {
     final data = await _csvService.importCsv();
     if (data == null) return 0;
-
     int count = 0;
     for (var row in data) {
       final plainPassword = row['password']?.toString() ?? '';
       if (plainPassword.isEmpty) continue;
-
       final newCredential = Credential(
         location: row['location']?.toString() ?? 'N/A',
         login: row['login']?.toString() ?? 'N/A',
@@ -115,14 +126,12 @@ class CredentialViewModel extends ChangeNotifier {
       await _repository.addCredential(userId, newCredential);
       count++;
     }
-    await fetchCredentials(userId);
     return count;
   }
 
   Future<int> importCredentialsFromJson(String userId) async {
     _setLoading(true);
     final count = await _dataImportService.importCredentialsFromJson(userId);
-    await fetchCredentials(userId);
     _setLoading(false);
     return count;
   }
@@ -132,7 +141,15 @@ class CredentialViewModel extends ChangeNotifier {
   }
 
   void clearData() {
+    _credentialsSubscription?.cancel();
     _allCredentials = [];
+    _userCredentialLogos = [];
     notifyListeners();
+  }
+
+  @override
+  void dispose() {
+    _credentialsSubscription?.cancel();
+    super.dispose();
   }
 }
