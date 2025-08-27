@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:key_budget/features/auth/viewmodel/auth_viewmodel.dart';
 import 'package:key_budget/features/credentials/view/widgets/logo_picker.dart';
+import 'package:key_budget/features/credentials/view/widgets/saved_logos_screen.dart';
 import 'package:key_budget/features/credentials/viewmodel/credential_viewmodel.dart';
 import 'package:provider/provider.dart';
 
@@ -45,7 +46,7 @@ class _AddCredentialScreenState extends State<AddCredentialScreen> {
 
     credentialViewModel
         .addCredential(
-      userId: authViewModel.currentUser!.id!,
+      userId: authViewModel.currentUser!.id,
       location: _locationController.text,
       login: _loginController.text,
       plainPassword: _passwordController.text,
@@ -63,6 +64,20 @@ class _AddCredentialScreenState extends State<AddCredentialScreen> {
     });
   }
 
+  void _selectSavedLogo() async {
+    final selectedLogo = await Navigator.of(context).push<String>(
+      MaterialPageRoute(
+        builder: (_) => const SavedLogosScreen(),
+      ),
+    );
+
+    if (selectedLogo != null) {
+      setState(() {
+        _logoPath = selectedLogo;
+      });
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -74,9 +89,40 @@ class _AddCredentialScreenState extends State<AddCredentialScreen> {
           child: ListView(
             children: [
               Center(
-                child: LogoPicker(onImageSelected: (path) {
-                  _logoPath = path;
-                }),
+                child: LogoPicker(
+                  initialImagePath: _logoPath,
+                  onImageSelected: (path) {
+                    setState(() {
+                      _logoPath = path;
+                    });
+                  },
+                ),
+              ),
+              const SizedBox(height: 8),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  TextButton.icon(
+                    onPressed: _selectSavedLogo,
+                    icon: const Icon(Icons.collections_bookmark_outlined,
+                        size: 18),
+                    label: const Text('Escolher Salva'),
+                  ),
+                  if (_logoPath != null) ...[
+                    const SizedBox(width: 8),
+                    TextButton.icon(
+                      onPressed: () {
+                        setState(() {
+                          _logoPath = null;
+                        });
+                      },
+                      icon: const Icon(Icons.no_photography_outlined, size: 18),
+                      label: const Text('Remover'),
+                      style: TextButton.styleFrom(
+                          foregroundColor: Theme.of(context).colorScheme.error),
+                    ),
+                  ]
+                ],
               ),
               const SizedBox(height: 24),
               TextFormField(
@@ -115,22 +161,19 @@ class _AddCredentialScreenState extends State<AddCredentialScreen> {
               const SizedBox(height: 16),
               TextFormField(
                 controller: _emailController,
-                decoration:
-                    const InputDecoration(labelText: 'Email (opcional)'),
+                decoration: const InputDecoration(labelText: 'Email'),
                 keyboardType: TextInputType.emailAddress,
               ),
               const SizedBox(height: 16),
               TextFormField(
                 controller: _phoneController,
-                decoration:
-                    const InputDecoration(labelText: 'Número (opcional)'),
+                decoration: const InputDecoration(labelText: 'Número'),
                 keyboardType: TextInputType.phone,
               ),
               const SizedBox(height: 16),
               TextFormField(
                 controller: _notesController,
-                decoration:
-                    const InputDecoration(labelText: 'Observações (opcional)'),
+                decoration: const InputDecoration(labelText: 'Observações'),
                 maxLines: 3,
               ),
               const SizedBox(height: 32),
