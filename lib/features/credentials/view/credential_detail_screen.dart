@@ -49,17 +49,39 @@ class _CredentialDetailScreenState extends State<CredentialDetailScreen> {
         TextEditingController(text: widget.credential.phoneNumber);
     _notesController = TextEditingController(text: widget.credential.notes);
     _logoPath = widget.credential.logoPath;
+    _loginController.addListener(_updateFields);
   }
 
   @override
   void dispose() {
     _locationController.dispose();
+    _loginController.removeListener(_updateFields);
     _loginController.dispose();
     _passwordController.dispose();
     _emailController.dispose();
     _phoneController.dispose();
     _notesController.dispose();
     super.dispose();
+  }
+
+  void _updateFields() {
+    if (!_isEditing) return;
+
+    final text = _loginController.text;
+    final isEmail = RegExp(r'^[^@]+@[^@]+\.[^@]+').hasMatch(text);
+    final isPhone = RegExp(r'^[0-9]+$').hasMatch(text);
+
+    if (text.isEmpty) {
+      _emailController.clear();
+      _phoneController.clear();
+    } else {
+      if (isEmail) {
+        _emailController.text = text;
+      }
+      if (isPhone) {
+        _phoneController.text = text;
+      }
+    }
   }
 
   void _copyToClipboard(String text, {bool isPassword = false}) {
