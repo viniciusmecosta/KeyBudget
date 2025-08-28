@@ -1,4 +1,3 @@
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:key_budget/app/view/auth_wrapper.dart';
 import 'package:key_budget/features/auth/view/login_screen.dart';
@@ -11,10 +10,6 @@ class AuthGate extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final authViewModel = Provider.of<AuthViewModel>(context);
-    if (kDebugMode) {
-      print(
-          "[AuthGate] Building with isLoading: ${authViewModel.isLoading}, currentUser: ${authViewModel.currentUser?.name}");
-    }
 
     if (authViewModel.isLoading) {
       return const Scaffold(body: Center(child: CircularProgressIndicator()));
