@@ -12,7 +12,7 @@ class ExpenseViewModel extends ChangeNotifier {
   final DataImportService _dataImportService = DataImportService();
 
   List<Expense> _allExpenses = [];
-  bool _isLoading = false;
+  bool _isLoading = true;
   List<String> _selectedCategoryIds = [];
   StreamSubscription? _expensesSubscription;
 
@@ -52,12 +52,12 @@ class ExpenseViewModel extends ChangeNotifier {
   }
 
   void listenToExpenses(String userId) {
-    _setLoading(true);
+    if (!_isLoading) _setLoading(true);
     _expensesSubscription?.cancel();
     _expensesSubscription =
         _repository.getExpensesStreamForUser(userId).listen((expenses) {
       _allExpenses = expenses;
-      _setLoading(false);
+      if (_isLoading) _setLoading(false);
     });
   }
 

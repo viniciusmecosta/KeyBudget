@@ -14,13 +14,17 @@ class CredentialViewModel extends ChangeNotifier {
   final DataImportService _dataImportService = DataImportService();
 
   List<Credential> _allCredentials = [];
-  List<String> _userCredentialLogos = [];
   bool _isLoading = false;
   StreamSubscription? _credentialsSubscription;
 
   List<Credential> get allCredentials => _allCredentials;
 
-  List<String> get userCredentialLogos => _userCredentialLogos;
+  List<String> get userCredentialLogos => _allCredentials
+      .map((cred) => cred.logoPath)
+      .whereType<String>()
+      .where((path) => path.isNotEmpty)
+      .toSet()
+      .toList();
 
   bool get isLoading => _isLoading;
 
@@ -35,18 +39,8 @@ class CredentialViewModel extends ChangeNotifier {
     _credentialsSubscription =
         _repository.getCredentialsStreamForUser(userId).listen((credentials) {
       _allCredentials = credentials;
-      _updateUniqueLogos();
       _setLoading(false);
     });
-  }
-
-  void _updateUniqueLogos() {
-    _userCredentialLogos = _allCredentials
-        .map((cred) => cred.logoPath)
-        .whereType<String>()
-        .where((path) => path.isNotEmpty)
-        .toSet()
-        .toList();
   }
 
   Future<void> addCredential({
@@ -143,7 +137,6 @@ class CredentialViewModel extends ChangeNotifier {
   void clearData() {
     _credentialsSubscription?.cancel();
     _allCredentials = [];
-    _userCredentialLogos = [];
     notifyListeners();
   }
 
