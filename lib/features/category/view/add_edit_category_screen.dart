@@ -1,11 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:key_budget/core/models/expense_category_model.dart';
-import 'package:key_budget/features/analysis/viewmodel/analysis_viewmodel.dart';
 import 'package:key_budget/features/auth/viewmodel/auth_viewmodel.dart';
 import 'package:key_budget/features/category/view/widgets/color_picker_widget.dart';
 import 'package:key_budget/features/category/view/widgets/icon_picker_widget.dart';
 import 'package:key_budget/features/category/viewmodel/category_viewmodel.dart';
-import 'package:key_budget/features/dashboard/viewmodel/dashboard_viewmodel.dart';
 import 'package:provider/provider.dart';
 
 class AddEditCategoryScreen extends StatefulWidget {
@@ -61,10 +59,6 @@ class _AddEditCategoryScreenState extends State<AddEditCategoryScreen> {
 
     future.whenComplete(() {
       if (mounted) {
-        Provider.of<DashboardViewModel>(context, listen: false)
-            .loadDashboardData(userId);
-        Provider.of<AnalysisViewModel>(context, listen: false)
-            .loadAnalysisData(userId);
         setState(() => _isSaving = false);
         Navigator.of(context).pop();
       }

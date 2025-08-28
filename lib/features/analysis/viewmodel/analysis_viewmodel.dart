@@ -3,20 +3,31 @@ import 'package:intl/intl.dart';
 import 'package:key_budget/core/models/expense_category_model.dart';
 import 'package:key_budget/core/models/expense_model.dart';
 import 'package:key_budget/features/category/viewmodel/category_viewmodel.dart';
-import 'package:key_budget/features/expenses/repository/expense_repository.dart';
+import 'package:key_budget/features/expenses/viewmodel/expense_viewmodel.dart';
 
 class AnalysisViewModel extends ChangeNotifier {
-  final ExpenseRepository _expenseRepository = ExpenseRepository();
-  CategoryViewModel categoryViewModel;
-
-  List<Expense> _allExpenses = [];
-  bool _isLoading = false;
+  final CategoryViewModel categoryViewModel;
+  final ExpenseViewModel expenseViewModel;
   DateTime? _selectedMonthForCategory;
   int _periodOffset = 0;
 
-  AnalysisViewModel({required this.categoryViewModel});
+  AnalysisViewModel({
+    required this.categoryViewModel,
+    required this.expenseViewModel,
+  }) {
+    _allExpenses.sort((a, b) => a.date.compareTo(b.date));
+    if (availableMonthsForFilter.isNotEmpty) {
+      _selectedMonthForCategory = availableMonthsForFilter.first;
+    } else {
+      final now = DateTime.now();
+      _selectedMonthForCategory = DateTime(now.year, now.month);
+    }
+  }
 
-  bool get isLoading => _isLoading;
+  List<Expense> get _allExpenses => expenseViewModel.allExpenses;
+
+  bool get isLoading =>
+      categoryViewModel.isLoading || expenseViewModel.isLoading;
 
   DateTime? get selectedMonthForCategory => _selectedMonthForCategory;
 
@@ -30,31 +41,7 @@ class AnalysisViewModel extends ChangeNotifier {
     return !nextStartDate.isBefore(firstExpenseDate);
   }
 
-  bool get canGoToNextPeriod {
-    return _periodOffset > 0;
-  }
-
-  void _setLoading(bool value) {
-    _isLoading = value;
-    notifyListeners();
-  }
-
-  Future<void> loadAnalysisData(String userId) async {
-    _setLoading(true);
-
-    await categoryViewModel.fetchCategories(userId);
-    _allExpenses = await _expenseRepository.getExpensesForUser(userId);
-    _allExpenses.sort((a, b) => a.date.compareTo(b.date));
-
-    if (availableMonthsForFilter.isNotEmpty) {
-      _selectedMonthForCategory = availableMonthsForFilter.first;
-    } else {
-      final now = DateTime.now();
-      _selectedMonthForCategory = DateTime(now.year, now.month);
-    }
-
-    _setLoading(false);
-  }
+  bool get canGoToNextPeriod => _periodOffset > 0;
 
   void setSelectedMonthForCategory(DateTime? month) {
     _selectedMonthForCategory = month;
@@ -168,14 +155,5 @@ class AnalysisViewModel extends ChangeNotifier {
       }
     }
     return totals;
-  }
-
-  void clearData() {
-    _allExpenses = [];
-    _isLoading = false;
-    final now = DateTime.now();
-    _selectedMonthForCategory = DateTime(now.year, now.month);
-    _periodOffset = 0;
-    notifyListeners();
   }
 }
