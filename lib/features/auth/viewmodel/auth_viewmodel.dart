@@ -1,4 +1,5 @@
 import 'package:firebase_auth/firebase_auth.dart' as firebase;
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:key_budget/app/viewmodel/navigation_viewmodel.dart';
 import 'package:key_budget/core/models/user_model.dart';
@@ -17,6 +18,7 @@ class AuthViewModel extends ChangeNotifier {
   bool _isLoading = true;
   String? _errorMessage;
   User? _currentUser;
+  bool _isSigningInWithGoogle = false;
 
   bool get isLoading => _isLoading;
 
@@ -26,6 +28,17 @@ class AuthViewModel extends ChangeNotifier {
 
   AuthViewModel() {
     _authRepository.onAuthStateChanged.listen((user) {
+      if (_isSigningInWithGoogle) {
+        if (kDebugMode) {
+          print(
+              "[AuthViewModel] onAuthStateChanged: Ignoring stream during Google Sign-In.");
+        }
+        return;
+      }
+      if (kDebugMode) {
+        print(
+            "[AuthViewModel] onAuthStateChanged stream received user: ${user?.name}");
+      }
       _currentUser = user;
       _isLoading = false;
       notifyListeners();
@@ -98,26 +111,45 @@ class AuthViewModel extends ChangeNotifier {
   }
 
   Future<bool> loginWithGoogle() async {
+    if (kDebugMode) {
+      print("[AuthViewModel] loginWithGoogle: Initiated.");
+    }
+    _isSigningInWithGoogle = true;
     _setLoading(true);
     _setErrorMessage(null);
 
     try {
       final userProfile = await _authRepository.signInWithGoogle();
       if (userProfile != null) {
+        if (kDebugMode) {
+          print(
+              "[AuthViewModel] loginWithGoogle: Success. Profile received: ${userProfile.name}");
+        }
         _currentUser = userProfile;
         await _localAuthService.saveCredentials(
             userProfile.email, userProfile.id);
-        notifyListeners();
         return true;
+      } else {
+        if (kDebugMode) {
+          print("[AuthViewModel] loginWithGoogle: Failed. Profile is null.");
+        }
+        return false;
       }
-      return false;
     } on firebase.FirebaseAuthException catch (e) {
+      if (kDebugMode) {
+        print(
+            "[AuthViewModel] loginWithGoogle: FirebaseAuthException: ${e.code}");
+      }
       _setErrorMessage(_mapAuthError(e.code));
       return false;
     } catch (e) {
+      if (kDebugMode) {
+        print("[AuthViewModel] loginWithGoogle: Generic Exception: $e");
+      }
       _setErrorMessage('Ocorreu um erro desconhecido.');
       return false;
     } finally {
+      _isSigningInWithGoogle = false;
       _setLoading(false);
     }
   }
