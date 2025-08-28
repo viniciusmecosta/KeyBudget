@@ -15,11 +15,10 @@ class AuthGate extends StatelessWidget {
       return const Scaffold(body: Center(child: CircularProgressIndicator()));
     }
 
-    return AnimatedSwitcher(
-      duration: const Duration(milliseconds: 300),
-      child: authViewModel.currentUser != null
-          ? AuthWrapper(key: ValueKey(authViewModel.currentUser))
-          : LoginScreen(key: const ValueKey('loginScreen')),
-    );
+    if (authViewModel.currentUser != null) {
+      return AuthWrapper(key: ValueKey(authViewModel.currentUser));
+    } else {
+      return LoginScreen(key: const ValueKey('loginScreen'));
+    }
   }
 }

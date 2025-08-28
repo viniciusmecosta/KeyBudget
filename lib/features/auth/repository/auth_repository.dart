@@ -132,7 +132,7 @@ class AuthRepository {
     return userCredential;
   }
 
-  Future<firebase.UserCredential?> signInWithGoogle() async {
+  Future<User?> signInWithGoogle() async {
     try {
       final GoogleSignInAccount? googleUser = await _googleSignIn.signIn();
       if (googleUser == null) {
@@ -150,9 +150,9 @@ class AuthRepository {
       final userCredential =
           await _firebaseAuth.signInWithCredential(credential);
       final userId = userCredential.user!.uid;
-      final userExists = await getUserProfile(userId);
+      User? userProfile = await getUserProfile(userId);
 
-      if (userExists == null) {
+      if (userProfile == null) {
         final newUser = User(
           id: userId,
           name: userCredential.user!.displayName ?? '',
@@ -163,11 +163,12 @@ class AuthRepository {
             .collection('users')
             .doc(newUser.id)
             .set(newUser.toMap());
+        userProfile = newUser;
       }
 
       await ensureCategoriesExist(userId);
 
-      return userCredential;
+      return userProfile;
     } catch (e) {
       if (kDebugMode) {
         print("Error during Google sign-in: $e");

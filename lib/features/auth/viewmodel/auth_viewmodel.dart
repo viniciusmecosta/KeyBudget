@@ -33,8 +33,10 @@ class AuthViewModel extends ChangeNotifier {
   }
 
   void _setLoading(bool value) {
-    _isLoading = value;
-    notifyListeners();
+    if (_isLoading != value) {
+      _isLoading = value;
+      notifyListeners();
+    }
   }
 
   void _setErrorMessage(String? message) {
@@ -100,13 +102,12 @@ class AuthViewModel extends ChangeNotifier {
     _setErrorMessage(null);
 
     try {
-      final credential = await _authRepository.signInWithGoogle();
-      if (credential != null) {
-        final user = credential.user;
-        if (user != null && user.email != null) {
-          await _authRepository.ensureCategoriesExist(user.uid);
-          await _localAuthService.saveCredentials(user.email!, user.uid);
-        }
+      final userProfile = await _authRepository.signInWithGoogle();
+      if (userProfile != null) {
+        _currentUser = userProfile;
+        await _localAuthService.saveCredentials(
+            userProfile.email, userProfile.id);
+        notifyListeners();
         return true;
       }
       return false;
@@ -194,6 +195,8 @@ class AuthViewModel extends ChangeNotifier {
       case 'wrong-password':
       case 'invalid-credential':
         return 'Email ou senha inválidos.';
+      case 'account-exists-with-different-credential':
+        return 'Já existe uma conta com este email.';
       default:
         return 'Ocorreu um erro de autenticação.';
     }
