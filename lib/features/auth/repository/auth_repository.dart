@@ -15,7 +15,14 @@ class AuthRepository {
   Stream<User?> get onAuthStateChanged {
     return _firebaseAuth.authStateChanges().asyncMap((firebaseUser) async {
       if (firebaseUser == null) {
+        if (kDebugMode) {
+          print("[AuthRepository] AuthStateChanged: User is null.");
+        }
         return null;
+      }
+      if (kDebugMode) {
+        print(
+            "[AuthRepository] AuthStateChanged: Firebase user detected. Fetching profile for UID: ${firebaseUser.uid}");
       }
       return await getUserProfile(firebaseUser.uid);
     });
@@ -25,12 +32,20 @@ class AuthRepository {
     try {
       final doc = await _firestore.collection('users').doc(uid).get();
       if (doc.exists) {
+        if (kDebugMode) {
+          print("[AuthRepository] getUserProfile: Profile found for UID: $uid");
+        }
         return User.fromMap(doc.data()!);
+      }
+      if (kDebugMode) {
+        print(
+            "[AuthRepository] getUserProfile: Profile NOT found for UID: $uid");
       }
       return null;
     } catch (e) {
       if (kDebugMode) {
-        print("Error getting user profile: $e");
+        print(
+            "[AuthRepository] getUserProfile: Error getting user profile: $e");
       }
       return null;
     }
@@ -46,7 +61,8 @@ class AuthRepository {
 
   Future<void> ensureCategoriesExist(String userId) async {
     if (kDebugMode) {
-      print('Ensuring categories exist for user: $userId');
+      print(
+          '[AuthRepository] ensureCategoriesExist: Checking for user: $userId');
     }
     try {
       final categoriesCollection =
@@ -56,11 +72,15 @@ class AuthRepository {
       if (existingCategories.docs.isNotEmpty) {
         if (kDebugMode) {
           print(
-              'Categories already exist for user: $userId. Skipping creation.');
+              '[AuthRepository] ensureCategoriesExist: Categories already exist.');
         }
         return;
       }
 
+      if (kDebugMode) {
+        print(
+            '[AuthRepository] ensureCategoriesExist: Creating default categories...');
+      }
       final List<ExpenseCategory> defaultCategories = [
         ExpenseCategory(
             name: 'Alimentação',
@@ -96,11 +116,12 @@ class AuthRepository {
       await batch.commit();
       if (kDebugMode) {
         print(
-            'Successfully created ${defaultCategories.length} default categories for user: $userId');
+            '[AuthRepository] ensureCategoriesExist: Successfully created default categories.');
       }
     } catch (e) {
       if (kDebugMode) {
-        print('Error creating default categories for user $userId: $e');
+        print(
+            '[AuthRepository] ensureCategoriesExist: Error creating categories: $e');
       }
     }
   }
@@ -134,11 +155,22 @@ class AuthRepository {
 
   Future<User?> signInWithGoogle() async {
     try {
+      if (kDebugMode) {
+        print("[AuthRepository] signInWithGoogle: Initiating Google Sign-In.");
+      }
       final GoogleSignInAccount? googleUser = await _googleSignIn.signIn();
       if (googleUser == null) {
+        if (kDebugMode) {
+          print(
+              "[AuthRepository] signInWithGoogle: User cancelled the sign-in.");
+        }
         return null;
       }
 
+      if (kDebugMode) {
+        print(
+            "[AuthRepository] signInWithGoogle: Google user selected. Authenticating with Firebase.");
+      }
       final GoogleSignInAuthentication googleAuth =
           await googleUser.authentication;
       final firebase.AuthCredential credential =
@@ -150,9 +182,17 @@ class AuthRepository {
       final userCredential =
           await _firebaseAuth.signInWithCredential(credential);
       final userId = userCredential.user!.uid;
+      if (kDebugMode) {
+        print(
+            "[AuthRepository] signInWithGoogle: Firebase authenticated. Checking for profile for UID: $userId");
+      }
       User? userProfile = await getUserProfile(userId);
 
       if (userProfile == null) {
+        if (kDebugMode) {
+          print(
+              "[AuthRepository] signInWithGoogle: Profile not found. Creating new user profile.");
+        }
         final newUser = User(
           id: userId,
           name: userCredential.user!.displayName ?? '',
@@ -164,14 +204,23 @@ class AuthRepository {
             .doc(newUser.id)
             .set(newUser.toMap());
         userProfile = newUser;
+      } else {
+        if (kDebugMode) {
+          print(
+              "[AuthRepository] signInWithGoogle: Existing user profile found.");
+        }
       }
 
       await ensureCategoriesExist(userId);
 
+      if (kDebugMode) {
+        print(
+            "[AuthRepository] signInWithGoogle: Process complete. Returning user profile.");
+      }
       return userProfile;
     } catch (e) {
       if (kDebugMode) {
-        print("Error during Google sign-in: $e");
+        print("[AuthRepository] signInWithGoogle: An error occurred: $e");
       }
       rethrow;
     }
