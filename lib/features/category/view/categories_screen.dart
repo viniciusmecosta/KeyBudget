@@ -1,10 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:key_budget/core/models/expense_category_model.dart';
-import 'package:key_budget/features/analysis/viewmodel/analysis_viewmodel.dart';
 import 'package:key_budget/features/auth/viewmodel/auth_viewmodel.dart';
 import 'package:key_budget/features/category/view/add_edit_category_screen.dart';
 import 'package:key_budget/features/category/viewmodel/category_viewmodel.dart';
-import 'package:key_budget/features/dashboard/viewmodel/dashboard_viewmodel.dart';
 import 'package:provider/provider.dart';
 
 class CategoriesScreen extends StatefulWidget {
@@ -48,15 +46,7 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
                   ?.id;
               if (userId != null) {
                 Provider.of<CategoryViewModel>(context, listen: false)
-                    .deleteCategory(userId, category.id!)
-                    .then((_) {
-                  if (mounted) {
-                    Provider.of<DashboardViewModel>(context, listen: false)
-                        .loadDashboardData(userId);
-                    Provider.of<AnalysisViewModel>(context, listen: false)
-                        .loadAnalysisData(userId);
-                  }
-                });
+                    .deleteCategory(userId, category.id!);
               }
               Navigator.of(ctx).pop();
             },

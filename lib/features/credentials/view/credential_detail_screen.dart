@@ -5,7 +5,6 @@ import 'package:key_budget/features/auth/viewmodel/auth_viewmodel.dart';
 import 'package:key_budget/features/credentials/view/widgets/logo_picker.dart';
 import 'package:key_budget/features/credentials/view/widgets/saved_logos_screen.dart';
 import 'package:key_budget/features/credentials/viewmodel/credential_viewmodel.dart';
-import 'package:key_budget/features/dashboard/viewmodel/dashboard_viewmodel.dart';
 import 'package:provider/provider.dart';
 
 class CredentialDetailScreen extends StatefulWidget {
@@ -121,11 +120,6 @@ class _CredentialDetailScreenState extends State<CredentialDetailScreen> {
     );
 
     if (mounted) {
-      Provider.of<DashboardViewModel>(context, listen: false)
-          .loadDashboardData(userId);
-    }
-
-    if (mounted) {
       setState(() {
         _isSaving = false;
         _isEditing = false;
@@ -156,8 +150,6 @@ class _CredentialDetailScreenState extends State<CredentialDetailScreen> {
                   .deleteCredential(userId, widget.credential.id!);
 
               if (mounted) {
-                Provider.of<DashboardViewModel>(context, listen: false)
-                    .loadDashboardData(userId);
                 Navigator.of(ctx).pop();
                 Navigator.of(context).pop();
               }
