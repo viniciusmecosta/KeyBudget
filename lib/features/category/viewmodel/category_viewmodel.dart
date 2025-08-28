@@ -20,6 +20,7 @@ class CategoryViewModel extends ChangeNotifier {
   Future<void> fetchCategories(String userId) async {
     _setLoading(true);
     _categories = await _repository.getCategoriesForUser(userId);
+    _categories.sort((a, b) => a.name.compareTo(b.name));
     _setLoading(false);
   }
 
