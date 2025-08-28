@@ -5,7 +5,6 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:key_budget/app/config/app_theme.dart';
 import 'package:key_budget/features/analysis/viewmodel/analysis_viewmodel.dart';
-import 'package:key_budget/features/auth/viewmodel/auth_viewmodel.dart';
 import 'package:provider/provider.dart';
 
 class AnalysisScreen extends StatefulWidget {
@@ -21,22 +20,6 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
   final _currencyFormatterNoCents =
       NumberFormat.currency(locale: 'pt_BR', symbol: 'R\$', decimalDigits: 0);
   int _touchedPieIndex = -1;
-
-  @override
-  void initState() {
-    super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      _fetchData();
-    });
-  }
-
-  Future<void> _fetchData() async {
-    final authViewModel = Provider.of<AuthViewModel>(context, listen: false);
-    if (authViewModel.currentUser != null && mounted) {
-      await Provider.of<AnalysisViewModel>(context, listen: false)
-          .loadAnalysisData(authViewModel.currentUser!.id);
-    }
-  }
 
   @override
   Widget build(BuildContext context) {

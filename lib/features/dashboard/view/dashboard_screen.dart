@@ -6,7 +6,9 @@ import 'package:key_budget/core/models/expense_model.dart';
 import 'package:key_budget/features/analysis/view/analysis_screen.dart';
 import 'package:key_budget/features/auth/viewmodel/auth_viewmodel.dart';
 import 'package:key_budget/features/category/viewmodel/category_viewmodel.dart';
+import 'package:key_budget/features/credentials/viewmodel/credential_viewmodel.dart';
 import 'package:key_budget/features/dashboard/viewmodel/dashboard_viewmodel.dart';
+import 'package:key_budget/features/expenses/viewmodel/expense_viewmodel.dart';
 import 'package:provider/provider.dart';
 
 class DashboardScreen extends StatefulWidget {
@@ -24,15 +26,20 @@ class _DashboardScreenState extends State<DashboardScreen> {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      _fetchData();
+      _fetchInitialData();
     });
   }
 
-  Future<void> _fetchData() async {
+  Future<void> _fetchInitialData() async {
     final authViewModel = Provider.of<AuthViewModel>(context, listen: false);
     if (authViewModel.currentUser != null && mounted) {
-      await Provider.of<DashboardViewModel>(context, listen: false)
-          .loadDashboardData(authViewModel.currentUser!.id);
+      final userId = authViewModel.currentUser!.id;
+      Provider.of<CategoryViewModel>(context, listen: false)
+          .fetchCategories(userId);
+      Provider.of<ExpenseViewModel>(context, listen: false)
+          .listenToExpenses(userId);
+      Provider.of<CredentialViewModel>(context, listen: false)
+          .listenToCredentials(userId);
     }
   }
 
@@ -67,7 +74,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
       body: viewModel.isLoading
           ? const Center(child: CircularProgressIndicator())
           : RefreshIndicator(
-              onRefresh: _fetchData,
+              onRefresh: _fetchInitialData,
               child: ListView(
                 padding: const EdgeInsets.all(16.0),
                 children: [
@@ -235,8 +242,14 @@ class _DashboardScreenState extends State<DashboardScreen> {
   Widget _buildRecentActivitySection(
       BuildContext context, DashboardViewModel viewModel) {
     final recentExpenses = viewModel.recentExpenses;
+    if (viewModel.isLoading) {
+      return const SizedBox.shrink();
+    }
     if (recentExpenses.isEmpty) {
-      return const Text('Nenhuma atividade recente.');
+      return const Padding(
+        padding: EdgeInsets.only(top: 20),
+        child: Center(child: Text('Nenhuma atividade recente.')),
+      );
     }
 
     return Column(
