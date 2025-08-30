@@ -39,6 +39,8 @@ class CredentialViewModel extends ChangeNotifier {
     _credentialsSubscription =
         _repository.getCredentialsStreamForUser(userId).listen((credentials) {
       _allCredentials = credentials;
+      _allCredentials.sort((a, b) =>
+          a.location.toLowerCase().compareTo(b.location.toLowerCase()));
       _setLoading(false);
     });
   }

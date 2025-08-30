@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:intl/intl.dart';
 import 'package:key_budget/app/widgets/empty_state_widget.dart';
-import 'package:key_budget/core/models/expense_model.dart';
 import 'package:key_budget/features/auth/viewmodel/auth_viewmodel.dart';
 import 'package:key_budget/features/category/viewmodel/category_viewmodel.dart';
 import 'package:key_budget/features/expenses/view/add_expense_screen.dart';
@@ -29,10 +28,11 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final authViewModel = Provider.of<AuthViewModel>(context, listen: false);
       if (authViewModel.currentUser != null) {
+        final userId = authViewModel.currentUser!.id;
         Provider.of<CategoryViewModel>(context, listen: false)
-            .fetchCategories(authViewModel.currentUser!.id);
+            .fetchCategories(userId);
         Provider.of<ExpenseViewModel>(context, listen: false)
-            .listenToExpenses(authViewModel.currentUser!.id);
+            .listenToExpenses(userId);
       }
     });
   }
@@ -226,30 +226,39 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
               ),
             ).animate().fadeIn(duration: 250.ms).slideY(begin: -0.3),
             Expanded(
-              child: Selector<ExpenseViewModel, List<Expense>>(
-                selector: (_, vm) => vm.filteredExpenses
-                    .where((exp) =>
-                        exp.date.year == _selectedMonth.year &&
-                        exp.date.month == _selectedMonth.month)
-                    .toList()
-                  ..sort((a, b) => b.date.compareTo(a.date)),
-                builder: (context, monthlyExpenses, child) {
-                  final isLoading = context
-                      .select<ExpenseViewModel, bool>((vm) => vm.isLoading);
+              child: Consumer<ExpenseViewModel>(
+                builder: (context, vm, child) {
+                  final monthlyExpenses = vm.filteredExpenses
+                      .where((exp) =>
+                          exp.date.year == _selectedMonth.year &&
+                          exp.date.month == _selectedMonth.month)
+                      .toList()
+                    ..sort((a, b) => b.date.compareTo(a.date));
 
-                  if (isLoading || categoryViewModel.isLoading) {
+                  if (vm.isLoading || categoryViewModel.isLoading) {
                     return const Center(child: CircularProgressIndicator());
                   }
+
                   if (monthlyExpenses.isEmpty) {
-                    return EmptyStateWidget(
-                      icon: Icons.money_off,
-                      message: 'Nenhuma despesa encontrada para este mês.',
-                      buttonText: 'Adicionar Despesa',
-                      onButtonPressed: () => Navigator.of(context).push(
-                        MaterialPageRoute(
-                            builder: (_) => const AddExpenseScreen()),
-                      ),
-                    );
+                    return LayoutBuilder(builder: (context, constraints) {
+                      return SingleChildScrollView(
+                        physics: const AlwaysScrollableScrollPhysics(),
+                        child: ConstrainedBox(
+                          constraints:
+                              BoxConstraints(minHeight: constraints.maxHeight),
+                          child: EmptyStateWidget(
+                            icon: Icons.money_off,
+                            message:
+                                'Nenhuma despesa encontrada para este mês.',
+                            buttonText: 'Adicionar Despesa',
+                            onButtonPressed: () => Navigator.of(context).push(
+                              MaterialPageRoute(
+                                  builder: (_) => const AddExpenseScreen()),
+                            ),
+                          ),
+                        ),
+                      );
+                    });
                   }
                   return ListView.builder(
                     padding:
