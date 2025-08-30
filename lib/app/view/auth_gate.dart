@@ -11,7 +11,7 @@ class AuthGate extends StatelessWidget {
   Widget build(BuildContext context) {
     final authViewModel = Provider.of<AuthViewModel>(context);
 
-    if (authViewModel.isLoading) {
+    if (!authViewModel.isInitialized) {
       return const Scaffold(body: Center(child: CircularProgressIndicator()));
     }
 
