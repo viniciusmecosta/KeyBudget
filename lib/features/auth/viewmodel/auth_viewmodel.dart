@@ -14,12 +14,15 @@ class AuthViewModel extends ChangeNotifier {
   final AuthRepository _authRepository = AuthRepository();
   final LocalAuthService _localAuthService = LocalAuthService();
 
-  bool _isLoading = true;
+  bool _isLoading = false;
+  bool _isInitialized = false;
   String? _errorMessage;
   User? _currentUser;
   bool _isSigningInWithGoogle = false;
 
   bool get isLoading => _isLoading;
+
+  bool get isInitialized => _isInitialized;
 
   String? get errorMessage => _errorMessage;
 
@@ -31,7 +34,9 @@ class AuthViewModel extends ChangeNotifier {
         return;
       }
       _currentUser = user;
-      _isLoading = false;
+      if (!_isInitialized) {
+        _isInitialized = true;
+      }
       notifyListeners();
     });
   }
@@ -189,6 +194,9 @@ class AuthViewModel extends ChangeNotifier {
 
     await _authRepository.signOut();
     await _localAuthService.clearCredentials();
+
+    _currentUser = null;
+    notifyListeners();
   }
 
   String _mapAuthError(String code) {
