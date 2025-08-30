@@ -192,6 +192,7 @@ class _CredentialsScreenState extends State<CredentialsScreen> {
         ),
       ),
       floatingActionButton: FloatingActionButton.extended(
+        heroTag: 'fab_credentials',
         onPressed: () => Navigator.of(context).push(
             MaterialPageRoute(builder: (_) => const AddCredentialScreen())),
         icon: const Icon(Icons.add),

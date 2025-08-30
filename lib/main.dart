@@ -81,17 +81,19 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
         Locale('pt', 'BR'),
       ],
       locale: const Locale('pt', 'BR'),
-      home: Consumer<AppLockService>(
-        builder: (context, appLock, child) {
-          return Stack(
-            children: [
-              child!,
-              if (appLock.isLocked) const LockScreen(),
-            ],
-          );
-        },
-        child: const AuthGate(),
-      ),
+      home: const AuthGate(),
+      builder: (context, navigator) {
+        return Consumer<AppLockService>(
+          builder: (context, appLock, _) {
+            return Stack(
+              children: [
+                if (navigator != null) navigator,
+                if (appLock.isLocked) const LockScreen(),
+              ],
+            );
+          },
+        );
+      },
     );
   }
 }
