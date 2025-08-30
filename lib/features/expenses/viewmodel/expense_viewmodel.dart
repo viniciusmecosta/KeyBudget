@@ -58,6 +58,7 @@ class ExpenseViewModel extends ChangeNotifier {
         _repository.getExpensesStreamForUser(userId).listen((expenses) {
       _allExpenses = expenses;
       if (_isLoading) _setLoading(false);
+      notifyListeners();
     });
   }
 

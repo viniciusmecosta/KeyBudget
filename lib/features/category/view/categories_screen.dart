@@ -110,6 +110,7 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
         },
       ),
       floatingActionButton: FloatingActionButton(
+        heroTag: 'fab_categories',
         onPressed: () {
           Navigator.of(context).push(
             MaterialPageRoute(

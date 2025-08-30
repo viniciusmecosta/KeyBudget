@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:key_budget/app/view/main_screen.dart';
 import 'package:key_budget/features/auth/view/widgets/avatar_picker.dart';
 import 'package:key_budget/features/auth/viewmodel/auth_viewmodel.dart';
 import 'package:provider/provider.dart';
@@ -38,9 +37,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
     final authViewModel = Provider.of<AuthViewModel>(context, listen: false);
 
     final success = await authViewModel.registerUser(
-      name: _nameController.text,
-      email: _emailController.text,
-      password: _passwordController.text,
+      name: _nameController.text.trim(),
+      email: _emailController.text.trim(),
+      password: _passwordController.text.trim(),
       phoneNumber:
           _phoneController.text.isNotEmpty ? _phoneController.text : null,
       avatarPath: _avatarPath,
@@ -48,9 +47,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
     if (mounted) {
       if (success) {
-        Navigator.of(context).pushReplacement(
-          MaterialPageRoute(builder: (_) => const MainScreen()),
-        );
+        Navigator.of(context).pop();
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(

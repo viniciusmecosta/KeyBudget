@@ -5,7 +5,7 @@ import 'package:key_budget/features/auth/viewmodel/auth_viewmodel.dart';
 import 'package:provider/provider.dart';
 
 class LoginScreen extends StatefulWidget {
-  LoginScreen({super.key});
+  const LoginScreen({super.key});
 
   @override
   State<LoginScreen> createState() => _LoginScreenState();
@@ -42,16 +42,18 @@ class _LoginScreenState extends State<LoginScreen> {
     if (!_formKey.currentState!.validate()) return;
     final authViewModel = Provider.of<AuthViewModel>(context, listen: false);
     final success = await authViewModel.loginUser(
-      email: _emailController.text,
-      password: _passwordController.text,
+      email: _emailController.text.trim(),
+      password: _passwordController.text.trim(),
     );
     if (mounted && !success) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(authViewModel.errorMessage ?? 'Erro desconhecido'),
           backgroundColor: Theme.of(context).colorScheme.error,
+          behavior: SnackBarBehavior.floating,
         ),
       );
+      _passwordController.clear();
     }
   }
 
@@ -63,6 +65,7 @@ class _LoginScreenState extends State<LoginScreen> {
         SnackBar(
           content: Text(authViewModel.errorMessage ?? 'Erro desconhecido'),
           backgroundColor: Theme.of(context).colorScheme.error,
+          behavior: SnackBarBehavior.floating,
         ),
       );
     }
@@ -129,9 +132,10 @@ class _LoginScreenState extends State<LoginScreen> {
                           prefixIcon: Icon(Icons.lock_outline),
                         ),
                         obscureText: true,
-                        validator: (value) => (value == null || value.isEmpty)
-                            ? 'Insira sua senha'
-                            : null,
+                        validator: (value) =>
+                            (value == null || value.length < 6)
+                                ? 'A senha deve ter pelo menos 6 caracteres'
+                                : null,
                       ),
                     ],
                   ),
@@ -142,31 +146,39 @@ class _LoginScreenState extends State<LoginScreen> {
                 const SizedBox(height: 28),
                 Consumer<AuthViewModel>(
                   builder: (context, viewModel, child) {
-                    return viewModel.isLoading
-                        ? const CircularProgressIndicator()
-                        : Column(
-                            children: [
-                              SizedBox(
-                                width: double.infinity,
-                                child: ElevatedButton(
-                                  onPressed: _submit,
-                                  child: const Text('Entrar'),
-                                ),
-                              ),
-                              const SizedBox(height: 16),
-                              SizedBox(
-                                width: double.infinity,
-                                child: OutlinedButton.icon(
-                                  onPressed: _submitGoogle,
-                                  icon: const Icon(
-                                    Icons.g_mobiledata,
-                                    size: 28,
-                                  ),
-                                  label: const Text('Entrar com Google'),
-                                ),
-                              ),
-                            ],
-                          );
+                    return Column(
+                      children: [
+                        SizedBox(
+                          width: double.infinity,
+                          child: ElevatedButton(
+                            onPressed: viewModel.isLoading ? null : _submit,
+                            child: viewModel.isLoading
+                                ? SizedBox(
+                                    height: 24,
+                                    width: 24,
+                                    child: CircularProgressIndicator(
+                                      color: theme.colorScheme.onPrimary,
+                                      strokeWidth: 2.5,
+                                    ),
+                                  )
+                                : const Text('Entrar'),
+                          ),
+                        ),
+                        const SizedBox(height: 16),
+                        SizedBox(
+                          width: double.infinity,
+                          child: OutlinedButton.icon(
+                            onPressed:
+                                viewModel.isLoading ? null : _submitGoogle,
+                            icon: const Icon(
+                              Icons.g_mobiledata,
+                              size: 28,
+                            ),
+                            label: const Text('Entrar com Google'),
+                          ),
+                        ),
+                      ],
+                    );
                   },
                 )
                     .animate()

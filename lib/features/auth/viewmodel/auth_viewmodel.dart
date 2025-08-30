@@ -14,11 +14,15 @@ class AuthViewModel extends ChangeNotifier {
   final AuthRepository _authRepository = AuthRepository();
   final LocalAuthService _localAuthService = LocalAuthService();
 
-  bool _isLoading = true;
+  bool _isLoading = false;
+  bool _isInitialized = false;
   String? _errorMessage;
   User? _currentUser;
+  bool _isSigningInWithGoogle = false;
 
   bool get isLoading => _isLoading;
+
+  bool get isInitialized => _isInitialized;
 
   String? get errorMessage => _errorMessage;
 
@@ -26,15 +30,22 @@ class AuthViewModel extends ChangeNotifier {
 
   AuthViewModel() {
     _authRepository.onAuthStateChanged.listen((user) {
+      if (_isSigningInWithGoogle) {
+        return;
+      }
       _currentUser = user;
-      _isLoading = false;
+      if (!_isInitialized) {
+        _isInitialized = true;
+      }
       notifyListeners();
     });
   }
 
   void _setLoading(bool value) {
-    _isLoading = value;
-    notifyListeners();
+    if (_isLoading != value) {
+      _isLoading = value;
+      notifyListeners();
+    }
   }
 
   void _setErrorMessage(String? message) {
@@ -96,20 +107,20 @@ class AuthViewModel extends ChangeNotifier {
   }
 
   Future<bool> loginWithGoogle() async {
+    _isSigningInWithGoogle = true;
     _setLoading(true);
     _setErrorMessage(null);
 
     try {
-      final credential = await _authRepository.signInWithGoogle();
-      if (credential != null) {
-        final user = credential.user;
-        if (user != null && user.email != null) {
-          await _authRepository.ensureCategoriesExist(user.uid);
-          await _localAuthService.saveCredentials(user.email!, user.uid);
-        }
+      final userProfile = await _authRepository.signInWithGoogle();
+      if (userProfile != null) {
+        _currentUser = userProfile;
+        await _localAuthService.saveCredentials(
+            userProfile.email, userProfile.id);
         return true;
+      } else {
+        return false;
       }
-      return false;
     } on firebase.FirebaseAuthException catch (e) {
       _setErrorMessage(_mapAuthError(e.code));
       return false;
@@ -117,6 +128,7 @@ class AuthViewModel extends ChangeNotifier {
       _setErrorMessage('Ocorreu um erro desconhecido.');
       return false;
     } finally {
+      _isSigningInWithGoogle = false;
       _setLoading(false);
     }
   }
@@ -182,6 +194,9 @@ class AuthViewModel extends ChangeNotifier {
 
     await _authRepository.signOut();
     await _localAuthService.clearCredentials();
+
+    _currentUser = null;
+    notifyListeners();
   }
 
   String _mapAuthError(String code) {
@@ -194,6 +209,8 @@ class AuthViewModel extends ChangeNotifier {
       case 'wrong-password':
       case 'invalid-credential':
         return 'Email ou senha inválidos.';
+      case 'account-exists-with-different-credential':
+        return 'Já existe uma conta com este email.';
       default:
         return 'Ocorreu um erro de autenticação.';
     }

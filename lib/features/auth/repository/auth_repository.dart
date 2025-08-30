@@ -45,19 +45,12 @@ class AuthRepository {
   }
 
   Future<void> ensureCategoriesExist(String userId) async {
-    if (kDebugMode) {
-      print('Ensuring categories exist for user: $userId');
-    }
     try {
       final categoriesCollection =
           _firestore.collection('users').doc(userId).collection('categories');
       final existingCategories = await categoriesCollection.limit(1).get();
 
       if (existingCategories.docs.isNotEmpty) {
-        if (kDebugMode) {
-          print(
-              'Categories already exist for user: $userId. Skipping creation.');
-        }
         return;
       }
 
@@ -94,13 +87,9 @@ class AuthRepository {
         batch.set(docRef, category.toMap());
       }
       await batch.commit();
-      if (kDebugMode) {
-        print(
-            'Successfully created ${defaultCategories.length} default categories for user: $userId');
-      }
     } catch (e) {
       if (kDebugMode) {
-        print('Error creating default categories for user $userId: $e');
+        print("Error ensuring categories exist: $e");
       }
     }
   }
@@ -132,7 +121,7 @@ class AuthRepository {
     return userCredential;
   }
 
-  Future<firebase.UserCredential?> signInWithGoogle() async {
+  Future<User?> signInWithGoogle() async {
     try {
       final GoogleSignInAccount? googleUser = await _googleSignIn.signIn();
       if (googleUser == null) {
@@ -150,9 +139,9 @@ class AuthRepository {
       final userCredential =
           await _firebaseAuth.signInWithCredential(credential);
       final userId = userCredential.user!.uid;
-      final userExists = await getUserProfile(userId);
+      User? userProfile = await getUserProfile(userId);
 
-      if (userExists == null) {
+      if (userProfile == null) {
         final newUser = User(
           id: userId,
           name: userCredential.user!.displayName ?? '',
@@ -163,11 +152,12 @@ class AuthRepository {
             .collection('users')
             .doc(newUser.id)
             .set(newUser.toMap());
+        userProfile = newUser;
       }
 
       await ensureCategoriesExist(userId);
 
-      return userCredential;
+      return userProfile;
     } catch (e) {
       if (kDebugMode) {
         print("Error during Google sign-in: $e");

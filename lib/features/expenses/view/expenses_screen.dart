@@ -314,6 +314,7 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
         ),
       ),
       floatingActionButton: FloatingActionButton.extended(
+        heroTag: 'fab_expenses',
         onPressed: () => Navigator.of(context)
             .push(MaterialPageRoute(builder: (_) => const AddExpenseScreen())),
         icon: const Icon(Icons.add),
