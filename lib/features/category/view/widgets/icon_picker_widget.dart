@@ -8,7 +8,7 @@ class IconPickerWidget extends StatefulWidget {
 }
 
 class _IconPickerWidgetState extends State<IconPickerWidget> {
-  final List<IconData> _allIcons = [
+  static const List<IconData> _allIcons = [
     Icons.restaurant,
     Icons.wifi,
     Icons.local_pizza,
@@ -275,38 +275,6 @@ class _IconPickerWidgetState extends State<IconPickerWidget> {
     Icons.work,
   ];
 
-  List<IconData> _displayedIcons = [];
-  final _scrollController = ScrollController();
-  final int _iconsPerPage = 50;
-
-  @override
-  void initState() {
-    super.initState();
-    _loadMoreIcons();
-    _scrollController.addListener(() {
-      if (_scrollController.position.pixels >=
-          _scrollController.position.maxScrollExtent - 200) {
-        _loadMoreIcons();
-      }
-    });
-  }
-
-  void _loadMoreIcons() {
-    if (_displayedIcons.length < _allIcons.length) {
-      setState(() {
-        final nextIcons =
-            _allIcons.skip(_displayedIcons.length).take(_iconsPerPage);
-        _displayedIcons.addAll(nextIcons);
-      });
-    }
-  }
-
-  @override
-  void dispose() {
-    _scrollController.dispose();
-    super.dispose();
-  }
-
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -317,9 +285,6 @@ class _IconPickerWidgetState extends State<IconPickerWidget> {
       maxChildSize: 0.9,
       expand: false,
       builder: (_, controller) {
-        _scrollController.hasClients
-            ? controller = _scrollController
-            : controller = controller;
         return Container(
           decoration: BoxDecoration(
             color: theme.cardColor,
@@ -337,10 +302,7 @@ class _IconPickerWidgetState extends State<IconPickerWidget> {
                 ),
               ),
               const SizedBox(height: 16),
-              Text(
-                'Selecione um Ícone',
-                style: theme.textTheme.titleLarge,
-              ),
+              Text('Selecione um Ícone', style: theme.textTheme.titleLarge),
               const SizedBox(height: 8),
               Expanded(
                 child: GridView.builder(
@@ -351,22 +313,21 @@ class _IconPickerWidgetState extends State<IconPickerWidget> {
                     crossAxisSpacing: 16,
                     mainAxisSpacing: 16,
                   ),
-                  itemCount: _displayedIcons.length,
+                  itemCount: _allIcons.length,
                   itemBuilder: (context, index) {
-                    final icon = _displayedIcons[index];
-                    return InkWell(
-                      onTap: () => Navigator.of(context).pop(icon),
-                      borderRadius: BorderRadius.circular(12),
-                      child: Container(
-                        decoration: BoxDecoration(
-                          color:
-                              theme.colorScheme.surfaceVariant.withOpacity(0.3),
+                    final icon = _allIcons[index];
+                    return IconButton(
+                      icon: Icon(
+                        icon,
+                        size: 32,
+                        color: theme.colorScheme.onSurfaceVariant,
+                      ),
+                      onPressed: () => Navigator.of(context).pop(icon),
+                      style: IconButton.styleFrom(
+                        backgroundColor:
+                            theme.colorScheme.surfaceVariant.withOpacity(0.3),
+                        shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: Icon(
-                          icon,
-                          size: 32,
-                          color: theme.colorScheme.onSurfaceVariant,
                         ),
                       ),
                     );
