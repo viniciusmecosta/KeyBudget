@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import 'package:key_budget/core/models/credential_model.dart';
 import 'package:key_budget/features/auth/viewmodel/auth_viewmodel.dart';
 import 'package:key_budget/features/credentials/view/widgets/logo_picker.dart';
@@ -375,7 +376,7 @@ class _CredentialDetailScreenState extends State<CredentialDetailScreen> {
             ],
           ),
         ),
-      ),
+      ).animate().fadeIn(duration: 250.ms).slideY(begin: 0.1, end: 0),
     );
   }
 }

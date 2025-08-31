@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_masked_text2/flutter_masked_text2.dart';
 import 'package:intl/intl.dart';
 import 'package:key_budget/app/widgets/category_autocomplete_field.dart';
@@ -337,7 +338,7 @@ class _ExpenseDetailScreenState extends State<ExpenseDetailScreen> {
             ],
           ),
         ),
-      ),
+      ).animate().fadeIn(duration: 250.ms).slideY(begin: 0.1, end: 0),
     );
   }
 }

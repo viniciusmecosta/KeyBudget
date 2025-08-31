@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import 'package:key_budget/core/services/app_lock_service.dart';
 import 'package:key_budget/core/services/local_auth_service.dart';
 import 'package:provider/provider.dart';
@@ -48,7 +49,7 @@ class _LockScreenState extends State<LockScreen> {
             ),
           ],
         ),
-      ),
+      ).animate().fadeIn(duration: 250.ms),
     );
   }
 }

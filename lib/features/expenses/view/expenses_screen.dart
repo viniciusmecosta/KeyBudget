@@ -225,7 +225,7 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
                   ],
                 ),
               ),
-            ).animate().fadeIn(duration: 250.ms).slideY(begin: -0.3),
+            ),
             Expanded(
               child: Selector<ExpenseViewModel, List<Expense>>(
                 selector: (_, vm) => vm.filteredExpenses
@@ -309,12 +309,12 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
                         ),
                       );
                     },
-                  ).animate().fadeIn(duration: 300.ms, delay: 200.ms);
+                  );
                 },
               ),
             ),
           ],
-        ),
+        ).animate().fadeIn(duration: 250.ms),
       ),
       floatingActionButton: FloatingActionButton.extended(
         heroTag: 'fab_expenses',
