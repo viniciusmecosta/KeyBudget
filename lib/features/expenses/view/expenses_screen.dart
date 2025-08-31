@@ -1,8 +1,9 @@
-import 'package:flutter/material.dart';
+import 'package:flutter/material.dart' hide DateUtils;
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:intl/intl.dart';
 import 'package:key_budget/app/widgets/empty_state_widget.dart';
 import 'package:key_budget/core/models/expense_model.dart';
+import 'package:key_budget/core/utils/date_utils.dart';
 import 'package:key_budget/features/auth/viewmodel/auth_viewmodel.dart';
 import 'package:key_budget/features/category/viewmodel/category_viewmodel.dart';
 import 'package:key_budget/features/expenses/view/add_expense_screen.dart';
@@ -148,6 +149,10 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
         : '';
   }
 
+  String _getRelativeDate(DateTime date) {
+    return DateUtils.getRelativeDate(date);
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -260,14 +265,6 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
                       final expense = monthlyExpenses[index];
                       final category =
                           categoryViewModel.getCategoryById(expense.categoryId);
-                      final formattedDate =
-                          DateFormat('d, EEEE', 'pt_BR').format(expense.date);
-                      final parts = formattedDate.split(',');
-                      final dayOfWeekPart =
-                          parts.length > 1 ? parts[1].trim() : '';
-                      final displayDate = dayOfWeekPart.isNotEmpty
-                          ? '${parts[0]}, ${dayOfWeekPart[0].toUpperCase()}${dayOfWeekPart.substring(1)}'
-                          : formattedDate;
 
                       return Card(
                         margin: const EdgeInsets.symmetric(
@@ -290,7 +287,7 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
                                 : (category?.name ?? 'Gasto Geral'),
                             style: const TextStyle(fontWeight: FontWeight.w600),
                           ),
-                          subtitle: Text(displayDate),
+                          subtitle: Text(_getRelativeDate(expense.date)),
                           trailing: Text(
                             '- ${_currencyFormatter.format(expense.amount)}',
                             style: theme.textTheme.titleMedium?.copyWith(
