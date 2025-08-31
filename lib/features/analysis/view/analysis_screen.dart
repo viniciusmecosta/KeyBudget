@@ -22,6 +22,14 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
       NumberFormat.currency(locale: 'pt_BR', symbol: 'R\$', decimalDigits: 0);
   int _touchedPieIndex = -1;
 
+  String _formatCurrencyFlexible(double value) {
+    if ((value * 100).truncate() % 100 != 0) {
+      return _currencyFormatter.format(value);
+    } else {
+      return _currencyFormatterNoCents.format(value);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final viewModel = Provider.of<AnalysisViewModel>(context);
@@ -31,129 +39,189 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
         title: const Text('Análise de Despesas'),
       ),
       body: viewModel.isLoading
-          ? const Center(child: CircularProgressIndicator())
-          : ListView(
-              padding: const EdgeInsets.all(16.0),
-              children: [
-                _buildTotalsRow(context, viewModel),
-                const SizedBox(height: 16),
-                _buildAverageCard(context, viewModel),
-                const SizedBox(height: 24),
-                _buildSectionTitle(context, 'Histórico Mensal'),
-                const SizedBox(height: 8),
-                _buildLineChart(context, viewModel),
-                const SizedBox(height: 24),
-                _buildSectionTitle(context, 'Categorias no Mês'),
-                const SizedBox(height: 12),
-                _buildCategoryMonthSelector(context, viewModel),
-                const SizedBox(height: 16),
-                _buildCategoryBreakdown(context, viewModel),
-              ],
-            ).animate().fadeIn(duration: 250.ms).slideY(begin: 0.1, end: 0),
-    );
-  }
-
-  Widget _buildTotalsRow(BuildContext context, AnalysisViewModel viewModel) {
-    return Row(
-      children: [
-        Expanded(
-            child: _buildTotalCard(context, 'Gasto Total',
-                viewModel.totalOverall, AppTheme.primary)),
-        const SizedBox(width: 16),
-        Expanded(
-            child: _buildTotalCard(context, 'Neste Mês',
-                viewModel.totalCurrentMonth, AppTheme.secondary)),
-      ],
-    );
-  }
-
-  Widget _buildAverageCard(BuildContext context, AnalysisViewModel viewModel) {
-    final theme = Theme.of(context);
-    final percentageChange = viewModel.percentageChangeFromLastMonth;
-    final hasPreviousMonth = viewModel.lastMonthExpense > 0;
-
-    final isIncrease = percentageChange >= 0;
-    final changeText =
-        '${isIncrease ? '+' : '-'} ${percentageChange.abs().toStringAsFixed(1)}%';
-    final changeColor =
-        isIncrease ? AppTheme.positiveChange : AppTheme.negativeChange;
-
-    return Card(
-      color: theme.colorScheme.tertiary.withOpacity(0.1),
-      elevation: 0,
-      child: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text('Média Mensal',
-                style: theme.textTheme.bodyLarge
-                    ?.copyWith(color: theme.colorScheme.tertiary)),
-            const SizedBox(height: 8),
-            Text(
-              _currencyFormatterNoCents.format(viewModel.averageMonthlyExpense),
-              style: theme.textTheme.headlineSmall?.copyWith(
-                  fontWeight: FontWeight.bold,
-                  color: theme.colorScheme.tertiary),
-            ),
-            if (hasPreviousMonth) ...[
-              const SizedBox(height: 4),
-              Row(
+          ? Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(
-                    isIncrease ? Icons.arrow_upward : Icons.arrow_downward,
-                    color: changeColor,
-                    size: 16,
+                  Container(
+                    padding: const EdgeInsets.all(20),
+                    decoration: BoxDecoration(
+                      color: AppTheme.primary.withOpacity(0.1),
+                      shape: BoxShape.circle,
+                    ),
+                    child: CircularProgressIndicator(
+                      strokeWidth: 3,
+                      valueColor:
+                          AlwaysStoppedAnimation<Color>(AppTheme.primary),
+                    ),
                   ),
-                  const SizedBox(width: 4),
+                  const SizedBox(height: 16),
                   Text(
-                    changeText,
-                    style: theme.textTheme.bodyMedium?.copyWith(
-                        fontWeight: FontWeight.bold, color: changeColor),
-                  )
+                    'Analisando seus dados...',
+                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                          color: AppTheme.onSurface.withOpacity(0.7),
+                        ),
+                  ),
                 ],
-              )
-            ],
-          ],
-        ),
-      ),
+              ),
+            )
+          : RefreshIndicator(
+              onRefresh: () async {},
+              color: AppTheme.primary,
+              child: SingleChildScrollView(
+                physics: const AlwaysScrollableScrollPhysics(),
+                padding: const EdgeInsets.all(20.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    _buildStatsOverview(context, viewModel),
+                    const SizedBox(height: 24),
+                    _buildMonthlyTrendSection(context, viewModel),
+                    const SizedBox(height: 24),
+                    _buildCategoryAnalysisSection(context, viewModel),
+                  ],
+                ),
+              ),
+            ).animate().fadeIn(duration: 300.ms).slideY(begin: 0.05, end: 0),
     );
   }
 
-  Widget _buildTotalCard(
-      BuildContext context, String title, double value, Color color) {
-    final theme = Theme.of(context);
-    return Card(
-      color: color.withOpacity(0.1),
-      elevation: 0,
-      child: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+  Widget _buildStatsOverview(
+      BuildContext context, AnalysisViewModel viewModel) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
           children: [
-            Text(title,
-                style: theme.textTheme.bodyLarge?.copyWith(color: color)),
-            const SizedBox(height: 8),
-            FittedBox(
-              fit: BoxFit.scaleDown,
-              child: Text(
-                _currencyFormatterNoCents.format(value),
-                style: theme.textTheme.headlineSmall
-                    ?.copyWith(fontWeight: FontWeight.bold, color: color),
+            Expanded(
+              child: _buildEnhancedStatCard(
+                context,
+                'Este Mês',
+                viewModel.totalCurrentMonth,
+                AppTheme.secondary,
+                icon: Icons.calendar_month,
+              ),
+            ),
+            const SizedBox(width: 16),
+            Expanded(
+              child: _buildEnhancedStatCard(
+                context,
+                'Mês Passado',
+                viewModel.lastMonthExpense,
+                AppTheme.chartColors[4],
+                icon: Icons.arrow_back_ios_new,
               ),
             ),
           ],
         ),
+        const SizedBox(height: 16),
+        Row(
+          children: [
+            Expanded(
+              child: _buildEnhancedStatCard(
+                context,
+                'Gasto Total',
+                viewModel.totalOverall,
+                AppTheme.primary,
+                icon: Icons.trending_up,
+              ),
+            ),
+            const SizedBox(width: 16),
+            Expanded(
+              child: _buildEnhancedStatCard(
+                context,
+                'Média Mensal',
+                viewModel.averageMonthlyExpense,
+                Theme.of(context).colorScheme.tertiary,
+                icon: Icons.insights,
+              ),
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+
+  Widget _buildEnhancedStatCard(
+    BuildContext context,
+    String title,
+    double value,
+    Color color, {
+    IconData? icon,
+  }) {
+    final theme = Theme.of(context);
+    final String formattedValue = title == 'Gasto Total'
+        ? _currencyFormatterNoCents.format(value)
+        : _formatCurrencyFlexible(value);
+
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: color.withOpacity(0.08),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: color.withOpacity(0.2),
+          width: 1,
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              if (icon != null) ...[
+                Icon(icon, color: color, size: 18),
+                const SizedBox(width: 8),
+              ],
+              Expanded(
+                child: Text(
+                  title,
+                  style: theme.textTheme.bodyMedium?.copyWith(
+                    color: color,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          FittedBox(
+            fit: BoxFit.scaleDown,
+            child: Text(
+              formattedValue,
+              style: theme.textTheme.headlineSmall?.copyWith(
+                fontWeight: FontWeight.bold,
+                color: color,
+                fontSize: 20,
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
 
-  Widget _buildSectionTitle(BuildContext context, String title) {
-    return Text(title,
-        style: Theme.of(context)
-            .textTheme
-            .titleLarge
-            ?.copyWith(fontWeight: FontWeight.bold));
+  Widget _buildMonthlyTrendSection(
+      BuildContext context, AnalysisViewModel viewModel) {
+    final data = viewModel.last6MonthsData;
+    final chartEntries = data.entries.toList();
+    if (chartEntries.isEmpty || chartEntries.every((e) => e.value == 0)) {
+      return const SizedBox.shrink();
+    }
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'Histórico Mensal',
+          style: Theme.of(context)
+              .textTheme
+              .titleLarge
+              ?.copyWith(fontWeight: FontWeight.bold),
+        ),
+        const SizedBox(height: 8),
+        _buildLineChart(context, viewModel),
+      ],
+    );
   }
 
   double _getRoundedMaxValue(double maxValue) {
@@ -167,16 +235,14 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
     final theme = Theme.of(context);
     final data = viewModel.last6MonthsData;
     final chartEntries = data.entries.toList();
-
     if (chartEntries.isEmpty || chartEntries.every((e) => e.value == 0)) {
       return const SizedBox(
-          height: 220,
-          child: Center(child: Text("Nenhum dado para exibir no período.")));
+        height: 220,
+        child: Center(child: Text("Nenhum dado para exibir no período.")),
+      );
     }
-
     final firstMonth = DateFormat('yyyy-MM').parse(chartEntries.first.key);
     final lastMonth = DateFormat('yyyy-MM').parse(chartEntries.last.key);
-
     final spots = chartEntries
         .asMap()
         .entries
@@ -185,10 +251,8 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
               entry.value.value,
             ))
         .toList();
-
     final maxValue = spots.map((spot) => spot.y).reduce(max);
     final roundedMaxValue = _getRoundedMaxValue(maxValue);
-
     return Column(
       children: [
         Row(
@@ -316,23 +380,44 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
     );
   }
 
+  Widget _buildCategoryAnalysisSection(
+      BuildContext context, AnalysisViewModel viewModel) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'Análise por Categoria',
+          style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                fontWeight: FontWeight.bold,
+              ),
+        ),
+        const SizedBox(height: 16),
+        _buildCategoryMonthSelector(context, viewModel),
+        const SizedBox(height: 20),
+        _buildEnhancedCategoryBreakdown(context, viewModel),
+      ],
+    );
+  }
+
   Widget _buildCategoryMonthSelector(
       BuildContext context, AnalysisViewModel viewModel) {
     if (viewModel.availableMonthsForFilter.isEmpty ||
         viewModel.selectedMonthForCategory == null) {
       return const SizedBox.shrink();
     }
-    return OutlinedButton.icon(
-      icon: const Icon(Icons.calendar_today, size: 18),
-      label: Text(
-        DateFormat.yMMMM('pt_BR').format(viewModel.selectedMonthForCategory!),
-        style: const TextStyle(fontWeight: FontWeight.bold),
-      ),
-      onPressed: () => _showMonthPicker(context, viewModel),
-      style: OutlinedButton.styleFrom(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(24),
+    return Center(
+      child: OutlinedButton.icon(
+        icon: const Icon(Icons.calendar_today, size: 18),
+        label: Text(
+          DateFormat.yMMMM('pt_BR').format(viewModel.selectedMonthForCategory!),
+          style: const TextStyle(fontWeight: FontWeight.bold),
+        ),
+        onPressed: () => _showMonthPicker(context, viewModel),
+        style: OutlinedButton.styleFrom(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(24),
+          ),
         ),
       ),
     );
@@ -365,132 +450,218 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
     );
   }
 
-  Widget _buildCategoryBreakdown(
+  Widget _buildEnhancedCategoryBreakdown(
       BuildContext context, AnalysisViewModel viewModel) {
     final theme = Theme.of(context);
     final data = viewModel.expensesByCategoryForSelectedMonth;
-
     if (data.isEmpty) {
-      return const SizedBox(
-          height: 180,
-          child: Center(child: Text("Nenhum dado para o mês selecionado.")));
-    }
-
-    final total = data.values.fold(0.0, (sum, item) => sum + item);
-    final chartData = data.entries.toList();
-
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 16.0),
-      child: SizedBox(
-        height: 220,
-        child: Row(
-          children: [
-            Expanded(
-              flex: 2,
-              child: PieChart(
-                PieChartData(
-                  pieTouchData: PieTouchData(
-                    touchCallback: (event, pieTouchResponse) {
-                      setState(() {
-                        if (!event.isInterestedForInteractions ||
-                            pieTouchResponse?.touchedSection == null) {
-                          _touchedPieIndex = -1;
-                          return;
-                        }
-                        _touchedPieIndex = pieTouchResponse!
-                            .touchedSection!.touchedSectionIndex;
-                      });
-                    },
-                  ),
-                  sectionsSpace: 4,
-                  centerSpaceRadius: 30,
-                  sections: List.generate(chartData.length, (i) {
-                    final isTouched = i == _touchedPieIndex;
-                    final entry = chartData[i];
-                    return PieChartSectionData(
-                      color: entry.key.color,
-                      value: entry.value,
-                      title: '',
-                      radius: isTouched ? 60 : 50,
-                      badgeWidget:
-                          isTouched ? _buildBadge(entry.key.name, theme) : null,
-                      badgePositionPercentageOffset: .98,
-                    );
-                  }),
+      return Container(
+        height: 200,
+        decoration: BoxDecoration(
+          color: AppTheme.primary.withOpacity(0.05),
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(
+            color: AppTheme.primary.withOpacity(0.1),
+          ),
+        ),
+        child: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(
+                Icons.pie_chart_outline,
+                size: 48,
+                color: AppTheme.primary.withOpacity(0.5),
+              ),
+              const SizedBox(height: 12),
+              Text(
+                "Nenhuma despesa encontrada",
+                style: theme.textTheme.bodyLarge?.copyWith(
+                  color: AppTheme.primary.withOpacity(0.7),
+                  fontWeight: FontWeight.w600,
                 ),
               ),
-            ),
-            const SizedBox(width: 20),
-            Expanded(
-              flex: 3,
-              child: ListView(
-                children: data.entries.map((entry) {
-                  final percentage =
-                      total > 0 ? (entry.value / total) * 100 : 0.0;
-                  return Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 4.0),
-                    child: _buildIndicator(
-                      color: entry.key.color,
-                      text: entry.key.name,
-                      value: entry.value,
-                      percentage: percentage,
-                    ),
-                  );
-                }).toList(),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildBadge(String text, ThemeData theme) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-      decoration: BoxDecoration(
-        color: Colors.black.withOpacity(0.75),
-        borderRadius: BorderRadius.circular(6),
-      ),
-      child: Text(
-        text,
-        textAlign: TextAlign.center,
-        style: const TextStyle(color: Colors.white, fontSize: 12),
-      ),
-    );
-  }
-
-  Widget _buildIndicator(
-      {required Color color,
-      required String text,
-      required double value,
-      required double percentage}) {
-    final formattedValue = _currencyFormatter.format(value);
-    return Row(
-      children: <Widget>[
-        Container(
-            width: 12,
-            height: 12,
-            decoration: BoxDecoration(shape: BoxShape.circle, color: color)),
-        const SizedBox(width: 8),
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(text,
-                  style: const TextStyle(
-                      fontSize: 14, fontWeight: FontWeight.bold),
-                  overflow: TextOverflow.ellipsis),
+              const SizedBox(height: 4),
               Text(
-                '$formattedValue (${percentage.toStringAsFixed(1)}%)',
-                style: TextStyle(
-                    fontSize: 12,
-                    color: Theme.of(context).textTheme.bodySmall?.color),
+                "para o mês selecionado",
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color: AppTheme.onSurface.withOpacity(0.6),
+                ),
               ),
             ],
           ),
-        )
+        ),
+      );
+    }
+    final total = data.values.fold(0.0, (sum, item) => sum + item);
+    final chartData = data.entries.toList();
+    return Column(
+      children: [
+        SizedBox(
+          height: 200,
+          child: PieChart(
+            PieChartData(
+              pieTouchData: PieTouchData(
+                touchCallback: (event, pieTouchResponse) {
+                  setState(() {
+                    if (!event.isInterestedForInteractions ||
+                        pieTouchResponse?.touchedSection == null) {
+                      _touchedPieIndex = -1;
+                      return;
+                    }
+                    _touchedPieIndex =
+                        pieTouchResponse!.touchedSection!.touchedSectionIndex;
+                  });
+                },
+              ),
+              sectionsSpace: 2,
+              centerSpaceRadius: 40,
+              sections: List.generate(chartData.length, (i) {
+                final isTouched = i == _touchedPieIndex;
+                final entry = chartData[i];
+                final percentage =
+                    total > 0 ? (entry.value / total) * 100 : 0.0;
+                return PieChartSectionData(
+                  color: entry.key.color,
+                  value: entry.value,
+                  title: '${percentage.toStringAsFixed(0)}%',
+                  radius: isTouched ? 70 : 60,
+                  titleStyle: const TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
+                    shadows: [
+                      Shadow(
+                        color: Colors.black26,
+                        offset: Offset(1, 1),
+                        blurRadius: 2,
+                      ),
+                    ],
+                  ),
+                );
+              }),
+            ),
+          ),
+        ),
+        const SizedBox(height: 24),
+        ListView.separated(
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          itemCount: chartData.length,
+          separatorBuilder: (context, index) => const SizedBox(height: 8),
+          itemBuilder: (context, index) {
+            final entry = chartData[index];
+            final percentage = total > 0 ? (entry.value / total) * 100 : 0.0;
+            return _buildEnhancedIndicator(
+              color: entry.key.color,
+              text: entry.key.name,
+              value: entry.value,
+              percentage: percentage,
+              isHighlighted: index == _touchedPieIndex,
+            );
+          },
+        ),
       ],
+    );
+  }
+
+  Widget _buildEnhancedIndicator({
+    required Color color,
+    required String text,
+    required double value,
+    required double percentage,
+    bool isHighlighted = false,
+  }) {
+    final formattedValue = _currencyFormatter.format(value);
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 200),
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: isHighlighted ? color.withOpacity(0.1) : Colors.transparent,
+        borderRadius: BorderRadius.circular(12),
+        border:
+            isHighlighted ? Border.all(color: color.withOpacity(0.3)) : null,
+      ),
+      child: Row(
+        children: [
+          Container(
+            width: 16,
+            height: 16,
+            decoration: BoxDecoration(
+              color: color,
+              shape: BoxShape.circle,
+              boxShadow: [
+                BoxShadow(
+                  color: color.withOpacity(0.3),
+                  blurRadius: 4,
+                  offset: const Offset(0, 2),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  text,
+                  style: TextStyle(
+                    fontSize: 14,
+                    fontWeight:
+                        isHighlighted ? FontWeight.bold : FontWeight.w600,
+                    color: isHighlighted ? color : null,
+                  ),
+                  overflow: TextOverflow.ellipsis,
+                ),
+                const SizedBox(height: 2),
+                Row(
+                  children: [
+                    Text(
+                      formattedValue,
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w500,
+                        color: Theme.of(context).textTheme.bodySmall?.color,
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 6, vertical: 2),
+                      decoration: BoxDecoration(
+                        color: color.withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Text(
+                        '${percentage.toStringAsFixed(1)}%',
+                        style: TextStyle(
+                          fontSize: 10,
+                          fontWeight: FontWeight.bold,
+                          color: color,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+          if (isHighlighted)
+            Container(
+              padding: const EdgeInsets.all(4),
+              decoration: BoxDecoration(
+                color: color.withOpacity(0.2),
+                borderRadius: BorderRadius.circular(6),
+              ),
+              child: Icon(
+                Icons.visibility,
+                color: color,
+                size: 16,
+              ),
+            ),
+        ],
+      ),
     );
   }
 }
