@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_masked_text2/flutter_masked_text2.dart';
-import 'package:intl/intl.dart';
 import 'package:key_budget/app/widgets/category_autocomplete_field.dart';
 import 'package:key_budget/app/widgets/category_picker_field.dart';
+import 'package:key_budget/app/widgets/date_picker_field.dart';
 import 'package:key_budget/core/models/expense_category_model.dart';
 import 'package:key_budget/core/models/expense_model.dart';
 import 'package:key_budget/features/auth/viewmodel/auth_viewmodel.dart';
@@ -30,8 +30,6 @@ class _ExpenseDetailScreenState extends State<ExpenseDetailScreen> {
   ExpenseCategory? _selectedCategory;
   bool _isEditing = false;
   bool _isSaving = false;
-  final _currencyFormatter =
-      NumberFormat.currency(locale: 'pt_BR', symbol: 'R\$');
 
   @override
   void initState() {
@@ -165,10 +163,7 @@ class _ExpenseDetailScreenState extends State<ExpenseDetailScreen> {
           child: ListView(
             children: [
               TextFormField(
-                controller: _isEditing
-                    ? _amountController
-                    : TextEditingController(
-                        text: _currencyFormatter.format(widget.expense.amount)),
+                controller: _amountController,
                 decoration: const InputDecoration(labelText: 'Valor *'),
                 keyboardType:
                     const TextInputType.numberWithOptions(decimal: true),
@@ -186,52 +181,32 @@ class _ExpenseDetailScreenState extends State<ExpenseDetailScreen> {
                 },
               ),
               const SizedBox(height: 16),
-              if (_isEditing)
-                CategoryPickerField(
-                  label: 'Categoria',
-                  value: _selectedCategory,
-                  categories: categoryViewModel.categories,
-                  onChanged: (category) {
-                    setState(() {
-                      _selectedCategory = category;
-                    });
-                  },
-                  onManageCategories: () async {
-                    final userId =
-                        Provider.of<AuthViewModel>(context, listen: false)
-                            .currentUser
-                            ?.id;
-                    await Navigator.of(context).push(MaterialPageRoute(
-                      builder: (_) => const CategoriesScreen(),
-                    ));
-                    if (userId != null && mounted) {
-                      await Provider.of<CategoryViewModel>(context,
-                              listen: false)
-                          .fetchCategories(userId);
-                    }
-                  },
-                  validator: (value) =>
-                      value == null ? 'Selecione uma categoria' : null,
-                )
-              else
-                InputDecorator(
-                  decoration: const InputDecoration(
-                    labelText: 'Categoria',
-                    enabled: false,
-                    contentPadding:
-                        EdgeInsets.symmetric(horizontal: 12, vertical: 16),
-                  ),
-                  child: _selectedCategory == null
-                      ? const Text('Não especificada')
-                      : Row(
-                          children: [
-                            Icon(_selectedCategory!.icon,
-                                size: 22, color: _selectedCategory!.color),
-                            const SizedBox(width: 12),
-                            Text(_selectedCategory!.name),
-                          ],
-                        ),
-                ),
+              CategoryPickerField(
+                label: 'Categoria',
+                value: _selectedCategory,
+                categories: categoryViewModel.categories,
+                isEnabled: _isEditing,
+                onChanged: (category) {
+                  setState(() {
+                    _selectedCategory = category;
+                  });
+                },
+                onManageCategories: () async {
+                  final userId =
+                      Provider.of<AuthViewModel>(context, listen: false)
+                          .currentUser
+                          ?.id;
+                  await Navigator.of(context).push(MaterialPageRoute(
+                    builder: (_) => const CategoriesScreen(),
+                  ));
+                  if (userId != null && mounted) {
+                    await Provider.of<CategoryViewModel>(context, listen: false)
+                        .fetchCategories(userId);
+                  }
+                },
+                validator: (value) =>
+                    value == null ? 'Selecione uma categoria' : null,
+              ),
               const SizedBox(height: 16),
               if (_isEditing)
                 CategoryAutocompleteField(
@@ -243,14 +218,12 @@ class _ExpenseDetailScreenState extends State<ExpenseDetailScreen> {
                   onSelected: (selection) {
                     _motivationController.text = selection;
                   },
-                  maxLines: 3,
                 )
               else
                 TextFormField(
                   controller: _motivationController,
                   decoration: const InputDecoration(labelText: 'Motivação'),
                   enabled: false,
-                  maxLines: 3,
                 ),
               const SizedBox(height: 16),
               if (_isEditing)
@@ -271,27 +244,15 @@ class _ExpenseDetailScreenState extends State<ExpenseDetailScreen> {
                   enabled: false,
                 ),
               const SizedBox(height: 16),
-              ListTile(
-                contentPadding: EdgeInsets.zero,
-                title: const Text('Data'),
-                subtitle: Text(DateFormat('dd/MM/yyyy').format(_selectedDate)),
-                trailing: _isEditing ? const Icon(Icons.calendar_today) : null,
-                onTap: !_isEditing
-                    ? null
-                    : () async {
-                        final pickedDate = await showDatePicker(
-                          context: context,
-                          initialDate: _selectedDate,
-                          firstDate: DateTime(2000),
-                          lastDate: DateTime.now(),
-                          locale: const Locale('pt', 'BR'),
-                        );
-                        if (pickedDate != null && pickedDate != _selectedDate) {
-                          setState(() {
-                            _selectedDate = pickedDate;
-                          });
-                        }
-                      },
+              DatePickerField(
+                label: 'Data',
+                selectedDate: _selectedDate,
+                isEditing: _isEditing,
+                onDateSelected: (newDate) {
+                  setState(() {
+                    _selectedDate = newDate;
+                  });
+                },
               ),
               const SizedBox(height: 24),
               if (_isEditing)
