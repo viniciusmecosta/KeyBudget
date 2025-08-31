@@ -15,6 +15,7 @@ class ExpenseViewModel extends ChangeNotifier {
   bool _isLoading = true;
   List<String> _selectedCategoryIds = [];
   StreamSubscription? _expensesSubscription;
+  bool _isListening = false;
 
   List<Expense> get allExpenses => _allExpenses;
 
@@ -52,6 +53,10 @@ class ExpenseViewModel extends ChangeNotifier {
   }
 
   void listenToExpenses(String userId) {
+    if (_isListening) {
+      return;
+    }
+
     if (!_isLoading) _setLoading(true);
     _expensesSubscription?.cancel();
     _expensesSubscription =
@@ -60,6 +65,7 @@ class ExpenseViewModel extends ChangeNotifier {
       if (_isLoading) _setLoading(false);
       notifyListeners();
     });
+    _isListening = true;
   }
 
   Future<void> addExpense(String userId, Expense expense) async {
@@ -163,6 +169,7 @@ class ExpenseViewModel extends ChangeNotifier {
     _expensesSubscription?.cancel();
     _allExpenses = [];
     _selectedCategoryIds = [];
+    _isListening = false;
     notifyListeners();
   }
 

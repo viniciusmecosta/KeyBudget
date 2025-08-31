@@ -193,6 +193,7 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
               margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
               elevation: 4,
               shadowColor: theme.primaryColor.withOpacity(0.2),
+              clipBehavior: Clip.antiAlias,
               child: Container(
                 width: double.infinity,
                 padding:
@@ -206,15 +207,15 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
                   ),
-                  borderRadius: BorderRadius.circular(16),
                 ),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Text(
                       'Total do mês',
-                      style: theme.textTheme.bodyLarge?.copyWith(
-                          color: theme.colorScheme.onPrimary.withOpacity(0.8)),
+                      style: theme.textTheme.titleMedium?.copyWith(
+                          color: theme.colorScheme.onPrimary.withOpacity(0.9),
+                          fontWeight: FontWeight.bold),
                     ),
                     Text(
                       _currencyFormatter.format(totalValue),
@@ -224,7 +225,7 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
                   ],
                 ),
               ),
-            ).animate().fadeIn(duration: 250.ms).slideY(begin: -0.3),
+            ),
             Expanded(
               child: Selector<ExpenseViewModel, List<Expense>>(
                 selector: (_, vm) => vm.filteredExpenses
@@ -270,8 +271,10 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
 
                       return Card(
                         margin: const EdgeInsets.symmetric(
-                            horizontal: 4, vertical: 6),
+                            horizontal: 4, vertical: 4),
                         child: ListTile(
+                          contentPadding: const EdgeInsets.symmetric(
+                              horizontal: 16, vertical: 6),
                           leading: CircleAvatar(
                             backgroundColor:
                                 (category?.color ?? theme.primaryColor)
@@ -306,12 +309,12 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
                         ),
                       );
                     },
-                  ).animate().fadeIn(duration: 300.ms, delay: 200.ms);
+                  );
                 },
               ),
             ),
           ],
-        ),
+        ).animate().fadeIn(duration: 250.ms),
       ),
       floatingActionButton: FloatingActionButton.extended(
         heroTag: 'fab_expenses',

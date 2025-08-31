@@ -28,17 +28,33 @@ class _MainScreenState extends State<MainScreen> {
     final theme = Theme.of(context);
 
     return Scaffold(
-      body: IndexedStack(
-        index: navigationViewModel.selectedIndex,
-        children: _widgetOptions,
+      body: AnimatedSwitcher(
+        duration: const Duration(milliseconds: 250),
+        transitionBuilder: (Widget child, Animation<double> animation) {
+          return FadeTransition(
+            opacity: animation,
+            child: ScaleTransition(
+              scale: Tween<double>(begin: 0.95, end: 1.0).animate(animation),
+              child: child,
+            ),
+          );
+        },
+        child: KeyedSubtree(
+          key: ValueKey<int>(navigationViewModel.selectedIndex),
+          child: _widgetOptions[navigationViewModel.selectedIndex],
+        ),
       ),
       bottomNavigationBar: Container(
         decoration: BoxDecoration(
           color: theme.cardColor,
+          borderRadius: const BorderRadius.only(
+            topLeft: Radius.circular(24),
+            topRight: Radius.circular(24),
+          ),
           boxShadow: [
             BoxShadow(
               blurRadius: 20,
-              color: theme.shadowColor,
+              color: theme.shadowColor.withOpacity(0.1),
             )
           ],
         ),
@@ -56,10 +72,10 @@ class _MainScreenState extends State<MainScreen> {
               tabBackgroundColor: theme.colorScheme.primary.withOpacity(0.1),
               color: theme.colorScheme.onSurface.withOpacity(0.6),
               tabs: const [
-                GButton(icon: Icons.home_outlined, text: 'Painel'),
-                GButton(icon: Icons.payment_outlined, text: 'Gastos'),
-                GButton(icon: Icons.vpn_key_outlined, text: 'Senhas'),
-                GButton(icon: Icons.person_outline, text: 'Perfil'),
+                GButton(icon: Icons.home_rounded, text: 'Painel'),
+                GButton(icon: Icons.payment_rounded, text: 'Despesas'),
+                GButton(icon: Icons.vpn_key_rounded, text: 'Credenciais'),
+                GButton(icon: Icons.person_rounded, text: 'Perfil'),
               ],
               selectedIndex: navigationViewModel.selectedIndex,
               onTabChange: (index) {

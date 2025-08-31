@@ -153,8 +153,10 @@ class _CredentialsScreenState extends State<CredentialsScreen> {
                 final logoPath = credential.logoPath;
                 return Card(
                   margin:
-                      const EdgeInsets.symmetric(horizontal: 4, vertical: 6),
+                      const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
                   child: ListTile(
+                    contentPadding:
+                        const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
                     leading: CircleAvatar(
                       backgroundColor: Theme.of(context)
                           .colorScheme
@@ -187,10 +189,10 @@ class _CredentialsScreenState extends State<CredentialsScreen> {
                   ),
                 );
               },
-            ).animate().fadeIn(duration: 300.ms, delay: 200.ms);
+            );
           },
         ),
-      ),
+      ).animate().fadeIn(duration: 250.ms),
       floatingActionButton: FloatingActionButton.extended(
         heroTag: 'fab_credentials',
         onPressed: () => Navigator.of(context).push(
