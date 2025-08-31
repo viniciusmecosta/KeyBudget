@@ -1,53 +1,382 @@
 import 'package:flutter/material.dart';
 
-class IconPickerWidget extends StatelessWidget {
+class IconPickerWidget extends StatefulWidget {
   const IconPickerWidget({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    final List<IconData> icons = [
-      Icons.restaurant,
-      Icons.wifi,
-      Icons.local_pizza,
-      Icons.water_drop,
-      Icons.checkroom,
-      Icons.shopping_bag,
-      Icons.medication,
-      Icons.shopping_cart,
-      Icons.directions_bus,
-      Icons.category,
-      Icons.home,
-      Icons.pets,
-      Icons.phone_android,
-      Icons.school,
-      Icons.fitness_center,
-      Icons.card_giftcard,
-      Icons.movie,
-      Icons.lightbulb,
-      Icons.flight,
-      Icons.build,
-    ];
+  State<IconPickerWidget> createState() => _IconPickerWidgetState();
+}
 
-    return AlertDialog(
-      title: const Text('Selecione um Ícone'),
-      content: SizedBox(
-        width: double.maxFinite,
-        child: GridView.builder(
-          shrinkWrap: true,
-          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-            crossAxisCount: 5,
-            crossAxisSpacing: 10,
-            mainAxisSpacing: 10,
+class _IconPickerWidgetState extends State<IconPickerWidget> {
+  final List<IconData> _allIcons = [
+    Icons.restaurant,
+    Icons.wifi,
+    Icons.local_pizza,
+    Icons.water_drop,
+    Icons.checkroom,
+    Icons.shopping_bag,
+    Icons.medication,
+    Icons.shopping_cart,
+    Icons.directions_bus,
+    Icons.category,
+    Icons.home,
+    Icons.pets,
+    Icons.phone_android,
+    Icons.school,
+    Icons.fitness_center,
+    Icons.card_giftcard,
+    Icons.movie,
+    Icons.lightbulb,
+    Icons.flight,
+    Icons.build,
+    Icons.ac_unit,
+    Icons.airport_shuttle,
+    Icons.all_inclusive,
+    Icons.apartment,
+    Icons.baby_changing_station,
+    Icons.backpack,
+    Icons.balcony,
+    Icons.bathtub,
+    Icons.beach_access,
+    Icons.bed,
+    Icons.bedroom_baby,
+    Icons.bedroom_child,
+    Icons.bedroom_parent,
+    Icons.blender,
+    Icons.book,
+    Icons.camera_alt,
+    Icons.car_repair,
+    Icons.carpenter,
+    Icons.casino,
+    Icons.castle,
+    Icons.celebration,
+    Icons.chair,
+    Icons.child_care,
+    Icons.child_friendly,
+    Icons.cleaning_services,
+    Icons.computer,
+    Icons.content_cut,
+    Icons.cottage,
+    Icons.countertops,
+    Icons.credit_card,
+    Icons.delivery_dining,
+    Icons.desk,
+    Icons.devices,
+    Icons.diamond,
+    Icons.dinner_dining,
+    Icons.directions_bike,
+    Icons.directions_boat,
+    Icons.directions_car,
+    Icons.directions_run,
+    Icons.directions_subway,
+    Icons.directions_walk,
+    Icons.dns,
+    Icons.domain,
+    Icons.eco,
+    Icons.electrical_services,
+    Icons.emoji_events,
+    Icons.engineering,
+    Icons.escalator_warning,
+    Icons.euro_symbol,
+    Icons.family_restroom,
+    Icons.fastfood,
+    Icons.favorite,
+    Icons.fence,
+    Icons.festival,
+    Icons.fireplace,
+    Icons.fire_truck,
+    Icons.flag,
+    Icons.flatware,
+    Icons.folder_special,
+    Icons.foundation,
+    Icons.free_breakfast,
+    Icons.functions,
+    Icons.gavel,
+    Icons.generating_tokens,
+    Icons.grass,
+    Icons.grid_goldenratio,
+    Icons.group,
+    Icons.hail,
+    Icons.handyman,
+    Icons.hardware,
+    Icons.headphones,
+    Icons.health_and_safety,
+    Icons.help,
+    Icons.history_edu,
+    Icons.hvac,
+    Icons.icecream,
+    Icons.interests,
+    Icons.ios_share,
+    Icons.kayaking,
+    Icons.kitesurfing,
+    Icons.landscape,
+    Icons.language,
+    Icons.laptop,
+    Icons.layers,
+    Icons.leaderboard,
+    Icons.leave_bags_at_home,
+    Icons.library_books,
+    Icons.liquor,
+    Icons.local_activity,
+    Icons.local_atm,
+    Icons.local_bar,
+    Icons.local_cafe,
+    Icons.local_convenience_store,
+    Icons.local_dining,
+    Icons.local_drink,
+    Icons.local_fire_department,
+    Icons.local_florist,
+    Icons.local_gas_station,
+    Icons.local_grocery_store,
+    Icons.local_hospital,
+    Icons.local_hotel,
+    Icons.local_laundry_service,
+    Icons.local_library,
+    Icons.local_mall,
+    Icons.local_movies,
+    Icons.local_offer,
+    Icons.local_parking,
+    Icons.local_pharmacy,
+    Icons.local_phone,
+    Icons.local_play,
+    Icons.local_police,
+    Icons.local_post_office,
+    Icons.local_printshop,
+    Icons.local_see,
+    Icons.local_shipping,
+    Icons.local_taxi,
+    Icons.location_city,
+    Icons.lock,
+    Icons.login,
+    Icons.loyalty,
+    Icons.luggage,
+    Icons.lunch_dining,
+    Icons.map,
+    Icons.masks,
+    Icons.medical_services,
+    Icons.military_tech,
+    Icons.miscellaneous_services,
+    Icons.moped,
+    Icons.motorcycle,
+    Icons.museum,
+    Icons.music_note,
+    Icons.nightlife,
+    Icons.no_food,
+    Icons.no_drinks,
+    Icons.no_flash,
+    Icons.no_photography,
+    Icons.no_stroller,
+    Icons.not_listed_location,
+    Icons.notifications,
+    Icons.outlet,
+    Icons.pages,
+    Icons.palette,
+    Icons.park,
+    Icons.party_mode,
+    Icons.password,
+    Icons.payment,
+    Icons.pedal_bike,
+    Icons.people,
+    Icons.person,
+    Icons.phone,
+    Icons.piano,
+    Icons.pie_chart,
+    Icons.plumbing,
+    Icons.plus_one,
+    Icons.poll,
+    Icons.pool,
+    Icons.psychology,
+    Icons.public,
+    Icons.ramen_dining,
+    Icons.receipt,
+    Icons.recommend,
+    Icons.recycling,
+    Icons.reduce_capacity,
+    Icons.report_problem,
+    Icons.restaurant_menu,
+    Icons.room,
+    Icons.rowing,
+    Icons.rv_hookup,
+    Icons.safety_divider,
+    Icons.sailing,
+    Icons.sanitizer,
+    Icons.satellite,
+    Icons.save,
+    Icons.savings,
+    Icons.science,
+    Icons.self_improvement,
+    Icons.sentiment_dissatisfied,
+    Icons.sentiment_neutral,
+    Icons.sentiment_satisfied,
+    Icons.sentiment_very_dissatisfied,
+    Icons.sentiment_very_satisfied,
+    Icons.set_meal,
+    Icons.share,
+    Icons.shield,
+    Icons.shopping_basket,
+    Icons.skateboarding,
+    Icons.smoking_rooms,
+    Icons.snowboarding,
+    Icons.snowmobile,
+    Icons.soap,
+    Icons.social_distance,
+    Icons.sports,
+    Icons.sports_bar,
+    Icons.sports_baseball,
+    Icons.sports_basketball,
+    Icons.sports_cricket,
+    Icons.sports_esports,
+    Icons.sports_football,
+    Icons.sports_golf,
+    Icons.sports_handball,
+    Icons.sports_hockey,
+    Icons.sports_kabaddi,
+    Icons.sports_mma,
+    Icons.sports_motorsports,
+    Icons.sports_rugby,
+    Icons.sports_soccer,
+    Icons.sports_tennis,
+    Icons.sports_volleyball,
+    Icons.store,
+    Icons.stroller,
+    Icons.support,
+    Icons.surfing,
+    Icons.sync,
+    Icons.tab,
+    Icons.tablet,
+    Icons.tag_faces,
+    Icons.tapas,
+    Icons.task,
+    Icons.terrain,
+    Icons.theater_comedy,
+    Icons.theaters,
+    Icons.thumb_down,
+    Icons.thumb_up,
+    Icons.toll,
+    Icons.toys,
+    Icons.traffic,
+    Icons.train,
+    Icons.tram,
+    Icons.translate,
+    Icons.trending_down,
+    Icons.trending_up,
+    Icons.two_wheeler,
+    Icons.umbrella,
+    Icons.update,
+    Icons.verified,
+    Icons.verified_user,
+    Icons.vibration,
+    Icons.video_call,
+    Icons.visibility,
+    Icons.volunteer_activism,
+    Icons.wallet,
+    Icons.watch,
+    Icons.waves,
+    Icons.work,
+  ];
+
+  List<IconData> _displayedIcons = [];
+  final _scrollController = ScrollController();
+  final int _iconsPerPage = 50;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadMoreIcons();
+    _scrollController.addListener(() {
+      if (_scrollController.position.pixels >=
+          _scrollController.position.maxScrollExtent - 200) {
+        _loadMoreIcons();
+      }
+    });
+  }
+
+  void _loadMoreIcons() {
+    if (_displayedIcons.length < _allIcons.length) {
+      setState(() {
+        final nextIcons =
+            _allIcons.skip(_displayedIcons.length).take(_iconsPerPage);
+        _displayedIcons.addAll(nextIcons);
+      });
+    }
+  }
+
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
+    return DraggableScrollableSheet(
+      initialChildSize: 0.7,
+      minChildSize: 0.4,
+      maxChildSize: 0.9,
+      expand: false,
+      builder: (_, controller) {
+        _scrollController.hasClients
+            ? controller = _scrollController
+            : controller = controller;
+        return Container(
+          decoration: BoxDecoration(
+            color: theme.cardColor,
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
           ),
-          itemCount: icons.length,
-          itemBuilder: (context, index) {
-            return IconButton(
-              icon: Icon(icons[index]),
-              onPressed: () => Navigator.of(context).pop(icons[index]),
-            );
-          },
-        ),
-      ),
+          child: Column(
+            children: [
+              const SizedBox(height: 12),
+              Container(
+                height: 5,
+                width: 50,
+                decoration: BoxDecoration(
+                  color: theme.dividerColor,
+                  borderRadius: BorderRadius.circular(20),
+                ),
+              ),
+              const SizedBox(height: 16),
+              Text(
+                'Selecione um Ícone',
+                style: theme.textTheme.titleLarge,
+              ),
+              const SizedBox(height: 8),
+              Expanded(
+                child: GridView.builder(
+                  controller: controller,
+                  padding: const EdgeInsets.all(16),
+                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                    crossAxisCount: 5,
+                    crossAxisSpacing: 16,
+                    mainAxisSpacing: 16,
+                  ),
+                  itemCount: _displayedIcons.length,
+                  itemBuilder: (context, index) {
+                    final icon = _displayedIcons[index];
+                    return InkWell(
+                      onTap: () => Navigator.of(context).pop(icon),
+                      borderRadius: BorderRadius.circular(12),
+                      child: Container(
+                        decoration: BoxDecoration(
+                          color:
+                              theme.colorScheme.surfaceVariant.withOpacity(0.3),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Icon(
+                          icon,
+                          size: 32,
+                          color: theme.colorScheme.onSurfaceVariant,
+                        ),
+                      ),
+                    );
+                  },
+                ),
+              ),
+            ],
+          ),
+        );
+      },
     );
   }
 }
