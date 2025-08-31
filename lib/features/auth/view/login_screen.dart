@@ -83,7 +83,7 @@ class _LoginScreenState extends State<LoginScreen> {
             end: Alignment.bottomRight,
             colors: [
               theme.colorScheme.background,
-              theme.primaryColor.withOpacity(0.2),
+              theme.primaryColor.withOpacity(0.1),
             ],
           ),
         ),
@@ -97,13 +97,14 @@ class _LoginScreenState extends State<LoginScreen> {
                   "KeyBudget",
                   style: theme.textTheme.headlineMedium?.copyWith(
                     color: theme.primaryColor,
+                    fontWeight: FontWeight.bold,
                   ),
                 ).animate().fadeIn(duration: 500.ms).slideY(begin: -0.5),
                 const SizedBox(height: 8),
                 Text(
                   "Gerencie suas finanças e senhas com segurança",
                   textAlign: TextAlign.center,
-                  style: theme.textTheme.bodyMedium?.copyWith(
+                  style: theme.textTheme.titleMedium?.copyWith(
                     color: theme.colorScheme.onSurface.withOpacity(0.7),
                   ),
                 ).animate().fadeIn(duration: 500.ms, delay: 200.ms),
@@ -153,11 +154,11 @@ class _LoginScreenState extends State<LoginScreen> {
                           child: ElevatedButton(
                             onPressed: viewModel.isLoading ? null : _submit,
                             child: viewModel.isLoading
-                                ? SizedBox(
+                                ? const SizedBox(
                                     height: 24,
                                     width: 24,
                                     child: CircularProgressIndicator(
-                                      color: theme.colorScheme.onPrimary,
+                                      color: Colors.white,
                                       strokeWidth: 2.5,
                                     ),
                                   )

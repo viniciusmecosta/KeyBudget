@@ -43,7 +43,7 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
                 _buildLineChart(context, viewModel),
                 const SizedBox(height: 24),
                 _buildSectionTitle(context, 'Categorias no Mês'),
-                const SizedBox(height: 8),
+                const SizedBox(height: 12),
                 _buildCategoryMonthSelector(context, viewModel),
                 const SizedBox(height: 16),
                 _buildCategoryBreakdown(context, viewModel),
@@ -321,13 +321,19 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
         viewModel.selectedMonthForCategory == null) {
       return const SizedBox.shrink();
     }
-    return ActionChip(
-      avatar: const Icon(Icons.calendar_today, size: 18),
+    return OutlinedButton.icon(
+      icon: const Icon(Icons.calendar_today, size: 18),
       label: Text(
         DateFormat.yMMMM('pt_BR').format(viewModel.selectedMonthForCategory!),
         style: const TextStyle(fontWeight: FontWeight.bold),
       ),
       onPressed: () => _showMonthPicker(context, viewModel),
+      style: OutlinedButton.styleFrom(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(24),
+        ),
+      ),
     );
   }
 
@@ -372,73 +378,67 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
     final total = data.values.fold(0.0, (sum, item) => sum + item);
     final chartData = data.entries.toList();
 
-    return Card(
-      elevation: 0,
-      color: Colors.transparent,
-      child: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: SizedBox(
-          height: 220, // Aumentado para dar mais espaço
-          child: Row(
-            children: [
-              Expanded(
-                flex: 2,
-                child: PieChart(
-                  PieChartData(
-                    pieTouchData: PieTouchData(
-                      touchCallback: (event, pieTouchResponse) {
-                        setState(() {
-                          if (!event.isInterestedForInteractions ||
-                              pieTouchResponse?.touchedSection == null) {
-                            _touchedPieIndex = -1;
-                            return;
-                          }
-                          _touchedPieIndex = pieTouchResponse!
-                              .touchedSection!.touchedSectionIndex;
-                        });
-                      },
-                    ),
-                    sectionsSpace: 4,
-                    centerSpaceRadius: 30,
-                    sections: List.generate(chartData.length, (i) {
-                      final isTouched = i == _touchedPieIndex;
-                      final entry = chartData[i];
-                      return PieChartSectionData(
-                        color: entry.key.color,
-                        value: entry.value,
-                        title: '',
-                        radius: isTouched ? 60 : 50,
-                        // Aumentado o raio
-                        badgeWidget: isTouched
-                            ? _buildBadge(entry.key.name, theme)
-                            : null,
-                        badgePositionPercentageOffset: .98,
-                      );
-                    }),
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 16.0),
+      child: SizedBox(
+        height: 220,
+        child: Row(
+          children: [
+            Expanded(
+              flex: 2,
+              child: PieChart(
+                PieChartData(
+                  pieTouchData: PieTouchData(
+                    touchCallback: (event, pieTouchResponse) {
+                      setState(() {
+                        if (!event.isInterestedForInteractions ||
+                            pieTouchResponse?.touchedSection == null) {
+                          _touchedPieIndex = -1;
+                          return;
+                        }
+                        _touchedPieIndex = pieTouchResponse!
+                            .touchedSection!.touchedSectionIndex;
+                      });
+                    },
                   ),
-                ),
-              ),
-              const SizedBox(width: 20),
-              Expanded(
-                flex: 3,
-                child: ListView(
-                  children: data.entries.map((entry) {
-                    final percentage =
-                        total > 0 ? (entry.value / total) * 100 : 0.0;
-                    return Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 4.0),
-                      child: _buildIndicator(
-                        color: entry.key.color,
-                        text: entry.key.name,
-                        value: entry.value,
-                        percentage: percentage,
-                      ),
+                  sectionsSpace: 4,
+                  centerSpaceRadius: 30,
+                  sections: List.generate(chartData.length, (i) {
+                    final isTouched = i == _touchedPieIndex;
+                    final entry = chartData[i];
+                    return PieChartSectionData(
+                      color: entry.key.color,
+                      value: entry.value,
+                      title: '',
+                      radius: isTouched ? 60 : 50,
+                      badgeWidget:
+                          isTouched ? _buildBadge(entry.key.name, theme) : null,
+                      badgePositionPercentageOffset: .98,
                     );
-                  }).toList(),
+                  }),
                 ),
               ),
-            ],
-          ),
+            ),
+            const SizedBox(width: 20),
+            Expanded(
+              flex: 3,
+              child: ListView(
+                children: data.entries.map((entry) {
+                  final percentage =
+                      total > 0 ? (entry.value / total) * 100 : 0.0;
+                  return Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 4.0),
+                    child: _buildIndicator(
+                      color: entry.key.color,
+                      text: entry.key.name,
+                      value: entry.value,
+                      percentage: percentage,
+                    ),
+                  );
+                }).toList(),
+              ),
+            ),
+          ],
         ),
       ),
     );

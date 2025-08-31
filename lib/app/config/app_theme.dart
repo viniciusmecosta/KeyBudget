@@ -62,21 +62,17 @@ class AppTheme {
       bodyMedium: const TextStyle(color: onSurface, fontSize: 16),
     ),
     appBarTheme: const AppBarTheme(
-      backgroundColor: background,
-      scrolledUnderElevation: 0.0,
+      backgroundColor: Colors.transparent,
       elevation: 0,
+      scrolledUnderElevation: 0.0,
       centerTitle: false,
       iconTheme: IconThemeData(color: onSurface),
       titleTextStyle: TextStyle(
-        fontSize: 20,
-        fontWeight: FontWeight.w600,
+        fontSize: 22,
+        fontWeight: FontWeight.bold,
         color: onSurface,
       ),
-      systemOverlayStyle: SystemUiOverlayStyle(
-        statusBarColor: Colors.transparent,
-        statusBarIconBrightness: Brightness.dark,
-        statusBarBrightness: Brightness.light,
-      ),
+      systemOverlayStyle: SystemUiOverlayStyle.dark,
     ),
     elevatedButtonTheme: ElevatedButtonThemeData(
       style: ElevatedButton.styleFrom(
@@ -85,8 +81,16 @@ class AppTheme {
         padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         textStyle: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-        elevation: 5,
-        shadowColor: primary.withOpacity(0.4),
+        elevation: 0,
+      ),
+    ),
+    outlinedButtonTheme: OutlinedButtonThemeData(
+      style: OutlinedButton.styleFrom(
+        foregroundColor: primary,
+        side: BorderSide(color: primary.withOpacity(0.3)),
+        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        textStyle: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
       ),
     ),
     inputDecorationTheme: InputDecorationTheme(
@@ -97,15 +101,17 @@ class AppTheme {
         borderSide: BorderSide.none,
       ),
       labelStyle: const TextStyle(color: onSurface),
+      floatingLabelStyle: const TextStyle(color: primary),
     ),
     cardTheme: CardThemeData(
       elevation: 0,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(16),
+        side: BorderSide(color: Colors.grey.shade200, width: 1),
       ),
       color: surface,
     ),
-    shadowColor: onSurface.withOpacity(0.1),
+    shadowColor: onSurface.withOpacity(0.01),
   );
 
   static final ThemeData darkTheme = ThemeData(
@@ -133,21 +139,17 @@ class AppTheme {
       bodyMedium: const TextStyle(color: onDarkSurface, fontSize: 16),
     ),
     appBarTheme: const AppBarTheme(
-      backgroundColor: darkBackground,
-      scrolledUnderElevation: 0.0,
+      backgroundColor: Colors.transparent,
       elevation: 0,
+      scrolledUnderElevation: 0.0,
       centerTitle: false,
       iconTheme: IconThemeData(color: onDarkSurface),
       titleTextStyle: TextStyle(
-        fontSize: 20,
-        fontWeight: FontWeight.w600,
+        fontSize: 22,
+        fontWeight: FontWeight.bold,
         color: onDarkSurface,
       ),
-      systemOverlayStyle: SystemUiOverlayStyle(
-        statusBarColor: Colors.transparent,
-        statusBarIconBrightness: Brightness.light,
-        statusBarBrightness: Brightness.dark,
-      ),
+      systemOverlayStyle: SystemUiOverlayStyle.light,
     ),
     elevatedButtonTheme: ElevatedButtonThemeData(
       style: ElevatedButton.styleFrom(
@@ -156,8 +158,16 @@ class AppTheme {
         padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         textStyle: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-        elevation: 5,
-        shadowColor: primaryVariant.withOpacity(0.4),
+        elevation: 0,
+      ),
+    ),
+    outlinedButtonTheme: OutlinedButtonThemeData(
+      style: OutlinedButton.styleFrom(
+        foregroundColor: primaryVariant,
+        side: BorderSide(color: primaryVariant.withOpacity(0.3)),
+        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        textStyle: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
       ),
     ),
     inputDecorationTheme: InputDecorationTheme(
@@ -168,14 +178,16 @@ class AppTheme {
         borderSide: BorderSide.none,
       ),
       labelStyle: const TextStyle(color: onDarkSurface),
+      floatingLabelStyle: const TextStyle(color: primaryVariant),
     ),
     cardTheme: CardThemeData(
       elevation: 0,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(16),
+        side: BorderSide(color: Colors.white.withOpacity(0.05), width: 1),
       ),
       color: darkSurface,
     ),
-    shadowColor: onDarkSurface.withOpacity(0.1),
+    shadowColor: onDarkSurface.withOpacity(0.01),
   );
 }
