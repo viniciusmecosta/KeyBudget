@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:key_budget/features/auth/viewmodel/auth_viewmodel.dart';
+import 'package:key_budget/features/category/view/categories_screen.dart';
 import 'package:key_budget/features/user/view/edit_user_screen.dart';
 import 'package:provider/provider.dart';
 
@@ -18,7 +19,7 @@ class UserScreen extends StatelessWidget {
         title: const Text('Meu Perfil'),
         actions: [
           IconButton(
-            icon: const Icon(Icons.edit),
+            icon: const Icon(Icons.edit_outlined),
             onPressed: () {
               Navigator.of(context).push(
                   MaterialPageRoute(builder: (_) => const EditUserScreen()));
@@ -44,59 +45,71 @@ class UserScreen extends StatelessWidget {
             }
           }
 
-          return Padding(
+          return ListView(
             padding: const EdgeInsets.all(16.0),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                Center(
-                  child: Container(
-                    width: 100,
-                    height: 100,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      color: theme.colorScheme.secondary,
-                      image: imageProvider != null
-                          ? DecorationImage(
-                              image: imageProvider,
-                              fit: BoxFit.cover,
-                            )
-                          : null,
-                    ),
-                    child: imageProvider == null
-                        ? Icon(Icons.person,
-                            size: 50, color: theme.colorScheme.onSecondary)
-                        : null,
-                  ),
+            children: [
+              const SizedBox(height: 20),
+              Center(
+                child: CircleAvatar(
+                  radius: 50,
+                  backgroundColor: theme.colorScheme.secondary,
+                  backgroundImage: imageProvider,
+                  child: imageProvider == null
+                      ? Icon(Icons.person,
+                          size: 50, color: theme.colorScheme.onSecondary)
+                      : null,
                 ),
-                const SizedBox(height: 16),
-                Center(
-                  child: Text(
-                    user?.name ?? 'Usuário',
-                    style: theme.textTheme.headlineSmall,
-                  ),
+              ),
+              const SizedBox(height: 16),
+              Center(
+                child: Text(
+                  user?.name ?? 'Usuário',
+                  style: theme.textTheme.headlineSmall
+                      ?.copyWith(fontWeight: FontWeight.bold),
                 ),
-                Center(
-                  child: Text(
-                    user?.email ?? '',
-                    style: theme.textTheme.bodyMedium,
-                  ),
+              ),
+              const SizedBox(height: 4),
+              Center(
+                child: Text(
+                  user?.email ?? '',
+                  style: theme.textTheme.bodyMedium,
                 ),
-                if (user?.phoneNumber != null && user!.phoneNumber!.isNotEmpty)
-                  Center(
+              ),
+              if (user?.phoneNumber != null && user!.phoneNumber!.isNotEmpty)
+                Padding(
+                  padding: const EdgeInsets.only(top: 4.0),
+                  child: Center(
                     child: Text(
                       user.phoneNumber!,
                       style: theme.textTheme.bodyMedium,
                     ),
                   ),
-                const Spacer(),
-                ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: theme.colorScheme.error,
-                    foregroundColor: theme.colorScheme.onError,
-                    padding: const EdgeInsets.symmetric(vertical: 16),
+                ),
+              const SizedBox(height: 32),
+              Card(
+                child: ListTile(
+                  leading: Icon(Icons.category_outlined,
+                      color: theme.colorScheme.primary),
+                  title: const Text('Gerenciar Categorias'),
+                  trailing: const Icon(Icons.chevron_right),
+                  onTap: () {
+                    Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (_) => const CategoriesScreen(),
+                      ),
+                    );
+                  },
+                ),
+              ),
+              const SizedBox(height: 8),
+              Card(
+                child: ListTile(
+                  leading: Icon(Icons.logout, color: theme.colorScheme.error),
+                  title: Text(
+                    'Sair do Aplicativo',
+                    style: TextStyle(color: theme.colorScheme.error),
                   ),
-                  onPressed: () {
+                  onTap: () {
                     showDialog(
                       context: context,
                       builder: (_) => AlertDialog(
@@ -120,10 +133,9 @@ class UserScreen extends StatelessWidget {
                       ),
                     );
                   },
-                  child: const Text('Sair'),
                 ),
-              ],
-            ),
+              ),
+            ],
           ).animate().fadeIn(duration: 250.ms);
         },
       ),
