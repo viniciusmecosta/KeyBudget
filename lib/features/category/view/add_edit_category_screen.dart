@@ -68,6 +68,7 @@ class _AddEditCategoryScreenState extends State<AddEditCategoryScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     return Scaffold(
       appBar: AppBar(
         title: Text(
@@ -87,38 +88,68 @@ class _AddEditCategoryScreenState extends State<AddEditCategoryScreen> {
                     value!.isEmpty ? 'Campo obrigatório' : null,
               ),
               const SizedBox(height: 24),
-              ListTile(
-                contentPadding: EdgeInsets.zero,
-                leading: Icon(_selectedIcon ?? Icons.category, size: 32),
-                title: const Text('Ícone'),
-                trailing: const Icon(Icons.chevron_right),
-                onTap: () async {
-                  final icon = await showDialog<IconData>(
-                    context: context,
-                    builder: (_) => const IconPickerWidget(),
-                  );
-                  if (icon != null) {
-                    setState(() => _selectedIcon = icon);
-                  }
-                },
-              ),
-              const Divider(),
-              ListTile(
-                contentPadding: EdgeInsets.zero,
-                leading: CircleAvatar(
-                    backgroundColor: _selectedColor ?? Colors.grey, radius: 16),
-                title: const Text('Cor'),
-                trailing: const Icon(Icons.chevron_right),
-                onTap: () async {
-                  final color = await showDialog<Color>(
-                    context: context,
-                    builder: (_) =>
-                        ColorPickerWidget(initialColor: _selectedColor),
-                  );
-                  if (color != null) {
-                    setState(() => _selectedColor = color);
-                  }
-                },
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Expanded(
+                    child: InkWell(
+                      onTap: () async {
+                        final icon = await showModalBottomSheet<IconData>(
+                          context: context,
+                          isScrollControlled: true,
+                          backgroundColor: Colors.transparent,
+                          builder: (_) => const IconPickerWidget(),
+                        );
+                        if (icon != null) {
+                          setState(() => _selectedIcon = icon);
+                        }
+                      },
+                      borderRadius: BorderRadius.circular(12),
+                      child: InputDecorator(
+                        decoration: const InputDecoration(
+                          labelText: 'Ícone',
+                          contentPadding: EdgeInsets.symmetric(vertical: 20),
+                        ),
+                        child: Center(
+                          child: Icon(
+                            _selectedIcon ?? Icons.category,
+                            size: 36,
+                            color: _selectedColor ??
+                                theme.colorScheme.onSurfaceVariant,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: InkWell(
+                      onTap: () async {
+                        final color = await showDialog<Color>(
+                          context: context,
+                          builder: (_) =>
+                              ColorPickerWidget(initialColor: _selectedColor),
+                        );
+                        if (color != null) {
+                          setState(() => _selectedColor = color);
+                        }
+                      },
+                      borderRadius: BorderRadius.circular(12),
+                      child: InputDecorator(
+                        decoration: const InputDecoration(
+                          labelText: 'Cor',
+                          contentPadding: EdgeInsets.symmetric(vertical: 20),
+                        ),
+                        child: Center(
+                          child: CircleAvatar(
+                            backgroundColor: _selectedColor ?? Colors.grey,
+                            radius: 18,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
               ),
               const SizedBox(height: 32),
               ElevatedButton(
