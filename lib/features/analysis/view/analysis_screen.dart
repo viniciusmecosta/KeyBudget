@@ -15,6 +15,13 @@ class AnalysisScreen extends StatefulWidget {
   State<AnalysisScreen> createState() => _AnalysisScreenState();
 }
 
+extension StringCapitalize on String {
+  String capitalize() {
+    if (isEmpty) return this;
+    return substring(0, 1).toUpperCase() + substring(1);
+  }
+}
+
 class _AnalysisScreenState extends State<AnalysisScreen> {
   final _currencyFormatter =
       NumberFormat.currency(locale: 'pt_BR', symbol: 'R\$');
@@ -109,7 +116,7 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
                 'Mês Passado',
                 viewModel.lastMonthExpense,
                 AppTheme.chartColors[4],
-                icon: Icons.arrow_back_ios_new,
+                icon: Icons.history_rounded,
               ),
             ),
           ],
@@ -405,20 +412,36 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
         viewModel.selectedMonthForCategory == null) {
       return const SizedBox.shrink();
     }
-    return Center(
-      child: OutlinedButton.icon(
-        icon: const Icon(Icons.calendar_today, size: 18),
-        label: Text(
-          DateFormat.yMMMM('pt_BR').format(viewModel.selectedMonthForCategory!),
-          style: const TextStyle(fontWeight: FontWeight.bold),
+    return OutlinedButton(
+      onPressed: () => _showMonthPicker(context, viewModel),
+      style: OutlinedButton.styleFrom(
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(24),
         ),
-        onPressed: () => _showMonthPicker(context, viewModel),
-        style: OutlinedButton.styleFrom(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(24),
+        side: BorderSide(
+          color: AppTheme.primary.withOpacity(0.3),
+          width: 1.2,
+        ),
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          const Icon(Icons.calendar_today, size: 18, color: AppTheme.primary),
+          const SizedBox(width: 10),
+          Text(
+            DateFormat.yMMMM('pt_BR')
+                .format(viewModel.selectedMonthForCategory!)
+                .capitalize(),
+            style: const TextStyle(
+              fontWeight: FontWeight.bold,
+              fontSize: 14,
+              color: AppTheme.primary,
+            ),
           ),
-        ),
+          const SizedBox(width: 6),
+          const Icon(Icons.arrow_drop_down, color: AppTheme.primary),
+        ],
       ),
     );
   }
@@ -426,25 +449,54 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
   void _showMonthPicker(BuildContext context, AnalysisViewModel viewModel) {
     showModalBottomSheet(
       context: context,
-      backgroundColor: Theme.of(context).cardColor,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
       builder: (bc) => SizedBox(
-        height: 300,
-        child: ListView.builder(
-          itemCount: viewModel.availableMonthsForFilter.length,
-          itemBuilder: (context, index) {
-            final month = viewModel.availableMonthsForFilter[index];
-            return ListTile(
-              title: Text(
-                DateFormat.yMMMM('pt_BR').format(month),
-                style: TextStyle(
-                    color: Theme.of(context).textTheme.bodyLarge?.color),
+        height: 320,
+        child: Column(
+          children: [
+            Container(
+              margin: const EdgeInsets.symmetric(vertical: 12),
+              width: 40,
+              height: 4,
+              decoration: BoxDecoration(
+                color: Colors.grey[400],
+                borderRadius: BorderRadius.circular(2),
               ),
-              onTap: () {
-                viewModel.setSelectedMonthForCategory(month);
-                Navigator.pop(context);
-              },
-            );
-          },
+            ),
+            Expanded(
+              child: ListView.builder(
+                itemCount: viewModel.availableMonthsForFilter.length,
+                itemBuilder: (context, index) {
+                  final month = viewModel.availableMonthsForFilter[index];
+                  final isSelected =
+                      month == viewModel.selectedMonthForCategory;
+                  return ListTile(
+                    selected: isSelected,
+                    selectedTileColor: AppTheme.primary.withOpacity(0.1),
+                    leading: Icon(
+                      Icons.calendar_month,
+                      color: isSelected ? AppTheme.primary : Colors.grey[600],
+                    ),
+                    title: Text(
+                      DateFormat.yMMMM('pt_BR').format(month).capitalize(),
+                      style: TextStyle(
+                        fontWeight:
+                            isSelected ? FontWeight.bold : FontWeight.w500,
+                        color: isSelected ? AppTheme.primary : null,
+                      ),
+                    ),
+                    onTap: () {
+                      viewModel.setSelectedMonthForCategory(month);
+                      Navigator.pop(context);
+                    },
+                  );
+                },
+              ),
+            ),
+          ],
         ),
       ),
     );
@@ -653,11 +705,6 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
               decoration: BoxDecoration(
                 color: color.withOpacity(0.2),
                 borderRadius: BorderRadius.circular(6),
-              ),
-              child: Icon(
-                Icons.visibility,
-                color: color,
-                size: 16,
               ),
             ),
         ],
