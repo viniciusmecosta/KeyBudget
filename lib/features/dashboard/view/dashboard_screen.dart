@@ -47,8 +47,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
   Widget build(BuildContext context) {
     final viewModel = Provider.of<DashboardViewModel>(context);
     final authViewModel = Provider.of<AuthViewModel>(context);
-    final navigationViewModel =
-        Provider.of<NavigationViewModel>(context, listen: false);
     final theme = Theme.of(context);
     final user = authViewModel.currentUser;
 
@@ -59,13 +57,13 @@ class _DashboardScreenState extends State<DashboardScreen> {
           children: [
             Text(
               'Bem-vindo(a),',
-              style: theme.textTheme.bodyMedium?.copyWith(
+              style: theme.textTheme.titleMedium?.copyWith(
                 color: theme.colorScheme.onSurface.withOpacity(0.6),
               ),
             ),
             Text(
               user?.name ?? 'Usuário',
-              style: theme.textTheme.titleLarge
+              style: theme.textTheme.headlineSmall
                   ?.copyWith(fontWeight: FontWeight.bold),
             ),
           ],
@@ -79,14 +77,14 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 padding: const EdgeInsets.all(16.0),
                 children: [
                   _buildTotalBalanceCard(context, viewModel),
-                  const SizedBox(height: 24),
-                  _buildInfoRow(context, viewModel, navigationViewModel),
+                  const SizedBox(height: 16),
+                  _buildInfoRow(context, viewModel),
                   const SizedBox(height: 24),
                   _buildSectionTitle(context, 'Últimas Atividades'),
-                  const SizedBox(height: 16),
+                  const SizedBox(height: 12),
                   _buildRecentActivitySection(context, viewModel),
                 ],
-              ),
+              ).animate().fadeIn(duration: 250.ms),
             ),
     );
   }
@@ -99,7 +97,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
     final isIncrease = percentageChange >= 0;
     final formattedPercentage =
-        '${isIncrease ? '+' : '-'} ${percentageChange.abs().toStringAsFixed(1)}%';
+        '${isIncrease ? '+ ' : '- '}${percentageChange.abs().toStringAsFixed(1)}%';
 
     return Card(
       elevation: 8,
@@ -124,24 +122,29 @@ class _DashboardScreenState extends State<DashboardScreen> {
               'Gasto Total do Mês',
               style: theme.textTheme.titleMedium?.copyWith(
                 color: theme.colorScheme.onPrimary.withOpacity(0.8),
+                fontWeight: FontWeight.bold,
               ),
             ),
             const SizedBox(height: 8),
             Text(
               _currencyFormatter.format(viewModel.totalAmountForMonth),
-              style: theme.textTheme.headlineLarge?.copyWith(
+              style: theme.textTheme.displaySmall?.copyWith(
                   fontWeight: FontWeight.bold,
                   color: theme.colorScheme.onPrimary),
             ),
             if (hasPreviousMonths) ...[
               const SizedBox(height: 8),
               Row(
+                mainAxisSize: MainAxisSize.min,
                 children: [
-                  Icon(isIncrease ? Icons.arrow_upward : Icons.arrow_downward,
-                      color: theme.colorScheme.onPrimary, size: 16),
+                  Icon(
+                    isIncrease ? Icons.arrow_upward : Icons.arrow_downward,
+                    color: theme.colorScheme.onPrimary,
+                    size: 16,
+                  ),
                   const SizedBox(width: 4),
                   Text(
-                    '$formattedPercentage vs média',
+                    formattedPercentage,
                     style: theme.textTheme.bodyMedium?.copyWith(
                       color: theme.colorScheme.onPrimary,
                       fontWeight: FontWeight.bold,
@@ -153,11 +156,12 @@ class _DashboardScreenState extends State<DashboardScreen> {
           ],
         ),
       ),
-    ).animate().fadeIn(duration: 300.ms).slideY(begin: 0.3);
+    );
   }
 
-  Widget _buildInfoRow(BuildContext context, DashboardViewModel viewModel,
-      NavigationViewModel navigationViewModel) {
+  Widget _buildInfoRow(BuildContext context, DashboardViewModel viewModel) {
+    final navigationViewModel =
+        Provider.of<NavigationViewModel>(context, listen: false);
     return Row(
       children: [
         Expanded(
@@ -185,7 +189,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
           ),
         ),
       ],
-    ).animate().fadeIn(duration: 300.ms, delay: 200.ms).slideY(begin: 0.3);
+    );
   }
 
   Widget _buildInfoCard(BuildContext context,
@@ -198,6 +202,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
     return GestureDetector(
       onTap: onTap,
       child: Card(
+        clipBehavior: Clip.antiAlias,
         child: Padding(
           padding: const EdgeInsets.all(18.0),
           child: Column(
@@ -206,7 +211,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
               CircleAvatar(
                 radius: 22,
                 backgroundColor: color.withOpacity(0.15),
-                child: Icon(icon, color: color, size: 28),
+                child: Icon(icon, color: color, size: 24),
               ),
               const SizedBox(height: 12),
               Text(
@@ -236,7 +241,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
           .textTheme
           .titleLarge
           ?.copyWith(fontWeight: FontWeight.bold),
-    ).animate().fadeIn(duration: 250.ms).slideX(begin: -0.2);
+    );
   }
 
   Widget _buildRecentActivitySection(
@@ -247,7 +252,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
     }
     if (recentExpenses.isEmpty) {
       return const Padding(
-        padding: EdgeInsets.only(top: 20),
+        padding: EdgeInsets.only(top: 20, bottom: 20),
         child: Center(child: Text('Nenhuma atividade recente.')),
       );
     }
@@ -256,7 +261,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
       children: recentExpenses
           .map((expense) => _buildActivityTile(context, expense))
           .toList(),
-    ).animate().fadeIn(duration: 300.ms, delay: 400.ms);
+    );
   }
 
   Widget _buildActivityTile(BuildContext context, Expense expense) {
@@ -265,7 +270,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
         .getCategoryById(expense.categoryId);
 
     return Card(
-      margin: const EdgeInsets.only(bottom: 12),
+      margin: const EdgeInsets.only(bottom: 8),
       child: ListTile(
         leading: CircleAvatar(
           backgroundColor:
@@ -283,7 +288,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
         subtitle: Text(DateFormat('dd/MM/yyyy').format(expense.date)),
         trailing: Text(
           '- ${_currencyFormatter.format(expense.amount)}',
-          style: theme.textTheme.bodyMedium?.copyWith(
+          style: theme.textTheme.bodyLarge?.copyWith(
             fontWeight: FontWeight.bold,
             color: theme.colorScheme.error,
           ),

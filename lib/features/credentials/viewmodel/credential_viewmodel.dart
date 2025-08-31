@@ -16,6 +16,7 @@ class CredentialViewModel extends ChangeNotifier {
   List<Credential> _allCredentials = [];
   bool _isLoading = false;
   StreamSubscription? _credentialsSubscription;
+  bool _isListening = false;
 
   List<Credential> get allCredentials => _allCredentials;
 
@@ -34,6 +35,10 @@ class CredentialViewModel extends ChangeNotifier {
   }
 
   void listenToCredentials(String userId) {
+    if (_isListening) {
+      return;
+    }
+
     _setLoading(true);
     _credentialsSubscription?.cancel();
     _credentialsSubscription =
@@ -43,6 +48,7 @@ class CredentialViewModel extends ChangeNotifier {
           a.location.toLowerCase().compareTo(b.location.toLowerCase()));
       _setLoading(false);
     });
+    _isListening = true;
   }
 
   Future<void> addCredential({
@@ -139,6 +145,7 @@ class CredentialViewModel extends ChangeNotifier {
   void clearData() {
     _credentialsSubscription?.cancel();
     _allCredentials = [];
+    _isListening = false;
     notifyListeners();
   }
 

@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_masked_text2/flutter_masked_text2.dart';
-import 'package:intl/intl.dart';
 import 'package:key_budget/app/widgets/category_autocomplete_field.dart';
+import 'package:key_budget/app/widgets/category_picker_field.dart';
+import 'package:key_budget/app/widgets/date_picker_field.dart';
+import 'package:key_budget/core/models/expense_category_model.dart';
 import 'package:key_budget/core/models/expense_model.dart';
 import 'package:key_budget/features/auth/viewmodel/auth_viewmodel.dart';
 import 'package:key_budget/features/category/view/categories_screen.dart';
@@ -24,13 +27,9 @@ class _ExpenseDetailScreenState extends State<ExpenseDetailScreen> {
   late TextEditingController _motivationController;
   late TextEditingController _locationController;
   late DateTime _selectedDate;
-  late String? _selectedCategoryId;
+  ExpenseCategory? _selectedCategory;
   bool _isEditing = false;
   bool _isSaving = false;
-  final _currencyFormatter =
-      NumberFormat.currency(locale: 'pt_BR', symbol: 'R\$');
-
-  static const String _manageCategoriesValue = '--manage-categories--';
 
   @override
   void initState() {
@@ -44,7 +43,8 @@ class _ExpenseDetailScreenState extends State<ExpenseDetailScreen> {
         TextEditingController(text: widget.expense.motivation);
     _locationController = TextEditingController(text: widget.expense.location);
     _selectedDate = widget.expense.date;
-    _selectedCategoryId = widget.expense.categoryId;
+    _selectedCategory = Provider.of<CategoryViewModel>(context, listen: false)
+        .getCategoryById(widget.expense.categoryId);
   }
 
   @override
@@ -58,8 +58,6 @@ class _ExpenseDetailScreenState extends State<ExpenseDetailScreen> {
   void _saveChanges() async {
     if (!_formKey.currentState!.validate()) return;
     final theme = Theme.of(context);
-    final categoryViewModel =
-        Provider.of<CategoryViewModel>(context, listen: false);
 
     if (_amountController.numberValue == 0) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -73,15 +71,6 @@ class _ExpenseDetailScreenState extends State<ExpenseDetailScreen> {
 
     setState(() => _isSaving = true);
 
-    String? finalCategoryId = _selectedCategoryId;
-    if (finalCategoryId == null) {
-      final otherCategory = categoryViewModel.categories
-          .firstWhere((cat) => cat.name == 'Outros', orElse: () => null!);
-      if (otherCategory != null) {
-        finalCategoryId = otherCategory.id;
-      }
-    }
-
     final authViewModel = Provider.of<AuthViewModel>(context, listen: false);
     final userId = authViewModel.currentUser!.id;
 
@@ -89,7 +78,7 @@ class _ExpenseDetailScreenState extends State<ExpenseDetailScreen> {
       id: widget.expense.id,
       amount: _amountController.numberValue,
       date: _selectedDate,
-      categoryId: finalCategoryId,
+      categoryId: _selectedCategory?.id,
       motivation: _motivationController.text.isNotEmpty
           ? _motivationController.text
           : null,
@@ -145,7 +134,6 @@ class _ExpenseDetailScreenState extends State<ExpenseDetailScreen> {
     final expenseViewModel =
         Provider.of<ExpenseViewModel>(context, listen: false);
     final categoryViewModel = Provider.of<CategoryViewModel>(context);
-    final theme = Theme.of(context);
 
     return Scaffold(
       appBar: AppBar(
@@ -175,10 +163,7 @@ class _ExpenseDetailScreenState extends State<ExpenseDetailScreen> {
           child: ListView(
             children: [
               TextFormField(
-                controller: _isEditing
-                    ? _amountController
-                    : TextEditingController(
-                        text: _currencyFormatter.format(widget.expense.amount)),
+                controller: _amountController,
                 decoration: const InputDecoration(labelText: 'Valor *'),
                 keyboardType:
                     const TextInputType.numberWithOptions(decimal: true),
@@ -196,98 +181,58 @@ class _ExpenseDetailScreenState extends State<ExpenseDetailScreen> {
                 },
               ),
               const SizedBox(height: 16),
-              DropdownButtonFormField<String?>(
-                value: _selectedCategoryId,
-                decoration: const InputDecoration(labelText: 'Categoria'),
-                isExpanded: false,
-                menuMaxHeight: MediaQuery.of(context).size.height * 0.4,
-                borderRadius: BorderRadius.circular(12),
-                dropdownColor: theme.cardColor,
-                items: [
-                  ...categoryViewModel.categories.map((category) {
-                    return DropdownMenuItem<String?>(
-                      value: category.id,
-                      child: Row(
-                        children: [
-                          Icon(category.icon, size: 22, color: category.color),
-                          const SizedBox(width: 12),
-                          Text(category.name),
-                        ],
-                      ),
-                    );
-                  }),
-                  const DropdownMenuItem<String?>(
-                    enabled: false,
-                    child: Divider(height: 0),
-                  ),
-                  DropdownMenuItem<String?>(
-                    value: _manageCategoriesValue,
-                    child: Row(
-                      children: [
-                        Icon(Icons.settings_outlined,
-                            color: theme.colorScheme.primary, size: 22),
-                        const SizedBox(width: 12),
-                        Text(
-                          'Gerenciar Categorias',
-                          style: TextStyle(
-                              color: theme.colorScheme.primary,
-                              fontWeight: FontWeight.bold),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-                onChanged: !_isEditing
-                    ? null
-                    : (value) async {
-                        if (value == _manageCategoriesValue) {
-                          final userId =
-                              Provider.of<AuthViewModel>(context, listen: false)
-                                  .currentUser
-                                  ?.id;
-                          await Navigator.of(context).push(MaterialPageRoute(
-                            builder: (_) => const CategoriesScreen(),
-                          ));
-                          if (userId != null && mounted) {
-                            await Provider.of<CategoryViewModel>(context,
-                                    listen: false)
-                                .fetchCategories(userId);
-                          }
-                        } else {
-                          setState(() {
-                            _selectedCategoryId = value;
-                          });
-                        }
-                      },
+              CategoryPickerField(
+                label: 'Categoria',
+                value: _selectedCategory,
+                categories: categoryViewModel.categories,
+                isEnabled: _isEditing,
+                onChanged: (category) {
+                  setState(() {
+                    _selectedCategory = category;
+                  });
+                },
+                onManageCategories: () async {
+                  final userId =
+                      Provider.of<AuthViewModel>(context, listen: false)
+                          .currentUser
+                          ?.id;
+                  await Navigator.of(context).push(MaterialPageRoute(
+                    builder: (_) => const CategoriesScreen(),
+                  ));
+                  if (userId != null && mounted) {
+                    await Provider.of<CategoryViewModel>(context, listen: false)
+                        .fetchCategories(userId);
+                  }
+                },
+                validator: (value) =>
+                    value == null ? 'Selecione uma categoria' : null,
               ),
               const SizedBox(height: 16),
               if (_isEditing)
                 CategoryAutocompleteField(
-                  key: ValueKey('motivation_$_selectedCategoryId'),
+                  key: ValueKey('motivation_${_selectedCategory?.id}'),
                   label: 'Motivação',
                   controller: _motivationController,
                   optionsBuilder: () => expenseViewModel
-                      .getUniqueMotivationsForCategory(_selectedCategoryId),
+                      .getUniqueMotivationsForCategory(_selectedCategory?.id),
                   onSelected: (selection) {
                     _motivationController.text = selection;
                   },
-                  maxLines: 3,
                 )
               else
                 TextFormField(
                   controller: _motivationController,
                   decoration: const InputDecoration(labelText: 'Motivação'),
                   enabled: false,
-                  maxLines: 3,
                 ),
               const SizedBox(height: 16),
               if (_isEditing)
                 CategoryAutocompleteField(
-                  key: ValueKey('location_$_selectedCategoryId'),
+                  key: ValueKey('location_${_selectedCategory?.id}'),
                   label: 'Local',
                   controller: _locationController,
                   optionsBuilder: () => expenseViewModel
-                      .getUniqueLocationsForCategory(_selectedCategoryId),
+                      .getUniqueLocationsForCategory(_selectedCategory?.id),
                   onSelected: (selection) {
                     _locationController.text = selection;
                   },
@@ -299,27 +244,15 @@ class _ExpenseDetailScreenState extends State<ExpenseDetailScreen> {
                   enabled: false,
                 ),
               const SizedBox(height: 16),
-              ListTile(
-                contentPadding: EdgeInsets.zero,
-                title: const Text('Data'),
-                subtitle: Text(DateFormat('dd/MM/yyyy').format(_selectedDate)),
-                trailing: _isEditing ? const Icon(Icons.calendar_today) : null,
-                onTap: !_isEditing
-                    ? null
-                    : () async {
-                        final pickedDate = await showDatePicker(
-                          context: context,
-                          initialDate: _selectedDate,
-                          firstDate: DateTime(2000),
-                          lastDate: DateTime.now(),
-                          locale: const Locale('pt', 'BR'),
-                        );
-                        if (pickedDate != null && pickedDate != _selectedDate) {
-                          setState(() {
-                            _selectedDate = pickedDate;
-                          });
-                        }
-                      },
+              DatePickerField(
+                label: 'Data',
+                selectedDate: _selectedDate,
+                isEditing: _isEditing,
+                onDateSelected: (newDate) {
+                  setState(() {
+                    _selectedDate = newDate;
+                  });
+                },
               ),
               const SizedBox(height: 24),
               if (_isEditing)
@@ -330,14 +263,14 @@ class _ExpenseDetailScreenState extends State<ExpenseDetailScreen> {
                           height: 24,
                           width: 24,
                           child: CircularProgressIndicator(
-                              color: theme.colorScheme.onPrimary,
+                              color: Theme.of(context).colorScheme.onPrimary,
                               strokeWidth: 2.0))
                       : const Text('Salvar Alterações'),
                 )
             ],
           ),
         ),
-      ),
+      ).animate().fadeIn(duration: 250.ms).slideY(begin: 0.1, end: 0),
     );
   }
 }

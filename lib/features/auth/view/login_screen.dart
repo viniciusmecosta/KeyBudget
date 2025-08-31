@@ -83,7 +83,7 @@ class _LoginScreenState extends State<LoginScreen> {
             end: Alignment.bottomRight,
             colors: [
               theme.colorScheme.background,
-              theme.primaryColor.withOpacity(0.2),
+              theme.primaryColor.withOpacity(0.1),
             ],
           ),
         ),
@@ -97,16 +97,17 @@ class _LoginScreenState extends State<LoginScreen> {
                   "KeyBudget",
                   style: theme.textTheme.headlineMedium?.copyWith(
                     color: theme.primaryColor,
+                    fontWeight: FontWeight.bold,
                   ),
-                ).animate().fadeIn(duration: 500.ms).slideY(begin: -0.5),
+                ),
                 const SizedBox(height: 8),
                 Text(
                   "Gerencie suas finanças e senhas com segurança",
                   textAlign: TextAlign.center,
-                  style: theme.textTheme.bodyMedium?.copyWith(
+                  style: theme.textTheme.titleMedium?.copyWith(
                     color: theme.colorScheme.onSurface.withOpacity(0.7),
                   ),
-                ).animate().fadeIn(duration: 500.ms, delay: 200.ms),
+                ),
                 const SizedBox(height: 48),
                 Form(
                   key: _formKey,
@@ -139,10 +140,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       ),
                     ],
                   ),
-                )
-                    .animate()
-                    .fadeIn(duration: 500.ms, delay: 400.ms)
-                    .slideX(begin: -0.5),
+                ),
                 const SizedBox(height: 28),
                 Consumer<AuthViewModel>(
                   builder: (context, viewModel, child) {
@@ -153,11 +151,11 @@ class _LoginScreenState extends State<LoginScreen> {
                           child: ElevatedButton(
                             onPressed: viewModel.isLoading ? null : _submit,
                             child: viewModel.isLoading
-                                ? SizedBox(
+                                ? const SizedBox(
                                     height: 24,
                                     width: 24,
                                     child: CircularProgressIndicator(
-                                      color: theme.colorScheme.onPrimary,
+                                      color: Colors.white,
                                       strokeWidth: 2.5,
                                     ),
                                   )
@@ -180,10 +178,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       ],
                     );
                   },
-                )
-                    .animate()
-                    .fadeIn(duration: 500.ms, delay: 600.ms)
-                    .slideY(begin: 0.5),
+                ),
                 const SizedBox(height: 20),
                 TextButton(
                   onPressed: () {
@@ -193,14 +188,11 @@ class _LoginScreenState extends State<LoginScreen> {
                   },
                   child: const Text("Não tem uma conta? Cadastre-se"),
                 )
-                    .animate()
-                    .fadeIn(duration: 500.ms, delay: 800.ms)
-                    .slideY(begin: 0.5),
               ],
             ),
           ),
         ),
-      ),
+      ).animate().fadeIn(duration: 250.ms),
     );
   }
 }
