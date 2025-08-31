@@ -3,6 +3,8 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_masked_text2/flutter_masked_text2.dart';
 import 'package:intl/intl.dart';
 import 'package:key_budget/app/widgets/category_autocomplete_field.dart';
+import 'package:key_budget/app/widgets/category_picker_field.dart';
+import 'package:key_budget/core/models/expense_category_model.dart';
 import 'package:key_budget/core/models/expense_model.dart';
 import 'package:key_budget/features/auth/viewmodel/auth_viewmodel.dart';
 import 'package:key_budget/features/category/view/categories_screen.dart';
@@ -24,10 +26,8 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
   final _motivationController = TextEditingController();
   final _locationController = TextEditingController();
   DateTime _selectedDate = DateTime.now();
-  String? _selectedCategoryId;
+  ExpenseCategory? _selectedCategory;
   bool _isSaving = false;
-
-  static const String _manageCategoriesValue = '--manage-categories--';
 
   @override
   void dispose() {
@@ -55,8 +55,6 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
   void _submit() async {
     if (!_formKey.currentState!.validate()) return;
     final theme = Theme.of(context);
-    final categoryViewModel =
-        Provider.of<CategoryViewModel>(context, listen: false);
 
     if (_amountController.numberValue == 0) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -70,15 +68,6 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
 
     setState(() => _isSaving = true);
 
-    String? finalCategoryId = _selectedCategoryId;
-    if (finalCategoryId == null) {
-      final otherCategory = categoryViewModel.categories
-          .firstWhere((cat) => cat.name == 'Outros', orElse: () => null!);
-      if (otherCategory != null) {
-        finalCategoryId = otherCategory.id;
-      }
-    }
-
     final expenseViewModel =
         Provider.of<ExpenseViewModel>(context, listen: false);
     final authViewModel = Provider.of<AuthViewModel>(context, listen: false);
@@ -87,7 +76,7 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
     final newExpense = Expense(
       amount: _amountController.numberValue,
       date: _selectedDate,
-      categoryId: finalCategoryId,
+      categoryId: _selectedCategory?.id,
       motivation: _motivationController.text.isNotEmpty
           ? _motivationController.text
           : null,
@@ -140,88 +129,55 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
                 },
               ),
               const SizedBox(height: 16),
-              DropdownButtonFormField<String?>(
-                value: _selectedCategoryId,
-                decoration: const InputDecoration(labelText: 'Categoria'),
-                isExpanded: false,
-                menuMaxHeight: MediaQuery.of(context).size.height * 0.4,
-                borderRadius: BorderRadius.circular(12),
-                dropdownColor: theme.cardColor,
-                items: [
-                  ...categoryViewModel.categories.map((category) {
-                    return DropdownMenuItem<String?>(
-                      value: category.id,
-                      child: Row(
-                        children: [
-                          Icon(category.icon, size: 22, color: category.color),
-                          const SizedBox(width: 12),
-                          Text(category.name),
-                        ],
-                      ),
-                    );
-                  }),
-                  const DropdownMenuItem<String?>(
-                    enabled: false,
-                    child: Divider(height: 0),
-                  ),
-                  DropdownMenuItem<String?>(
-                    value: _manageCategoriesValue,
-                    child: Row(
-                      children: [
-                        Icon(Icons.settings_outlined,
-                            color: theme.colorScheme.primary, size: 22),
-                        const SizedBox(width: 12),
-                        Text(
-                          'Gerenciar Categorias',
-                          style: TextStyle(
-                              color: theme.colorScheme.primary,
-                              fontWeight: FontWeight.bold),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-                onChanged: (value) async {
-                  if (value == _manageCategoriesValue) {
-                    final userId =
-                        Provider.of<AuthViewModel>(context, listen: false)
-                            .currentUser
-                            ?.id;
-                    await Navigator.of(context).push(MaterialPageRoute(
-                      builder: (_) => const CategoriesScreen(),
-                    ));
-                    if (userId != null && mounted) {
-                      await Provider.of<CategoryViewModel>(context,
-                              listen: false)
-                          .fetchCategories(userId);
-                    }
-                  } else {
-                    setState(() {
-                      _selectedCategoryId = value;
-                      _motivationController.clear();
-                      _locationController.clear();
-                    });
+              CategoryPickerField(
+                label: 'Categoria',
+                value: _selectedCategory,
+                categories: categoryViewModel.categories,
+                onChanged: (category) {
+                  setState(() {
+                    _selectedCategory = category;
+                    _motivationController.clear();
+                    _locationController.clear();
+                  });
+                },
+                onManageCategories: () async {
+                  final userId =
+                      Provider.of<AuthViewModel>(context, listen: false)
+                          .currentUser
+                          ?.id;
+                  await Navigator.of(context).push(MaterialPageRoute(
+                    builder: (_) => const CategoriesScreen(),
+                  ));
+                  if (userId != null && mounted) {
+                    await Provider.of<CategoryViewModel>(context, listen: false)
+                        .fetchCategories(userId);
                   }
+                },
+                validator: (value) {
+                  if (value == null) {
+                    return 'Selecione uma categoria';
+                  }
+                  return null;
                 },
               ),
               const SizedBox(height: 16),
               CategoryAutocompleteField(
-                key: ValueKey('motivation_$_selectedCategoryId'),
+                key: ValueKey('motivation_${_selectedCategory?.id}'),
                 label: 'Motivação',
                 controller: _motivationController,
                 optionsBuilder: () => expenseViewModel
-                    .getUniqueMotivationsForCategory(_selectedCategoryId),
+                    .getUniqueMotivationsForCategory(_selectedCategory?.id),
                 onSelected: (selection) {
                   _motivationController.text = selection;
                 },
               ),
               const SizedBox(height: 16),
               CategoryAutocompleteField(
-                key: ValueKey('location_$_selectedCategoryId'),
+                key: ValueKey('location_${_selectedCategory?.id}'),
                 label: 'Local',
                 controller: _locationController,
                 optionsBuilder: () => expenseViewModel
-                    .getUniqueLocationsForCategory(_selectedCategoryId),
+                    .getUniqueLocationsForCategory(_selectedCategory?.id),
                 onSelected: (selection) {
                   _locationController.text = selection;
                 },
