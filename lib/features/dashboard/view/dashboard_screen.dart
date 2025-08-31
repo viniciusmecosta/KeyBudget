@@ -1,8 +1,9 @@
-import 'package:flutter/material.dart';
+import 'package:flutter/material.dart' hide DateUtils;
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:intl/intl.dart';
 import 'package:key_budget/app/viewmodel/navigation_viewmodel.dart';
 import 'package:key_budget/core/models/expense_model.dart';
+import 'package:key_budget/core/utils/date_utils.dart';
 import 'package:key_budget/features/analysis/view/analysis_screen.dart';
 import 'package:key_budget/features/auth/viewmodel/auth_viewmodel.dart';
 import 'package:key_budget/features/category/viewmodel/category_viewmodel.dart';
@@ -41,6 +42,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
       Provider.of<CredentialViewModel>(context, listen: false)
           .listenToCredentials(userId);
     }
+  }
+
+  String _getRelativeDate(DateTime date) {
+    return DateUtils.getRelativeDate(date);
   }
 
   @override
@@ -285,7 +290,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
           style:
               theme.textTheme.bodyLarge?.copyWith(fontWeight: FontWeight.bold),
         ),
-        subtitle: Text(DateFormat('dd/MM/yyyy').format(expense.date)),
+        subtitle: Text(_getRelativeDate(expense.date)),
         trailing: Text(
           '- ${_currencyFormatter.format(expense.amount)}',
           style: theme.textTheme.bodyLarge?.copyWith(
