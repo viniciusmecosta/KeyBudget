@@ -8,6 +8,7 @@ class CategoryPickerField extends StatelessWidget {
   final ValueChanged<ExpenseCategory?> onChanged;
   final VoidCallback onManageCategories;
   final FormFieldValidator<ExpenseCategory>? validator;
+  final bool isEnabled;
 
   const CategoryPickerField({
     super.key,
@@ -17,6 +18,7 @@ class CategoryPickerField extends StatelessWidget {
     required this.onChanged,
     required this.onManageCategories,
     this.validator,
+    this.isEnabled = true,
   });
 
   @override
@@ -27,22 +29,23 @@ class CategoryPickerField extends StatelessWidget {
       initialValue: value,
       builder: (FormFieldState<ExpenseCategory> state) {
         return InkWell(
-          onTap: () async {
-            final selected = await _showCategoryPicker(context);
-            if (selected != null) {
-              state.didChange(selected);
-              onChanged(selected);
-            }
-          },
+          onTap: !isEnabled
+              ? null
+              : () async {
+                  final selected = await _showCategoryPicker(context);
+                  if (selected != null) {
+                    state.didChange(selected);
+                    onChanged(selected);
+                  }
+                },
           child: InputDecorator(
             decoration: InputDecoration(
               labelText: label,
               errorText: state.errorText,
-              contentPadding: const EdgeInsets.fromLTRB(12, 12, 12, 12),
             ),
             isEmpty: value == null,
             child: value == null
-                ? null
+                ? const Text('')
                 : Row(
                     children: [
                       Icon(value!.icon, size: 24, color: value!.color),
@@ -50,7 +53,11 @@ class CategoryPickerField extends StatelessWidget {
                       Expanded(
                           child: Text(
                         value!.name,
-                        style: theme.textTheme.titleMedium,
+                        style: theme.textTheme.titleMedium?.copyWith(
+                          color: isEnabled
+                              ? null
+                              : theme.textTheme.bodySmall?.color,
+                        ),
                         overflow: TextOverflow.ellipsis,
                       )),
                     ],

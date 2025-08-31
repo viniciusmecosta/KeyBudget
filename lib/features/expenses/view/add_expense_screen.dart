@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_masked_text2/flutter_masked_text2.dart';
-import 'package:intl/intl.dart';
 import 'package:key_budget/app/widgets/category_autocomplete_field.dart';
 import 'package:key_budget/app/widgets/category_picker_field.dart';
+import 'package:key_budget/app/widgets/date_picker_field.dart';
 import 'package:key_budget/core/models/expense_category_model.dart';
 import 'package:key_budget/core/models/expense_model.dart';
 import 'package:key_budget/features/auth/viewmodel/auth_viewmodel.dart';
@@ -35,21 +35,6 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
     _motivationController.dispose();
     _locationController.dispose();
     super.dispose();
-  }
-
-  Future<void> _pickDate() async {
-    final pickedDate = await showDatePicker(
-      context: context,
-      initialDate: _selectedDate,
-      firstDate: DateTime(2000),
-      lastDate: DateTime.now(),
-      locale: const Locale('pt', 'BR'),
-    );
-    if (pickedDate != null && pickedDate != _selectedDate) {
-      setState(() {
-        _selectedDate = pickedDate;
-      });
-    }
   }
 
   void _submit() async {
@@ -103,7 +88,6 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
     final expenseViewModel =
         Provider.of<ExpenseViewModel>(context, listen: false);
     final categoryViewModel = Provider.of<CategoryViewModel>(context);
-    final theme = Theme.of(context);
 
     return Scaffold(
       appBar: AppBar(title: const Text('Adicionar Despesa')),
@@ -183,18 +167,15 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
                 },
               ),
               const SizedBox(height: 16),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(
-                    'Data: ${DateFormat('dd/MM/yyyy').format(_selectedDate)}',
-                    style: theme.textTheme.titleMedium,
-                  ),
-                  TextButton(
-                    onPressed: _pickDate,
-                    child: const Text('Selecionar Data'),
-                  )
-                ],
+              DatePickerField(
+                label: 'Data',
+                selectedDate: _selectedDate,
+                isEditing: true,
+                onDateSelected: (newDate) {
+                  setState(() {
+                    _selectedDate = newDate;
+                  });
+                },
               ),
               const SizedBox(height: 24),
               ElevatedButton(
@@ -204,7 +185,7 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
                         height: 24,
                         width: 24,
                         child: CircularProgressIndicator(
-                            color: theme.colorScheme.onPrimary,
+                            color: Theme.of(context).colorScheme.onPrimary,
                             strokeWidth: 2.0))
                     : const Text('Salvar Despesa'),
               ),
