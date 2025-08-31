@@ -189,7 +189,7 @@ class AuthViewModel extends ChangeNotifier {
     context.read<DashboardViewModel>().clearData();
     context.read<ExpenseViewModel>().clearData();
     context.read<CredentialViewModel>().clearData();
-    context.read<NavigationViewModel>().clearData();
+    context.read<NavigationViewModel>().clearData(notify: false);
     context.read<CategoryViewModel>().clearData();
 
     await _authRepository.signOut();
