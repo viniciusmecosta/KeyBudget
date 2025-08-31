@@ -1,6 +1,7 @@
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import 'package:key_budget/features/auth/viewmodel/auth_viewmodel.dart';
 import 'package:key_budget/features/user/view/edit_user_screen.dart';
 import 'package:provider/provider.dart';
@@ -123,7 +124,7 @@ class UserScreen extends StatelessWidget {
                 ),
               ],
             ),
-          );
+          ).animate().fadeIn(duration: 250.ms);
         },
       ),
     );

@@ -189,10 +189,10 @@ class _CredentialsScreenState extends State<CredentialsScreen> {
                   ),
                 );
               },
-            ).animate().fadeIn(duration: 300.ms, delay: 200.ms);
+            );
           },
         ),
-      ),
+      ).animate().fadeIn(duration: 250.ms),
       floatingActionButton: FloatingActionButton.extended(
         heroTag: 'fab_credentials',
         onPressed: () => Navigator.of(context).push(

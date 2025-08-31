@@ -2,6 +2,7 @@ import 'dart:math';
 
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import 'package:intl/intl.dart';
 import 'package:key_budget/app/config/app_theme.dart';
 import 'package:key_budget/features/analysis/viewmodel/analysis_viewmodel.dart';
@@ -48,7 +49,7 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
                 const SizedBox(height: 16),
                 _buildCategoryBreakdown(context, viewModel),
               ],
-            ),
+            ).animate().fadeIn(duration: 250.ms).slideY(begin: 0.1, end: 0),
     );
   }
 

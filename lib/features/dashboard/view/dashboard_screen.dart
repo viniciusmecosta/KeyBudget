@@ -84,7 +84,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   const SizedBox(height: 12),
                   _buildRecentActivitySection(context, viewModel),
                 ],
-              ),
+              ).animate().fadeIn(duration: 250.ms),
             ),
     );
   }
@@ -156,7 +156,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
           ],
         ),
       ),
-    ).animate().fadeIn(duration: 300.ms).slideY(begin: 0.3);
+    );
   }
 
   Widget _buildInfoRow(BuildContext context, DashboardViewModel viewModel) {
@@ -189,7 +189,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
           ),
         ),
       ],
-    ).animate().fadeIn(duration: 300.ms, delay: 200.ms).slideY(begin: 0.3);
+    );
   }
 
   Widget _buildInfoCard(BuildContext context,
@@ -241,7 +241,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
           .textTheme
           .titleLarge
           ?.copyWith(fontWeight: FontWeight.bold),
-    ).animate().fadeIn(duration: 250.ms).slideX(begin: -0.2);
+    );
   }
 
   Widget _buildRecentActivitySection(
@@ -261,7 +261,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
       children: recentExpenses
           .map((expense) => _buildActivityTile(context, expense))
           .toList(),
-    ).animate().fadeIn(duration: 300.ms, delay: 400.ms);
+    );
   }
 
   Widget _buildActivityTile(BuildContext context, Expense expense) {

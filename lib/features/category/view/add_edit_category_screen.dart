@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import 'package:key_budget/core/models/expense_category_model.dart';
 import 'package:key_budget/features/auth/viewmodel/auth_viewmodel.dart';
 import 'package:key_budget/features/category/view/widgets/color_picker_widget.dart';
@@ -133,7 +134,7 @@ class _AddEditCategoryScreenState extends State<AddEditCategoryScreen> {
             ],
           ),
         ),
-      ),
+      ).animate().fadeIn(duration: 250.ms).slideY(begin: 0.1, end: 0),
     );
   }
 }
