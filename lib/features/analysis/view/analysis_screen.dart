@@ -5,8 +5,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:intl/intl.dart';
 import 'package:key_budget/app/config/app_theme.dart';
-import 'package:key_budget/features/analysis/viewmodel/analysis_viewmodel.dart';
 import 'package:provider/provider.dart';
+
+import '../viewmodel/analysis_viewmodel.dart';
 
 class AnalysisScreen extends StatefulWidget {
   const AnalysisScreen({super.key});
@@ -24,9 +25,9 @@ extension StringCapitalize on String {
 
 class _AnalysisScreenState extends State<AnalysisScreen> {
   final _currencyFormatter =
-      NumberFormat.currency(locale: 'pt_BR', symbol: 'R\$');
+  NumberFormat.currency(locale: 'pt_BR', symbol: 'R\$');
   final _currencyFormatterNoCents =
-      NumberFormat.currency(locale: 'pt_BR', symbol: 'R\$', decimalDigits: 0);
+  NumberFormat.currency(locale: 'pt_BR', symbol: 'R\$', decimalDigits: 0);
   int _touchedPieIndex = -1;
 
   String _formatCurrencyFlexible(double value) {
@@ -47,49 +48,49 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
       ),
       body: viewModel.isLoading
           ? Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(20),
-                    decoration: BoxDecoration(
-                      color: AppTheme.primary.withOpacity(0.1),
-                      shape: BoxShape.circle,
-                    ),
-                    child: CircularProgressIndicator(
-                      strokeWidth: 3,
-                      valueColor:
-                          AlwaysStoppedAnimation<Color>(AppTheme.primary),
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                  Text(
-                    'Analisando seus dados...',
-                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                          color: AppTheme.onSurface.withOpacity(0.7),
-                        ),
-                  ),
-                ],
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Container(
+              padding: const EdgeInsets.all(20),
+              decoration: BoxDecoration(
+                color: AppTheme.primary.withOpacity(0.1),
+                shape: BoxShape.circle,
               ),
-            )
+              child: CircularProgressIndicator(
+                strokeWidth: 3,
+                valueColor:
+                AlwaysStoppedAnimation<Color>(AppTheme.primary),
+              ),
+            ),
+            const SizedBox(height: 16),
+            Text(
+              'Analisando seus dados...',
+              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                color: AppTheme.onSurface.withOpacity(0.7),
+              ),
+            ),
+          ],
+        ),
+      )
           : RefreshIndicator(
-              onRefresh: () async {},
-              color: AppTheme.primary,
-              child: SingleChildScrollView(
-                physics: const AlwaysScrollableScrollPhysics(),
-                padding: const EdgeInsets.all(20.0),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    _buildStatsOverview(context, viewModel),
-                    const SizedBox(height: 24),
-                    _buildMonthlyTrendSection(context, viewModel),
-                    const SizedBox(height: 24),
-                    _buildCategoryAnalysisSection(context, viewModel),
-                  ],
-                ),
-              ),
-            ).animate().fadeIn(duration: 300.ms).slideY(begin: 0.05, end: 0),
+        onRefresh: () async {},
+        color: AppTheme.primary,
+        child: SingleChildScrollView(
+          physics: const AlwaysScrollableScrollPhysics(),
+          padding: const EdgeInsets.all(20.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              _buildStatsOverview(context, viewModel),
+              const SizedBox(height: 24),
+              _buildMonthlyTrendSection(context, viewModel),
+              const SizedBox(height: 24),
+              _buildCategoryAnalysisSection(context, viewModel),
+            ],
+          ),
+        ),
+      ).animate().fadeIn(duration: 300.ms).slideY(begin: 0.05, end: 0),
     );
   }
 
@@ -150,12 +151,12 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
   }
 
   Widget _buildEnhancedStatCard(
-    BuildContext context,
-    String title,
-    double value,
-    Color color, {
-    IconData? icon,
-  }) {
+      BuildContext context,
+      String title,
+      double value,
+      Color color, {
+        IconData? icon,
+      }) {
     final theme = Theme.of(context);
     final String formattedValue = title == 'Gasto Total'
         ? _currencyFormatterNoCents.format(value)
@@ -210,7 +211,7 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
 
   Widget _buildMonthlyTrendSection(
       BuildContext context, AnalysisViewModel viewModel) {
-    final data = viewModel.last6MonthsData;
+    final data = viewModel.lastNMonthsData;
     final chartEntries = data.entries.toList();
     if (chartEntries.isEmpty || chartEntries.every((e) => e.value == 0)) {
       return const SizedBox.shrink();
@@ -226,9 +227,183 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
               ?.copyWith(fontWeight: FontWeight.bold),
         ),
         const SizedBox(height: 8),
+        _buildPeriodSelector(context, viewModel),
+        const SizedBox(height: 16),
         _buildLineChart(context, viewModel),
       ],
     );
+  }
+
+  Widget _buildPeriodSelector(
+      BuildContext context, AnalysisViewModel viewModel) {
+    return Container(
+      padding: const EdgeInsets.all(4),
+      decoration: BoxDecoration(
+        color: Theme.of(context).colorScheme.surfaceVariant.withOpacity(0.3),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: Theme.of(context).colorScheme.outline.withOpacity(0.2),
+        ),
+      ),
+      child: Column(
+        children: [
+          if (!viewModel.useCustomRange) ...[
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              children: viewModel.availableMonthsCounts.map((count) {
+                final isSelected = viewModel.selectedMonthsCount == count;
+                return Expanded(
+                  child: GestureDetector(
+                    onTap: () => viewModel.setSelectedMonthsCount(count),
+                    child: Container(
+                      margin: const EdgeInsets.symmetric(horizontal: 2),
+                      padding: const EdgeInsets.symmetric(vertical: 8),
+                      decoration: BoxDecoration(
+                        color:
+                        isSelected ? AppTheme.primary : Colors.transparent,
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Text(
+                        '${count}M',
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.bold,
+                          color: isSelected ? Colors.white : AppTheme.primary,
+                        ),
+                      ),
+                    ),
+                  ),
+                );
+              }).toList(),
+            ),
+            const SizedBox(height: 8),
+          ],
+          Row(
+            children: [
+              if (!viewModel.useCustomRange) ...[
+                IconButton(
+                  icon: const Icon(Icons.chevron_left, size: 20),
+                  onPressed: viewModel.canGoToPreviousPeriod
+                      ? () => viewModel.changePeriod(1)
+                      : null,
+                  color: AppTheme.primary,
+                ),
+              ],
+              Expanded(
+                child: GestureDetector(
+                  onTap: () => _showCustomRangePicker(context, viewModel),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                        vertical: 8, horizontal: 12),
+                    decoration: BoxDecoration(
+                      color: viewModel.useCustomRange
+                          ? AppTheme.secondary.withOpacity(0.1)
+                          : Colors.transparent,
+                      borderRadius: BorderRadius.circular(8),
+                      border: viewModel.useCustomRange
+                          ? Border.all(
+                          color: AppTheme.secondary.withOpacity(0.3))
+                          : null,
+                    ),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        if (viewModel.useCustomRange) ...[
+                          Icon(Icons.date_range,
+                              size: 16, color: AppTheme.secondary),
+                          const SizedBox(width: 4),
+                        ],
+                        Flexible(
+                          child: Text(
+                            viewModel.currentPeriodLabel,
+                            style: TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w600,
+                              color: viewModel.useCustomRange
+                                  ? AppTheme.secondary
+                                  : AppTheme.primary,
+                            ),
+                            textAlign: TextAlign.center,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+              if (!viewModel.useCustomRange) ...[
+                IconButton(
+                  icon: const Icon(Icons.chevron_right, size: 20),
+                  onPressed: viewModel.canGoToNextPeriod
+                      ? () => viewModel.changePeriod(-1)
+                      : null,
+                  color: AppTheme.primary,
+                ),
+              ],
+            ],
+          ),
+          if (viewModel.useCustomRange) ...[
+            const SizedBox(height: 8),
+            TextButton.icon(
+              onPressed: () => viewModel.clearCustomRange(),
+              icon: const Icon(Icons.clear, size: 16),
+              label: const Text('Voltar ao padrão'),
+              style: TextButton.styleFrom(
+                foregroundColor: Colors.grey[600],
+                textStyle: const TextStyle(fontSize: 12),
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
+  void _showCustomRangePicker(
+      BuildContext context, AnalysisViewModel viewModel) {
+    final availableRange = viewModel.availableDateRange;
+    if (availableRange == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Nenhum dado disponível para seleção')),
+      );
+      return;
+    }
+
+    showDateRangePicker(
+      context: context,
+      firstDate: availableRange.start,
+      lastDate: availableRange.end,
+      initialDateRange: viewModel.useCustomRange
+          ? DateTimeRange(
+        start: viewModel.customStartDate ?? availableRange.start,
+        end: viewModel.customEndDate ?? availableRange.end,
+      )
+          : null,
+      locale: const Locale('pt', 'BR'),
+      helpText: 'Selecionar período',
+      cancelText: 'Cancelar',
+      confirmText: 'Confirmar',
+      fieldStartLabelText: 'Data início',
+      fieldEndLabelText: 'Data fim',
+      builder: (context, child) {
+        return Theme(
+          data: Theme.of(context).copyWith(
+            colorScheme: Theme.of(context).colorScheme.copyWith(
+              primary: AppTheme.primary,
+            ),
+          ),
+          child: child!,
+        );
+      },
+    ).then((range) {
+      if (range != null) {
+        final startDate = DateTime(range.start.year, range.start.month, 1);
+        final endDate = DateTime(range.end.year, range.end.month + 1, 0);
+        viewModel.setCustomDateRange(startDate, endDate);
+      }
+    });
   }
 
   double _getRoundedMaxValue(double maxValue) {
@@ -240,150 +415,238 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
 
   Widget _buildLineChart(BuildContext context, AnalysisViewModel viewModel) {
     final theme = Theme.of(context);
-    final data = viewModel.last6MonthsData;
+    final data = viewModel.lastNMonthsData;
     final chartEntries = data.entries.toList();
     if (chartEntries.isEmpty || chartEntries.every((e) => e.value == 0)) {
-      return const SizedBox(
+      return Container(
         height: 220,
-        child: Center(child: Text("Nenhum dado para exibir no período.")),
+        decoration: BoxDecoration(
+          color: AppTheme.primary.withOpacity(0.05),
+          borderRadius: BorderRadius.circular(16),
+        ),
+        child: const Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(Icons.show_chart, size: 48, color: Colors.grey),
+              SizedBox(height: 8),
+              Text("Nenhum dado para exibir no período."),
+            ],
+          ),
+        ),
       );
     }
-    final firstMonth = DateFormat('yyyy-MM').parse(chartEntries.first.key);
-    final lastMonth = DateFormat('yyyy-MM').parse(chartEntries.last.key);
+
     final spots = chartEntries
         .asMap()
         .entries
         .map((entry) => FlSpot(
-              entry.key.toDouble(),
-              entry.value.value,
-            ))
+      entry.key.toDouble(),
+      entry.value.value,
+    ))
         .toList();
     final maxValue = spots.map((spot) => spot.y).reduce(max);
     final roundedMaxValue = _getRoundedMaxValue(maxValue);
-    return Column(
-      children: [
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            IconButton(
-              icon: const Icon(Icons.chevron_left),
-              onPressed: viewModel.canGoToPreviousPeriod
-                  ? () => viewModel.changePeriod(1)
-                  : null,
-            ),
-            Text(
-              '${DateFormat.yMMM('pt_BR').format(firstMonth)} - ${DateFormat.yMMM('pt_BR').format(lastMonth)}',
-              style: theme.textTheme.titleMedium,
-            ),
-            IconButton(
-              icon: const Icon(Icons.chevron_right),
-              onPressed: viewModel.canGoToNextPeriod
-                  ? () => viewModel.changePeriod(-1)
-                  : null,
-            ),
+
+    return Container(
+      padding: const EdgeInsets.symmetric(vertical: 16),
+      child: Column(
+        children: [
+          if (viewModel.currentPeriodStats['total']! > 0) ...[
+            _buildPeriodStats(context, viewModel),
+            const SizedBox(height: 16),
+            Divider(color: Colors.grey[200]),
+            const SizedBox(height: 16),
           ],
-        ),
-        const SizedBox(height: 16),
-        SizedBox(
-          height: 200,
-          child: LineChart(
-            LineChartData(
-              gridData: FlGridData(
-                show: true,
-                drawVerticalLine: true,
-                horizontalInterval: 500,
-                getDrawingHorizontalLine: (value) => FlLine(
-                    color: theme.dividerColor.withOpacity(0.1), strokeWidth: 1),
-                getDrawingVerticalLine: (value) => FlLine(
-                    color: theme.dividerColor.withOpacity(0.1), strokeWidth: 1),
-              ),
-              titlesData: FlTitlesData(
-                show: true,
-                rightTitles:
-                    const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-                topTitles:
-                    const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-                bottomTitles: AxisTitles(
-                  sideTitles: SideTitles(
-                    showTitles: true,
-                    reservedSize: 20,
-                    interval: 1,
-                    getTitlesWidget: (value, meta) {
-                      final index = value.toInt();
-                      if (index < 0 || index >= chartEntries.length) {
-                        return const SizedBox.shrink();
-                      }
-                      final date =
-                          DateFormat('yyyy-MM').parse(chartEntries[index].key);
-                      return Padding(
-                        padding: const EdgeInsets.only(top: 6),
-                        child: Text(
-                          DateFormat('MMM', 'pt_BR')
-                              .format(date)
-                              .substring(0, 3),
-                          style:
-                              theme.textTheme.bodySmall!.copyWith(fontSize: 10),
-                        ),
-                      );
+          SizedBox(
+            height: 200,
+            child: LineChart(
+              LineChartData(
+                gridData: FlGridData(
+                  show: true,
+                  drawVerticalLine: true,
+                  horizontalInterval: 500,
+                  getDrawingHorizontalLine: (value) => FlLine(
+                      color: theme.dividerColor.withOpacity(0.1),
+                      strokeWidth: 1),
+                  getDrawingVerticalLine: (value) => FlLine(
+                      color: theme.dividerColor.withOpacity(0.1),
+                      strokeWidth: 1),
+                ),
+                titlesData: FlTitlesData(
+                  show: true,
+                  rightTitles: const AxisTitles(
+                      sideTitles: SideTitles(showTitles: false)),
+                  topTitles: const AxisTitles(
+                      sideTitles: SideTitles(showTitles: false)),
+                  bottomTitles: AxisTitles(
+                    sideTitles: SideTitles(
+                      showTitles: true,
+                      reservedSize: 20,
+                      interval: 1,
+                      getTitlesWidget: (value, meta) {
+                        final index = value.toInt();
+                        if (index < 0 || index >= chartEntries.length) {
+                          return const SizedBox.shrink();
+                        }
+                        final date =
+                        DateFormat('yyyy-MM').parse(chartEntries[index].key);
+                        return Padding(
+                          padding: const EdgeInsets.only(top: 6),
+                          child: Text(
+                            DateFormat('MMM', 'pt_BR')
+                                .format(date)
+                                .substring(0, 3),
+                            style: theme.textTheme.bodySmall!
+                                .copyWith(fontSize: 10),
+                          ),
+                        );
+                      },
+                    ),
+                  ),
+                  leftTitles: AxisTitles(
+                    sideTitles: SideTitles(
+                      showTitles: true,
+                      interval: 500,
+                      getTitlesWidget: (value, meta) {
+                        final inK = value / 1000;
+                        return Text(
+                            '${inK.toStringAsFixed(1).replaceAll('.0', '')}k',
+                            style: theme.textTheme.bodySmall,
+                            textAlign: TextAlign.left);
+                      },
+                      reservedSize: 32,
+                    ),
+                  ),
+                ),
+                borderData: FlBorderData(show: false),
+                minX: 0,
+                maxX: (chartEntries.length - 1).toDouble(),
+                minY: 0,
+                maxY: roundedMaxValue,
+                lineTouchData: LineTouchData(
+                  touchTooltipData: LineTouchTooltipData(
+                    getTooltipColor: (_) => Colors.blueGrey.withOpacity(0.8),
+                    getTooltipItems: (touchedSpots) {
+                      return touchedSpots.map((spot) {
+                        final index = spot.x.toInt();
+                        final monthKey = chartEntries[index].key;
+                        final date = DateFormat('yyyy-MM').parse(monthKey);
+                        return LineTooltipItem(
+                          '${DateFormat.yMMM('pt_BR').format(date)}\n${_currencyFormatter.format(spot.y)}',
+                          const TextStyle(
+                              color: Colors.white, fontWeight: FontWeight.bold),
+                        );
+                      }).toList();
                     },
                   ),
                 ),
-                leftTitles: AxisTitles(
-                  sideTitles: SideTitles(
-                    showTitles: true,
-                    interval: 500,
-                    getTitlesWidget: (value, meta) {
-                      final inK = value / 1000;
-                      return Text(
-                          '${inK.toStringAsFixed(1).replaceAll('.0', '')}k',
-                          style: theme.textTheme.bodySmall,
-                          textAlign: TextAlign.left);
-                    },
-                    reservedSize: 32,
+                lineBarsData: [
+                  LineChartBarData(
+                    spots: spots,
+                    isCurved: true,
+                    gradient: const LinearGradient(
+                        colors: [AppTheme.primary, AppTheme.secondary]),
+                    barWidth: 5,
+                    isStrokeCapRound: true,
+                    dotData: FlDotData(
+                      show: true,
+                      getDotPainter: (spot, percent, barData, index) {
+                        return FlDotCirclePainter(
+                          radius: 4,
+                          color: AppTheme.primary,
+                          strokeWidth: 2,
+                          strokeColor: theme.scaffoldBackgroundColor,
+                        );
+                      },
+                    ),
+                    belowBarData: BarAreaData(
+                      show: true,
+                      gradient: LinearGradient(
+                        begin: Alignment.topCenter,
+                        end: Alignment.bottomCenter,
+                        colors: [
+                          AppTheme.primary.withOpacity(0.3),
+                          AppTheme.secondary.withOpacity(0.1),
+                        ],
+                      ),
+                    ),
                   ),
-                ),
+                ],
               ),
-              borderData: FlBorderData(show: false),
-              minX: 0,
-              maxX: 5,
-              minY: 0,
-              maxY: roundedMaxValue,
-              lineTouchData: LineTouchData(
-                touchTooltipData: LineTouchTooltipData(
-                  getTooltipColor: (_) => Colors.blueGrey.withOpacity(0.8),
-                  getTooltipItems: (touchedSpots) {
-                    return touchedSpots.map((spot) {
-                      return LineTooltipItem(
-                        _currencyFormatter.format(spot.y),
-                        const TextStyle(
-                            color: Colors.white, fontWeight: FontWeight.bold),
-                      );
-                    }).toList();
-                  },
-                ),
-              ),
-              lineBarsData: [
-                LineChartBarData(
-                  spots: spots,
-                  isCurved: true,
-                  gradient: const LinearGradient(
-                      colors: [AppTheme.primary, AppTheme.secondary]),
-                  barWidth: 5,
-                  isStrokeCapRound: true,
-                  dotData: const FlDotData(show: false),
-                  belowBarData: BarAreaData(
-                    show: true,
-                    gradient: LinearGradient(colors: [
-                      AppTheme.primary.withOpacity(0.2),
-                      AppTheme.secondary.withOpacity(0.2),
-                    ]),
-                  ),
-                ),
-              ],
             ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildPeriodStats(BuildContext context, AnalysisViewModel viewModel) {
+    final stats = viewModel.currentPeriodStats;
+    return Row(
+      children: [
+        Expanded(
+          child: _buildMiniStatCard(
+            'Total',
+            _currencyFormatterNoCents.format(stats['total']!),
+            AppTheme.primary,
+          ),
+        ),
+        const SizedBox(width: 8),
+        Expanded(
+          child: _buildMiniStatCard(
+            'Média',
+            _formatCurrencyFlexible(stats['average']!),
+            AppTheme.secondary,
+          ),
+        ),
+        const SizedBox(width: 8),
+        Expanded(
+          child: _buildMiniStatCard(
+            'Maior',
+            _formatCurrencyFlexible(stats['highest']!),
+            AppTheme.chartColors[2],
+          ),
+        ),
+        const SizedBox(width: 8),
+        Expanded(
+          child: _buildMiniStatCard(
+            'Menor',
+            _formatCurrencyFlexible(stats['lowest']!),
+            AppTheme.chartColors[3],
           ),
         ),
       ],
+    );
+  }
+
+  Widget _buildMiniStatCard(String label, String value, Color color) {
+    return Container(
+      padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 4),
+      child: Column(
+        children: [
+          Text(
+            label,
+            style: TextStyle(
+              fontSize: 10,
+              fontWeight: FontWeight.w600,
+              color: color,
+            ),
+          ),
+          const SizedBox(height: 4),
+          FittedBox(
+            fit: BoxFit.scaleDown,
+            child: Text(
+              value,
+              style: TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.bold,
+                color: color,
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 
@@ -395,8 +658,8 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
         Text(
           'Análise por Categoria',
           style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                fontWeight: FontWeight.bold,
-              ),
+            fontWeight: FontWeight.bold,
+          ),
         ),
         const SizedBox(height: 16),
         _buildCategoryMonthSelector(context, viewModel),
@@ -466,6 +729,15 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
                 borderRadius: BorderRadius.circular(2),
               ),
             ),
+            Padding(
+              padding: const EdgeInsets.all(16),
+              child: Text(
+                'Selecionar Mês para Análise de Categorias',
+                style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
             Expanded(
               child: ListView.builder(
                 itemCount: viewModel.availableMonthsForFilter.length,
@@ -473,6 +745,12 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
                   final month = viewModel.availableMonthsForFilter[index];
                   final isSelected =
                       month == viewModel.selectedMonthForCategory;
+                  final monthExpenses = viewModel.allExpenses.where((exp) =>
+                  exp.date.year == month.year &&
+                      exp.date.month == month.month);
+                  final monthTotal =
+                  monthExpenses.fold(0.0, (sum, exp) => sum + exp.amount);
+
                   return ListTile(
                     selected: isSelected,
                     selectedTileColor: AppTheme.primary.withOpacity(0.1),
@@ -484,10 +762,23 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
                       DateFormat.yMMMM('pt_BR').format(month).capitalize(),
                       style: TextStyle(
                         fontWeight:
-                            isSelected ? FontWeight.bold : FontWeight.w500,
+                        isSelected ? FontWeight.bold : FontWeight.w500,
                         color: isSelected ? AppTheme.primary : null,
                       ),
                     ),
+                    subtitle: monthTotal > 0
+                        ? Text(
+                      _currencyFormatter.format(monthTotal),
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: Colors.grey[600],
+                      ),
+                    )
+                        : null,
+                    trailing: isSelected
+                        ? Icon(Icons.check_circle,
+                        color: AppTheme.primary, size: 20)
+                        : null,
                     onTap: () {
                       viewModel.setSelectedMonthForCategory(month);
                       Navigator.pop(context);
@@ -547,73 +838,77 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
     }
     final total = data.values.fold(0.0, (sum, item) => sum + item);
     final chartData = data.entries.toList();
-    return Column(
-      children: [
-        SizedBox(
-          height: 200,
-          child: PieChart(
-            PieChartData(
-              pieTouchData: PieTouchData(
-                touchCallback: (event, pieTouchResponse) {
-                  setState(() {
-                    if (!event.isInterestedForInteractions ||
-                        pieTouchResponse?.touchedSection == null) {
-                      _touchedPieIndex = -1;
-                      return;
-                    }
-                    _touchedPieIndex =
-                        pieTouchResponse!.touchedSection!.touchedSectionIndex;
-                  });
-                },
+
+    return Container(
+      padding: const EdgeInsets.symmetric(vertical: 16),
+      child: Column(
+        children: [
+          SizedBox(
+            height: 200,
+            child: PieChart(
+              PieChartData(
+                pieTouchData: PieTouchData(
+                  touchCallback: (event, pieTouchResponse) {
+                    setState(() {
+                      if (!event.isInterestedForInteractions ||
+                          pieTouchResponse?.touchedSection == null) {
+                        _touchedPieIndex = -1;
+                        return;
+                      }
+                      _touchedPieIndex =
+                          pieTouchResponse!.touchedSection!.touchedSectionIndex;
+                    });
+                  },
+                ),
+                sectionsSpace: 2,
+                centerSpaceRadius: 40,
+                sections: List.generate(chartData.length, (i) {
+                  final isTouched = i == _touchedPieIndex;
+                  final entry = chartData[i];
+                  final percentage =
+                  total > 0 ? (entry.value / total) * 100 : 0.0;
+                  return PieChartSectionData(
+                    color: entry.key.color,
+                    value: entry.value,
+                    title: '${percentage.toStringAsFixed(0)}%',
+                    radius: isTouched ? 70 : 60,
+                    titleStyle: const TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                      shadows: [
+                        Shadow(
+                          color: Colors.black26,
+                          offset: Offset(1, 1),
+                          blurRadius: 2,
+                        ),
+                      ],
+                    ),
+                  );
+                }),
               ),
-              sectionsSpace: 2,
-              centerSpaceRadius: 40,
-              sections: List.generate(chartData.length, (i) {
-                final isTouched = i == _touchedPieIndex;
-                final entry = chartData[i];
-                final percentage =
-                    total > 0 ? (entry.value / total) * 100 : 0.0;
-                return PieChartSectionData(
-                  color: entry.key.color,
-                  value: entry.value,
-                  title: '${percentage.toStringAsFixed(0)}%',
-                  radius: isTouched ? 70 : 60,
-                  titleStyle: const TextStyle(
-                    fontSize: 12,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white,
-                    shadows: [
-                      Shadow(
-                        color: Colors.black26,
-                        offset: Offset(1, 1),
-                        blurRadius: 2,
-                      ),
-                    ],
-                  ),
-                );
-              }),
             ),
           ),
-        ),
-        const SizedBox(height: 24),
-        ListView.separated(
-          shrinkWrap: true,
-          physics: const NeverScrollableScrollPhysics(),
-          itemCount: chartData.length,
-          separatorBuilder: (context, index) => const SizedBox(height: 8),
-          itemBuilder: (context, index) {
-            final entry = chartData[index];
-            final percentage = total > 0 ? (entry.value / total) * 100 : 0.0;
-            return _buildEnhancedIndicator(
-              color: entry.key.color,
-              text: entry.key.name,
-              value: entry.value,
-              percentage: percentage,
-              isHighlighted: index == _touchedPieIndex,
-            );
-          },
-        ),
-      ],
+          const SizedBox(height: 24),
+          ListView.separated(
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            itemCount: chartData.length,
+            separatorBuilder: (context, index) => const SizedBox(height: 8),
+            itemBuilder: (context, index) {
+              final entry = chartData[index];
+              final percentage = total > 0 ? (entry.value / total) * 100 : 0.0;
+              return _buildEnhancedIndicator(
+                color: entry.key.color,
+                text: entry.key.name,
+                value: entry.value,
+                percentage: percentage,
+                isHighlighted: index == _touchedPieIndex,
+              );
+            },
+          ),
+        ],
+      ),
     );
   }
 
@@ -632,7 +927,7 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
         color: isHighlighted ? color.withOpacity(0.1) : Colors.transparent,
         borderRadius: BorderRadius.circular(12),
         border:
-            isHighlighted ? Border.all(color: color.withOpacity(0.3)) : null,
+        isHighlighted ? Border.all(color: color.withOpacity(0.3)) : null,
       ),
       child: Row(
         children: [
@@ -661,7 +956,7 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
                   style: TextStyle(
                     fontSize: 14,
                     fontWeight:
-                        isHighlighted ? FontWeight.bold : FontWeight.w600,
+                    isHighlighted ? FontWeight.bold : FontWeight.w600,
                     color: isHighlighted ? color : null,
                   ),
                   overflow: TextOverflow.ellipsis,
@@ -705,6 +1000,11 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
               decoration: BoxDecoration(
                 color: color.withOpacity(0.2),
                 borderRadius: BorderRadius.circular(6),
+              ),
+              child: Icon(
+                Icons.trending_up,
+                size: 12,
+                color: color,
               ),
             ),
         ],

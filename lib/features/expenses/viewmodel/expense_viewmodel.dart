@@ -18,10 +18,14 @@ class ExpenseViewModel extends ChangeNotifier {
   bool _isListening = false;
 
   List<Expense> get allExpenses => _allExpenses;
-
   bool get isLoading => _isLoading;
-
   List<String> get selectedCategoryIds => _selectedCategoryIds;
+
+  List<Expense> get allExpensesSorted {
+    final sorted = List<Expense>.from(_allExpenses);
+    sorted.sort((a, b) => a.date.compareTo(b.date));
+    return sorted;
+  }
 
   List<Expense> get filteredExpenses {
     List<Expense> filtered = List.from(_allExpenses);
@@ -29,8 +33,8 @@ class ExpenseViewModel extends ChangeNotifier {
     if (_selectedCategoryIds.isNotEmpty) {
       filtered = filtered
           .where((exp) =>
-              exp.categoryId != null &&
-              _selectedCategoryIds.contains(exp.categoryId))
+      exp.categoryId != null &&
+          _selectedCategoryIds.contains(exp.categoryId))
           .toList();
     }
 
@@ -61,10 +65,10 @@ class ExpenseViewModel extends ChangeNotifier {
     _expensesSubscription?.cancel();
     _expensesSubscription =
         _repository.getExpensesStreamForUser(userId).listen((expenses) {
-      _allExpenses = expenses;
-      if (_isLoading) _setLoading(false);
-      notifyListeners();
-    });
+          _allExpenses = expenses;
+          if (_isLoading) _setLoading(false);
+          notifyListeners();
+        });
     _isListening = true;
   }
 
@@ -85,8 +89,8 @@ class ExpenseViewModel extends ChangeNotifier {
     if (start != null && end != null) {
       expensesToExport = _allExpenses
           .where((exp) =>
-              exp.date.isAfter(start.subtract(const Duration(days: 1))) &&
-              exp.date.isBefore(end.add(const Duration(days: 1))))
+      exp.date.isAfter(start.subtract(const Duration(days: 1))) &&
+          exp.date.isBefore(end.add(const Duration(days: 1))))
           .toList();
     }
     return await _csvService.exportExpenses(expensesToExport);
@@ -100,7 +104,7 @@ class ExpenseViewModel extends ChangeNotifier {
     for (var row in data) {
       final newExpense = Expense(
         date:
-            DateTime.tryParse(row['date']?.toString() ?? '') ?? DateTime.now(),
+        DateTime.tryParse(row['date']?.toString() ?? '') ?? DateTime.now(),
         amount: double.tryParse(row['amount']?.toString() ?? '0.0') ?? 0.0,
         categoryId: null,
         motivation: row['motivation']?.toString(),
@@ -123,9 +127,9 @@ class ExpenseViewModel extends ChangeNotifier {
     if (categoryId == null) return [];
     final locations = _allExpenses
         .where((exp) =>
-            exp.categoryId == categoryId &&
-            exp.location != null &&
-            exp.location!.isNotEmpty)
+    exp.categoryId == categoryId &&
+        exp.location != null &&
+        exp.location!.isNotEmpty)
         .map((exp) => exp.location!)
         .toList();
 
@@ -146,9 +150,9 @@ class ExpenseViewModel extends ChangeNotifier {
     if (categoryId == null) return [];
     final motivations = _allExpenses
         .where((exp) =>
-            exp.categoryId == categoryId &&
-            exp.motivation != null &&
-            exp.motivation!.isNotEmpty)
+    exp.categoryId == categoryId &&
+        exp.motivation != null &&
+        exp.motivation!.isNotEmpty)
         .map((exp) => exp.motivation!)
         .toList();
 

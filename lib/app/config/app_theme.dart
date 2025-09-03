@@ -18,6 +18,9 @@ class AppTheme {
   static const Color positiveChange = Color(0xFFE57373);
   static const Color negativeChange = Color(0xFF81C784);
 
+  static const Color chartBackgroundColor = Color(0xFFFFFFFF);
+  static const Color darkChartBackgroundColor = Color(0xFF1E1E2D);
+
   static final List<Color> chartColors = [
     const Color(0xFFF4A261),
     const Color(0xFF2A9D8F),
