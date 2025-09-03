@@ -73,7 +73,7 @@ class _MainScreenState extends State<MainScreen> {
               color: theme.colorScheme.onSurface.withOpacity(0.6),
               tabs: const [
                 GButton(icon: Icons.home_rounded, text: 'Painel'),
-                GButton(icon: Icons.payment_rounded, text: 'Despesas'),
+                GButton(icon: Icons.monetization_on_rounded, text: 'Despesas'),
                 GButton(icon: Icons.vpn_key_rounded, text: 'Credenciais'),
                 GButton(icon: Icons.person_rounded, text: 'Perfil'),
               ],
