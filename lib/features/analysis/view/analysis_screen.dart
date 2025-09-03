@@ -239,7 +239,6 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
     return Container(
       padding: const EdgeInsets.all(4),
       decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surfaceVariant.withOpacity(0.3),
         borderRadius: BorderRadius.circular(12),
       ),
       child: Column(
@@ -449,10 +448,6 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
       padding: const EdgeInsets.symmetric(vertical: 16),
       child: Column(
         children: [
-          if (viewModel.currentPeriodStats['total']! > 0) ...[
-            _buildPeriodStats(context, viewModel),
-            const SizedBox(height: 24),
-          ],
           SizedBox(
             height: 200,
             child: LineChart(
