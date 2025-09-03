@@ -38,9 +38,13 @@ class AnalysisViewModel extends ChangeNotifier {
       categoryViewModel.isLoading || expenseViewModel.isLoading;
 
   DateTime? get selectedMonthForCategory => _selectedMonthForCategory;
+
   int get selectedMonthsCount => _selectedMonthsCount;
+
   bool get useCustomRange => _useCustomRange;
+
   DateTime? get customStartDate => _customStartDate;
+
   DateTime? get customEndDate => _customEndDate;
 
   List<int> get availableMonthsCounts => [3, 6, 9, 12];
@@ -184,7 +188,7 @@ class AnalysisViewModel extends ChangeNotifier {
     if (_customStartDate == null || _customEndDate == null) return data;
 
     DateTime current =
-    DateTime(_customStartDate!.year, _customStartDate!.month, 1);
+        DateTime(_customStartDate!.year, _customStartDate!.month, 1);
     final end = DateTime(_customEndDate!.year, _customEndDate!.month, 1);
 
     while (!current.isAfter(end)) {
@@ -196,7 +200,7 @@ class AnalysisViewModel extends ChangeNotifier {
     final expensesInRange = allExpenses.where((exp) {
       final expenseMonth = DateTime(exp.date.year, exp.date.month, 1);
       return !expenseMonth.isBefore(
-          DateTime(_customStartDate!.year, _customStartDate!.month, 1)) &&
+              DateTime(_customStartDate!.year, _customStartDate!.month, 1)) &&
           !expenseMonth.isAfter(
               DateTime(_customEndDate!.year, _customEndDate!.month, 1));
     });
@@ -255,7 +259,7 @@ class AnalysisViewModel extends ChangeNotifier {
     if (_selectedMonthForCategory == null) return totals;
 
     final monthExpenses = allExpenses.where((exp) =>
-    exp.date.year == _selectedMonthForCategory!.year &&
+        exp.date.year == _selectedMonthForCategory!.year &&
         exp.date.month == _selectedMonthForCategory!.month);
 
     for (var expense in monthExpenses) {

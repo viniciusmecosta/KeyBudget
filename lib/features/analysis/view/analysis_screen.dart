@@ -25,9 +25,9 @@ extension StringCapitalize on String {
 
 class _AnalysisScreenState extends State<AnalysisScreen> {
   final _currencyFormatter =
-  NumberFormat.currency(locale: 'pt_BR', symbol: 'R\$');
+      NumberFormat.currency(locale: 'pt_BR', symbol: 'R\$');
   final _currencyFormatterNoCents =
-  NumberFormat.currency(locale: 'pt_BR', symbol: 'R\$', decimalDigits: 0);
+      NumberFormat.currency(locale: 'pt_BR', symbol: 'R\$', decimalDigits: 0);
   int _touchedPieIndex = -1;
 
   String _formatCurrencyFlexible(double value) {
@@ -48,49 +48,49 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
       ),
       body: viewModel.isLoading
           ? Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Container(
-              padding: const EdgeInsets.all(20),
-              decoration: BoxDecoration(
-                color: AppTheme.primary.withOpacity(0.1),
-                shape: BoxShape.circle,
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(20),
+                    decoration: BoxDecoration(
+                      color: AppTheme.primary.withOpacity(0.1),
+                      shape: BoxShape.circle,
+                    ),
+                    child: CircularProgressIndicator(
+                      strokeWidth: 3,
+                      valueColor:
+                          AlwaysStoppedAnimation<Color>(AppTheme.primary),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  Text(
+                    'Analisando seus dados...',
+                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                          color: AppTheme.onSurface.withOpacity(0.7),
+                        ),
+                  ),
+                ],
               ),
-              child: CircularProgressIndicator(
-                strokeWidth: 3,
-                valueColor:
-                AlwaysStoppedAnimation<Color>(AppTheme.primary),
-              ),
-            ),
-            const SizedBox(height: 16),
-            Text(
-              'Analisando seus dados...',
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                color: AppTheme.onSurface.withOpacity(0.7),
-              ),
-            ),
-          ],
-        ),
-      )
+            )
           : RefreshIndicator(
-        onRefresh: () async {},
-        color: AppTheme.primary,
-        child: SingleChildScrollView(
-          physics: const AlwaysScrollableScrollPhysics(),
-          padding: const EdgeInsets.all(20.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              _buildStatsOverview(context, viewModel),
-              const SizedBox(height: 24),
-              _buildMonthlyTrendSection(context, viewModel),
-              const SizedBox(height: 24),
-              _buildCategoryAnalysisSection(context, viewModel),
-            ],
-          ),
-        ),
-      ).animate().fadeIn(duration: 300.ms).slideY(begin: 0.05, end: 0),
+              onRefresh: () async {},
+              color: AppTheme.primary,
+              child: SingleChildScrollView(
+                physics: const AlwaysScrollableScrollPhysics(),
+                padding: const EdgeInsets.all(20.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    _buildStatsOverview(context, viewModel),
+                    const SizedBox(height: 24),
+                    _buildMonthlyTrendSection(context, viewModel),
+                    const SizedBox(height: 24),
+                    _buildCategoryAnalysisSection(context, viewModel),
+                  ],
+                ),
+              ),
+            ).animate().fadeIn(duration: 300.ms).slideY(begin: 0.05, end: 0),
     );
   }
 
@@ -151,12 +151,12 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
   }
 
   Widget _buildEnhancedStatCard(
-      BuildContext context,
-      String title,
-      double value,
-      Color color, {
-        IconData? icon,
-      }) {
+    BuildContext context,
+    String title,
+    double value,
+    Color color, {
+    IconData? icon,
+  }) {
     final theme = Theme.of(context);
     final String formattedValue = title == 'Gasto Total'
         ? _currencyFormatterNoCents.format(value)
@@ -241,9 +241,6 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
       decoration: BoxDecoration(
         color: Theme.of(context).colorScheme.surfaceVariant.withOpacity(0.3),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(
-          color: Theme.of(context).colorScheme.outline.withOpacity(0.2),
-        ),
       ),
       child: Column(
         children: [
@@ -260,7 +257,7 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
                       padding: const EdgeInsets.symmetric(vertical: 8),
                       decoration: BoxDecoration(
                         color:
-                        isSelected ? AppTheme.primary : Colors.transparent,
+                            isSelected ? AppTheme.primary : Colors.transparent,
                         borderRadius: BorderRadius.circular(8),
                       ),
                       child: Text(
@@ -294,8 +291,8 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
                 child: GestureDetector(
                   onTap: () => _showCustomRangePicker(context, viewModel),
                   child: Container(
-                    padding: const EdgeInsets.symmetric(
-                        vertical: 8, horizontal: 12),
+                    padding:
+                        const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
                     decoration: BoxDecoration(
                       color: viewModel.useCustomRange
                           ? AppTheme.secondary.withOpacity(0.1)
@@ -303,7 +300,7 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
                       borderRadius: BorderRadius.circular(8),
                       border: viewModel.useCustomRange
                           ? Border.all(
-                          color: AppTheme.secondary.withOpacity(0.3))
+                              color: AppTheme.secondary.withOpacity(0.3))
                           : null,
                     ),
                     child: Row(
@@ -377,9 +374,9 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
       lastDate: availableRange.end,
       initialDateRange: viewModel.useCustomRange
           ? DateTimeRange(
-        start: viewModel.customStartDate ?? availableRange.start,
-        end: viewModel.customEndDate ?? availableRange.end,
-      )
+              start: viewModel.customStartDate ?? availableRange.start,
+              end: viewModel.customEndDate ?? availableRange.end,
+            )
           : null,
       locale: const Locale('pt', 'BR'),
       helpText: 'Selecionar período',
@@ -391,8 +388,8 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
         return Theme(
           data: Theme.of(context).copyWith(
             colorScheme: Theme.of(context).colorScheme.copyWith(
-              primary: AppTheme.primary,
-            ),
+                  primary: AppTheme.primary,
+                ),
           ),
           child: child!,
         );
@@ -441,9 +438,9 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
         .asMap()
         .entries
         .map((entry) => FlSpot(
-      entry.key.toDouble(),
-      entry.value.value,
-    ))
+              entry.key.toDouble(),
+              entry.value.value,
+            ))
         .toList();
     final maxValue = spots.map((spot) => spot.y).reduce(max);
     final roundedMaxValue = _getRoundedMaxValue(maxValue);
@@ -454,9 +451,7 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
         children: [
           if (viewModel.currentPeriodStats['total']! > 0) ...[
             _buildPeriodStats(context, viewModel),
-            const SizedBox(height: 16),
-            Divider(color: Colors.grey[200]),
-            const SizedBox(height: 16),
+            const SizedBox(height: 24),
           ],
           SizedBox(
             height: 200,
@@ -489,8 +484,8 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
                         if (index < 0 || index >= chartEntries.length) {
                           return const SizedBox.shrink();
                         }
-                        final date =
-                        DateFormat('yyyy-MM').parse(chartEntries[index].key);
+                        final date = DateFormat('yyyy-MM')
+                            .parse(chartEntries[index].key);
                         return Padding(
                           padding: const EdgeInsets.only(top: 6),
                           child: Text(
@@ -650,6 +645,28 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
     );
   }
 
+  Widget _buildSectionHeader(String title, String subtitle) {
+    final theme = Theme.of(context);
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          title,
+          style: theme.textTheme.titleLarge?.copyWith(
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        const SizedBox(height: 4),
+        Text(
+          subtitle,
+          style: theme.textTheme.bodyMedium?.copyWith(
+            color: theme.textTheme.bodySmall?.color,
+          ),
+        ),
+      ],
+    );
+  }
+
   Widget _buildCategoryAnalysisSection(
       BuildContext context, AnalysisViewModel viewModel) {
     return Column(
@@ -658,8 +675,8 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
         Text(
           'Análise por Categoria',
           style: Theme.of(context).textTheme.titleLarge?.copyWith(
-            fontWeight: FontWeight.bold,
-          ),
+                fontWeight: FontWeight.bold,
+              ),
         ),
         const SizedBox(height: 16),
         _buildCategoryMonthSelector(context, viewModel),
@@ -734,8 +751,8 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
               child: Text(
                 'Selecionar Mês para Análise de Categorias',
                 style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                  fontWeight: FontWeight.bold,
-                ),
+                      fontWeight: FontWeight.bold,
+                    ),
               ),
             ),
             Expanded(
@@ -746,10 +763,10 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
                   final isSelected =
                       month == viewModel.selectedMonthForCategory;
                   final monthExpenses = viewModel.allExpenses.where((exp) =>
-                  exp.date.year == month.year &&
+                      exp.date.year == month.year &&
                       exp.date.month == month.month);
                   final monthTotal =
-                  monthExpenses.fold(0.0, (sum, exp) => sum + exp.amount);
+                      monthExpenses.fold(0.0, (sum, exp) => sum + exp.amount);
 
                   return ListTile(
                     selected: isSelected,
@@ -762,22 +779,22 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
                       DateFormat.yMMMM('pt_BR').format(month).capitalize(),
                       style: TextStyle(
                         fontWeight:
-                        isSelected ? FontWeight.bold : FontWeight.w500,
+                            isSelected ? FontWeight.bold : FontWeight.w500,
                         color: isSelected ? AppTheme.primary : null,
                       ),
                     ),
                     subtitle: monthTotal > 0
                         ? Text(
-                      _currencyFormatter.format(monthTotal),
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: Colors.grey[600],
-                      ),
-                    )
+                            _currencyFormatter.format(monthTotal),
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: Colors.grey[600],
+                            ),
+                          )
                         : null,
                     trailing: isSelected
                         ? Icon(Icons.check_circle,
-                        color: AppTheme.primary, size: 20)
+                            color: AppTheme.primary, size: 20)
                         : null,
                     onTap: () {
                       viewModel.setSelectedMonthForCategory(month);
@@ -866,7 +883,7 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
                   final isTouched = i == _touchedPieIndex;
                   final entry = chartData[i];
                   final percentage =
-                  total > 0 ? (entry.value / total) * 100 : 0.0;
+                      total > 0 ? (entry.value / total) * 100 : 0.0;
                   return PieChartSectionData(
                     color: entry.key.color,
                     value: entry.value,
@@ -927,7 +944,7 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
         color: isHighlighted ? color.withOpacity(0.1) : Colors.transparent,
         borderRadius: BorderRadius.circular(12),
         border:
-        isHighlighted ? Border.all(color: color.withOpacity(0.3)) : null,
+            isHighlighted ? Border.all(color: color.withOpacity(0.3)) : null,
       ),
       child: Row(
         children: [
@@ -956,7 +973,7 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
                   style: TextStyle(
                     fontSize: 14,
                     fontWeight:
-                    isHighlighted ? FontWeight.bold : FontWeight.w600,
+                        isHighlighted ? FontWeight.bold : FontWeight.w600,
                     color: isHighlighted ? color : null,
                   ),
                   overflow: TextOverflow.ellipsis,
