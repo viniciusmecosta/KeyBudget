@@ -1,4 +1,5 @@
 import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:key_budget/app/config/app_theme.dart';
@@ -39,14 +40,17 @@ class _SuppliersScreenState extends State<SuppliersScreen> {
   }
 
   void _launchWhatsApp(String phone) async {
-    final whatsappUrl = "https://wa.me/$phone";
+    final sanitizedPhone = phone.replaceAll(RegExp(r'[^0-9]'), '');
+    final whatsappUrl = "https://wa.me/55$sanitizedPhone";
     final uri = Uri.parse(whatsappUrl);
     if (await canLaunchUrl(uri)) {
       await launchUrl(uri);
     } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Não foi possível abrir o WhatsApp.')),
-      );
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Não foi possível abrir o WhatsApp.')),
+        );
+      }
     }
   }
 
@@ -56,9 +60,12 @@ class _SuppliersScreenState extends State<SuppliersScreen> {
     if (await canLaunchUrl(uri)) {
       await launchUrl(uri);
     } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Não foi possível abrir o app de e-mail.')),
-      );
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+              content: Text('Não foi possível abrir o app de e-mail.')),
+        );
+      }
     }
   }
 
@@ -81,7 +88,8 @@ class _SuppliersScreenState extends State<SuppliersScreen> {
                   return SingleChildScrollView(
                     physics: const AlwaysScrollableScrollPhysics(),
                     child: ConstrainedBox(
-                      constraints: BoxConstraints(minHeight: constraints.maxHeight),
+                      constraints:
+                          BoxConstraints(minHeight: constraints.maxHeight),
                       child: EmptyStateWidget(
                         icon: Icons.store_mall_directory_outlined,
                         message: 'Nenhum fornecedor encontrado.',
@@ -102,7 +110,7 @@ class _SuppliersScreenState extends State<SuppliersScreen> {
                   final photoPath = supplier.photoPath;
                   return Card(
                     margin:
-                    const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
+                        const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
                     child: ListTile(
                       contentPadding: const EdgeInsets.symmetric(
                           horizontal: 16, vertical: 6),
@@ -111,28 +119,35 @@ class _SuppliersScreenState extends State<SuppliersScreen> {
                             .colorScheme
                             .tertiary
                             .withOpacity(0.15),
-                        backgroundImage: photoPath != null && photoPath.isNotEmpty
-                            ? MemoryImage(base64Decode(photoPath))
-                            : null,
+                        backgroundImage:
+                            photoPath != null && photoPath.isNotEmpty
+                                ? MemoryImage(base64Decode(photoPath))
+                                : null,
                         child: photoPath == null || photoPath.isEmpty
                             ? Icon(Icons.store_outlined,
-                            color: Theme.of(context).colorScheme.tertiary)
+                                color: Theme.of(context).colorScheme.tertiary)
                             : null,
                       ),
                       title: Text(supplier.name,
                           style: const TextStyle(fontWeight: FontWeight.w600)),
-                      subtitle: Text(supplier.representativeName ?? 'Sem representante'),
+                      subtitle: Text(
+                          supplier.representativeName ?? 'Sem representante'),
                       trailing: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          if (supplier.phoneNumber != null && supplier.phoneNumber!.isNotEmpty)
+                          if (supplier.phoneNumber != null &&
+                              supplier.phoneNumber!.isNotEmpty)
                             IconButton(
-                              icon: Icon(Icons.message, color: Colors.green.shade600),
-                              onPressed: () => _launchWhatsApp(supplier.phoneNumber!),
+                              icon: Icon(Icons.message,
+                                  color: Colors.green.shade600),
+                              onPressed: () =>
+                                  _launchWhatsApp(supplier.phoneNumber!),
                             ),
-                          if (supplier.email != null && supplier.email!.isNotEmpty)
+                          if (supplier.email != null &&
+                              supplier.email!.isNotEmpty)
                             IconButton(
-                              icon: Icon(Icons.email_outlined, color: Colors.blue.shade600),
+                              icon: Icon(Icons.email_outlined,
+                                  color: Colors.blue.shade600),
                               onPressed: () => _launchEmail(supplier.email!),
                             ),
                         ],
