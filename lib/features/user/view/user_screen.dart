@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
+import 'package:key_budget/app/config/app_theme.dart';
 import 'package:key_budget/features/auth/viewmodel/auth_viewmodel.dart';
 import 'package:key_budget/features/category/view/categories_screen.dart';
 import 'package:key_budget/features/user/view/edit_user_screen.dart';
@@ -46,7 +47,7 @@ class UserScreen extends StatelessWidget {
           }
 
           return ListView(
-            padding: const EdgeInsets.all(16.0),
+            padding: const EdgeInsets.all(AppTheme.defaultPadding),
             children: [
               const SizedBox(height: 20),
               Center(

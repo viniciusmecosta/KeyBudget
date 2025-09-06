@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart' hide DateUtils;
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:intl/intl.dart';
+import 'package:key_budget/app/config/app_theme.dart';
 import 'package:key_budget/app/widgets/empty_state_widget.dart';
 import 'package:key_budget/core/models/expense_model.dart';
 import 'package:key_budget/core/utils/date_utils.dart';
@@ -258,8 +259,7 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
                     );
                   }
                   return ListView.builder(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                    padding: const EdgeInsets.all(AppTheme.defaultPadding),
                     itemCount: monthlyExpenses.length,
                     itemBuilder: (context, index) {
                       final expense = monthlyExpenses[index];

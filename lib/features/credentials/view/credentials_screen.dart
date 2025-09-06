@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_animate/flutter_animate.dart';
+import 'package:key_budget/app/config/app_theme.dart';
 import 'package:key_budget/app/widgets/empty_state_widget.dart';
 import 'package:key_budget/features/auth/viewmodel/auth_viewmodel.dart';
 import 'package:key_budget/features/credentials/view/add_credential_screen.dart';
@@ -146,7 +147,7 @@ class _CredentialsScreenState extends State<CredentialsScreen> {
               });
             }
             return ListView.builder(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+              padding: const EdgeInsets.all(AppTheme.defaultPadding),
               itemCount: vm.allCredentials.length,
               itemBuilder: (context, index) {
                 final credential = vm.allCredentials[index];
