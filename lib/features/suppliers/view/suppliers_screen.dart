@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:key_budget/app/config/app_theme.dart';
 import 'package:key_budget/app/widgets/empty_state_widget.dart';
 import 'package:key_budget/features/auth/viewmodel/auth_viewmodel.dart';
@@ -43,6 +44,7 @@ class _SuppliersScreenState extends State<SuppliersScreen> {
     final sanitizedPhone = phone.replaceAll(RegExp(r'[^0-9]'), '');
     final whatsappUrl = "https://wa.me/55$sanitizedPhone";
     final uri = Uri.parse(whatsappUrl);
+
     if (await canLaunchUrl(uri)) {
       await launchUrl(uri);
     } else {
@@ -138,8 +140,8 @@ class _SuppliersScreenState extends State<SuppliersScreen> {
                           if (supplier.phoneNumber != null &&
                               supplier.phoneNumber!.isNotEmpty)
                             IconButton(
-                              icon: Icon(Icons.message,
-                                  color: Colors.green.shade600),
+                              icon: FaIcon(FontAwesomeIcons.whatsapp,
+                                  color: Colors.green.shade700),
                               onPressed: () =>
                                   _launchWhatsApp(supplier.phoneNumber!),
                             ),
