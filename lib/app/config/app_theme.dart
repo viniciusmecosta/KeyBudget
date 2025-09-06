@@ -3,6 +3,13 @@ import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 class AppTheme {
+  static const double spaceS = 8.0;
+  static const double spaceM = 16.0;
+  static const double spaceL = 24.0;
+  static const double spaceXL = 32.0;
+
+  static const double defaultPadding = spaceM;
+
   static const Color primary = Color(0xFF6A5AE0);
   static const Color primaryVariant = Color(0xFF8A7AF3);
   static const Color secondary = Color(0xFF23B0B0);

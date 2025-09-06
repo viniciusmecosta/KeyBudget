@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart' hide DateUtils;
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:intl/intl.dart';
+import 'package:key_budget/app/config/app_theme.dart';
 import 'package:key_budget/app/viewmodel/navigation_viewmodel.dart';
 import 'package:key_budget/core/models/expense_model.dart';
 import 'package:key_budget/core/utils/date_utils.dart';
@@ -74,23 +75,25 @@ class _DashboardScreenState extends State<DashboardScreen> {
           ],
         ),
       ),
-      body: viewModel.isLoading
-          ? const Center(child: CircularProgressIndicator())
-          : RefreshIndicator(
-              onRefresh: _fetchInitialData,
-              child: ListView(
-                padding: const EdgeInsets.all(16.0),
-                children: [
-                  _buildTotalBalanceCard(context, viewModel),
-                  const SizedBox(height: 16),
-                  _buildInfoRow(context, viewModel),
-                  const SizedBox(height: 24),
-                  _buildSectionTitle(context, 'Últimas Atividades'),
-                  const SizedBox(height: 12),
-                  _buildRecentActivitySection(context, viewModel),
-                ],
-              ).animate().fadeIn(duration: 250.ms),
-            ),
+      body: SafeArea(
+        child: viewModel.isLoading
+            ? const Center(child: CircularProgressIndicator())
+            : RefreshIndicator(
+                onRefresh: _fetchInitialData,
+                child: ListView(
+                  padding: const EdgeInsets.all(AppTheme.defaultPadding),
+                  children: [
+                    _buildTotalBalanceCard(context, viewModel),
+                    const SizedBox(height: 16),
+                    _buildInfoRow(context, viewModel),
+                    const SizedBox(height: 24),
+                    _buildSectionTitle(context, 'Últimas Atividades'),
+                    const SizedBox(height: 12),
+                    _buildRecentActivitySection(context, viewModel),
+                  ],
+                ).animate().fadeIn(duration: 250.ms),
+              ),
+      ),
     );
   }
 
