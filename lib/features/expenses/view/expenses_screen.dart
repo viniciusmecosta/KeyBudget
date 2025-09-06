@@ -190,128 +190,131 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
           ),
         ],
       ),
-      body: RefreshIndicator(
-        onRefresh: _handleRefresh,
-        child: Column(
-          children: [
-            _buildMonthSelector(context),
-            Card(
-              margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-              elevation: 4,
-              shadowColor: theme.primaryColor.withOpacity(0.2),
-              clipBehavior: Clip.antiAlias,
-              child: Container(
-                width: double.infinity,
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    colors: [
-                      theme.colorScheme.primary,
-                      theme.primaryColor.withOpacity(0.7)
+      body: SafeArea(
+        child: RefreshIndicator(
+          onRefresh: _handleRefresh,
+          child: Column(
+            children: [
+              _buildMonthSelector(context),
+              Card(
+                margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                elevation: 4,
+                shadowColor: theme.primaryColor.withOpacity(0.2),
+                clipBehavior: Clip.antiAlias,
+                child: Container(
+                  width: double.infinity,
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      colors: [
+                        theme.colorScheme.primary,
+                        theme.primaryColor.withOpacity(0.7)
+                      ],
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                    ),
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        'Total do mês',
+                        style: theme.textTheme.titleMedium?.copyWith(
+                            color: theme.colorScheme.onPrimary.withOpacity(0.9),
+                            fontWeight: FontWeight.bold),
+                      ),
+                      Text(
+                        _currencyFormatter.format(totalValue),
+                        style: theme.textTheme.headlineMedium
+                            ?.copyWith(color: theme.colorScheme.onPrimary),
+                      ),
                     ],
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
                   ),
                 ),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      'Total do mês',
-                      style: theme.textTheme.titleMedium?.copyWith(
-                          color: theme.colorScheme.onPrimary.withOpacity(0.9),
-                          fontWeight: FontWeight.bold),
-                    ),
-                    Text(
-                      _currencyFormatter.format(totalValue),
-                      style: theme.textTheme.headlineMedium
-                          ?.copyWith(color: theme.colorScheme.onPrimary),
-                    ),
-                  ],
-                ),
               ),
-            ),
-            Expanded(
-              child: Selector<ExpenseViewModel, List<Expense>>(
-                selector: (_, vm) => vm.filteredExpenses
-                    .where((exp) =>
-                        exp.date.year == _selectedMonth.year &&
-                        exp.date.month == _selectedMonth.month)
-                    .toList()
-                  ..sort((a, b) => b.date.compareTo(a.date)),
-                builder: (context, monthlyExpenses, child) {
-                  final isLoading = context
-                      .select<ExpenseViewModel, bool>((vm) => vm.isLoading);
+              Expanded(
+                child: Selector<ExpenseViewModel, List<Expense>>(
+                  selector: (_, vm) => vm.filteredExpenses
+                      .where((exp) =>
+                          exp.date.year == _selectedMonth.year &&
+                          exp.date.month == _selectedMonth.month)
+                      .toList()
+                    ..sort((a, b) => b.date.compareTo(a.date)),
+                  builder: (context, monthlyExpenses, child) {
+                    final isLoading = context
+                        .select<ExpenseViewModel, bool>((vm) => vm.isLoading);
 
-                  if (isLoading || categoryViewModel.isLoading) {
-                    return const Center(child: CircularProgressIndicator());
-                  }
-                  if (monthlyExpenses.isEmpty) {
-                    return EmptyStateWidget(
-                      icon: Icons.money_off,
-                      message: 'Nenhuma despesa encontrada para este mês.',
-                      buttonText: 'Adicionar Despesa',
-                      onButtonPressed: () => Navigator.of(context).push(
-                        MaterialPageRoute(
-                            builder: (_) => const AddExpenseScreen()),
-                      ),
-                    );
-                  }
-                  return ListView.builder(
-                    padding: const EdgeInsets.all(AppTheme.defaultPadding),
-                    itemCount: monthlyExpenses.length,
-                    itemBuilder: (context, index) {
-                      final expense = monthlyExpenses[index];
-                      final category =
-                          categoryViewModel.getCategoryById(expense.categoryId);
-
-                      return Card(
-                        margin: const EdgeInsets.symmetric(
-                            horizontal: 4, vertical: 4),
-                        child: ListTile(
-                          contentPadding: const EdgeInsets.symmetric(
-                              horizontal: 16, vertical: 6),
-                          leading: CircleAvatar(
-                            backgroundColor:
-                                (category?.color ?? theme.primaryColor)
-                                    .withOpacity(0.15),
-                            child: Icon(
-                              category?.icon ?? Icons.category,
-                              color: category?.color ?? theme.primaryColor,
-                            ),
-                          ),
-                          title: Text(
-                            expense.location?.isNotEmpty == true
-                                ? expense.location!
-                                : (category?.name ?? 'Gasto Geral'),
-                            style: const TextStyle(fontWeight: FontWeight.w600),
-                          ),
-                          subtitle: Text(_getRelativeDate(expense.date)),
-                          trailing: Text(
-                            '- ${_currencyFormatter.format(expense.amount)}',
-                            style: theme.textTheme.titleMedium?.copyWith(
-                              fontWeight: FontWeight.bold,
-                              color: theme.colorScheme.error,
-                            ),
-                          ),
-                          onTap: () {
-                            Navigator.of(context).push(
-                              MaterialPageRoute(
-                                builder: (_) =>
-                                    ExpenseDetailScreen(expense: expense),
-                              ),
-                            );
-                          },
+                    if (isLoading || categoryViewModel.isLoading) {
+                      return const Center(child: CircularProgressIndicator());
+                    }
+                    if (monthlyExpenses.isEmpty) {
+                      return EmptyStateWidget(
+                        icon: Icons.money_off,
+                        message: 'Nenhuma despesa encontrada para este mês.',
+                        buttonText: 'Adicionar Despesa',
+                        onButtonPressed: () => Navigator.of(context).push(
+                          MaterialPageRoute(
+                              builder: (_) => const AddExpenseScreen()),
                         ),
                       );
-                    },
-                  );
-                },
+                    }
+                    return ListView.builder(
+                      padding: const EdgeInsets.all(AppTheme.defaultPadding),
+                      itemCount: monthlyExpenses.length,
+                      itemBuilder: (context, index) {
+                        final expense = monthlyExpenses[index];
+                        final category = categoryViewModel
+                            .getCategoryById(expense.categoryId);
+
+                        return Card(
+                          margin: const EdgeInsets.symmetric(
+                              horizontal: 4, vertical: 4),
+                          child: ListTile(
+                            contentPadding: const EdgeInsets.symmetric(
+                                horizontal: 16, vertical: 6),
+                            leading: CircleAvatar(
+                              backgroundColor:
+                                  (category?.color ?? theme.primaryColor)
+                                      .withOpacity(0.15),
+                              child: Icon(
+                                category?.icon ?? Icons.category,
+                                color: category?.color ?? theme.primaryColor,
+                              ),
+                            ),
+                            title: Text(
+                              expense.location?.isNotEmpty == true
+                                  ? expense.location!
+                                  : (category?.name ?? 'Gasto Geral'),
+                              style:
+                                  const TextStyle(fontWeight: FontWeight.w600),
+                            ),
+                            subtitle: Text(_getRelativeDate(expense.date)),
+                            trailing: Text(
+                              '- ${_currencyFormatter.format(expense.amount)}',
+                              style: theme.textTheme.titleMedium?.copyWith(
+                                fontWeight: FontWeight.bold,
+                                color: theme.colorScheme.error,
+                              ),
+                            ),
+                            onTap: () {
+                              Navigator.of(context).push(
+                                MaterialPageRoute(
+                                  builder: (_) =>
+                                      ExpenseDetailScreen(expense: expense),
+                                ),
+                              );
+                            },
+                          ),
+                        );
+                      },
+                    );
+                  },
+                ),
               ),
-            ),
-          ],
-        ).animate().fadeIn(duration: 250.ms),
+            ],
+          ).animate().fadeIn(duration: 250.ms),
+        ),
       ),
       floatingActionButton: FloatingActionButton.extended(
         heroTag: 'fab_expenses',
