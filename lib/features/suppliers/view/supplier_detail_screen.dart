@@ -1,0 +1,256 @@
+import 'package:flutter/material.dart';
+import 'package:flutter_animate/flutter_animate.dart';
+import 'package:key_budget/app/config/app_theme.dart';
+import 'package:key_budget/core/models/supplier_model.dart';
+import 'package:key_budget/features/auth/viewmodel/auth_viewmodel.dart';
+import 'package:key_budget/features/credentials/view/widgets/logo_picker.dart';
+import 'package:key_budget/features/credentials/view/widgets/saved_logos_screen.dart';
+import 'package:key_budget/features/suppliers/viewmodel/supplier_viewmodel.dart';
+import 'package:provider/provider.dart';
+
+class SupplierDetailScreen extends StatefulWidget {
+  final Supplier supplier;
+
+  const SupplierDetailScreen({super.key, required this.supplier});
+
+  @override
+  State<SupplierDetailScreen> createState() => _SupplierDetailScreenState();
+}
+
+class _SupplierDetailScreenState extends State<SupplierDetailScreen> {
+  final _formKey = GlobalKey<FormState>();
+  late TextEditingController _nameController;
+  late TextEditingController _repNameController;
+  late TextEditingController _emailController;
+  late TextEditingController _phoneController;
+  late TextEditingController _notesController;
+  String? _photoPath;
+  bool _isEditing = false;
+  bool _isSaving = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _nameController = TextEditingController(text: widget.supplier.name);
+    _repNameController =
+        TextEditingController(text: widget.supplier.representativeName);
+    _emailController = TextEditingController(text: widget.supplier.email);
+    _phoneController = TextEditingController(text: widget.supplier.phoneNumber);
+    _notesController =
+        TextEditingController(text: widget.supplier.notes);
+    _photoPath = widget.supplier.photoPath;
+  }
+
+  @override
+  void dispose() {
+    _nameController.dispose();
+    _repNameController.dispose();
+    _emailController.dispose();
+    _phoneController.dispose();
+    _notesController.dispose();
+    super.dispose();
+  }
+
+  void _saveChanges() async {
+    if (!_formKey.currentState!.validate()) return;
+
+    setState(() => _isSaving = true);
+    final authViewModel = Provider.of<AuthViewModel>(context, listen: false);
+    final userId = authViewModel.currentUser!.id;
+
+    await Provider.of<SupplierViewModel>(context, listen: false).updateSupplier(
+      userId: userId,
+      originalSupplier: widget.supplier,
+      name: _nameController.text,
+      representativeName:
+      _repNameController.text.isNotEmpty ? _repNameController.text : null,
+      email: _emailController.text.isNotEmpty ? _emailController.text : null,
+      phoneNumber:
+      _phoneController.text.isNotEmpty ? _phoneController.text : null,
+      photoPath: _photoPath,
+      notes:
+      _notesController.text.isNotEmpty ? _notesController.text : null,
+    );
+
+    if (mounted) {
+      setState(() {
+        _isSaving = false;
+        _isEditing = false;
+      });
+      Navigator.of(context).pop();
+    }
+  }
+
+  void _deleteSupplier() {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Confirmar Exclusão'),
+        content:
+        const Text('Você tem certeza que deseja excluir este fornecedor?'),
+        actions: [
+          TextButton(
+            child: const Text('Cancelar'),
+            onPressed: () => Navigator.of(ctx).pop(),
+          ),
+          TextButton(
+            child: const Text('Excluir'),
+            onPressed: () async {
+              final authViewModel =
+              Provider.of<AuthViewModel>(context, listen: false);
+              final userId = authViewModel.currentUser!.id;
+              await Provider.of<SupplierViewModel>(context, listen: false)
+                  .deleteSupplier(userId, widget.supplier.id!);
+
+              if (mounted) {
+                Navigator.of(ctx).pop();
+                Navigator.of(context).pop();
+              }
+            },
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _selectSavedLogo() async {
+    final selectedLogo = await Navigator.of(context).push<String>(
+      MaterialPageRoute(
+        builder: (_) => const SavedLogosScreen(isForSuppliers: true),
+      ),
+    );
+
+    if (selectedLogo != null) {
+      setState(() {
+        _photoPath = selectedLogo;
+      });
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
+    return Scaffold(
+      appBar: AppBar(
+        title: Text(_isEditing ? 'Editar Fornecedor' : 'Detalhes'),
+        actions: [
+          if (!_isEditing)
+            IconButton(
+              icon: const Icon(Icons.delete),
+              onPressed: _deleteSupplier,
+            ),
+          IconButton(
+            icon: Icon(_isEditing ? Icons.check : Icons.edit),
+            onPressed: () {
+              if (_isEditing) {
+                _saveChanges();
+              } else {
+                setState(() => _isEditing = true);
+              }
+            },
+          ),
+        ],
+      ),
+      body: Padding(
+        padding: const EdgeInsets.all(AppTheme.defaultPadding),
+        child: Form(
+          key: _formKey,
+          child: ListView(
+            children: [
+              Center(
+                child: LogoPicker(
+                  initialImagePath: _photoPath,
+                  onImageSelected: (path) {
+                    if (_isEditing) {
+                      setState(() {
+                        _photoPath = path;
+                      });
+                    }
+                  },
+                ),
+              ),
+              if (_isEditing) ...[
+                const SizedBox(height: 8),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    TextButton.icon(
+                      onPressed: _selectSavedLogo,
+                      icon: const Icon(Icons.collections_bookmark_outlined,
+                          size: 18),
+                      label: const Text('Escolher Salva'),
+                    ),
+                    const SizedBox(width: 8),
+                    TextButton.icon(
+                      onPressed: () {
+                        setState(() {
+                          _photoPath = null;
+                        });
+                      },
+                      icon: const Icon(Icons.no_photography_outlined, size: 18),
+                      label: const Text('Remover'),
+                      style: TextButton.styleFrom(
+                          foregroundColor: theme.colorScheme.error),
+                    ),
+                  ],
+                ),
+              ],
+              const SizedBox(height: 24),
+              TextFormField(
+                controller: _nameController,
+                readOnly: !_isEditing,
+                decoration:
+                const InputDecoration(labelText: 'Nome Fornecedor/Loja *'),
+                validator: (value) =>
+                value!.isEmpty ? 'Campo obrigatório' : null,
+              ),
+              const SizedBox(height: 16),
+              TextFormField(
+                controller: _repNameController,
+                readOnly: !_isEditing,
+                decoration: const InputDecoration(labelText: 'Nome Representante'),
+              ),
+              const SizedBox(height: 16),
+              TextFormField(
+                controller: _emailController,
+                readOnly: !_isEditing,
+                decoration: const InputDecoration(labelText: 'Email'),
+                keyboardType: TextInputType.emailAddress,
+              ),
+              const SizedBox(height: 16),
+              TextFormField(
+                controller: _phoneController,
+                readOnly: !_isEditing,
+                decoration:
+                const InputDecoration(labelText: 'Telefone (WhatsApp)'),
+                keyboardType: TextInputType.phone,
+              ),
+              const SizedBox(height: 16),
+              TextFormField(
+                controller: _notesController,
+                readOnly: !_isEditing,
+                decoration: const InputDecoration(labelText: 'Observações'),
+                maxLines: 3,
+                textCapitalization: TextCapitalization.sentences,
+              ),
+              const SizedBox(height: 24),
+              if (_isEditing)
+                ElevatedButton(
+                  onPressed: _isSaving ? null : _saveChanges,
+                  child: _isSaving
+                      ? SizedBox(
+                      height: 24,
+                      width: 24,
+                      child: CircularProgressIndicator(
+                          color: theme.colorScheme.onPrimary,
+                          strokeWidth: 2.0))
+                      : const Text('Salvar Alterações'),
+                )
+            ],
+          ),
+        ),
+      ).animate().fadeIn(duration: 250.ms).slideY(begin: 0.1, end: 0),
+    );
+  }
+}
