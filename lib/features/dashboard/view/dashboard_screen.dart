@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart' hide DateUtils;
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:intl/intl.dart';
+import 'package:key_budget/app/config/app_theme.dart';
 import 'package:key_budget/app/viewmodel/navigation_viewmodel.dart';
 import 'package:key_budget/core/models/expense_model.dart';
 import 'package:key_budget/core/utils/date_utils.dart';
@@ -79,7 +80,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
           : RefreshIndicator(
               onRefresh: _fetchInitialData,
               child: ListView(
-                padding: const EdgeInsets.all(16.0),
+                padding: const EdgeInsets.all(AppTheme.defaultPadding),
                 children: [
                   _buildTotalBalanceCard(context, viewModel),
                   const SizedBox(height: 16),
