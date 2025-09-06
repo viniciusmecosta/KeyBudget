@@ -90,7 +90,8 @@ class _LoginScreenState extends State<LoginScreen> {
         ),
         child: Center(
           child: SingleChildScrollView(
-            padding: const EdgeInsets.all(AppTheme.defaultPadding),
+            padding: const EdgeInsets.symmetric(
+                horizontal: AppTheme.spaceL, vertical: AppTheme.spaceXL),
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
@@ -101,7 +102,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     fontWeight: FontWeight.bold,
                   ),
                 ),
-                const SizedBox(height: 8),
+                const SizedBox(height: AppTheme.spaceS),
                 Text(
                   "Gerencie suas finanças e senhas com segurança",
                   textAlign: TextAlign.center,
@@ -153,8 +154,8 @@ class _LoginScreenState extends State<LoginScreen> {
                             onPressed: viewModel.isLoading ? null : _submit,
                             child: viewModel.isLoading
                                 ? const SizedBox(
-                                    height: 24,
-                                    width: 24,
+                                    height: AppTheme.spaceL,
+                                    width: AppTheme.spaceL,
                                     child: CircularProgressIndicator(
                                       color: Colors.white,
                                       strokeWidth: 2.5,
@@ -163,14 +164,14 @@ class _LoginScreenState extends State<LoginScreen> {
                                 : const Text('Entrar'),
                           ),
                         ),
-                        const SizedBox(height: 16),
+                        const SizedBox(height: AppTheme.spaceM),
                         SizedBox(
                           width: double.infinity,
                           child: OutlinedButton.icon(
                             onPressed:
                                 viewModel.isLoading ? null : _submitGoogle,
                             icon: const Icon(
-                              Icons.g_mobiledata,
+                              Icons.g_mobiledata_rounded,
                               size: 28,
                             ),
                             label: const Text('Entrar com Google'),
