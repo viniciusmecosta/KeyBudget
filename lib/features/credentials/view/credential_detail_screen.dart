@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_animate/flutter_animate.dart';
+import 'package:key_budget/app/config/app_theme.dart';
 import 'package:key_budget/core/models/credential_model.dart';
 import 'package:key_budget/features/auth/viewmodel/auth_viewmodel.dart';
 import 'package:key_budget/features/credentials/view/widgets/logo_picker.dart';
@@ -201,7 +202,7 @@ class _CredentialDetailScreenState extends State<CredentialDetailScreen> {
         ],
       ),
       body: Padding(
-        padding: const EdgeInsets.all(16.0),
+        padding: const EdgeInsets.all(AppTheme.defaultPadding),
         child: Form(
           key: _formKey,
           child: ListView(

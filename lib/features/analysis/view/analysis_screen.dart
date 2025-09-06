@@ -45,51 +45,53 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
       appBar: AppBar(
         title: const Text('Análise de Despesas'),
       ),
-      body: viewModel.isLoading
-          ? Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(20),
-                    decoration: BoxDecoration(
-                      color: AppTheme.primary.withOpacity(0.1),
-                      shape: BoxShape.circle,
-                    ),
-                    child: CircularProgressIndicator(
-                      strokeWidth: 3,
-                      valueColor:
-                          AlwaysStoppedAnimation<Color>(AppTheme.primary),
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                  Text(
-                    'Analisando seus dados...',
-                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                          color: AppTheme.onSurface.withOpacity(0.7),
-                        ),
-                  ),
-                ],
-              ),
-            )
-          : RefreshIndicator(
-              onRefresh: () async {},
-              color: AppTheme.primary,
-              child: SingleChildScrollView(
-                physics: const AlwaysScrollableScrollPhysics(),
-                padding: const EdgeInsets.all(20.0),
+      body: SafeArea(
+        child: viewModel.isLoading
+            ? Center(
                 child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    _buildStatsOverview(context, viewModel),
-                    const SizedBox(height: 24),
-                    _buildMonthlyTrendSection(context, viewModel),
-                    const SizedBox(height: 24),
-                    _buildCategoryAnalysisSection(context, viewModel),
+                    Container(
+                      padding: const EdgeInsets.all(20),
+                      decoration: BoxDecoration(
+                        color: AppTheme.primary.withOpacity(0.1),
+                        shape: BoxShape.circle,
+                      ),
+                      child: CircularProgressIndicator(
+                        strokeWidth: 3,
+                        valueColor:
+                            AlwaysStoppedAnimation<Color>(AppTheme.primary),
+                      ),
+                    ),
+                    const SizedBox(height: AppTheme.spaceM),
+                    Text(
+                      'Analisando seus dados...',
+                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                            color: AppTheme.onSurface.withOpacity(0.7),
+                          ),
+                    ),
                   ],
                 ),
-              ),
-            ).animate().fadeIn(duration: 300.ms).slideY(begin: 0.05, end: 0),
+              )
+            : RefreshIndicator(
+                onRefresh: () async {},
+                color: AppTheme.primary,
+                child: SingleChildScrollView(
+                  physics: const AlwaysScrollableScrollPhysics(),
+                  padding: const EdgeInsets.all(AppTheme.defaultPadding),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      _buildStatsOverview(context, viewModel),
+                      const SizedBox(height: AppTheme.spaceL),
+                      _buildMonthlyTrendSection(context, viewModel),
+                      const SizedBox(height: AppTheme.spaceL),
+                      _buildCategoryAnalysisSection(context, viewModel),
+                    ],
+                  ),
+                ),
+              ).animate().fadeIn(duration: 300.ms).slideY(begin: 0.05, end: 0),
+      ),
     );
   }
 
@@ -109,7 +111,7 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
                 icon: Icons.calendar_month,
               ),
             ),
-            const SizedBox(width: 16),
+            const SizedBox(width: AppTheme.spaceM),
             Expanded(
               child: _buildEnhancedStatCard(
                 context,
@@ -121,7 +123,7 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
             ),
           ],
         ),
-        const SizedBox(height: 16),
+        const SizedBox(height: AppTheme.spaceM),
         Row(
           children: [
             Expanded(
@@ -133,7 +135,7 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
                 icon: Icons.trending_up,
               ),
             ),
-            const SizedBox(width: 16),
+            const SizedBox(width: AppTheme.spaceM),
             Expanded(
               child: _buildEnhancedStatCard(
                 context,
@@ -162,10 +164,10 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
         : _formatCurrencyFlexible(value);
 
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(AppTheme.spaceM),
       decoration: BoxDecoration(
         color: color.withOpacity(0.08),
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(AppTheme.spaceM),
         border: Border.all(
           color: color.withOpacity(0.2),
           width: 1,
@@ -178,7 +180,7 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
             children: [
               if (icon != null) ...[
                 Icon(icon, color: color, size: 18),
-                const SizedBox(width: 8),
+                const SizedBox(width: AppTheme.spaceS),
               ],
               Expanded(
                 child: Text(
@@ -225,7 +227,7 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
               .titleLarge
               ?.copyWith(fontWeight: FontWeight.bold),
         ),
-        const SizedBox(height: 8),
+        const SizedBox(height: AppTheme.spaceS),
         _buildLineChart(context, viewModel),
       ],
     );
@@ -283,7 +285,7 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
             ),
           ],
         ),
-        const SizedBox(height: 16),
+        const SizedBox(height: AppTheme.spaceM),
         SizedBox(
           height: 200,
           child: LineChart(
@@ -398,7 +400,7 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
                 fontWeight: FontWeight.bold,
               ),
         ),
-        const SizedBox(height: 16),
+        const SizedBox(height: AppTheme.spaceM),
         _buildCategoryMonthSelector(context, viewModel),
         const SizedBox(height: 20),
         _buildEnhancedCategoryBreakdown(context, viewModel),
@@ -417,7 +419,7 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
       style: OutlinedButton.styleFrom(
         padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(24),
+          borderRadius: BorderRadius.circular(AppTheme.spaceL),
         ),
         side: BorderSide(
           color: AppTheme.primary.withOpacity(0.3),
@@ -451,7 +453,8 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
       context: context,
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+        borderRadius:
+            BorderRadius.vertical(top: Radius.circular(AppTheme.spaceL)),
       ),
       builder: (bc) => SizedBox(
         height: 320,
@@ -511,7 +514,7 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
         height: 200,
         decoration: BoxDecoration(
           color: AppTheme.primary.withOpacity(0.05),
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(AppTheme.spaceM),
           border: Border.all(
             color: AppTheme.primary.withOpacity(0.1),
           ),
@@ -595,12 +598,13 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
             ),
           ),
         ),
-        const SizedBox(height: 24),
+        const SizedBox(height: AppTheme.spaceL),
         ListView.separated(
           shrinkWrap: true,
           physics: const NeverScrollableScrollPhysics(),
           itemCount: chartData.length,
-          separatorBuilder: (context, index) => const SizedBox(height: 8),
+          separatorBuilder: (context, index) =>
+              const SizedBox(height: AppTheme.spaceS),
           itemBuilder: (context, index) {
             final entry = chartData[index];
             final percentage = total > 0 ? (entry.value / total) * 100 : 0.0;
@@ -637,8 +641,8 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
       child: Row(
         children: [
           Container(
-            width: 16,
-            height: 16,
+            width: AppTheme.spaceM,
+            height: AppTheme.spaceM,
             decoration: BoxDecoration(
               color: color,
               shape: BoxShape.circle,
@@ -677,13 +681,13 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
                         color: Theme.of(context).textTheme.bodySmall?.color,
                       ),
                     ),
-                    const SizedBox(width: 8),
+                    const SizedBox(width: AppTheme.spaceS),
                     Container(
                       padding: const EdgeInsets.symmetric(
                           horizontal: 6, vertical: 2),
                       decoration: BoxDecoration(
                         color: color.withOpacity(0.1),
-                        borderRadius: BorderRadius.circular(8),
+                        borderRadius: BorderRadius.circular(AppTheme.spaceS),
                       ),
                       child: Text(
                         '${percentage.toStringAsFixed(1)}%',

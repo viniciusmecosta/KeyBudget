@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
+import 'package:key_budget/app/config/app_theme.dart';
 import 'package:key_budget/features/auth/view/widgets/avatar_picker.dart';
 import 'package:key_budget/features/auth/viewmodel/auth_viewmodel.dart';
 import 'package:provider/provider.dart';
@@ -85,7 +86,7 @@ class _EditUserScreenState extends State<EditUserScreen> {
     return Scaffold(
       appBar: AppBar(title: const Text('Editar Perfil')),
       body: Padding(
-        padding: const EdgeInsets.all(16.0),
+        padding: const EdgeInsets.all(AppTheme.defaultPadding),
         child: Form(
           key: _formKey,
           child: ListView(
