@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:key_budget/app/config/app_theme.dart';
 import 'package:key_budget/core/models/supplier_model.dart';
@@ -6,6 +7,7 @@ import 'package:key_budget/features/auth/viewmodel/auth_viewmodel.dart';
 import 'package:key_budget/features/credentials/view/widgets/logo_picker.dart';
 import 'package:key_budget/features/credentials/view/widgets/saved_logos_screen.dart';
 import 'package:key_budget/features/suppliers/viewmodel/supplier_viewmodel.dart';
+import 'package:mask_text_input_formatter/mask_text_input_formatter.dart';
 import 'package:provider/provider.dart';
 
 class SupplierDetailScreen extends StatefulWidget {
@@ -28,6 +30,11 @@ class _SupplierDetailScreenState extends State<SupplierDetailScreen> {
   bool _isEditing = false;
   bool _isSaving = false;
 
+  final _phoneMaskFormatter = MaskTextInputFormatter(
+    mask: '(##) # ####-####',
+    filter: {"#": RegExp(r'[0-9]')},
+  );
+
   @override
   void initState() {
     super.initState();
@@ -35,9 +42,9 @@ class _SupplierDetailScreenState extends State<SupplierDetailScreen> {
     _repNameController =
         TextEditingController(text: widget.supplier.representativeName);
     _emailController = TextEditingController(text: widget.supplier.email);
-    _phoneController = TextEditingController(text: widget.supplier.phoneNumber);
-    _notesController =
-        TextEditingController(text: widget.supplier.notes);
+    _phoneController = TextEditingController(
+        text: _phoneMaskFormatter.maskText(widget.supplier.phoneNumber ?? ''));
+    _notesController = TextEditingController(text: widget.supplier.notes);
     _photoPath = widget.supplier.photoPath;
   }
 
@@ -49,6 +56,14 @@ class _SupplierDetailScreenState extends State<SupplierDetailScreen> {
     _phoneController.dispose();
     _notesController.dispose();
     super.dispose();
+  }
+
+  void _copyToClipboard(String text) {
+    if (text.isEmpty) return;
+    Clipboard.setData(ClipboardData(text: text));
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Copiado para a área de transferência!')),
+    );
   }
 
   void _saveChanges() async {
@@ -65,11 +80,9 @@ class _SupplierDetailScreenState extends State<SupplierDetailScreen> {
       representativeName:
       _repNameController.text.isNotEmpty ? _repNameController.text : null,
       email: _emailController.text.isNotEmpty ? _emailController.text : null,
-      phoneNumber:
-      _phoneController.text.isNotEmpty ? _phoneController.text : null,
+      phoneNumber: _phoneMaskFormatter.unmaskText(_phoneController.text),
       photoPath: _photoPath,
-      notes:
-      _notesController.text.isNotEmpty ? _notesController.text : null,
+      notes: _notesController.text.isNotEmpty ? _notesController.text : null,
     );
 
     if (mounted) {
@@ -200,6 +213,7 @@ class _SupplierDetailScreenState extends State<SupplierDetailScreen> {
               TextFormField(
                 controller: _nameController,
                 readOnly: !_isEditing,
+                textCapitalization: TextCapitalization.words,
                 decoration:
                 const InputDecoration(labelText: 'Nome Fornecedor/Loja *'),
                 validator: (value) =>
@@ -209,22 +223,60 @@ class _SupplierDetailScreenState extends State<SupplierDetailScreen> {
               TextFormField(
                 controller: _repNameController,
                 readOnly: !_isEditing,
-                decoration: const InputDecoration(labelText: 'Nome Representante'),
+                textCapitalization: TextCapitalization.words,
+                decoration:
+                const InputDecoration(labelText: 'Nome Representante'),
               ),
               const SizedBox(height: 16),
               TextFormField(
                 controller: _emailController,
                 readOnly: !_isEditing,
-                decoration: const InputDecoration(labelText: 'Email'),
+                decoration: InputDecoration(
+                  labelText: 'Email',
+                  suffixIcon: _isEditing || _emailController.text.isEmpty
+                      ? null
+                      : IconButton(
+                    icon: const Icon(Icons.copy, size: 20),
+                    onPressed: () =>
+                        _copyToClipboard(_emailController.text),
+                  ),
+                ),
                 keyboardType: TextInputType.emailAddress,
+                validator: (value) {
+                  if (value == null || value.isEmpty) return null;
+                  final emailRegex = RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$');
+                  if (!emailRegex.hasMatch(value)) {
+                    return 'Por favor, insira um email válido.';
+                  }
+                  return null;
+                },
               ),
               const SizedBox(height: 16),
               TextFormField(
                 controller: _phoneController,
                 readOnly: !_isEditing,
-                decoration:
-                const InputDecoration(labelText: 'Telefone (WhatsApp)'),
+                inputFormatters: [_phoneMaskFormatter],
+                decoration: InputDecoration(
+                  labelText: 'Telefone (WhatsApp)',
+                  suffixIcon: _isEditing || _phoneController.text.isEmpty
+                      ? null
+                      : IconButton(
+                    icon: const Icon(Icons.copy, size: 20),
+                    onPressed: () => _copyToClipboard(
+                      _phoneMaskFormatter.unmaskText(_phoneController.text),
+                    ),
+                  ),
+                ),
                 keyboardType: TextInputType.phone,
+                validator: (value) {
+                  if (value == null || value.isEmpty) return null;
+                  final unmaskedText =
+                  _phoneMaskFormatter.unmaskText(_phoneController.text);
+                  if (unmaskedText.isNotEmpty && unmaskedText.length != 11) {
+                    return 'O telefone deve ter 11 dígitos.';
+                  }
+                  return null;
+                },
               ),
               const SizedBox(height: 16),
               TextFormField(

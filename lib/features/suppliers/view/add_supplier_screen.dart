@@ -5,6 +5,7 @@ import 'package:key_budget/features/auth/viewmodel/auth_viewmodel.dart';
 import 'package:key_budget/features/credentials/view/widgets/logo_picker.dart';
 import 'package:key_budget/features/credentials/view/widgets/saved_logos_screen.dart';
 import 'package:key_budget/features/suppliers/viewmodel/supplier_viewmodel.dart';
+import 'package:mask_text_input_formatter/mask_text_input_formatter.dart';
 import 'package:provider/provider.dart';
 
 class AddSupplierScreen extends StatefulWidget {
@@ -23,6 +24,11 @@ class _AddSupplierScreenState extends State<AddSupplierScreen> {
   final _notesController = TextEditingController();
   String? _photoPath;
   bool _isSaving = false;
+
+  final _phoneMaskFormatter = MaskTextInputFormatter(
+    mask: '(##) # ####-####',
+    filter: {"#": RegExp(r'[0-9]')},
+  );
 
   @override
   void dispose() {
@@ -49,8 +55,7 @@ class _AddSupplierScreenState extends State<AddSupplierScreen> {
       representativeName:
           _repNameController.text.isNotEmpty ? _repNameController.text : null,
       email: _emailController.text.isNotEmpty ? _emailController.text : null,
-      phoneNumber:
-          _phoneController.text.isNotEmpty ? _phoneController.text : null,
+      phoneNumber: _phoneMaskFormatter.unmaskText(_phoneController.text),
       photoPath: _photoPath,
       notes: _notesController.text.isNotEmpty ? _notesController.text : null,
     );
@@ -124,6 +129,7 @@ class _AddSupplierScreenState extends State<AddSupplierScreen> {
               const SizedBox(height: 24),
               TextFormField(
                 controller: _nameController,
+                textCapitalization: TextCapitalization.words,
                 decoration:
                     const InputDecoration(labelText: 'Nome Fornecedor/Loja *'),
                 validator: (value) =>
@@ -132,6 +138,7 @@ class _AddSupplierScreenState extends State<AddSupplierScreen> {
               const SizedBox(height: 16),
               TextFormField(
                 controller: _repNameController,
+                textCapitalization: TextCapitalization.words,
                 decoration:
                     const InputDecoration(labelText: 'Nome Representante'),
               ),
@@ -140,13 +147,32 @@ class _AddSupplierScreenState extends State<AddSupplierScreen> {
                 controller: _emailController,
                 decoration: const InputDecoration(labelText: 'Email'),
                 keyboardType: TextInputType.emailAddress,
+                validator: (value) {
+                  if (value == null || value.isEmpty) return null;
+                  final emailRegex =
+                      RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$');
+                  if (!emailRegex.hasMatch(value)) {
+                    return 'Por favor, insira um email válido.';
+                  }
+                  return null;
+                },
               ),
               const SizedBox(height: 16),
               TextFormField(
                 controller: _phoneController,
+                inputFormatters: [_phoneMaskFormatter],
                 decoration:
                     const InputDecoration(labelText: 'Telefone (WhatsApp)'),
                 keyboardType: TextInputType.phone,
+                validator: (value) {
+                  if (value == null || value.isEmpty) return null;
+                  final unmaskedText =
+                      _phoneMaskFormatter.unmaskText(_phoneController.text);
+                  if (unmaskedText.length != 11) {
+                    return 'O telefone deve ter 11 dígitos.';
+                  }
+                  return null;
+                },
               ),
               const SizedBox(height: 16),
               TextFormField(
