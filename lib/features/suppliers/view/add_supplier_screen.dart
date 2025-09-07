@@ -4,62 +4,40 @@ import 'package:key_budget/app/config/app_theme.dart';
 import 'package:key_budget/features/auth/viewmodel/auth_viewmodel.dart';
 import 'package:key_budget/features/credentials/view/widgets/logo_picker.dart';
 import 'package:key_budget/features/credentials/view/widgets/saved_logos_screen.dart';
-import 'package:key_budget/features/credentials/viewmodel/credential_viewmodel.dart';
+import 'package:key_budget/features/suppliers/viewmodel/supplier_viewmodel.dart';
+import 'package:mask_text_input_formatter/mask_text_input_formatter.dart';
 import 'package:provider/provider.dart';
 
-class AddCredentialScreen extends StatefulWidget {
-  const AddCredentialScreen({super.key});
+class AddSupplierScreen extends StatefulWidget {
+  const AddSupplierScreen({super.key});
 
   @override
-  State<AddCredentialScreen> createState() => _AddCredentialScreenState();
+  State<AddSupplierScreen> createState() => _AddSupplierScreenState();
 }
 
-class _AddCredentialScreenState extends State<AddCredentialScreen> {
+class _AddSupplierScreenState extends State<AddSupplierScreen> {
   final _formKey = GlobalKey<FormState>();
-  final _locationController = TextEditingController();
-  final _loginController = TextEditingController();
-  final _passwordController = TextEditingController();
+  final _nameController = TextEditingController();
+  final _repNameController = TextEditingController();
   final _emailController = TextEditingController();
   final _phoneController = TextEditingController();
   final _notesController = TextEditingController();
-  String? _logoPath;
-  bool _isPasswordVisible = false;
+  String? _photoPath;
   bool _isSaving = false;
 
-  @override
-  void initState() {
-    super.initState();
-    _loginController.addListener(_updateFields);
-  }
+  final _phoneMaskFormatter = MaskTextInputFormatter(
+    mask: '(##) # ####-####',
+    filter: {"#": RegExp(r'[0-9]')},
+  );
 
   @override
   void dispose() {
-    _locationController.dispose();
-    _loginController.removeListener(_updateFields);
-    _loginController.dispose();
-    _passwordController.dispose();
+    _nameController.dispose();
+    _repNameController.dispose();
     _emailController.dispose();
     _phoneController.dispose();
     _notesController.dispose();
     super.dispose();
-  }
-
-  void _updateFields() {
-    final text = _loginController.text;
-    final isEmail = RegExp(r'^[^@]+@[^@]+\.[^@]+').hasMatch(text);
-    final isPhone = RegExp(r'^[0-9]+$').hasMatch(text);
-
-    if (text.isEmpty) {
-      _emailController.clear();
-      _phoneController.clear();
-    } else {
-      if (isEmail) {
-        _emailController.text = text;
-      }
-      if (isPhone) {
-        _phoneController.text = text;
-      }
-    }
   }
 
   void _submit() async {
@@ -67,21 +45,19 @@ class _AddCredentialScreenState extends State<AddCredentialScreen> {
 
     setState(() => _isSaving = true);
 
-    final credentialViewModel =
-        Provider.of<CredentialViewModel>(context, listen: false);
+    final viewModel = Provider.of<SupplierViewModel>(context, listen: false);
     final authViewModel = Provider.of<AuthViewModel>(context, listen: false);
     final userId = authViewModel.currentUser!.id;
 
-    await credentialViewModel.addCredential(
+    await viewModel.addSupplier(
       userId: userId,
-      location: _locationController.text,
-      login: _loginController.text,
-      plainPassword: _passwordController.text,
+      name: _nameController.text,
+      representativeName:
+          _repNameController.text.isNotEmpty ? _repNameController.text : null,
       email: _emailController.text.isNotEmpty ? _emailController.text : null,
-      phoneNumber:
-          _phoneController.text.isNotEmpty ? _phoneController.text : null,
+      phoneNumber: _phoneMaskFormatter.unmaskText(_phoneController.text),
+      photoPath: _photoPath,
       notes: _notesController.text.isNotEmpty ? _notesController.text : null,
-      logoPath: _logoPath,
     );
 
     if (mounted) {
@@ -93,13 +69,13 @@ class _AddCredentialScreenState extends State<AddCredentialScreen> {
   void _selectSavedLogo() async {
     final selectedLogo = await Navigator.of(context).push<String>(
       MaterialPageRoute(
-        builder: (_) => const SavedLogosScreen(),
+        builder: (_) => const SavedLogosScreen(isForSuppliers: true),
       ),
     );
 
     if (selectedLogo != null) {
       setState(() {
-        _logoPath = selectedLogo;
+        _photoPath = selectedLogo;
       });
     }
   }
@@ -107,7 +83,7 @@ class _AddCredentialScreenState extends State<AddCredentialScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Adicionar Credencial')),
+      appBar: AppBar(title: const Text('Adicionar Fornecedor')),
       body: Padding(
         padding: const EdgeInsets.all(AppTheme.defaultPadding),
         child: Form(
@@ -116,10 +92,10 @@ class _AddCredentialScreenState extends State<AddCredentialScreen> {
             children: [
               Center(
                 child: LogoPicker(
-                  initialImagePath: _logoPath,
+                  initialImagePath: _photoPath,
                   onImageSelected: (path) {
                     setState(() {
-                      _logoPath = path;
+                      _photoPath = path;
                     });
                   },
                 ),
@@ -134,12 +110,12 @@ class _AddCredentialScreenState extends State<AddCredentialScreen> {
                         size: 18),
                     label: const Text('Escolher Salva'),
                   ),
-                  if (_logoPath != null) ...[
+                  if (_photoPath != null) ...[
                     const SizedBox(width: 8),
                     TextButton.icon(
                       onPressed: () {
                         setState(() {
-                          _logoPath = null;
+                          _photoPath = null;
                         });
                       },
                       icon: const Icon(Icons.no_photography_outlined, size: 18),
@@ -152,57 +128,58 @@ class _AddCredentialScreenState extends State<AddCredentialScreen> {
               ),
               const SizedBox(height: 24),
               TextFormField(
-                controller: _locationController,
-                textCapitalization: TextCapitalization.sentences,
-                decoration: const InputDecoration(labelText: 'Local/Serviço *'),
+                controller: _nameController,
+                textCapitalization: TextCapitalization.words,
+                decoration:
+                    const InputDecoration(labelText: 'Nome Fornecedor/Loja *'),
                 validator: (value) =>
                     value!.isEmpty ? 'Campo obrigatório' : null,
               ),
               const SizedBox(height: 16),
               TextFormField(
-                controller: _loginController,
-                decoration: const InputDecoration(labelText: 'Login/Usuário *'),
-                validator: (value) =>
-                    value!.isEmpty ? 'Campo obrigatório' : null,
-              ),
-              const SizedBox(height: 16),
-              TextFormField(
-                controller: _passwordController,
-                obscureText: !_isPasswordVisible,
-                decoration: InputDecoration(
-                  labelText: 'Senha *',
-                  suffixIcon: IconButton(
-                    icon: Icon(_isPasswordVisible
-                        ? Icons.visibility_off
-                        : Icons.visibility),
-                    onPressed: () {
-                      setState(() {
-                        _isPasswordVisible = !_isPasswordVisible;
-                      });
-                    },
-                  ),
-                ),
-                validator: (value) =>
-                    value!.isEmpty ? 'Campo obrigatório' : null,
+                controller: _repNameController,
+                textCapitalization: TextCapitalization.words,
+                decoration:
+                    const InputDecoration(labelText: 'Nome Representante'),
               ),
               const SizedBox(height: 16),
               TextFormField(
                 controller: _emailController,
                 decoration: const InputDecoration(labelText: 'Email'),
                 keyboardType: TextInputType.emailAddress,
+                validator: (value) {
+                  if (value == null || value.isEmpty) return null;
+                  final emailRegex =
+                      RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$');
+                  if (!emailRegex.hasMatch(value)) {
+                    return 'Por favor, insira um email válido.';
+                  }
+                  return null;
+                },
               ),
               const SizedBox(height: 16),
               TextFormField(
                 controller: _phoneController,
-                decoration: const InputDecoration(labelText: 'Número'),
+                inputFormatters: [_phoneMaskFormatter],
+                decoration:
+                    const InputDecoration(labelText: 'Telefone (WhatsApp)'),
                 keyboardType: TextInputType.phone,
+                validator: (value) {
+                  if (value == null || value.isEmpty) return null;
+                  final unmaskedText =
+                      _phoneMaskFormatter.unmaskText(_phoneController.text);
+                  if (unmaskedText.isNotEmpty && unmaskedText.length != 11) {
+                    return 'O telefone deve ter 11 dígitos.';
+                  }
+                  return null;
+                },
               ),
               const SizedBox(height: 16),
               TextFormField(
                 controller: _notesController,
-                textCapitalization: TextCapitalization.sentences,
                 decoration: const InputDecoration(labelText: 'Observações'),
                 maxLines: 3,
+                textCapitalization: TextCapitalization.sentences,
               ),
               const SizedBox(height: 32),
               ElevatedButton(
@@ -214,7 +191,7 @@ class _AddCredentialScreenState extends State<AddCredentialScreen> {
                         child: CircularProgressIndicator(
                             color: Theme.of(context).colorScheme.onPrimary,
                             strokeWidth: 2.0))
-                    : const Text('Salvar Credencial'),
+                    : const Text('Salvar Fornecedor'),
               ),
             ],
           ),

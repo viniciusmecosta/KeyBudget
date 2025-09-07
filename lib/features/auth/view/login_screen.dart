@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:key_budget/app/config/app_theme.dart';
 import 'package:key_budget/features/auth/view/register_screen.dart';
 import 'package:key_budget/features/auth/viewmodel/auth_viewmodel.dart';
@@ -170,9 +171,9 @@ class _LoginScreenState extends State<LoginScreen> {
                           child: OutlinedButton.icon(
                             onPressed:
                                 viewModel.isLoading ? null : _submitGoogle,
-                            icon: const Icon(
-                              Icons.g_mobiledata_rounded,
-                              size: 28,
+                            icon: const FaIcon(
+                              FontAwesomeIcons.google,
+                              size: 20,
                             ),
                             label: const Text('Entrar com Google'),
                           ),

@@ -4,6 +4,7 @@ import 'package:key_budget/app/viewmodel/navigation_viewmodel.dart';
 import 'package:key_budget/features/credentials/view/credentials_screen.dart';
 import 'package:key_budget/features/dashboard/view/dashboard_screen.dart';
 import 'package:key_budget/features/expenses/view/expenses_screen.dart';
+// import 'package:key_budget/features/suppliers/view/suppliers_screen.dart';
 import 'package:key_budget/features/user/view/user_screen.dart';
 import 'package:provider/provider.dart';
 
@@ -19,6 +20,7 @@ class _MainScreenState extends State<MainScreen> {
     DashboardScreen(),
     ExpensesScreen(),
     CredentialsScreen(),
+    // SuppliersScreen(),
     UserScreen(),
   ];
 
@@ -67,7 +69,7 @@ class _MainScreenState extends State<MainScreen> {
               gap: 8,
               activeColor: theme.colorScheme.primary,
               iconSize: 24,
-              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
               duration: const Duration(milliseconds: 400),
               tabBackgroundColor: theme.colorScheme.primary.withOpacity(0.1),
               color: theme.colorScheme.onSurface.withOpacity(0.6),
@@ -75,6 +77,9 @@ class _MainScreenState extends State<MainScreen> {
                 GButton(icon: Icons.home_rounded, text: 'Painel'),
                 GButton(icon: Icons.monetization_on_rounded, text: 'Despesas'),
                 GButton(icon: Icons.vpn_key_rounded, text: 'Credenciais'),
+                // GButton(
+                //     icon: Icons.store_mall_directory_rounded,
+                //     text: 'Fornecedores'),
                 GButton(icon: Icons.person_rounded, text: 'Perfil'),
               ],
               selectedIndex: navigationViewModel.selectedIndex,

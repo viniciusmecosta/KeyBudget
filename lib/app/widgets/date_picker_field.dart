@@ -55,11 +55,10 @@ class DatePickerField extends StatelessWidget {
         ),
         child: Text(
           _formatDate(selectedDate),
-          style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                color: isEditing
-                    ? null
-                    : Theme.of(context).textTheme.bodySmall?.color,
-              ),
+          style: Theme.of(context)
+              .textTheme
+              .titleMedium
+              ?.copyWith(color: Theme.of(context).colorScheme.onSurface),
         ),
       ),
     );

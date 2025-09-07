@@ -82,6 +82,7 @@ class _AddEditCategoryScreenState extends State<AddEditCategoryScreen> {
             children: [
               TextFormField(
                 controller: _nameController,
+                textCapitalization: TextCapitalization.sentences,
                 decoration:
                     const InputDecoration(labelText: 'Nome da Categoria *'),
                 validator: (value) =>

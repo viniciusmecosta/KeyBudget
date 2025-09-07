@@ -6,44 +6,56 @@ import 'package:key_budget/features/credentials/viewmodel/credential_viewmodel.d
 import 'package:provider/provider.dart';
 
 class SavedLogosScreen extends StatelessWidget {
-  const SavedLogosScreen({super.key});
+  final bool isForSuppliers;
+
+  const SavedLogosScreen({super.key, this.isForSuppliers = false});
 
   @override
   Widget build(BuildContext context) {
-    final viewModel = Provider.of<CredentialViewModel>(context, listen: false);
-    final logos = viewModel.userCredentialLogos;
+    final List<String> logos;
+    // if (isForSuppliers) {
+    //   logos = Provider.of<SupplierViewModel>(context, listen: false)
+    //       .userSupplierPhotos;
+    // } else {
+    logos = Provider.of<CredentialViewModel>(context, listen: false)
+        .userCredentialLogos;
+    // }
+
     final theme = Theme.of(context);
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Selecionar Logo'),
+        title: const Text('Selecionar Imagem Salva'),
       ),
       body: (logos.isEmpty
               ? Center(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(
-                        Icons.image_not_supported_outlined,
-                        size: 80,
-                        color: theme.colorScheme.onSurface.withOpacity(0.4),
-                      ),
-                      const SizedBox(height: 24),
-                      Text(
-                        'Nenhum logo salvo encontrado',
-                        textAlign: TextAlign.center,
-                        style: theme.textTheme.headlineSmall?.copyWith(
-                          color:
-                              theme.textTheme.bodyMedium?.color?.withAlpha(200),
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 32.0),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(
+                          Icons.image_not_supported_outlined,
+                          size: 80,
+                          color: theme.colorScheme.onSurface.withOpacity(0.4),
                         ),
-                      ),
-                      const SizedBox(height: 8),
-                      Text(
-                        'Os logos que você salva em suas credenciais aparecem aqui.',
-                        textAlign: TextAlign.center,
-                        style: theme.textTheme.bodyMedium,
-                      ),
-                    ],
+                        const SizedBox(height: 24),
+                        Text(
+                          'Nenhuma imagem salva encontrada',
+                          textAlign: TextAlign.center,
+                          style: theme.textTheme.headlineSmall?.copyWith(
+                            color: theme.textTheme.bodyMedium?.color
+                                ?.withAlpha(200),
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          'As imagens que você salva aparecem aqui.',
+                          textAlign: TextAlign.center,
+                          style: theme.textTheme.bodyMedium,
+                        ),
+                      ],
+                    ),
                   ),
                 )
               : GridView.builder(
