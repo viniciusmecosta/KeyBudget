@@ -208,15 +208,16 @@ class _CredentialDetailScreenState extends State<CredentialDetailScreen> {
           child: ListView(
             children: [
               Center(
-                child: LogoPicker(
-                  initialImagePath: _logoPath,
-                  onImageSelected: (path) {
-                    if (_isEditing) {
+                child: AbsorbPointer(
+                  absorbing: !_isEditing,
+                  child: LogoPicker(
+                    initialImagePath: _logoPath,
+                    onImageSelected: (path) {
                       setState(() {
                         _logoPath = path;
                       });
-                    }
-                  },
+                    },
+                  ),
                 ),
               ),
               if (_isEditing) ...[
@@ -250,6 +251,9 @@ class _CredentialDetailScreenState extends State<CredentialDetailScreen> {
                 controller: _locationController,
                 readOnly: !_isEditing,
                 textCapitalization: TextCapitalization.sentences,
+                style: _isEditing
+                    ? null
+                    : TextStyle(color: theme.colorScheme.onSurface),
                 decoration: InputDecoration(
                   labelText: 'Local/Serviço *',
                   suffixIcon: _isEditing
@@ -267,6 +271,9 @@ class _CredentialDetailScreenState extends State<CredentialDetailScreen> {
               TextFormField(
                 controller: _loginController,
                 readOnly: !_isEditing,
+                style: _isEditing
+                    ? null
+                    : TextStyle(color: theme.colorScheme.onSurface),
                 decoration: InputDecoration(
                   labelText: 'Login/Usuário *',
                   suffixIcon: _isEditing
@@ -285,6 +292,9 @@ class _CredentialDetailScreenState extends State<CredentialDetailScreen> {
                 controller: _passwordController,
                 readOnly: !_isEditing,
                 obscureText: !_isPasswordVisible,
+                style: _isEditing
+                    ? null
+                    : TextStyle(color: theme.colorScheme.onSurface),
                 decoration: InputDecoration(
                   labelText: 'Senha',
                   errorText: _decryptionError && !_isEditing
@@ -314,55 +324,70 @@ class _CredentialDetailScreenState extends State<CredentialDetailScreen> {
                   ),
                 ),
               ),
-              const SizedBox(height: 16),
-              TextFormField(
-                controller: _emailController,
-                readOnly: !_isEditing,
-                decoration: InputDecoration(
-                  labelText: 'Email',
-                  suffixIcon: _isEditing || _emailController.text.isEmpty
+              if (_isEditing || _emailController.text.isNotEmpty)
+                const SizedBox(height: 16),
+              if (_isEditing || _emailController.text.isNotEmpty)
+                TextFormField(
+                  controller: _emailController,
+                  readOnly: !_isEditing,
+                  style: _isEditing
                       ? null
-                      : IconButton(
-                          icon: const Icon(Icons.copy, size: 20),
-                          onPressed: () =>
-                              _copyToClipboard(_emailController.text),
-                        ),
+                      : TextStyle(color: theme.colorScheme.onSurface),
+                  decoration: InputDecoration(
+                    labelText: 'Email',
+                    suffixIcon: _isEditing || _emailController.text.isEmpty
+                        ? null
+                        : IconButton(
+                            icon: const Icon(Icons.copy, size: 20),
+                            onPressed: () =>
+                                _copyToClipboard(_emailController.text),
+                          ),
+                  ),
+                  keyboardType: TextInputType.emailAddress,
                 ),
-                keyboardType: TextInputType.emailAddress,
-              ),
-              const SizedBox(height: 16),
-              TextFormField(
-                controller: _phoneController,
-                readOnly: !_isEditing,
-                decoration: InputDecoration(
-                  labelText: 'Número',
-                  suffixIcon: _isEditing || _phoneController.text.isEmpty
+              if (_isEditing || _phoneController.text.isNotEmpty)
+                const SizedBox(height: 16),
+              if (_isEditing || _phoneController.text.isNotEmpty)
+                TextFormField(
+                  controller: _phoneController,
+                  readOnly: !_isEditing,
+                  style: _isEditing
                       ? null
-                      : IconButton(
-                          icon: const Icon(Icons.copy, size: 20),
-                          onPressed: () =>
-                              _copyToClipboard(_phoneController.text),
-                        ),
+                      : TextStyle(color: theme.colorScheme.onSurface),
+                  decoration: InputDecoration(
+                    labelText: 'Número',
+                    suffixIcon: _isEditing || _phoneController.text.isEmpty
+                        ? null
+                        : IconButton(
+                            icon: const Icon(Icons.copy, size: 20),
+                            onPressed: () =>
+                                _copyToClipboard(_phoneController.text),
+                          ),
+                  ),
+                  keyboardType: TextInputType.phone,
                 ),
-                keyboardType: TextInputType.phone,
-              ),
-              const SizedBox(height: 16),
-              TextFormField(
-                controller: _notesController,
-                readOnly: !_isEditing,
-                maxLines: 3,
-                textCapitalization: TextCapitalization.sentences,
-                decoration: InputDecoration(
-                  labelText: 'Observações',
-                  suffixIcon: _isEditing || _notesController.text.isEmpty
+              if (_isEditing || _notesController.text.isNotEmpty)
+                const SizedBox(height: 16),
+              if (_isEditing || _notesController.text.isNotEmpty)
+                TextFormField(
+                  controller: _notesController,
+                  readOnly: !_isEditing,
+                  maxLines: 3,
+                  style: _isEditing
                       ? null
-                      : IconButton(
-                          icon: const Icon(Icons.copy, size: 20),
-                          onPressed: () =>
-                              _copyToClipboard(_notesController.text),
-                        ),
+                      : TextStyle(color: theme.colorScheme.onSurface),
+                  textCapitalization: TextCapitalization.sentences,
+                  decoration: InputDecoration(
+                    labelText: 'Observações',
+                    suffixIcon: _isEditing || _notesController.text.isEmpty
+                        ? null
+                        : IconButton(
+                            icon: const Icon(Icons.copy, size: 20),
+                            onPressed: () =>
+                                _copyToClipboard(_notesController.text),
+                          ),
+                  ),
                 ),
-              ),
               const SizedBox(height: 24),
               if (_isEditing)
                 ElevatedButton(

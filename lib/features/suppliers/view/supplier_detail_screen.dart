@@ -129,7 +129,7 @@ class _SupplierDetailScreenState extends State<SupplierDetailScreen> {
   void _selectSavedLogo() async {
     final selectedLogo = await Navigator.of(context).push<String>(
       MaterialPageRoute(
-        builder: (_) => const SavedLogosScreen(isForSuppliers: true),
+        builder: (_) => const SavedLogosScreen(),
       ),
     );
 
@@ -172,15 +172,16 @@ class _SupplierDetailScreenState extends State<SupplierDetailScreen> {
           child: ListView(
             children: [
               Center(
-                child: LogoPicker(
-                  initialImagePath: _photoPath,
-                  onImageSelected: (path) {
-                    if (_isEditing) {
+                child: AbsorbPointer(
+                  absorbing: !_isEditing,
+                  child: LogoPicker(
+                    initialImagePath: _photoPath,
+                    onImageSelected: (path) {
                       setState(() {
                         _photoPath = path;
                       });
-                    }
-                  },
+                    },
+                  ),
                 ),
               ),
               if (_isEditing) ...[
@@ -214,80 +215,103 @@ class _SupplierDetailScreenState extends State<SupplierDetailScreen> {
                 controller: _nameController,
                 readOnly: !_isEditing,
                 textCapitalization: TextCapitalization.words,
+                style: _isEditing
+                    ? null
+                    : TextStyle(color: theme.colorScheme.onSurface),
                 decoration:
                     const InputDecoration(labelText: 'Nome Fornecedor/Loja *'),
                 validator: (value) =>
                     value!.isEmpty ? 'Campo obrigatório' : null,
               ),
-              const SizedBox(height: 16),
-              TextFormField(
-                controller: _repNameController,
-                readOnly: !_isEditing,
-                textCapitalization: TextCapitalization.words,
-                decoration:
-                    const InputDecoration(labelText: 'Nome Representante'),
-              ),
-              const SizedBox(height: 16),
-              TextFormField(
-                controller: _emailController,
-                readOnly: !_isEditing,
-                decoration: InputDecoration(
-                  labelText: 'Email',
-                  suffixIcon: _isEditing || _emailController.text.isEmpty
+              if (_isEditing || _repNameController.text.isNotEmpty)
+                const SizedBox(height: 16),
+              if (_isEditing || _repNameController.text.isNotEmpty)
+                TextFormField(
+                  controller: _repNameController,
+                  readOnly: !_isEditing,
+                  textCapitalization: TextCapitalization.words,
+                  style: _isEditing
                       ? null
-                      : IconButton(
-                          icon: const Icon(Icons.copy, size: 20),
-                          onPressed: () =>
-                              _copyToClipboard(_emailController.text),
-                        ),
+                      : TextStyle(color: theme.colorScheme.onSurface),
+                  decoration:
+                      const InputDecoration(labelText: 'Nome Representante'),
                 ),
-                keyboardType: TextInputType.emailAddress,
-                validator: (value) {
-                  if (value == null || value.isEmpty) return null;
-                  final emailRegex =
-                      RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$');
-                  if (!emailRegex.hasMatch(value)) {
-                    return 'Por favor, insira um email válido.';
-                  }
-                  return null;
-                },
-              ),
-              const SizedBox(height: 16),
-              TextFormField(
-                controller: _phoneController,
-                readOnly: !_isEditing,
-                inputFormatters: [_phoneMaskFormatter],
-                decoration: InputDecoration(
-                  labelText: 'Telefone (WhatsApp)',
-                  suffixIcon: _isEditing || _phoneController.text.isEmpty
+              if (_isEditing || _emailController.text.isNotEmpty)
+                const SizedBox(height: 16),
+              if (_isEditing || _emailController.text.isNotEmpty)
+                TextFormField(
+                  controller: _emailController,
+                  readOnly: !_isEditing,
+                  style: _isEditing
                       ? null
-                      : IconButton(
-                          icon: const Icon(Icons.copy, size: 20),
-                          onPressed: () => _copyToClipboard(
-                            _phoneMaskFormatter
-                                .unmaskText(_phoneController.text),
+                      : TextStyle(color: theme.colorScheme.onSurface),
+                  decoration: InputDecoration(
+                    labelText: 'Email',
+                    suffixIcon: _isEditing || _emailController.text.isEmpty
+                        ? null
+                        : IconButton(
+                            icon: const Icon(Icons.copy, size: 20),
+                            onPressed: () =>
+                                _copyToClipboard(_emailController.text),
                           ),
-                        ),
+                  ),
+                  keyboardType: TextInputType.emailAddress,
+                  validator: (value) {
+                    if (value == null || value.isEmpty) return null;
+                    final emailRegex =
+                        RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$');
+                    if (!emailRegex.hasMatch(value)) {
+                      return 'Por favor, insira um email válido.';
+                    }
+                    return null;
+                  },
                 ),
-                keyboardType: TextInputType.phone,
-                validator: (value) {
-                  if (value == null || value.isEmpty) return null;
-                  final unmaskedText =
-                      _phoneMaskFormatter.unmaskText(_phoneController.text);
-                  if (unmaskedText.isNotEmpty && unmaskedText.length != 11) {
-                    return 'O telefone deve ter 11 dígitos.';
-                  }
-                  return null;
-                },
-              ),
-              const SizedBox(height: 16),
-              TextFormField(
-                controller: _notesController,
-                readOnly: !_isEditing,
-                decoration: const InputDecoration(labelText: 'Observações'),
-                maxLines: 3,
-                textCapitalization: TextCapitalization.sentences,
-              ),
+              if (_isEditing || _phoneController.text.isNotEmpty)
+                const SizedBox(height: 16),
+              if (_isEditing || _phoneController.text.isNotEmpty)
+                TextFormField(
+                  controller: _phoneController,
+                  readOnly: !_isEditing,
+                  inputFormatters: [_phoneMaskFormatter],
+                  style: _isEditing
+                      ? null
+                      : TextStyle(color: theme.colorScheme.onSurface),
+                  decoration: InputDecoration(
+                    labelText: 'Telefone (WhatsApp)',
+                    suffixIcon: _isEditing || _phoneController.text.isEmpty
+                        ? null
+                        : IconButton(
+                            icon: const Icon(Icons.copy, size: 20),
+                            onPressed: () => _copyToClipboard(
+                              _phoneMaskFormatter
+                                  .unmaskText(_phoneController.text),
+                            ),
+                          ),
+                  ),
+                  keyboardType: TextInputType.phone,
+                  validator: (value) {
+                    if (value == null || value.isEmpty) return null;
+                    final unmaskedText =
+                        _phoneMaskFormatter.unmaskText(_phoneController.text);
+                    if (unmaskedText.isNotEmpty && unmaskedText.length != 11) {
+                      return 'O telefone deve ter 11 dígitos.';
+                    }
+                    return null;
+                  },
+                ),
+              if (_isEditing || _notesController.text.isNotEmpty)
+                const SizedBox(height: 16),
+              if (_isEditing || _notesController.text.isNotEmpty)
+                TextFormField(
+                  controller: _notesController,
+                  readOnly: !_isEditing,
+                  style: _isEditing
+                      ? null
+                      : TextStyle(color: theme.colorScheme.onSurface),
+                  decoration: const InputDecoration(labelText: 'Observações'),
+                  maxLines: 3,
+                  textCapitalization: TextCapitalization.sentences,
+                ),
               const SizedBox(height: 24),
               if (_isEditing)
                 ElevatedButton(

@@ -132,6 +132,7 @@ class _ExpenseDetailScreenState extends State<ExpenseDetailScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     final expenseViewModel =
         Provider.of<ExpenseViewModel>(context, listen: false);
     final categoryViewModel = Provider.of<CategoryViewModel>(context);
@@ -165,10 +166,13 @@ class _ExpenseDetailScreenState extends State<ExpenseDetailScreen> {
             children: [
               TextFormField(
                 controller: _amountController,
+                readOnly: !_isEditing,
+                style: _isEditing
+                    ? null
+                    : TextStyle(color: theme.colorScheme.onSurface),
                 decoration: const InputDecoration(labelText: 'Valor *'),
                 keyboardType:
                     const TextInputType.numberWithOptions(decimal: true),
-                enabled: _isEditing,
                 validator: (value) {
                   if (_isEditing) {
                     if (value == null || value.isEmpty) {
@@ -208,42 +212,49 @@ class _ExpenseDetailScreenState extends State<ExpenseDetailScreen> {
                 validator: (value) =>
                     value == null ? 'Selecione uma categoria' : null,
               ),
-              const SizedBox(height: 16),
-              if (_isEditing)
-                CategoryAutocompleteField(
-                  key: ValueKey('motivation_${_selectedCategory?.id}'),
-                  label: 'Motivação',
-                  controller: _motivationController,
-                  optionsBuilder: () => expenseViewModel
-                      .getUniqueMotivationsForCategory(_selectedCategory?.id),
-                  onSelected: (selection) {
-                    _motivationController.text = selection;
-                  },
-                )
-              else
-                TextFormField(
-                  controller: _motivationController,
-                  decoration: const InputDecoration(labelText: 'Motivação'),
-                  enabled: false,
-                ),
-              const SizedBox(height: 16),
-              if (_isEditing)
-                CategoryAutocompleteField(
-                  key: ValueKey('location_${_selectedCategory?.id}'),
-                  label: 'Local',
-                  controller: _locationController,
-                  optionsBuilder: () => expenseViewModel
-                      .getUniqueLocationsForCategory(_selectedCategory?.id),
-                  onSelected: (selection) {
-                    _locationController.text = selection;
-                  },
-                )
-              else
-                TextFormField(
-                  controller: _locationController,
-                  decoration: const InputDecoration(labelText: 'Local'),
-                  enabled: false,
-                ),
+              if (_isEditing || _motivationController.text.isNotEmpty)
+                const SizedBox(height: 16),
+              if (_isEditing || _motivationController.text.isNotEmpty)
+                _isEditing
+                    ? CategoryAutocompleteField(
+                        key: ValueKey('motivation_${_selectedCategory?.id}'),
+                        label: 'Motivação',
+                        controller: _motivationController,
+                        optionsBuilder: () =>
+                            expenseViewModel.getUniqueMotivationsForCategory(
+                                _selectedCategory?.id),
+                        onSelected: (selection) {
+                          _motivationController.text = selection;
+                        },
+                      )
+                    : TextFormField(
+                        controller: _motivationController,
+                        readOnly: true,
+                        style: TextStyle(color: theme.colorScheme.onSurface),
+                        decoration:
+                            const InputDecoration(labelText: 'Motivação'),
+                      ),
+              if (_isEditing || _locationController.text.isNotEmpty)
+                const SizedBox(height: 16),
+              if (_isEditing || _locationController.text.isNotEmpty)
+                _isEditing
+                    ? CategoryAutocompleteField(
+                        key: ValueKey('location_${_selectedCategory?.id}'),
+                        label: 'Local',
+                        controller: _locationController,
+                        optionsBuilder: () =>
+                            expenseViewModel.getUniqueLocationsForCategory(
+                                _selectedCategory?.id),
+                        onSelected: (selection) {
+                          _locationController.text = selection;
+                        },
+                      )
+                    : TextFormField(
+                        controller: _locationController,
+                        readOnly: true,
+                        style: TextStyle(color: theme.colorScheme.onSurface),
+                        decoration: const InputDecoration(labelText: 'Local'),
+                      ),
               const SizedBox(height: 16),
               DatePickerField(
                 label: 'Data',
