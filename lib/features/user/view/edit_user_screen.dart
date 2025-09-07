@@ -109,6 +109,7 @@ class _EditUserScreenState extends State<EditUserScreen> {
                     children: [
                       TextFormField(
                         controller: _nameController,
+                        textCapitalization: TextCapitalization.words,
                         decoration: const InputDecoration(
                             labelText: 'Nome *',
                             prefixIcon: Icon(Icons.person_outline)),

@@ -2,99 +2,64 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:key_budget/app/config/app_theme.dart';
-import 'package:key_budget/core/models/credential_model.dart';
+import 'package:key_budget/core/models/supplier_model.dart';
 import 'package:key_budget/features/auth/viewmodel/auth_viewmodel.dart';
 import 'package:key_budget/features/credentials/view/widgets/logo_picker.dart';
 import 'package:key_budget/features/credentials/view/widgets/saved_logos_screen.dart';
-import 'package:key_budget/features/credentials/viewmodel/credential_viewmodel.dart';
+import 'package:key_budget/features/suppliers/viewmodel/supplier_viewmodel.dart';
+import 'package:mask_text_input_formatter/mask_text_input_formatter.dart';
 import 'package:provider/provider.dart';
 
-class CredentialDetailScreen extends StatefulWidget {
-  final Credential credential;
+class SupplierDetailScreen extends StatefulWidget {
+  final Supplier supplier;
 
-  const CredentialDetailScreen({super.key, required this.credential});
+  const SupplierDetailScreen({super.key, required this.supplier});
 
   @override
-  State<CredentialDetailScreen> createState() => _CredentialDetailScreenState();
+  State<SupplierDetailScreen> createState() => _SupplierDetailScreenState();
 }
 
-class _CredentialDetailScreenState extends State<CredentialDetailScreen> {
+class _SupplierDetailScreenState extends State<SupplierDetailScreen> {
   final _formKey = GlobalKey<FormState>();
-  late TextEditingController _locationController;
-  late TextEditingController _loginController;
-  late TextEditingController _passwordController;
+  late TextEditingController _nameController;
+  late TextEditingController _repNameController;
   late TextEditingController _emailController;
   late TextEditingController _phoneController;
   late TextEditingController _notesController;
-  String? _logoPath;
+  String? _photoPath;
   bool _isEditing = false;
   bool _isSaving = false;
-  bool _isPasswordVisible = false;
-  bool _decryptionError = false;
+
+  final _phoneMaskFormatter = MaskTextInputFormatter(
+    mask: '(##) # ####-####',
+    filter: {"#": RegExp(r'[0-9]')},
+  );
 
   @override
   void initState() {
     super.initState();
-    final decryptedPassword =
-        Provider.of<CredentialViewModel>(context, listen: false)
-            .decryptPassword(widget.credential.encryptedPassword);
-
-    _decryptionError = decryptedPassword == 'ERRO_DECRIPT';
-
-    _locationController =
-        TextEditingController(text: widget.credential.location);
-    _loginController = TextEditingController(text: widget.credential.login);
-    _passwordController = TextEditingController(
-        text: _decryptionError ? 'Falha ao decifrar' : decryptedPassword);
-    _emailController = TextEditingController(text: widget.credential.email);
-    _phoneController =
-        TextEditingController(text: widget.credential.phoneNumber);
-    _notesController = TextEditingController(text: widget.credential.notes);
-    _logoPath = widget.credential.logoPath;
-    _loginController.addListener(_updateFields);
+    _nameController = TextEditingController(text: widget.supplier.name);
+    _repNameController =
+        TextEditingController(text: widget.supplier.representativeName);
+    _emailController = TextEditingController(text: widget.supplier.email);
+    _phoneController = TextEditingController(
+        text: _phoneMaskFormatter.maskText(widget.supplier.phoneNumber ?? ''));
+    _notesController = TextEditingController(text: widget.supplier.notes);
+    _photoPath = widget.supplier.photoPath;
   }
 
   @override
   void dispose() {
-    _locationController.dispose();
-    _loginController.removeListener(_updateFields);
-    _loginController.dispose();
-    _passwordController.dispose();
+    _nameController.dispose();
+    _repNameController.dispose();
     _emailController.dispose();
     _phoneController.dispose();
     _notesController.dispose();
     super.dispose();
   }
 
-  void _updateFields() {
-    if (!_isEditing) return;
-
-    final text = _loginController.text;
-    final isEmail = RegExp(r'^[^@]+@[^@]+\.[^@]+').hasMatch(text);
-    final isPhone = RegExp(r'^[0-9]+$').hasMatch(text);
-
-    if (text.isEmpty) {
-      _emailController.clear();
-      _phoneController.clear();
-    } else {
-      if (isEmail) {
-        _emailController.text = text;
-      }
-      if (isPhone) {
-        _phoneController.text = text;
-      }
-    }
-  }
-
-  void _copyToClipboard(String text, {bool isPassword = false}) {
-    if (isPassword && _decryptionError) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-            content: const Text('Não é possível copiar a senha com erro.'),
-            backgroundColor: Theme.of(context).colorScheme.error),
-      );
-      return;
-    }
+  void _copyToClipboard(String text) {
+    if (text.isEmpty) return;
     Clipboard.setData(ClipboardData(text: text));
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(content: Text('Copiado para a área de transferência!')),
@@ -108,17 +73,16 @@ class _CredentialDetailScreenState extends State<CredentialDetailScreen> {
     final authViewModel = Provider.of<AuthViewModel>(context, listen: false);
     final userId = authViewModel.currentUser!.id;
 
-    await Provider.of<CredentialViewModel>(context, listen: false)
-        .updateCredential(
+    await Provider.of<SupplierViewModel>(context, listen: false).updateSupplier(
       userId: userId,
-      originalCredential: widget.credential,
-      location: _locationController.text,
-      login: _loginController.text,
-      newPlainPassword: _passwordController.text,
-      email: _emailController.text,
-      phoneNumber: _phoneController.text,
-      notes: _notesController.text,
-      logoPath: _logoPath,
+      originalSupplier: widget.supplier,
+      name: _nameController.text,
+      representativeName:
+          _repNameController.text.isNotEmpty ? _repNameController.text : null,
+      email: _emailController.text.isNotEmpty ? _emailController.text : null,
+      phoneNumber: _phoneMaskFormatter.unmaskText(_phoneController.text),
+      photoPath: _photoPath,
+      notes: _notesController.text.isNotEmpty ? _notesController.text : null,
     );
 
     if (mounted) {
@@ -130,13 +94,13 @@ class _CredentialDetailScreenState extends State<CredentialDetailScreen> {
     }
   }
 
-  void _deleteCredential() {
+  void _deleteSupplier() {
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
         title: const Text('Confirmar Exclusão'),
         content:
-            const Text('Você tem certeza que deseja excluir esta credencial?'),
+            const Text('Você tem certeza que deseja excluir este fornecedor?'),
         actions: [
           TextButton(
             child: const Text('Cancelar'),
@@ -148,8 +112,8 @@ class _CredentialDetailScreenState extends State<CredentialDetailScreen> {
               final authViewModel =
                   Provider.of<AuthViewModel>(context, listen: false);
               final userId = authViewModel.currentUser!.id;
-              await Provider.of<CredentialViewModel>(context, listen: false)
-                  .deleteCredential(userId, widget.credential.id!);
+              await Provider.of<SupplierViewModel>(context, listen: false)
+                  .deleteSupplier(userId, widget.supplier.id!);
 
               if (mounted) {
                 Navigator.of(ctx).pop();
@@ -171,7 +135,7 @@ class _CredentialDetailScreenState extends State<CredentialDetailScreen> {
 
     if (selectedLogo != null) {
       setState(() {
-        _logoPath = selectedLogo;
+        _photoPath = selectedLogo;
       });
     }
   }
@@ -182,12 +146,12 @@ class _CredentialDetailScreenState extends State<CredentialDetailScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(_isEditing ? 'Editar Credencial' : 'Detalhes'),
+        title: Text(_isEditing ? 'Editar Fornecedor' : 'Detalhes'),
         actions: [
           if (!_isEditing)
             IconButton(
               icon: const Icon(Icons.delete),
-              onPressed: _deleteCredential,
+              onPressed: _deleteSupplier,
             ),
           IconButton(
             icon: Icon(_isEditing ? Icons.check : Icons.edit),
@@ -211,10 +175,10 @@ class _CredentialDetailScreenState extends State<CredentialDetailScreen> {
                 child: AbsorbPointer(
                   absorbing: !_isEditing,
                   child: LogoPicker(
-                    initialImagePath: _logoPath,
+                    initialImagePath: _photoPath,
                     onImageSelected: (path) {
                       setState(() {
-                        _logoPath = path;
+                        _photoPath = path;
                       });
                     },
                   ),
@@ -235,7 +199,7 @@ class _CredentialDetailScreenState extends State<CredentialDetailScreen> {
                     TextButton.icon(
                       onPressed: () {
                         setState(() {
-                          _logoPath = null;
+                          _photoPath = null;
                         });
                       },
                       icon: const Icon(Icons.no_photography_outlined, size: 18),
@@ -248,82 +212,30 @@ class _CredentialDetailScreenState extends State<CredentialDetailScreen> {
               ],
               const SizedBox(height: 24),
               TextFormField(
-                controller: _locationController,
+                controller: _nameController,
                 readOnly: !_isEditing,
-                textCapitalization: TextCapitalization.sentences,
+                textCapitalization: TextCapitalization.words,
                 style: _isEditing
                     ? null
                     : TextStyle(color: theme.colorScheme.onSurface),
-                decoration: InputDecoration(
-                  labelText: 'Local/Serviço *',
-                  suffixIcon: _isEditing
-                      ? null
-                      : IconButton(
-                          icon: const Icon(Icons.copy, size: 20),
-                          onPressed: () =>
-                              _copyToClipboard(_locationController.text),
-                        ),
-                ),
+                decoration:
+                    const InputDecoration(labelText: 'Nome Fornecedor/Loja *'),
                 validator: (value) =>
                     value!.isEmpty ? 'Campo obrigatório' : null,
               ),
-              const SizedBox(height: 16),
-              TextFormField(
-                controller: _loginController,
-                readOnly: !_isEditing,
-                style: _isEditing
-                    ? null
-                    : TextStyle(color: theme.colorScheme.onSurface),
-                decoration: InputDecoration(
-                  labelText: 'Login/Usuário *',
-                  suffixIcon: _isEditing
+              if (_isEditing || _repNameController.text.isNotEmpty)
+                const SizedBox(height: 16),
+              if (_isEditing || _repNameController.text.isNotEmpty)
+                TextFormField(
+                  controller: _repNameController,
+                  readOnly: !_isEditing,
+                  textCapitalization: TextCapitalization.words,
+                  style: _isEditing
                       ? null
-                      : IconButton(
-                          icon: const Icon(Icons.copy, size: 20),
-                          onPressed: () =>
-                              _copyToClipboard(_loginController.text),
-                        ),
+                      : TextStyle(color: theme.colorScheme.onSurface),
+                  decoration:
+                      const InputDecoration(labelText: 'Nome Representante'),
                 ),
-                validator: (value) =>
-                    value!.isEmpty ? 'Campo obrigatório' : null,
-              ),
-              const SizedBox(height: 16),
-              TextFormField(
-                controller: _passwordController,
-                readOnly: !_isEditing,
-                obscureText: !_isPasswordVisible,
-                style: _isEditing
-                    ? null
-                    : TextStyle(color: theme.colorScheme.onSurface),
-                decoration: InputDecoration(
-                  labelText: 'Senha',
-                  errorText: _decryptionError && !_isEditing
-                      ? 'Erro ao decifrar.'
-                      : null,
-                  suffixIcon: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      IconButton(
-                        icon: Icon(
-                          _isPasswordVisible
-                              ? Icons.visibility_off
-                              : Icons.visibility,
-                          size: 20,
-                        ),
-                        onPressed: () => setState(
-                            () => _isPasswordVisible = !_isPasswordVisible),
-                      ),
-                      if (!_isEditing)
-                        IconButton(
-                          icon: const Icon(Icons.copy, size: 20),
-                          onPressed: () => _copyToClipboard(
-                              _passwordController.text,
-                              isPassword: true),
-                        ),
-                    ],
-                  ),
-                ),
-              ),
               if (_isEditing || _emailController.text.isNotEmpty)
                 const SizedBox(height: 16),
               if (_isEditing || _emailController.text.isNotEmpty)
@@ -344,6 +256,15 @@ class _CredentialDetailScreenState extends State<CredentialDetailScreen> {
                           ),
                   ),
                   keyboardType: TextInputType.emailAddress,
+                  validator: (value) {
+                    if (value == null || value.isEmpty) return null;
+                    final emailRegex =
+                        RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$');
+                    if (!emailRegex.hasMatch(value)) {
+                      return 'Por favor, insira um email válido.';
+                    }
+                    return null;
+                  },
                 ),
               if (_isEditing || _phoneController.text.isNotEmpty)
                 const SizedBox(height: 16),
@@ -351,20 +272,32 @@ class _CredentialDetailScreenState extends State<CredentialDetailScreen> {
                 TextFormField(
                   controller: _phoneController,
                   readOnly: !_isEditing,
+                  inputFormatters: [_phoneMaskFormatter],
                   style: _isEditing
                       ? null
                       : TextStyle(color: theme.colorScheme.onSurface),
                   decoration: InputDecoration(
-                    labelText: 'Número',
+                    labelText: 'Telefone (WhatsApp)',
                     suffixIcon: _isEditing || _phoneController.text.isEmpty
                         ? null
                         : IconButton(
                             icon: const Icon(Icons.copy, size: 20),
-                            onPressed: () =>
-                                _copyToClipboard(_phoneController.text),
+                            onPressed: () => _copyToClipboard(
+                              _phoneMaskFormatter
+                                  .unmaskText(_phoneController.text),
+                            ),
                           ),
                   ),
                   keyboardType: TextInputType.phone,
+                  validator: (value) {
+                    if (value == null || value.isEmpty) return null;
+                    final unmaskedText =
+                        _phoneMaskFormatter.unmaskText(_phoneController.text);
+                    if (unmaskedText.isNotEmpty && unmaskedText.length != 11) {
+                      return 'O telefone deve ter 11 dígitos.';
+                    }
+                    return null;
+                  },
                 ),
               if (_isEditing || _notesController.text.isNotEmpty)
                 const SizedBox(height: 16),
@@ -372,21 +305,12 @@ class _CredentialDetailScreenState extends State<CredentialDetailScreen> {
                 TextFormField(
                   controller: _notesController,
                   readOnly: !_isEditing,
-                  maxLines: 3,
                   style: _isEditing
                       ? null
                       : TextStyle(color: theme.colorScheme.onSurface),
+                  decoration: const InputDecoration(labelText: 'Observações'),
+                  maxLines: 3,
                   textCapitalization: TextCapitalization.sentences,
-                  decoration: InputDecoration(
-                    labelText: 'Observações',
-                    suffixIcon: _isEditing || _notesController.text.isEmpty
-                        ? null
-                        : IconButton(
-                            icon: const Icon(Icons.copy, size: 20),
-                            onPressed: () =>
-                                _copyToClipboard(_notesController.text),
-                          ),
-                  ),
                 ),
               const SizedBox(height: 24),
               if (_isEditing)
