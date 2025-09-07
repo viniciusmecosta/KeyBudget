@@ -53,11 +53,7 @@ class CategoryPickerField extends StatelessWidget {
                       Expanded(
                           child: Text(
                         value!.name,
-                        style: theme.textTheme.titleMedium?.copyWith(
-                          color: isEnabled
-                              ? null
-                              : theme.textTheme.bodySmall?.color,
-                        ),
+                        style: theme.textTheme.titleMedium,
                         overflow: TextOverflow.ellipsis,
                       )),
                     ],
