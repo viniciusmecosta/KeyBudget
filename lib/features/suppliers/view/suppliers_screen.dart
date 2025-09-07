@@ -110,6 +110,20 @@ class _SuppliersScreenState extends State<SuppliersScreen> {
                 itemBuilder: (context, index) {
                   final supplier = vm.allSuppliers[index];
                   final photoPath = supplier.photoPath;
+                  String subtitleText;
+                  if (supplier.representativeName != null &&
+                      supplier.representativeName!.isNotEmpty) {
+                    subtitleText = supplier.representativeName!;
+                  } else if (supplier.phoneNumber != null &&
+                      supplier.phoneNumber!.isNotEmpty) {
+                    subtitleText = supplier.phoneNumber!;
+                  } else if (supplier.email != null &&
+                      supplier.email!.isNotEmpty) {
+                    subtitleText = supplier.email!;
+                  } else {
+                    subtitleText = 'Sem contato';
+                  }
+
                   return Card(
                     margin:
                         const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
@@ -132,25 +146,45 @@ class _SuppliersScreenState extends State<SuppliersScreen> {
                       ),
                       title: Text(supplier.name,
                           style: const TextStyle(fontWeight: FontWeight.w600)),
-                      subtitle: Text(
-                          supplier.representativeName ?? 'Sem representante'),
+                      subtitle: Text(subtitleText),
                       trailing: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
                           if (supplier.phoneNumber != null &&
                               supplier.phoneNumber!.isNotEmpty)
-                            IconButton(
-                              icon: FaIcon(FontAwesomeIcons.whatsapp,
-                                  color: Colors.green.shade700),
-                              onPressed: () =>
-                                  _launchWhatsApp(supplier.phoneNumber!),
+                            SizedBox(
+                              width: 40,
+                              height: 40,
+                              child: IconButton(
+                                icon: FaIcon(FontAwesomeIcons.whatsapp,
+                                    color: Colors.green.shade700),
+                                onPressed: () =>
+                                    _launchWhatsApp(supplier.phoneNumber!),
+                                style: IconButton.styleFrom(
+                                  backgroundColor:
+                                      Colors.green.withOpacity(0.1),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
+                                ),
+                              ),
                             ),
                           if (supplier.email != null &&
                               supplier.email!.isNotEmpty)
-                            IconButton(
-                              icon: Icon(Icons.email_outlined,
-                                  color: Colors.blue.shade600),
-                              onPressed: () => _launchEmail(supplier.email!),
+                            SizedBox(
+                              width: 40,
+                              height: 40,
+                              child: IconButton(
+                                icon: Icon(Icons.email_outlined,
+                                    color: Colors.blue.shade600),
+                                onPressed: () => _launchEmail(supplier.email!),
+                                style: IconButton.styleFrom(
+                                  backgroundColor: Colors.blue.withOpacity(0.1),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
+                                ),
+                              ),
                             ),
                         ],
                       ),
