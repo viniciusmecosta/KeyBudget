@@ -62,17 +62,12 @@ class _SupplierDetailScreenState extends State<SupplierDetailScreen> {
   @override
   void initState() {
     super.initState();
-    final initialPhone = widget.supplier.phoneNumber ?? '';
-    if (initialPhone.length <= 10) {
-      _phoneMaskFormatter.updateMask(mask: '(##) ####-####');
-    }
-
     _nameController = TextEditingController(text: widget.supplier.name);
     _repNameController =
         TextEditingController(text: widget.supplier.representativeName);
     _emailController = TextEditingController(text: widget.supplier.email);
-    _phoneController =
-        TextEditingController(text: _phoneMaskFormatter.maskText(initialPhone));
+    _phoneController = TextEditingController(
+        text: _phoneMaskFormatter.maskText(widget.supplier.phoneNumber ?? ''));
     _notesController = TextEditingController(text: widget.supplier.notes);
     _photoPath = widget.supplier.photoPath;
   }
@@ -308,16 +303,6 @@ class _SupplierDetailScreenState extends State<SupplierDetailScreen> {
                   style: _isEditing
                       ? null
                       : TextStyle(color: theme.colorScheme.onSurface),
-                  onChanged: (text) {
-                    if (_isEditing) {
-                      final unmaskedText = _phoneMaskFormatter.unmaskText(text);
-                      if (unmaskedText.length <= 10) {
-                        _phoneMaskFormatter.updateMask(mask: '(##) ####-####');
-                      } else {
-                        _phoneMaskFormatter.updateMask(mask: '(##) #####-####');
-                      }
-                    }
-                  },
                   decoration: InputDecoration(
                     labelText: 'Telefone (WhatsApp)',
                     suffixIcon: _isEditing || _phoneController.text.isEmpty
