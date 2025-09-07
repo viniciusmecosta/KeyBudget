@@ -3,6 +3,7 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'package:key_budget/app/config/app_theme.dart';
 import 'package:key_budget/features/auth/view/widgets/avatar_picker.dart';
 import 'package:key_budget/features/auth/viewmodel/auth_viewmodel.dart';
+import 'package:mask_text_input_formatter/mask_text_input_formatter.dart';
 import 'package:provider/provider.dart';
 
 class EditUserScreen extends StatefulWidget {
@@ -23,12 +24,23 @@ class _EditUserScreenState extends State<EditUserScreen> {
   bool _isConfirmPasswordVisible = false;
   bool _isSaving = false;
 
+  final _phoneMaskFormatter = MaskTextInputFormatter(
+    mask: '(##) #####-####',
+    filter: {"#": RegExp(r'[0-9]')},
+  );
+
   @override
   void initState() {
     super.initState();
     final user = Provider.of<AuthViewModel>(context, listen: false).currentUser;
     _nameController = TextEditingController(text: user?.name);
-    _phoneController = TextEditingController(text: user?.phoneNumber);
+
+    final initialPhone = user?.phoneNumber ?? '';
+    if (initialPhone.length <= 10) {
+      _phoneMaskFormatter.updateMask(mask: '(##) ####-####');
+    }
+    _phoneController =
+        TextEditingController(text: _phoneMaskFormatter.maskText(initialPhone));
     _passwordController = TextEditingController();
     _confirmPasswordController = TextEditingController();
     _avatarPath = user?.avatarPath;
@@ -52,8 +64,9 @@ class _EditUserScreenState extends State<EditUserScreen> {
 
     final success = await viewModel.updateUser(
       name: _nameController.text,
-      phoneNumber:
-          _phoneController.text.isNotEmpty ? _phoneController.text : null,
+      phoneNumber: _phoneController.text.isNotEmpty
+          ? _phoneMaskFormatter.unmaskText(_phoneController.text)
+          : null,
       avatarPath: _avatarPath,
       newPassword:
           _passwordController.text.isNotEmpty ? _passwordController.text : null,
@@ -120,10 +133,22 @@ class _EditUserScreenState extends State<EditUserScreen> {
                       const SizedBox(height: 16),
                       TextFormField(
                         controller: _phoneController,
+                        inputFormatters: [_phoneMaskFormatter],
                         decoration: const InputDecoration(
                             labelText: 'Número',
                             prefixIcon: Icon(Icons.phone_outlined)),
                         keyboardType: TextInputType.phone,
+                        onChanged: (text) {
+                          final unmaskedText =
+                              _phoneMaskFormatter.unmaskText(text);
+                          if (unmaskedText.length <= 10) {
+                            _phoneMaskFormatter.updateMask(
+                                mask: '(##) ####-####');
+                          } else {
+                            _phoneMaskFormatter.updateMask(
+                                mask: '(##) #####-####');
+                          }
+                        },
                       ),
                     ],
                   ),

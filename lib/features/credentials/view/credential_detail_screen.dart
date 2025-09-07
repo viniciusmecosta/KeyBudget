@@ -7,6 +7,7 @@ import 'package:key_budget/features/auth/viewmodel/auth_viewmodel.dart';
 import 'package:key_budget/features/credentials/view/widgets/logo_picker.dart';
 import 'package:key_budget/features/credentials/view/widgets/saved_logos_screen.dart';
 import 'package:key_budget/features/credentials/viewmodel/credential_viewmodel.dart';
+import 'package:mask_text_input_formatter/mask_text_input_formatter.dart';
 import 'package:provider/provider.dart';
 
 class CredentialDetailScreen extends StatefulWidget {
@@ -32,6 +33,11 @@ class _CredentialDetailScreenState extends State<CredentialDetailScreen> {
   bool _isPasswordVisible = false;
   bool _decryptionError = false;
 
+  final _phoneMaskFormatter = MaskTextInputFormatter(
+    mask: '(##) #####-####',
+    filter: {"#": RegExp(r'[0-9]')},
+  );
+
   @override
   void initState() {
     super.initState();
@@ -41,6 +47,11 @@ class _CredentialDetailScreenState extends State<CredentialDetailScreen> {
 
     _decryptionError = decryptedPassword == 'ERRO_DECRIPT';
 
+    final initialPhone = widget.credential.phoneNumber ?? '';
+    if (initialPhone.length <= 10) {
+      _phoneMaskFormatter.updateMask(mask: '(##) ####-####');
+    }
+
     _locationController =
         TextEditingController(text: widget.credential.location);
     _loginController = TextEditingController(text: widget.credential.login);
@@ -48,7 +59,7 @@ class _CredentialDetailScreenState extends State<CredentialDetailScreen> {
         text: _decryptionError ? 'Falha ao decifrar' : decryptedPassword);
     _emailController = TextEditingController(text: widget.credential.email);
     _phoneController =
-        TextEditingController(text: widget.credential.phoneNumber);
+        TextEditingController(text: _phoneMaskFormatter.maskText(initialPhone));
     _notesController = TextEditingController(text: widget.credential.notes);
     _logoPath = widget.credential.logoPath;
     _loginController.addListener(_updateFields);
@@ -71,7 +82,6 @@ class _CredentialDetailScreenState extends State<CredentialDetailScreen> {
 
     final text = _loginController.text;
     final isEmail = RegExp(r'^[^@]+@[^@]+\.[^@]+').hasMatch(text);
-    final isPhone = RegExp(r'^[0-9]+$').hasMatch(text);
 
     if (text.isEmpty) {
       _emailController.clear();
@@ -80,8 +90,9 @@ class _CredentialDetailScreenState extends State<CredentialDetailScreen> {
       if (isEmail) {
         _emailController.text = text;
       }
-      if (isPhone) {
-        _phoneController.text = text;
+      final sanitizedText = text.replaceAll(RegExp(r'[^0-9]'), '');
+      if (sanitizedText.length >= 10) {
+        _phoneController.text = _phoneMaskFormatter.maskText(sanitizedText);
       }
     }
   }
@@ -116,7 +127,7 @@ class _CredentialDetailScreenState extends State<CredentialDetailScreen> {
       login: _loginController.text,
       newPlainPassword: _passwordController.text,
       email: _emailController.text,
-      phoneNumber: _phoneController.text,
+      phoneNumber: _phoneMaskFormatter.unmaskText(_phoneController.text),
       notes: _notesController.text,
       logoPath: _logoPath,
     );
@@ -351,17 +362,29 @@ class _CredentialDetailScreenState extends State<CredentialDetailScreen> {
                 TextFormField(
                   controller: _phoneController,
                   readOnly: !_isEditing,
+                  inputFormatters: [_phoneMaskFormatter],
                   style: _isEditing
                       ? null
                       : TextStyle(color: theme.colorScheme.onSurface),
+                  onChanged: (text) {
+                    if (_isEditing) {
+                      final unmaskedText = _phoneMaskFormatter.unmaskText(text);
+                      if (unmaskedText.length <= 10) {
+                        _phoneMaskFormatter.updateMask(mask: '(##) ####-####');
+                      } else {
+                        _phoneMaskFormatter.updateMask(mask: '(##) #####-####');
+                      }
+                    }
+                  },
                   decoration: InputDecoration(
                     labelText: 'Número',
                     suffixIcon: _isEditing || _phoneController.text.isEmpty
                         ? null
                         : IconButton(
                             icon: const Icon(Icons.copy, size: 20),
-                            onPressed: () =>
-                                _copyToClipboard(_phoneController.text),
+                            onPressed: () => _copyToClipboard(
+                                _phoneMaskFormatter
+                                    .unmaskText(_phoneController.text)),
                           ),
                   ),
                   keyboardType: TextInputType.phone,
