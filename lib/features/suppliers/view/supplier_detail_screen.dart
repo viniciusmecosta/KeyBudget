@@ -78,7 +78,7 @@ class _SupplierDetailScreenState extends State<SupplierDetailScreen> {
       originalSupplier: widget.supplier,
       name: _nameController.text,
       representativeName:
-      _repNameController.text.isNotEmpty ? _repNameController.text : null,
+          _repNameController.text.isNotEmpty ? _repNameController.text : null,
       email: _emailController.text.isNotEmpty ? _emailController.text : null,
       phoneNumber: _phoneMaskFormatter.unmaskText(_phoneController.text),
       photoPath: _photoPath,
@@ -100,7 +100,7 @@ class _SupplierDetailScreenState extends State<SupplierDetailScreen> {
       builder: (ctx) => AlertDialog(
         title: const Text('Confirmar Exclusão'),
         content:
-        const Text('Você tem certeza que deseja excluir este fornecedor?'),
+            const Text('Você tem certeza que deseja excluir este fornecedor?'),
         actions: [
           TextButton(
             child: const Text('Cancelar'),
@@ -110,7 +110,7 @@ class _SupplierDetailScreenState extends State<SupplierDetailScreen> {
             child: const Text('Excluir'),
             onPressed: () async {
               final authViewModel =
-              Provider.of<AuthViewModel>(context, listen: false);
+                  Provider.of<AuthViewModel>(context, listen: false);
               final userId = authViewModel.currentUser!.id;
               await Provider.of<SupplierViewModel>(context, listen: false)
                   .deleteSupplier(userId, widget.supplier.id!);
@@ -215,9 +215,9 @@ class _SupplierDetailScreenState extends State<SupplierDetailScreen> {
                 readOnly: !_isEditing,
                 textCapitalization: TextCapitalization.words,
                 decoration:
-                const InputDecoration(labelText: 'Nome Fornecedor/Loja *'),
+                    const InputDecoration(labelText: 'Nome Fornecedor/Loja *'),
                 validator: (value) =>
-                value!.isEmpty ? 'Campo obrigatório' : null,
+                    value!.isEmpty ? 'Campo obrigatório' : null,
               ),
               const SizedBox(height: 16),
               TextFormField(
@@ -225,7 +225,7 @@ class _SupplierDetailScreenState extends State<SupplierDetailScreen> {
                 readOnly: !_isEditing,
                 textCapitalization: TextCapitalization.words,
                 decoration:
-                const InputDecoration(labelText: 'Nome Representante'),
+                    const InputDecoration(labelText: 'Nome Representante'),
               ),
               const SizedBox(height: 16),
               TextFormField(
@@ -236,15 +236,16 @@ class _SupplierDetailScreenState extends State<SupplierDetailScreen> {
                   suffixIcon: _isEditing || _emailController.text.isEmpty
                       ? null
                       : IconButton(
-                    icon: const Icon(Icons.copy, size: 20),
-                    onPressed: () =>
-                        _copyToClipboard(_emailController.text),
-                  ),
+                          icon: const Icon(Icons.copy, size: 20),
+                          onPressed: () =>
+                              _copyToClipboard(_emailController.text),
+                        ),
                 ),
                 keyboardType: TextInputType.emailAddress,
                 validator: (value) {
                   if (value == null || value.isEmpty) return null;
-                  final emailRegex = RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$');
+                  final emailRegex =
+                      RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$');
                   if (!emailRegex.hasMatch(value)) {
                     return 'Por favor, insira um email válido.';
                   }
@@ -261,17 +262,18 @@ class _SupplierDetailScreenState extends State<SupplierDetailScreen> {
                   suffixIcon: _isEditing || _phoneController.text.isEmpty
                       ? null
                       : IconButton(
-                    icon: const Icon(Icons.copy, size: 20),
-                    onPressed: () => _copyToClipboard(
-                      _phoneMaskFormatter.unmaskText(_phoneController.text),
-                    ),
-                  ),
+                          icon: const Icon(Icons.copy, size: 20),
+                          onPressed: () => _copyToClipboard(
+                            _phoneMaskFormatter
+                                .unmaskText(_phoneController.text),
+                          ),
+                        ),
                 ),
                 keyboardType: TextInputType.phone,
                 validator: (value) {
                   if (value == null || value.isEmpty) return null;
                   final unmaskedText =
-                  _phoneMaskFormatter.unmaskText(_phoneController.text);
+                      _phoneMaskFormatter.unmaskText(_phoneController.text);
                   if (unmaskedText.isNotEmpty && unmaskedText.length != 11) {
                     return 'O telefone deve ter 11 dígitos.';
                   }
@@ -292,11 +294,11 @@ class _SupplierDetailScreenState extends State<SupplierDetailScreen> {
                   onPressed: _isSaving ? null : _saveChanges,
                   child: _isSaving
                       ? SizedBox(
-                      height: 24,
-                      width: 24,
-                      child: CircularProgressIndicator(
-                          color: theme.colorScheme.onPrimary,
-                          strokeWidth: 2.0))
+                          height: 24,
+                          width: 24,
+                          child: CircularProgressIndicator(
+                              color: theme.colorScheme.onPrimary,
+                              strokeWidth: 2.0))
                       : const Text('Salvar Alterações'),
                 )
             ],

@@ -168,7 +168,7 @@ class _AddSupplierScreenState extends State<AddSupplierScreen> {
                   if (value == null || value.isEmpty) return null;
                   final unmaskedText =
                       _phoneMaskFormatter.unmaskText(_phoneController.text);
-                  if (unmaskedText.length != 11) {
+                  if (unmaskedText.isNotEmpty && unmaskedText.length != 11) {
                     return 'O telefone deve ter 11 dígitos.';
                   }
                   return null;

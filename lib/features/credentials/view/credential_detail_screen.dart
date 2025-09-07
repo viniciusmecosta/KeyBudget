@@ -249,6 +249,7 @@ class _CredentialDetailScreenState extends State<CredentialDetailScreen> {
               TextFormField(
                 controller: _locationController,
                 readOnly: !_isEditing,
+                textCapitalization: TextCapitalization.sentences,
                 decoration: InputDecoration(
                   labelText: 'Local/Serviço *',
                   suffixIcon: _isEditing
@@ -350,6 +351,7 @@ class _CredentialDetailScreenState extends State<CredentialDetailScreen> {
                 controller: _notesController,
                 readOnly: !_isEditing,
                 maxLines: 3,
+                textCapitalization: TextCapitalization.sentences,
                 decoration: InputDecoration(
                   labelText: 'Observações',
                   suffixIcon: _isEditing || _notesController.text.isEmpty

@@ -79,6 +79,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 const SizedBox(height: 24),
                 TextFormField(
                   controller: _nameController,
+                  textCapitalization: TextCapitalization.words,
                   decoration: const InputDecoration(labelText: 'Nome *'),
                   validator: (value) => (value == null || value.isEmpty)
                       ? 'Insira seu nome'

@@ -10,10 +10,10 @@ class SupplierRepository {
         .doc(userId)
         .collection('suppliers')
         .withConverter<Supplier>(
-      fromFirestore: (snapshots, _) =>
-          Supplier.fromMap(snapshots.data()!, snapshots.id),
-      toFirestore: (supplier, _) => supplier.toMap(),
-    );
+          fromFirestore: (snapshots, _) =>
+              Supplier.fromMap(snapshots.data()!, snapshots.id),
+          toFirestore: (supplier, _) => supplier.toMap(),
+        );
   }
 
   Future<void> addSupplier(String userId, Supplier supplier) async {
@@ -22,7 +22,7 @@ class SupplierRepository {
 
   Stream<List<Supplier>> getSuppliersStreamForUser(String userId) {
     final querySnapshot =
-    _getSuppliersCollection(userId).orderBy('name').snapshots();
+        _getSuppliersCollection(userId).orderBy('name').snapshots();
     return querySnapshot
         .map((snapshot) => snapshot.docs.map((doc) => doc.data()).toList());
   }

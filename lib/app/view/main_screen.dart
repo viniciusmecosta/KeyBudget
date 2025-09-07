@@ -77,7 +77,8 @@ class _MainScreenState extends State<MainScreen> {
                 GButton(icon: Icons.home_rounded, text: 'Painel'),
                 GButton(icon: Icons.monetization_on_rounded, text: 'Despesas'),
                 GButton(icon: Icons.vpn_key_rounded, text: 'Credenciais'),
-                GButton(icon: Icons.store_mall_directory_rounded, text: 'Forn.'),
+                GButton(
+                    icon: Icons.store_mall_directory_rounded, text: 'Forn.'),
                 GButton(icon: Icons.person_rounded, text: 'Perfil'),
               ],
               selectedIndex: navigationViewModel.selectedIndex,

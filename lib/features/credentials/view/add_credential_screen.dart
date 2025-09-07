@@ -153,6 +153,7 @@ class _AddCredentialScreenState extends State<AddCredentialScreen> {
               const SizedBox(height: 24),
               TextFormField(
                 controller: _locationController,
+                textCapitalization: TextCapitalization.sentences,
                 decoration: const InputDecoration(labelText: 'Local/Serviço *'),
                 validator: (value) =>
                     value!.isEmpty ? 'Campo obrigatório' : null,
@@ -199,6 +200,7 @@ class _AddCredentialScreenState extends State<AddCredentialScreen> {
               const SizedBox(height: 16),
               TextFormField(
                 controller: _notesController,
+                textCapitalization: TextCapitalization.sentences,
                 decoration: const InputDecoration(labelText: 'Observações'),
                 maxLines: 3,
               ),
