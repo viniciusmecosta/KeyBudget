@@ -47,19 +47,15 @@ class _CredentialDetailScreenState extends State<CredentialDetailScreen> {
 
     _decryptionError = decryptedPassword == 'ERRO_DECRIPT';
 
-    final initialPhone = widget.credential.phoneNumber ?? '';
-    if (initialPhone.length <= 10) {
-      _phoneMaskFormatter.updateMask(mask: '(##) ####-####');
-    }
-
     _locationController =
         TextEditingController(text: widget.credential.location);
     _loginController = TextEditingController(text: widget.credential.login);
     _passwordController = TextEditingController(
         text: _decryptionError ? 'Falha ao decifrar' : decryptedPassword);
     _emailController = TextEditingController(text: widget.credential.email);
-    _phoneController =
-        TextEditingController(text: _phoneMaskFormatter.maskText(initialPhone));
+    _phoneController = TextEditingController(
+        text:
+            _phoneMaskFormatter.maskText(widget.credential.phoneNumber ?? ''));
     _notesController = TextEditingController(text: widget.credential.notes);
     _logoPath = widget.credential.logoPath;
     _loginController.addListener(_updateFields);
@@ -366,16 +362,6 @@ class _CredentialDetailScreenState extends State<CredentialDetailScreen> {
                   style: _isEditing
                       ? null
                       : TextStyle(color: theme.colorScheme.onSurface),
-                  onChanged: (text) {
-                    if (_isEditing) {
-                      final unmaskedText = _phoneMaskFormatter.unmaskText(text);
-                      if (unmaskedText.length <= 10) {
-                        _phoneMaskFormatter.updateMask(mask: '(##) ####-####');
-                      } else {
-                        _phoneMaskFormatter.updateMask(mask: '(##) #####-####');
-                      }
-                    }
-                  },
                   decoration: InputDecoration(
                     labelText: 'Número',
                     suffixIcon: _isEditing || _phoneController.text.isEmpty
