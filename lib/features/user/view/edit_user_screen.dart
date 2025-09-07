@@ -34,13 +34,8 @@ class _EditUserScreenState extends State<EditUserScreen> {
     super.initState();
     final user = Provider.of<AuthViewModel>(context, listen: false).currentUser;
     _nameController = TextEditingController(text: user?.name);
-
-    final initialPhone = user?.phoneNumber ?? '';
-    if (initialPhone.length <= 10) {
-      _phoneMaskFormatter.updateMask(mask: '(##) ####-####');
-    }
-    _phoneController =
-        TextEditingController(text: _phoneMaskFormatter.maskText(initialPhone));
+    _phoneController = TextEditingController(
+        text: _phoneMaskFormatter.maskText(user?.phoneNumber ?? ''));
     _passwordController = TextEditingController();
     _confirmPasswordController = TextEditingController();
     _avatarPath = user?.avatarPath;
@@ -138,17 +133,6 @@ class _EditUserScreenState extends State<EditUserScreen> {
                             labelText: 'Número',
                             prefixIcon: Icon(Icons.phone_outlined)),
                         keyboardType: TextInputType.phone,
-                        onChanged: (text) {
-                          final unmaskedText =
-                              _phoneMaskFormatter.unmaskText(text);
-                          if (unmaskedText.length <= 10) {
-                            _phoneMaskFormatter.updateMask(
-                                mask: '(##) ####-####');
-                          } else {
-                            _phoneMaskFormatter.updateMask(
-                                mask: '(##) #####-####');
-                          }
-                        },
                       ),
                     ],
                   ),

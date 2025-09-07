@@ -204,14 +204,6 @@ class _AddCredentialScreenState extends State<AddCredentialScreen> {
                 inputFormatters: [_phoneMaskFormatter],
                 decoration: const InputDecoration(labelText: 'Número'),
                 keyboardType: TextInputType.phone,
-                onChanged: (text) {
-                  final unmaskedText = _phoneMaskFormatter.unmaskText(text);
-                  if (unmaskedText.length <= 10) {
-                    _phoneMaskFormatter.updateMask(mask: '(##) ####-####');
-                  } else {
-                    _phoneMaskFormatter.updateMask(mask: '(##) #####-####');
-                  }
-                },
               ),
               const SizedBox(height: 16),
               TextFormField(

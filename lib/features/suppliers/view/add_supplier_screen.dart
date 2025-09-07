@@ -192,14 +192,6 @@ class _AddSupplierScreenState extends State<AddSupplierScreen> {
                 decoration:
                     const InputDecoration(labelText: 'Telefone (WhatsApp)'),
                 keyboardType: TextInputType.phone,
-                onChanged: (text) {
-                  final unmaskedText = _phoneMaskFormatter.unmaskText(text);
-                  if (unmaskedText.length <= 10) {
-                    _phoneMaskFormatter.updateMask(mask: '(##) ####-####');
-                  } else {
-                    _phoneMaskFormatter.updateMask(mask: '(##) #####-####');
-                  }
-                },
                 validator: (value) {
                   if (value == null || value.isEmpty) return null;
                   final unmaskedText =
