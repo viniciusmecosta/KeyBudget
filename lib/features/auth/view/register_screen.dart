@@ -10,9 +10,9 @@ import 'package:provider/provider.dart';
 class PasteSanitizerInputFormatter extends TextInputFormatter {
   @override
   TextEditingValue formatEditUpdate(
-      TextEditingValue oldValue,
-      TextEditingValue newValue,
-      ) {
+    TextEditingValue oldValue,
+    TextEditingValue newValue,
+  ) {
     final isPasted = newValue.text.length > oldValue.text.length + 1;
     if (isPasted) {
       String text = newValue.text;
@@ -113,8 +113,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   controller: _nameController,
                   textCapitalization: TextCapitalization.words,
                   decoration: const InputDecoration(labelText: 'Nome *'),
-                  validator: (value) =>
-                  (value == null || value.isEmpty) ? 'Insira seu nome' : null,
+                  validator: (value) => (value == null || value.isEmpty)
+                      ? 'Insira seu nome'
+                      : null,
                 ),
                 const SizedBox(height: 16),
                 TextFormField(
@@ -145,8 +146,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       icon: Icon(_isPasswordVisible
                           ? Icons.visibility_off
                           : Icons.visibility),
-                      onPressed: () =>
-                          setState(() => _isPasswordVisible = !_isPasswordVisible),
+                      onPressed: () => setState(
+                          () => _isPasswordVisible = !_isPasswordVisible),
                     ),
                   ),
                   validator: (value) => (value == null || value.length < 6)
@@ -164,7 +165,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
                           ? Icons.visibility_off
                           : Icons.visibility),
                       onPressed: () => setState(() =>
-                      _isConfirmPasswordVisible = !_isConfirmPasswordVisible),
+                          _isConfirmPasswordVisible =
+                              !_isConfirmPasswordVisible),
                     ),
                   ),
                   validator: (value) => value != _passwordController.text
@@ -177,9 +179,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     return viewModel.isLoading
                         ? const CircularProgressIndicator()
                         : ElevatedButton(
-                      onPressed: _submit,
-                      child: const Text('Cadastrar'),
-                    );
+                            onPressed: _submit,
+                            child: const Text('Cadastrar'),
+                          );
                   },
                 ),
                 TextButton(
