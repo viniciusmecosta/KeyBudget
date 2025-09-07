@@ -12,9 +12,9 @@ import 'package:provider/provider.dart';
 class PasteSanitizerInputFormatter extends TextInputFormatter {
   @override
   TextEditingValue formatEditUpdate(
-      TextEditingValue oldValue,
-      TextEditingValue newValue,
-      ) {
+    TextEditingValue oldValue,
+    TextEditingValue newValue,
+  ) {
     final isPasted = newValue.text.length > oldValue.text.length + 1;
     if (isPasted) {
       String text = newValue.text;
@@ -78,7 +78,7 @@ class _AddSupplierScreenState extends State<AddSupplierScreen> {
       userId: userId,
       name: _nameController.text,
       representativeName:
-      _repNameController.text.isNotEmpty ? _repNameController.text : null,
+          _repNameController.text.isNotEmpty ? _repNameController.text : null,
       email: _emailController.text.isNotEmpty ? _emailController.text : null,
       phoneNumber: _phoneMaskFormatter.unmaskText(_phoneController.text),
       photoPath: _photoPath,
@@ -156,16 +156,16 @@ class _AddSupplierScreenState extends State<AddSupplierScreen> {
                 controller: _nameController,
                 textCapitalization: TextCapitalization.words,
                 decoration:
-                const InputDecoration(labelText: 'Nome Fornecedor/Loja *'),
+                    const InputDecoration(labelText: 'Nome Fornecedor/Loja *'),
                 validator: (value) =>
-                value!.isEmpty ? 'Campo obrigatório' : null,
+                    value!.isEmpty ? 'Campo obrigatório' : null,
               ),
               const SizedBox(height: 16),
               TextFormField(
                 controller: _repNameController,
                 textCapitalization: TextCapitalization.words,
                 decoration:
-                const InputDecoration(labelText: 'Nome Representante'),
+                    const InputDecoration(labelText: 'Nome Representante'),
               ),
               const SizedBox(height: 16),
               TextFormField(
@@ -175,7 +175,7 @@ class _AddSupplierScreenState extends State<AddSupplierScreen> {
                 validator: (value) {
                   if (value == null || value.isEmpty) return null;
                   final emailRegex =
-                  RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$');
+                      RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$');
                   if (!emailRegex.hasMatch(value)) {
                     return 'Por favor, insira um email válido.';
                   }
@@ -190,12 +190,12 @@ class _AddSupplierScreenState extends State<AddSupplierScreen> {
                   _phoneMaskFormatter
                 ],
                 decoration:
-                const InputDecoration(labelText: 'Telefone (WhatsApp)'),
+                    const InputDecoration(labelText: 'Telefone (WhatsApp)'),
                 keyboardType: TextInputType.phone,
                 validator: (value) {
                   if (value == null || value.isEmpty) return null;
                   final unmaskedText =
-                  _phoneMaskFormatter.unmaskText(_phoneController.text);
+                      _phoneMaskFormatter.unmaskText(_phoneController.text);
                   if (unmaskedText.isNotEmpty && unmaskedText.length < 10) {
                     return 'O telefone deve ter no mínimo 10 dígitos.';
                   }
@@ -214,11 +214,11 @@ class _AddSupplierScreenState extends State<AddSupplierScreen> {
                 onPressed: _isSaving ? null : _submit,
                 child: _isSaving
                     ? SizedBox(
-                    height: 24,
-                    width: 24,
-                    child: CircularProgressIndicator(
-                        color: Theme.of(context).colorScheme.onPrimary,
-                        strokeWidth: 2.0))
+                        height: 24,
+                        width: 24,
+                        child: CircularProgressIndicator(
+                            color: Theme.of(context).colorScheme.onPrimary,
+                            strokeWidth: 2.0))
                     : const Text('Salvar Fornecedor'),
               ),
             ],
