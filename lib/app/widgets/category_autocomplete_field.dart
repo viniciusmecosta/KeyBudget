@@ -6,6 +6,7 @@ class CategoryAutocompleteField extends StatelessWidget {
   final List<String> Function() optionsBuilder;
   final void Function(String) onSelected;
   final int maxLines;
+  final TextCapitalization textCapitalization;
 
   const CategoryAutocompleteField({
     super.key,
@@ -14,6 +15,7 @@ class CategoryAutocompleteField extends StatelessWidget {
     required this.optionsBuilder,
     required this.onSelected,
     this.maxLines = 1,
+    this.textCapitalization = TextCapitalization.none,
   });
 
   @override
@@ -37,6 +39,7 @@ class CategoryAutocompleteField extends StatelessWidget {
         return TextFormField(
           controller: fieldTextEditingController,
           focusNode: focusNode,
+          textCapitalization: textCapitalization,
           decoration: InputDecoration(labelText: label),
           onChanged: (value) => controller.text = value,
           maxLines: maxLines,

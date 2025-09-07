@@ -149,6 +149,7 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
               CategoryAutocompleteField(
                 key: ValueKey('motivation_${_selectedCategory?.id}'),
                 label: 'Motivação',
+                textCapitalization: TextCapitalization.sentences,
                 controller: _motivationController,
                 optionsBuilder: () => expenseViewModel
                     .getUniqueMotivationsForCategory(_selectedCategory?.id),
@@ -160,6 +161,7 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
               CategoryAutocompleteField(
                 key: ValueKey('location_${_selectedCategory?.id}'),
                 label: 'Local',
+                textCapitalization: TextCapitalization.sentences,
                 controller: _locationController,
                 optionsBuilder: () => expenseViewModel
                     .getUniqueLocationsForCategory(_selectedCategory?.id),
