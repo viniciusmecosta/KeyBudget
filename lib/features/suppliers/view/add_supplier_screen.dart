@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:key_budget/app/config/app_theme.dart';
 import 'package:key_budget/features/auth/viewmodel/auth_viewmodel.dart';
@@ -7,6 +8,30 @@ import 'package:key_budget/features/credentials/view/widgets/saved_logos_screen.
 import 'package:key_budget/features/suppliers/viewmodel/supplier_viewmodel.dart';
 import 'package:mask_text_input_formatter/mask_text_input_formatter.dart';
 import 'package:provider/provider.dart';
+
+class PasteSanitizerInputFormatter extends TextInputFormatter {
+  @override
+  TextEditingValue formatEditUpdate(
+    TextEditingValue oldValue,
+    TextEditingValue newValue,
+  ) {
+    final isPasted = newValue.text.length > oldValue.text.length + 1;
+    if (isPasted) {
+      String text = newValue.text;
+      String sanitizedText = text.replaceAll(RegExp(r'[^0-9]'), '');
+
+      if (sanitizedText.startsWith('55')) {
+        sanitizedText = sanitizedText.substring(2);
+      }
+
+      return TextEditingValue(
+        text: sanitizedText,
+        selection: TextSelection.collapsed(offset: sanitizedText.length),
+      );
+    }
+    return newValue;
+  }
+}
 
 class AddSupplierScreen extends StatefulWidget {
   const AddSupplierScreen({super.key});
@@ -26,7 +51,7 @@ class _AddSupplierScreenState extends State<AddSupplierScreen> {
   bool _isSaving = false;
 
   final _phoneMaskFormatter = MaskTextInputFormatter(
-    mask: '(##) # ####-####',
+    mask: '(##) #####-####',
     filter: {"#": RegExp(r'[0-9]')},
   );
 
@@ -160,16 +185,27 @@ class _AddSupplierScreenState extends State<AddSupplierScreen> {
               const SizedBox(height: 16),
               TextFormField(
                 controller: _phoneController,
-                inputFormatters: [_phoneMaskFormatter],
+                inputFormatters: [
+                  PasteSanitizerInputFormatter(),
+                  _phoneMaskFormatter
+                ],
                 decoration:
                     const InputDecoration(labelText: 'Telefone (WhatsApp)'),
                 keyboardType: TextInputType.phone,
+                onChanged: (text) {
+                  final unmaskedText = _phoneMaskFormatter.unmaskText(text);
+                  if (unmaskedText.length <= 10) {
+                    _phoneMaskFormatter.updateMask(mask: '(##) ####-####');
+                  } else {
+                    _phoneMaskFormatter.updateMask(mask: '(##) #####-####');
+                  }
+                },
                 validator: (value) {
                   if (value == null || value.isEmpty) return null;
                   final unmaskedText =
                       _phoneMaskFormatter.unmaskText(_phoneController.text);
-                  if (unmaskedText.isNotEmpty && unmaskedText.length != 11) {
-                    return 'O telefone deve ter 11 dígitos.';
+                  if (unmaskedText.isNotEmpty && unmaskedText.length < 10) {
+                    return 'O telefone deve ter no mínimo 10 dígitos.';
                   }
                   return null;
                 },

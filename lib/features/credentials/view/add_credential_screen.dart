@@ -5,6 +5,7 @@ import 'package:key_budget/features/auth/viewmodel/auth_viewmodel.dart';
 import 'package:key_budget/features/credentials/view/widgets/logo_picker.dart';
 import 'package:key_budget/features/credentials/view/widgets/saved_logos_screen.dart';
 import 'package:key_budget/features/credentials/viewmodel/credential_viewmodel.dart';
+import 'package:mask_text_input_formatter/mask_text_input_formatter.dart';
 import 'package:provider/provider.dart';
 
 class AddCredentialScreen extends StatefulWidget {
@@ -25,6 +26,11 @@ class _AddCredentialScreenState extends State<AddCredentialScreen> {
   String? _logoPath;
   bool _isPasswordVisible = false;
   bool _isSaving = false;
+
+  final _phoneMaskFormatter = MaskTextInputFormatter(
+    mask: '(##) #####-####',
+    filter: {"#": RegExp(r'[0-9]')},
+  );
 
   @override
   void initState() {
@@ -47,7 +53,6 @@ class _AddCredentialScreenState extends State<AddCredentialScreen> {
   void _updateFields() {
     final text = _loginController.text;
     final isEmail = RegExp(r'^[^@]+@[^@]+\.[^@]+').hasMatch(text);
-    final isPhone = RegExp(r'^[0-9]+$').hasMatch(text);
 
     if (text.isEmpty) {
       _emailController.clear();
@@ -56,8 +61,9 @@ class _AddCredentialScreenState extends State<AddCredentialScreen> {
       if (isEmail) {
         _emailController.text = text;
       }
-      if (isPhone) {
-        _phoneController.text = text;
+      final sanitizedText = text.replaceAll(RegExp(r'[^0-9]'), '');
+      if (sanitizedText.length >= 10) {
+        _phoneController.text = _phoneMaskFormatter.maskText(sanitizedText);
       }
     }
   }
@@ -78,8 +84,9 @@ class _AddCredentialScreenState extends State<AddCredentialScreen> {
       login: _loginController.text,
       plainPassword: _passwordController.text,
       email: _emailController.text.isNotEmpty ? _emailController.text : null,
-      phoneNumber:
-          _phoneController.text.isNotEmpty ? _phoneController.text : null,
+      phoneNumber: _phoneController.text.isNotEmpty
+          ? _phoneMaskFormatter.unmaskText(_phoneController.text)
+          : null,
       notes: _notesController.text.isNotEmpty ? _notesController.text : null,
       logoPath: _logoPath,
     );
@@ -194,8 +201,17 @@ class _AddCredentialScreenState extends State<AddCredentialScreen> {
               const SizedBox(height: 16),
               TextFormField(
                 controller: _phoneController,
+                inputFormatters: [_phoneMaskFormatter],
                 decoration: const InputDecoration(labelText: 'Número'),
                 keyboardType: TextInputType.phone,
+                onChanged: (text) {
+                  final unmaskedText = _phoneMaskFormatter.unmaskText(text);
+                  if (unmaskedText.length <= 10) {
+                    _phoneMaskFormatter.updateMask(mask: '(##) ####-####');
+                  } else {
+                    _phoneMaskFormatter.updateMask(mask: '(##) #####-####');
+                  }
+                },
               ),
               const SizedBox(height: 16),
               TextFormField(

@@ -5,6 +5,8 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'package:key_budget/features/credentials/viewmodel/credential_viewmodel.dart';
 import 'package:provider/provider.dart';
 
+import '../../../suppliers/viewmodel/supplier_viewmodel.dart';
+
 class SavedLogosScreen extends StatelessWidget {
   final bool isForSuppliers;
 
@@ -13,13 +15,13 @@ class SavedLogosScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final List<String> logos;
-    // if (isForSuppliers) {
-    //   logos = Provider.of<SupplierViewModel>(context, listen: false)
-    //       .userSupplierPhotos;
-    // } else {
-    logos = Provider.of<CredentialViewModel>(context, listen: false)
-        .userCredentialLogos;
-    // }
+    if (isForSuppliers) {
+      logos = Provider.of<SupplierViewModel>(context, listen: false)
+          .userSupplierPhotos;
+    } else {
+      logos = Provider.of<CredentialViewModel>(context, listen: false)
+          .userCredentialLogos;
+    }
 
     final theme = Theme.of(context);
 
