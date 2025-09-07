@@ -174,7 +174,11 @@ class _CredentialsScreenState extends State<CredentialsScreen> {
                       ),
                       title: Text(credential.location,
                           style: const TextStyle(fontWeight: FontWeight.w600)),
-                      subtitle: Text(credential.login),
+                      subtitle: FittedBox(
+                        fit: BoxFit.scaleDown,
+                        alignment: Alignment.centerLeft,
+                        child: Text(credential.login),
+                      ),
                       trailing: IconButton(
                         icon: const Icon(Icons.visibility_outlined),
                         onPressed: () => _showDecryptedPassword(
