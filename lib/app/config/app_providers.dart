@@ -9,6 +9,8 @@ import 'package:key_budget/features/expenses/viewmodel/expense_viewmodel.dart';
 import 'package:provider/provider.dart';
 import 'package:provider/single_child_widget.dart';
 
+import '../../features/suppliers/viewmodel/supplier_viewmodel.dart';
+
 List<SingleChildWidget> appProviders = [
   ChangeNotifierProvider(create: (_) => AuthViewModel()),
   ChangeNotifierProvider(create: (_) => AppLockService()),
@@ -16,7 +18,7 @@ List<SingleChildWidget> appProviders = [
   ChangeNotifierProvider(create: (_) => CategoryViewModel()),
   ChangeNotifierProvider(create: (_) => CredentialViewModel()),
   ChangeNotifierProvider(create: (_) => ExpenseViewModel()),
-  // ChangeNotifierProvider(create: (_) => SupplierViewModel()),
+  ChangeNotifierProvider(create: (_) => SupplierViewModel()),
   ChangeNotifierProxyProvider2<CategoryViewModel, ExpenseViewModel,
       AnalysisViewModel>(
     create: (context) => AnalysisViewModel(

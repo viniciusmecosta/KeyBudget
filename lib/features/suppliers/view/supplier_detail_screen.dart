@@ -10,6 +10,30 @@ import 'package:key_budget/features/suppliers/viewmodel/supplier_viewmodel.dart'
 import 'package:mask_text_input_formatter/mask_text_input_formatter.dart';
 import 'package:provider/provider.dart';
 
+class PasteSanitizerInputFormatter extends TextInputFormatter {
+  @override
+  TextEditingValue formatEditUpdate(
+    TextEditingValue oldValue,
+    TextEditingValue newValue,
+  ) {
+    final isPasted = newValue.text.length > oldValue.text.length + 1;
+    if (isPasted) {
+      String text = newValue.text;
+      String sanitizedText = text.replaceAll(RegExp(r'[^0-9]'), '');
+
+      if (sanitizedText.startsWith('55')) {
+        sanitizedText = sanitizedText.substring(2);
+      }
+
+      return TextEditingValue(
+        text: sanitizedText,
+        selection: TextSelection.collapsed(offset: sanitizedText.length),
+      );
+    }
+    return newValue;
+  }
+}
+
 class SupplierDetailScreen extends StatefulWidget {
   final Supplier supplier;
 
@@ -31,19 +55,24 @@ class _SupplierDetailScreenState extends State<SupplierDetailScreen> {
   bool _isSaving = false;
 
   final _phoneMaskFormatter = MaskTextInputFormatter(
-    mask: '(##) # ####-####',
+    mask: '(##) #####-####',
     filter: {"#": RegExp(r'[0-9]')},
   );
 
   @override
   void initState() {
     super.initState();
+    final initialPhone = widget.supplier.phoneNumber ?? '';
+    if (initialPhone.length <= 10) {
+      _phoneMaskFormatter.updateMask(mask: '(##) ####-####');
+    }
+
     _nameController = TextEditingController(text: widget.supplier.name);
     _repNameController =
         TextEditingController(text: widget.supplier.representativeName);
     _emailController = TextEditingController(text: widget.supplier.email);
-    _phoneController = TextEditingController(
-        text: _phoneMaskFormatter.maskText(widget.supplier.phoneNumber ?? ''));
+    _phoneController =
+        TextEditingController(text: _phoneMaskFormatter.maskText(initialPhone));
     _notesController = TextEditingController(text: widget.supplier.notes);
     _photoPath = widget.supplier.photoPath;
   }
@@ -272,10 +301,23 @@ class _SupplierDetailScreenState extends State<SupplierDetailScreen> {
                 TextFormField(
                   controller: _phoneController,
                   readOnly: !_isEditing,
-                  inputFormatters: [_phoneMaskFormatter],
+                  inputFormatters: [
+                    PasteSanitizerInputFormatter(),
+                    _phoneMaskFormatter
+                  ],
                   style: _isEditing
                       ? null
                       : TextStyle(color: theme.colorScheme.onSurface),
+                  onChanged: (text) {
+                    if (_isEditing) {
+                      final unmaskedText = _phoneMaskFormatter.unmaskText(text);
+                      if (unmaskedText.length <= 10) {
+                        _phoneMaskFormatter.updateMask(mask: '(##) ####-####');
+                      } else {
+                        _phoneMaskFormatter.updateMask(mask: '(##) #####-####');
+                      }
+                    }
+                  },
                   decoration: InputDecoration(
                     labelText: 'Telefone (WhatsApp)',
                     suffixIcon: _isEditing || _phoneController.text.isEmpty
@@ -293,8 +335,8 @@ class _SupplierDetailScreenState extends State<SupplierDetailScreen> {
                     if (value == null || value.isEmpty) return null;
                     final unmaskedText =
                         _phoneMaskFormatter.unmaskText(_phoneController.text);
-                    if (unmaskedText.isNotEmpty && unmaskedText.length != 11) {
-                      return 'O telefone deve ter 11 dígitos.';
+                    if (unmaskedText.isNotEmpty && unmaskedText.length < 10) {
+                      return 'O telefone deve ter no mínimo 10 dígitos.';
                     }
                     return null;
                   },
