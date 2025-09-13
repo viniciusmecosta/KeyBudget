@@ -148,7 +148,8 @@ class _CredentialsScreenState extends State<CredentialsScreen> {
                 });
               }
               return ListView.builder(
-                padding: const EdgeInsets.all(AppTheme.defaultPadding),
+                padding: const EdgeInsets.fromLTRB(AppTheme.defaultPadding,
+                    AppTheme.defaultPadding, AppTheme.defaultPadding, 80),
                 itemCount: vm.allCredentials.length,
                 itemBuilder: (context, index) {
                   final credential = vm.allCredentials[index];

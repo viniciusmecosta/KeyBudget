@@ -105,7 +105,8 @@ class _SuppliersScreenState extends State<SuppliersScreen> {
                 });
               }
               return ListView.builder(
-                padding: const EdgeInsets.all(AppTheme.defaultPadding),
+                padding: const EdgeInsets.fromLTRB(AppTheme.defaultPadding,
+                    AppTheme.defaultPadding, AppTheme.defaultPadding, 80),
                 itemCount: vm.allSuppliers.length,
                 itemBuilder: (context, index) {
                   final supplier = vm.allSuppliers[index];
