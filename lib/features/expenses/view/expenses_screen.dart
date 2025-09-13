@@ -260,7 +260,11 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
                       );
                     }
                     return ListView.builder(
-                      padding: const EdgeInsets.all(AppTheme.defaultPadding),
+                      padding: const EdgeInsets.fromLTRB(
+                          AppTheme.defaultPadding,
+                          AppTheme.defaultPadding,
+                          AppTheme.defaultPadding,
+                          80),
                       itemCount: monthlyExpenses.length,
                       itemBuilder: (context, index) {
                         final expense = monthlyExpenses[index];
