@@ -10,12 +10,16 @@ class AnalysisViewModel extends ChangeNotifier {
   final ExpenseViewModel expenseViewModel;
   DateTime? _selectedMonthForCategory;
   int _periodOffset = 0;
+  int _selectedMonthsCount = 6;
+  DateTime? _customStartDate;
+  DateTime? _customEndDate;
+  bool _useCustomRange = false;
 
   AnalysisViewModel({
     required this.categoryViewModel,
     required this.expenseViewModel,
   }) {
-    _allExpenses.sort((a, b) => a.date.compareTo(b.date));
+    allExpenses.sort((a, b) => a.date.compareTo(b.date));
     if (availableMonthsForFilter.isNotEmpty) {
       _selectedMonthForCategory = availableMonthsForFilter.first;
     } else {
@@ -24,20 +28,39 @@ class AnalysisViewModel extends ChangeNotifier {
     }
   }
 
-  List<Expense> get _allExpenses => expenseViewModel.allExpenses;
+  List<Expense> get allExpenses {
+    final expenses = List<Expense>.from(expenseViewModel.allExpenses);
+    expenses.sort((a, b) => a.date.compareTo(b.date));
+    return expenses;
+  }
 
   bool get isLoading =>
       categoryViewModel.isLoading || expenseViewModel.isLoading;
 
   DateTime? get selectedMonthForCategory => _selectedMonthForCategory;
 
+  int get selectedMonthsCount => _selectedMonthsCount;
+
+  bool get useCustomRange => _useCustomRange;
+
+  DateTime? get customStartDate => _customStartDate;
+
+  DateTime? get customEndDate => _customEndDate;
+
+  List<int> get availableMonthsCounts => [3, 6, 9, 12];
+
   bool get canGoToPreviousPeriod {
-    if (_allExpenses.isEmpty) return false;
-    final firstExpenseDate = _allExpenses.first.date;
+    if (allExpenses.isEmpty) return false;
+    final firstExpenseDate = allExpenses.first.date;
     final now = DateTime.now();
     final nextPeriodOffset = _periodOffset + 1;
-    final nextStartDate =
-        DateTime(now.year, now.month - 5 - (nextPeriodOffset * 6), 1);
+    final nextStartDate = DateTime(
+        now.year,
+        now.month -
+            _selectedMonthsCount +
+            1 -
+            (nextPeriodOffset * _selectedMonthsCount),
+        1);
     return !nextStartDate.isBefore(firstExpenseDate);
   }
 
@@ -48,7 +71,33 @@ class AnalysisViewModel extends ChangeNotifier {
     notifyListeners();
   }
 
+  void setSelectedMonthsCount(int count) {
+    _selectedMonthsCount = count;
+    _periodOffset = 0;
+    _useCustomRange = false;
+    notifyListeners();
+  }
+
+  void setCustomDateRange(DateTime? startDate, DateTime? endDate) {
+    _customStartDate = startDate;
+    _customEndDate = endDate;
+    _useCustomRange = startDate != null && endDate != null;
+    if (_useCustomRange) {
+      _periodOffset = 0;
+    }
+    notifyListeners();
+  }
+
+  void clearCustomRange() {
+    _useCustomRange = false;
+    _customStartDate = null;
+    _customEndDate = null;
+    notifyListeners();
+  }
+
   void changePeriod(int direction) {
+    if (_useCustomRange) return;
+
     if (direction > 0 && canGoToPreviousPeriod) {
       _periodOffset++;
     } else if (direction < 0 && canGoToNextPeriod) {
@@ -58,12 +107,12 @@ class AnalysisViewModel extends ChangeNotifier {
   }
 
   double get totalOverall {
-    return _allExpenses.fold(0.0, (sum, item) => sum + item.amount);
+    return allExpenses.fold(0.0, (sum, item) => sum + item.amount);
   }
 
   double get totalCurrentMonth {
     final now = DateTime.now();
-    return _allExpenses
+    return allExpenses
         .where(
             (exp) => exp.date.year == now.year && exp.date.month == now.month)
         .fold(0.0, (sum, item) => sum + item.amount);
@@ -71,7 +120,7 @@ class AnalysisViewModel extends ChangeNotifier {
 
   Map<String, double> get monthlyTotals {
     final Map<String, double> data = {};
-    for (var expense in _allExpenses) {
+    for (var expense in allExpenses) {
       final monthKey = DateFormat('yyyy-MM').format(expense.date);
       data.update(monthKey, (value) => value + expense.amount,
           ifAbsent: () => expense.amount);
@@ -99,23 +148,27 @@ class AnalysisViewModel extends ChangeNotifier {
     return ((currentMonth - lastMonth) / lastMonth) * 100;
   }
 
-  Map<String, double> get last6MonthsData {
+  Map<String, double> get lastNMonthsData {
     final Map<String, double> data = {};
+
+    if (_useCustomRange && _customStartDate != null && _customEndDate != null) {
+      return _getCustomRangeData();
+    }
+
     final now = DateTime.now();
+    final currentPeriodEndDate = DateTime(
+        now.year, now.month - (_periodOffset * _selectedMonthsCount) + 1, 0);
+    final currentPeriodStartDate = DateTime(currentPeriodEndDate.year,
+        currentPeriodEndDate.month - _selectedMonthsCount + 1, 1);
 
-    final currentPeriodEndDate =
-        DateTime(now.year, now.month - (_periodOffset * 6) + 1, 0);
-    final currentPeriodStartDate =
-        DateTime(currentPeriodEndDate.year, currentPeriodEndDate.month - 5, 1);
-
-    for (int i = 0; i < 6; i++) {
+    for (int i = 0; i < _selectedMonthsCount; i++) {
       final date = DateTime(
           currentPeriodStartDate.year, currentPeriodStartDate.month + i, 1);
       final monthKey = DateFormat('yyyy-MM').format(date);
       data[monthKey] = 0.0;
     }
 
-    final expensesInPeriod = _allExpenses.where((exp) {
+    final expensesInPeriod = allExpenses.where((exp) {
       return !exp.date.isBefore(currentPeriodStartDate) &&
           !exp.date.isAfter(currentPeriodEndDate);
     });
@@ -129,9 +182,59 @@ class AnalysisViewModel extends ChangeNotifier {
     return data;
   }
 
+  Map<String, double> _getCustomRangeData() {
+    final Map<String, double> data = {};
+
+    if (_customStartDate == null || _customEndDate == null) return data;
+
+    DateTime current =
+        DateTime(_customStartDate!.year, _customStartDate!.month, 1);
+    final end = DateTime(_customEndDate!.year, _customEndDate!.month, 1);
+
+    while (!current.isAfter(end)) {
+      final monthKey = DateFormat('yyyy-MM').format(current);
+      data[monthKey] = 0.0;
+      current = DateTime(current.year, current.month + 1, 1);
+    }
+
+    final expensesInRange = allExpenses.where((exp) {
+      final expenseMonth = DateTime(exp.date.year, exp.date.month, 1);
+      return !expenseMonth.isBefore(
+              DateTime(_customStartDate!.year, _customStartDate!.month, 1)) &&
+          !expenseMonth.isAfter(
+              DateTime(_customEndDate!.year, _customEndDate!.month, 1));
+    });
+
+    for (var expense in expensesInRange) {
+      final monthKey = DateFormat('yyyy-MM').format(expense.date);
+      if (data.containsKey(monthKey)) {
+        data.update(monthKey, (value) => value + expense.amount);
+      }
+    }
+
+    return data;
+  }
+
+  Map<String, double> get last6MonthsData => lastNMonthsData;
+
+  String get currentPeriodLabel {
+    if (_useCustomRange && _customStartDate != null && _customEndDate != null) {
+      return '${DateFormat.yMMM('pt_BR').format(_customStartDate!)} - ${DateFormat.yMMM('pt_BR').format(_customEndDate!)}';
+    }
+
+    final data = lastNMonthsData;
+    if (data.isEmpty) return '';
+
+    final entries = data.entries.toList();
+    final firstMonth = DateFormat('yyyy-MM').parse(entries.first.key);
+    final lastMonth = DateFormat('yyyy-MM').parse(entries.last.key);
+
+    return '${DateFormat.yMMM('pt_BR').format(firstMonth)} - ${DateFormat.yMMM('pt_BR').format(lastMonth)}';
+  }
+
   List<DateTime> get availableMonthsForFilter {
-    if (_allExpenses.isEmpty) return [];
-    final uniqueMonths = _allExpenses
+    if (allExpenses.isEmpty) return [];
+    final uniqueMonths = allExpenses
         .map((e) => DateTime(e.date.year, e.date.month))
         .toSet()
         .toList();
@@ -139,11 +242,23 @@ class AnalysisViewModel extends ChangeNotifier {
     return uniqueMonths;
   }
 
+  DateTimeRange? get availableDateRange {
+    if (allExpenses.isEmpty) return null;
+    final sortedExpenses = List<Expense>.from(allExpenses)
+      ..sort((a, b) => a.date.compareTo(b.date));
+    return DateTimeRange(
+      start: DateTime(
+          sortedExpenses.first.date.year, sortedExpenses.first.date.month, 1),
+      end: DateTime(
+          sortedExpenses.last.date.year, sortedExpenses.last.date.month + 1, 0),
+    );
+  }
+
   Map<ExpenseCategory, double> get expensesByCategoryForSelectedMonth {
     final Map<ExpenseCategory, double> totals = {};
     if (_selectedMonthForCategory == null) return totals;
 
-    final monthExpenses = _allExpenses.where((exp) =>
+    final monthExpenses = allExpenses.where((exp) =>
         exp.date.year == _selectedMonthForCategory!.year &&
         exp.date.month == _selectedMonthForCategory!.month);
 
@@ -155,5 +270,26 @@ class AnalysisViewModel extends ChangeNotifier {
       }
     }
     return totals;
+  }
+
+  Map<String, double> get currentPeriodStats {
+    final data = lastNMonthsData;
+    final values = data.values.where((v) => v > 0).toList();
+
+    if (values.isEmpty) {
+      return {
+        'total': 0.0,
+        'average': 0.0,
+        'highest': 0.0,
+        'lowest': 0.0,
+      };
+    }
+
+    return {
+      'total': values.fold(0.0, (a, b) => a + b),
+      'average': values.fold(0.0, (a, b) => a + b) / values.length,
+      'highest': values.reduce((a, b) => a > b ? a : b),
+      'lowest': values.reduce((a, b) => a < b ? a : b),
+    };
   }
 }
