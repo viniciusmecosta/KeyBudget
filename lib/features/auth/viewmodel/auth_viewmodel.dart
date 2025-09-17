@@ -7,8 +7,7 @@ import 'package:key_budget/features/auth/repository/auth_repository.dart';
 import 'package:key_budget/features/category/viewmodel/category_viewmodel.dart';
 import 'package:key_budget/features/credentials/viewmodel/credential_viewmodel.dart';
 import 'package:key_budget/features/dashboard/viewmodel/dashboard_viewmodel.dart';
-import 'package:key_budget/features/expenses/viewmodel/expense_viewmodel.dart';
-// import 'package:key_budget/features/suppliers/viewmodel/supplier_viewmodel.dart';
+import 'package:key_budget/features/expenses/viewmodel/expense_viewmodel.dart'; // import 'package:key_budget/features/suppliers/viewmodel/supplier_viewmodel.dart';
 import 'package:provider/provider.dart';
 
 class AuthViewModel extends ChangeNotifier {
@@ -20,6 +19,7 @@ class AuthViewModel extends ChangeNotifier {
   String? _errorMessage;
   User? _currentUser;
   bool _isSigningInWithGoogle = false;
+  bool _justAuthenticated = false;
 
   bool get isLoading => _isLoading;
 
@@ -28,6 +28,8 @@ class AuthViewModel extends ChangeNotifier {
   String? get errorMessage => _errorMessage;
 
   User? get currentUser => _currentUser;
+
+  bool get justAuthenticated => _justAuthenticated;
 
   AuthViewModel() {
     _authRepository.onAuthStateChanged.listen((user) {
@@ -40,6 +42,10 @@ class AuthViewModel extends ChangeNotifier {
       }
       notifyListeners();
     });
+  }
+
+  void consumeJustAuthenticated() {
+    _justAuthenticated = false;
   }
 
   void _setLoading(bool value) {
@@ -72,6 +78,7 @@ class AuthViewModel extends ChangeNotifier {
         avatarPath: avatarPath,
       );
       await _localAuthService.saveCredentials(email, password);
+      _justAuthenticated = true;
       return true;
     } on firebase.FirebaseAuthException catch (e) {
       _setErrorMessage(_mapAuthError(e.code));
@@ -95,6 +102,7 @@ class AuthViewModel extends ChangeNotifier {
       final credential = await _authRepository.signInWithEmail(email, password);
       await _authRepository.ensureCategoriesExist(credential.user!.uid);
       await _localAuthService.saveCredentials(email, password);
+      _justAuthenticated = true;
       return true;
     } on firebase.FirebaseAuthException catch (e) {
       _setErrorMessage(_mapAuthError(e.code));
@@ -118,6 +126,7 @@ class AuthViewModel extends ChangeNotifier {
         _currentUser = userProfile;
         await _localAuthService.saveCredentials(
             userProfile.email, userProfile.id);
+        _justAuthenticated = true;
         return true;
       } else {
         return false;
