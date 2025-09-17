@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:key_budget/app/view/main_screen.dart';
+import 'package:key_budget/core/services/app_lock_service.dart';
 import 'package:key_budget/core/services/local_auth_service.dart';
-import 'package:key_budget/features/auth/viewmodel/auth_viewmodel.dart';
 import 'package:provider/provider.dart';
 
 enum AuthStatus { pending, success, failed }
@@ -27,12 +27,9 @@ class _AuthWrapperState extends State<AuthWrapper> {
   Future<void> _authenticate() async {
     final localAuthService = LocalAuthService();
     final canAuth = await localAuthService.canAuthenticate();
-    final authViewModel = Provider.of<AuthViewModel>(context, listen: false);
 
     if (!canAuth) {
-      if (mounted) {
-        await authViewModel.logout(context);
-      }
+      setState(() => _status = AuthStatus.success);
       return;
     }
 
@@ -42,10 +39,6 @@ class _AuthWrapperState extends State<AuthWrapper> {
       setState(() {
         _status = isAuthenticated ? AuthStatus.success : AuthStatus.failed;
       });
-
-      if (_status == AuthStatus.failed) {
-        await authViewModel.logout(context);
-      }
     }
   }
 
@@ -55,6 +48,12 @@ class _AuthWrapperState extends State<AuthWrapper> {
       case AuthStatus.success:
         return const MainScreen();
       case AuthStatus.failed:
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          Provider.of<AppLockService>(context, listen: false).lockApp();
+        });
+        return const Scaffold(
+          body: Center(),
+        );
       case AuthStatus.pending:
       default:
         return const Scaffold(body: Center(child: CircularProgressIndicator()));
