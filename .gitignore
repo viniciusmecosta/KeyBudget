@@ -49,3 +49,6 @@ app.*.map.json
 # Environment files
 .env
 .env.*
+
+.gradle/
+.metadata
