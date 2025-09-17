@@ -19,6 +19,8 @@ class CredentialsScreen extends StatefulWidget {
 }
 
 class _CredentialsScreenState extends State<CredentialsScreen> {
+  bool _isFirstLoad = true;
+
   @override
   void initState() {
     super.initState();
@@ -47,6 +49,7 @@ class _CredentialsScreenState extends State<CredentialsScreen> {
 
     final count =
         await viewModel.importCredentialsFromCsv(authViewModel.currentUser!.id);
+    if (!mounted) return;
     scaffoldMessenger.showSnackBar(SnackBar(
         content: Text('$count credenciais importadas com sucesso!'),
         backgroundColor: theme.colorScheme.secondaryContainer));
@@ -72,28 +75,60 @@ class _CredentialsScreenState extends State<CredentialsScreen> {
   void _showDecryptedPassword(BuildContext context, String encryptedPassword) {
     final viewModel = Provider.of<CredentialViewModel>(context, listen: false);
     final decryptedPassword = viewModel.decryptPassword(encryptedPassword);
+    final theme = Theme.of(context);
 
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Senha Decifrada'),
-        content: Text(decryptedPassword),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: Row(
+          children: [
+            Icon(Icons.lock_open_rounded, color: theme.colorScheme.primary),
+            const SizedBox(width: 12),
+            const Text('Senha Revelada'),
+          ],
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'A senha é:',
+              style: theme.textTheme.bodySmall,
+            ),
+            const SizedBox(height: 8),
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              decoration: BoxDecoration(
+                color: theme.colorScheme.onSurface.withOpacity(0.05),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Text(
+                decryptedPassword,
+                style: theme.textTheme.titleMedium
+                    ?.copyWith(fontWeight: FontWeight.bold),
+              ),
+            ),
+          ],
+        ),
         actions: [
           TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text('Fechar'),
+          ),
+          ElevatedButton.icon(
+            icon: const Icon(Icons.copy, size: 16),
+            label: const Text('Copiar Senha'),
             onPressed: () {
               Clipboard.setData(ClipboardData(text: decryptedPassword));
               ScaffoldMessenger.of(context).showSnackBar(
                 const SnackBar(
-                    content:
-                        Text('Senha copiada para a área de transferência')),
+                    content: Text('Senha copiada para a área de transferência'),
+                    behavior: SnackBarBehavior.floating),
               );
               Navigator.of(context).pop();
             },
-            child: const Text('Copiar'),
-          ),
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(),
-            child: const Text('Fechar'),
           ),
         ],
       ),
@@ -102,6 +137,9 @@ class _CredentialsScreenState extends State<CredentialsScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final vm = context.watch<CredentialViewModel>();
+    final theme = Theme.of(context);
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('Credenciais'),
@@ -121,85 +159,73 @@ class _CredentialsScreenState extends State<CredentialsScreen> {
         ],
       ),
       body: SafeArea(
-        child: RefreshIndicator(
-          onRefresh: _handleRefresh,
-          child: Consumer<CredentialViewModel>(
-            builder: (context, vm, child) {
-              if (vm.isLoading) {
-                return const Center(child: CircularProgressIndicator());
-              }
-              if (vm.allCredentials.isEmpty) {
-                return LayoutBuilder(builder: (context, constraints) {
-                  return SingleChildScrollView(
-                    physics: const AlwaysScrollableScrollPhysics(),
-                    child: ConstrainedBox(
-                      constraints:
-                          BoxConstraints(minHeight: constraints.maxHeight),
-                      child: EmptyStateWidget(
-                        icon: Icons.key_off,
-                        message: 'Nenhuma credencial encontrada.',
-                        buttonText: 'Adicionar Credencial',
-                        onButtonPressed: () => Navigator.of(context).push(
-                            MaterialPageRoute(
-                                builder: (_) => const AddCredentialScreen())),
+        child: vm.isLoading
+            ? Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    CircularProgressIndicator(
+                      color: theme.colorScheme.primary,
+                    ),
+                    const SizedBox(height: AppTheme.spaceM),
+                    Text(
+                      'Carregando credenciais...',
+                      style: theme.textTheme.bodyMedium?.copyWith(
+                        color: theme.colorScheme.onSurface.withOpacity(0.7),
                       ),
                     ),
-                  );
-                });
-              }
-              return ListView.builder(
-                padding: const EdgeInsets.fromLTRB(AppTheme.defaultPadding,
-                    AppTheme.defaultPadding, AppTheme.defaultPadding, 80),
-                itemCount: vm.allCredentials.length,
-                itemBuilder: (context, index) {
-                  final credential = vm.allCredentials[index];
-                  final logoPath = credential.logoPath;
-                  return Card(
-                    margin:
-                        const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
-                    child: ListTile(
-                      contentPadding: const EdgeInsets.symmetric(
-                          horizontal: 16, vertical: 6),
-                      leading: CircleAvatar(
-                        backgroundColor: Theme.of(context)
-                            .colorScheme
-                            .secondary
-                            .withOpacity(0.15),
-                        backgroundImage: logoPath != null && logoPath.isNotEmpty
-                            ? MemoryImage(base64Decode(logoPath))
-                            : null,
-                        child: logoPath == null || logoPath.isEmpty
-                            ? Icon(Icons.vpn_key_outlined,
-                                color: Theme.of(context).colorScheme.secondary)
-                            : null,
-                      ),
-                      title: Text(credential.location,
-                          style: const TextStyle(fontWeight: FontWeight.w600)),
-                      subtitle: FittedBox(
-                        fit: BoxFit.scaleDown,
-                        alignment: Alignment.centerLeft,
-                        child: Text(credential.login),
-                      ),
-                      trailing: IconButton(
-                        icon: const Icon(Icons.visibility_outlined),
-                        onPressed: () => _showDecryptedPassword(
-                            context, credential.encryptedPassword),
-                      ),
-                      onTap: () {
-                        Navigator.of(context).push(
-                          MaterialPageRoute(
-                            builder: (_) =>
-                                CredentialDetailScreen(credential: credential),
+                  ],
+                ).animate().fadeIn(duration: 300.ms),
+              )
+            : RefreshIndicator(
+                onRefresh: _handleRefresh,
+                color: theme.colorScheme.primary,
+                backgroundColor: theme.colorScheme.surface,
+                child: CustomScrollView(
+                  physics: const BouncingScrollPhysics(),
+                  slivers: [
+                    if (vm.allCredentials.isEmpty)
+                      SliverFillRemaining(
+                        child: SingleChildScrollView(
+                          physics: const AlwaysScrollableScrollPhysics(),
+                          child: EmptyStateWidget(
+                            icon: Icons.key_off,
+                            message: 'Nenhuma credencial encontrada.',
+                            buttonText: 'Adicionar Credencial',
+                            onButtonPressed: () => Navigator.of(context).push(
+                                MaterialPageRoute(
+                                    builder: (_) =>
+                                        const AddCredentialScreen())),
                           ),
-                        );
-                      },
-                    ),
-                  );
-                },
-              );
-            },
-          ),
-        ).animate().fadeIn(duration: 250.ms),
+                        ),
+                      )
+                    else
+                      SliverPadding(
+                        padding: const EdgeInsets.fromLTRB(
+                            AppTheme.defaultPadding,
+                            AppTheme.defaultPadding,
+                            AppTheme.defaultPadding,
+                            96.0),
+                        sliver: SliverList(
+                          delegate: SliverChildBuilderDelegate(
+                            (context, index) {
+                              final credential = vm.allCredentials[index];
+                              return _buildCredentialTile(
+                                  context, credential, index);
+                            },
+                            childCount: vm.allCredentials.length,
+                          ),
+                        ),
+                      ),
+                  ],
+                ),
+              ).animate(onComplete: (_) {
+                if (_isFirstLoad && mounted) {
+                  setState(() {
+                    _isFirstLoad = false;
+                  });
+                }
+              }).fadeIn(duration: 250.ms),
       ),
       floatingActionButton: FloatingActionButton.extended(
         heroTag: 'fab_credentials',
@@ -209,5 +235,93 @@ class _CredentialsScreenState extends State<CredentialsScreen> {
         label: const Text("Nova Credencial"),
       ).animate().scale(duration: 250.ms),
     );
+  }
+
+  Widget _buildCredentialTile(
+      BuildContext context, dynamic credential, int index) {
+    final theme = Theme.of(context);
+    final logoPath = credential.logoPath;
+
+    Widget tile = Container(
+      margin: const EdgeInsets.only(bottom: AppTheme.spaceS),
+      child: Material(
+        color: theme.colorScheme.surface,
+        borderRadius: BorderRadius.circular(16),
+        elevation: 0,
+        child: InkWell(
+          onTap: () {
+            Navigator.of(context).push(
+              MaterialPageRoute(
+                builder: (_) => CredentialDetailScreen(credential: credential),
+              ),
+            );
+          },
+          borderRadius: BorderRadius.circular(16),
+          child: Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(
+                color: theme.colorScheme.outline.withOpacity(0.1),
+              ),
+            ),
+            child: Row(
+              children: [
+                CircleAvatar(
+                  radius: 24,
+                  backgroundColor: logoPath != null && logoPath.isNotEmpty
+                      ? Colors.transparent
+                      : theme.colorScheme.secondary.withOpacity(0.1),
+                  backgroundImage: logoPath != null && logoPath.isNotEmpty
+                      ? MemoryImage(base64Decode(logoPath))
+                      : null,
+                  child: logoPath == null || logoPath.isEmpty
+                      ? Icon(Icons.vpn_key_outlined,
+                          color: theme.colorScheme.secondary, size: 24)
+                      : null,
+                ),
+                const SizedBox(width: AppTheme.spaceM),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        credential.location,
+                        style: theme.textTheme.bodyLarge?.copyWith(
+                          fontWeight: FontWeight.w600,
+                          color: theme.colorScheme.onSurface,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        credential.login,
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          color: theme.colorScheme.onSurface.withOpacity(0.6),
+                        ),
+                        overflow: TextOverflow.visible,
+                      ),
+                    ],
+                  ),
+                ),
+                IconButton(
+                  icon: const Icon(Icons.visibility_outlined),
+                  onPressed: () => _showDecryptedPassword(
+                      context, credential.encryptedPassword),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+
+    if (_isFirstLoad) {
+      return tile
+          .animate(delay: Duration(milliseconds: 100 * index))
+          .fadeIn(duration: 300.ms)
+          .slideX(begin: 0.2, end: 0);
+    }
+
+    return tile;
   }
 }
