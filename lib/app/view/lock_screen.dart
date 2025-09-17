@@ -13,6 +13,8 @@ class LockScreen extends StatefulWidget {
 }
 
 class _LockScreenState extends State<LockScreen> {
+  bool _isAuthenticating = false;
+
   @override
   void initState() {
     super.initState();
@@ -24,11 +26,28 @@ class _LockScreenState extends State<LockScreen> {
   }
 
   Future<void> _authenticate() async {
+    if (_isAuthenticating) {
+      return;
+    }
+
+    if (mounted) {
+      setState(() {
+        _isAuthenticating = true;
+      });
+    }
+
     final localAuthService = LocalAuthService();
     final isAuthenticated = await localAuthService.authenticate();
-    if (isAuthenticated && mounted) {
-      Provider.of<AppLockService>(context, listen: false).unlockApp();
-    }
+
+    if (mounted) {
+      if (isAuthenticated) {
+        Provider.of<AppLockService>(context, listen: false).unlockApp();
+      } else {
+        setState(() {
+          _isAuthenticating = false;
+        });
+      }
+    } else {}
   }
 
   @override
@@ -46,8 +65,18 @@ class _LockScreenState extends State<LockScreen> {
                 style: theme.textTheme.headlineSmall),
             const SizedBox(height: 32),
             ElevatedButton.icon(
-              onPressed: _authenticate,
-              icon: const Icon(Icons.fingerprint),
+              onPressed: _isAuthenticating ? null : _authenticate,
+              icon: _isAuthenticating
+                  ? Container(
+                      width: 24,
+                      height: 24,
+                      padding: const EdgeInsets.all(2.0),
+                      child: CircularProgressIndicator(
+                        color: theme.colorScheme.onPrimary,
+                        strokeWidth: 3,
+                      ),
+                    )
+                  : const Icon(Icons.fingerprint),
               label: const Text('Desbloquear'),
               style: ElevatedButton.styleFrom(
                 padding:
