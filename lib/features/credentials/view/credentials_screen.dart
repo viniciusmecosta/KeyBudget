@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'package:auto_size_text/auto_size_text.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_animate/flutter_animate.dart';
@@ -85,7 +86,7 @@ class _CredentialsScreenState extends State<CredentialsScreen> {
           children: [
             Icon(Icons.lock_open_rounded, color: theme.colorScheme.primary),
             const SizedBox(width: 12),
-            const Text('Senha Revelada'),
+            const Text('Senha'),
           ],
         ),
         content: Column(
@@ -293,13 +294,15 @@ class _CredentialsScreenState extends State<CredentialsScreen> {
                         ),
                       ),
                       const SizedBox(height: 4),
-                      Text(
+                      AutoSizeText(
                         credential.login,
                         style: theme.textTheme.bodySmall?.copyWith(
                           color: theme.colorScheme.onSurface.withOpacity(0.6),
                         ),
-                        overflow: TextOverflow.visible,
-                      ),
+                        maxLines: 1,
+                        minFontSize: 10,
+                        overflow: TextOverflow.ellipsis,
+                      )
                     ],
                   ),
                 ),
