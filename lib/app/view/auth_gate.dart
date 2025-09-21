@@ -82,7 +82,8 @@ class _AuthGateState extends State<AuthGate> {
         WidgetsBinding.instance.addPostFrameCallback((_) {
           Provider.of<AppLockService>(context, listen: false).lockApp();
         });
-        return const Scaffold(body: Center(child: Text("Falha na autenticação")));
+        return const Scaffold(
+            body: Center(child: Text("Falha na autenticação")));
       case AuthStatus.pending:
       default:
         return const Scaffold(body: Center(child: CircularProgressIndicator()));
