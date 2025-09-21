@@ -4,14 +4,14 @@ import 'package:intl/intl.dart';
 import 'package:key_budget/app/config/app_theme.dart';
 import 'package:key_budget/app/widgets/empty_state_widget.dart';
 import 'package:key_budget/core/models/expense_model.dart';
-import 'package:key_budget/core/utils/date_utils.dart';
 import 'package:key_budget/features/auth/viewmodel/auth_viewmodel.dart';
 import 'package:key_budget/features/category/viewmodel/category_viewmodel.dart';
 import 'package:key_budget/features/expenses/view/add_expense_screen.dart';
-import 'package:key_budget/features/expenses/view/expense_detail_screen.dart';
 import 'package:key_budget/features/expenses/view/export_expenses_screen.dart';
 import 'package:key_budget/features/expenses/viewmodel/expense_viewmodel.dart';
 import 'package:provider/provider.dart';
+
+import '../../../app/widgets/activity_tile_widget.dart';
 
 class ExpensesScreen extends StatefulWidget {
   const ExpensesScreen({super.key});
@@ -23,7 +23,7 @@ class ExpensesScreen extends StatefulWidget {
 class _ExpensesScreenState extends State<ExpensesScreen> {
   DateTime _selectedMonth = DateTime(DateTime.now().year, DateTime.now().month);
   final _currencyFormatter =
-      NumberFormat.currency(locale: 'pt_BR', symbol: 'R\$');
+      NumberFormat.currency(locale: 'pt_BR', symbol: 'R\$ ');
   bool _isFirstLoad = true;
 
   @override
@@ -75,61 +75,104 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
     showModalBottomSheet(
       context: context,
       shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+        borderRadius:
+            BorderRadius.vertical(top: Radius.circular(AppTheme.radiusXL)),
       ),
+      backgroundColor: theme.colorScheme.surface,
       builder: (context) {
         return StatefulBuilder(
           builder: (context, setModalState) {
-            return Column(
-              children: [
-                const SizedBox(height: 12),
-                Container(
-                  height: 5,
-                  width: 50,
-                  decoration: BoxDecoration(
-                    color: theme.dividerColor,
-                    borderRadius: BorderRadius.circular(20),
+            return Container(
+              padding: const EdgeInsets.all(AppTheme.spaceL),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Container(
+                    height: 4,
+                    width: 48,
+                    margin: const EdgeInsets.only(bottom: AppTheme.spaceL),
+                    decoration: BoxDecoration(
+                      color: theme.colorScheme.onSurface.withOpacity(0.2),
+                      borderRadius: BorderRadius.circular(AppTheme.radiusS),
+                    ),
                   ),
-                ),
-                const SizedBox(height: 16),
-                Text(
-                  'Filtrar por Categoria',
-                  style: theme.textTheme.titleLarge,
-                ),
-                Expanded(
-                  child: ListView(
-                    children: categoryViewModel.categories.map((category) {
-                      final isSelected = expenseViewModel.selectedCategoryIds
-                          .contains(category.id);
-                      return CheckboxListTile(
-                        title: Text(category.name),
-                        value: isSelected,
-                        onChanged: (value) {
-                          final currentSelection = List<String>.from(
-                              expenseViewModel.selectedCategoryIds);
-                          if (value == true) {
-                            currentSelection.add(category.id!);
-                          } else {
-                            currentSelection.remove(category.id);
-                          }
-                          expenseViewModel.setCategoryFilter(currentSelection);
-                          setModalState(() {});
-                        },
-                      );
-                    }).toList(),
+                  Text(
+                    'Filtrar por Categoria',
+                    style: theme.textTheme.titleLarge?.copyWith(
+                      fontWeight: FontWeight.w700,
+                    ),
                   ),
-                ),
-                Padding(
-                  padding: const EdgeInsets.all(8.0),
-                  child: TextButton(
-                    onPressed: () {
-                      expenseViewModel.clearFilters();
-                      Navigator.of(context).pop();
-                    },
-                    child: const Text('Limpar Filtros'),
+                  const SizedBox(height: AppTheme.spaceL),
+                  Flexible(
+                    child: ListView(
+                      shrinkWrap: true,
+                      children: categoryViewModel.categories.map((category) {
+                        final isSelected = expenseViewModel.selectedCategoryIds
+                            .contains(category.id);
+                        return Container(
+                          margin:
+                              const EdgeInsets.only(bottom: AppTheme.spaceXS),
+                          decoration: BoxDecoration(
+                            color: isSelected
+                                ? theme.colorScheme.primary.withOpacity(0.08)
+                                : Colors.transparent,
+                            borderRadius:
+                                BorderRadius.circular(AppTheme.radiusM),
+                            border: Border.all(
+                              color: isSelected
+                                  ? theme.colorScheme.primary.withOpacity(0.2)
+                                  : theme.colorScheme.outline.withOpacity(0.1),
+                            ),
+                          ),
+                          child: CheckboxListTile(
+                            title: Text(
+                              category.name,
+                              style: theme.textTheme.bodyLarge?.copyWith(
+                                fontWeight: FontWeight.w500,
+                                color: isSelected
+                                    ? theme.colorScheme.primary
+                                    : theme.colorScheme.onSurface,
+                              ),
+                            ),
+                            value: isSelected,
+                            activeColor: theme.colorScheme.primary,
+                            onChanged: (value) {
+                              final currentSelection = List<String>.from(
+                                  expenseViewModel.selectedCategoryIds);
+                              if (value == true) {
+                                currentSelection.add(category.id!);
+                              } else {
+                                currentSelection.remove(category.id);
+                              }
+                              expenseViewModel
+                                  .setCategoryFilter(currentSelection);
+                              setModalState(() {});
+                            },
+                          ),
+                        );
+                      }).toList(),
+                    ),
                   ),
-                )
-              ],
+                  const SizedBox(height: AppTheme.spaceL),
+                  SizedBox(
+                    width: double.infinity,
+                    child: TextButton(
+                      onPressed: () {
+                        expenseViewModel.clearFilters();
+                        Navigator.of(context).pop();
+                      },
+                      style: TextButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(
+                            vertical: AppTheme.spaceM),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(AppTheme.radiusM),
+                        ),
+                      ),
+                      child: const Text('Limpar Filtros'),
+                    ),
+                  ),
+                ],
+              ),
             );
           },
         );
@@ -149,10 +192,6 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
     return formattedDate.isNotEmpty
         ? formattedDate[0].toUpperCase() + formattedDate.substring(1)
         : '';
-  }
-
-  String _getRelativeDate(DateTime date) {
-    return DateUtils.getRelativeDate(date);
   }
 
   @override
@@ -175,6 +214,7 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
       onRefresh: _handleRefresh,
       color: theme.colorScheme.primary,
       backgroundColor: theme.colorScheme.surface,
+      strokeWidth: 2.5,
       child: CustomScrollView(
         physics: const BouncingScrollPhysics(),
         slivers: [
@@ -193,8 +233,9 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
           ),
           if (monthlyExpenses.isEmpty)
             SliverFillRemaining(
+              hasScrollBody: false,
               child: EmptyStateWidget(
-                icon: Icons.money_off,
+                icon: Icons.money_off_rounded,
                 message: 'Nenhuma despesa encontrada para este mês.',
                 buttonText: 'Adicionar Despesa',
                 onButtonPressed: () => Navigator.of(context).push(
@@ -210,7 +251,7 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
                 delegate: SliverChildBuilderDelegate(
                   (context, index) {
                     final expense = monthlyExpenses[index];
-                    return _buildActivityTile(context, expense, index);
+                    return _buildExpenseTile(expense, index);
                   },
                   childCount: monthlyExpenses.length,
                 ),
@@ -221,17 +262,59 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
     );
 
     return Scaffold(
+      backgroundColor: theme.colorScheme.background,
       appBar: AppBar(
-        title: const Text('Despesas'),
+        title: Text(
+          'Despesas',
+          style: theme.textTheme.titleLarge?.copyWith(
+            fontWeight: FontWeight.w700,
+          ),
+        ),
         actions: [
           IconButton(
-            icon: const Icon(Icons.filter_list_rounded),
+            icon: Icon(
+              Icons.filter_list_rounded,
+              color: theme.colorScheme.onSurface,
+            ),
             onPressed: _showCategoryFilter,
           ),
-          PopupMenuButton(
-            itemBuilder: (context) => const [
-              PopupMenuItem(value: 'import', child: Text('Importar de CSV')),
-              PopupMenuItem(value: 'export', child: Text('Exportar para CSV')),
+          PopupMenuButton<String>(
+            icon: Icon(
+              Icons.more_vert_rounded,
+              color: theme.colorScheme.onSurface,
+            ),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(AppTheme.radiusM),
+            ),
+            itemBuilder: (context) => [
+              PopupMenuItem(
+                value: 'import',
+                child: Row(
+                  children: [
+                    Icon(
+                      Icons.upload_file_rounded,
+                      size: 18,
+                      color: theme.colorScheme.onSurface,
+                    ),
+                    const SizedBox(width: AppTheme.spaceS),
+                    const Text('Importar de CSV'),
+                  ],
+                ),
+              ),
+              PopupMenuItem(
+                value: 'export',
+                child: Row(
+                  children: [
+                    Icon(
+                      Icons.download_rounded,
+                      size: 18,
+                      color: theme.colorScheme.onSurface,
+                    ),
+                    const SizedBox(width: AppTheme.spaceS),
+                    const Text('Exportar para CSV'),
+                  ],
+                ),
+              ),
             ],
             onSelected: (value) {
               if (value == 'import') _import(context);
@@ -247,74 +330,101 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
       ),
       body: SafeArea(
         child: expenseViewModel.isLoading || categoryViewModel.isLoading
-            ? Center(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    CircularProgressIndicator(
-                      color: theme.colorScheme.primary,
-                    ),
-                    const SizedBox(height: AppTheme.spaceM),
-                    Text(
-                      'Carregando suas despesas...',
-                      style: theme.textTheme.bodyMedium?.copyWith(
-                        color: theme.colorScheme.onSurface.withOpacity(0.7),
-                      ),
-                    ),
-                  ],
-                ).animate().fadeIn(duration: const Duration(milliseconds: 300)),
-              )
+            ? _buildLoadingState(theme)
             : body.animate(
                 onComplete: (_) {
                   if (_isFirstLoad && mounted) {
                     setState(() => _isFirstLoad = false);
                   }
                 },
-              ).fadeIn(
-                duration: 250.ms,
-              ),
+              ).fadeIn(duration: 250.ms),
       ),
       floatingActionButton: FloatingActionButton.extended(
         heroTag: 'fab_expenses',
         onPressed: () => Navigator.of(context)
             .push(MaterialPageRoute(builder: (_) => const AddExpenseScreen())),
-        icon: const Icon(Icons.add),
+        icon: const Icon(Icons.add_rounded),
         label: const Text("Nova Despesa"),
+        backgroundColor: theme.colorScheme.primary,
+        foregroundColor: theme.colorScheme.onPrimary,
+        elevation: 4,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(AppTheme.radiusL),
+        ),
       ).animate().scale(duration: 250.ms),
     );
   }
 
+  Widget _buildLoadingState(ThemeData theme) {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          CircularProgressIndicator(
+            color: theme.colorScheme.primary,
+            strokeWidth: 2.5,
+          ),
+          const SizedBox(height: AppTheme.spaceL),
+          Text(
+            'Carregando suas despesas...',
+            style: theme.textTheme.bodyMedium?.copyWith(
+              color: theme.colorScheme.onSurface.withOpacity(0.7),
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+        ],
+      ).animate().fadeIn(duration: 300.ms),
+    );
+  }
+
   Widget _buildMonthSelector(BuildContext context) {
-    return Padding(
+    final theme = Theme.of(context);
+
+    return Container(
+      margin: const EdgeInsets.symmetric(
+          horizontal: AppTheme.defaultPadding, vertical: AppTheme.spaceS),
       padding: const EdgeInsets.symmetric(
-          horizontal: AppTheme.defaultPadding, vertical: 8),
+          horizontal: AppTheme.spaceS, vertical: AppTheme.spaceXS),
+      decoration: BoxDecoration(
+        color: theme.colorScheme.surface,
+        borderRadius: BorderRadius.circular(AppTheme.radiusL),
+        border: Border.all(
+          color: theme.colorScheme.outline.withOpacity(0.08),
+        ),
+      ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           IconButton(
-            icon: const Icon(Icons.chevron_left),
+            icon: const Icon(Icons.chevron_left_rounded),
             onPressed: () {
               setState(() {
                 _selectedMonth =
                     DateTime(_selectedMonth.year, _selectedMonth.month - 1);
               });
             },
+            style: IconButton.styleFrom(
+              foregroundColor: theme.colorScheme.onSurface,
+            ),
           ),
           Text(
             _formatMonthYear(_selectedMonth),
-            style: Theme.of(context)
-                .textTheme
-                .titleLarge
-                ?.copyWith(fontWeight: FontWeight.bold),
+            style: theme.textTheme.titleLarge?.copyWith(
+              fontWeight: FontWeight.w700,
+              color: theme.colorScheme.onSurface,
+            ),
           ),
           IconButton(
-            icon: const Icon(Icons.chevron_right),
+            icon: const Icon(Icons.chevron_right_rounded),
             onPressed: () {
               setState(() {
                 _selectedMonth =
                     DateTime(_selectedMonth.year, _selectedMonth.month + 1);
               });
             },
+            style: IconButton.styleFrom(
+              foregroundColor: theme.colorScheme.onSurface,
+            ),
           ),
         ],
       ),
@@ -325,38 +435,59 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
     final theme = Theme.of(context);
     Widget card = Container(
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(AppTheme.radiusXL),
         gradient: LinearGradient(
           colors: [
             theme.colorScheme.primary,
-            theme.colorScheme.primary.withOpacity(0.8),
+            theme.colorScheme.primary.withOpacity(0.85),
           ],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
         boxShadow: [
           BoxShadow(
-            color: theme.colorScheme.primary.withOpacity(0.3),
-            blurRadius: 20,
+            color: theme.colorScheme.primary.withOpacity(0.25),
+            blurRadius: 24,
             offset: const Offset(0, 8),
           ),
         ],
       ),
       child: Padding(
-        padding: const EdgeInsets.all(24),
+        padding: const EdgeInsets.all(AppTheme.spaceL),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Text(
-              'Total do mês',
-              style: theme.textTheme.titleMedium?.copyWith(
-                  color: theme.colorScheme.onPrimary.withOpacity(0.9),
-                  fontWeight: FontWeight.bold),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Total do mês',
+                  style: theme.textTheme.titleMedium?.copyWith(
+                    color: theme.colorScheme.onPrimary.withOpacity(0.9),
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                const SizedBox(height: AppTheme.spaceS),
+                Text(
+                  _currencyFormatter.format(totalValue),
+                  style: theme.textTheme.headlineMedium?.copyWith(
+                    color: theme.colorScheme.onPrimary,
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+              ],
             ),
-            Text(
-              _currencyFormatter.format(totalValue),
-              style: theme.textTheme.headlineMedium
-                  ?.copyWith(color: theme.colorScheme.onPrimary),
+            Container(
+              padding: const EdgeInsets.all(AppTheme.spaceM),
+              decoration: BoxDecoration(
+                color: theme.colorScheme.onPrimary.withOpacity(0.15),
+                borderRadius: BorderRadius.circular(AppTheme.radiusL),
+              ),
+              child: Icon(
+                Icons.account_balance_wallet_rounded,
+                color: theme.colorScheme.onPrimary,
+                size: 28,
+              ),
             ),
           ],
         ),
@@ -369,92 +500,17 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
     return card;
   }
 
-  Widget _buildActivityTile(BuildContext context, Expense expense, int index) {
-    final theme = Theme.of(context);
-    final category = Provider.of<CategoryViewModel>(context, listen: false)
-        .getCategoryById(expense.categoryId);
-
-    Widget tile = Container(
-      margin: const EdgeInsets.only(bottom: AppTheme.spaceS),
-      child: Material(
-        color: theme.colorScheme.surface,
-        borderRadius: BorderRadius.circular(16),
-        elevation: 0,
-        child: InkWell(
-          onTap: () {
-            Navigator.of(context).push(
-              MaterialPageRoute(
-                builder: (_) => ExpenseDetailScreen(expense: expense),
-              ),
-            );
-          },
-          borderRadius: BorderRadius.circular(16),
-          child: Container(
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(16),
-              border: Border.all(
-                color: theme.colorScheme.outline.withOpacity(0.1),
-              ),
-            ),
-            child: Row(
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    color: (category?.color ?? theme.colorScheme.primary)
-                        .withOpacity(0.1),
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Icon(
-                    category?.icon ?? Icons.shopping_bag_rounded,
-                    color: category?.color ?? theme.colorScheme.primary,
-                    size: 24,
-                  ),
-                ),
-                const SizedBox(width: AppTheme.spaceM),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        expense.location?.isNotEmpty == true
-                            ? expense.location!
-                            : (category?.name ?? 'Gasto Geral'),
-                        style: theme.textTheme.bodyLarge?.copyWith(
-                          fontWeight: FontWeight.w600,
-                          color: theme.colorScheme.onSurface,
-                        ),
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        _getRelativeDate(expense.date),
-                        style: theme.textTheme.bodySmall?.copyWith(
-                          color: theme.colorScheme.onSurface.withOpacity(0.6),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                Text(
-                  '- ${_currencyFormatter.format(expense.amount)}',
-                  style: theme.textTheme.bodyLarge?.copyWith(
-                    fontWeight: FontWeight.bold,
-                    color: AppTheme.error,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
+  Widget _buildExpenseTile(Expense expense, int index) {
+    Widget tile = ActivityTile(
+      expense: expense,
+      index: index,
     );
 
     if (_isFirstLoad) {
       return tile
-          .animate(delay: Duration(milliseconds: 200 + (100 * index)))
-          .fadeIn(duration: 300.ms)
-          .slideX(begin: 0.2, end: 0);
+          .animate(delay: Duration(milliseconds: 50 * index))
+          .fadeIn(duration: 400.ms, curve: Curves.easeOut)
+          .slideX(begin: 0.2, end: 0, curve: Curves.easeOutCubic);
     }
 
     return tile;
