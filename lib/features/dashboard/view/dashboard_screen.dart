@@ -509,46 +509,77 @@ class _DashboardScreenState extends State<DashboardScreen>
 
   Widget _buildActivityTile(BuildContext context, Expense expense, int index) {
     final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+    final textTheme = theme.textTheme;
     final category = Provider.of<CategoryViewModel>(context, listen: false)
         .getCategoryById(expense.categoryId);
 
+    final categoryColor = category?.color ?? colorScheme.primary;
+
     return Container(
-      margin: EdgeInsets.only(bottom: AppTheme.spaceS),
+      margin: EdgeInsets.only(bottom: index < 4 ? AppTheme.spaceM : 0),
+      decoration: BoxDecoration(
+        color: colorScheme.surface,
+        borderRadius: BorderRadius.circular(AppTheme.radiusL),
+        border: Border.all(
+          color: colorScheme.outline.withOpacity(0.06),
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: colorScheme.shadow.withOpacity(0.03),
+            blurRadius: 6,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
       child: Material(
-        color: theme.colorScheme.surface,
-        borderRadius: BorderRadius.circular(16),
-        elevation: 0,
+        color: Colors.transparent,
+        borderRadius: BorderRadius.circular(AppTheme.radiusL),
         child: InkWell(
           onTap: () {
-            Navigator.of(context).push(MaterialPageRoute(
-              builder: (_) => ExpenseDetailScreen(expense: expense),
-            ));
-          },
-          borderRadius: BorderRadius.circular(16),
-          child: Container(
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(16),
-              border: Border.all(
-                color: theme.colorScheme.outline.withOpacity(0.1),
+            Navigator.of(context).push(
+              PageRouteBuilder(
+                pageBuilder: (context, animation, secondaryAnimation) =>
+                    ExpenseDetailScreen(expense: expense),
+                transitionsBuilder:
+                    (context, animation, secondaryAnimation, child) {
+                  const begin = Offset(0.0, 1.0);
+                  const end = Offset.zero;
+                  const curve = Curves.easeInOutCubic;
+
+                  var tween = Tween(begin: begin, end: end)
+                      .chain(CurveTween(curve: curve));
+
+                  return SlideTransition(
+                    position: animation.drive(tween),
+                    child: child,
+                  );
+                },
+                transitionDuration: const Duration(milliseconds: 300),
               ),
-            ),
+            );
+          },
+          borderRadius: BorderRadius.circular(AppTheme.radiusL),
+          child: Padding(
+            padding: const EdgeInsets.all(AppTheme.cardPadding),
             child: Row(
               children: [
                 Container(
-                  padding: const EdgeInsets.all(12),
+                  padding: const EdgeInsets.all(14),
                   decoration: BoxDecoration(
-                    color: (category?.color ?? theme.colorScheme.primary)
-                        .withOpacity(0.1),
-                    borderRadius: BorderRadius.circular(12),
+                    color: categoryColor.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(AppTheme.radiusM),
+                    border: Border.all(
+                      color: categoryColor.withOpacity(0.15),
+                    ),
                   ),
                   child: Icon(
                     category?.icon ?? Icons.shopping_bag_rounded,
-                    color: category?.color ?? theme.colorScheme.primary,
-                    size: 24,
+                    color: categoryColor,
+                    size: 22,
                   ),
                 ),
-                const SizedBox(width: AppTheme.spaceM),
+                const SizedBox(width: AppTheme.spaceL),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -557,27 +588,46 @@ class _DashboardScreenState extends State<DashboardScreen>
                         expense.location?.isNotEmpty == true
                             ? expense.location!
                             : (category?.name ?? 'Gasto Geral'),
-                        style: theme.textTheme.bodyLarge?.copyWith(
+                        style: textTheme.bodyLarge?.copyWith(
                           fontWeight: FontWeight.w600,
-                          color: theme.colorScheme.onSurface,
+                          color: colorScheme.onSurface,
                         ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
                       ),
-                      const SizedBox(height: 4),
-                      Text(
-                        _getRelativeDate(expense.date),
-                        style: theme.textTheme.bodySmall?.copyWith(
-                          color: theme.colorScheme.onSurface.withOpacity(0.6),
-                        ),
+                      const SizedBox(height: AppTheme.spaceXS),
+                      Row(
+                        children: [
+                          Icon(
+                            Icons.access_time_rounded,
+                            size: 14,
+                            color: colorScheme.onSurfaceVariant,
+                          ),
+                          const SizedBox(width: AppTheme.spaceXS),
+                          Text(
+                            _getRelativeDate(expense.date),
+                            style: textTheme.bodySmall?.copyWith(
+                              color: colorScheme.onSurfaceVariant,
+                              fontWeight: FontWeight.w400,
+                            ),
+                          ),
+                        ],
                       ),
                     ],
                   ),
                 ),
-                Text(
-                  '- ${_currencyFormatter.format(expense.amount)}',
-                  style: theme.textTheme.bodyLarge?.copyWith(
-                    fontWeight: FontWeight.bold,
-                    color: AppTheme.error,
-                  ),
+                const SizedBox(width: AppTheme.spaceM),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: [
+                    Text(
+                      _currencyFormatter.format(expense.amount),
+                      style: textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.w700,
+                        color: AppTheme.error,
+                      ),
+                    ),
+                  ],
                 ),
               ],
             ),
@@ -586,7 +636,15 @@ class _DashboardScreenState extends State<DashboardScreen>
       ),
     )
         .animate(delay: Duration(milliseconds: 100 * index))
-        .fadeIn(duration: const Duration(milliseconds: 300))
-        .slideX(begin: 0.2, end: 0);
+        .fadeIn(
+          duration: const Duration(milliseconds: 400),
+          curve: Curves.easeOut,
+        )
+        .slideX(
+          begin: 0.3,
+          end: 0,
+          duration: const Duration(milliseconds: 400),
+          curve: Curves.easeOutCubic,
+        );
   }
 }
