@@ -3,16 +3,15 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'package:intl/intl.dart';
 import 'package:key_budget/app/config/app_theme.dart';
 import 'package:key_budget/app/viewmodel/navigation_viewmodel.dart';
-import 'package:key_budget/core/models/expense_model.dart';
-import 'package:key_budget/core/utils/date_utils.dart';
 import 'package:key_budget/features/analysis/view/analysis_screen.dart';
 import 'package:key_budget/features/auth/viewmodel/auth_viewmodel.dart';
 import 'package:key_budget/features/category/viewmodel/category_viewmodel.dart';
 import 'package:key_budget/features/credentials/viewmodel/credential_viewmodel.dart';
 import 'package:key_budget/features/dashboard/viewmodel/dashboard_viewmodel.dart';
-import 'package:key_budget/features/expenses/view/expense_detail_screen.dart';
 import 'package:key_budget/features/expenses/viewmodel/expense_viewmodel.dart';
 import 'package:provider/provider.dart';
+
+import '../../../app/widgets/activity_tile_widget.dart';
 
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
@@ -76,10 +75,6 @@ class _DashboardScreenState extends State<DashboardScreen>
     }
   }
 
-  String _getRelativeDate(DateTime date) {
-    return DateUtils.getRelativeDate(date);
-  }
-
   @override
   Widget build(BuildContext context) {
     final viewModel = Provider.of<DashboardViewModel>(context);
@@ -88,87 +83,73 @@ class _DashboardScreenState extends State<DashboardScreen>
     final user = authViewModel.currentUser;
 
     return Scaffold(
+      backgroundColor: theme.colorScheme.background,
       appBar: AppBar(
         elevation: 0,
         scrolledUnderElevation: 0,
         backgroundColor: Colors.transparent,
-        title: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'Bem-vindo(a) de volta,',
-              style: theme.textTheme.bodyMedium?.copyWith(
-                color: theme.colorScheme.onSurface.withOpacity(0.6),
-                fontSize: 14,
+        toolbarHeight: 80,
+        title: Padding(
+          padding: const EdgeInsets.only(top: AppTheme.spaceS),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Bem-vindo(a) de volta,',
+                style: theme.textTheme.bodyMedium?.copyWith(
+                  color: theme.colorScheme.onSurface.withOpacity(0.65),
+                  fontSize: 14,
+                  fontWeight: FontWeight.w400,
+                ),
               ),
-            ),
-            Text(
-              user?.name ?? 'Usuário',
-              style: theme.textTheme.headlineSmall?.copyWith(
-                fontWeight: FontWeight.bold,
-                color: theme.colorScheme.onSurface,
+              const SizedBox(height: 2),
+              Text(
+                user?.name ?? 'Usuário',
+                style: theme.textTheme.headlineSmall?.copyWith(
+                  fontWeight: FontWeight.w700,
+                  color: theme.colorScheme.onSurface,
+                  fontSize: 22,
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
       body: SafeArea(
         child: viewModel.isLoading
-            ? Center(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    CircularProgressIndicator(
-                      color: theme.colorScheme.primary,
-                    ),
-                    const SizedBox(height: AppTheme.spaceM),
-                    Text(
-                      'Carregando seus dados...',
-                      style: theme.textTheme.bodyMedium?.copyWith(
-                        color: theme.colorScheme.onSurface.withOpacity(0.7),
-                      ),
-                    ),
-                  ],
-                ).animate().fadeIn(duration: const Duration(milliseconds: 300)),
-              )
+            ? _buildLoadingState(theme)
             : RefreshIndicator(
                 onRefresh: _fetchInitialData,
                 color: theme.colorScheme.primary,
                 backgroundColor: theme.colorScheme.surface,
+                strokeWidth: 2.5,
                 child: CustomScrollView(
                   physics: const BouncingScrollPhysics(),
                   slivers: [
                     SliverPadding(
-                      padding: const EdgeInsets.all(AppTheme.defaultPadding),
+                      padding: const EdgeInsets.fromLTRB(AppTheme.spaceM,
+                          AppTheme.spaceS, AppTheme.spaceM, AppTheme.spaceL),
                       sliver: SliverList(
                         delegate: SliverChildListDelegate([
                           _buildTotalBalanceCard(context, viewModel)
                               .animate()
-                              .fadeIn(
-                                  duration: const Duration(milliseconds: 400),
-                                  delay: const Duration(milliseconds: 100))
-                              .slideY(begin: 0.3, end: 0),
+                              .fadeIn(duration: 400.ms, delay: 100.ms)
+                              .slideY(begin: 0.2, end: 0),
                           const SizedBox(height: AppTheme.spaceL),
                           _buildQuickActionsRow(context, viewModel)
                               .animate()
-                              .fadeIn(
-                                  duration: const Duration(milliseconds: 400),
-                                  delay: const Duration(milliseconds: 200))
-                              .slideY(begin: 0.3, end: 0),
+                              .fadeIn(duration: 400.ms, delay: 200.ms)
+                              .slideY(begin: 0.2, end: 0),
                           const SizedBox(height: AppTheme.spaceXL),
                           _buildSectionHeader(context, 'Atividades Recentes')
                               .animate()
-                              .fadeIn(
-                                  duration: const Duration(milliseconds: 400),
-                                  delay: const Duration(milliseconds: 300))
-                              .slideX(begin: -0.2, end: 0),
+                              .fadeIn(duration: 400.ms, delay: 300.ms)
+                              .slideX(begin: -0.1, end: 0),
                           const SizedBox(height: AppTheme.spaceM),
                           _buildRecentActivitySection(context, viewModel)
                               .animate()
-                              .fadeIn(
-                                  duration: const Duration(milliseconds: 400),
-                                  delay: const Duration(milliseconds: 400))
-                              .slideY(begin: 0.2, end: 0),
+                              .fadeIn(duration: 400.ms, delay: 400.ms)
+                              .slideY(begin: 0.1, end: 0),
                         ]),
                       ),
                     ),
@@ -176,6 +157,28 @@ class _DashboardScreenState extends State<DashboardScreen>
                 ),
               ),
       ),
+    );
+  }
+
+  Widget _buildLoadingState(ThemeData theme) {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          CircularProgressIndicator(
+            color: theme.colorScheme.primary,
+            strokeWidth: 2.5,
+          ),
+          const SizedBox(height: AppTheme.spaceL),
+          Text(
+            'Carregando seus dados...',
+            style: theme.textTheme.bodyMedium?.copyWith(
+              color: theme.colorScheme.onSurface.withOpacity(0.7),
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+        ],
+      ).animate().fadeIn(duration: 300.ms),
     );
   }
 
@@ -191,34 +194,34 @@ class _DashboardScreenState extends State<DashboardScreen>
 
     return Container(
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(AppTheme.radiusXL),
         gradient: LinearGradient(
           colors: [
             theme.colorScheme.primary,
-            theme.colorScheme.primary.withOpacity(0.8),
+            theme.colorScheme.primary.withOpacity(0.85),
           ],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
         boxShadow: [
           BoxShadow(
-            color: theme.colorScheme.primary.withOpacity(0.3),
-            blurRadius: 20,
+            color: theme.colorScheme.primary.withOpacity(0.25),
+            blurRadius: 24,
             offset: const Offset(0, 8),
           ),
         ],
       ),
       child: Material(
         color: Colors.transparent,
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(AppTheme.radiusXL),
         child: InkWell(
           onTap: () {
             Provider.of<NavigationViewModel>(context, listen: false)
                 .selectedIndex = 1;
           },
-          borderRadius: BorderRadius.circular(20),
+          borderRadius: BorderRadius.circular(AppTheme.radiusXL),
           child: Padding(
-            padding: const EdgeInsets.all(24),
+            padding: const EdgeInsets.all(AppTheme.spaceL),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -235,6 +238,7 @@ class _DashboardScreenState extends State<DashboardScreen>
                               color:
                                   theme.colorScheme.onPrimary.withOpacity(0.9),
                               fontWeight: FontWeight.w600,
+                              fontSize: 15,
                             ),
                           ),
                           const SizedBox(height: AppTheme.spaceS),
@@ -242,38 +246,39 @@ class _DashboardScreenState extends State<DashboardScreen>
                             _currencyFormatter
                                 .format(viewModel.totalAmountForMonth),
                             style: theme.textTheme.displaySmall?.copyWith(
-                              fontWeight: FontWeight.bold,
+                              fontWeight: FontWeight.w800,
                               color: theme.colorScheme.onPrimary,
-                              fontSize: 32,
+                              fontSize: 30,
+                              height: 1.1,
                             ),
                           ),
                         ],
                       ),
                     ),
                     Container(
-                      padding: const EdgeInsets.all(12),
+                      padding: const EdgeInsets.all(AppTheme.spaceM - 2),
                       decoration: BoxDecoration(
-                        color: theme.colorScheme.onPrimary.withOpacity(0.2),
-                        borderRadius: BorderRadius.circular(16),
+                        color: theme.colorScheme.onPrimary.withOpacity(0.15),
+                        borderRadius: BorderRadius.circular(AppTheme.radiusL),
                       ),
                       child: Icon(
                         Icons.account_balance_wallet_rounded,
                         color: theme.colorScheme.onPrimary,
-                        size: 32,
+                        size: 28,
                       ),
                     ),
                   ],
                 ),
                 if (hasPreviousMonths) ...[
-                  const SizedBox(height: AppTheme.spaceM),
+                  const SizedBox(height: AppTheme.spaceL),
                   Container(
                     padding: const EdgeInsets.symmetric(
-                      horizontal: 12,
-                      vertical: 6,
+                      horizontal: AppTheme.spaceM - 2,
+                      vertical: AppTheme.spaceS - 2,
                     ),
                     decoration: BoxDecoration(
                       color: theme.colorScheme.onPrimary.withOpacity(0.15),
-                      borderRadius: BorderRadius.circular(20),
+                      borderRadius: BorderRadius.circular(AppTheme.radiusXL),
                     ),
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
@@ -283,19 +288,23 @@ class _DashboardScreenState extends State<DashboardScreen>
                           color: theme.colorScheme.onPrimary,
                           size: 16,
                         ),
-                        const SizedBox(width: 4),
+                        const SizedBox(width: AppTheme.spaceXS),
                         Text(
                           formattedPercentage,
                           style: theme.textTheme.bodyMedium?.copyWith(
                             color: theme.colorScheme.onPrimary,
-                            fontWeight: FontWeight.bold,
+                            fontWeight: FontWeight.w700,
+                            fontSize: 13,
                           ),
                         ),
-                        const SizedBox(width: 4),
+                        const SizedBox(width: AppTheme.spaceXS),
                         Text(
                           'vs média',
                           style: theme.textTheme.bodySmall?.copyWith(
-                            color: theme.colorScheme.onPrimary.withOpacity(0.8),
+                            color:
+                                theme.colorScheme.onPrimary.withOpacity(0.85),
+                            fontSize: 13,
+                            fontWeight: FontWeight.w500,
                           ),
                         ),
                       ],
@@ -360,47 +369,51 @@ class _DashboardScreenState extends State<DashboardScreen>
 
     return Material(
       color: theme.colorScheme.surface,
-      borderRadius: BorderRadius.circular(16),
+      borderRadius: BorderRadius.circular(AppTheme.radiusL),
       elevation: 0,
+      shadowColor: theme.colorScheme.shadow.withOpacity(0.05),
       child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(AppTheme.radiusL),
         child: Container(
-          padding: const EdgeInsets.all(20),
+          padding: const EdgeInsets.all(AppTheme.spaceM + 2),
           decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(16),
+            borderRadius: BorderRadius.circular(AppTheme.radiusL),
             border: Border.all(
-              color: theme.colorScheme.outline.withOpacity(0.1),
+              color: theme.colorScheme.outline.withOpacity(0.08),
             ),
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Container(
-                padding: const EdgeInsets.all(12),
+                padding: const EdgeInsets.all(AppTheme.spaceM - 2),
                 decoration: BoxDecoration(
-                  color: color.withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(12),
+                  color: color.withOpacity(0.12),
+                  borderRadius: BorderRadius.circular(AppTheme.radiusM),
                 ),
                 child: Icon(
                   icon,
                   color: color,
-                  size: 24,
+                  size: 22,
                 ),
               ),
               const SizedBox(height: AppTheme.spaceM),
               Text(
                 title,
                 style: theme.textTheme.titleMedium?.copyWith(
-                  fontWeight: FontWeight.bold,
+                  fontWeight: FontWeight.w700,
                   color: theme.colorScheme.onSurface,
+                  fontSize: 16,
                 ),
               ),
-              const SizedBox(height: 4),
+              const SizedBox(height: AppTheme.spaceXS),
               Text(
                 subtitle,
                 style: theme.textTheme.bodySmall?.copyWith(
-                  color: theme.colorScheme.onSurface.withOpacity(0.6),
+                  color: theme.colorScheme.onSurface.withOpacity(0.65),
+                  fontSize: 13,
+                  fontWeight: FontWeight.w500,
                 ),
               ),
             ],
@@ -414,24 +427,49 @@ class _DashboardScreenState extends State<DashboardScreen>
     final theme = Theme.of(context);
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      crossAxisAlignment: CrossAxisAlignment.center,
       children: [
         Text(
           title,
           style: theme.textTheme.titleLarge?.copyWith(
-            fontWeight: FontWeight.bold,
+            fontWeight: FontWeight.w700,
             color: theme.colorScheme.onSurface,
+            fontSize: 20,
           ),
         ),
-        TextButton(
-          onPressed: () {
-            Provider.of<NavigationViewModel>(context, listen: false)
-                .selectedIndex = 1;
-          },
-          child: Text(
-            'Ver todas',
-            style: TextStyle(
-              color: theme.colorScheme.primary,
-              fontWeight: FontWeight.w600,
+        Material(
+          color: Colors.transparent,
+          borderRadius: BorderRadius.circular(AppTheme.radiusM),
+          child: InkWell(
+            onTap: () {
+              Provider.of<NavigationViewModel>(context, listen: false)
+                  .selectedIndex = 1;
+            },
+            borderRadius: BorderRadius.circular(AppTheme.radiusM),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(
+                horizontal: AppTheme.spaceM,
+                vertical: AppTheme.spaceS,
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    'Ver todas',
+                    style: TextStyle(
+                      color: theme.colorScheme.primary,
+                      fontWeight: FontWeight.w600,
+                      fontSize: 14,
+                    ),
+                  ),
+                  const SizedBox(width: AppTheme.spaceXS),
+                  Icon(
+                    Icons.arrow_forward_ios_rounded,
+                    color: theme.colorScheme.primary,
+                    size: 14,
+                  ),
+                ],
+              ),
             ),
           ),
         ),
@@ -451,12 +489,19 @@ class _DashboardScreenState extends State<DashboardScreen>
       return _buildEmptyState(context);
     }
 
-    return Column(
-      children: recentExpenses
-          .asMap()
-          .entries
-          .map((entry) => _buildActivityTile(context, entry.value, entry.key))
-          .toList(),
+    return ListView.builder(
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
+      itemCount: recentExpenses.length > 5 ? 5 : recentExpenses.length,
+      itemBuilder: (context, index) {
+        return ActivityTile(
+          expense: recentExpenses[index],
+          index: index,
+        )
+            .animate(delay: Duration(milliseconds: 50 * index))
+            .fadeIn(duration: 400.ms, curve: Curves.easeOut)
+            .slideX(begin: 0.2, end: 0, curve: Curves.easeOutCubic);
+      },
     );
   }
 
@@ -467,26 +512,26 @@ class _DashboardScreenState extends State<DashboardScreen>
       padding: const EdgeInsets.all(AppTheme.spaceXL),
       decoration: BoxDecoration(
         color: theme.colorScheme.surface,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(AppTheme.radiusL),
         border: Border.all(
-          color: theme.colorScheme.outline.withOpacity(0.1),
+          color: theme.colorScheme.outline.withOpacity(0.08),
         ),
       ),
       child: Column(
         children: [
           Container(
-            padding: const EdgeInsets.all(20),
+            padding: const EdgeInsets.all(AppTheme.spaceL),
             decoration: BoxDecoration(
               color: theme.colorScheme.primary.withOpacity(0.1),
-              borderRadius: BorderRadius.circular(50),
+              borderRadius: BorderRadius.circular(AppTheme.spaceXL),
             ),
             child: Icon(
               Icons.receipt_long_rounded,
-              size: 48,
-              color: theme.colorScheme.primary.withOpacity(0.6),
+              size: 40,
+              color: theme.colorScheme.primary.withOpacity(0.7),
             ),
           ),
-          const SizedBox(height: AppTheme.spaceM),
+          const SizedBox(height: AppTheme.spaceL),
           Text(
             'Nenhuma atividade recente',
             style: theme.textTheme.titleMedium?.copyWith(
@@ -500,151 +545,11 @@ class _DashboardScreenState extends State<DashboardScreen>
             textAlign: TextAlign.center,
             style: theme.textTheme.bodyMedium?.copyWith(
               color: theme.colorScheme.onSurface.withOpacity(0.6),
+              height: 1.4,
             ),
           ),
         ],
       ),
     );
-  }
-
-  Widget _buildActivityTile(BuildContext context, Expense expense, int index) {
-    final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
-    final textTheme = theme.textTheme;
-    final category = Provider.of<CategoryViewModel>(context, listen: false)
-        .getCategoryById(expense.categoryId);
-
-    final categoryColor = category?.color ?? colorScheme.primary;
-
-    return Container(
-      margin: EdgeInsets.only(bottom: index < 4 ? AppTheme.spaceM : 0),
-      decoration: BoxDecoration(
-        color: colorScheme.surface,
-        borderRadius: BorderRadius.circular(AppTheme.radiusL),
-        border: Border.all(
-          color: colorScheme.outline.withOpacity(0.06),
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: colorScheme.shadow.withOpacity(0.03),
-            blurRadius: 6,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Material(
-        color: Colors.transparent,
-        borderRadius: BorderRadius.circular(AppTheme.radiusL),
-        child: InkWell(
-          onTap: () {
-            Navigator.of(context).push(
-              PageRouteBuilder(
-                pageBuilder: (context, animation, secondaryAnimation) =>
-                    ExpenseDetailScreen(expense: expense),
-                transitionsBuilder:
-                    (context, animation, secondaryAnimation, child) {
-                  const begin = Offset(0.0, 1.0);
-                  const end = Offset.zero;
-                  const curve = Curves.easeInOutCubic;
-
-                  var tween = Tween(begin: begin, end: end)
-                      .chain(CurveTween(curve: curve));
-
-                  return SlideTransition(
-                    position: animation.drive(tween),
-                    child: child,
-                  );
-                },
-                transitionDuration: const Duration(milliseconds: 300),
-              ),
-            );
-          },
-          borderRadius: BorderRadius.circular(AppTheme.radiusL),
-          child: Padding(
-            padding: const EdgeInsets.all(AppTheme.cardPadding),
-            child: Row(
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(14),
-                  decoration: BoxDecoration(
-                    color: categoryColor.withOpacity(0.1),
-                    borderRadius: BorderRadius.circular(AppTheme.radiusM),
-                    border: Border.all(
-                      color: categoryColor.withOpacity(0.15),
-                    ),
-                  ),
-                  child: Icon(
-                    category?.icon ?? Icons.shopping_bag_rounded,
-                    color: categoryColor,
-                    size: 22,
-                  ),
-                ),
-                const SizedBox(width: AppTheme.spaceL),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        expense.location?.isNotEmpty == true
-                            ? expense.location!
-                            : (category?.name ?? 'Gasto Geral'),
-                        style: textTheme.bodyLarge?.copyWith(
-                          fontWeight: FontWeight.w600,
-                          color: colorScheme.onSurface,
-                        ),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                      const SizedBox(height: AppTheme.spaceXS),
-                      Row(
-                        children: [
-                          Icon(
-                            Icons.access_time_rounded,
-                            size: 14,
-                            color: colorScheme.onSurfaceVariant,
-                          ),
-                          const SizedBox(width: AppTheme.spaceXS),
-                          Text(
-                            _getRelativeDate(expense.date),
-                            style: textTheme.bodySmall?.copyWith(
-                              color: colorScheme.onSurfaceVariant,
-                              fontWeight: FontWeight.w400,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(width: AppTheme.spaceM),
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.end,
-                  children: [
-                    Text(
-                      _currencyFormatter.format(expense.amount),
-                      style: textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.w700,
-                        color: AppTheme.error,
-                      ),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
-    )
-        .animate(delay: Duration(milliseconds: 100 * index))
-        .fadeIn(
-          duration: const Duration(milliseconds: 400),
-          curve: Curves.easeOut,
-        )
-        .slideX(
-          begin: 0.3,
-          end: 0,
-          duration: const Duration(milliseconds: 400),
-          curve: Curves.easeOutCubic,
-        );
   }
 }

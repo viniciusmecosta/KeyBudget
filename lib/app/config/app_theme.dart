@@ -20,53 +20,47 @@ class AppTheme {
   static const double radiusXL = 20.0;
   static const double radiusXXL = 24.0;
 
-  // Paleta principal mais refinada
   static const Color primary = Color(0xFF6A5AE0);
   static const Color primaryVariant = Color(0xFF8A7AF3);
   static const Color primaryLight = Color(0xFFF0EDFF);
   static const Color secondary = Color(0xFF23B0B0);
   static const Color secondaryLight = Color(0xFFE6F7F7);
 
-  // Backgrounds e surfaces com maior contraste
   static const Color background = Color(0xFFFAFAFC);
   static const Color surface = Color(0xFFFFFFFF);
   static const Color surfaceVariant = Color(0xFFF8F9FA);
   static const Color onSurface = Color(0xFF1A1A2E);
   static const Color onSurfaceVariant = Color(0xFF6B7280);
 
-  // Dark theme com melhor contraste
   static const Color darkBackground = Color(0xFF0F0F17);
   static const Color darkSurface = Color(0xFF1A1A2E);
   static const Color darkSurfaceVariant = Color(0xFF24243A);
   static const Color onDarkSurface = Color(0xFFF5F5F7);
   static const Color onDarkSurfaceVariant = Color(0xFF9CA3AF);
 
-  // Estados e alertas
   static const Color success = Color(0xFF10B981);
   static const Color error = Color(0xFFEF4444);
   static const Color warning = Color(0xFFF59E0B);
   static const Color info = Color(0xFF3B82F6);
 
-  // Indicadores de mudança
   static const Color positiveChange = Color(0xFFEF4444);
   static const Color negativeChange = Color(0xFF10B981);
 
-  // Paleta para gráficos mais harmoniosa
   static final List<Color> chartColors = [
-    const Color(0xFFFF6B6B), // Coral suave
-    const Color(0xFF4ECDC4), // Turquesa
-    const Color(0xFF45B7D1), // Azul céu
-    const Color(0xFF96CEB4), // Verde menta
-    const Color(0xFFFFA07A), // Salmão
-    const Color(0xFF9B59B6), // Roxo
-    const Color(0xFFFFD93D), // Amarelo vibrante
-    const Color(0xFF6C5CE7), // Roxo profundo
-    const Color(0xFF00B894), // Verde esmeralda
-    const Color(0xFFE17055), // Laranja terra
-    const Color(0xFF74B9FF), // Azul claro
-    const Color(0xFFE84393), // Rosa magenta
-    const Color(0xFF00CEC9), // Ciano
-    const Color(0xFFFDCB6E), // Amarelo dourado
+    const Color(0xFFFF6B6B),
+    const Color(0xFF4ECDC4),
+    const Color(0xFF45B7D1),
+    const Color(0xFF96CEB4),
+    const Color(0xFFFFA07A),
+    const Color(0xFF9B59B6),
+    const Color(0xFFFFD93D),
+    const Color(0xFF6C5CE7),
+    const Color(0xFF00B894),
+    const Color(0xFFE17055),
+    const Color(0xFF74B9FF),
+    const Color(0xFFE84393),
+    const Color(0xFF00CEC9),
+    const Color(0xFFFDCB6E),
   ];
 
   static final ThemeData lightTheme = ThemeData(
@@ -164,7 +158,8 @@ class AppTheme {
         backgroundColor: primary,
         foregroundColor: surface,
         padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(radiusM)),
+        shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(radiusM)),
         textStyle: const TextStyle(
           fontSize: 16,
           fontWeight: FontWeight.w600,
@@ -178,7 +173,8 @@ class AppTheme {
         foregroundColor: primary,
         side: BorderSide(color: primary.withOpacity(0.3)),
         padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(radiusM)),
+        shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(radiusM)),
         textStyle: const TextStyle(
           fontSize: 16,
           fontWeight: FontWeight.w600,
@@ -189,7 +185,8 @@ class AppTheme {
       style: TextButton.styleFrom(
         foregroundColor: primary,
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(radiusS)),
+        shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(radiusS)),
         textStyle: const TextStyle(
           fontSize: 14,
           fontWeight: FontWeight.w600,
@@ -242,7 +239,7 @@ class AppTheme {
     ),
     switchTheme: SwitchThemeData(
       thumbColor: MaterialStateProperty.resolveWith<Color>(
-            (Set<MaterialState> states) {
+        (Set<MaterialState> states) {
           if (states.contains(MaterialState.selected)) {
             return primary;
           }
@@ -250,7 +247,7 @@ class AppTheme {
         },
       ),
       trackColor: MaterialStateProperty.resolveWith<Color>(
-            (Set<MaterialState> states) {
+        (Set<MaterialState> states) {
           if (states.contains(MaterialState.selected)) {
             return primary.withOpacity(0.3);
           }
@@ -356,7 +353,8 @@ class AppTheme {
         backgroundColor: primaryVariant,
         foregroundColor: onDarkSurface,
         padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(radiusM)),
+        shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(radiusM)),
         textStyle: const TextStyle(
           fontSize: 16,
           fontWeight: FontWeight.w600,
@@ -370,7 +368,8 @@ class AppTheme {
         foregroundColor: primaryVariant,
         side: BorderSide(color: primaryVariant.withOpacity(0.3)),
         padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(radiusM)),
+        shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(radiusM)),
         textStyle: const TextStyle(
           fontSize: 16,
           fontWeight: FontWeight.w600,
@@ -381,7 +380,8 @@ class AppTheme {
       style: TextButton.styleFrom(
         foregroundColor: primaryVariant,
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(radiusS)),
+        shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(radiusS)),
         textStyle: const TextStyle(
           fontSize: 14,
           fontWeight: FontWeight.w600,
@@ -422,7 +422,8 @@ class AppTheme {
       elevation: 0,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(radiusL),
-        side: BorderSide(color: onDarkSurfaceVariant.withOpacity(0.08), width: 1),
+        side:
+            BorderSide(color: onDarkSurfaceVariant.withOpacity(0.08), width: 1),
       ),
       color: darkSurface,
       shadowColor: Colors.black.withOpacity(0.2),
@@ -434,7 +435,7 @@ class AppTheme {
     ),
     switchTheme: SwitchThemeData(
       thumbColor: MaterialStateProperty.resolveWith<Color>(
-            (Set<MaterialState> states) {
+        (Set<MaterialState> states) {
           if (states.contains(MaterialState.selected)) {
             return primaryVariant;
           }
@@ -442,7 +443,7 @@ class AppTheme {
         },
       ),
       trackColor: MaterialStateProperty.resolveWith<Color>(
-            (Set<MaterialState> states) {
+        (Set<MaterialState> states) {
           if (states.contains(MaterialState.selected)) {
             return primaryVariant.withOpacity(0.3);
           }
