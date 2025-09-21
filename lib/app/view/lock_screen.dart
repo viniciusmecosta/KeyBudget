@@ -30,24 +30,18 @@ class _LockScreenState extends State<LockScreen> {
       return;
     }
 
-    if (mounted) {
-      setState(() {
-        _isAuthenticating = true;
-      });
-    }
+    setState(() => _isAuthenticating = true);
 
     final localAuthService = LocalAuthService();
     final isAuthenticated = await localAuthService.authenticate();
 
-    if (mounted) {
-      if (isAuthenticated) {
-        Provider.of<AppLockService>(context, listen: false).unlockApp();
-      } else {
-        setState(() {
-          _isAuthenticating = false;
-        });
-      }
-    } else {}
+    if (!mounted) return;
+
+    if (isAuthenticated) {
+      Provider.of<AppLockService>(context, listen: false).unlockApp();
+    } else {
+      setState(() => _isAuthenticating = false);
+    }
   }
 
   @override
@@ -67,10 +61,9 @@ class _LockScreenState extends State<LockScreen> {
             ElevatedButton.icon(
               onPressed: _isAuthenticating ? null : _authenticate,
               icon: _isAuthenticating
-                  ? Container(
+                  ? SizedBox(
                       width: 24,
                       height: 24,
-                      padding: const EdgeInsets.all(2.0),
                       child: CircularProgressIndicator(
                         color: theme.colorScheme.onPrimary,
                         strokeWidth: 3,
@@ -78,10 +71,6 @@ class _LockScreenState extends State<LockScreen> {
                     )
                   : const Icon(Icons.fingerprint),
               label: const Text('Desbloquear'),
-              style: ElevatedButton.styleFrom(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-              ),
             ),
             const SizedBox(height: 16),
             OutlinedButton.icon(
@@ -90,23 +79,13 @@ class _LockScreenState extends State<LockScreen> {
                     Provider.of<AuthViewModel>(context, listen: false);
                 final appLockService =
                     Provider.of<AppLockService>(context, listen: false);
-
                 await authViewModel.logout(context);
-
                 appLockService.unlockApp();
               },
               icon:
                   Icon(Icons.logout, size: 20, color: theme.colorScheme.error),
-              label: Text(
-                'Sair',
-                style: TextStyle(color: theme.colorScheme.error),
-              ),
-              style: OutlinedButton.styleFrom(
-                side:
-                    BorderSide(color: theme.colorScheme.error.withOpacity(0.4)),
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-              ),
+              label: Text('Sair',
+                  style: TextStyle(color: theme.colorScheme.error)),
             ),
           ],
         ),

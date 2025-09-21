@@ -34,13 +34,13 @@ class _AuthGateState extends State<AuthGate> {
   }
 
   void _authenticateOrBypass() {
-    WidgetsBinding.instance.addPostFrameCallback((_) {
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
       final authViewModel = Provider.of<AuthViewModel>(context, listen: false);
       if (authViewModel.justAuthenticated) {
         authViewModel.consumeJustAuthenticated();
         if (mounted) setState(() => _status = AuthStatus.success);
       } else {
-        _authenticate();
+        await _authenticate();
       }
     });
   }
@@ -82,7 +82,7 @@ class _AuthGateState extends State<AuthGate> {
         WidgetsBinding.instance.addPostFrameCallback((_) {
           Provider.of<AppLockService>(context, listen: false).lockApp();
         });
-        return const Scaffold(body: Center());
+        return const Scaffold(body: Center(child: Text("Falha na autenticação")));
       case AuthStatus.pending:
       default:
         return const Scaffold(body: Center(child: CircularProgressIndicator()));
