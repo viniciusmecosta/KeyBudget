@@ -1,9 +1,8 @@
 import 'package:flutter/material.dart' hide DateUtils;
 import 'package:flutter_animate/flutter_animate.dart';
-import 'package:intl/intl.dart';
 import 'package:key_budget/app/config/app_theme.dart';
+import 'package:key_budget/app/widgets/balance_card.dart';
 import 'package:key_budget/app/widgets/empty_state_widget.dart';
-import 'package:key_budget/core/models/expense_model.dart';
 import 'package:key_budget/features/auth/viewmodel/auth_viewmodel.dart';
 import 'package:key_budget/features/category/viewmodel/category_viewmodel.dart';
 import 'package:key_budget/features/expenses/view/add_expense_screen.dart';
@@ -11,7 +10,9 @@ import 'package:key_budget/features/expenses/view/export_expenses_screen.dart';
 import 'package:key_budget/features/expenses/viewmodel/expense_viewmodel.dart';
 import 'package:provider/provider.dart';
 
-import '../../../app/widgets/activity_tile_widget.dart';
+import '../widgets/category_filter_modal.dart';
+import '../widgets/expense_list.dart';
+import '../widgets/month_selector.dart';
 
 class ExpensesScreen extends StatefulWidget {
   const ExpensesScreen({super.key});
@@ -22,8 +23,6 @@ class ExpensesScreen extends StatefulWidget {
 
 class _ExpensesScreenState extends State<ExpensesScreen> {
   DateTime _selectedMonth = DateTime(DateTime.now().year, DateTime.now().month);
-  final _currencyFormatter =
-      NumberFormat.currency(locale: 'pt_BR', symbol: 'R\$ ');
   bool _isFirstLoad = true;
 
   @override
@@ -66,132 +65,17 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
   }
 
   void _showCategoryFilter() {
-    final expenseViewModel =
-        Provider.of<ExpenseViewModel>(context, listen: false);
-    final categoryViewModel =
-        Provider.of<CategoryViewModel>(context, listen: false);
-    final theme = Theme.of(context);
-
     showModalBottomSheet(
       context: context,
       shape: const RoundedRectangleBorder(
         borderRadius:
             BorderRadius.vertical(top: Radius.circular(AppTheme.radiusXL)),
       ),
-      backgroundColor: theme.colorScheme.surface,
+      backgroundColor: Theme.of(context).colorScheme.surface,
       builder: (context) {
-        return StatefulBuilder(
-          builder: (context, setModalState) {
-            return Container(
-              padding: const EdgeInsets.all(AppTheme.spaceL),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Container(
-                    height: 4,
-                    width: 48,
-                    margin: const EdgeInsets.only(bottom: AppTheme.spaceL),
-                    decoration: BoxDecoration(
-                      color: theme.colorScheme.onSurface.withOpacity(0.2),
-                      borderRadius: BorderRadius.circular(AppTheme.radiusS),
-                    ),
-                  ),
-                  Text(
-                    'Filtrar por Categoria',
-                    style: theme.textTheme.titleLarge?.copyWith(
-                      fontWeight: FontWeight.w700,
-                    ),
-                  ),
-                  const SizedBox(height: AppTheme.spaceL),
-                  Flexible(
-                    child: ListView(
-                      shrinkWrap: true,
-                      children: categoryViewModel.categories.map((category) {
-                        final isSelected = expenseViewModel.selectedCategoryIds
-                            .contains(category.id);
-                        return Container(
-                          margin:
-                              const EdgeInsets.only(bottom: AppTheme.spaceXS),
-                          decoration: BoxDecoration(
-                            color: isSelected
-                                ? theme.colorScheme.primary.withOpacity(0.08)
-                                : Colors.transparent,
-                            borderRadius:
-                                BorderRadius.circular(AppTheme.radiusM),
-                            border: Border.all(
-                              color: isSelected
-                                  ? theme.colorScheme.primary.withOpacity(0.2)
-                                  : theme.colorScheme.outline.withOpacity(0.1),
-                            ),
-                          ),
-                          child: CheckboxListTile(
-                            title: Text(
-                              category.name,
-                              style: theme.textTheme.bodyLarge?.copyWith(
-                                fontWeight: FontWeight.w500,
-                                color: isSelected
-                                    ? theme.colorScheme.primary
-                                    : theme.colorScheme.onSurface,
-                              ),
-                            ),
-                            value: isSelected,
-                            activeColor: theme.colorScheme.primary,
-                            onChanged: (value) {
-                              final currentSelection = List<String>.from(
-                                  expenseViewModel.selectedCategoryIds);
-                              if (value == true) {
-                                currentSelection.add(category.id!);
-                              } else {
-                                currentSelection.remove(category.id);
-                              }
-                              expenseViewModel
-                                  .setCategoryFilter(currentSelection);
-                              setModalState(() {});
-                            },
-                          ),
-                        );
-                      }).toList(),
-                    ),
-                  ),
-                  const SizedBox(height: AppTheme.spaceL),
-                  SizedBox(
-                    width: double.infinity,
-                    child: TextButton(
-                      onPressed: () {
-                        expenseViewModel.clearFilters();
-                        Navigator.of(context).pop();
-                      },
-                      style: TextButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(
-                            vertical: AppTheme.spaceM),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(AppTheme.radiusM),
-                        ),
-                      ),
-                      child: const Text('Limpar Filtros'),
-                    ),
-                  ),
-                ],
-              ),
-            );
-          },
-        );
+        return const CategoryFilterModal();
       },
     );
-  }
-
-  String _formatMonthYear(DateTime date) {
-    final now = DateTime.now();
-    String formattedDate;
-
-    if (date.year == now.year) {
-      formattedDate = DateFormat.MMMM('pt_BR').format(date);
-    } else {
-      formattedDate = DateFormat.yMMMM('pt_BR').format(date);
-    }
-    return formattedDate.isNotEmpty
-        ? formattedDate[0].toUpperCase() + formattedDate.substring(1)
-        : '';
   }
 
   @override
@@ -221,11 +105,24 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
           SliverList(
             delegate: SliverChildListDelegate(
               [
-                _buildMonthSelector(context),
+                MonthSelector(
+                  selectedMonth: _selectedMonth,
+                  onMonthChanged: (newMonth) {
+                    setState(() {
+                      _selectedMonth = newMonth;
+                    });
+                  },
+                ),
                 Padding(
                   padding: const EdgeInsets.symmetric(
                       horizontal: AppTheme.defaultPadding),
-                  child: _buildTotalBalanceCard(context, totalValue),
+                  child: BalanceCard(
+                    title: 'Total do mês',
+                    totalValue: totalValue,
+                  )
+                      .animate()
+                      .fadeIn(duration: 400.ms)
+                      .slideY(begin: 0.3, end: 0),
                 ),
                 const SizedBox(height: AppTheme.spaceL),
               ],
@@ -244,18 +141,9 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
               ),
             )
           else
-            SliverPadding(
-              padding: const EdgeInsets.fromLTRB(
-                  AppTheme.defaultPadding, 0, AppTheme.defaultPadding, 96.0),
-              sliver: SliverList(
-                delegate: SliverChildBuilderDelegate(
-                  (context, index) {
-                    final expense = monthlyExpenses[index];
-                    return _buildExpenseTile(expense, index);
-                  },
-                  childCount: monthlyExpenses.length,
-                ),
-              ),
+            ExpenseList(
+              monthlyExpenses: monthlyExpenses,
+              isFirstLoad: _isFirstLoad,
             ),
         ],
       ),
@@ -375,144 +263,5 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
         ],
       ).animate().fadeIn(duration: 300.ms),
     );
-  }
-
-  Widget _buildMonthSelector(BuildContext context) {
-    final theme = Theme.of(context);
-
-    return Container(
-      margin: const EdgeInsets.symmetric(
-          horizontal: AppTheme.defaultPadding, vertical: AppTheme.spaceS),
-      padding: const EdgeInsets.symmetric(
-          horizontal: AppTheme.spaceS, vertical: AppTheme.spaceXS),
-      decoration: BoxDecoration(
-        color: theme.colorScheme.surface,
-        borderRadius: BorderRadius.circular(AppTheme.radiusL),
-        border: Border.all(
-          color: theme.colorScheme.outline.withOpacity(0.08),
-        ),
-      ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          IconButton(
-            icon: const Icon(Icons.chevron_left_rounded),
-            onPressed: () {
-              setState(() {
-                _selectedMonth =
-                    DateTime(_selectedMonth.year, _selectedMonth.month - 1);
-              });
-            },
-            style: IconButton.styleFrom(
-              foregroundColor: theme.colorScheme.onSurface,
-            ),
-          ),
-          Text(
-            _formatMonthYear(_selectedMonth),
-            style: theme.textTheme.titleLarge?.copyWith(
-              fontWeight: FontWeight.w700,
-              color: theme.colorScheme.onSurface,
-            ),
-          ),
-          IconButton(
-            icon: const Icon(Icons.chevron_right_rounded),
-            onPressed: () {
-              setState(() {
-                _selectedMonth =
-                    DateTime(_selectedMonth.year, _selectedMonth.month + 1);
-              });
-            },
-            style: IconButton.styleFrom(
-              foregroundColor: theme.colorScheme.onSurface,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildTotalBalanceCard(BuildContext context, double totalValue) {
-    final theme = Theme.of(context);
-    Widget card = Container(
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(AppTheme.radiusXL),
-        gradient: LinearGradient(
-          colors: [
-            theme.colorScheme.primary,
-            theme.colorScheme.primary.withOpacity(0.85),
-          ],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: theme.colorScheme.primary.withOpacity(0.25),
-            blurRadius: 24,
-            offset: const Offset(0, 8),
-          ),
-        ],
-      ),
-      child: Padding(
-        padding: const EdgeInsets.all(AppTheme.spaceL),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'Total do mês',
-                  style: theme.textTheme.titleMedium?.copyWith(
-                    color: theme.colorScheme.onPrimary.withOpacity(0.9),
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-                const SizedBox(height: AppTheme.spaceS),
-                Text(
-                  _currencyFormatter.format(totalValue),
-                  style: theme.textTheme.headlineMedium?.copyWith(
-                    color: theme.colorScheme.onPrimary,
-                    fontWeight: FontWeight.w800,
-                  ),
-                ),
-              ],
-            ),
-            Container(
-              padding: const EdgeInsets.all(AppTheme.spaceM),
-              decoration: BoxDecoration(
-                color: theme.colorScheme.onPrimary.withOpacity(0.15),
-                borderRadius: BorderRadius.circular(AppTheme.radiusL),
-              ),
-              child: Icon(
-                Icons.account_balance_wallet_rounded,
-                color: theme.colorScheme.onPrimary,
-                size: 28,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-
-    if (_isFirstLoad) {
-      return card.animate().fadeIn(duration: 400.ms).slideY(begin: 0.3, end: 0);
-    }
-    return card;
-  }
-
-  Widget _buildExpenseTile(Expense expense, int index) {
-    Widget tile = ActivityTile(
-      expense: expense,
-      index: index,
-    );
-
-    if (_isFirstLoad) {
-      return tile
-          .animate(delay: Duration(milliseconds: 50 * index))
-          .fadeIn(duration: 400.ms, curve: Curves.easeOut)
-          .slideX(begin: 0.2, end: 0, curve: Curves.easeOutCubic);
-    }
-
-    return tile;
   }
 }

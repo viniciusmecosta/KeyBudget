@@ -1,25 +1,26 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:key_budget/app/config/app_theme.dart';
-import 'package:key_budget/app/viewmodel/navigation_viewmodel.dart';
-import 'package:key_budget/features/dashboard/viewmodel/dashboard_viewmodel.dart';
-import 'package:provider/provider.dart';
 
-class TotalBalanceCard extends StatelessWidget {
-  const TotalBalanceCard({super.key});
+class BalanceCard extends StatelessWidget {
+  final String title;
+  final double totalValue;
+  final Widget? subtitle;
+  final VoidCallback? onTap;
+
+  const BalanceCard({
+    super.key,
+    required this.title,
+    required this.totalValue,
+    this.subtitle,
+    this.onTap,
+  });
 
   @override
   Widget build(BuildContext context) {
-    final viewModel = Provider.of<DashboardViewModel>(context);
     final theme = Theme.of(context);
-    final percentageChange = viewModel.percentageChangeFromAverage;
-    final hasPreviousMonths = viewModel.averageOfPreviousMonths > 0;
     final currencyFormatter =
         NumberFormat.currency(locale: 'pt_BR', symbol: 'R\$');
-
-    final isIncrease = percentageChange >= 0;
-    final formattedPercentage =
-        '${isIncrease ? '+' : '-'}${percentageChange.abs().toStringAsFixed(1)}%';
 
     return Container(
       decoration: BoxDecoration(
@@ -44,10 +45,7 @@ class TotalBalanceCard extends StatelessWidget {
         color: Colors.transparent,
         borderRadius: BorderRadius.circular(AppTheme.radiusXL),
         child: InkWell(
-          onTap: () {
-            Provider.of<NavigationViewModel>(context, listen: false)
-                .selectedIndex = 1;
-          },
+          onTap: onTap,
           borderRadius: BorderRadius.circular(AppTheme.radiusXL),
           child: Padding(
             padding: const EdgeInsets.all(AppTheme.spaceL),
@@ -62,7 +60,7 @@ class TotalBalanceCard extends StatelessWidget {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            'Gasto Total do Mês',
+                            title,
                             style: theme.textTheme.titleMedium?.copyWith(
                               color:
                                   theme.colorScheme.onPrimary.withOpacity(0.9),
@@ -72,8 +70,7 @@ class TotalBalanceCard extends StatelessWidget {
                           ),
                           const SizedBox(height: AppTheme.spaceS),
                           Text(
-                            currencyFormatter
-                                .format(viewModel.totalAmountForMonth),
+                            currencyFormatter.format(totalValue),
                             style: theme.textTheme.displaySmall?.copyWith(
                               fontWeight: FontWeight.w800,
                               color: theme.colorScheme.onPrimary,
@@ -98,47 +95,9 @@ class TotalBalanceCard extends StatelessWidget {
                     ),
                   ],
                 ),
-                if (hasPreviousMonths) ...[
+                if (subtitle != null) ...[
                   const SizedBox(height: AppTheme.spaceL),
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: AppTheme.spaceM - 2,
-                      vertical: AppTheme.spaceS - 2,
-                    ),
-                    decoration: BoxDecoration(
-                      color: theme.colorScheme.onPrimary.withOpacity(0.15),
-                      borderRadius: BorderRadius.circular(AppTheme.radiusXL),
-                    ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Icon(
-                          isIncrease ? Icons.trending_up : Icons.trending_down,
-                          color: theme.colorScheme.onPrimary,
-                          size: 16,
-                        ),
-                        const SizedBox(width: AppTheme.spaceXS),
-                        Text(
-                          formattedPercentage,
-                          style: theme.textTheme.bodyMedium?.copyWith(
-                            color: theme.colorScheme.onPrimary,
-                            fontWeight: FontWeight.w700,
-                            fontSize: 13,
-                          ),
-                        ),
-                        const SizedBox(width: AppTheme.spaceXS),
-                        Text(
-                          'vs média',
-                          style: theme.textTheme.bodySmall?.copyWith(
-                            color:
-                                theme.colorScheme.onPrimary.withOpacity(0.85),
-                            fontSize: 13,
-                            fontWeight: FontWeight.w500,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
+                  subtitle!,
                 ],
               ],
             ),

@@ -8,10 +8,10 @@ import 'package:key_budget/features/dashboard/viewmodel/dashboard_viewmodel.dart
 import 'package:key_budget/features/expenses/viewmodel/expense_viewmodel.dart';
 import 'package:provider/provider.dart';
 
+import '../widgets/dashboard_balance_card.dart';
 import '../widgets/dashboard_header.dart';
 import '../widgets/quick_actions_section.dart';
 import '../widgets/recent_activity_section.dart';
-import '../widgets/total_balance_card.dart';
 
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
@@ -96,7 +96,7 @@ class _DashboardScreenState extends State<DashboardScreen>
                           AppTheme.spaceS, AppTheme.spaceM, AppTheme.spaceL),
                       sliver: SliverList(
                         delegate: SliverChildListDelegate([
-                          const TotalBalanceCard()
+                          const DashboardBalanceCard()
                               .animate()
                               .fadeIn(duration: 400.ms, delay: 100.ms)
                               .slideY(begin: 0.2, end: 0),
