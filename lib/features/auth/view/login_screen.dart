@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_animate/flutter_animate.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:key_budget/app/config/app_theme.dart';
 import 'package:key_budget/features/auth/view/register_screen.dart';
 import 'package:key_budget/features/auth/viewmodel/auth_viewmodel.dart';
 import 'package:provider/provider.dart';
+
+import '../widgets/auth_page_layout.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -75,127 +76,87 @@ class _LoginScreenState extends State<LoginScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-
-    return Scaffold(
-      body: Container(
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [
-              theme.colorScheme.background,
-              theme.primaryColor.withOpacity(0.1),
-            ],
-          ),
-        ),
-        child: Center(
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.symmetric(
-                horizontal: AppTheme.spaceL, vertical: AppTheme.spaceXL),
+    return AuthPageLayout(
+      child: Column(
+        children: [
+          Form(
+            key: _formKey,
             child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Text(
-                  "KeyBudget",
-                  style: theme.textTheme.headlineMedium?.copyWith(
-                    color: theme.primaryColor,
-                    fontWeight: FontWeight.bold,
+                TextFormField(
+                  controller: _emailController,
+                  decoration: const InputDecoration(
+                    labelText: 'Email',
+                    prefixIcon: Icon(Icons.email_outlined),
                   ),
-                ),
-                const SizedBox(height: AppTheme.spaceS),
-                Text(
-                  "Gerencie suas finanças e senhas com segurança",
-                  textAlign: TextAlign.center,
-                  style: theme.textTheme.titleMedium?.copyWith(
-                    color: theme.colorScheme.onSurface.withOpacity(0.7),
-                  ),
-                ),
-                const SizedBox(height: 48),
-                Form(
-                  key: _formKey,
-                  child: Column(
-                    children: [
-                      TextFormField(
-                        controller: _emailController,
-                        decoration: const InputDecoration(
-                          labelText: 'Email',
-                          prefixIcon: Icon(Icons.email_outlined),
-                        ),
-                        keyboardType: TextInputType.emailAddress,
-                        validator: (value) =>
-                            (value == null || !value.contains('@'))
-                                ? 'Insira um email válido'
-                                : null,
-                      ),
-                      const SizedBox(height: 20),
-                      TextFormField(
-                        controller: _passwordController,
-                        decoration: const InputDecoration(
-                          labelText: 'Senha',
-                          prefixIcon: Icon(Icons.lock_outline),
-                        ),
-                        obscureText: true,
-                        validator: (value) =>
-                            (value == null || value.length < 6)
-                                ? 'A senha deve ter pelo menos 6 caracteres'
-                                : null,
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(height: 28),
-                Consumer<AuthViewModel>(
-                  builder: (context, viewModel, child) {
-                    return Column(
-                      children: [
-                        SizedBox(
-                          width: double.infinity,
-                          child: ElevatedButton(
-                            onPressed: viewModel.isLoading ? null : _submit,
-                            child: viewModel.isLoading
-                                ? const SizedBox(
-                                    height: AppTheme.spaceL,
-                                    width: AppTheme.spaceL,
-                                    child: CircularProgressIndicator(
-                                      color: Colors.white,
-                                      strokeWidth: 2.5,
-                                    ),
-                                  )
-                                : const Text('Entrar'),
-                          ),
-                        ),
-                        const SizedBox(height: AppTheme.spaceM),
-                        SizedBox(
-                          width: double.infinity,
-                          child: OutlinedButton.icon(
-                            onPressed:
-                                viewModel.isLoading ? null : _submitGoogle,
-                            icon: const FaIcon(
-                              FontAwesomeIcons.google,
-                              size: 20,
-                            ),
-                            label: const Text('Entrar com Google'),
-                          ),
-                        ),
-                      ],
-                    );
-                  },
+                  keyboardType: TextInputType.emailAddress,
+                  validator: (value) => (value == null || !value.contains('@'))
+                      ? 'Insira um email válido'
+                      : null,
                 ),
                 const SizedBox(height: 20),
-                TextButton(
-                  onPressed: () {
-                    Navigator.of(context).push(
-                      MaterialPageRoute(builder: (_) => const RegisterScreen()),
-                    );
-                  },
-                  child: const Text("Não tem uma conta? Cadastre-se"),
-                )
+                TextFormField(
+                  controller: _passwordController,
+                  decoration: const InputDecoration(
+                    labelText: 'Senha',
+                    prefixIcon: Icon(Icons.lock_outline),
+                  ),
+                  obscureText: true,
+                  validator: (value) => (value == null || value.length < 6)
+                      ? 'A senha deve ter pelo menos 6 caracteres'
+                      : null,
+                ),
               ],
             ),
           ),
-        ),
-      ).animate().fadeIn(duration: 250.ms),
+          const SizedBox(height: 28),
+          Consumer<AuthViewModel>(
+            builder: (context, viewModel, child) {
+              return Column(
+                children: [
+                  SizedBox(
+                    width: double.infinity,
+                    child: ElevatedButton(
+                      onPressed: viewModel.isLoading ? null : _submit,
+                      child: viewModel.isLoading
+                          ? const SizedBox(
+                              height: AppTheme.spaceL,
+                              width: AppTheme.spaceL,
+                              child: CircularProgressIndicator(
+                                color: Colors.white,
+                                strokeWidth: 2.5,
+                              ),
+                            )
+                          : const Text('Entrar'),
+                    ),
+                  ),
+                  const SizedBox(height: AppTheme.spaceM),
+                  SizedBox(
+                    width: double.infinity,
+                    child: OutlinedButton.icon(
+                      onPressed: viewModel.isLoading ? null : _submitGoogle,
+                      icon: const FaIcon(
+                        FontAwesomeIcons.google,
+                        size: 20,
+                      ),
+                      label: const Text('Entrar com Google'),
+                    ),
+                  ),
+                ],
+              );
+            },
+          ),
+          const SizedBox(height: 20),
+          TextButton(
+            onPressed: () {
+              Navigator.of(context).push(
+                MaterialPageRoute(builder: (_) => const RegisterScreen()),
+              );
+            },
+            child: const Text("Não tem uma conta? Cadastre-se"),
+          )
+        ],
+      ),
     );
   }
 }

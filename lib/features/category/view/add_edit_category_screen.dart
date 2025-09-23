@@ -2,10 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:key_budget/core/models/expense_category_model.dart';
 import 'package:key_budget/features/auth/viewmodel/auth_viewmodel.dart';
-import 'package:key_budget/features/category/view/widgets/color_picker_widget.dart';
-import 'package:key_budget/features/category/view/widgets/icon_picker_widget.dart';
 import 'package:key_budget/features/category/viewmodel/category_viewmodel.dart';
 import 'package:provider/provider.dart';
+
+import '../widgets/category_form.dart';
 
 class AddEditCategoryScreen extends StatefulWidget {
   final ExpenseCategory? category;
@@ -68,7 +68,6 @@ class _AddEditCategoryScreenState extends State<AddEditCategoryScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
     return Scaffold(
       appBar: AppBar(
         title: Text(
@@ -76,95 +75,33 @@ class _AddEditCategoryScreenState extends State<AddEditCategoryScreen> {
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
-        child: Form(
-          key: _formKey,
-          child: ListView(
-            children: [
-              TextFormField(
-                controller: _nameController,
-                textCapitalization: TextCapitalization.sentences,
-                decoration:
-                    const InputDecoration(labelText: 'Nome da Categoria *'),
-                validator: (value) =>
-                    value!.isEmpty ? 'Campo obrigatório' : null,
+        child: Column(
+          children: [
+            Expanded(
+              child: CategoryForm(
+                formKey: _formKey,
+                nameController: _nameController,
+                selectedIcon: _selectedIcon,
+                selectedColor: _selectedColor,
+                onIconChanged: (icon) {
+                  setState(() => _selectedIcon = icon);
+                },
+                onColorChanged: (color) {
+                  setState(() => _selectedColor = color);
+                },
               ),
-              const SizedBox(height: 24),
-              Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Expanded(
-                    child: InkWell(
-                      onTap: () async {
-                        final icon = await showModalBottomSheet<IconData>(
-                          context: context,
-                          isScrollControlled: true,
-                          backgroundColor: Colors.transparent,
-                          builder: (_) => const IconPickerWidget(),
-                        );
-                        if (icon != null) {
-                          setState(() => _selectedIcon = icon);
-                        }
-                      },
-                      borderRadius: BorderRadius.circular(12),
-                      child: InputDecorator(
-                        decoration: const InputDecoration(
-                          labelText: 'Ícone',
-                          contentPadding: EdgeInsets.symmetric(vertical: 20),
-                        ),
-                        child: Center(
-                          child: Icon(
-                            _selectedIcon ?? Icons.category,
-                            size: 36,
-                            color: _selectedColor ??
-                                theme.colorScheme.onSurfaceVariant,
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 16),
-                  Expanded(
-                    child: InkWell(
-                      onTap: () async {
-                        final color = await showDialog<Color>(
-                          context: context,
-                          builder: (_) =>
-                              ColorPickerWidget(initialColor: _selectedColor),
-                        );
-                        if (color != null) {
-                          setState(() => _selectedColor = color);
-                        }
-                      },
-                      borderRadius: BorderRadius.circular(12),
-                      child: InputDecorator(
-                        decoration: const InputDecoration(
-                          labelText: 'Cor',
-                          contentPadding: EdgeInsets.symmetric(vertical: 20),
-                        ),
-                        child: Center(
-                          child: CircleAvatar(
-                            backgroundColor: _selectedColor ?? Colors.grey,
-                            radius: 18,
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 32),
-              ElevatedButton(
-                onPressed: _isSaving ? null : _submit,
-                child: _isSaving
-                    ? const SizedBox(
-                        height: 24,
-                        width: 24,
-                        child: CircularProgressIndicator(strokeWidth: 2.0),
-                      )
-                    : const Text('Salvar Categoria'),
-              ),
-            ],
-          ),
+            ),
+            const SizedBox(height: 32),
+            ElevatedButton(
+              onPressed: _isSaving ? null : _submit,
+              child: _isSaving
+                  ? const SizedBox(
+                      height: 24,
+                      width: 24,
+                      child: CircularProgressIndicator(strokeWidth: 2.0))
+                  : const Text('Salvar Categoria'),
+            ),
+          ],
         ),
       ).animate().fadeIn(duration: 250.ms).slideY(begin: 0.1, end: 0),
     );
