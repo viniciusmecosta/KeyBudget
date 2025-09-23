@@ -1,38 +1,13 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:key_budget/app/config/app_theme.dart';
 import 'package:key_budget/core/models/supplier_model.dart';
 import 'package:key_budget/features/auth/viewmodel/auth_viewmodel.dart';
-import 'package:key_budget/features/credentials/view/widgets/logo_picker.dart';
-import 'package:key_budget/features/credentials/view/widgets/saved_logos_screen.dart';
 import 'package:key_budget/features/suppliers/viewmodel/supplier_viewmodel.dart';
 import 'package:mask_text_input_formatter/mask_text_input_formatter.dart';
 import 'package:provider/provider.dart';
 
-class PasteSanitizerInputFormatter extends TextInputFormatter {
-  @override
-  TextEditingValue formatEditUpdate(
-    TextEditingValue oldValue,
-    TextEditingValue newValue,
-  ) {
-    final isPasted = newValue.text.length > oldValue.text.length + 1;
-    if (isPasted) {
-      String text = newValue.text;
-      String sanitizedText = text.replaceAll(RegExp(r'[^0-9]'), '');
-
-      if (sanitizedText.startsWith('55')) {
-        sanitizedText = sanitizedText.substring(2);
-      }
-
-      return TextEditingValue(
-        text: sanitizedText,
-        selection: TextSelection.collapsed(offset: sanitizedText.length),
-      );
-    }
-    return newValue;
-  }
-}
+import '../widgets/supplier_form.dart';
 
 class SupplierDetailScreen extends StatefulWidget {
   final Supplier supplier;
@@ -80,14 +55,6 @@ class _SupplierDetailScreenState extends State<SupplierDetailScreen> {
     _phoneController.dispose();
     _notesController.dispose();
     super.dispose();
-  }
-
-  void _copyToClipboard(String text) {
-    if (text.isEmpty) return;
-    Clipboard.setData(ClipboardData(text: text));
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Copiado para a área de transferência!')),
-    );
   }
 
   void _saveChanges() async {
@@ -150,24 +117,8 @@ class _SupplierDetailScreenState extends State<SupplierDetailScreen> {
     );
   }
 
-  void _selectSavedLogo() async {
-    final selectedLogo = await Navigator.of(context).push<String>(
-      MaterialPageRoute(
-        builder: (_) => const SavedLogosScreen(),
-      ),
-    );
-
-    if (selectedLogo != null) {
-      setState(() {
-        _photoPath = selectedLogo;
-      });
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-
     return Scaffold(
       appBar: AppBar(
         title: Text(_isEditing ? 'Editar Fornecedor' : 'Detalhes'),
@@ -191,169 +142,41 @@ class _SupplierDetailScreenState extends State<SupplierDetailScreen> {
       ),
       body: Padding(
         padding: const EdgeInsets.all(AppTheme.defaultPadding),
-        child: Form(
-          key: _formKey,
-          child: ListView(
-            children: [
-              Center(
-                child: AbsorbPointer(
-                  absorbing: !_isEditing,
-                  child: LogoPicker(
-                    initialImagePath: _photoPath,
-                    onImageSelected: (path) {
-                      setState(() {
-                        _photoPath = path;
-                      });
-                    },
-                  ),
+        child: Column(
+          children: [
+            Expanded(
+              child: AbsorbPointer(
+                absorbing: !_isEditing,
+                child: SupplierForm(
+                  formKey: _formKey,
+                  nameController: _nameController,
+                  repNameController: _repNameController,
+                  emailController: _emailController,
+                  phoneController: _phoneController,
+                  notesController: _notesController,
+                  photoPath: _photoPath,
+                  onPhotoChanged: (path) {
+                    setState(() {
+                      _photoPath = path;
+                    });
+                  },
+                  isEditing: _isEditing,
                 ),
               ),
-              if (_isEditing) ...[
-                const SizedBox(height: 8),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    TextButton.icon(
-                      onPressed: _selectSavedLogo,
-                      icon: const Icon(Icons.collections_bookmark_outlined,
-                          size: 18),
-                      label: const Text('Escolher Salva'),
-                    ),
-                    const SizedBox(width: 8),
-                    TextButton.icon(
-                      onPressed: () {
-                        setState(() {
-                          _photoPath = null;
-                        });
-                      },
-                      icon: const Icon(Icons.no_photography_outlined, size: 18),
-                      label: const Text('Remover'),
-                      style: TextButton.styleFrom(
-                          foregroundColor: theme.colorScheme.error),
-                    ),
-                  ],
-                ),
-              ],
-              const SizedBox(height: 24),
-              TextFormField(
-                controller: _nameController,
-                readOnly: !_isEditing,
-                textCapitalization: TextCapitalization.words,
-                style: _isEditing
-                    ? null
-                    : TextStyle(color: theme.colorScheme.onSurface),
-                decoration:
-                    const InputDecoration(labelText: 'Nome Fornecedor/Loja *'),
-                validator: (value) =>
-                    value!.isEmpty ? 'Campo obrigatório' : null,
-              ),
-              if (_isEditing || _repNameController.text.isNotEmpty)
-                const SizedBox(height: 16),
-              if (_isEditing || _repNameController.text.isNotEmpty)
-                TextFormField(
-                  controller: _repNameController,
-                  readOnly: !_isEditing,
-                  textCapitalization: TextCapitalization.words,
-                  style: _isEditing
-                      ? null
-                      : TextStyle(color: theme.colorScheme.onSurface),
-                  decoration:
-                      const InputDecoration(labelText: 'Nome Representante'),
-                ),
-              if (_isEditing || _emailController.text.isNotEmpty)
-                const SizedBox(height: 16),
-              if (_isEditing || _emailController.text.isNotEmpty)
-                TextFormField(
-                  controller: _emailController,
-                  readOnly: !_isEditing,
-                  style: _isEditing
-                      ? null
-                      : TextStyle(color: theme.colorScheme.onSurface),
-                  decoration: InputDecoration(
-                    labelText: 'Email',
-                    suffixIcon: _isEditing || _emailController.text.isEmpty
-                        ? null
-                        : IconButton(
-                            icon: const Icon(Icons.copy, size: 20),
-                            onPressed: () =>
-                                _copyToClipboard(_emailController.text),
-                          ),
-                  ),
-                  keyboardType: TextInputType.emailAddress,
-                  validator: (value) {
-                    if (value == null || value.isEmpty) return null;
-                    final emailRegex =
-                        RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$');
-                    if (!emailRegex.hasMatch(value)) {
-                      return 'Por favor, insira um email válido.';
-                    }
-                    return null;
-                  },
-                ),
-              if (_isEditing || _phoneController.text.isNotEmpty)
-                const SizedBox(height: 16),
-              if (_isEditing || _phoneController.text.isNotEmpty)
-                TextFormField(
-                  controller: _phoneController,
-                  readOnly: !_isEditing,
-                  inputFormatters: [
-                    PasteSanitizerInputFormatter(),
-                    _phoneMaskFormatter
-                  ],
-                  style: _isEditing
-                      ? null
-                      : TextStyle(color: theme.colorScheme.onSurface),
-                  decoration: InputDecoration(
-                    labelText: 'Telefone (WhatsApp)',
-                    suffixIcon: _isEditing || _phoneController.text.isEmpty
-                        ? null
-                        : IconButton(
-                            icon: const Icon(Icons.copy, size: 20),
-                            onPressed: () => _copyToClipboard(
-                              _phoneMaskFormatter
-                                  .unmaskText(_phoneController.text),
-                            ),
-                          ),
-                  ),
-                  keyboardType: TextInputType.phone,
-                  validator: (value) {
-                    if (value == null || value.isEmpty) return null;
-                    final unmaskedText =
-                        _phoneMaskFormatter.unmaskText(_phoneController.text);
-                    if (unmaskedText.isNotEmpty && unmaskedText.length < 10) {
-                      return 'O telefone deve ter no mínimo 10 dígitos.';
-                    }
-                    return null;
-                  },
-                ),
-              if (_isEditing || _notesController.text.isNotEmpty)
-                const SizedBox(height: 16),
-              if (_isEditing || _notesController.text.isNotEmpty)
-                TextFormField(
-                  controller: _notesController,
-                  readOnly: !_isEditing,
-                  style: _isEditing
-                      ? null
-                      : TextStyle(color: theme.colorScheme.onSurface),
-                  decoration: const InputDecoration(labelText: 'Observações'),
-                  maxLines: 3,
-                  textCapitalization: TextCapitalization.sentences,
-                ),
-              const SizedBox(height: 24),
-              if (_isEditing)
-                ElevatedButton(
-                  onPressed: _isSaving ? null : _saveChanges,
-                  child: _isSaving
-                      ? SizedBox(
-                          height: 24,
-                          width: 24,
-                          child: CircularProgressIndicator(
-                              color: theme.colorScheme.onPrimary,
-                              strokeWidth: 2.0))
-                      : const Text('Salvar Alterações'),
-                )
-            ],
-          ),
+            ),
+            if (_isEditing) ...[
+              const SizedBox(height: 16),
+              ElevatedButton(
+                onPressed: _isSaving ? null : _saveChanges,
+                child: _isSaving
+                    ? const SizedBox(
+                        height: 24,
+                        width: 24,
+                        child: CircularProgressIndicator(strokeWidth: 2.0))
+                    : const Text('Salvar Alterações'),
+              )
+            ]
+          ],
         ),
       ).animate().fadeIn(duration: 250.ms).slideY(begin: 0.1, end: 0),
     );

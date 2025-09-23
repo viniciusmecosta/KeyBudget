@@ -27,4 +27,18 @@ class DateUtils {
       return DateFormat('dd').format(date);
     }
   }
+
+  static String formatMonthYear(DateTime date) {
+    final now = DateTime.now();
+    String formattedDate;
+
+    if (date.year == now.year) {
+      formattedDate = DateFormat.MMMM('pt_BR').format(date);
+    } else {
+      formattedDate = DateFormat.yMMMM('pt_BR').format(date);
+    }
+    return formattedDate.isNotEmpty
+        ? formattedDate[0].toUpperCase() + formattedDate.substring(1)
+        : '';
+  }
 }
