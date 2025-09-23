@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:key_budget/app/config/app_theme.dart';
 import 'package:key_budget/features/auth/view/widgets/avatar_picker.dart';
@@ -7,29 +6,7 @@ import 'package:key_budget/features/auth/viewmodel/auth_viewmodel.dart';
 import 'package:mask_text_input_formatter/mask_text_input_formatter.dart';
 import 'package:provider/provider.dart';
 
-class PasteSanitizerInputFormatter extends TextInputFormatter {
-  @override
-  TextEditingValue formatEditUpdate(
-    TextEditingValue oldValue,
-    TextEditingValue newValue,
-  ) {
-    final isPasted = newValue.text.length > oldValue.text.length + 1;
-    if (isPasted) {
-      String text = newValue.text;
-      String sanitizedText = text.replaceAll(RegExp(r'[^0-9]'), '');
-
-      if (sanitizedText.startsWith('55')) {
-        sanitizedText = sanitizedText.substring(2);
-      }
-
-      return TextEditingValue(
-        text: sanitizedText,
-        selection: TextSelection.collapsed(offset: sanitizedText.length),
-      );
-    }
-    return newValue;
-  }
-}
+import '../../../app/widgets/paste_sanatizer_input_formatter.dart';
 
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
