@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:key_budget/app/config/app_theme.dart';
-import 'package:key_budget/features/auth/view/widgets/avatar_picker.dart';
 import 'package:key_budget/features/auth/viewmodel/auth_viewmodel.dart';
 import 'package:mask_text_input_formatter/mask_text_input_formatter.dart';
 import 'package:provider/provider.dart';
+
+import '../widgets/user_form.dart';
 
 class EditUserScreen extends StatefulWidget {
   const EditUserScreen({super.key});
@@ -20,8 +21,6 @@ class _EditUserScreenState extends State<EditUserScreen> {
   late TextEditingController _passwordController;
   late TextEditingController _confirmPasswordController;
   String? _avatarPath;
-  bool _isPasswordVisible = false;
-  bool _isConfirmPasswordVisible = false;
   bool _isSaving = false;
 
   final _phoneMaskFormatter = MaskTextInputFormatter(
@@ -95,128 +94,36 @@ class _EditUserScreenState extends State<EditUserScreen> {
       appBar: AppBar(title: const Text('Editar Perfil')),
       body: Padding(
         padding: const EdgeInsets.all(AppTheme.defaultPadding),
-        child: Form(
-          key: _formKey,
-          child: ListView(
-            children: [
-              const SizedBox(height: 16),
-              Center(
-                child: AvatarPicker(
-                  initialImagePath: _avatarPath,
-                  onImageSelected: (path) {
+        child: Column(
+          children: [
+            Expanded(
+              child: UserForm(
+                formKey: _formKey,
+                nameController: _nameController,
+                phoneController: _phoneController,
+                passwordController: _passwordController,
+                confirmPasswordController: _confirmPasswordController,
+                avatarPath: _avatarPath,
+                onAvatarChanged: (path) {
+                  setState(() {
                     _avatarPath = path;
-                  },
-                ),
+                  });
+                },
               ),
-              const SizedBox(height: 32),
-              Card(
-                child: Padding(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
-                  child: Column(
-                    children: [
-                      TextFormField(
-                        controller: _nameController,
-                        textCapitalization: TextCapitalization.words,
-                        decoration: const InputDecoration(
-                            labelText: 'Nome *',
-                            prefixIcon: Icon(Icons.person_outline)),
-                        validator: (value) => (value == null || value.isEmpty)
-                            ? 'Insira seu nome'
-                            : null,
-                      ),
-                      const SizedBox(height: 16),
-                      TextFormField(
-                        controller: _phoneController,
-                        inputFormatters: [_phoneMaskFormatter],
-                        decoration: const InputDecoration(
-                            labelText: 'Número',
-                            prefixIcon: Icon(Icons.phone_outlined)),
-                        keyboardType: TextInputType.phone,
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-              const SizedBox(height: 24),
-              Card(
-                child: Padding(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Alterar Senha',
-                        style: Theme.of(context).textTheme.titleLarge,
-                      ),
-                      const SizedBox(height: 8),
-                      Text(
-                        'Deixe os campos em branco para não alterar a senha.',
-                        style: Theme.of(context).textTheme.bodySmall,
-                      ),
-                      const SizedBox(height: 20),
-                      TextFormField(
-                        controller: _passwordController,
-                        obscureText: !_isPasswordVisible,
-                        decoration: InputDecoration(
-                          labelText: 'Nova Senha',
-                          prefixIcon: const Icon(Icons.lock_outline),
-                          suffixIcon: IconButton(
-                            icon: Icon(_isPasswordVisible
-                                ? Icons.visibility_off
-                                : Icons.visibility),
-                            onPressed: () => setState(
-                                () => _isPasswordVisible = !_isPasswordVisible),
-                          ),
-                        ),
-                        validator: (value) {
-                          if (value != null &&
-                              value.isNotEmpty &&
-                              value.length < 6) {
-                            return 'A senha deve ter pelo menos 6 caracteres';
-                          }
-                          return null;
-                        },
-                      ),
-                      const SizedBox(height: 16),
-                      TextFormField(
-                        controller: _confirmPasswordController,
-                        obscureText: !_isConfirmPasswordVisible,
-                        decoration: InputDecoration(
-                          labelText: 'Confirmar Nova Senha',
-                          prefixIcon: const Icon(Icons.lock_outline),
-                          suffixIcon: IconButton(
-                            icon: Icon(_isConfirmPasswordVisible
-                                ? Icons.visibility_off
-                                : Icons.visibility),
-                            onPressed: () => setState(() =>
-                                _isConfirmPasswordVisible =
-                                    !_isConfirmPasswordVisible),
-                          ),
-                        ),
-                        validator: (value) => value != _passwordController.text
-                            ? 'As senhas não coincidem'
-                            : null,
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-              const SizedBox(height: 32),
-              ElevatedButton(
-                onPressed: _isSaving ? null : _submit,
-                child: _isSaving
-                    ? SizedBox(
-                        height: 24,
-                        width: 24,
-                        child: CircularProgressIndicator(
-                            color: Theme.of(context).colorScheme.onPrimary,
-                            strokeWidth: 2.0))
-                    : const Text('Salvar Alterações'),
-              ),
-            ],
-          ),
+            ),
+            const SizedBox(height: 32),
+            ElevatedButton(
+              onPressed: _isSaving ? null : _submit,
+              child: _isSaving
+                  ? SizedBox(
+                      height: 24,
+                      width: 24,
+                      child: CircularProgressIndicator(
+                          color: Theme.of(context).colorScheme.onPrimary,
+                          strokeWidth: 2.0))
+                  : const Text('Salvar Alterações'),
+            ),
+          ],
         ),
       ).animate().fadeIn(duration: 250.ms).slideY(begin: 0.1, end: 0),
     );

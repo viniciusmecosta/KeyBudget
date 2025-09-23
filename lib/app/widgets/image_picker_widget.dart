@@ -3,21 +3,25 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 
-class LogoPicker extends StatefulWidget {
+class ImagePickerWidget extends StatefulWidget {
   final Function(String) onImageSelected;
   final String? initialImagePath;
+  final IconData placeholderIcon;
+  final double radius;
 
-  const LogoPicker({
+  const ImagePickerWidget({
     super.key,
     required this.onImageSelected,
     this.initialImagePath,
+    this.placeholderIcon = Icons.add_a_photo,
+    this.radius = 50,
   });
 
   @override
-  State<LogoPicker> createState() => _LogoPickerState();
+  State<ImagePickerWidget> createState() => _ImagePickerWidgetState();
 }
 
-class _LogoPickerState extends State<LogoPicker> {
+class _ImagePickerWidgetState extends State<ImagePickerWidget> {
   String? _imageBase64;
 
   @override
@@ -27,7 +31,7 @@ class _LogoPickerState extends State<LogoPicker> {
   }
 
   @override
-  void didUpdateWidget(covariant LogoPicker oldWidget) {
+  void didUpdateWidget(covariant ImagePickerWidget oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (widget.initialImagePath != oldWidget.initialImagePath) {
       setState(() {
@@ -40,8 +44,8 @@ class _LogoPickerState extends State<LogoPicker> {
     final picker = ImagePicker();
     final pickedFile = await picker.pickImage(
       source: ImageSource.gallery,
-      maxWidth: 150,
-      imageQuality: 60,
+      maxWidth: 200,
+      imageQuality: 70,
     );
 
     if (pickedFile != null) {
@@ -56,6 +60,10 @@ class _LogoPickerState extends State<LogoPicker> {
 
   ImageProvider? _getImageProvider() {
     if (_imageBase64 == null || _imageBase64!.isEmpty) return null;
+
+    if (Uri.tryParse(_imageBase64!)?.isAbsolute == true) {
+      return NetworkImage(_imageBase64!);
+    }
     try {
       return MemoryImage(base64Decode(_imageBase64!));
     } catch (e) {
@@ -69,12 +77,15 @@ class _LogoPickerState extends State<LogoPicker> {
     return GestureDetector(
       onTap: _pickImage,
       child: CircleAvatar(
-        radius: 40,
+        radius: widget.radius,
         backgroundColor: theme.colorScheme.secondary.withOpacity(0.1),
         backgroundImage: _getImageProvider(),
         child: _imageBase64 == null
-            ? Icon(Icons.add_photo_alternate_outlined,
-                size: 30, color: theme.colorScheme.secondary)
+            ? Icon(
+                widget.placeholderIcon,
+                size: widget.radius,
+                color: theme.colorScheme.secondary,
+              )
             : null,
       ),
     );

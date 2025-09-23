@@ -2,16 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_masked_text2/flutter_masked_text2.dart';
 import 'package:key_budget/app/config/app_theme.dart';
-import 'package:key_budget/app/widgets/category_autocomplete_field.dart';
-import 'package:key_budget/app/widgets/category_picker_field.dart';
-import 'package:key_budget/app/widgets/date_picker_field.dart';
 import 'package:key_budget/core/models/expense_category_model.dart';
 import 'package:key_budget/core/models/expense_model.dart';
 import 'package:key_budget/features/auth/viewmodel/auth_viewmodel.dart';
-import 'package:key_budget/features/category/view/categories_screen.dart';
-import 'package:key_budget/features/category/viewmodel/category_viewmodel.dart';
 import 'package:key_budget/features/expenses/viewmodel/expense_viewmodel.dart';
 import 'package:provider/provider.dart';
+
+import '../widgets/expense_form.dart';
 
 class AddExpenseScreen extends StatefulWidget {
   const AddExpenseScreen({super.key});
@@ -86,114 +83,48 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final expenseViewModel =
-        Provider.of<ExpenseViewModel>(context, listen: false);
-    final categoryViewModel = Provider.of<CategoryViewModel>(context);
-
     return Scaffold(
       appBar: AppBar(title: const Text('Adicionar Despesa')),
       body: Padding(
         padding: const EdgeInsets.all(AppTheme.defaultPadding),
-        child: Form(
-          key: _formKey,
-          child: ListView(
-            children: [
-              TextFormField(
-                controller: _amountController,
-                decoration: const InputDecoration(labelText: 'Valor *'),
-                keyboardType:
-                    const TextInputType.numberWithOptions(decimal: true),
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Campo obrigatório';
-                  }
-                  if (_amountController.numberValue <= 0) {
-                    return 'O valor deve ser maior que zero';
-                  }
-                  return null;
+        child: Column(
+          children: [
+            Expanded(
+              child: ExpenseForm(
+                formKey: _formKey,
+                amountController: _amountController,
+                motivationController: _motivationController,
+                locationController: _locationController,
+                selectedDate: _selectedDate,
+                selectedCategory: _selectedCategory,
+                onDateChanged: (date) {
+                  setState(() {
+                    _selectedDate = date;
+                  });
                 },
-              ),
-              const SizedBox(height: 16),
-              CategoryPickerField(
-                label: 'Categoria',
-                value: _selectedCategory,
-                categories: categoryViewModel.categories,
-                onChanged: (category) {
+                onCategoryChanged: (category) {
                   setState(() {
                     _selectedCategory = category;
                     _motivationController.clear();
                     _locationController.clear();
                   });
                 },
-                onManageCategories: () async {
-                  final userId =
-                      Provider.of<AuthViewModel>(context, listen: false)
-                          .currentUser
-                          ?.id;
-                  await Navigator.of(context).push(MaterialPageRoute(
-                    builder: (_) => const CategoriesScreen(),
-                  ));
-                  if (userId != null && mounted) {
-                    await Provider.of<CategoryViewModel>(context, listen: false)
-                        .fetchCategories(userId);
-                  }
-                },
-                validator: (value) {
-                  if (value == null) {
-                    return 'Selecione uma categoria';
-                  }
-                  return null;
-                },
-              ),
-              const SizedBox(height: 16),
-              CategoryAutocompleteField(
-                key: ValueKey('motivation_${_selectedCategory?.id}'),
-                label: 'Motivação',
-                textCapitalization: TextCapitalization.sentences,
-                controller: _motivationController,
-                optionsBuilder: () => expenseViewModel
-                    .getUniqueMotivationsForCategory(_selectedCategory?.id),
-                onSelected: (selection) {
-                  _motivationController.text = selection;
-                },
-              ),
-              const SizedBox(height: 16),
-              CategoryAutocompleteField(
-                key: ValueKey('location_${_selectedCategory?.id}'),
-                label: 'Local',
-                textCapitalization: TextCapitalization.sentences,
-                controller: _locationController,
-                optionsBuilder: () => expenseViewModel
-                    .getUniqueLocationsForCategory(_selectedCategory?.id),
-                onSelected: (selection) {
-                  _locationController.text = selection;
-                },
-              ),
-              const SizedBox(height: 16),
-              DatePickerField(
-                label: 'Data',
-                selectedDate: _selectedDate,
                 isEditing: true,
-                onDateSelected: (newDate) {
-                  setState(() {
-                    _selectedDate = newDate;
-                  });
-                },
               ),
-              const SizedBox(height: 24),
-              ElevatedButton(
-                onPressed: _isSaving ? null : _submit,
-                child: _isSaving
-                    ? SizedBox(
-                        height: 24,
-                        width: 24,
-                        child: CircularProgressIndicator(
-                            color: Theme.of(context).colorScheme.onPrimary,
-                            strokeWidth: 2.0))
-                    : const Text('Salvar Despesa'),
-              ),
-            ],
-          ),
+            ),
+            const SizedBox(height: 16),
+            ElevatedButton(
+              onPressed: _isSaving ? null : _submit,
+              child: _isSaving
+                  ? SizedBox(
+                      height: 24,
+                      width: 24,
+                      child: CircularProgressIndicator(
+                          color: Theme.of(context).colorScheme.onPrimary,
+                          strokeWidth: 2.0))
+                  : const Text('Salvar Despesa'),
+            ),
+          ],
         ),
       ).animate().fadeIn(duration: 300.ms).slideY(begin: 0.1, end: 0),
     );

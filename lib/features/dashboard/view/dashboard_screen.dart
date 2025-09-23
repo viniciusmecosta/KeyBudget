@@ -1,9 +1,6 @@
 import 'package:flutter/material.dart' hide DateUtils;
 import 'package:flutter_animate/flutter_animate.dart';
-import 'package:intl/intl.dart';
 import 'package:key_budget/app/config/app_theme.dart';
-import 'package:key_budget/app/viewmodel/navigation_viewmodel.dart';
-import 'package:key_budget/features/analysis/view/analysis_screen.dart';
 import 'package:key_budget/features/auth/viewmodel/auth_viewmodel.dart';
 import 'package:key_budget/features/category/viewmodel/category_viewmodel.dart';
 import 'package:key_budget/features/credentials/viewmodel/credential_viewmodel.dart';
@@ -11,7 +8,10 @@ import 'package:key_budget/features/dashboard/viewmodel/dashboard_viewmodel.dart
 import 'package:key_budget/features/expenses/viewmodel/expense_viewmodel.dart';
 import 'package:provider/provider.dart';
 
-import '../../../app/widgets/activity_tile_widget.dart';
+import '../widgets/dashboard_balance_card.dart';
+import '../widgets/dashboard_header.dart';
+import '../widgets/quick_actions_section.dart';
+import '../widgets/recent_activity_section.dart';
 
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
@@ -22,9 +22,6 @@ class DashboardScreen extends StatefulWidget {
 
 class _DashboardScreenState extends State<DashboardScreen>
     with TickerProviderStateMixin {
-  final _currencyFormatter =
-      NumberFormat.currency(locale: 'pt_BR', symbol: 'R\$');
-
   late AnimationController _refreshController;
   bool _isRefreshing = false;
 
@@ -78,43 +75,11 @@ class _DashboardScreenState extends State<DashboardScreen>
   @override
   Widget build(BuildContext context) {
     final viewModel = Provider.of<DashboardViewModel>(context);
-    final authViewModel = Provider.of<AuthViewModel>(context);
     final theme = Theme.of(context);
-    final user = authViewModel.currentUser;
 
     return Scaffold(
       backgroundColor: theme.colorScheme.background,
-      appBar: AppBar(
-        elevation: 0,
-        scrolledUnderElevation: 0,
-        backgroundColor: Colors.transparent,
-        toolbarHeight: 80,
-        title: Padding(
-          padding: const EdgeInsets.only(top: AppTheme.spaceS),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                'Bem-vindo(a) de volta,',
-                style: theme.textTheme.bodyMedium?.copyWith(
-                  color: theme.colorScheme.onSurface.withOpacity(0.65),
-                  fontSize: 14,
-                  fontWeight: FontWeight.w400,
-                ),
-              ),
-              const SizedBox(height: 2),
-              Text(
-                user?.name ?? 'Usuário',
-                style: theme.textTheme.headlineSmall?.copyWith(
-                  fontWeight: FontWeight.w700,
-                  color: theme.colorScheme.onSurface,
-                  fontSize: 22,
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
+      appBar: const DashboardHeader(),
       body: SafeArea(
         child: viewModel.isLoading
             ? _buildLoadingState(theme)
@@ -131,25 +96,20 @@ class _DashboardScreenState extends State<DashboardScreen>
                           AppTheme.spaceS, AppTheme.spaceM, AppTheme.spaceL),
                       sliver: SliverList(
                         delegate: SliverChildListDelegate([
-                          _buildTotalBalanceCard(context, viewModel)
+                          const DashboardBalanceCard()
                               .animate()
                               .fadeIn(duration: 400.ms, delay: 100.ms)
                               .slideY(begin: 0.2, end: 0),
                           const SizedBox(height: AppTheme.spaceL),
-                          _buildQuickActionsRow(context, viewModel)
+                          const QuickActionsSection()
                               .animate()
                               .fadeIn(duration: 400.ms, delay: 200.ms)
                               .slideY(begin: 0.2, end: 0),
                           const SizedBox(height: AppTheme.spaceXL),
-                          _buildSectionHeader(context, 'Atividades Recentes')
+                          const RecentActivitySection()
                               .animate()
                               .fadeIn(duration: 400.ms, delay: 300.ms)
                               .slideX(begin: -0.1, end: 0),
-                          const SizedBox(height: AppTheme.spaceM),
-                          _buildRecentActivitySection(context, viewModel)
-                              .animate()
-                              .fadeIn(duration: 400.ms, delay: 400.ms)
-                              .slideY(begin: 0.1, end: 0),
                         ]),
                       ),
                     ),
@@ -179,377 +139,6 @@ class _DashboardScreenState extends State<DashboardScreen>
           ),
         ],
       ).animate().fadeIn(duration: 300.ms),
-    );
-  }
-
-  Widget _buildTotalBalanceCard(
-      BuildContext context, DashboardViewModel viewModel) {
-    final theme = Theme.of(context);
-    final percentageChange = viewModel.percentageChangeFromAverage;
-    final hasPreviousMonths = viewModel.averageOfPreviousMonths > 0;
-
-    final isIncrease = percentageChange >= 0;
-    final formattedPercentage =
-        '${isIncrease ? '+' : '-'}${percentageChange.abs().toStringAsFixed(1)}%';
-
-    return Container(
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(AppTheme.radiusXL),
-        gradient: LinearGradient(
-          colors: [
-            theme.colorScheme.primary,
-            theme.colorScheme.primary.withOpacity(0.85),
-          ],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: theme.colorScheme.primary.withOpacity(0.25),
-            blurRadius: 24,
-            offset: const Offset(0, 8),
-          ),
-        ],
-      ),
-      child: Material(
-        color: Colors.transparent,
-        borderRadius: BorderRadius.circular(AppTheme.radiusXL),
-        child: InkWell(
-          onTap: () {
-            Provider.of<NavigationViewModel>(context, listen: false)
-                .selectedIndex = 1;
-          },
-          borderRadius: BorderRadius.circular(AppTheme.radiusXL),
-          child: Padding(
-            padding: const EdgeInsets.all(AppTheme.spaceL),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'Gasto Total do Mês',
-                            style: theme.textTheme.titleMedium?.copyWith(
-                              color:
-                                  theme.colorScheme.onPrimary.withOpacity(0.9),
-                              fontWeight: FontWeight.w600,
-                              fontSize: 15,
-                            ),
-                          ),
-                          const SizedBox(height: AppTheme.spaceS),
-                          Text(
-                            _currencyFormatter
-                                .format(viewModel.totalAmountForMonth),
-                            style: theme.textTheme.displaySmall?.copyWith(
-                              fontWeight: FontWeight.w800,
-                              color: theme.colorScheme.onPrimary,
-                              fontSize: 30,
-                              height: 1.1,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    Container(
-                      padding: const EdgeInsets.all(AppTheme.spaceM - 2),
-                      decoration: BoxDecoration(
-                        color: theme.colorScheme.onPrimary.withOpacity(0.15),
-                        borderRadius: BorderRadius.circular(AppTheme.radiusL),
-                      ),
-                      child: Icon(
-                        Icons.account_balance_wallet_rounded,
-                        color: theme.colorScheme.onPrimary,
-                        size: 28,
-                      ),
-                    ),
-                  ],
-                ),
-                if (hasPreviousMonths) ...[
-                  const SizedBox(height: AppTheme.spaceL),
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: AppTheme.spaceM - 2,
-                      vertical: AppTheme.spaceS - 2,
-                    ),
-                    decoration: BoxDecoration(
-                      color: theme.colorScheme.onPrimary.withOpacity(0.15),
-                      borderRadius: BorderRadius.circular(AppTheme.radiusXL),
-                    ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Icon(
-                          isIncrease ? Icons.trending_up : Icons.trending_down,
-                          color: theme.colorScheme.onPrimary,
-                          size: 16,
-                        ),
-                        const SizedBox(width: AppTheme.spaceXS),
-                        Text(
-                          formattedPercentage,
-                          style: theme.textTheme.bodyMedium?.copyWith(
-                            color: theme.colorScheme.onPrimary,
-                            fontWeight: FontWeight.w700,
-                            fontSize: 13,
-                          ),
-                        ),
-                        const SizedBox(width: AppTheme.spaceXS),
-                        Text(
-                          'vs média',
-                          style: theme.textTheme.bodySmall?.copyWith(
-                            color:
-                                theme.colorScheme.onPrimary.withOpacity(0.85),
-                            fontSize: 13,
-                            fontWeight: FontWeight.w500,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildQuickActionsRow(
-      BuildContext context, DashboardViewModel viewModel) {
-    final navigationViewModel =
-        Provider.of<NavigationViewModel>(context, listen: false);
-
-    return Row(
-      children: [
-        Expanded(
-          child: _buildQuickActionCard(
-            context,
-            title: 'Credenciais',
-            subtitle: '${viewModel.credentialCount} cadastradas',
-            icon: Icons.security_rounded,
-            color: Theme.of(context).colorScheme.secondary,
-            onTap: () => navigationViewModel.selectedIndex = 2,
-          ),
-        ),
-        const SizedBox(width: AppTheme.spaceM),
-        Expanded(
-          child: _buildQuickActionCard(
-            context,
-            title: 'Análise',
-            subtitle: 'Ver relatórios',
-            icon: Icons.bar_chart_rounded,
-            color: Theme.of(context).colorScheme.tertiary,
-            onTap: () {
-              Navigator.of(context).push(
-                MaterialPageRoute(
-                  builder: (_) => const AnalysisScreen(),
-                ),
-              );
-            },
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildQuickActionCard(
-    BuildContext context, {
-    required String title,
-    required String subtitle,
-    required IconData icon,
-    required Color color,
-    required VoidCallback onTap,
-  }) {
-    final theme = Theme.of(context);
-
-    return Material(
-      color: theme.colorScheme.surface,
-      borderRadius: BorderRadius.circular(AppTheme.radiusL),
-      elevation: 0,
-      shadowColor: theme.colorScheme.shadow.withOpacity(0.05),
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(AppTheme.radiusL),
-        child: Container(
-          padding: const EdgeInsets.all(AppTheme.spaceM + 2),
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(AppTheme.radiusL),
-            border: Border.all(
-              color: theme.colorScheme.outline.withOpacity(0.08),
-            ),
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Container(
-                padding: const EdgeInsets.all(AppTheme.spaceM - 2),
-                decoration: BoxDecoration(
-                  color: color.withOpacity(0.12),
-                  borderRadius: BorderRadius.circular(AppTheme.radiusM),
-                ),
-                child: Icon(
-                  icon,
-                  color: color,
-                  size: 22,
-                ),
-              ),
-              const SizedBox(height: AppTheme.spaceM),
-              Text(
-                title,
-                style: theme.textTheme.titleMedium?.copyWith(
-                  fontWeight: FontWeight.w700,
-                  color: theme.colorScheme.onSurface,
-                  fontSize: 16,
-                ),
-              ),
-              const SizedBox(height: AppTheme.spaceXS),
-              Text(
-                subtitle,
-                style: theme.textTheme.bodySmall?.copyWith(
-                  color: theme.colorScheme.onSurface.withOpacity(0.65),
-                  fontSize: 13,
-                  fontWeight: FontWeight.w500,
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildSectionHeader(BuildContext context, String title) {
-    final theme = Theme.of(context);
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      crossAxisAlignment: CrossAxisAlignment.center,
-      children: [
-        Text(
-          title,
-          style: theme.textTheme.titleLarge?.copyWith(
-            fontWeight: FontWeight.w700,
-            color: theme.colorScheme.onSurface,
-            fontSize: 20,
-          ),
-        ),
-        Material(
-          color: Colors.transparent,
-          borderRadius: BorderRadius.circular(AppTheme.radiusM),
-          child: InkWell(
-            onTap: () {
-              Provider.of<NavigationViewModel>(context, listen: false)
-                  .selectedIndex = 1;
-            },
-            borderRadius: BorderRadius.circular(AppTheme.radiusM),
-            child: Padding(
-              padding: const EdgeInsets.symmetric(
-                horizontal: AppTheme.spaceM,
-                vertical: AppTheme.spaceS,
-              ),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(
-                    'Ver todas',
-                    style: TextStyle(
-                      color: theme.colorScheme.primary,
-                      fontWeight: FontWeight.w600,
-                      fontSize: 14,
-                    ),
-                  ),
-                  const SizedBox(width: AppTheme.spaceXS),
-                  Icon(
-                    Icons.arrow_forward_ios_rounded,
-                    color: theme.colorScheme.primary,
-                    size: 14,
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildRecentActivitySection(
-      BuildContext context, DashboardViewModel viewModel) {
-    final recentExpenses = viewModel.recentExpenses;
-
-    if (viewModel.isLoading) {
-      return const SizedBox.shrink();
-    }
-
-    if (recentExpenses.isEmpty) {
-      return _buildEmptyState(context);
-    }
-
-    return ListView.builder(
-      shrinkWrap: true,
-      physics: const NeverScrollableScrollPhysics(),
-      itemCount: recentExpenses.length > 5 ? 5 : recentExpenses.length,
-      itemBuilder: (context, index) {
-        return ActivityTile(
-          expense: recentExpenses[index],
-          index: index,
-        )
-            .animate(delay: Duration(milliseconds: 50 * index))
-            .fadeIn(duration: 400.ms, curve: Curves.easeOut)
-            .slideX(begin: 0.2, end: 0, curve: Curves.easeOutCubic);
-      },
-    );
-  }
-
-  Widget _buildEmptyState(BuildContext context) {
-    final theme = Theme.of(context);
-
-    return Container(
-      padding: const EdgeInsets.all(AppTheme.spaceXL),
-      decoration: BoxDecoration(
-        color: theme.colorScheme.surface,
-        borderRadius: BorderRadius.circular(AppTheme.radiusL),
-        border: Border.all(
-          color: theme.colorScheme.outline.withOpacity(0.08),
-        ),
-      ),
-      child: Column(
-        children: [
-          Container(
-            padding: const EdgeInsets.all(AppTheme.spaceL),
-            decoration: BoxDecoration(
-              color: theme.colorScheme.primary.withOpacity(0.1),
-              borderRadius: BorderRadius.circular(AppTheme.spaceXL),
-            ),
-            child: Icon(
-              Icons.receipt_long_rounded,
-              size: 40,
-              color: theme.colorScheme.primary.withOpacity(0.7),
-            ),
-          ),
-          const SizedBox(height: AppTheme.spaceL),
-          Text(
-            'Nenhuma atividade recente',
-            style: theme.textTheme.titleMedium?.copyWith(
-              fontWeight: FontWeight.w600,
-              color: theme.colorScheme.onSurface,
-            ),
-          ),
-          const SizedBox(height: AppTheme.spaceS),
-          Text(
-            'Suas transações aparecerão aqui assim que forem registradas',
-            textAlign: TextAlign.center,
-            style: theme.textTheme.bodyMedium?.copyWith(
-              color: theme.colorScheme.onSurface.withOpacity(0.6),
-              height: 1.4,
-            ),
-          ),
-        ],
-      ),
     );
   }
 }
