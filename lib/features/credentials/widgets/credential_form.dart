@@ -3,29 +3,31 @@ import 'package:key_budget/features/credentials/widgets/logo_picker.dart';
 import 'package:key_budget/features/credentials/widgets/saved_logos_screen.dart';
 import 'package:mask_text_input_formatter/mask_text_input_formatter.dart';
 
-import '../../../app/widgets/paste_sanatizer_input_formatter.dart';
+import '../../../app/widgets/password_form_field.dart';
 
-class SupplierForm extends StatelessWidget {
+class CredentialForm extends StatelessWidget {
   final GlobalKey<FormState> formKey;
-  final TextEditingController nameController;
-  final TextEditingController repNameController;
+  final TextEditingController locationController;
+  final TextEditingController loginController;
+  final TextEditingController passwordController;
   final TextEditingController emailController;
   final TextEditingController phoneController;
   final TextEditingController notesController;
-  final String? photoPath;
-  final Function(String?) onPhotoChanged;
+  final String? logoPath;
+  final Function(String?) onLogoChanged;
   final bool isEditing;
 
-  const SupplierForm({
+  const CredentialForm({
     super.key,
     required this.formKey,
-    required this.nameController,
-    required this.repNameController,
+    required this.locationController,
+    required this.loginController,
+    required this.passwordController,
     required this.emailController,
     required this.phoneController,
     required this.notesController,
-    required this.photoPath,
-    required this.onPhotoChanged,
+    required this.logoPath,
+    required this.onLogoChanged,
     this.isEditing = false,
   });
 
@@ -39,12 +41,10 @@ class SupplierForm extends StatelessWidget {
 
     void selectSavedLogo() async {
       final selectedLogo = await Navigator.of(context).push<String>(
-        MaterialPageRoute(
-          builder: (_) => const SavedLogosScreen(isForSuppliers: true),
-        ),
+        MaterialPageRoute(builder: (_) => const SavedLogosScreen()),
       );
       if (selectedLogo != null) {
-        onPhotoChanged(selectedLogo);
+        onLogoChanged(selectedLogo);
       }
     }
 
@@ -53,14 +53,9 @@ class SupplierForm extends StatelessWidget {
       child: ListView(
         children: [
           Center(
-            child: AbsorbPointer(
-              absorbing: !isEditing && photoPath != null,
-              child: LogoPicker(
-                initialImagePath: photoPath,
-                onImageSelected: (path) {
-                  onPhotoChanged(path);
-                },
-              ),
+            child: LogoPicker(
+              initialImagePath: logoPath,
+              onImageSelected: (path) => onLogoChanged(path),
             ),
           ),
           const SizedBox(height: 8),
@@ -72,10 +67,10 @@ class SupplierForm extends StatelessWidget {
                 icon: const Icon(Icons.collections_bookmark_outlined, size: 18),
                 label: const Text('Escolher Salva'),
               ),
-              if (photoPath != null) ...[
+              if (logoPath != null) ...[
                 const SizedBox(width: 8),
                 TextButton.icon(
-                  onPressed: () => onPhotoChanged(null),
+                  onPressed: () => onLogoChanged(null),
                   icon: const Icon(Icons.no_photography_outlined, size: 18),
                   label: const Text('Remover'),
                   style: TextButton.styleFrom(
@@ -86,57 +81,42 @@ class SupplierForm extends StatelessWidget {
           ),
           const SizedBox(height: 24),
           TextFormField(
-            controller: nameController,
-            textCapitalization: TextCapitalization.words,
-            decoration:
-                const InputDecoration(labelText: 'Nome Fornecedor/Loja *'),
+            controller: locationController,
+            textCapitalization: TextCapitalization.sentences,
+            decoration: const InputDecoration(labelText: 'Local/Serviço *'),
             validator: (value) => value!.isEmpty ? 'Campo obrigatório' : null,
           ),
           const SizedBox(height: 16),
           TextFormField(
-            controller: repNameController,
-            textCapitalization: TextCapitalization.words,
-            decoration: const InputDecoration(labelText: 'Nome Representante'),
+            controller: loginController,
+            decoration: const InputDecoration(labelText: 'Login/Usuário *'),
+            validator: (value) => value!.isEmpty ? 'Campo obrigatório' : null,
+          ),
+          const SizedBox(height: 16),
+          PasswordFormField(
+            controller: passwordController,
+            labelText: 'Senha *',
+            validator: (value) => value!.isEmpty ? 'Campo obrigatório' : null,
           ),
           const SizedBox(height: 16),
           TextFormField(
             controller: emailController,
             decoration: const InputDecoration(labelText: 'Email'),
             keyboardType: TextInputType.emailAddress,
-            validator: (value) {
-              if (value == null || value.isEmpty) return null;
-              final emailRegex = RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$');
-              if (!emailRegex.hasMatch(value)) {
-                return 'Por favor, insira um email válido.';
-              }
-              return null;
-            },
           ),
           const SizedBox(height: 16),
           TextFormField(
             controller: phoneController,
-            inputFormatters: [
-              PasteSanitizerInputFormatter(),
-              phoneMaskFormatter
-            ],
-            decoration: const InputDecoration(labelText: 'Telefone (WhatsApp)'),
+            inputFormatters: [phoneMaskFormatter],
+            decoration: const InputDecoration(labelText: 'Número'),
             keyboardType: TextInputType.phone,
-            validator: (value) {
-              if (value == null || value.isEmpty) return null;
-              final unmaskedText =
-                  phoneMaskFormatter.unmaskText(phoneController.text);
-              if (unmaskedText.isNotEmpty && unmaskedText.length < 10) {
-                return 'O telefone deve ter no mínimo 10 dígitos.';
-              }
-              return null;
-            },
           ),
           const SizedBox(height: 16),
           TextFormField(
             controller: notesController,
+            textCapitalization: TextCapitalization.sentences,
             decoration: const InputDecoration(labelText: 'Observações'),
             maxLines: 3,
-            textCapitalization: TextCapitalization.sentences,
           ),
         ],
       ),
