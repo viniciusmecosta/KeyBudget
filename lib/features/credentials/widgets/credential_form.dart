@@ -1,9 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:key_budget/features/credentials/widgets/logo_picker.dart';
+import 'package:key_budget/app/widgets/image_picker_widget.dart';
+import 'package:key_budget/app/widgets/password_form_field.dart';
 import 'package:key_budget/features/credentials/widgets/saved_logos_screen.dart';
 import 'package:mask_text_input_formatter/mask_text_input_formatter.dart';
-
-import '../../../app/widgets/password_form_field.dart';
 
 class CredentialForm extends StatelessWidget {
   final GlobalKey<FormState> formKey;
@@ -53,9 +52,11 @@ class CredentialForm extends StatelessWidget {
       child: ListView(
         children: [
           Center(
-            child: LogoPicker(
+            child: ImagePickerWidget(
               initialImagePath: logoPath,
               onImageSelected: (path) => onLogoChanged(path),
+              placeholderIcon: Icons.add_photo_alternate_outlined,
+              radius: 40,
             ),
           ),
           const SizedBox(height: 8),
