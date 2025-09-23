@@ -13,7 +13,6 @@ class LocalAuthService {
       final bool canAuthenticateWithBiometrics = await _auth.canCheckBiometrics;
       final List<BiometricType> availableBiometrics =
           await _auth.getAvailableBiometrics();
-
       return canAuthenticateWithBiometrics && availableBiometrics.isNotEmpty;
     } catch (e) {
       return false;
@@ -26,11 +25,14 @@ class LocalAuthService {
 
     try {
       return await _auth.authenticate(
-        localizedReason: 'Desbloqueie para acessar seus dados',
+        localizedReason: 'Confirme sua identidade',
         authMessages: const <AuthMessages>[
           AndroidAuthMessages(
-            signInTitle: 'Acesso ao KeyBudget',
+            signInTitle: 'KeyBudget',
             cancelButton: 'Cancelar',
+            biometricHint: 'Use sua digital ou face',
+            biometricNotRecognized: 'Não reconhecido, tente novamente',
+            biometricSuccess: 'Acesso liberado',
           ),
         ],
         options: const AuthenticationOptions(
