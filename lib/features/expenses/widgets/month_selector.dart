@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
 import 'package:key_budget/app/config/app_theme.dart';
+import 'package:key_budget/core/utils/date_utils.dart' as app_date_utils;
 
 class MonthSelector extends StatelessWidget {
   final DateTime selectedMonth;
@@ -11,20 +11,6 @@ class MonthSelector extends StatelessWidget {
     required this.selectedMonth,
     required this.onMonthChanged,
   });
-
-  String _formatMonthYear(DateTime date) {
-    final now = DateTime.now();
-    String formattedDate;
-
-    if (date.year == now.year) {
-      formattedDate = DateFormat.MMMM('pt_BR').format(date);
-    } else {
-      formattedDate = DateFormat.yMMMM('pt_BR').format(date);
-    }
-    return formattedDate.isNotEmpty
-        ? formattedDate[0].toUpperCase() + formattedDate.substring(1)
-        : '';
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -56,7 +42,7 @@ class MonthSelector extends StatelessWidget {
             ),
           ),
           Text(
-            _formatMonthYear(selectedMonth),
+            app_date_utils.DateUtils.formatMonthYear(selectedMonth),
             style: theme.textTheme.titleLarge?.copyWith(
               fontWeight: FontWeight.w700,
               color: theme.colorScheme.onSurface,
