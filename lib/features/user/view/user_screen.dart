@@ -8,6 +8,8 @@ import 'package:key_budget/features/category/view/categories_screen.dart';
 import 'package:key_budget/features/user/view/edit_user_screen.dart';
 import 'package:provider/provider.dart';
 
+import '../widgets/settings_tile.dart';
+
 class UserScreen extends StatelessWidget {
   const UserScreen({super.key});
 
@@ -88,55 +90,47 @@ class UserScreen extends StatelessWidget {
                     ),
                   ),
                 const SizedBox(height: 32),
-                Card(
-                  child: ListTile(
-                    leading: Icon(Icons.category_outlined,
-                        color: theme.colorScheme.primary),
-                    title: const Text('Gerenciar Categorias'),
-                    trailing: const Icon(Icons.chevron_right),
-                    onTap: () {
-                      Navigator.of(context).push(
-                        MaterialPageRoute(
-                          builder: (_) => const CategoriesScreen(),
-                        ),
-                      );
-                    },
-                  ),
+                SettingsTile(
+                  icon: Icons.category_outlined,
+                  title: 'Gerenciar Categorias',
+                  onTap: () {
+                    Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (_) => const CategoriesScreen(),
+                      ),
+                    );
+                  },
                 ),
                 const SizedBox(height: 8),
-                Card(
-                  child: ListTile(
-                    leading: Icon(Icons.logout, color: theme.colorScheme.error),
-                    title: Text(
-                      'Sair do Aplicativo',
-                      style: TextStyle(color: theme.colorScheme.error),
-                    ),
-                    onTap: () {
-                      showDialog(
-                        context: context,
-                        builder: (_) => AlertDialog(
-                          title: const Text("Confirmar Logout"),
-                          content: const Text(
-                              "Deseja realmente sair do aplicativo?"),
-                          actions: [
-                            TextButton(
-                              onPressed: () => Navigator.of(context).pop(),
-                              child: const Text("Cancelar"),
-                            ),
-                            ElevatedButton(
-                              onPressed: () {
-                                Navigator.of(context).pop();
-                                Provider.of<AuthViewModel>(context,
-                                        listen: false)
-                                    .logout(context);
-                              },
-                              child: const Text("Sair"),
-                            ),
-                          ],
-                        ),
-                      );
-                    },
-                  ),
+                SettingsTile(
+                  icon: Icons.logout,
+                  title: 'Sair do Aplicativo',
+                  iconColor: theme.colorScheme.error,
+                  textColor: theme.colorScheme.error,
+                  onTap: () {
+                    showDialog(
+                      context: context,
+                      builder: (_) => AlertDialog(
+                        title: const Text("Confirmar Logout"),
+                        content:
+                            const Text("Deseja realmente sair do aplicativo?"),
+                        actions: [
+                          TextButton(
+                            onPressed: () => Navigator.of(context).pop(),
+                            child: const Text("Cancelar"),
+                          ),
+                          ElevatedButton(
+                            onPressed: () {
+                              Navigator.of(context).pop();
+                              Provider.of<AuthViewModel>(context, listen: false)
+                                  .logout(context);
+                            },
+                            child: const Text("Sair"),
+                          ),
+                        ],
+                      ),
+                    );
+                  },
                 ),
               ],
             ).animate().fadeIn(duration: 250.ms);
