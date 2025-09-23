@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:key_budget/features/auth/view/widgets/avatar_picker.dart';
+import 'package:key_budget/app/widgets/image_picker_widget.dart';
+import 'package:key_budget/app/widgets/password_form_field.dart';
 import 'package:mask_text_input_formatter/mask_text_input_formatter.dart';
-
-import '../../../app/widgets/password_form_field.dart';
 
 class UserForm extends StatefulWidget {
   final GlobalKey<FormState> formKey;
@@ -42,7 +41,7 @@ class _UserFormState extends State<UserForm> {
         children: [
           const SizedBox(height: 16),
           Center(
-            child: AvatarPicker(
+            child: ImagePickerWidget(
               initialImagePath: widget.avatarPath,
               onImageSelected: (path) {
                 widget.onAvatarChanged(path);

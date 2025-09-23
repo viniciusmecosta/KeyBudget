@@ -53,6 +53,15 @@ class DashboardBalanceCard extends StatelessWidget {
                       fontSize: 13,
                     ),
                   ),
+                  const SizedBox(width: AppTheme.spaceXS),
+                  Text(
+                    'vs média',
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: theme.colorScheme.onPrimary.withOpacity(0.85),
+                      fontSize: 13,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
                 ],
               ),
             )

@@ -1,9 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:key_budget/features/credentials/widgets/logo_picker.dart';
+import 'package:key_budget/app/widgets/image_picker_widget.dart';
+import 'package:key_budget/core/utils/formatters.dart';
 import 'package:key_budget/features/credentials/widgets/saved_logos_screen.dart';
 import 'package:mask_text_input_formatter/mask_text_input_formatter.dart';
-
-import '../../../app/widgets/paste_sanatizer_input_formatter.dart';
 
 class SupplierForm extends StatelessWidget {
   final GlobalKey<FormState> formKey;
@@ -55,11 +54,13 @@ class SupplierForm extends StatelessWidget {
           Center(
             child: AbsorbPointer(
               absorbing: !isEditing && photoPath != null,
-              child: LogoPicker(
+              child: ImagePickerWidget(
                 initialImagePath: photoPath,
                 onImageSelected: (path) {
                   onPhotoChanged(path);
                 },
+                radius: 40,
+                placeholderIcon: Icons.store_mall_directory,
               ),
             ),
           ),
