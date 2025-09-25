@@ -20,47 +20,47 @@ class AppTheme {
   static const double radiusXL = 20.0;
   static const double radiusXXL = 24.0;
 
-  static const Color primary = Color(0xFF6A5AE0);
-  static const Color primaryVariant = Color(0xFF8A7AF3);
-  static const Color primaryLight = Color(0xFFF0EDFF);
-  static const Color secondary = Color(0xFF23B0B0);
-  static const Color secondaryLight = Color(0xFFE6F7F7);
+  static const Color primary = Color(0xFF3F51B5);
+  static const Color primaryVariant = Color(0xFF5C6BC0);
+  static const Color primaryLight = Color(0xFFE8EAF6);
+  static const Color secondary = Color(0xFF009688);
+  static const Color secondaryLight = Color(0xFFE0F2F1);
 
-  static const Color background = Color(0xFFFAFAFC);
+  static const Color background = Color(0xFFFDFDFE);
   static const Color surface = Color(0xFFFFFFFF);
-  static const Color surfaceVariant = Color(0xFFF8F9FA);
-  static const Color onSurface = Color(0xFF1A1A2E);
+  static const Color surfaceVariant = Color(0xFFF3F4F6);
+  static const Color onSurface = Color(0xFF111827);
   static const Color onSurfaceVariant = Color(0xFF6B7280);
 
-  static const Color darkBackground = Color(0xFF0F0F17);
-  static const Color darkSurface = Color(0xFF1A1A2E);
-  static const Color darkSurfaceVariant = Color(0xFF24243A);
-  static const Color onDarkSurface = Color(0xFFF5F5F7);
+  static const Color darkBackground = Color(0xFF0D1117);
+  static const Color darkSurface = Color(0xFF161B22);
+  static const Color darkSurfaceVariant = Color(0xFF1F2937);
+  static const Color onDarkSurface = Color(0xFFF3F4F6);
   static const Color onDarkSurfaceVariant = Color(0xFF9CA3AF);
 
-  static const Color success = Color(0xFF10B981);
+  static const Color success = Color(0xFF22C55E);
   static const Color error = Color(0xFFEF4444);
-  static const Color warning = Color(0xFFF59E0B);
+  static const Color warning = Color(0xFFFACC15);
   static const Color info = Color(0xFF3B82F6);
 
-  static const Color positiveChange = Color(0xFFEF4444);
-  static const Color negativeChange = Color(0xFF10B981);
+  static const Color positiveChange = Color(0xFF22C55E);
+  static const Color negativeChange = Color(0xFFEF4444);
 
   static final List<Color> chartColors = [
-    const Color(0xFFFF6B6B),
-    const Color(0xFF4ECDC4),
-    const Color(0xFF45B7D1),
-    const Color(0xFF96CEB4),
-    const Color(0xFFFFA07A),
-    const Color(0xFF9B59B6),
-    const Color(0xFFFFD93D),
-    const Color(0xFF6C5CE7),
-    const Color(0xFF00B894),
-    const Color(0xFFE17055),
-    const Color(0xFF74B9FF),
-    const Color(0xFFE84393),
-    const Color(0xFF00CEC9),
-    const Color(0xFFFDCB6E),
+    const Color(0xFF3B82F6),
+    const Color(0xFF10B981),
+    const Color(0xFFF59E0B),
+    const Color(0xFFEF4444),
+    const Color(0xFF6366F1),
+    const Color(0xFFE11D48),
+    const Color(0xFF14B8A6),
+    const Color(0xFF8B5CF6),
+    const Color(0xFF84CC16),
+    const Color(0xFFF97316),
+    const Color(0xFF0EA5E9),
+    const Color(0xFFD946EF),
+    const Color(0xFF06B6D4),
+    const Color(0xFFFDE047),
   ];
 
   static final ThemeData lightTheme = ThemeData(
