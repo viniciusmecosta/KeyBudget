@@ -28,9 +28,9 @@ class LocalAuthService {
         localizedReason: 'Confirme sua identidade',
         authMessages: const <AuthMessages>[
           AndroidAuthMessages(
-            signInTitle: 'KeyBudget',
+            signInTitle: ' ',
             cancelButton: 'Cancelar',
-            biometricHint: 'Use sua digital ou face',
+            biometricHint: ' ',
             biometricNotRecognized: 'Não reconhecido, tente novamente',
             biometricSuccess: 'Acesso liberado',
           ),
