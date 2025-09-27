@@ -16,8 +16,9 @@ class DocumentRepository {
         );
   }
 
-  Future<void> addDocument(String userId, Document document) async {
-    await getDocumentsCollection(userId).add(document);
+  Future<String> addDocument(String userId, Document document) async {
+    final docRef = await getDocumentsCollection(userId).add(document);
+    return docRef.id;
   }
 
   Stream<List<Document>> getDocumentsStream(String userId) {

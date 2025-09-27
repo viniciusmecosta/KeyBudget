@@ -44,7 +44,7 @@ class _AddDocumentScreenState extends State<AddDocumentScreen> {
     final userId =
         Provider.of<AuthViewModel>(context, listen: false).currentUser!.id;
 
-    final newDocument = Document(
+    final newDocumentData = Document(
       nomeDocumento: _nomeController.text,
       numero: _numeroController.text,
       dataExpedicao: _dataExpedicao.value,
@@ -59,17 +59,19 @@ class _AddDocumentScreenState extends State<AddDocumentScreen> {
           widget.originalDocument?.id,
     );
 
-    final success = await viewModel.addDocument(userId, newDocument);
+    final newId = await viewModel.addDocument(userId, newDocumentData);
 
     if (mounted) {
-      if (success) {
+      if (newId != null) {
         if (widget.isNewVersion && widget.originalDocument != null) {
+          final newDocumentWithId = newDocumentData.copyWith(id: newId);
           final allVersions = [
             widget.originalDocument!,
             ...widget.originalDocument!.versoes,
-            newDocument
+            newDocumentWithId
           ];
-          await viewModel.setAsPrincipal(userId, newDocument, allVersions);
+          await viewModel.setAsPrincipal(
+              userId, newDocumentWithId, allVersions);
         }
         SnackbarService.showSuccess(context, 'Documento salvo com sucesso!');
         Navigator.of(context).pop();

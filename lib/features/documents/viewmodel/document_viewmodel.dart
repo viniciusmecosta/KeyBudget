@@ -75,14 +75,14 @@ class DocumentViewModel extends ChangeNotifier {
     return result;
   }
 
-  Future<bool> addDocument(String userId, Document document) async {
+  Future<String?> addDocument(String userId, Document document) async {
     _setLoading(true);
     try {
-      await _repository.addDocument(userId, document);
-      return true;
+      final newId = await _repository.addDocument(userId, document);
+      return newId;
     } catch (e) {
       _setErrorMessage('Não foi possível adicionar o documento.');
-      return false;
+      return null;
     } finally {
       _setLoading(false);
     }
