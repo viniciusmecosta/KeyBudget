@@ -8,6 +8,8 @@ import 'package:key_budget/features/expenses/view/expenses_screen.dart';
 import 'package:key_budget/features/user/view/user_screen.dart';
 import 'package:provider/provider.dart';
 
+import '../../features/documents/view/document_screen.dart';
+
 class MainScreen extends StatefulWidget {
   const MainScreen({super.key});
 
@@ -21,6 +23,7 @@ class _MainScreenState extends State<MainScreen> {
     ExpensesScreen(),
     CredentialsScreen(),
     // SuppliersScreen(),
+    DocumentsScreen(),
     UserScreen(),
   ];
 
@@ -80,6 +83,7 @@ class _MainScreenState extends State<MainScreen> {
                 // GButton(
                 //     icon: Icons.store_mall_directory_rounded,
                 //     text: 'Fornecedores'),
+                GButton(icon: Icons.folder_copy_rounded, text: 'Documentos'),
                 GButton(icon: Icons.person_rounded, text: 'Perfil'),
               ],
               selectedIndex: navigationViewModel.selectedIndex,
