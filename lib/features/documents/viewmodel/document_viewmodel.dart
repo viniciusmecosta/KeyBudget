@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
+
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:key_budget/core/models/document_model.dart';
@@ -28,13 +29,13 @@ class DocumentViewModel extends ChangeNotifier {
     _documentsSubscription?.cancel();
     _documentsSubscription =
         _repository.getDocumentsStream(userId).listen((docs) async {
-          final processedDocs = await _processDocuments(docs, userId);
-          _documents = processedDocs;
-          _setLoading(false);
-        }, onError: (error) {
-          _setErrorMessage('Erro ao carregar os documentos.');
-          _setLoading(false);
-        });
+      final processedDocs = await _processDocuments(docs, userId);
+      _documents = processedDocs;
+      _setLoading(false);
+    }, onError: (error) {
+      _setErrorMessage('Erro ao carregar os documentos.');
+      _setLoading(false);
+    });
     _isListening = true;
   }
 
@@ -48,34 +49,27 @@ class DocumentViewModel extends ChangeNotifier {
 
   Future<List<Document>> _processDocuments(
       List<Document> docs, String userId) async {
-    final docMap = {for (var doc in docs) doc.id: doc};
-    final parentDocs = <String?, List<Document>>{};
-
+    final Map<String, List<Document>> versionsMap = {};
     for (var doc in docs) {
-      if (doc.documentoPaiId != null) {
-        parentDocs.putIfAbsent(doc.documentoPaiId, () => []).add(doc);
-      }
+      final key = doc.originalDocumentId ?? doc.id!;
+      versionsMap.putIfAbsent(key, () => []).add(doc);
     }
 
-    final result =
-    docs.where((doc) => doc.documentoPaiId == null).map<Document>((doc) {
-      final allVersions = <Document>[doc, ...(parentDocs[doc.id] ?? [])];
-      allVersions.sort((a, b) {
+    final List<Document> result = [];
+    versionsMap.forEach((key, versions) {
+      versions.sort((a, b) {
         if (a.dataExpedicao == null && b.dataExpedicao == null) return 0;
         if (a.dataExpedicao == null) return 1;
         if (b.dataExpedicao == null) return -1;
         return b.dataExpedicao!.compareTo(a.dataExpedicao!);
       });
-      final mainVersion =
-      allVersions.firstWhere((v) => v.isPrincipal, orElse: () => doc);
-      final otherVersions =
-      allVersions.where((v) => v.id != mainVersion.id).toList();
 
-      return mainVersion.copyWith(
-          versoes: otherVersions,
-          documentoPai:
-          doc.documentoPaiId != null ? docMap[doc.documentoPaiId] : null);
-    }).toList();
+      final mainVersion = versions.firstWhere((v) => v.isPrincipal,
+          orElse: () => versions.first);
+      final otherVersions =
+          versions.where((v) => v.id != mainVersion.id).toList();
+      result.add(mainVersion.copyWith(versoes: otherVersions));
+    });
 
     result.sort((a, b) => a.nomeDocumento.compareTo(b.nomeDocumento));
     return result;

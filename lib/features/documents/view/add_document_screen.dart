@@ -1,18 +1,19 @@
 import 'package:flutter/material.dart';
+import 'package:key_budget/app/config/app_theme.dart';
 import 'package:key_budget/core/models/document_model.dart';
 import 'package:key_budget/core/services/snackbar_service.dart';
 import 'package:key_budget/features/auth/viewmodel/auth_viewmodel.dart';
 import 'package:key_budget/features/documents/viewmodel/document_viewmodel.dart';
 import 'package:provider/provider.dart';
 
-import '../widgets/documents_form.dart';
+import '../widgets/document_form.dart';
 
 class AddDocumentScreen extends StatefulWidget {
-  final Document? documentoPai;
+  final Document? originalDocument;
   final bool isNewVersion;
 
   const AddDocumentScreen(
-      {super.key, this.documentoPai, this.isNewVersion = false});
+      {super.key, this.originalDocument, this.isNewVersion = false});
 
   @override
   State<AddDocumentScreen> createState() => _AddDocumentScreenState();
@@ -26,16 +27,14 @@ class _AddDocumentScreenState extends State<AddDocumentScreen> {
   final _validade = ValueNotifier<DateTime?>(null);
   final _camposAdicionais = ValueNotifier<List<Map<String, String>>>([]);
   final _anexos = ValueNotifier<List<Anexo>>([]);
-  Document? _documentoPai;
 
   @override
   void initState() {
     super.initState();
-    _nomeController =
-        TextEditingController(text: widget.documentoPai?.nomeDocumento ?? '');
+    _nomeController = TextEditingController(
+        text: widget.originalDocument?.nomeDocumento ?? '');
     _numeroController =
-        TextEditingController(text: widget.documentoPai?.numero ?? '');
-    _documentoPai = widget.documentoPai;
+        TextEditingController(text: widget.originalDocument?.numero ?? '');
   }
 
   void _submit() async {
@@ -52,21 +51,22 @@ class _AddDocumentScreenState extends State<AddDocumentScreen> {
       validade: _validade.value,
       camposAdicionais: {
         for (var campo in _camposAdicionais.value)
-          campo['nome']!: campo['valor']!
+          if (campo['nome']!.isNotEmpty) campo['nome']!: campo['valor']!
       },
       anexos: _anexos.value,
-      isPrincipal: !widget.isNewVersion,
-      documentoPaiId: _documentoPai?.id,
+      isPrincipal: widget.isNewVersion ? true : false,
+      originalDocumentId: widget.originalDocument?.originalDocumentId ??
+          widget.originalDocument?.id,
     );
 
     final success = await viewModel.addDocument(userId, newDocument);
 
     if (mounted) {
       if (success) {
-        if (widget.isNewVersion) {
+        if (widget.isNewVersion && widget.originalDocument != null) {
           final allVersions = [
-            _documentoPai!,
-            ..._documentoPai!.versoes,
+            widget.originalDocument!,
+            ...widget.originalDocument!.versoes,
             newDocument
           ];
           await viewModel.setAsPrincipal(userId, newDocument, allVersions);
@@ -86,7 +86,7 @@ class _AddDocumentScreenState extends State<AddDocumentScreen> {
     return Scaffold(
       appBar: AppBar(
         title:
-        Text(widget.isNewVersion ? 'Nova Versão' : 'Adicionar Documento'),
+            Text(widget.isNewVersion ? 'Nova Versão' : 'Adicionar Documento'),
       ),
       body: DocumentForm(
         formKey: _formKey,
@@ -96,16 +96,9 @@ class _AddDocumentScreenState extends State<AddDocumentScreen> {
         validade: _validade,
         camposAdicionais: _camposAdicionais,
         anexos: _anexos,
-        documentoPai: _documentoPai,
-        allDocuments: viewModel.documents,
-        onDocumentoPaiChanged: (doc) {
-          setState(() {
-            _documentoPai = doc;
-          });
-        },
       ),
       bottomNavigationBar: Padding(
-        padding: const EdgeInsets.all(16.0),
+        padding: const EdgeInsets.all(AppTheme.defaultPadding),
         child: ElevatedButton(
           onPressed: viewModel.isLoading ? null : _submit,
           child: viewModel.isLoading

@@ -10,10 +10,10 @@ class DocumentRepository {
         .doc(userId)
         .collection('documents')
         .withConverter<Document>(
-      fromFirestore: (snapshots, _) =>
-          Document.fromMap(snapshots.data()!, snapshots.id),
-      toFirestore: (document, _) => document.toMap(),
-    );
+          fromFirestore: (snapshots, _) =>
+              Document.fromMap(snapshots.data()!, snapshots.id),
+          toFirestore: (document, _) => document.toMap(),
+        );
   }
 
   Future<void> addDocument(String userId, Document document) async {
@@ -24,8 +24,7 @@ class DocumentRepository {
     return getDocumentsCollection(userId)
         .orderBy('dataExpedicao', descending: true)
         .snapshots()
-        .map(
-            (snapshot) => snapshot.docs.map((doc) => doc.data()).toList());
+        .map((snapshot) => snapshot.docs.map((doc) => doc.data()).toList());
   }
 
   Future<List<Document>> getDocumentsForUser(String userId) async {
