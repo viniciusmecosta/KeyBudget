@@ -24,8 +24,15 @@ class DocumentRepository {
     return getDocumentsCollection(userId)
         .orderBy('dataExpedicao', descending: true)
         .snapshots()
-        .map((snapshot) =>
-        snapshot.docs.map((doc) => doc.data()).toList());
+        .map(
+            (snapshot) => snapshot.docs.map((doc) => doc.data()).toList());
+  }
+
+  Future<List<Document>> getDocumentsForUser(String userId) async {
+    final querySnapshot = await getDocumentsCollection(userId)
+        .orderBy('dataExpedicao', descending: true)
+        .get();
+    return querySnapshot.docs.map((doc) => doc.data()).toList();
   }
 
   Future<void> updateDocument(String userId, Document document) async {

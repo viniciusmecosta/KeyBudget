@@ -10,7 +10,7 @@ class DocumentForm extends StatefulWidget {
   final GlobalKey<FormState> formKey;
   final TextEditingController nomeController;
   final TextEditingController numeroController;
-  final ValueNotifier<DateTime> dataExpedicao;
+  final ValueNotifier<DateTime?> dataExpedicao;
   final ValueNotifier<DateTime?> validade;
   final ValueNotifier<List<Map<String, String>>> camposAdicionais;
   final ValueNotifier<List<Anexo>> anexos;
@@ -48,33 +48,31 @@ class _DocumentFormState extends State<DocumentForm> {
         children: [
           TextFormField(
             controller: widget.nomeController,
-            decoration:
-                const InputDecoration(labelText: 'Nome do Documento *'),
-            validator: (value) =>
-                value!.isEmpty ? 'Campo obrigatório' : null,
+            decoration: const InputDecoration(labelText: 'Nome do Documento *'),
+            validator: (value) => value!.isEmpty ? 'Campo obrigatório' : null,
           ),
           const SizedBox(height: 16),
           TextFormField(
             controller: widget.numeroController,
             decoration: const InputDecoration(labelText: 'Número *'),
-            validator: (value) =>
-                value!.isEmpty ? 'Campo obrigatório' : null,
+            validator: (value) => value!.isEmpty ? 'Campo obrigatório' : null,
           ),
           const SizedBox(height: 16),
-          _buildDatePicker(
-              context, 'Data de Expedição *', widget.dataExpedicao),
+          _buildDatePicker(context, 'Data de Expedição', widget.dataExpedicao,
+              isOptional: true),
           const SizedBox(height: 16),
           _buildDatePicker(context, 'Validade', widget.validade,
               isOptional: true),
           const SizedBox(height: 16),
           DropdownButtonFormField<Document>(
             value: widget.documentoPai,
-            decoration: const InputDecoration(labelText: 'Documento Associado (Anterior)'),
+            decoration:
+            const InputDecoration(labelText: 'Documento Associado (Anterior)'),
             items: widget.allDocuments
                 .map((doc) => DropdownMenuItem(
-                      value: doc,
-                      child: Text(doc.nomeDocumento),
-                    ))
+              value: doc,
+              child: Text(doc.nomeDocumento),
+            ))
                 .toList(),
             onChanged: (value) {
               widget.onDocumentoPaiChanged(value);
@@ -122,8 +120,7 @@ class _DocumentFormState extends State<DocumentForm> {
             label: const Text('Adicionar Campo'),
             onPressed: () {
               setState(() {
-                widget.camposAdicionais.value
-                    .add({'nome': '', 'valor': ''});
+                widget.camposAdicionais.value.add({'nome': '', 'valor': ''});
               });
             },
           ),
@@ -200,13 +197,13 @@ class _DocumentFormState extends State<DocumentForm> {
           labelText: label,
           suffixIcon: isOptional && notifier.value != null
               ? IconButton(
-                  icon: const Icon(Icons.clear),
-                  onPressed: () {
-                    setState(() {
-                      notifier.value = null;
-                    });
-                  },
-                )
+            icon: const Icon(Icons.clear),
+            onPressed: () {
+              setState(() {
+                notifier.value = null;
+              });
+            },
+          )
               : null,
         ),
         child: Text(

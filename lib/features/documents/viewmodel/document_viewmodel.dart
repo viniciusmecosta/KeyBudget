@@ -17,7 +17,9 @@ class DocumentViewModel extends ChangeNotifier {
   List<Document> _documents = [];
 
   bool get isLoading => _isLoading;
+
   String? get errorMessage => _errorMessage;
+
   List<Document> get documents => _documents;
 
   void listenToDocuments(String userId) {
@@ -36,6 +38,14 @@ class DocumentViewModel extends ChangeNotifier {
     _isListening = true;
   }
 
+  Future<void> forceRefresh(String userId) async {
+    _setLoading(true);
+    final docs = await _repository.getDocumentsForUser(userId);
+    final processedDocs = await _processDocuments(docs, userId);
+    _documents = processedDocs;
+    _setLoading(false);
+  }
+
   Future<List<Document>> _processDocuments(
       List<Document> docs, String userId) async {
     final docMap = {for (var doc in docs) doc.id: doc};
@@ -50,7 +60,12 @@ class DocumentViewModel extends ChangeNotifier {
     final result =
     docs.where((doc) => doc.documentoPaiId == null).map<Document>((doc) {
       final allVersions = <Document>[doc, ...(parentDocs[doc.id] ?? [])];
-      allVersions.sort((a, b) => b.dataExpedicao.compareTo(a.dataExpedicao));
+      allVersions.sort((a, b) {
+        if (a.dataExpedicao == null && b.dataExpedicao == null) return 0;
+        if (a.dataExpedicao == null) return 1;
+        if (b.dataExpedicao == null) return -1;
+        return b.dataExpedicao!.compareTo(a.dataExpedicao!);
+      });
       final mainVersion =
       allVersions.firstWhere((v) => v.isPrincipal, orElse: () => doc);
       final otherVersions =
@@ -62,7 +77,7 @@ class DocumentViewModel extends ChangeNotifier {
           doc.documentoPaiId != null ? docMap[doc.documentoPaiId] : null);
     }).toList();
 
-    result.sort((a, b) => b.nomeDocumento.compareTo(a.nomeDocumento));
+    result.sort((a, b) => a.nomeDocumento.compareTo(b.nomeDocumento));
     return result;
   }
 
@@ -83,6 +98,7 @@ class DocumentViewModel extends ChangeNotifier {
     _setLoading(true);
     try {
       await _repository.updateDocument(userId, document);
+      await forceRefresh(userId);
       return true;
     } catch (e) {
       _setErrorMessage('Não foi possível atualizar o documento.');
@@ -115,6 +131,7 @@ class DocumentViewModel extends ChangeNotifier {
         batch.update(docRef, {'isPrincipal': doc.id == newPrincipal.id});
       }
       await batch.commit();
+      await forceRefresh(userId);
       return true;
     } catch (e) {
       _setErrorMessage('Não foi possível definir como principal.');

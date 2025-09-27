@@ -4,7 +4,7 @@ class Document {
   final String? id;
   final String nomeDocumento;
   final String numero;
-  final DateTime dataExpedicao;
+  final DateTime? dataExpedicao;
   final DateTime? validade;
   final Map<String, String> camposAdicionais;
   final List<Anexo> anexos;
@@ -17,7 +17,7 @@ class Document {
     this.id,
     required this.nomeDocumento,
     required this.numero,
-    required this.dataExpedicao,
+    this.dataExpedicao,
     this.validade,
     this.camposAdicionais = const {},
     this.anexos = const [],
@@ -31,7 +31,8 @@ class Document {
     return {
       'nomeDocumento': nomeDocumento,
       'numero': numero,
-      'dataExpedicao': Timestamp.fromDate(dataExpedicao),
+      'dataExpedicao':
+      dataExpedicao != null ? Timestamp.fromDate(dataExpedicao!) : null,
       'validade': validade != null ? Timestamp.fromDate(validade!) : null,
       'camposAdicionais': camposAdicionais,
       'anexos': anexos.map((anexo) => anexo.toMap()).toList(),
@@ -45,7 +46,7 @@ class Document {
       id: id,
       nomeDocumento: map['nomeDocumento'] ?? '',
       numero: map['numero'] ?? '',
-      dataExpedicao: (map['dataExpedicao'] as Timestamp).toDate(),
+      dataExpedicao: (map['dataExpedicao'] as Timestamp?)?.toDate(),
       validade: (map['validade'] as Timestamp?)?.toDate(),
       camposAdicionais: Map<String, String>.from(map['camposAdicionais'] ?? {}),
       anexos: (map['anexos'] as List<dynamic>?)
@@ -88,7 +89,7 @@ class Document {
 
 class Anexo {
   final String nome;
-  final String tipo; // 'image/jpeg', 'application/pdf', etc.
+  final String tipo;
   final String base64;
 
   Anexo({
