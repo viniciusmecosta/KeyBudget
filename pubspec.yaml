@@ -41,6 +41,8 @@ dependencies:
   mask_text_input_formatter: ^2.9.0
   font_awesome_flutter: ^10.7.0
   auto_size_text: ^3.0.0
+  syncfusion_flutter_pdfviewer: ^31.1.21
+  open_file: ^3.3.1
 
 dev_dependencies:
   flutter_test:
@@ -52,4 +54,3 @@ flutter:
 
   assets:
     - assets/
-
