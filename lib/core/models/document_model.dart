@@ -9,8 +9,7 @@ class Document {
   final Map<String, String> camposAdicionais;
   final List<Anexo> anexos;
   final bool isPrincipal;
-  final String? documentoPaiId;
-  final Document? documentoPai;
+  final String? originalDocumentId;
   final List<Document> versoes;
 
   Document({
@@ -22,8 +21,7 @@ class Document {
     this.camposAdicionais = const {},
     this.anexos = const [],
     this.isPrincipal = true,
-    this.documentoPaiId,
-    this.documentoPai,
+    this.originalDocumentId,
     this.versoes = const [],
   });
 
@@ -32,12 +30,12 @@ class Document {
       'nomeDocumento': nomeDocumento,
       'numero': numero,
       'dataExpedicao':
-      dataExpedicao != null ? Timestamp.fromDate(dataExpedicao!) : null,
+          dataExpedicao != null ? Timestamp.fromDate(dataExpedicao!) : null,
       'validade': validade != null ? Timestamp.fromDate(validade!) : null,
       'camposAdicionais': camposAdicionais,
       'anexos': anexos.map((anexo) => anexo.toMap()).toList(),
       'isPrincipal': isPrincipal,
-      'documentoPaiId': documentoPaiId,
+      'originalDocumentId': originalDocumentId,
     };
   }
 
@@ -50,11 +48,11 @@ class Document {
       validade: (map['validade'] as Timestamp?)?.toDate(),
       camposAdicionais: Map<String, String>.from(map['camposAdicionais'] ?? {}),
       anexos: (map['anexos'] as List<dynamic>?)
-          ?.map((anexoMap) => Anexo.fromMap(anexoMap))
-          .toList() ??
+              ?.map((anexoMap) => Anexo.fromMap(anexoMap))
+              .toList() ??
           [],
       isPrincipal: map['isPrincipal'] ?? true,
-      documentoPaiId: map['documentoPaiId'],
+      originalDocumentId: map['originalDocumentId'],
     );
   }
 
@@ -67,8 +65,7 @@ class Document {
     Map<String, String>? camposAdicionais,
     List<Anexo>? anexos,
     bool? isPrincipal,
-    String? documentoPaiId,
-    Document? documentoPai,
+    String? originalDocumentId,
     List<Document>? versoes,
   }) {
     return Document(
@@ -80,8 +77,7 @@ class Document {
       camposAdicionais: camposAdicionais ?? this.camposAdicionais,
       anexos: anexos ?? this.anexos,
       isPrincipal: isPrincipal ?? this.isPrincipal,
-      documentoPaiId: documentoPaiId ?? this.documentoPaiId,
-      documentoPai: documentoPai ?? this.documentoPai,
+      originalDocumentId: originalDocumentId ?? this.originalDocumentId,
       versoes: versoes ?? this.versoes,
     );
   }
