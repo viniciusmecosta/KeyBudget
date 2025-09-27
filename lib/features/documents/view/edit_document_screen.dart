@@ -7,35 +7,37 @@ import 'package:provider/provider.dart';
 
 import '../widgets/documents_form.dart';
 
-class AddDocumentScreen extends StatefulWidget {
-  final Document? documentoPai;
-  final bool isNewVersion;
+class EditDocumentScreen extends StatefulWidget {
+  final Document document;
 
-  const AddDocumentScreen(
-      {super.key, this.documentoPai, this.isNewVersion = false});
+  const EditDocumentScreen({super.key, required this.document});
 
   @override
-  State<AddDocumentScreen> createState() => _AddDocumentScreenState();
+  State<EditDocumentScreen> createState() => _EditDocumentScreenState();
 }
 
-class _AddDocumentScreenState extends State<AddDocumentScreen> {
+class _EditDocumentScreenState extends State<EditDocumentScreen> {
   final _formKey = GlobalKey<FormState>();
   late TextEditingController _nomeController;
   late TextEditingController _numeroController;
-  final _dataExpedicao = ValueNotifier<DateTime?>(null);
-  final _validade = ValueNotifier<DateTime?>(null);
-  final _camposAdicionais = ValueNotifier<List<Map<String, String>>>([]);
-  final _anexos = ValueNotifier<List<Anexo>>([]);
+  late ValueNotifier<DateTime?> _dataExpedicao;
+  late ValueNotifier<DateTime?> _validade;
+  late ValueNotifier<List<Map<String, String>>> _camposAdicionais;
+  late ValueNotifier<List<Anexo>> _anexos;
   Document? _documentoPai;
 
   @override
   void initState() {
     super.initState();
-    _nomeController =
-        TextEditingController(text: widget.documentoPai?.nomeDocumento ?? '');
-    _numeroController =
-        TextEditingController(text: widget.documentoPai?.numero ?? '');
-    _documentoPai = widget.documentoPai;
+    _nomeController = TextEditingController(text: widget.document.nomeDocumento);
+    _numeroController = TextEditingController(text: widget.document.numero);
+    _dataExpedicao = ValueNotifier(widget.document.dataExpedicao);
+    _validade = ValueNotifier(widget.document.validade);
+    _camposAdicionais = ValueNotifier(widget.document.camposAdicionais.entries
+        .map((e) => {'nome': e.key, 'valor': e.value})
+        .toList());
+    _anexos = ValueNotifier(List<Anexo>.from(widget.document.anexos));
+    _documentoPai = widget.document.documentoPai;
   }
 
   void _submit() async {
@@ -45,7 +47,7 @@ class _AddDocumentScreenState extends State<AddDocumentScreen> {
     final userId =
         Provider.of<AuthViewModel>(context, listen: false).currentUser!.id;
 
-    final newDocument = Document(
+    final updatedDocument = widget.document.copyWith(
       nomeDocumento: _nomeController.text,
       numero: _numeroController.text,
       dataExpedicao: _dataExpedicao.value,
@@ -55,23 +57,15 @@ class _AddDocumentScreenState extends State<AddDocumentScreen> {
           campo['nome']!: campo['valor']!
       },
       anexos: _anexos.value,
-      isPrincipal: !widget.isNewVersion,
       documentoPaiId: _documentoPai?.id,
     );
 
-    final success = await viewModel.addDocument(userId, newDocument);
+    final success = await viewModel.updateDocument(userId, updatedDocument);
 
     if (mounted) {
       if (success) {
-        if (widget.isNewVersion) {
-          final allVersions = [
-            _documentoPai!,
-            ..._documentoPai!.versoes,
-            newDocument
-          ];
-          await viewModel.setAsPrincipal(userId, newDocument, allVersions);
-        }
-        SnackbarService.showSuccess(context, 'Documento salvo com sucesso!');
+        SnackbarService.showSuccess(
+            context, 'Documento atualizado com sucesso!');
         Navigator.of(context).pop();
       } else {
         SnackbarService.showError(
@@ -85,8 +79,7 @@ class _AddDocumentScreenState extends State<AddDocumentScreen> {
     final viewModel = context.watch<DocumentViewModel>();
     return Scaffold(
       appBar: AppBar(
-        title:
-        Text(widget.isNewVersion ? 'Nova Versão' : 'Adicionar Documento'),
+        title: const Text('Editar Documento'),
       ),
       body: DocumentForm(
         formKey: _formKey,
@@ -97,7 +90,9 @@ class _AddDocumentScreenState extends State<AddDocumentScreen> {
         camposAdicionais: _camposAdicionais,
         anexos: _anexos,
         documentoPai: _documentoPai,
-        allDocuments: viewModel.documents,
+        allDocuments: viewModel.documents
+            .where((d) => d.id != widget.document.id)
+            .toList(),
         onDocumentoPaiChanged: (doc) {
           setState(() {
             _documentoPai = doc;
@@ -110,7 +105,7 @@ class _AddDocumentScreenState extends State<AddDocumentScreen> {
           onPressed: viewModel.isLoading ? null : _submit,
           child: viewModel.isLoading
               ? const CircularProgressIndicator()
-              : const Text('Salvar'),
+              : const Text('Salvar Alterações'),
         ),
       ),
     );

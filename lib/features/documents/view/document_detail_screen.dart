@@ -7,7 +7,9 @@ import 'package:provider/provider.dart';
 import 'package:syncfusion_flutter_pdfviewer/pdfviewer.dart';
 import 'package:key_budget/features/documents/viewmodel/document_viewmodel.dart';
 import 'package:key_budget/features/auth/viewmodel/auth_viewmodel.dart';
+import '../../user/view/edit_user_screen.dart';
 import 'add_document_screen.dart';
+import 'edit_document_screen.dart';
 
 class DocumentDetailScreen extends StatelessWidget {
   final Document document;
@@ -25,6 +27,13 @@ class DocumentDetailScreen extends StatelessWidget {
         title: Text(document.nomeDocumento),
         actions: [
           IconButton(
+            icon: const Icon(Icons.edit),
+            tooltip: 'Editar Documento',
+            onPressed: () => Navigator.of(context).push(MaterialPageRoute(
+              builder: (_) => EditDocumentScreen(document: document),
+            )),
+          ),
+          IconButton(
             icon: const Icon(Icons.add),
             tooltip: 'Adicionar Nova Versão',
             onPressed: () => Navigator.of(context).push(MaterialPageRoute(
@@ -35,7 +44,8 @@ class DocumentDetailScreen extends StatelessWidget {
           IconButton(
             icon: const Icon(Icons.delete),
             onPressed: () async {
-              final success = await viewModel.deleteDocument(userId, document.id!);
+              final success =
+              await viewModel.deleteDocument(userId, document.id!);
               if (success) {
                 SnackbarService.showSuccess(
                     context, 'Documento excluído com sucesso!');
@@ -53,9 +63,12 @@ class DocumentDetailScreen extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            if (document.dataExpedicao != null)
+              _buildDetailItem(
+                  'Data de Expedição',
+                  DateFormat('dd/MM/yyyy').format(document.dataExpedicao!),
+                  context),
             _buildDetailItem('Número', document.numero, context),
-            _buildDetailItem('Data de Expedição',
-                DateFormat('dd/MM/yyyy').format(document.dataExpedicao), context),
             if (document.validade != null)
               _buildDetailItem('Validade',
                   DateFormat('dd/MM/yyyy').format(document.validade!), context),
@@ -64,7 +77,8 @@ class DocumentDetailScreen extends StatelessWidget {
             if (document.anexos.isNotEmpty) ...[
               const SizedBox(height: 16),
               Text('Anexos', style: Theme.of(context).textTheme.titleLarge),
-              ...document.anexos.map((anexo) => _buildAnexoItem(anexo, context)),
+              ...document.anexos
+                  .map((anexo) => _buildAnexoItem(anexo, context)),
             ],
             if (document.versoes.isNotEmpty) ...[
               const SizedBox(height: 16),
@@ -73,8 +87,9 @@ class DocumentDetailScreen extends StatelessWidget {
                     style: Theme.of(context).textTheme.titleLarge),
                 children: document.versoes
                     .map((v) => ListTile(
-                  title: Text(DateFormat('dd/MM/yyyy')
-                      .format(v.dataExpedicao)),
+                  title: Text(v.dataExpedicao != null
+                      ? DateFormat('dd/MM/yyyy').format(v.dataExpedicao!)
+                      : 'Sem data'),
                   trailing: TextButton(
                     child: const Text('Marcar como Principal'),
                     onPressed: () async {
@@ -82,15 +97,18 @@ class DocumentDetailScreen extends StatelessWidget {
                       final success = await viewModel.setAsPrincipal(
                           userId, v, allVersions);
                       if (success) {
-                        SnackbarService.showSuccess(context,
-                            'Versão definida como principal!');
+                        SnackbarService.showSuccess(
+                            context, 'Versão definida como principal!');
+                        Navigator.pop(context);
                       } else {
-                        SnackbarService.showError(context,
-                            viewModel.errorMessage ?? 'Erro ao definir.');
+                        SnackbarService.showError(
+                            context,
+                            viewModel.errorMessage ??
+                                'Erro ao definir.');
                       }
                     },
                   ),
-                  onTap: () => Navigator.of(context).push(
+                  onTap: () => Navigator.of(context).pushReplacement(
                     MaterialPageRoute(
                       builder: (_) => DocumentDetailScreen(document: v),
                     ),
@@ -139,8 +157,7 @@ class DocumentDetailScreen extends StatelessWidget {
                 onPressed: () async {
                   await viewModel.downloadAndOpenFile(anexo);
                   if (viewModel.errorMessage != null) {
-                    SnackbarService.showError(
-                        context, viewModel.errorMessage!);
+                    SnackbarService.showError(context, viewModel.errorMessage!);
                   }
                 },
               ),
