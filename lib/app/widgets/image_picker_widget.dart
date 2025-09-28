@@ -78,7 +78,8 @@ class _ImagePickerWidgetState extends State<ImagePickerWidget> {
       onTap: _pickImage,
       child: CircleAvatar(
         radius: widget.radius,
-        backgroundColor: theme.colorScheme.secondary.withOpacity(0.1),
+        backgroundColor:
+            theme.colorScheme.secondary.withAlpha((255 * 0.1).round()),
         backgroundImage: _getImageProvider(),
         child: _imageBase64 == null
             ? Icon(

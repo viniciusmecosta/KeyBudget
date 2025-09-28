@@ -324,8 +324,9 @@ class _IconPickerWidgetState extends State<IconPickerWidget> {
                       ),
                       onPressed: () => Navigator.of(context).pop(icon),
                       style: IconButton.styleFrom(
-                        backgroundColor:
-                            theme.colorScheme.surfaceVariant.withOpacity(0.3),
+                        backgroundColor: theme
+                            .colorScheme.surfaceContainerHighest
+                            .withAlpha((255 * 0.3).round()),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(12),
                         ),

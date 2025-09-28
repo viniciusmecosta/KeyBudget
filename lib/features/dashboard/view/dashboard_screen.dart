@@ -57,10 +57,10 @@ class _DashboardScreenState extends State<DashboardScreen>
 
         await Provider.of<CategoryViewModel>(context, listen: false)
             .fetchCategories(userId);
-
+        if (!mounted) return;
         Provider.of<ExpenseViewModel>(context, listen: false)
             .listenToExpenses(userId);
-
+        if (!mounted) return;
         Provider.of<CredentialViewModel>(context, listen: false)
             .listenToCredentials(userId);
       }
@@ -78,7 +78,7 @@ class _DashboardScreenState extends State<DashboardScreen>
     final theme = Theme.of(context);
 
     return Scaffold(
-      backgroundColor: theme.colorScheme.background,
+      backgroundColor: theme.colorScheme.surface,
       appBar: const DashboardHeader(),
       body: SafeArea(
         child: viewModel.isLoading
@@ -133,7 +133,7 @@ class _DashboardScreenState extends State<DashboardScreen>
           Text(
             'Carregando seus dados...',
             style: theme.textTheme.bodyMedium?.copyWith(
-              color: theme.colorScheme.onSurface.withOpacity(0.7),
+              color: theme.colorScheme.onSurface.withAlpha((255 * 0.7).round()),
               fontWeight: FontWeight.w500,
             ),
           ),

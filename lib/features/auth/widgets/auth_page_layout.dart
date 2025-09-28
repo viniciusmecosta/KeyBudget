@@ -18,8 +18,8 @@ class AuthPageLayout extends StatelessWidget {
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
             colors: [
-              theme.colorScheme.background,
-              theme.primaryColor.withOpacity(0.1),
+              theme.colorScheme.surface,
+              theme.primaryColor.withAlpha((255 * 0.1).round()),
             ],
           ),
         ),
@@ -42,7 +42,8 @@ class AuthPageLayout extends StatelessWidget {
                   "Gerencie suas finanças e senhas com segurança",
                   textAlign: TextAlign.center,
                   style: theme.textTheme.titleMedium?.copyWith(
-                    color: theme.colorScheme.onSurface.withOpacity(0.7),
+                    color: theme.colorScheme.onSurface
+                        .withAlpha((255 * 0.7).round()),
                   ),
                 ),
                 const SizedBox(height: 48),

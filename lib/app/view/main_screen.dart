@@ -4,9 +4,10 @@ import 'package:key_budget/app/viewmodel/navigation_viewmodel.dart';
 import 'package:key_budget/features/credentials/view/credentials_screen.dart';
 import 'package:key_budget/features/dashboard/view/dashboard_screen.dart';
 import 'package:key_budget/features/expenses/view/expenses_screen.dart';
-// import 'package:key_budget/features/suppliers/view/suppliers_screen.dart';
 import 'package:key_budget/features/user/view/user_screen.dart';
 import 'package:provider/provider.dart';
+
+import '../../features/documents/view/documents_screen.dart';
 
 class MainScreen extends StatefulWidget {
   const MainScreen({super.key});
@@ -20,7 +21,7 @@ class _MainScreenState extends State<MainScreen> {
     DashboardScreen(),
     ExpensesScreen(),
     CredentialsScreen(),
-    // SuppliersScreen(),
+    DocumentsScreen(),
     UserScreen(),
   ];
 
@@ -56,7 +57,7 @@ class _MainScreenState extends State<MainScreen> {
           boxShadow: [
             BoxShadow(
               blurRadius: 20,
-              color: theme.shadowColor.withOpacity(0.1),
+              color: theme.shadowColor.withAlpha((255 * 0.1).round()),
             )
           ],
         ),
@@ -71,15 +72,14 @@ class _MainScreenState extends State<MainScreen> {
               iconSize: 24,
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
               duration: const Duration(milliseconds: 400),
-              tabBackgroundColor: theme.colorScheme.primary.withOpacity(0.1),
-              color: theme.colorScheme.onSurface.withOpacity(0.6),
+              tabBackgroundColor:
+                  theme.colorScheme.primary.withAlpha((255 * 0.1).round()),
+              color: theme.colorScheme.onSurface.withAlpha((255 * 0.6).round()),
               tabs: const [
                 GButton(icon: Icons.home_rounded, text: 'Painel'),
                 GButton(icon: Icons.monetization_on_rounded, text: 'Despesas'),
                 GButton(icon: Icons.vpn_key_rounded, text: 'Credenciais'),
-                // GButton(
-                //     icon: Icons.store_mall_directory_rounded,
-                //     text: 'Fornecedores'),
+                GButton(icon: Icons.folder_copy_rounded, text: 'Documentos'),
                 GButton(icon: Icons.person_rounded, text: 'Perfil'),
               ],
               selectedIndex: navigationViewModel.selectedIndex,

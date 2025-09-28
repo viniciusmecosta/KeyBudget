@@ -28,13 +28,13 @@ class AppTheme {
 
   static const Color background = Color(0xFFFDFDFE);
   static const Color surface = Color(0xFFFFFFFF);
-  static const Color surfaceVariant = Color(0xFFF3F4F6);
+  static const Color surfaceContainerHighest = Color(0xFFF3F4F6);
   static const Color onSurface = Color(0xFF111827);
   static const Color onSurfaceVariant = Color(0xFF6B7280);
 
   static const Color darkBackground = Color(0xFF0D1117);
   static const Color darkSurface = Color(0xFF161B22);
-  static const Color darkSurfaceVariant = Color(0xFF1F2937);
+  static const Color darkSurfaceContainerHighest = Color(0xFF1F2937);
   static const Color onDarkSurface = Color(0xFFF3F4F6);
   static const Color onDarkSurfaceVariant = Color(0xFF9CA3AF);
 
@@ -75,17 +75,15 @@ class AppTheme {
       onSecondary: surface,
       surface: surface,
       onSurface: onSurface,
-      background: background,
-      onBackground: onSurface,
       error: error,
       onError: surface,
       brightness: Brightness.light,
       tertiary: chartColors[5],
-      surfaceVariant: surfaceVariant,
+      surfaceContainerHighest: surfaceContainerHighest,
       onSurfaceVariant: onSurfaceVariant,
-      outline: onSurfaceVariant.withOpacity(0.2),
-      outlineVariant: onSurfaceVariant.withOpacity(0.1),
-      shadow: onSurface.withOpacity(0.1),
+      outline: onSurfaceVariant.withAlpha(51),
+      outlineVariant: onSurfaceVariant.withAlpha(26),
+      shadow: onSurface.withAlpha(26),
     ).copyWith(
       secondaryContainer: success,
     ),
@@ -171,7 +169,7 @@ class AppTheme {
     outlinedButtonTheme: OutlinedButtonThemeData(
       style: OutlinedButton.styleFrom(
         foregroundColor: primary,
-        side: BorderSide(color: primary.withOpacity(0.3)),
+        side: BorderSide(color: primary.withAlpha(77)),
         padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
         shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(radiusM)),
@@ -195,7 +193,7 @@ class AppTheme {
     ),
     inputDecorationTheme: InputDecorationTheme(
       filled: true,
-      fillColor: surfaceVariant,
+      fillColor: surfaceContainerHighest,
       border: OutlineInputBorder(
         borderRadius: BorderRadius.circular(radiusM),
         borderSide: BorderSide.none,
@@ -203,7 +201,7 @@ class AppTheme {
       enabledBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(radiusM),
         borderSide: BorderSide(
-          color: onSurfaceVariant.withOpacity(0.1),
+          color: onSurfaceVariant.withAlpha(26),
         ),
       ),
       focusedBorder: OutlineInputBorder(
@@ -219,43 +217,43 @@ class AppTheme {
         borderSide: const BorderSide(color: error, width: 2),
       ),
       contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 18),
-      labelStyle: TextStyle(color: onSurfaceVariant),
+      labelStyle: const TextStyle(color: onSurfaceVariant),
       floatingLabelStyle: const TextStyle(color: primary),
-      hintStyle: TextStyle(color: onSurfaceVariant.withOpacity(0.6)),
+      hintStyle: TextStyle(color: onSurfaceVariant.withAlpha(153)),
     ),
     cardTheme: CardThemeData(
       elevation: 0,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(radiusL),
-        side: BorderSide(color: onSurfaceVariant.withOpacity(0.08), width: 1),
+        side: BorderSide(color: onSurfaceVariant.withAlpha(20), width: 1),
       ),
       color: surface,
-      shadowColor: onSurface.withOpacity(0.05),
+      shadowColor: onSurface.withAlpha(13),
     ),
     dividerTheme: DividerThemeData(
-      color: onSurfaceVariant.withOpacity(0.12),
+      color: onSurfaceVariant.withAlpha(31),
       thickness: 1,
       space: 1,
     ),
     switchTheme: SwitchThemeData(
-      thumbColor: MaterialStateProperty.resolveWith<Color>(
-        (Set<MaterialState> states) {
-          if (states.contains(MaterialState.selected)) {
+      thumbColor: WidgetStateProperty.resolveWith<Color>(
+        (Set<WidgetState> states) {
+          if (states.contains(WidgetState.selected)) {
             return primary;
           }
           return onSurfaceVariant;
         },
       ),
-      trackColor: MaterialStateProperty.resolveWith<Color>(
-        (Set<MaterialState> states) {
-          if (states.contains(MaterialState.selected)) {
-            return primary.withOpacity(0.3);
+      trackColor: WidgetStateProperty.resolveWith<Color>(
+        (Set<WidgetState> states) {
+          if (states.contains(WidgetState.selected)) {
+            return primary.withAlpha(77);
           }
-          return onSurfaceVariant.withOpacity(0.2);
+          return onSurfaceVariant.withAlpha(51);
         },
       ),
     ),
-    shadowColor: onSurface.withOpacity(0.03),
+    shadowColor: onSurface.withAlpha(8),
   );
 
   static final ThemeData darkTheme = ThemeData(
@@ -270,17 +268,15 @@ class AppTheme {
       onSecondary: onDarkSurface,
       surface: darkSurface,
       onSurface: onDarkSurface,
-      background: darkBackground,
-      onBackground: onDarkSurface,
       error: error,
       onError: surface,
       brightness: Brightness.dark,
       tertiary: chartColors[5],
-      surfaceVariant: darkSurfaceVariant,
+      surfaceContainerHighest: darkSurfaceContainerHighest,
       onSurfaceVariant: onDarkSurfaceVariant,
-      outline: onDarkSurfaceVariant.withOpacity(0.2),
-      outlineVariant: onDarkSurfaceVariant.withOpacity(0.1),
-      shadow: Colors.black.withOpacity(0.3),
+      outline: onDarkSurfaceVariant.withAlpha(51),
+      outlineVariant: onDarkSurfaceVariant.withAlpha(26),
+      shadow: Colors.black.withAlpha(77),
     ).copyWith(
       secondaryContainer: success,
     ),
@@ -366,7 +362,7 @@ class AppTheme {
     outlinedButtonTheme: OutlinedButtonThemeData(
       style: OutlinedButton.styleFrom(
         foregroundColor: primaryVariant,
-        side: BorderSide(color: primaryVariant.withOpacity(0.3)),
+        side: BorderSide(color: primaryVariant.withAlpha(77)),
         padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
         shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(radiusM)),
@@ -390,7 +386,7 @@ class AppTheme {
     ),
     inputDecorationTheme: InputDecorationTheme(
       filled: true,
-      fillColor: darkSurfaceVariant,
+      fillColor: darkSurfaceContainerHighest,
       border: OutlineInputBorder(
         borderRadius: BorderRadius.circular(radiusM),
         borderSide: BorderSide.none,
@@ -398,7 +394,7 @@ class AppTheme {
       enabledBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(radiusM),
         borderSide: BorderSide(
-          color: onDarkSurfaceVariant.withOpacity(0.1),
+          color: onDarkSurfaceVariant.withAlpha(26),
         ),
       ),
       focusedBorder: OutlineInputBorder(
@@ -414,43 +410,42 @@ class AppTheme {
         borderSide: const BorderSide(color: error, width: 2),
       ),
       contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 18),
-      labelStyle: TextStyle(color: onDarkSurfaceVariant),
+      labelStyle: const TextStyle(color: onDarkSurfaceVariant),
       floatingLabelStyle: const TextStyle(color: primaryVariant),
-      hintStyle: TextStyle(color: onDarkSurfaceVariant.withOpacity(0.6)),
+      hintStyle: TextStyle(color: onDarkSurfaceVariant.withAlpha(153)),
     ),
     cardTheme: CardThemeData(
       elevation: 0,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(radiusL),
-        side:
-            BorderSide(color: onDarkSurfaceVariant.withOpacity(0.08), width: 1),
+        side: BorderSide(color: onDarkSurfaceVariant.withAlpha(20), width: 1),
       ),
       color: darkSurface,
-      shadowColor: Colors.black.withOpacity(0.2),
+      shadowColor: Colors.black.withAlpha(51),
     ),
     dividerTheme: DividerThemeData(
-      color: onDarkSurfaceVariant.withOpacity(0.12),
+      color: onDarkSurfaceVariant.withAlpha(31),
       thickness: 1,
       space: 1,
     ),
     switchTheme: SwitchThemeData(
-      thumbColor: MaterialStateProperty.resolveWith<Color>(
-        (Set<MaterialState> states) {
-          if (states.contains(MaterialState.selected)) {
+      thumbColor: WidgetStateProperty.resolveWith<Color>(
+        (Set<WidgetState> states) {
+          if (states.contains(WidgetState.selected)) {
             return primaryVariant;
           }
           return onDarkSurfaceVariant;
         },
       ),
-      trackColor: MaterialStateProperty.resolveWith<Color>(
-        (Set<MaterialState> states) {
-          if (states.contains(MaterialState.selected)) {
-            return primaryVariant.withOpacity(0.3);
+      trackColor: WidgetStateProperty.resolveWith<Color>(
+        (Set<WidgetState> states) {
+          if (states.contains(WidgetState.selected)) {
+            return primaryVariant.withAlpha(77);
           }
-          return onDarkSurfaceVariant.withOpacity(0.2);
+          return onDarkSurfaceVariant.withAlpha(51);
         },
       ),
     ),
-    shadowColor: Colors.black.withOpacity(0.1),
+    shadowColor: Colors.black.withAlpha(26),
   );
 }

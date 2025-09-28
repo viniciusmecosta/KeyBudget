@@ -76,13 +76,13 @@ class _SupplierDetailScreenState extends State<SupplierDetailScreen> {
       notes: _notesController.text.isNotEmpty ? _notesController.text : null,
     );
 
-    if (mounted) {
-      setState(() {
-        _isSaving = false;
-        _isEditing = false;
-      });
-      Navigator.of(context).pop();
-    }
+    if (!mounted) return;
+
+    setState(() {
+      _isSaving = false;
+      _isEditing = false;
+    });
+    Navigator.of(context).pop();
   }
 
   void _deleteSupplier() {
@@ -106,10 +106,9 @@ class _SupplierDetailScreenState extends State<SupplierDetailScreen> {
               await Provider.of<SupplierViewModel>(context, listen: false)
                   .deleteSupplier(userId, widget.supplier.id!);
 
-              if (mounted) {
-                Navigator.of(ctx).pop();
-                Navigator.of(context).pop();
-              }
+              if (!mounted) return;
+              Navigator.of(ctx).pop();
+              Navigator.of(context).pop();
             },
           ),
         ],

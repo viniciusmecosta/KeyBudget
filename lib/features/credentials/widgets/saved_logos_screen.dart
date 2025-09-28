@@ -37,7 +37,8 @@ class SavedLogosScreen extends StatelessWidget {
                         Icon(
                           Icons.image_not_supported_outlined,
                           size: 80,
-                          color: theme.colorScheme.onSurface.withOpacity(0.4),
+                          color: theme.colorScheme.onSurface
+                              .withAlpha((255 * 0.4).round()),
                         ),
                         const SizedBox(height: 24),
                         Text(
@@ -74,12 +75,14 @@ class SavedLogosScreen extends StatelessWidget {
                       },
                       child: Card(
                         elevation: 4,
-                        shadowColor: theme.colorScheme.shadow.withOpacity(0.2),
+                        shadowColor: theme.colorScheme.shadow
+                            .withAlpha((255 * 0.2).round()),
                         shape: const CircleBorder(),
                         clipBehavior: Clip.antiAlias,
                         child: CircleAvatar(
-                          backgroundColor:
-                              theme.colorScheme.surfaceVariant.withOpacity(0.3),
+                          backgroundColor: theme
+                              .colorScheme.surfaceContainerHighest
+                              .withAlpha((255 * 0.3).round()),
                           backgroundImage:
                               MemoryImage(base64Decode(logoBase64)),
                         ),

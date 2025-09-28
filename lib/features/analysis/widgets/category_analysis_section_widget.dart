@@ -59,7 +59,7 @@ class _CategoryAnalysisSectionWidgetState
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(16),
             border: Border.all(
-              color: theme.colorScheme.outline.withOpacity(0.1),
+              color: theme.colorScheme.outline.withAlpha((255 * 0.1).round()),
             ),
           ),
           child: Row(
@@ -67,7 +67,8 @@ class _CategoryAnalysisSectionWidgetState
               Container(
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: theme.colorScheme.primary.withOpacity(0.1),
+                  color:
+                      theme.colorScheme.primary.withAlpha((255 * 0.1).round()),
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Icon(
@@ -94,7 +95,8 @@ class _CategoryAnalysisSectionWidgetState
                           .format(viewModel.selectedMonthForCategory!)
                           .capitalize(),
                       style: theme.textTheme.bodyMedium?.copyWith(
-                        color: theme.colorScheme.onSurface.withOpacity(0.6),
+                        color: theme.colorScheme.onSurface
+                            .withAlpha((255 * 0.6).round()),
                       ),
                     ),
                   ],
@@ -102,7 +104,8 @@ class _CategoryAnalysisSectionWidgetState
               ),
               Icon(
                 Icons.arrow_forward_ios,
-                color: theme.colorScheme.onSurface.withOpacity(0.4),
+                color:
+                    theme.colorScheme.onSurface.withAlpha((255 * 0.4).round()),
                 size: 16,
               ),
             ],
@@ -130,7 +133,8 @@ class _CategoryAnalysisSectionWidgetState
               width: 40,
               height: 4,
               decoration: BoxDecoration(
-                color: theme.colorScheme.onSurface.withOpacity(0.3),
+                color:
+                    theme.colorScheme.onSurface.withAlpha((255 * 0.3).round()),
                 borderRadius: BorderRadius.circular(2),
               ),
             ),
@@ -169,7 +173,8 @@ class _CategoryAnalysisSectionWidgetState
                     ),
                     child: Material(
                       color: isSelected
-                          ? theme.colorScheme.primary.withOpacity(0.1)
+                          ? theme.colorScheme.primary
+                              .withAlpha((255 * 0.1).round())
                           : theme.colorScheme.surface,
                       borderRadius: BorderRadius.circular(12),
                       child: InkWell(
@@ -184,8 +189,10 @@ class _CategoryAnalysisSectionWidgetState
                             borderRadius: BorderRadius.circular(12),
                             border: Border.all(
                               color: isSelected
-                                  ? theme.colorScheme.primary.withOpacity(0.3)
-                                  : theme.colorScheme.outline.withOpacity(0.1),
+                                  ? theme.colorScheme.primary
+                                      .withAlpha((255 * 0.3).round())
+                                  : theme.colorScheme.outline
+                                      .withAlpha((255 * 0.1).round()),
                             ),
                           ),
                           child: Row(
@@ -195,9 +202,9 @@ class _CategoryAnalysisSectionWidgetState
                                 decoration: BoxDecoration(
                                   color: isSelected
                                       ? theme.colorScheme.primary
-                                          .withOpacity(0.2)
+                                          .withAlpha((255 * 0.2).round())
                                       : theme.colorScheme.outline
-                                          .withOpacity(0.1),
+                                          .withAlpha((255 * 0.1).round()),
                                   borderRadius: BorderRadius.circular(8),
                                 ),
                                 child: Icon(
@@ -205,7 +212,7 @@ class _CategoryAnalysisSectionWidgetState
                                   color: isSelected
                                       ? theme.colorScheme.primary
                                       : theme.colorScheme.onSurface
-                                          .withOpacity(0.6),
+                                          .withAlpha((255 * 0.6).round()),
                                   size: 20,
                                 ),
                               ),
@@ -236,7 +243,7 @@ class _CategoryAnalysisSectionWidgetState
                                         style: TextStyle(
                                           fontSize: 12,
                                           color: theme.colorScheme.onSurface
-                                              .withOpacity(0.6),
+                                              .withAlpha((255 * 0.6).round()),
                                         ),
                                       ),
                                     ],
@@ -286,7 +293,7 @@ class _CategoryAnalysisSectionWidgetState
         color: theme.colorScheme.surface,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
-          color: theme.colorScheme.outline.withOpacity(0.1),
+          color: theme.colorScheme.outline.withAlpha((255 * 0.1).round()),
         ),
       ),
       child: Column(
@@ -353,8 +360,7 @@ class _CategoryAnalysisSectionWidgetState
                     Text(
                       'Total',
                       style: theme.textTheme.bodySmall?.copyWith(
-                        color:
-                            theme.textTheme.bodySmall?.color?.withOpacity(0.7),
+                        color: theme.textTheme.bodySmall?.color?.withAlpha(178),
                       ),
                     ),
                     Text(
@@ -387,7 +393,7 @@ class _CategoryAnalysisSectionWidgetState
               isHighlighted: isHighlighted,
               showDivider: index < chartData.length - 1,
             );
-          }).toList(),
+          }),
         ],
       ),
     );
@@ -415,7 +421,8 @@ class _CategoryAnalysisSectionWidgetState
           Text(
             '${percentage.toStringAsFixed(1)}%',
             style: TextStyle(
-              color: theme.colorScheme.onInverseSurface.withOpacity(0.7),
+              color: theme.colorScheme.onInverseSurface
+                  .withAlpha((255 * 0.7).round()),
               fontSize: 9,
             ),
           ),
@@ -443,7 +450,9 @@ class _CategoryAnalysisSectionWidgetState
           duration: const Duration(milliseconds: 200),
           padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 8),
           decoration: BoxDecoration(
-            color: isHighlighted ? color.withOpacity(0.08) : Colors.transparent,
+            color: isHighlighted
+                ? color.withAlpha((255 * 0.08).round())
+                : Colors.transparent,
             borderRadius: BorderRadius.circular(8),
           ),
           child: Row(
@@ -457,7 +466,7 @@ class _CategoryAnalysisSectionWidgetState
                   boxShadow: isHighlighted
                       ? [
                           BoxShadow(
-                            color: color.withOpacity(0.4),
+                            color: color.withAlpha((255 * 0.4).round()),
                             blurRadius: 6,
                             offset: const Offset(0, 2),
                           ),
@@ -497,7 +506,7 @@ class _CategoryAnalysisSectionWidgetState
                         vertical: 2,
                       ),
                       decoration: BoxDecoration(
-                        color: color.withOpacity(0.15),
+                        color: color.withAlpha((255 * 0.15).round()),
                         borderRadius: BorderRadius.circular(10),
                       ),
                       child: Text(
@@ -519,7 +528,7 @@ class _CategoryAnalysisSectionWidgetState
           Divider(
             height: 1,
             thickness: 0.5,
-            color: theme.colorScheme.outline.withOpacity(0.1),
+            color: theme.colorScheme.outline.withAlpha((255 * 0.1).round()),
           ),
       ],
     );
