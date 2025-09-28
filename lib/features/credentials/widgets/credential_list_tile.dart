@@ -43,7 +43,8 @@ class CredentialListTile extends StatelessWidget {
               width: double.infinity,
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
               decoration: BoxDecoration(
-                color: theme.colorScheme.onSurface.withOpacity(0.05),
+                color:
+                    theme.colorScheme.onSurface.withAlpha((255 * 0.05).round()),
                 borderRadius: BorderRadius.circular(8),
               ),
               child: Text(
@@ -102,7 +103,7 @@ class CredentialListTile extends StatelessWidget {
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(16),
               border: Border.all(
-                color: theme.colorScheme.outline.withOpacity(0.1),
+                color: theme.colorScheme.outline.withAlpha((255 * 0.1).round()),
               ),
             ),
             child: Row(
@@ -111,7 +112,8 @@ class CredentialListTile extends StatelessWidget {
                   radius: 24,
                   backgroundColor: logoPath != null && logoPath.isNotEmpty
                       ? Colors.transparent
-                      : theme.colorScheme.secondary.withOpacity(0.1),
+                      : theme.colorScheme.secondary
+                          .withAlpha((255 * 0.1).round()),
                   backgroundImage: logoPath != null && logoPath.isNotEmpty
                       ? MemoryImage(base64Decode(logoPath))
                       : null,
@@ -136,7 +138,8 @@ class CredentialListTile extends StatelessWidget {
                       AutoSizeText(
                         credential.login,
                         style: theme.textTheme.bodySmall?.copyWith(
-                          color: theme.colorScheme.onSurface.withOpacity(0.6),
+                          color: theme.colorScheme.onSurface
+                              .withAlpha((255 * 0.6).round()),
                         ),
                         maxLines: 1,
                         minFontSize: 10,

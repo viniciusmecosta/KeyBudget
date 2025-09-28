@@ -41,44 +41,44 @@ class _DocumentsScreenState extends State<DocumentsScreen> {
       body: viewModel.isLoading
           ? const Center(child: CircularProgressIndicator())
           : viewModel.documents.isEmpty
-          ? EmptyStateWidget(
-        icon: Icons.folder_off_outlined,
-        message: 'Nenhum documento encontrado.',
-        buttonText: 'Adicionar Documento',
-        onButtonPressed: () => Navigator.of(context).push(
-            MaterialPageRoute(
-                builder: (_) => const AddDocumentScreen())),
-      )
-          : ListView.builder(
-        padding: const EdgeInsets.all(AppTheme.defaultPadding),
-        itemCount: viewModel.documents.length,
-        itemBuilder: (context, index) {
-          final doc = viewModel.documents[index];
-          return Card(
-            child: ListTile(
-              title: Text(doc.documentName),
-              subtitle: doc.number != null ? Text(doc.number!) : null,
-              trailing: doc.number != null
-                  ? IconButton(
-                icon: const Icon(Icons.copy_all_outlined),
-                tooltip: 'Copiar número',
-                onPressed: () {
-                  Clipboard.setData(
-                      ClipboardData(text: doc.number!));
-                  SnackbarService.showSuccess(
-                      context, 'Número copiado!');
-                },
-              )
-                  : null,
-              onTap: () => Navigator.of(context).push(
-                MaterialPageRoute(
-                  builder: (_) => DocumentDetailScreen(document: doc),
+              ? EmptyStateWidget(
+                  icon: Icons.folder_off_outlined,
+                  message: 'Nenhum documento encontrado.',
+                  buttonText: 'Adicionar Documento',
+                  onButtonPressed: () => Navigator.of(context).push(
+                      MaterialPageRoute(
+                          builder: (_) => const AddDocumentScreen())),
+                )
+              : ListView.builder(
+                  padding: const EdgeInsets.all(AppTheme.defaultPadding),
+                  itemCount: viewModel.documents.length,
+                  itemBuilder: (context, index) {
+                    final doc = viewModel.documents[index];
+                    return Card(
+                      child: ListTile(
+                        title: Text(doc.documentName),
+                        subtitle: doc.number != null ? Text(doc.number!) : null,
+                        trailing: doc.number != null
+                            ? IconButton(
+                                icon: const Icon(Icons.copy_all_outlined),
+                                tooltip: 'Copiar número',
+                                onPressed: () {
+                                  Clipboard.setData(
+                                      ClipboardData(text: doc.number!));
+                                  SnackbarService.showSuccess(
+                                      context, 'Número copiado!');
+                                },
+                              )
+                            : null,
+                        onTap: () => Navigator.of(context).push(
+                          MaterialPageRoute(
+                            builder: (_) => DocumentDetailScreen(document: doc),
+                          ),
+                        ),
+                      ),
+                    );
+                  },
                 ),
-              ),
-            ),
-          );
-        },
-      ),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () => Navigator.of(context)
             .push(MaterialPageRoute(builder: (_) => const AddDocumentScreen())),

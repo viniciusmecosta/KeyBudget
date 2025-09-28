@@ -79,7 +79,8 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
                 margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
                 child: ListTile(
                   leading: CircleAvatar(
-                    backgroundColor: category.color.withOpacity(0.2),
+                    backgroundColor:
+                        category.color.withAlpha((255 * 0.2).round()),
                     child: Icon(category.icon, color: category.color),
                   ),
                   title: Text(category.name),

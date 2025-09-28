@@ -21,7 +21,7 @@ class EmptyChartStateWidget extends StatelessWidget {
         color: theme.colorScheme.surface,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
-          color: theme.colorScheme.outline.withOpacity(0.1),
+          color: theme.colorScheme.outline.withAlpha((255 * 0.1).round()),
         ),
       ),
       child: Column(
@@ -29,13 +29,13 @@ class EmptyChartStateWidget extends StatelessWidget {
           Container(
             padding: const EdgeInsets.all(20),
             decoration: BoxDecoration(
-              color: theme.colorScheme.primary.withOpacity(0.1),
+              color: theme.colorScheme.primary.withAlpha((255 * 0.1).round()),
               borderRadius: BorderRadius.circular(50),
             ),
             child: Icon(
               icon,
               size: 48,
-              color: theme.colorScheme.primary.withOpacity(0.6),
+              color: theme.colorScheme.primary.withAlpha((255 * 0.6).round()),
             ),
           ),
           const SizedBox(height: AppTheme.spaceM),
@@ -52,7 +52,7 @@ class EmptyChartStateWidget extends StatelessWidget {
             'Suas transações aparecerão aqui assim que forem registradas',
             textAlign: TextAlign.center,
             style: theme.textTheme.bodyMedium?.copyWith(
-              color: theme.colorScheme.onSurface.withOpacity(0.6),
+              color: theme.colorScheme.onSurface.withAlpha((255 * 0.6).round()),
             ),
           ),
         ],

@@ -77,7 +77,7 @@ class ExpenseForm extends StatelessWidget {
               await Navigator.of(context).push(MaterialPageRoute(
                 builder: (_) => const CategoriesScreen(),
               ));
-              if (userId != null) {
+              if (userId != null && context.mounted) {
                 await Provider.of<CategoryViewModel>(context, listen: false)
                     .fetchCategories(userId);
               }

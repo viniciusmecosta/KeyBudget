@@ -24,7 +24,8 @@ class DashboardHeader extends StatelessWidget implements PreferredSizeWidget {
             Text(
               'Bem-vindo(a) de volta,',
               style: theme.textTheme.bodyMedium?.copyWith(
-                color: theme.colorScheme.onSurface.withOpacity(0.65),
+                color:
+                    theme.colorScheme.onSurface.withAlpha((255 * 0.65).round()),
                 fontSize: 14,
                 fontWeight: FontWeight.w400,
               ),

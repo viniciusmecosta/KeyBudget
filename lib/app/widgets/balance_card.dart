@@ -28,14 +28,14 @@ class BalanceCard extends StatelessWidget {
         gradient: LinearGradient(
           colors: [
             theme.colorScheme.primary,
-            theme.colorScheme.primary.withOpacity(0.85),
+            theme.colorScheme.primary.withAlpha((255 * 0.85).round()),
           ],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
         boxShadow: [
           BoxShadow(
-            color: theme.colorScheme.primary.withOpacity(0.25),
+            color: theme.colorScheme.primary.withAlpha((255 * 0.25).round()),
             blurRadius: 24,
             offset: const Offset(0, 8),
           ),
@@ -62,8 +62,8 @@ class BalanceCard extends StatelessWidget {
                           Text(
                             title,
                             style: theme.textTheme.titleMedium?.copyWith(
-                              color:
-                                  theme.colorScheme.onPrimary.withOpacity(0.9),
+                              color: theme.colorScheme.onPrimary
+                                  .withAlpha((255 * 0.9).round()),
                               fontWeight: FontWeight.w600,
                               fontSize: 15,
                             ),
@@ -84,7 +84,8 @@ class BalanceCard extends StatelessWidget {
                     Container(
                       padding: const EdgeInsets.all(AppTheme.spaceM - 2),
                       decoration: BoxDecoration(
-                        color: theme.colorScheme.onPrimary.withOpacity(0.15),
+                        color: theme.colorScheme.onPrimary
+                            .withAlpha((255 * 0.15).round()),
                         borderRadius: BorderRadius.circular(AppTheme.radiusL),
                       ),
                       child: Icon(

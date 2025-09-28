@@ -57,7 +57,7 @@ class _MainScreenState extends State<MainScreen> {
           boxShadow: [
             BoxShadow(
               blurRadius: 20,
-              color: theme.shadowColor.withOpacity(0.1),
+              color: theme.shadowColor.withAlpha((255 * 0.1).round()),
             )
           ],
         ),
@@ -72,8 +72,9 @@ class _MainScreenState extends State<MainScreen> {
               iconSize: 24,
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
               duration: const Duration(milliseconds: 400),
-              tabBackgroundColor: theme.colorScheme.primary.withOpacity(0.1),
-              color: theme.colorScheme.onSurface.withOpacity(0.6),
+              tabBackgroundColor:
+                  theme.colorScheme.primary.withAlpha((255 * 0.1).round()),
+              color: theme.colorScheme.onSurface.withAlpha((255 * 0.6).round()),
               tabs: const [
                 GButton(icon: Icons.home_rounded, text: 'Painel'),
                 GButton(icon: Icons.monetization_on_rounded, text: 'Despesas'),

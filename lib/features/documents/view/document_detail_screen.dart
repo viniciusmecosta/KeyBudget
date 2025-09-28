@@ -1,4 +1,5 @@
 import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:key_budget/app/config/app_theme.dart';
@@ -8,6 +9,7 @@ import 'package:key_budget/features/auth/viewmodel/auth_viewmodel.dart';
 import 'package:key_budget/features/documents/viewmodel/document_viewmodel.dart';
 import 'package:provider/provider.dart';
 import 'package:syncfusion_flutter_pdfviewer/pdfviewer.dart';
+
 import 'add_document_screen.dart';
 import 'edit_document_screen.dart';
 
@@ -21,7 +23,6 @@ class DocumentDetailScreen extends StatelessWidget {
     final viewModel = context.watch<DocumentViewModel>();
     final userId =
         Provider.of<AuthViewModel>(context, listen: false).currentUser!.id;
-    final theme = Theme.of(context);
 
     return Scaffold(
       appBar: AppBar(
@@ -46,7 +47,8 @@ class DocumentDetailScreen extends StatelessWidget {
             icon: const Icon(Icons.delete_outline),
             onPressed: () async {
               final success =
-              await viewModel.deleteDocument(userId, document.id!);
+                  await viewModel.deleteDocument(userId, document.id!);
+              if (!context.mounted) return;
               if (success) {
                 SnackbarService.showSuccess(
                     context, 'Documento excluído com sucesso!');
@@ -86,11 +88,15 @@ class DocumentDetailScreen extends StatelessWidget {
             if (document.number != null)
               _buildDetailItem('Número', document.number!, context),
             if (document.issueDate != null)
-              _buildDetailItem('Data de Expedição',
-                  DateFormat('dd/MM/yyyy').format(document.issueDate!), context),
+              _buildDetailItem(
+                  'Data de Expedição',
+                  DateFormat('dd/MM/yyyy').format(document.issueDate!),
+                  context),
             if (document.expiryDate != null)
-              _buildDetailItem('Validade',
-                  DateFormat('dd/MM/yyyy').format(document.expiryDate!), context),
+              _buildDetailItem(
+                  'Validade',
+                  DateFormat('dd/MM/yyyy').format(document.expiryDate!),
+                  context),
           ],
         ),
       ),
@@ -130,8 +136,8 @@ class DocumentDetailScreen extends StatelessWidget {
             children: [
               Text('Anexos', style: theme.textTheme.titleLarge),
               const SizedBox(height: AppTheme.spaceM),
-              ...document.attachments
-                  .map((attachment) => _buildAttachmentItem(attachment, context)),
+              ...document.attachments.map(
+                  (attachment) => _buildAttachmentItem(attachment, context)),
             ],
           ),
         ),
@@ -149,31 +155,32 @@ class DocumentDetailScreen extends StatelessWidget {
           title: Text('Versões Anteriores', style: theme.textTheme.titleLarge),
           children: document.versions
               .map((v) => ListTile(
-            title: Text(v.issueDate != null
-                ? DateFormat('dd/MM/yyyy').format(v.issueDate!)
-                : 'Sem data'),
-            trailing: TextButton(
-              child: const Text('Marcar como Principal'),
-              onPressed: () async {
-                final allVersions = [document, ...document.versions];
-                final success =
-                await viewModel.setAsPrincipal(userId, v, allVersions);
-                if (success) {
-                  SnackbarService.showSuccess(
-                      context, 'Versão definida como principal!');
-                  Navigator.pop(context);
-                } else {
-                  SnackbarService.showError(
-                      context, viewModel.errorMessage ?? 'Erro ao definir.');
-                }
-              },
-            ),
-            onTap: () => Navigator.of(context).pushReplacement(
-              MaterialPageRoute(
-                builder: (_) => DocumentDetailScreen(document: v),
-              ),
-            ),
-          ))
+                    title: Text(v.issueDate != null
+                        ? DateFormat('dd/MM/yyyy').format(v.issueDate!)
+                        : 'Sem data'),
+                    trailing: TextButton(
+                      child: const Text('Marcar como Principal'),
+                      onPressed: () async {
+                        final allVersions = [document, ...document.versions];
+                        final success = await viewModel.setAsPrincipal(
+                            userId, v, allVersions);
+                        if (!context.mounted) return;
+                        if (success) {
+                          SnackbarService.showSuccess(
+                              context, 'Versão definida como principal!');
+                          Navigator.pop(context);
+                        } else {
+                          SnackbarService.showError(context,
+                              viewModel.errorMessage ?? 'Erro ao definir.');
+                        }
+                      },
+                    ),
+                    onTap: () => Navigator.of(context).pushReplacement(
+                      MaterialPageRoute(
+                        builder: (_) => DocumentDetailScreen(document: v),
+                      ),
+                    ),
+                  ))
               .toList(),
         ),
       ),
@@ -202,13 +209,17 @@ class DocumentDetailScreen extends StatelessWidget {
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(AppTheme.radiusM),
         side: BorderSide(
-          color: Theme.of(context).colorScheme.outline.withOpacity(0.2),
+          color: Theme.of(context)
+              .colorScheme
+              .outline
+              .withAlpha((255 * 0.2).round()),
         ),
       ),
       margin: const EdgeInsets.only(bottom: AppTheme.spaceM),
       child: InkWell(
         onTap: () async {
           await viewModel.openFile(attachment);
+          if (!context.mounted) return;
           if (viewModel.errorMessage != null) {
             SnackbarService.showError(context, viewModel.errorMessage!);
           }

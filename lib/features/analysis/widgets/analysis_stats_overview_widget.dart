@@ -98,7 +98,7 @@ class AnalysisStatsOverviewWidget extends StatelessWidget {
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(16),
           border: Border.all(
-            color: theme.colorScheme.outline.withOpacity(0.1),
+            color: theme.colorScheme.outline.withAlpha((255 * 0.1).round()),
           ),
         ),
         child: Column(
@@ -107,7 +107,7 @@ class AnalysisStatsOverviewWidget extends StatelessWidget {
             Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: color.withOpacity(0.1),
+                color: color.withAlpha((255 * 0.1).round()),
                 borderRadius: BorderRadius.circular(12),
               ),
               child: Icon(
