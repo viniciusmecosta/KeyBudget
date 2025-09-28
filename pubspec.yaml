@@ -43,6 +43,8 @@ dependencies:
   auto_size_text: ^3.0.0
   syncfusion_flutter_pdfviewer: ^31.1.21
   open_file: ^3.3.1
+  flutter_image_compress: ^2.3.0
+  syncfusion_flutter_pdf: ^31.1.21
 
 dev_dependencies:
   flutter_test:

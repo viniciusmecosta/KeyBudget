@@ -19,25 +19,25 @@ class EditDocumentScreen extends StatefulWidget {
 
 class _EditDocumentScreenState extends State<EditDocumentScreen> {
   final _formKey = GlobalKey<FormState>();
-  late TextEditingController _nomeController;
-  late TextEditingController _numeroController;
-  late ValueNotifier<DateTime?> _dataExpedicao;
-  late ValueNotifier<DateTime?> _validade;
-  late ValueNotifier<List<Map<String, String>>> _camposAdicionais;
-  late ValueNotifier<List<Anexo>> _anexos;
+  late TextEditingController _nameController;
+  late TextEditingController _numberController;
+  late ValueNotifier<DateTime?> _issueDate;
+  late ValueNotifier<DateTime?> _expiryDate;
+  late ValueNotifier<List<Map<String, String>>> _additionalFields;
+  late ValueNotifier<List<Attachment>> _attachments;
 
   @override
   void initState() {
     super.initState();
-    _nomeController =
-        TextEditingController(text: widget.document.nomeDocumento);
-    _numeroController = TextEditingController(text: widget.document.numero);
-    _dataExpedicao = ValueNotifier(widget.document.dataExpedicao);
-    _validade = ValueNotifier(widget.document.validade);
-    _camposAdicionais = ValueNotifier(widget.document.camposAdicionais.entries
-        .map((e) => {'nome': e.key, 'valor': e.value})
+    _nameController =
+        TextEditingController(text: widget.document.documentName);
+    _numberController = TextEditingController(text: widget.document.number);
+    _issueDate = ValueNotifier(widget.document.issueDate);
+    _expiryDate = ValueNotifier(widget.document.expiryDate);
+    _additionalFields = ValueNotifier(widget.document.additionalFields.entries
+        .map((e) => {'name': e.key, 'value': e.value})
         .toList());
-    _anexos = ValueNotifier(List<Anexo>.from(widget.document.anexos));
+    _attachments = ValueNotifier(List<Attachment>.from(widget.document.attachments));
   }
 
   void _submit() async {
@@ -48,15 +48,15 @@ class _EditDocumentScreenState extends State<EditDocumentScreen> {
         Provider.of<AuthViewModel>(context, listen: false).currentUser!.id;
 
     final updatedDocument = widget.document.copyWith(
-      nomeDocumento: _nomeController.text,
-      numero: _numeroController.text,
-      dataExpedicao: _dataExpedicao.value,
-      validade: _validade.value,
-      camposAdicionais: {
-        for (var campo in _camposAdicionais.value)
-          if (campo['nome']!.isNotEmpty) campo['nome']!: campo['valor']!
+      documentName: _nameController.text,
+      number: _numberController.text,
+      issueDate: _issueDate.value,
+      expiryDate: _expiryDate.value,
+      additionalFields: {
+        for (var field in _additionalFields.value)
+          if (field['name']!.isNotEmpty) field['name']!: field['value']!
       },
-      anexos: _anexos.value,
+      attachments: _attachments.value,
     );
 
     final success = await viewModel.updateDocument(userId, updatedDocument);
@@ -82,12 +82,12 @@ class _EditDocumentScreenState extends State<EditDocumentScreen> {
       ),
       body: DocumentForm(
         formKey: _formKey,
-        nomeController: _nomeController,
-        numeroController: _numeroController,
-        dataExpedicao: _dataExpedicao,
-        validade: _validade,
-        camposAdicionais: _camposAdicionais,
-        anexos: _anexos,
+        nameController: _nameController,
+        numberController: _numberController,
+        issueDate: _issueDate,
+        expiryDate: _expiryDate,
+        additionalFields: _additionalFields,
+        attachments: _attachments,
       ),
       bottomNavigationBar: Padding(
         padding: const EdgeInsets.all(AppTheme.defaultPadding),

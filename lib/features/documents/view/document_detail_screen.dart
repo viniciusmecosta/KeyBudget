@@ -1,5 +1,4 @@
 import 'dart:convert';
-
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:key_budget/app/config/app_theme.dart';
@@ -9,7 +8,6 @@ import 'package:key_budget/features/auth/viewmodel/auth_viewmodel.dart';
 import 'package:key_budget/features/documents/viewmodel/document_viewmodel.dart';
 import 'package:provider/provider.dart';
 import 'package:syncfusion_flutter_pdfviewer/pdfviewer.dart';
-
 import 'add_document_screen.dart';
 import 'edit_document_screen.dart';
 
@@ -27,7 +25,7 @@ class DocumentDetailScreen extends StatelessWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(document.nomeDocumento),
+        title: Text(document.documentName),
         actions: [
           IconButton(
             icon: const Icon(Icons.edit_outlined),
@@ -48,7 +46,7 @@ class DocumentDetailScreen extends StatelessWidget {
             icon: const Icon(Icons.delete_outline),
             onPressed: () async {
               final success =
-                  await viewModel.deleteDocument(userId, document.id!);
+              await viewModel.deleteDocument(userId, document.id!);
               if (success) {
                 SnackbarService.showSuccess(
                     context, 'Documento excluído com sucesso!');
@@ -65,11 +63,11 @@ class DocumentDetailScreen extends StatelessWidget {
         padding: const EdgeInsets.all(AppTheme.defaultPadding),
         children: [
           _buildInfoCard(context),
-          if (document.camposAdicionais.isNotEmpty)
-            _buildCamposAdicionaisCard(context),
-          if (document.anexos.isNotEmpty) _buildAnexosCard(context),
-          if (document.versoes.isNotEmpty)
-            _buildVersoesCard(context, viewModel, userId),
+          if (document.additionalFields.isNotEmpty)
+            _buildAdditionalFieldsCard(context),
+          if (document.attachments.isNotEmpty) _buildAttachmentsCard(context),
+          if (document.versions.isNotEmpty)
+            _buildVersionsCard(context, viewModel, userId),
         ],
       ),
     );
@@ -85,22 +83,21 @@ class DocumentDetailScreen extends StatelessWidget {
           children: [
             Text('Informações Principais', style: theme.textTheme.titleLarge),
             const SizedBox(height: AppTheme.spaceL),
-            _buildDetailItem('Número', document.numero, context),
-            if (document.dataExpedicao != null)
-              _buildDetailItem(
-                  'Data de Expedição',
-                  DateFormat('dd/MM/yyyy').format(document.dataExpedicao!),
-                  context),
-            if (document.validade != null)
+            if (document.number != null)
+              _buildDetailItem('Número', document.number!, context),
+            if (document.issueDate != null)
+              _buildDetailItem('Data de Expedição',
+                  DateFormat('dd/MM/yyyy').format(document.issueDate!), context),
+            if (document.expiryDate != null)
               _buildDetailItem('Validade',
-                  DateFormat('dd/MM/yyyy').format(document.validade!), context),
+                  DateFormat('dd/MM/yyyy').format(document.expiryDate!), context),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildCamposAdicionaisCard(BuildContext context) {
+  Widget _buildAdditionalFieldsCard(BuildContext context) {
     final theme = Theme.of(context);
     return Padding(
       padding: const EdgeInsets.only(top: AppTheme.spaceL),
@@ -112,7 +109,7 @@ class DocumentDetailScreen extends StatelessWidget {
             children: [
               Text('Campos Adicionais', style: theme.textTheme.titleLarge),
               const SizedBox(height: AppTheme.spaceL),
-              ...document.camposAdicionais.entries
+              ...document.additionalFields.entries
                   .map((e) => _buildDetailItem(e.key, e.value, context)),
             ],
           ),
@@ -121,7 +118,7 @@ class DocumentDetailScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildAnexosCard(BuildContext context) {
+  Widget _buildAttachmentsCard(BuildContext context) {
     final theme = Theme.of(context);
     return Padding(
       padding: const EdgeInsets.only(top: AppTheme.spaceL),
@@ -133,8 +130,8 @@ class DocumentDetailScreen extends StatelessWidget {
             children: [
               Text('Anexos', style: theme.textTheme.titleLarge),
               const SizedBox(height: AppTheme.spaceM),
-              ...document.anexos
-                  .map((anexo) => _buildAnexoItem(anexo, context)),
+              ...document.attachments
+                  .map((attachment) => _buildAttachmentItem(attachment, context)),
             ],
           ),
         ),
@@ -142,7 +139,7 @@ class DocumentDetailScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildVersoesCard(
+  Widget _buildVersionsCard(
       BuildContext context, DocumentViewModel viewModel, String userId) {
     final theme = Theme.of(context);
     return Padding(
@@ -150,33 +147,33 @@ class DocumentDetailScreen extends StatelessWidget {
       child: Card(
         child: ExpansionTile(
           title: Text('Versões Anteriores', style: theme.textTheme.titleLarge),
-          children: document.versoes
+          children: document.versions
               .map((v) => ListTile(
-                    title: Text(v.dataExpedicao != null
-                        ? DateFormat('dd/MM/yyyy').format(v.dataExpedicao!)
-                        : 'Sem data'),
-                    trailing: TextButton(
-                      child: const Text('Marcar como Principal'),
-                      onPressed: () async {
-                        final allVersions = [document, ...document.versoes];
-                        final success = await viewModel.setAsPrincipal(
-                            userId, v, allVersions);
-                        if (success) {
-                          SnackbarService.showSuccess(
-                              context, 'Versão definida como principal!');
-                          Navigator.pop(context);
-                        } else {
-                          SnackbarService.showError(context,
-                              viewModel.errorMessage ?? 'Erro ao definir.');
-                        }
-                      },
-                    ),
-                    onTap: () => Navigator.of(context).pushReplacement(
-                      MaterialPageRoute(
-                        builder: (_) => DocumentDetailScreen(document: v),
-                      ),
-                    ),
-                  ))
+            title: Text(v.issueDate != null
+                ? DateFormat('dd/MM/yyyy').format(v.issueDate!)
+                : 'Sem data'),
+            trailing: TextButton(
+              child: const Text('Marcar como Principal'),
+              onPressed: () async {
+                final allVersions = [document, ...document.versions];
+                final success =
+                await viewModel.setAsPrincipal(userId, v, allVersions);
+                if (success) {
+                  SnackbarService.showSuccess(
+                      context, 'Versão definida como principal!');
+                  Navigator.pop(context);
+                } else {
+                  SnackbarService.showError(
+                      context, viewModel.errorMessage ?? 'Erro ao definir.');
+                }
+              },
+            ),
+            onTap: () => Navigator.of(context).pushReplacement(
+              MaterialPageRoute(
+                builder: (_) => DocumentDetailScreen(document: v),
+              ),
+            ),
+          ))
               .toList(),
         ),
       ),
@@ -197,10 +194,11 @@ class DocumentDetailScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildAnexoItem(Anexo anexo, BuildContext context) {
+  Widget _buildAttachmentItem(Attachment attachment, BuildContext context) {
     final viewModel = Provider.of<DocumentViewModel>(context, listen: false);
     return Card(
       elevation: 0,
+      clipBehavior: Clip.antiAlias,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(AppTheme.radiusM),
         side: BorderSide(
@@ -208,31 +206,24 @@ class DocumentDetailScreen extends StatelessWidget {
         ),
       ),
       margin: const EdgeInsets.only(bottom: AppTheme.spaceM),
-      child: Column(
-        children: [
-          if (anexo.tipo.contains('pdf'))
-            SizedBox(
-              height: 200,
-              child: SfPdfViewer.memory(base64Decode(anexo.base64)),
-            )
-          else
-            Image.memory(base64Decode(anexo.base64)),
-          ButtonBar(
-            alignment: MainAxisAlignment.end,
-            children: [
-              TextButton.icon(
-                icon: const Icon(Icons.download),
-                label: const Text('Baixar'),
-                onPressed: () async {
-                  await viewModel.downloadAndOpenFile(anexo);
-                  if (viewModel.errorMessage != null) {
-                    SnackbarService.showError(context, viewModel.errorMessage!);
-                  }
-                },
-              ),
-            ],
-          )
-        ],
+      child: InkWell(
+        onTap: () async {
+          await viewModel.openFile(attachment);
+          if (viewModel.errorMessage != null) {
+            SnackbarService.showError(context, viewModel.errorMessage!);
+          }
+        },
+        child: Column(
+          children: [
+            if (attachment.type.contains('pdf'))
+              SizedBox(
+                height: 200,
+                child: SfPdfViewer.memory(base64Decode(attachment.base64)),
+              )
+            else
+              Image.memory(base64Decode(attachment.base64)),
+          ],
+        ),
       ),
     );
   }
