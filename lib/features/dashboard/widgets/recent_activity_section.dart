@@ -106,7 +106,7 @@ class RecentActivitySection extends StatelessWidget {
         color: theme.colorScheme.surface,
         borderRadius: BorderRadius.circular(AppTheme.radiusL),
         border: Border.all(
-          color: theme.colorScheme.outline.withOpacity(0.08),
+          color: theme.colorScheme.outline.withAlpha((255 * 0.08).round()),
         ),
       ),
       child: Column(
@@ -114,13 +114,13 @@ class RecentActivitySection extends StatelessWidget {
           Container(
             padding: const EdgeInsets.all(AppTheme.spaceL),
             decoration: BoxDecoration(
-              color: theme.colorScheme.primary.withOpacity(0.1),
+              color: theme.colorScheme.primary.withAlpha((255 * 0.1).round()),
               borderRadius: BorderRadius.circular(AppTheme.spaceXL),
             ),
             child: Icon(
               Icons.receipt_long_rounded,
               size: 40,
-              color: theme.colorScheme.primary.withOpacity(0.7),
+              color: theme.colorScheme.primary.withAlpha((255 * 0.7).round()),
             ),
           ),
           const SizedBox(height: AppTheme.spaceL),
@@ -136,7 +136,7 @@ class RecentActivitySection extends StatelessWidget {
             'Suas transações aparecerão aqui assim que forem registradas',
             textAlign: TextAlign.center,
             style: theme.textTheme.bodyMedium?.copyWith(
-              color: theme.colorScheme.onSurface.withOpacity(0.6),
+              color: theme.colorScheme.onSurface.withAlpha((255 * 0.6).round()),
               height: 1.4,
             ),
           ),

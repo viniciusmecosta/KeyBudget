@@ -36,11 +36,11 @@ class ActivityTile extends StatelessWidget {
         color: colorScheme.surface,
         borderRadius: BorderRadius.circular(AppTheme.radiusM),
         border: Border.all(
-          color: colorScheme.outline.withOpacity(0.08),
+          color: colorScheme.outline.withAlpha((255 * 0.08).round()),
         ),
         boxShadow: [
           BoxShadow(
-            color: colorScheme.shadow.withOpacity(0.04),
+            color: colorScheme.shadow.withAlpha((255 * 0.04).round()),
             blurRadius: 8,
             offset: const Offset(0, 2),
           ),
@@ -73,10 +73,10 @@ class ActivityTile extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(AppTheme.spaceS + 2),
       decoration: BoxDecoration(
-        color: categoryColor.withOpacity(0.12),
+        color: categoryColor.withAlpha((255 * 0.12).round()),
         borderRadius: BorderRadius.circular(AppTheme.spaceS + 2),
         border: Border.all(
-          color: categoryColor.withOpacity(0.2),
+          color: categoryColor.withAlpha((255 * 0.2).round()),
           width: 1,
         ),
       ),
@@ -113,14 +113,16 @@ class ActivityTile extends StatelessWidget {
               Icon(
                 Icons.schedule_rounded,
                 size: 12,
-                color: colorScheme.onSurfaceVariant.withOpacity(0.7),
+                color:
+                    colorScheme.onSurfaceVariant.withAlpha((255 * 0.7).round()),
               ),
               const SizedBox(width: 4),
               Flexible(
                 child: Text(
                   DateUtils.getRelativeDate(expense.date),
                   style: textTheme.bodySmall?.copyWith(
-                    color: colorScheme.onSurfaceVariant.withOpacity(0.8),
+                    color: colorScheme.onSurfaceVariant
+                        .withAlpha((255 * 0.8).round()),
                     fontSize: 12,
                     height: 1.2,
                   ),

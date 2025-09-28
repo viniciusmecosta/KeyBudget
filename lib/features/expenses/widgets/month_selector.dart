@@ -25,7 +25,7 @@ class MonthSelector extends StatelessWidget {
         color: theme.colorScheme.surface,
         borderRadius: BorderRadius.circular(AppTheme.radiusL),
         border: Border.all(
-          color: theme.colorScheme.outline.withOpacity(0.08),
+          color: theme.colorScheme.outline.withAlpha((255 * 0.08).round()),
         ),
       ),
       child: Row(

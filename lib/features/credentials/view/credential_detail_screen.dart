@@ -89,13 +89,12 @@ class _CredentialDetailScreenState extends State<CredentialDetailScreen> {
       logoPath: _logoPath,
     );
 
-    if (mounted) {
-      setState(() {
-        _isSaving = false;
-        _isEditing = false;
-      });
-      Navigator.of(context).pop();
-    }
+    if (!mounted) return;
+    setState(() {
+      _isSaving = false;
+      _isEditing = false;
+    });
+    Navigator.of(context).pop();
   }
 
   void _deleteCredential() {
@@ -118,11 +117,9 @@ class _CredentialDetailScreenState extends State<CredentialDetailScreen> {
               final userId = authViewModel.currentUser!.id;
               await Provider.of<CredentialViewModel>(context, listen: false)
                   .deleteCredential(userId, widget.credential.id!);
-
-              if (mounted) {
-                Navigator.of(ctx).pop();
-                Navigator.of(context).pop();
-              }
+              if (!mounted) return;
+              Navigator.of(ctx).pop();
+              Navigator.of(context).pop();
             },
           ),
         ],
