@@ -2,38 +2,40 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 
 class Document {
   final String? id;
-  final String nomeDocumento;
-  final String numero;
-  final DateTime? dataExpedicao;
-  final DateTime? validade;
-  final Map<String, String> camposAdicionais;
-  final List<Anexo> anexos;
+  final String documentName;
+  final String? number;
+  final DateTime? issueDate;
+  final DateTime? expiryDate;
+  final Map<String, String> additionalFields;
+  final List<Attachment> attachments;
   final bool isPrincipal;
   final String? originalDocumentId;
-  final List<Document> versoes;
+  final List<Document> versions;
 
   Document({
     this.id,
-    required this.nomeDocumento,
-    required this.numero,
-    this.dataExpedicao,
-    this.validade,
-    this.camposAdicionais = const {},
-    this.anexos = const [],
+    required this.documentName,
+    this.number,
+    this.issueDate,
+    this.expiryDate,
+    this.additionalFields = const {},
+    this.attachments = const [],
     this.isPrincipal = true,
     this.originalDocumentId,
-    this.versoes = const [],
+    this.versions = const [],
   });
 
   Map<String, dynamic> toMap() {
+    final List<Map<String, dynamic>> attachmentsData =
+    attachments.map((attachment) => attachment.toMap()).toList();
+
     return {
-      'nomeDocumento': nomeDocumento,
-      'numero': numero,
-      'dataExpedicao':
-          dataExpedicao != null ? Timestamp.fromDate(dataExpedicao!) : null,
-      'validade': validade != null ? Timestamp.fromDate(validade!) : null,
-      'camposAdicionais': camposAdicionais,
-      'anexos': anexos.map((anexo) => anexo.toMap()).toList(),
+      'documentName': documentName,
+      'number': number,
+      'issueDate': issueDate != null ? Timestamp.fromDate(issueDate!) : null,
+      'expiryDate': expiryDate != null ? Timestamp.fromDate(expiryDate!) : null,
+      'additionalFields': Map<String, dynamic>.from(additionalFields),
+      'attachments': attachmentsData,
       'isPrincipal': isPrincipal,
       'originalDocumentId': originalDocumentId,
     };
@@ -42,14 +44,15 @@ class Document {
   factory Document.fromMap(Map<String, dynamic> map, String id) {
     return Document(
       id: id,
-      nomeDocumento: map['nomeDocumento'] ?? '',
-      numero: map['numero'] ?? '',
-      dataExpedicao: (map['dataExpedicao'] as Timestamp?)?.toDate(),
-      validade: (map['validade'] as Timestamp?)?.toDate(),
-      camposAdicionais: Map<String, String>.from(map['camposAdicionais'] ?? {}),
-      anexos: (map['anexos'] as List<dynamic>?)
-              ?.map((anexoMap) => Anexo.fromMap(anexoMap))
-              .toList() ??
+      documentName: map['documentName'] ?? '',
+      number: map['number'],
+      issueDate: (map['issueDate'] as Timestamp?)?.toDate(),
+      expiryDate: (map['expiryDate'] as Timestamp?)?.toDate(),
+      additionalFields: Map<String, String>.from(map['additionalFields'] ?? {}),
+      attachments: (map['attachments'] as List<dynamic>?)
+          ?.map((attachmentMap) =>
+          Attachment.fromMap(attachmentMap as Map<String, dynamic>))
+          .toList() ??
           [],
       isPrincipal: map['isPrincipal'] ?? true,
       originalDocumentId: map['originalDocumentId'],
@@ -58,55 +61,55 @@ class Document {
 
   Document copyWith({
     String? id,
-    String? nomeDocumento,
-    String? numero,
-    DateTime? dataExpedicao,
-    DateTime? validade,
-    Map<String, String>? camposAdicionais,
-    List<Anexo>? anexos,
+    String? documentName,
+    String? number,
+    DateTime? issueDate,
+    DateTime? expiryDate,
+    Map<String, String>? additionalFields,
+    List<Attachment>? attachments,
     bool? isPrincipal,
     String? originalDocumentId,
-    List<Document>? versoes,
+    List<Document>? versions,
   }) {
     return Document(
       id: id ?? this.id,
-      nomeDocumento: nomeDocumento ?? this.nomeDocumento,
-      numero: numero ?? this.numero,
-      dataExpedicao: dataExpedicao ?? this.dataExpedicao,
-      validade: validade ?? this.validade,
-      camposAdicionais: camposAdicionais ?? this.camposAdicionais,
-      anexos: anexos ?? this.anexos,
+      documentName: documentName ?? this.documentName,
+      number: number ?? this.number,
+      issueDate: issueDate ?? this.issueDate,
+      expiryDate: expiryDate ?? this.expiryDate,
+      additionalFields: additionalFields ?? this.additionalFields,
+      attachments: attachments ?? this.attachments,
       isPrincipal: isPrincipal ?? this.isPrincipal,
       originalDocumentId: originalDocumentId ?? this.originalDocumentId,
-      versoes: versoes ?? this.versoes,
+      versions: versions ?? this.versions,
     );
   }
 }
 
-class Anexo {
-  final String nome;
-  final String tipo;
+class Attachment {
+  final String name;
+  final String type;
   final String base64;
 
-  Anexo({
-    required this.nome,
-    required this.tipo,
+  Attachment({
+    required this.name,
+    required this.type,
     required this.base64,
   });
 
   Map<String, dynamic> toMap() {
     return {
-      'nome': nome,
-      'tipo': tipo,
+      'name': name,
+      'type': type,
       'base64': base64,
     };
   }
 
-  factory Anexo.fromMap(Map<String, dynamic> map) {
-    return Anexo(
-      nome: map['nome'],
-      tipo: map['tipo'],
-      base64: map['base64'],
+  factory Attachment.fromMap(Map<String, dynamic> map) {
+    return Attachment(
+      name: map['name'] ?? '',
+      type: map['type'] ?? '',
+      base64: map['base64'] ?? '',
     );
   }
 }

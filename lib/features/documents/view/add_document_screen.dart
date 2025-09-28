@@ -21,20 +21,20 @@ class AddDocumentScreen extends StatefulWidget {
 
 class _AddDocumentScreenState extends State<AddDocumentScreen> {
   final _formKey = GlobalKey<FormState>();
-  late TextEditingController _nomeController;
-  late TextEditingController _numeroController;
-  final _dataExpedicao = ValueNotifier<DateTime?>(null);
-  final _validade = ValueNotifier<DateTime?>(null);
-  final _camposAdicionais = ValueNotifier<List<Map<String, String>>>([]);
-  final _anexos = ValueNotifier<List<Anexo>>([]);
+  late TextEditingController _nameController;
+  late TextEditingController _numberController;
+  final _issueDate = ValueNotifier<DateTime?>(null);
+  final _expiryDate = ValueNotifier<DateTime?>(null);
+  final _additionalFields = ValueNotifier<List<Map<String, String>>>([]);
+  final _attachments = ValueNotifier<List<Attachment>>([]);
 
   @override
   void initState() {
     super.initState();
-    _nomeController = TextEditingController(
-        text: widget.originalDocument?.nomeDocumento ?? '');
-    _numeroController =
-        TextEditingController(text: widget.originalDocument?.numero ?? '');
+    _nameController =
+        TextEditingController(text: widget.originalDocument?.documentName ?? '');
+    _numberController =
+        TextEditingController(text: widget.originalDocument?.number ?? '');
   }
 
   void _submit() async {
@@ -45,18 +45,18 @@ class _AddDocumentScreenState extends State<AddDocumentScreen> {
         Provider.of<AuthViewModel>(context, listen: false).currentUser!.id;
 
     final newDocumentData = Document(
-      nomeDocumento: _nomeController.text,
-      numero: _numeroController.text,
-      dataExpedicao: _dataExpedicao.value,
-      validade: _validade.value,
-      camposAdicionais: {
-        for (var campo in _camposAdicionais.value)
-          if (campo['nome']!.isNotEmpty) campo['nome']!: campo['valor']!
+      documentName: _nameController.text,
+      number: _numberController.text,
+      issueDate: _issueDate.value,
+      expiryDate: _expiryDate.value,
+      additionalFields: {
+        for (var field in _additionalFields.value)
+          if (field['name']!.isNotEmpty) field['name']!: field['value']!
       },
-      anexos: _anexos.value,
+      attachments: _attachments.value,
       isPrincipal: widget.isNewVersion ? true : false,
-      originalDocumentId: widget.originalDocument?.originalDocumentId ??
-          widget.originalDocument?.id,
+      originalDocumentId:
+      widget.originalDocument?.originalDocumentId ?? widget.originalDocument?.id,
     );
 
     final newId = await viewModel.addDocument(userId, newDocumentData);
@@ -67,7 +67,7 @@ class _AddDocumentScreenState extends State<AddDocumentScreen> {
           final newDocumentWithId = newDocumentData.copyWith(id: newId);
           final allVersions = [
             widget.originalDocument!,
-            ...widget.originalDocument!.versoes,
+            ...widget.originalDocument!.versions,
             newDocumentWithId
           ];
           await viewModel.setAsPrincipal(
@@ -88,16 +88,16 @@ class _AddDocumentScreenState extends State<AddDocumentScreen> {
     return Scaffold(
       appBar: AppBar(
         title:
-            Text(widget.isNewVersion ? 'Nova Versão' : 'Adicionar Documento'),
+        Text(widget.isNewVersion ? 'Nova Versão' : 'Adicionar Documento'),
       ),
       body: DocumentForm(
         formKey: _formKey,
-        nomeController: _nomeController,
-        numeroController: _numeroController,
-        dataExpedicao: _dataExpedicao,
-        validade: _validade,
-        camposAdicionais: _camposAdicionais,
-        anexos: _anexos,
+        nameController: _nameController,
+        numberController: _numberController,
+        issueDate: _issueDate,
+        expiryDate: _expiryDate,
+        additionalFields: _additionalFields,
+        attachments: _attachments,
       ),
       bottomNavigationBar: Padding(
         padding: const EdgeInsets.all(AppTheme.defaultPadding),

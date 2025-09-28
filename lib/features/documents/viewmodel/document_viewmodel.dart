@@ -1,13 +1,15 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
-
 import 'package:file_picker/file_picker.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:key_budget/core/models/document_model.dart';
 import 'package:key_budget/features/documents/repository/document_repository.dart';
 import 'package:open_file/open_file.dart';
 import 'package:path_provider/path_provider.dart';
+import 'package:flutter_image_compress/flutter_image_compress.dart';
+import 'package:syncfusion_flutter_pdf/pdf.dart';
 
 class DocumentViewModel extends ChangeNotifier {
   final DocumentRepository _repository = DocumentRepository();
@@ -29,13 +31,16 @@ class DocumentViewModel extends ChangeNotifier {
     _documentsSubscription?.cancel();
     _documentsSubscription =
         _repository.getDocumentsStream(userId).listen((docs) async {
-      final processedDocs = await _processDocuments(docs, userId);
-      _documents = processedDocs;
-      _setLoading(false);
-    }, onError: (error) {
-      _setErrorMessage('Erro ao carregar os documentos.');
-      _setLoading(false);
-    });
+          final processedDocs = await _processDocuments(docs, userId);
+          _documents = processedDocs;
+          _setLoading(false);
+        }, onError: (error) {
+          _setErrorMessage('Erro ao carregar os documentos.');
+          if (kDebugMode) {
+            print('Erro ao carregar documentos: $error');
+          }
+          _setLoading(false);
+        });
     _isListening = true;
   }
 
@@ -58,20 +63,20 @@ class DocumentViewModel extends ChangeNotifier {
     final List<Document> result = [];
     versionsMap.forEach((key, versions) {
       versions.sort((a, b) {
-        if (a.dataExpedicao == null && b.dataExpedicao == null) return 0;
-        if (a.dataExpedicao == null) return 1;
-        if (b.dataExpedicao == null) return -1;
-        return b.dataExpedicao!.compareTo(a.dataExpedicao!);
+        if (a.issueDate == null && b.issueDate == null) return 0;
+        if (a.issueDate == null) return 1;
+        if (b.issueDate == null) return -1;
+        return b.issueDate!.compareTo(a.issueDate!);
       });
 
-      final mainVersion = versions.firstWhere((v) => v.isPrincipal,
-          orElse: () => versions.first);
+      final mainVersion =
+      versions.firstWhere((v) => v.isPrincipal, orElse: () => versions.first);
       final otherVersions =
-          versions.where((v) => v.id != mainVersion.id).toList();
-      result.add(mainVersion.copyWith(versoes: otherVersions));
+      versions.where((v) => v.id != mainVersion.id).toList();
+      result.add(mainVersion.copyWith(versions: otherVersions));
     });
 
-    result.sort((a, b) => a.nomeDocumento.compareTo(b.nomeDocumento));
+    result.sort((a, b) => a.documentName.compareTo(b.documentName));
     return result;
   }
 
@@ -82,6 +87,9 @@ class DocumentViewModel extends ChangeNotifier {
       return newId;
     } catch (e) {
       _setErrorMessage('Não foi possível adicionar o documento.');
+      if (kDebugMode) {
+        print('Erro ao adicionar documento: $e');
+      }
       return null;
     } finally {
       _setLoading(false);
@@ -96,6 +104,9 @@ class DocumentViewModel extends ChangeNotifier {
       return true;
     } catch (e) {
       _setErrorMessage('Não foi possível atualizar o documento.');
+      if (kDebugMode) {
+        print('Erro ao atualizar documento: $e');
+      }
       return false;
     } finally {
       _setLoading(false);
@@ -109,6 +120,9 @@ class DocumentViewModel extends ChangeNotifier {
       return true;
     } catch (e) {
       _setErrorMessage('Não foi possível excluir o documento.');
+      if (kDebugMode) {
+        print('Erro ao excluir documento: $e');
+      }
       return false;
     } finally {
       _setLoading(false);
@@ -129,13 +143,19 @@ class DocumentViewModel extends ChangeNotifier {
       return true;
     } catch (e) {
       _setErrorMessage('Não foi possível definir como principal.');
+      if (kDebugMode) {
+        print('Erro ao definir como principal: $e');
+      }
       return false;
     } finally {
       _setLoading(false);
     }
   }
 
-  Future<Anexo?> pickAndConvertFile() async {
+  Future<Attachment?> pickAndConvertFile() async {
+    const firestoreSizeLimit = 1048576;
+    const maxFileSize = 5 * 1048576;
+
     try {
       FilePickerResult? result = await FilePicker.platform.pickFiles(
         type: FileType.custom,
@@ -144,26 +164,56 @@ class DocumentViewModel extends ChangeNotifier {
 
       if (result != null) {
         final file = File(result.files.single.path!);
-        final bytes = await file.readAsBytes();
+        final extension = result.files.single.extension?.toLowerCase() ?? '';
+        List<int> bytes = await file.readAsBytes();
+
+        if (bytes.length > firestoreSizeLimit) {
+          if (['jpg', 'jpeg', 'png', 'webp'].contains(extension)) {
+            int quality = 85;
+            while (bytes.length > firestoreSizeLimit && quality > 10) {
+              final compressedBytes =
+              await FlutterImageCompress.compressWithList(
+                Uint8List.fromList(bytes),
+                quality: quality,
+              );
+              bytes = compressedBytes;
+              quality -= 5;
+            }
+          } else if (extension == 'pdf') {
+            final PdfDocument document = PdfDocument(inputBytes: bytes);
+            document.compressionLevel = PdfCompressionLevel.best;
+            final compressedBytes = await document.save();
+            document.dispose();
+            bytes = compressedBytes.toList();
+          }
+        }
+
+        if (bytes.length > maxFileSize) {
+          _setErrorMessage(
+              'O arquivo é muito grande (${(bytes.length / 1048576).toStringAsFixed(2)}MB). O tamanho máximo permitido, mesmo após a compressão, é de 5MB.');
+          return null;
+        }
+
         final base64 = base64Encode(bytes);
-        return Anexo(
-          nome: result.files.single.name,
-          tipo: result.files.single.extension ?? '',
+
+        return Attachment(
+          name: result.files.single.name,
+          type: extension,
           base64: base64,
         );
       }
       return null;
     } catch (e) {
-      _setErrorMessage('Erro ao selecionar o arquivo.');
+      _setErrorMessage('Erro ao selecionar ou processar o arquivo.');
       return null;
     }
   }
 
-  Future<void> downloadAndOpenFile(Anexo anexo) async {
+  Future<void> openFile(Attachment attachment) async {
     try {
-      final bytes = base64Decode(anexo.base64);
+      final bytes = base64Decode(attachment.base64);
       final dir = await getTemporaryDirectory();
-      final file = File('${dir.path}/${anexo.nome}');
+      final file = File('${dir.path}/${attachment.name}');
       await file.writeAsBytes(bytes);
       await OpenFile.open(file.path);
     } catch (e) {

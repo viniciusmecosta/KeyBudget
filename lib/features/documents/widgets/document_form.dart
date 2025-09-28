@@ -1,5 +1,4 @@
 import 'dart:convert';
-
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:key_budget/app/config/app_theme.dart';
@@ -10,22 +9,22 @@ import 'package:syncfusion_flutter_pdfviewer/pdfviewer.dart';
 
 class DocumentForm extends StatefulWidget {
   final GlobalKey<FormState> formKey;
-  final TextEditingController nomeController;
-  final TextEditingController numeroController;
-  final ValueNotifier<DateTime?> dataExpedicao;
-  final ValueNotifier<DateTime?> validade;
-  final ValueNotifier<List<Map<String, String>>> camposAdicionais;
-  final ValueNotifier<List<Anexo>> anexos;
+  final TextEditingController nameController;
+  final TextEditingController numberController;
+  final ValueNotifier<DateTime?> issueDate;
+  final ValueNotifier<DateTime?> expiryDate;
+  final ValueNotifier<List<Map<String, String>>> additionalFields;
+  final ValueNotifier<List<Attachment>> attachments;
 
   const DocumentForm({
     super.key,
     required this.formKey,
-    required this.nomeController,
-    required this.numeroController,
-    required this.dataExpedicao,
-    required this.validade,
-    required this.camposAdicionais,
-    required this.anexos,
+    required this.nameController,
+    required this.numberController,
+    required this.issueDate,
+    required this.expiryDate,
+    required this.additionalFields,
+    required this.attachments,
   });
 
   @override
@@ -53,24 +52,22 @@ class _DocumentFormState extends State<DocumentForm> {
                       style: theme.textTheme.titleLarge),
                   const SizedBox(height: AppTheme.spaceL),
                   TextFormField(
-                    controller: widget.nomeController,
+                    controller: widget.nameController,
                     decoration:
-                        const InputDecoration(labelText: 'Nome do Documento *'),
+                    const InputDecoration(labelText: 'Nome do Documento *'),
                     validator: (value) =>
-                        value!.isEmpty ? 'Campo obrigatório' : null,
+                    value!.isEmpty ? 'Campo obrigatório' : null,
                   ),
                   const SizedBox(height: AppTheme.spaceM),
                   TextFormField(
-                    controller: widget.numeroController,
-                    decoration: const InputDecoration(labelText: 'Número *'),
-                    validator: (value) =>
-                        value!.isEmpty ? 'Campo obrigatório' : null,
+                    controller: widget.numberController,
+                    decoration: const InputDecoration(labelText: 'Número'),
                   ),
                   const SizedBox(height: AppTheme.spaceM),
                   _buildDatePicker(
-                      context, 'Data de Expedição', widget.dataExpedicao, true),
+                      context, 'Data de Expedição', widget.issueDate, true),
                   const SizedBox(height: AppTheme.spaceM),
-                  _buildDatePicker(context, 'Validade', widget.validade, true),
+                  _buildDatePicker(context, 'Validade', widget.expiryDate, true),
                 ],
               ),
             ),
@@ -84,7 +81,7 @@ class _DocumentFormState extends State<DocumentForm> {
                 children: [
                   Text('Campos Adicionais', style: theme.textTheme.titleLarge),
                   const SizedBox(height: AppTheme.spaceS),
-                  ..._buildCamposAdicionais(),
+                  ..._buildAdditionalFields(),
                   Align(
                     alignment: Alignment.centerLeft,
                     child: TextButton.icon(
@@ -92,8 +89,8 @@ class _DocumentFormState extends State<DocumentForm> {
                       label: const Text('Adicionar Campo'),
                       onPressed: () {
                         setState(() {
-                          widget.camposAdicionais.value
-                              .add({'nome': '', 'valor': ''});
+                          widget.additionalFields.value
+                              .add({'name': '', 'value': ''});
                         });
                       },
                     ),
@@ -111,17 +108,17 @@ class _DocumentFormState extends State<DocumentForm> {
                 children: [
                   Text('Anexos', style: theme.textTheme.titleLarge),
                   const SizedBox(height: AppTheme.spaceM),
-                  ..._buildAnexos(viewModel),
+                  ..._buildAttachments(viewModel),
                   Align(
                     alignment: Alignment.centerLeft,
                     child: TextButton.icon(
                       icon: const Icon(Icons.attach_file),
                       label: const Text('Adicionar Anexo'),
                       onPressed: () async {
-                        final anexo = await viewModel.pickAndConvertFile();
-                        if (anexo != null) {
+                        final attachment = await viewModel.pickAndConvertFile();
+                        if (attachment != null) {
                           setState(() {
-                            widget.anexos.value.add(anexo);
+                            widget.attachments.value.add(attachment);
                           });
                         }
                       },
@@ -136,29 +133,29 @@ class _DocumentFormState extends State<DocumentForm> {
     );
   }
 
-  List<Widget> _buildCamposAdicionais() {
-    return widget.camposAdicionais.value.map((campo) {
-      final index = widget.camposAdicionais.value.indexOf(campo);
+  List<Widget> _buildAdditionalFields() {
+    return widget.additionalFields.value.map((field) {
+      final index = widget.additionalFields.value.indexOf(field);
       return Padding(
         padding: const EdgeInsets.only(bottom: AppTheme.spaceS),
         child: Row(
           children: [
             Expanded(
               child: TextFormField(
-                initialValue: campo['nome'],
+                initialValue: field['name'],
                 decoration: const InputDecoration(labelText: 'Nome'),
                 onChanged: (value) {
-                  widget.camposAdicionais.value[index]['nome'] = value;
+                  widget.additionalFields.value[index]['name'] = value;
                 },
               ),
             ),
             const SizedBox(width: AppTheme.spaceS),
             Expanded(
               child: TextFormField(
-                initialValue: campo['valor'],
+                initialValue: field['value'],
                 decoration: const InputDecoration(labelText: 'Valor'),
                 onChanged: (value) {
-                  widget.camposAdicionais.value[index]['valor'] = value;
+                  widget.additionalFields.value[index]['value'] = value;
                 },
               ),
             ),
@@ -166,7 +163,7 @@ class _DocumentFormState extends State<DocumentForm> {
               icon: const Icon(Icons.remove_circle_outline),
               onPressed: () {
                 setState(() {
-                  widget.camposAdicionais.value.removeAt(index);
+                  widget.additionalFields.value.removeAt(index);
                 });
               },
             ),
@@ -176,8 +173,8 @@ class _DocumentFormState extends State<DocumentForm> {
     }).toList();
   }
 
-  List<Widget> _buildAnexos(DocumentViewModel viewModel) {
-    return widget.anexos.value.map((anexo) {
+  List<Widget> _buildAttachments(DocumentViewModel viewModel) {
+    return widget.attachments.value.map((attachment) {
       return Card(
         elevation: 0,
         shape: RoundedRectangleBorder(
@@ -192,28 +189,28 @@ class _DocumentFormState extends State<DocumentForm> {
           child: Column(
             children: [
               ListTile(
-                title: Text(anexo.nome, overflow: TextOverflow.ellipsis),
+                title: Text(attachment.name, overflow: TextOverflow.ellipsis),
                 trailing: IconButton(
                   icon: const Icon(Icons.remove_circle_outline),
                   onPressed: () {
                     setState(() {
-                      widget.anexos.value.remove(anexo);
+                      widget.attachments.value.remove(attachment);
                     });
                   },
                 ),
               ),
-              if (anexo.tipo.contains('pdf'))
+              if (attachment.type.contains('pdf'))
                 SizedBox(
                   height: 200,
-                  child: SfPdfViewer.memory(base64Decode(anexo.base64)),
+                  child: SfPdfViewer.memory(base64Decode(attachment.base64)),
                 )
               else
                 Image.memory(
-                  base64Decode(anexo.base64),
+                  base64Decode(attachment.base64),
                   height: 150,
                   fit: BoxFit.cover,
                   errorBuilder: (context, error, stackTrace) =>
-                      const Icon(Icons.broken_image, size: 50),
+                  const Icon(Icons.broken_image, size: 50),
                 ),
             ],
           ),
@@ -246,13 +243,13 @@ class _DocumentFormState extends State<DocumentForm> {
           labelText: label,
           suffixIcon: isOptional && notifier.value != null
               ? IconButton(
-                  icon: const Icon(Icons.clear),
-                  onPressed: () {
-                    setState(() {
-                      notifier.value = null;
-                    });
-                  },
-                )
+            icon: const Icon(Icons.clear),
+            onPressed: () {
+              setState(() {
+                notifier.value = null;
+              });
+            },
+          )
               : null,
         ),
         child: Text(
