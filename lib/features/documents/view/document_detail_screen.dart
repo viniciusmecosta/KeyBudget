@@ -47,7 +47,7 @@ class DocumentDetailScreen extends StatelessWidget {
             icon: const Icon(Icons.delete_outline),
             onPressed: () async {
               final success =
-                  await viewModel.deleteDocument(userId, document.id!);
+              await viewModel.deleteDocument(userId, document.id!);
               if (!context.mounted) return;
               if (success) {
                 SnackbarService.showSuccess(
@@ -137,7 +137,7 @@ class DocumentDetailScreen extends StatelessWidget {
               Text('Anexos', style: theme.textTheme.titleLarge),
               const SizedBox(height: AppTheme.spaceM),
               ...document.attachments.map(
-                  (attachment) => _buildAttachmentItem(attachment, context)),
+                      (attachment) => _buildAttachmentItem(attachment, context)),
             ],
           ),
         ),
@@ -155,32 +155,32 @@ class DocumentDetailScreen extends StatelessWidget {
           title: Text('Versões Anteriores', style: theme.textTheme.titleLarge),
           children: document.versions
               .map((v) => ListTile(
-                    title: Text(v.issueDate != null
-                        ? DateFormat('dd/MM/yyyy').format(v.issueDate!)
-                        : 'Sem data'),
-                    trailing: TextButton(
-                      child: const Text('Marcar como Principal'),
-                      onPressed: () async {
-                        final allVersions = [document, ...document.versions];
-                        final success = await viewModel.setAsPrincipal(
-                            userId, v, allVersions);
-                        if (!context.mounted) return;
-                        if (success) {
-                          SnackbarService.showSuccess(
-                              context, 'Versão definida como principal!');
-                          Navigator.pop(context);
-                        } else {
-                          SnackbarService.showError(context,
-                              viewModel.errorMessage ?? 'Erro ao definir.');
-                        }
-                      },
-                    ),
-                    onTap: () => Navigator.of(context).pushReplacement(
-                      MaterialPageRoute(
-                        builder: (_) => DocumentDetailScreen(document: v),
-                      ),
-                    ),
-                  ))
+            title: Text(v.issueDate != null
+                ? DateFormat('dd/MM/yyyy').format(v.issueDate!)
+                : 'Sem data'),
+            trailing: TextButton(
+              child: const Text('Marcar como Principal'),
+              onPressed: () async {
+                final allVersions = [document, ...document.versions];
+                final success = await viewModel.setAsPrincipal(
+                    userId, v, allVersions);
+                if (!context.mounted) return;
+                if (success) {
+                  SnackbarService.showSuccess(
+                      context, 'Versão definida como principal!');
+                  Navigator.pop(context);
+                } else {
+                  SnackbarService.showError(context,
+                      viewModel.errorMessage ?? 'Erro ao definir.');
+                }
+              },
+            ),
+            onTap: () => Navigator.of(context).pushReplacement(
+              MaterialPageRoute(
+                builder: (_) => DocumentDetailScreen(document: v),
+              ),
+            ),
+          ))
               .toList(),
         ),
       ),
@@ -229,7 +229,9 @@ class DocumentDetailScreen extends StatelessWidget {
             if (attachment.type.contains('pdf'))
               SizedBox(
                 height: 200,
-                child: SfPdfViewer.memory(base64Decode(attachment.base64)),
+                child: AbsorbPointer(
+                  child: SfPdfViewer.memory(base64Decode(attachment.base64)),
+                ),
               )
             else
               Image.memory(base64Decode(attachment.base64)),
