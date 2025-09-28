@@ -33,7 +33,8 @@ class DashboardBalanceCard extends StatelessWidget {
                 vertical: AppTheme.spaceS - 2,
               ),
               decoration: BoxDecoration(
-                color: theme.colorScheme.onPrimary.withOpacity(0.15),
+                color:
+                    theme.colorScheme.onPrimary.withAlpha((255 * 0.15).round()),
                 borderRadius: BorderRadius.circular(AppTheme.radiusXL),
               ),
               child: Row(
@@ -51,15 +52,6 @@ class DashboardBalanceCard extends StatelessWidget {
                       color: theme.colorScheme.onPrimary,
                       fontWeight: FontWeight.w700,
                       fontSize: 13,
-                    ),
-                  ),
-                  const SizedBox(width: AppTheme.spaceXS),
-                  Text(
-                    'vs média',
-                    style: theme.textTheme.bodySmall?.copyWith(
-                      color: theme.colorScheme.onPrimary.withOpacity(0.85),
-                      fontSize: 13,
-                      fontWeight: FontWeight.w500,
                     ),
                   ),
                 ],

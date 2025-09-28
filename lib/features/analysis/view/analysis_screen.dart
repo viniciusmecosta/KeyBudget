@@ -50,7 +50,8 @@ class AnalysisScreen extends StatelessWidget {
                     Text(
                       'Analisando seus dados...',
                       style: theme.textTheme.bodyMedium?.copyWith(
-                        color: theme.colorScheme.onSurface.withOpacity(0.7),
+                        color: theme.colorScheme.onSurface
+                            .withAlpha((255 * 0.7).round()),
                       ),
                     ),
                   ],
@@ -130,7 +131,7 @@ class AnalysisScreen extends StatelessWidget {
         Text(
           subtitle,
           style: theme.textTheme.bodyMedium?.copyWith(
-            color: theme.colorScheme.onSurface.withOpacity(0.6),
+            color: theme.colorScheme.onSurface.withAlpha((255 * 0.6).round()),
           ),
         ),
       ],

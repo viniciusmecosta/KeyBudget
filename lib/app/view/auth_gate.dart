@@ -85,7 +85,6 @@ class _AuthGateState extends State<AuthGate> {
         return const Scaffold(
             body: Center(child: Text("Falha na autenticação")));
       case AuthStatus.pending:
-      default:
         return const Scaffold(body: Center(child: CircularProgressIndicator()));
     }
   }

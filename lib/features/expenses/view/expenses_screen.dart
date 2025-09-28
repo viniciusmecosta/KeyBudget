@@ -150,7 +150,7 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
     );
 
     return Scaffold(
-      backgroundColor: theme.colorScheme.background,
+      backgroundColor: theme.scaffoldBackgroundColor,
       appBar: AppBar(
         title: Text(
           'Despesas',
@@ -256,7 +256,7 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
           Text(
             'Carregando suas despesas...',
             style: theme.textTheme.bodyMedium?.copyWith(
-              color: theme.colorScheme.onSurface.withOpacity(0.7),
+              color: theme.colorScheme.onSurface.withAlpha((255 * 0.7).round()),
               fontWeight: FontWeight.w500,
             ),
           ),

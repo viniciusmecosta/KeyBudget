@@ -19,9 +19,11 @@ class SupplierListTile extends StatelessWidget {
     if (await canLaunchUrl(uri)) {
       await launchUrl(uri);
     } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Não foi possível abrir o WhatsApp.')),
-      );
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Não foi possível abrir o WhatsApp.')),
+        );
+      }
     }
   }
 
@@ -31,10 +33,12 @@ class SupplierListTile extends StatelessWidget {
     if (await canLaunchUrl(uri)) {
       await launchUrl(uri);
     } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-            content: Text('Não foi possível abrir o app de e-mail.')),
-      );
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+              content: Text('Não foi possível abrir o app de e-mail.')),
+        );
+      }
     }
   }
 
@@ -60,7 +64,8 @@ class SupplierListTile extends StatelessWidget {
       child: ListTile(
         contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
         leading: CircleAvatar(
-          backgroundColor: theme.colorScheme.tertiary.withOpacity(0.15),
+          backgroundColor:
+              theme.colorScheme.tertiary.withAlpha((255 * 0.15).round()),
           backgroundImage: photoPath != null && photoPath.isNotEmpty
               ? MemoryImage(base64Decode(photoPath))
               : null,
@@ -85,7 +90,8 @@ class SupplierListTile extends StatelessWidget {
                   onPressed: () =>
                       _launchWhatsApp(context, supplier.phoneNumber!),
                   style: IconButton.styleFrom(
-                    backgroundColor: Colors.green.withOpacity(0.1),
+                    backgroundColor:
+                        Colors.green.withAlpha((255 * 0.1).round()),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(12),
                     ),
@@ -100,7 +106,7 @@ class SupplierListTile extends StatelessWidget {
                   icon: Icon(Icons.email_outlined, color: Colors.blue.shade600),
                   onPressed: () => _launchEmail(context, supplier.email!),
                   style: IconButton.styleFrom(
-                    backgroundColor: Colors.blue.withOpacity(0.1),
+                    backgroundColor: Colors.blue.withAlpha((255 * 0.1).round()),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(12),
                     ),

@@ -42,7 +42,7 @@ class MonthlyTrendSectionWidget extends StatelessWidget {
         color: theme.colorScheme.surface,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
-          color: theme.colorScheme.outline.withOpacity(0.1),
+          color: theme.colorScheme.outline.withAlpha((255 * 0.1).round()),
         ),
       ),
       child: Column(
@@ -66,8 +66,8 @@ class MonthlyTrendSectionWidget extends StatelessWidget {
                         border: isSelected
                             ? null
                             : Border.all(
-                                color:
-                                    theme.colorScheme.outline.withOpacity(0.2),
+                                color: theme.colorScheme.outline
+                                    .withAlpha((255 * 0.2).round()),
                               ),
                       ),
                       child: Text(
@@ -97,7 +97,8 @@ class MonthlyTrendSectionWidget extends StatelessWidget {
                       ? () => viewModel.changePeriod(1)
                       : null,
                   style: IconButton.styleFrom(
-                    backgroundColor: theme.colorScheme.primary.withOpacity(0.1),
+                    backgroundColor: theme.colorScheme.primary
+                        .withAlpha((255 * 0.1).round()),
                     foregroundColor: theme.colorScheme.primary,
                   ),
                 ),
@@ -106,7 +107,8 @@ class MonthlyTrendSectionWidget extends StatelessWidget {
               Expanded(
                 child: Material(
                   color: viewModel.useCustomRange
-                      ? theme.colorScheme.secondary.withOpacity(0.1)
+                      ? theme.colorScheme.secondary
+                          .withAlpha((255 * 0.1).round())
                       : Colors.transparent,
                   borderRadius: BorderRadius.circular(12),
                   child: InkWell(
@@ -119,8 +121,10 @@ class MonthlyTrendSectionWidget extends StatelessWidget {
                         borderRadius: BorderRadius.circular(12),
                         border: Border.all(
                           color: viewModel.useCustomRange
-                              ? theme.colorScheme.secondary.withOpacity(0.3)
-                              : theme.colorScheme.outline.withOpacity(0.2),
+                              ? theme.colorScheme.secondary
+                                  .withAlpha((255 * 0.3).round())
+                              : theme.colorScheme.outline
+                                  .withAlpha((255 * 0.2).round()),
                         ),
                       ),
                       child: Row(
@@ -162,7 +166,8 @@ class MonthlyTrendSectionWidget extends StatelessWidget {
                       ? () => viewModel.changePeriod(-1)
                       : null,
                   style: IconButton.styleFrom(
-                    backgroundColor: theme.colorScheme.primary.withOpacity(0.1),
+                    backgroundColor: theme.colorScheme.primary
+                        .withAlpha((255 * 0.1).round()),
                     foregroundColor: theme.colorScheme.primary,
                   ),
                 ),
@@ -176,7 +181,8 @@ class MonthlyTrendSectionWidget extends StatelessWidget {
               icon: const Icon(Icons.clear, size: 16),
               label: const Text('Voltar ao padrão'),
               style: TextButton.styleFrom(
-                foregroundColor: theme.colorScheme.onSurface.withOpacity(0.6),
+                foregroundColor:
+                    theme.colorScheme.onSurface.withAlpha((255 * 0.6).round()),
                 textStyle: const TextStyle(fontSize: 12),
               ),
             ),
@@ -268,7 +274,7 @@ class MonthlyTrendSectionWidget extends StatelessWidget {
         color: theme.colorScheme.surface,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
-          color: theme.colorScheme.outline.withOpacity(0.1),
+          color: theme.colorScheme.outline.withAlpha((255 * 0.1).round()),
         ),
       ),
       child: Column(
@@ -282,10 +288,10 @@ class MonthlyTrendSectionWidget extends StatelessWidget {
                   drawVerticalLine: true,
                   horizontalInterval: 500,
                   getDrawingHorizontalLine: (value) => FlLine(
-                      color: theme.dividerColor.withOpacity(0.1),
+                      color: theme.dividerColor.withAlpha((255 * 0.1).round()),
                       strokeWidth: 1),
                   getDrawingVerticalLine: (value) => FlLine(
-                      color: theme.dividerColor.withOpacity(0.1),
+                      color: theme.dividerColor.withAlpha((255 * 0.1).round()),
                       strokeWidth: 1),
                 ),
                 titlesData: FlTitlesData(
@@ -387,8 +393,10 @@ class MonthlyTrendSectionWidget extends StatelessWidget {
                         begin: Alignment.topCenter,
                         end: Alignment.bottomCenter,
                         colors: [
-                          theme.colorScheme.primary.withOpacity(0.2),
-                          theme.colorScheme.secondary.withOpacity(0.05),
+                          theme.colorScheme.primary
+                              .withAlpha((255 * 0.2).round()),
+                          theme.colorScheme.secondary
+                              .withAlpha((255 * 0.05).round()),
                         ],
                       ),
                     ),

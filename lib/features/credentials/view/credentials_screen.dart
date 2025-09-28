@@ -106,7 +106,8 @@ class _CredentialsScreenState extends State<CredentialsScreen> {
                     Text(
                       'Carregando credenciais...',
                       style: theme.textTheme.bodyMedium?.copyWith(
-                        color: theme.colorScheme.onSurface.withOpacity(0.7),
+                        color: theme.colorScheme.onSurface
+                            .withAlpha((255 * 0.7).round()),
                       ),
                     ),
                   ],

@@ -31,8 +31,8 @@ class _AddDocumentScreenState extends State<AddDocumentScreen> {
   @override
   void initState() {
     super.initState();
-    _nameController =
-        TextEditingController(text: widget.originalDocument?.documentName ?? '');
+    _nameController = TextEditingController(
+        text: widget.originalDocument?.documentName ?? '');
     _numberController =
         TextEditingController(text: widget.originalDocument?.number ?? '');
   }
@@ -55,8 +55,8 @@ class _AddDocumentScreenState extends State<AddDocumentScreen> {
       },
       attachments: _attachments.value,
       isPrincipal: widget.isNewVersion ? true : false,
-      originalDocumentId:
-      widget.originalDocument?.originalDocumentId ?? widget.originalDocument?.id,
+      originalDocumentId: widget.originalDocument?.originalDocumentId ??
+          widget.originalDocument?.id,
     );
 
     final newId = await viewModel.addDocument(userId, newDocumentData);
@@ -73,6 +73,7 @@ class _AddDocumentScreenState extends State<AddDocumentScreen> {
           await viewModel.setAsPrincipal(
               userId, newDocumentWithId, allVersions);
         }
+        if (!mounted) return;
         SnackbarService.showSuccess(context, 'Documento salvo com sucesso!');
         Navigator.of(context).pop();
       } else {
@@ -88,7 +89,7 @@ class _AddDocumentScreenState extends State<AddDocumentScreen> {
     return Scaffold(
       appBar: AppBar(
         title:
-        Text(widget.isNewVersion ? 'Nova Versão' : 'Adicionar Documento'),
+            Text(widget.isNewVersion ? 'Nova Versão' : 'Adicionar Documento'),
       ),
       body: DocumentForm(
         formKey: _formKey,

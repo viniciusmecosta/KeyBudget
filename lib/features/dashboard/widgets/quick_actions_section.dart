@@ -61,7 +61,7 @@ class QuickActionsSection extends StatelessWidget {
       color: theme.colorScheme.surface,
       borderRadius: BorderRadius.circular(AppTheme.radiusL),
       elevation: 0,
-      shadowColor: theme.colorScheme.shadow.withOpacity(0.05),
+      shadowColor: theme.colorScheme.shadow.withAlpha((255 * 0.05).round()),
       child: InkWell(
         onTap: onTap,
         borderRadius: BorderRadius.circular(AppTheme.radiusL),
@@ -70,7 +70,7 @@ class QuickActionsSection extends StatelessWidget {
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(AppTheme.radiusL),
             border: Border.all(
-              color: theme.colorScheme.outline.withOpacity(0.08),
+              color: theme.colorScheme.outline.withAlpha((255 * 0.08).round()),
             ),
           ),
           child: Column(
@@ -79,7 +79,7 @@ class QuickActionsSection extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.all(AppTheme.spaceM - 2),
                 decoration: BoxDecoration(
-                  color: color.withOpacity(0.12),
+                  color: color.withAlpha((255 * 0.12).round()),
                   borderRadius: BorderRadius.circular(AppTheme.radiusM),
                 ),
                 child: Icon(
@@ -101,7 +101,8 @@ class QuickActionsSection extends StatelessWidget {
               Text(
                 subtitle,
                 style: theme.textTheme.bodySmall?.copyWith(
-                  color: theme.colorScheme.onSurface.withOpacity(0.65),
+                  color: theme.colorScheme.onSurface
+                      .withAlpha((255 * 0.65).round()),
                   fontSize: 13,
                   fontWeight: FontWeight.w500,
                 ),

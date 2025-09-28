@@ -29,15 +29,15 @@ class _EditDocumentScreenState extends State<EditDocumentScreen> {
   @override
   void initState() {
     super.initState();
-    _nameController =
-        TextEditingController(text: widget.document.documentName);
+    _nameController = TextEditingController(text: widget.document.documentName);
     _numberController = TextEditingController(text: widget.document.number);
     _issueDate = ValueNotifier(widget.document.issueDate);
     _expiryDate = ValueNotifier(widget.document.expiryDate);
     _additionalFields = ValueNotifier(widget.document.additionalFields.entries
         .map((e) => {'name': e.key, 'value': e.value})
         .toList());
-    _attachments = ValueNotifier(List<Attachment>.from(widget.document.attachments));
+    _attachments =
+        ValueNotifier(List<Attachment>.from(widget.document.attachments));
   }
 
   void _submit() async {

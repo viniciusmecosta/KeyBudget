@@ -27,7 +27,7 @@ class Document {
 
   Map<String, dynamic> toMap() {
     final List<Map<String, dynamic>> attachmentsData =
-    attachments.map((attachment) => attachment.toMap()).toList();
+        attachments.map((attachment) => attachment.toMap()).toList();
 
     return {
       'documentName': documentName,
@@ -50,9 +50,9 @@ class Document {
       expiryDate: (map['expiryDate'] as Timestamp?)?.toDate(),
       additionalFields: Map<String, String>.from(map['additionalFields'] ?? {}),
       attachments: (map['attachments'] as List<dynamic>?)
-          ?.map((attachmentMap) =>
-          Attachment.fromMap(attachmentMap as Map<String, dynamic>))
-          .toList() ??
+              ?.map((attachmentMap) =>
+                  Attachment.fromMap(attachmentMap as Map<String, dynamic>))
+              .toList() ??
           [],
       isPrincipal: map['isPrincipal'] ?? true,
       originalDocumentId: map['originalDocumentId'],

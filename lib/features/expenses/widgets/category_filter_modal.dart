@@ -28,7 +28,7 @@ class _CategoryFilterModalState extends State<CategoryFilterModal> {
             width: 48,
             margin: const EdgeInsets.only(bottom: AppTheme.spaceL),
             decoration: BoxDecoration(
-              color: theme.colorScheme.onSurface.withOpacity(0.2),
+              color: theme.colorScheme.onSurface.withAlpha((255 * 0.2).round()),
               borderRadius: BorderRadius.circular(AppTheme.radiusS),
             ),
           ),
@@ -49,13 +49,16 @@ class _CategoryFilterModalState extends State<CategoryFilterModal> {
                   margin: const EdgeInsets.only(bottom: AppTheme.spaceXS),
                   decoration: BoxDecoration(
                     color: isSelected
-                        ? theme.colorScheme.primary.withOpacity(0.08)
+                        ? theme.colorScheme.primary
+                            .withAlpha((255 * 0.08).round())
                         : Colors.transparent,
                     borderRadius: BorderRadius.circular(AppTheme.radiusM),
                     border: Border.all(
                       color: isSelected
-                          ? theme.colorScheme.primary.withOpacity(0.2)
-                          : theme.colorScheme.outline.withOpacity(0.1),
+                          ? theme.colorScheme.primary
+                              .withAlpha((255 * 0.2).round())
+                          : theme.colorScheme.outline
+                              .withAlpha((255 * 0.1).round()),
                     ),
                   ),
                   child: CheckboxListTile(

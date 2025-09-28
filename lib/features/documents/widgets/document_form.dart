@@ -1,4 +1,5 @@
 import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:key_budget/app/config/app_theme.dart';
@@ -54,9 +55,9 @@ class _DocumentFormState extends State<DocumentForm> {
                   TextFormField(
                     controller: widget.nameController,
                     decoration:
-                    const InputDecoration(labelText: 'Nome do Documento *'),
+                        const InputDecoration(labelText: 'Nome do Documento *'),
                     validator: (value) =>
-                    value!.isEmpty ? 'Campo obrigatório' : null,
+                        value!.isEmpty ? 'Campo obrigatório' : null,
                   ),
                   const SizedBox(height: AppTheme.spaceM),
                   TextFormField(
@@ -67,7 +68,8 @@ class _DocumentFormState extends State<DocumentForm> {
                   _buildDatePicker(
                       context, 'Data de Expedição', widget.issueDate, true),
                   const SizedBox(height: AppTheme.spaceM),
-                  _buildDatePicker(context, 'Validade', widget.expiryDate, true),
+                  _buildDatePicker(
+                      context, 'Validade', widget.expiryDate, true),
                 ],
               ),
             ),
@@ -180,7 +182,10 @@ class _DocumentFormState extends State<DocumentForm> {
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(AppTheme.radiusM),
           side: BorderSide(
-            color: Theme.of(context).colorScheme.outline.withOpacity(0.2),
+            color: Theme.of(context)
+                .colorScheme
+                .outline
+                .withAlpha((255 * 0.2).round()),
           ),
         ),
         margin: const EdgeInsets.only(bottom: AppTheme.spaceM),
@@ -210,7 +215,7 @@ class _DocumentFormState extends State<DocumentForm> {
                   height: 150,
                   fit: BoxFit.cover,
                   errorBuilder: (context, error, stackTrace) =>
-                  const Icon(Icons.broken_image, size: 50),
+                      const Icon(Icons.broken_image, size: 50),
                 ),
             ],
           ),
@@ -243,13 +248,13 @@ class _DocumentFormState extends State<DocumentForm> {
           labelText: label,
           suffixIcon: isOptional && notifier.value != null
               ? IconButton(
-            icon: const Icon(Icons.clear),
-            onPressed: () {
-              setState(() {
-                notifier.value = null;
-              });
-            },
-          )
+                  icon: const Icon(Icons.clear),
+                  onPressed: () {
+                    setState(() {
+                      notifier.value = null;
+                    });
+                  },
+                )
               : null,
         ),
         child: Text(
