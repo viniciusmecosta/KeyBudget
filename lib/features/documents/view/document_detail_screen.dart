@@ -1,11 +1,15 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:key_budget/app/config/app_theme.dart';
 import 'package:key_budget/core/models/document_model.dart';
 import 'package:key_budget/core/services/snackbar_service.dart';
 import 'package:key_budget/features/auth/viewmodel/auth_viewmodel.dart';
+import 'package:key_budget/features/documents/view/file_viewer_screen.dart';
 import 'package:key_budget/features/documents/viewmodel/document_viewmodel.dart';
 import 'package:provider/provider.dart';
+import 'package:syncfusion_flutter_pdfviewer/pdfviewer.dart';
 
 import 'add_document_screen.dart';
 import 'edit_document_screen.dart';
@@ -133,8 +137,8 @@ class DocumentDetailScreen extends StatelessWidget {
             children: [
               Text('Anexos', style: theme.textTheme.titleLarge),
               const SizedBox(height: AppTheme.spaceM),
-              ...document.attachments
-                  .map((attachment) => _buildAttachmentItem(attachment, context)),
+              ...document.attachments.map(
+                      (attachment) => AttachmentPreviewWidget(attachment: attachment)),
             ],
           ),
         ),
@@ -159,8 +163,8 @@ class DocumentDetailScreen extends StatelessWidget {
               child: const Text('Marcar como Principal'),
               onPressed: () async {
                 final allVersions = [document, ...document.versions];
-                final success =
-                await viewModel.setAsPrincipal(userId, v, allVersions);
+                final success = await viewModel.setAsPrincipal(
+                    userId, v, allVersions);
                 if (!context.mounted) return;
                 if (success) {
                   SnackbarService.showSuccess(
@@ -197,36 +201,109 @@ class DocumentDetailScreen extends StatelessWidget {
       ),
     );
   }
+}
 
-  Widget _buildAttachmentItem(Attachment attachment, BuildContext context) {
+class AttachmentPreviewWidget extends StatefulWidget {
+  final Attachment attachment;
+
+  const AttachmentPreviewWidget({super.key, required this.attachment});
+
+  @override
+  State<AttachmentPreviewWidget> createState() =>
+      _AttachmentPreviewWidgetState();
+}
+
+class _AttachmentPreviewWidgetState extends State<AttachmentPreviewWidget> {
+  Future<File?>? _downloadFuture;
+
+  @override
+  void initState() {
+    super.initState();
     final viewModel = Provider.of<DocumentViewModel>(context, listen: false);
+    _downloadFuture = viewModel.downloadFileForViewing(widget.attachment);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isPdf = widget.attachment.type.toLowerCase() == 'pdf';
+    final isImage = ['png', 'jpg', 'jpeg', 'webp']
+        .contains(widget.attachment.type.toLowerCase());
+
     return Card(
       elevation: 0,
       clipBehavior: Clip.antiAlias,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(AppTheme.radiusM),
         side: BorderSide(
-          color: Theme.of(context)
-              .colorScheme
-              .outline
-              .withAlpha((255 * 0.2).round()),
+          color: theme.colorScheme.outline.withAlpha((255 * 0.2).round()),
         ),
       ),
       margin: const EdgeInsets.only(bottom: AppTheme.spaceM),
-      child: ListTile(
-        leading: Icon(
-          attachment.type.contains('pdf')
-              ? Icons.picture_as_pdf
-              : Icons.image,
-        ),
-        title: Text(attachment.name, overflow: TextOverflow.ellipsis),
+      child: InkWell(
         onTap: () async {
-          await viewModel.openFile(attachment);
-          if (!context.mounted) return;
-          if (viewModel.errorMessage != null) {
-            SnackbarService.showError(context, viewModel.errorMessage!);
+          final file = await _downloadFuture;
+          if (file != null && mounted) {
+            Navigator.of(context).push(
+              MaterialPageRoute(
+                builder: (_) => FileViewerScreen(
+                  filePath: file.path,
+                  fileName: widget.attachment.name,
+                ),
+              ),
+            );
+          } else if (mounted) {
+            SnackbarService.showError(
+                context, "Não foi possível abrir o anexo.");
           }
         },
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            ListTile(
+              leading: Icon(
+                isPdf ? Icons.picture_as_pdf_outlined : Icons.image_outlined,
+              ),
+              title:
+              Text(widget.attachment.name, overflow: TextOverflow.ellipsis),
+              trailing: const Icon(Icons.open_in_new),
+            ),
+            if (isPdf || isImage)
+              Container(
+                height: 200,
+                width: double.infinity,
+                color: theme.colorScheme.surfaceContainerHighest,
+                child: FutureBuilder<File?>(
+                  future: _downloadFuture,
+                  builder: (context, snapshot) {
+                    if (snapshot.connectionState == ConnectionState.waiting) {
+                      return const Center(child: CircularProgressIndicator());
+                    }
+                    if (snapshot.hasError || snapshot.data == null) {
+                      return const Center(
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(Icons.error_outline, color: Colors.red),
+                            SizedBox(height: 8),
+                            Text("Falha ao carregar pré-visualização"),
+                          ],
+                        ),
+                      );
+                    }
+                    final file = snapshot.data!;
+                    if (isPdf) {
+                      return SfPdfViewer.file(file);
+                    }
+                    if (isImage) {
+                      return Image.file(file, fit: BoxFit.cover);
+                    }
+                    return const SizedBox.shrink();
+                  },
+                ),
+              ),
+          ],
+        ),
       ),
     );
   }

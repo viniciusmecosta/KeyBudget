@@ -63,6 +63,7 @@ class DriveService {
     try {
       await driveApi.files.delete(fileId);
     } catch (e) {
+      // Ignora erro se o arquivo não existir
     }
   }
 
@@ -70,8 +71,10 @@ class DriveService {
     final driveApi = await _getDriveApi();
     if (driveApi == null) return null;
 
-    final media = await driveApi.files.get(fileId,
-        downloadOptions: drive.DownloadOptions.metadata) as drive.Media;
+    final media = (await driveApi.files.get(
+      fileId,
+      downloadOptions: drive.DownloadOptions.fullMedia,
+    )) as drive.Media;
 
     final dir = await getTemporaryDirectory();
     final file = File('${dir.path}/$fileName');

@@ -6,7 +6,6 @@ import 'package:flutter/foundation.dart';
 import 'package:key_budget/core/models/document_model.dart';
 import 'package:key_budget/core/services/drive_service.dart';
 import 'package:key_budget/features/documents/repository/document_repository.dart';
-import 'package:open_file/open_file.dart';
 
 class DocumentViewModel extends ChangeNotifier {
   final DocumentRepository _repository = DocumentRepository();
@@ -180,19 +179,21 @@ class DocumentViewModel extends ChangeNotifier {
     }
   }
 
-  Future<void> openFile(Attachment attachment) async {
+  Future<File?> downloadFileForViewing(Attachment attachment) async {
     _setLoading(true);
     _setErrorMessage(null);
     try {
-      final file =
-      await _driveService.downloadFile(attachment.driveFileId, attachment.name);
+      final file = await _driveService.downloadFile(
+          attachment.driveFileId, attachment.name);
       if (file != null) {
-        await OpenFile.open(file.path);
+        return file;
       } else {
         _setErrorMessage('Não foi possível baixar o anexo.');
+        return null;
       }
     } catch (e) {
       _setErrorMessage('Não foi possível abrir o anexo.');
+      return null;
     } finally {
       _setLoading(false);
     }
