@@ -1,12 +1,9 @@
-import 'dart:convert';
-
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:key_budget/app/config/app_theme.dart';
 import 'package:key_budget/core/models/document_model.dart';
 import 'package:key_budget/features/documents/viewmodel/document_viewmodel.dart';
 import 'package:provider/provider.dart';
-import 'package:syncfusion_flutter_pdfviewer/pdfviewer.dart';
 
 class DocumentForm extends StatefulWidget {
   final GlobalKey<FormState> formKey;
@@ -55,9 +52,9 @@ class _DocumentFormState extends State<DocumentForm> {
                   TextFormField(
                     controller: widget.nameController,
                     decoration:
-                        const InputDecoration(labelText: 'Nome do Documento *'),
+                    const InputDecoration(labelText: 'Nome do Documento *'),
                     validator: (value) =>
-                        value!.isEmpty ? 'Campo obrigatório' : null,
+                    value!.isEmpty ? 'Campo obrigatório' : null,
                   ),
                   const SizedBox(height: AppTheme.spaceM),
                   TextFormField(
@@ -110,14 +107,14 @@ class _DocumentFormState extends State<DocumentForm> {
                 children: [
                   Text('Anexos', style: theme.textTheme.titleLarge),
                   const SizedBox(height: AppTheme.spaceM),
-                  ..._buildAttachments(viewModel),
+                  ..._buildAttachments(),
                   Align(
                     alignment: Alignment.centerLeft,
                     child: TextButton.icon(
                       icon: const Icon(Icons.attach_file),
                       label: const Text('Adicionar Anexo'),
                       onPressed: () async {
-                        final attachment = await viewModel.pickAndConvertFile();
+                        final attachment = await viewModel.pickAndUploadFile();
                         if (attachment != null) {
                           setState(() {
                             widget.attachments.value.add(attachment);
@@ -175,50 +172,18 @@ class _DocumentFormState extends State<DocumentForm> {
     }).toList();
   }
 
-  List<Widget> _buildAttachments(DocumentViewModel viewModel) {
+  List<Widget> _buildAttachments() {
     return widget.attachments.value.map((attachment) {
-      return Card(
-        elevation: 0,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(AppTheme.radiusM),
-          side: BorderSide(
-            color: Theme.of(context)
-                .colorScheme
-                .outline
-                .withAlpha((255 * 0.2).round()),
-          ),
-        ),
-        margin: const EdgeInsets.only(bottom: AppTheme.spaceM),
-        child: Padding(
-          padding: const EdgeInsets.all(AppTheme.spaceS),
-          child: Column(
-            children: [
-              ListTile(
-                title: Text(attachment.name, overflow: TextOverflow.ellipsis),
-                trailing: IconButton(
-                  icon: const Icon(Icons.remove_circle_outline),
-                  onPressed: () {
-                    setState(() {
-                      widget.attachments.value.remove(attachment);
-                    });
-                  },
-                ),
-              ),
-              if (attachment.type.contains('pdf'))
-                SizedBox(
-                  height: 200,
-                  child: SfPdfViewer.memory(base64Decode(attachment.base64)),
-                )
-              else
-                Image.memory(
-                  base64Decode(attachment.base64),
-                  height: 150,
-                  fit: BoxFit.cover,
-                  errorBuilder: (context, error, stackTrace) =>
-                      const Icon(Icons.broken_image, size: 50),
-                ),
-            ],
-          ),
+      return ListTile(
+        leading: const Icon(Icons.insert_drive_file),
+        title: Text(attachment.name, overflow: TextOverflow.ellipsis),
+        trailing: IconButton(
+          icon: const Icon(Icons.remove_circle_outline),
+          onPressed: () {
+            setState(() {
+              widget.attachments.value.remove(attachment);
+            });
+          },
         ),
       );
     }).toList();
@@ -248,13 +213,13 @@ class _DocumentFormState extends State<DocumentForm> {
           labelText: label,
           suffixIcon: isOptional && notifier.value != null
               ? IconButton(
-                  icon: const Icon(Icons.clear),
-                  onPressed: () {
-                    setState(() {
-                      notifier.value = null;
-                    });
-                  },
-                )
+            icon: const Icon(Icons.clear),
+            onPressed: () {
+              setState(() {
+                notifier.value = null;
+              });
+            },
+          )
               : null,
         ),
         child: Text(

@@ -1,18 +1,16 @@
 import 'dart:async';
-import 'dart:convert';
 import 'dart:io';
 
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/foundation.dart';
-import 'package:flutter_image_compress/flutter_image_compress.dart';
 import 'package:key_budget/core/models/document_model.dart';
+import 'package:key_budget/core/services/drive_service.dart';
 import 'package:key_budget/features/documents/repository/document_repository.dart';
 import 'package:open_file/open_file.dart';
-import 'package:path_provider/path_provider.dart';
-import 'package:syncfusion_flutter_pdf/pdf.dart';
 
 class DocumentViewModel extends ChangeNotifier {
   final DocumentRepository _repository = DocumentRepository();
+  final DriveService _driveService = DriveService();
   StreamSubscription? _documentsSubscription;
   bool _isListening = false;
   bool _isLoading = false;
@@ -31,16 +29,16 @@ class DocumentViewModel extends ChangeNotifier {
     _documentsSubscription?.cancel();
     _documentsSubscription =
         _repository.getDocumentsStream(userId).listen((docs) async {
-      final processedDocs = await _processDocuments(docs, userId);
-      _documents = processedDocs;
-      _setLoading(false);
-    }, onError: (error) {
-      _setErrorMessage('Erro ao carregar os documentos.');
-      if (kDebugMode) {
-        print('Erro ao carregar documentos: $error');
-      }
-      _setLoading(false);
-    });
+          final processedDocs = await _processDocuments(docs, userId);
+          _documents = processedDocs;
+          _setLoading(false);
+        }, onError: (error) {
+          _setErrorMessage('Erro ao carregar os documentos.');
+          if (kDebugMode) {
+            print('Erro ao carregar documentos: $error');
+          }
+          _setLoading(false);
+        });
     _isListening = true;
   }
 
@@ -72,7 +70,7 @@ class DocumentViewModel extends ChangeNotifier {
       final mainVersion = versions.firstWhere((v) => v.isPrincipal,
           orElse: () => versions.first);
       final otherVersions =
-          versions.where((v) => v.id != mainVersion.id).toList();
+      versions.where((v) => v.id != mainVersion.id).toList();
       result.add(mainVersion.copyWith(versions: otherVersions));
     });
 
@@ -152,72 +150,51 @@ class DocumentViewModel extends ChangeNotifier {
     }
   }
 
-  Future<Attachment?> pickAndConvertFile() async {
-    const firestoreSizeLimit = 1048576;
-    const maxFileSize = 5 * 1048576;
-
+  Future<Attachment?> pickAndUploadFile() async {
+    _setLoading(true);
+    _setErrorMessage(null);
     try {
-      FilePickerResult? result = await FilePicker.platform.pickFiles(
-        type: FileType.custom,
-        allowedExtensions: ['jpg', 'png', 'webp', 'pdf'],
-      );
+      FilePickerResult? result = await FilePicker.platform.pickFiles();
 
       if (result != null) {
         final file = File(result.files.single.path!);
-        final extension = result.files.single.extension?.toLowerCase() ?? '';
-        List<int> bytes = await file.readAsBytes();
+        final driveFile = await _driveService.uploadFile(file);
 
-        if (bytes.length > firestoreSizeLimit) {
-          if (['jpg', 'jpeg', 'png', 'webp'].contains(extension)) {
-            int quality = 85;
-            while (bytes.length > firestoreSizeLimit && quality > 10) {
-              final compressedBytes =
-                  await FlutterImageCompress.compressWithList(
-                Uint8List.fromList(bytes),
-                quality: quality,
-              );
-              bytes = compressedBytes;
-              quality -= 5;
-            }
-          } else if (extension == 'pdf') {
-            final PdfDocument document = PdfDocument(inputBytes: bytes);
-            document.compressionLevel = PdfCompressionLevel.best;
-            final compressedBytes = await document.save();
-            document.dispose();
-            bytes = compressedBytes.toList();
-          }
-        }
-
-        if (bytes.length > maxFileSize) {
-          _setErrorMessage(
-              'O arquivo é muito grande (${(bytes.length / 1048576).toStringAsFixed(2)}MB). O tamanho máximo permitido, mesmo após a compressão, é de 5MB.');
+        if (driveFile != null && driveFile.id != null) {
+          return Attachment(
+            name: driveFile.name ?? 'arquivo',
+            type: result.files.single.extension?.toLowerCase() ?? '',
+            driveFileId: driveFile.id!,
+          );
+        } else {
+          _setErrorMessage('Falha no upload para o Google Drive.');
           return null;
         }
-
-        final base64 = base64Encode(bytes);
-
-        return Attachment(
-          name: result.files.single.name,
-          type: extension,
-          base64: base64,
-        );
       }
       return null;
     } catch (e) {
-      _setErrorMessage('Erro ao selecionar ou processar o arquivo.');
+      _setErrorMessage('Erro ao selecionar ou enviar o arquivo.');
       return null;
+    } finally {
+      _setLoading(false);
     }
   }
 
   Future<void> openFile(Attachment attachment) async {
+    _setLoading(true);
+    _setErrorMessage(null);
     try {
-      final bytes = base64Decode(attachment.base64);
-      final dir = await getTemporaryDirectory();
-      final file = File('${dir.path}/${attachment.name}');
-      await file.writeAsBytes(bytes);
-      await OpenFile.open(file.path);
+      final file =
+      await _driveService.downloadFile(attachment.driveFileId, attachment.name);
+      if (file != null) {
+        await OpenFile.open(file.path);
+      } else {
+        _setErrorMessage('Não foi possível baixar o anexo.');
+      }
     } catch (e) {
       _setErrorMessage('Não foi possível abrir o anexo.');
+    } finally {
+      _setLoading(false);
     }
   }
 

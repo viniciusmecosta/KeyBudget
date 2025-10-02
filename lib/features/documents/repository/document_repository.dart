@@ -1,8 +1,10 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:key_budget/core/models/document_model.dart';
+import 'package:key_budget/core/services/drive_service.dart';
 
 class DocumentRepository {
   final FirebaseFirestore firestore = FirebaseFirestore.instance;
+  final DriveService _driveService = DriveService();
 
   CollectionReference<Document> getDocumentsCollection(String userId) {
     return firestore
@@ -10,10 +12,10 @@ class DocumentRepository {
         .doc(userId)
         .collection('documents')
         .withConverter<Document>(
-          fromFirestore: (snapshots, _) =>
-              Document.fromMap(snapshots.data()!, snapshots.id),
-          toFirestore: (document, _) => document.toMap(),
-        );
+      fromFirestore: (snapshots, _) =>
+          Document.fromMap(snapshots.data()!, snapshots.id),
+      toFirestore: (document, _) => document.toMap(),
+    );
   }
 
   Future<String> addDocument(String userId, Document document) async {
@@ -42,6 +44,17 @@ class DocumentRepository {
   }
 
   Future<void> deleteDocument(String userId, String documentId) async {
+    final docSnapshot =
+    await getDocumentsCollection(userId).doc(documentId).get();
+    final document = docSnapshot.data();
+
+    if (document != null) {
+      for (var attachment in document.attachments) {
+        if (attachment.driveFileId.isNotEmpty) {
+          await _driveService.deleteFile(attachment.driveFileId);
+        }
+      }
+    }
     await getDocumentsCollection(userId).doc(documentId).delete();
   }
 }

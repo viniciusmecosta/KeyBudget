@@ -3,10 +3,12 @@ import 'package:google_nav_bar/google_nav_bar.dart';
 import 'package:key_budget/app/viewmodel/navigation_viewmodel.dart';
 import 'package:key_budget/features/credentials/view/credentials_screen.dart';
 import 'package:key_budget/features/dashboard/view/dashboard_screen.dart';
+import 'package:key_budget/features/documents/viewmodel/document_viewmodel.dart';
 import 'package:key_budget/features/expenses/view/expenses_screen.dart';
 import 'package:key_budget/features/user/view/user_screen.dart';
 import 'package:provider/provider.dart';
 
+import '../../features/auth/viewmodel/auth_viewmodel.dart';
 import '../../features/documents/view/documents_screen.dart';
 
 class MainScreen extends StatefulWidget {
@@ -24,6 +26,18 @@ class _MainScreenState extends State<MainScreen> {
     DocumentsScreen(),
     UserScreen(),
   ];
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final authViewModel = Provider.of<AuthViewModel>(context, listen: false);
+      if (authViewModel.currentUser != null) {
+        Provider.of<DocumentViewModel>(context, listen: false)
+            .listenToDocuments(authViewModel.currentUser!.id);
+      }
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -73,7 +87,7 @@ class _MainScreenState extends State<MainScreen> {
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
               duration: const Duration(milliseconds: 400),
               tabBackgroundColor:
-                  theme.colorScheme.primary.withAlpha((255 * 0.1).round()),
+              theme.colorScheme.primary.withAlpha((255 * 0.1).round()),
               color: theme.colorScheme.onSurface.withAlpha((255 * 0.6).round()),
               tabs: const [
                 GButton(icon: Icons.home_rounded, text: 'Painel'),

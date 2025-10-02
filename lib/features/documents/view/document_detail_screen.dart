@@ -1,5 +1,3 @@
-import 'dart:convert';
-
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:key_budget/app/config/app_theme.dart';
@@ -8,7 +6,6 @@ import 'package:key_budget/core/services/snackbar_service.dart';
 import 'package:key_budget/features/auth/viewmodel/auth_viewmodel.dart';
 import 'package:key_budget/features/documents/viewmodel/document_viewmodel.dart';
 import 'package:provider/provider.dart';
-import 'package:syncfusion_flutter_pdfviewer/pdfviewer.dart';
 
 import 'add_document_screen.dart';
 import 'edit_document_screen.dart';
@@ -136,8 +133,8 @@ class DocumentDetailScreen extends StatelessWidget {
             children: [
               Text('Anexos', style: theme.textTheme.titleLarge),
               const SizedBox(height: AppTheme.spaceM),
-              ...document.attachments.map(
-                      (attachment) => _buildAttachmentItem(attachment, context)),
+              ...document.attachments
+                  .map((attachment) => _buildAttachmentItem(attachment, context)),
             ],
           ),
         ),
@@ -162,8 +159,8 @@ class DocumentDetailScreen extends StatelessWidget {
               child: const Text('Marcar como Principal'),
               onPressed: () async {
                 final allVersions = [document, ...document.versions];
-                final success = await viewModel.setAsPrincipal(
-                    userId, v, allVersions);
+                final success =
+                await viewModel.setAsPrincipal(userId, v, allVersions);
                 if (!context.mounted) return;
                 if (success) {
                   SnackbarService.showSuccess(
@@ -216,7 +213,13 @@ class DocumentDetailScreen extends StatelessWidget {
         ),
       ),
       margin: const EdgeInsets.only(bottom: AppTheme.spaceM),
-      child: InkWell(
+      child: ListTile(
+        leading: Icon(
+          attachment.type.contains('pdf')
+              ? Icons.picture_as_pdf
+              : Icons.image,
+        ),
+        title: Text(attachment.name, overflow: TextOverflow.ellipsis),
         onTap: () async {
           await viewModel.openFile(attachment);
           if (!context.mounted) return;
@@ -224,19 +227,6 @@ class DocumentDetailScreen extends StatelessWidget {
             SnackbarService.showError(context, viewModel.errorMessage!);
           }
         },
-        child: Column(
-          children: [
-            if (attachment.type.contains('pdf'))
-              SizedBox(
-                height: 200,
-                child: AbsorbPointer(
-                  child: SfPdfViewer.memory(base64Decode(attachment.base64)),
-                ),
-              )
-            else
-              Image.memory(base64Decode(attachment.base64)),
-          ],
-        ),
       ),
     );
   }
