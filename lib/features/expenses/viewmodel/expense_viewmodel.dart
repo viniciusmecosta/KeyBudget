@@ -119,47 +119,60 @@ class ExpenseViewModel extends ChangeNotifier {
     return count;
   }
 
-  List<String> getUniqueLocationsForCategory(String? categoryId) {
-    if (categoryId == null) return [];
-    final locations = _allExpenses
-        .where((exp) =>
-            exp.categoryId == categoryId &&
-            exp.location != null &&
-            exp.location!.isNotEmpty)
-        .map((exp) => exp.location!)
-        .toList();
+  List<String> getUniqueLocationsForCategory(String? categoryId, String query) {
+    if (categoryId == null || query.isEmpty) return [];
+
+    final locations = _allExpenses.where((exp) =>
+        exp.categoryId == categoryId &&
+        exp.location != null &&
+        exp.location!.isNotEmpty);
 
     if (locations.isEmpty) return [];
 
     final frequencyMap = <String, int>{};
-    for (var location in locations) {
-      frequencyMap[location] = (frequencyMap[location] ?? 0) + 1;
+    for (var exp in locations) {
+      frequencyMap[exp.location!] = (frequencyMap[exp.location!] ?? 0) + 1;
     }
 
-    final sortedLocations = frequencyMap.entries.toList()
+    final queryLower = query.toLowerCase();
+    final filteredLocations = frequencyMap.entries.where((entry) {
+      return entry.key
+          .toLowerCase()
+          .split(' ')
+          .any((word) => word.startsWith(queryLower));
+    });
+
+    final sortedLocations = filteredLocations.toList()
       ..sort((a, b) => b.value.compareTo(a.value));
 
     return sortedLocations.map((e) => e.key).take(3).toList();
   }
 
-  List<String> getUniqueMotivationsForCategory(String? categoryId) {
-    if (categoryId == null) return [];
-    final motivations = _allExpenses
-        .where((exp) =>
-            exp.categoryId == categoryId &&
-            exp.motivation != null &&
-            exp.motivation!.isNotEmpty)
-        .map((exp) => exp.motivation!)
-        .toList();
+  List<String> getUniqueMotivationsForCategory(
+      String? categoryId, String query) {
+    if (categoryId == null || query.isEmpty) return [];
+
+    final motivations = _allExpenses.where((exp) =>
+        exp.categoryId == categoryId &&
+        exp.motivation != null &&
+        exp.motivation!.isNotEmpty);
 
     if (motivations.isEmpty) return [];
 
     final frequencyMap = <String, int>{};
-    for (var motivation in motivations) {
-      frequencyMap[motivation] = (frequencyMap[motivation] ?? 0) + 1;
+    for (var exp in motivations) {
+      frequencyMap[exp.motivation!] = (frequencyMap[exp.motivation!] ?? 0) + 1;
     }
 
-    final sortedMotivations = frequencyMap.entries.toList()
+    final queryLower = query.toLowerCase();
+    final filteredMotivations = frequencyMap.entries.where((entry) {
+      return entry.key
+          .toLowerCase()
+          .split(' ')
+          .any((word) => word.startsWith(queryLower));
+    });
+
+    final sortedMotivations = filteredMotivations.toList()
       ..sort((a, b) => b.value.compareTo(a.value));
 
     return sortedMotivations.map((e) => e.key).take(3).toList();

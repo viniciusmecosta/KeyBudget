@@ -87,7 +87,7 @@ class Document {
 }
 
 class Attachment {
-  final String name;
+  String name;
   final String type;
   final String base64;
 

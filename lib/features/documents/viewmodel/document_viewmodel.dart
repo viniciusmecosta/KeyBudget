@@ -9,6 +9,7 @@ import 'package:key_budget/core/models/document_model.dart';
 import 'package:key_budget/features/documents/repository/document_repository.dart';
 import 'package:open_file/open_file.dart';
 import 'package:path_provider/path_provider.dart';
+import 'package:share_plus/share_plus.dart';
 import 'package:syncfusion_flutter_pdf/pdf.dart';
 
 class DocumentViewModel extends ChangeNotifier {
@@ -76,7 +77,8 @@ class DocumentViewModel extends ChangeNotifier {
       result.add(mainVersion.copyWith(versions: otherVersions));
     });
 
-    result.sort((a, b) => a.documentName.compareTo(b.documentName));
+    result.sort((a, b) =>
+        a.documentName.toLowerCase().compareTo(b.documentName.toLowerCase()));
     return result;
   }
 
@@ -211,13 +213,30 @@ class DocumentViewModel extends ChangeNotifier {
 
   Future<void> openFile(Attachment attachment) async {
     try {
+      final dir = await getApplicationDocumentsDirectory();
+      final filePath = '${dir.path}/${attachment.name}';
+      final file = File(filePath);
+
+      if (!await file.exists()) {
+        final bytes = base64Decode(attachment.base64);
+        await file.writeAsBytes(bytes);
+      }
+
+      await OpenFile.open(file.path);
+    } catch (e) {
+      _setErrorMessage('Não foi possível abrir o anexo.');
+    }
+  }
+
+  Future<void> shareAttachment(Attachment attachment) async {
+    try {
       final bytes = base64Decode(attachment.base64);
       final dir = await getTemporaryDirectory();
       final file = File('${dir.path}/${attachment.name}');
       await file.writeAsBytes(bytes);
-      await OpenFile.open(file.path);
+      await Share.shareXFiles([XFile(file.path)], text: attachment.name);
     } catch (e) {
-      _setErrorMessage('Não foi possível abrir o anexo.');
+      _setErrorMessage('Não foi possível compartilhar o anexo.');
     }
   }
 

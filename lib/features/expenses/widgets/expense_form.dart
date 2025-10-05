@@ -91,8 +91,13 @@ class ExpenseForm extends StatelessWidget {
             label: 'Motivação',
             controller: motivationController,
             textCapitalization: TextCapitalization.sentences,
-            optionsBuilder: () => expenseViewModel
-                .getUniqueMotivationsForCategory(selectedCategory?.id),
+            optionsBuilder: (TextEditingValue textEditingValue) {
+              if (textEditingValue.text == '') {
+                return const Iterable<String>.empty();
+              }
+              return expenseViewModel.getUniqueMotivationsForCategory(
+                  selectedCategory?.id, textEditingValue.text);
+            },
             onSelected: (selection) {
               motivationController.text = selection;
             },
@@ -103,8 +108,13 @@ class ExpenseForm extends StatelessWidget {
             label: 'Local',
             controller: locationController,
             textCapitalization: TextCapitalization.sentences,
-            optionsBuilder: () => expenseViewModel
-                .getUniqueLocationsForCategory(selectedCategory?.id),
+            optionsBuilder: (TextEditingValue textEditingValue) {
+              if (textEditingValue.text == '') {
+                return const Iterable<String>.empty();
+              }
+              return expenseViewModel.getUniqueLocationsForCategory(
+                  selectedCategory?.id, textEditingValue.text);
+            },
             onSelected: (selection) {
               locationController.text = selection;
             },
