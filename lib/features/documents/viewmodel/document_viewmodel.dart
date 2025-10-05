@@ -31,16 +31,16 @@ class DocumentViewModel extends ChangeNotifier {
     _documentsSubscription?.cancel();
     _documentsSubscription =
         _repository.getDocumentsStream(userId).listen((docs) async {
-      final processedDocs = await _processDocuments(docs, userId);
-      _documents = processedDocs;
-      _setLoading(false);
-    }, onError: (error) {
-      _setErrorMessage('Erro ao carregar os documentos.');
-      if (kDebugMode) {
-        print('Erro ao carregar documentos: $error');
-      }
-      _setLoading(false);
-    });
+          final processedDocs = await _processDocuments(docs, userId);
+          _documents = processedDocs;
+          _setLoading(false);
+        }, onError: (error) {
+          _setErrorMessage('Erro ao carregar os documentos.');
+          if (kDebugMode) {
+            print('Erro ao carregar documentos: $error');
+          }
+          _setLoading(false);
+        });
     _isListening = true;
   }
 
@@ -72,7 +72,7 @@ class DocumentViewModel extends ChangeNotifier {
       final mainVersion = versions.firstWhere((v) => v.isPrincipal,
           orElse: () => versions.first);
       final otherVersions =
-          versions.where((v) => v.id != mainVersion.id).toList();
+      versions.where((v) => v.id != mainVersion.id).toList();
       result.add(mainVersion.copyWith(versions: otherVersions));
     });
 
@@ -172,7 +172,7 @@ class DocumentViewModel extends ChangeNotifier {
             int quality = 85;
             while (bytes.length > firestoreSizeLimit && quality > 10) {
               final compressedBytes =
-                  await FlutterImageCompress.compressWithList(
+              await FlutterImageCompress.compressWithList(
                 Uint8List.fromList(bytes),
                 quality: quality,
               );
@@ -211,10 +211,15 @@ class DocumentViewModel extends ChangeNotifier {
 
   Future<void> openFile(Attachment attachment) async {
     try {
-      final bytes = base64Decode(attachment.base64);
-      final dir = await getTemporaryDirectory();
-      final file = File('${dir.path}/${attachment.name}');
-      await file.writeAsBytes(bytes);
+      final dir = await getApplicationDocumentsDirectory();
+      final filePath = '${dir.path}/${attachment.name}';
+      final file = File(filePath);
+
+      if (!await file.exists()) {
+        final bytes = base64Decode(attachment.base64);
+        await file.writeAsBytes(bytes);
+      }
+
       await OpenFile.open(file.path);
     } catch (e) {
       _setErrorMessage('Não foi possível abrir o anexo.');
