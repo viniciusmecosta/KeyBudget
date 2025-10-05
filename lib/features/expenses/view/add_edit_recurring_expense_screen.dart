@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_masked_text2/flutter_masked_text2.dart';
 import 'package:key_budget/app/config/app_theme.dart';
 import 'package:key_budget/core/models/expense_category_model.dart';
@@ -30,6 +31,7 @@ class _AddEditRecurringExpenseScreenState
   DateTime _startDate = DateTime.now();
   DateTime? _endDate;
   int _dayOfMonth = DateTime.now().day;
+  bool _isSaving = false;
 
   @override
   void initState() {
@@ -48,6 +50,7 @@ class _AddEditRecurringExpenseScreenState
   void _submit() async {
     if (!_formKey.currentState!.validate()) return;
 
+    setState(() => _isSaving = true);
     final viewModel = context.read<ExpenseViewModel>();
     final userId = context.read<AuthViewModel>().currentUser!.id;
 
@@ -77,6 +80,10 @@ class _AddEditRecurringExpenseScreenState
       if (mounted) {
         SnackbarService.showError(context, 'Erro ao salvar despesa.');
       }
+    } finally {
+      if (mounted) {
+        setState(() => _isSaving = false);
+      }
     }
   }
 
@@ -88,25 +95,39 @@ class _AddEditRecurringExpenseScreenState
             ? 'Nova Despesa Recorrente'
             : 'Editar Despesa Recorrente'),
       ),
-      body: RecurringExpenseForm(
-        formKey: _formKey,
-        amountController: _amountController,
-        motivationController: _motivationController,
-        locationController: _locationController,
-        onCategoryChanged: (category) =>
-            setState(() => _selectedCategory = category),
-        onFrequencyChanged: (freq) => setState(() => _frequency = freq),
-        onStartDateChanged: (date) => setState(() => _startDate = date),
-        onEndDateChanged: (date) => setState(() => _endDate = date),
-        onDayOfMonthChanged: (day) => setState(() => _dayOfMonth = day),
-      ),
-      bottomNavigationBar: Padding(
+      body: Padding(
         padding: const EdgeInsets.all(AppTheme.defaultPadding),
-        child: ElevatedButton(
-          onPressed: _submit,
-          child: const Text('Salvar'),
+        child: Column(
+          children: [
+            Expanded(
+              child: RecurringExpenseForm(
+                formKey: _formKey,
+                amountController: _amountController,
+                motivationController: _motivationController,
+                locationController: _locationController,
+                onCategoryChanged: (category) =>
+                    setState(() => _selectedCategory = category),
+                onFrequencyChanged: (freq) => setState(() => _frequency = freq),
+                onStartDateChanged: (date) => setState(() => _startDate = date),
+                onEndDateChanged: (date) => setState(() => _endDate = date),
+                onDayOfMonthChanged: (day) => setState(() => _dayOfMonth = day),
+              ),
+            ),
+            const SizedBox(height: 16),
+            ElevatedButton(
+              onPressed: _isSaving ? null : _submit,
+              child: _isSaving
+                  ? SizedBox(
+                      height: 24,
+                      width: 24,
+                      child: CircularProgressIndicator(
+                          color: Theme.of(context).colorScheme.onPrimary,
+                          strokeWidth: 2.0))
+                  : const Text('Salvar'),
+            ),
+          ],
         ),
-      ),
+      ).animate().fadeIn(duration: 300.ms).slideY(begin: 0.1, end: 0),
     );
   }
 }

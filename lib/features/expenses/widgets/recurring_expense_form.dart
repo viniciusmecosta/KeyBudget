@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_masked_text2/flutter_masked_text2.dart';
-import 'package:intl/intl.dart';
+import 'package:key_budget/app/config/app_theme.dart';
 import 'package:key_budget/app/widgets/category_picker_field.dart';
+import 'package:key_budget/app/widgets/date_picker_field.dart';
 import 'package:key_budget/core/models/expense_category_model.dart';
 import 'package:key_budget/core/models/recurring_expense_model.dart';
 import 'package:key_budget/features/category/viewmodel/category_viewmodel.dart';
@@ -36,50 +37,49 @@ class RecurringExpenseForm extends StatelessWidget {
     return Form(
       key: formKey,
       child: ListView(
-        padding: const EdgeInsets.all(16.0),
         children: [
           TextFormField(
             controller: amountController,
             decoration: const InputDecoration(labelText: 'Valor'),
             keyboardType: TextInputType.number,
           ),
+          const SizedBox(height: AppTheme.spaceM),
           CategoryPickerField(
             label: 'Categoria',
             categories: context.watch<CategoryViewModel>().categories,
             onChanged: onCategoryChanged,
             onManageCategories: () {},
           ),
+          const SizedBox(height: AppTheme.spaceM),
           TextFormField(
             controller: motivationController,
             decoration: const InputDecoration(labelText: 'Motivação'),
           ),
+          const SizedBox(height: AppTheme.spaceM),
           TextFormField(
             controller: locationController,
             decoration: const InputDecoration(labelText: 'Local'),
           ),
+          const SizedBox(height: AppTheme.spaceM),
           DropdownButtonFormField<RecurrenceFrequency>(
             value: RecurrenceFrequency.monthly,
             items: RecurrenceFrequency.values
-                .map((e) => DropdownMenuItem(value: e, child: Text(e.name)))
+                .map((e) =>
+                    DropdownMenuItem(value: e, child: Text(e.nameInPortuguese)))
                 .toList(),
             onChanged: (val) {
               if (val != null) onFrequencyChanged(val);
             },
             decoration: const InputDecoration(labelText: 'Frequência'),
           ),
-          ListTile(
-            title: const Text('Data de Início'),
-            subtitle: Text(DateFormat.yMd().format(DateTime.now())),
-            onTap: () async {
-              final date = await showDatePicker(
-                context: context,
-                initialDate: DateTime.now(),
-                firstDate: DateTime(2000),
-                lastDate: DateTime(2100),
-              );
-              if (date != null) onStartDateChanged(date);
-            },
+          const SizedBox(height: AppTheme.spaceM),
+          DatePickerField(
+            label: 'Data de Início',
+            selectedDate: DateTime.now(),
+            isEditing: true,
+            onDateSelected: onStartDateChanged,
           ),
+          const SizedBox(height: AppTheme.spaceM),
           DropdownButtonFormField<int>(
             value: DateTime.now().day,
             items: List.generate(31, (i) => i + 1)

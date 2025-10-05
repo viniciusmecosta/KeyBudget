@@ -39,13 +39,9 @@ class _DocumentsScreenState extends State<DocumentsScreen> {
       body: viewModel.isLoading
           ? const Center(child: CircularProgressIndicator())
           : viewModel.documents.isEmpty
-              ? EmptyStateWidget(
+              ? const EmptyStateWidget(
                   icon: Icons.folder_off_outlined,
                   message: 'Nenhum documento encontrado.',
-                  buttonText: 'Adicionar Documento',
-                  onButtonPressed: () => Navigator.of(context).push(
-                      MaterialPageRoute(
-                          builder: (_) => const AddDocumentScreen())),
                 )
               : ListView.builder(
                   padding: const EdgeInsets.fromLTRB(AppTheme.defaultPadding,

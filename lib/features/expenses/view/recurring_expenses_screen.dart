@@ -24,15 +24,9 @@ class RecurringExpensesScreen extends StatelessWidget {
               color: theme.colorScheme.primary,
             ))
           : viewModel.recurringExpenses.isEmpty
-              ? EmptyStateWidget(
+              ? const EmptyStateWidget(
                   icon: Icons.replay_circle_filled_outlined,
                   message: 'Nenhuma despesa recorrente encontrada.',
-                  buttonText: 'Adicionar Recorrente',
-                  onButtonPressed: () => Navigator.of(context).push(
-                    MaterialPageRoute(
-                      builder: (_) => const AddEditRecurringExpenseScreen(),
-                    ),
-                  ),
                 )
               : ListView.builder(
                   padding: const EdgeInsets.all(AppTheme.defaultPadding),

@@ -124,14 +124,9 @@ class _CredentialsScreenState extends State<CredentialsScreen> {
                       SliverFillRemaining(
                         child: SingleChildScrollView(
                           physics: const AlwaysScrollableScrollPhysics(),
-                          child: EmptyStateWidget(
+                          child: const EmptyStateWidget(
                             icon: Icons.key_off,
                             message: 'Nenhuma credencial encontrada.',
-                            buttonText: 'Adicionar Credencial',
-                            onButtonPressed: () => Navigator.of(context).push(
-                                MaterialPageRoute(
-                                    builder: (_) =>
-                                        const AddCredentialScreen())),
                           ),
                         ),
                       )
