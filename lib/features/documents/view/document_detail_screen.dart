@@ -6,6 +6,7 @@ import 'package:key_budget/app/config/app_theme.dart';
 import 'package:key_budget/core/models/document_model.dart';
 import 'package:key_budget/core/services/snackbar_service.dart';
 import 'package:key_budget/features/auth/viewmodel/auth_viewmodel.dart';
+import 'package:key_budget/features/documents/view/image_viewer_screen.dart';
 import 'package:key_budget/features/documents/viewmodel/document_viewmodel.dart';
 import 'package:provider/provider.dart';
 import 'package:syncfusion_flutter_pdfviewer/pdfviewer.dart';
@@ -47,7 +48,7 @@ class DocumentDetailScreen extends StatelessWidget {
             icon: const Icon(Icons.delete_outline),
             onPressed: () async {
               final success =
-              await viewModel.deleteDocument(userId, document.id!);
+                  await viewModel.deleteDocument(userId, document.id!);
               if (!context.mounted) return;
               if (success) {
                 SnackbarService.showSuccess(
@@ -137,7 +138,7 @@ class DocumentDetailScreen extends StatelessWidget {
               Text('Anexos', style: theme.textTheme.titleLarge),
               const SizedBox(height: AppTheme.spaceM),
               ...document.attachments.map(
-                      (attachment) => _buildAttachmentItem(attachment, context)),
+                  (attachment) => _buildAttachmentItem(attachment, context)),
             ],
           ),
         ),
@@ -155,32 +156,32 @@ class DocumentDetailScreen extends StatelessWidget {
           title: Text('Versões Anteriores', style: theme.textTheme.titleLarge),
           children: document.versions
               .map((v) => ListTile(
-            title: Text(v.issueDate != null
-                ? DateFormat('dd/MM/yyyy').format(v.issueDate!)
-                : 'Sem data'),
-            trailing: TextButton(
-              child: const Text('Marcar como Principal'),
-              onPressed: () async {
-                final allVersions = [document, ...document.versions];
-                final success = await viewModel.setAsPrincipal(
-                    userId, v, allVersions);
-                if (!context.mounted) return;
-                if (success) {
-                  SnackbarService.showSuccess(
-                      context, 'Versão definida como principal!');
-                  Navigator.pop(context);
-                } else {
-                  SnackbarService.showError(context,
-                      viewModel.errorMessage ?? 'Erro ao definir.');
-                }
-              },
-            ),
-            onTap: () => Navigator.of(context).pushReplacement(
-              MaterialPageRoute(
-                builder: (_) => DocumentDetailScreen(document: v),
-              ),
-            ),
-          ))
+                    title: Text(v.issueDate != null
+                        ? DateFormat('dd/MM/yyyy').format(v.issueDate!)
+                        : 'Sem data'),
+                    trailing: TextButton(
+                      child: const Text('Marcar como Principal'),
+                      onPressed: () async {
+                        final allVersions = [document, ...document.versions];
+                        final success = await viewModel.setAsPrincipal(
+                            userId, v, allVersions);
+                        if (!context.mounted) return;
+                        if (success) {
+                          SnackbarService.showSuccess(
+                              context, 'Versão definida como principal!');
+                          Navigator.pop(context);
+                        } else {
+                          SnackbarService.showError(context,
+                              viewModel.errorMessage ?? 'Erro ao definir.');
+                        }
+                      },
+                    ),
+                    onTap: () => Navigator.of(context).pushReplacement(
+                      MaterialPageRoute(
+                        builder: (_) => DocumentDetailScreen(document: v),
+                      ),
+                    ),
+                  ))
               .toList(),
         ),
       ),
@@ -203,40 +204,64 @@ class DocumentDetailScreen extends StatelessWidget {
 
   Widget _buildAttachmentItem(Attachment attachment, BuildContext context) {
     final viewModel = Provider.of<DocumentViewModel>(context, listen: false);
+    final theme = Theme.of(context);
+    final isPdf = attachment.type.contains('pdf');
     return Card(
       elevation: 0,
       clipBehavior: Clip.antiAlias,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(AppTheme.radiusM),
         side: BorderSide(
-          color: Theme.of(context)
-              .colorScheme
-              .outline
-              .withAlpha((255 * 0.2).round()),
+          color: theme.colorScheme.outline.withAlpha((255 * 0.2).round()),
         ),
       ),
       margin: const EdgeInsets.only(bottom: AppTheme.spaceM),
-      child: InkWell(
-        onTap: () async {
-          await viewModel.openFile(attachment);
-          if (!context.mounted) return;
-          if (viewModel.errorMessage != null) {
-            SnackbarService.showError(context, viewModel.errorMessage!);
-          }
-        },
-        child: Column(
-          children: [
-            if (attachment.type.contains('pdf'))
-              SizedBox(
-                height: 200,
-                child: AbsorbPointer(
-                  child: SfPdfViewer.memory(base64Decode(attachment.base64)),
-                ),
-              )
-            else
-              Image.memory(base64Decode(attachment.base64)),
-          ],
-        ),
+      child: Column(
+        children: [
+          ListTile(
+            title: Text(attachment.name, overflow: TextOverflow.ellipsis),
+            trailing: IconButton(
+              icon: const Icon(Icons.share_outlined),
+              tooltip: 'Compartilhar',
+              onPressed: () async {
+                await viewModel.shareAttachment(attachment);
+                if (!context.mounted) return;
+                if (viewModel.errorMessage != null) {
+                  SnackbarService.showError(context, viewModel.errorMessage!);
+                }
+              },
+            ),
+          ),
+          InkWell(
+            onTap: () async {
+              if (isPdf) {
+                await viewModel.openFile(attachment);
+                if (!context.mounted) return;
+                if (viewModel.errorMessage != null) {
+                  SnackbarService.showError(context, viewModel.errorMessage!);
+                }
+              } else {
+                Navigator.of(context).push(MaterialPageRoute(
+                  builder: (_) => ImageViewerScreen(
+                    imageBase64: attachment.base64,
+                    imageName: attachment.name,
+                  ),
+                ));
+              }
+            },
+            child: isPdf
+                ? SizedBox(
+                    height: 200,
+                    child: AbsorbPointer(
+                      child: SfPdfViewer.memory(
+                        base64Decode(attachment.base64),
+                        enableDoubleTapZooming: false,
+                      ),
+                    ),
+                  )
+                : Image.memory(base64Decode(attachment.base64)),
+          ),
+        ],
       ),
     );
   }
