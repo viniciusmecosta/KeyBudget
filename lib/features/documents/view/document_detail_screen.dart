@@ -7,8 +7,6 @@ import 'package:key_budget/app/config/app_theme.dart';
 import 'package:key_budget/core/models/document_model.dart';
 import 'package:key_budget/core/services/snackbar_service.dart';
 import 'package:key_budget/features/auth/viewmodel/auth_viewmodel.dart';
-import 'package:key_budget/features/documents/view/image_viewer_screen.dart';
-import 'package:key_budget/features/documents/view/pdf_viewer_screen.dart';
 import 'package:key_budget/features/documents/viewmodel/document_viewmodel.dart';
 import 'package:provider/provider.dart';
 import 'package:syncfusion_flutter_pdfviewer/pdfviewer.dart';
@@ -49,8 +47,7 @@ class DocumentDetailScreen extends StatelessWidget {
           IconButton(
             icon: const Icon(Icons.delete_outline),
             onPressed: () async {
-              final success =
-                  await viewModel.deleteDocument(userId, document.id!);
+              final success = await viewModel.deleteDocument(userId, document);
               if (!context.mounted) return;
               if (success) {
                 SnackbarService.showSuccess(
@@ -221,7 +218,6 @@ class DocumentDetailScreen extends StatelessWidget {
   }
 
   Widget _buildAttachmentItem(Attachment attachment, BuildContext context) {
-    final viewModel = Provider.of<DocumentViewModel>(context, listen: false);
     final theme = Theme.of(context);
     final isPdf = attachment.type.contains('pdf');
 
@@ -243,6 +239,8 @@ class DocumentDetailScreen extends StatelessWidget {
               icon: const Icon(Icons.share_outlined),
               tooltip: 'Compartilhar',
               onPressed: () async {
+                final viewModel =
+                    Provider.of<DocumentViewModel>(context, listen: false);
                 await viewModel.shareAttachment(attachment);
                 if (context.mounted && viewModel.errorMessage != null) {
                   SnackbarService.showError(context, viewModel.errorMessage!);
@@ -250,25 +248,30 @@ class DocumentDetailScreen extends StatelessWidget {
               },
             ),
           ),
-          InkWell(
+          GestureDetector(
             onTap: () async {
-              final base64 =
-                  await viewModel.downloadAttachmentAsBase64(attachment);
-              if (base64 != null && context.mounted) {
-                if (isPdf) {
-                  Navigator.of(context).push(MaterialPageRoute(
-                    builder: (_) => PdfViewerScreen(
-                      pdfBase64: base64,
-                      pdfName: attachment.name,
-                    ),
-                  ));
-                } else {
-                  Navigator.of(context).push(MaterialPageRoute(
-                    builder: (_) => ImageViewerScreen(
-                      imageBase64: base64,
-                      imageName: attachment.name,
-                    ),
-                  ));
+              final viewModel =
+                  Provider.of<DocumentViewModel>(context, listen: false);
+
+              if (isPdf) {
+                final file = await viewModel.getAttachmentFile(attachment);
+                if (file != null && context.mounted) {
+                  await viewModel.openFile(attachment);
+                  if (viewModel.errorMessage != null) {
+                    SnackbarService.showError(
+                      context,
+                      viewModel.errorMessage ?? 'Não foi possível abrir o PDF.',
+                    );
+                  }
+                }
+              } else {
+                await viewModel.openFile(attachment);
+                if (context.mounted && viewModel.errorMessage != null) {
+                  SnackbarService.showError(
+                    context,
+                    viewModel.errorMessage ??
+                        'Não foi possível abrir a imagem.',
+                  );
                 }
               }
             },
@@ -276,7 +279,8 @@ class DocumentDetailScreen extends StatelessWidget {
               height: 200,
               color: theme.colorScheme.surfaceContainerHighest,
               child: FutureBuilder<String?>(
-                future: viewModel.downloadAttachmentAsBase64(attachment),
+                future: Provider.of<DocumentViewModel>(context, listen: false)
+                    .getAttachmentAsBase64(attachment),
                 builder: (context, snapshot) {
                   if (snapshot.connectionState == ConnectionState.waiting) {
                     return const Center(child: CircularProgressIndicator());
@@ -286,9 +290,17 @@ class DocumentDetailScreen extends StatelessWidget {
                   }
                   final base64 = snapshot.data!;
                   return isPdf
-                      ? SfPdfViewer.memory(
-                          base64Decode(base64),
-                          enableDoubleTapZooming: false,
+                      ? Stack(
+                          children: [
+                            SfPdfViewer.memory(
+                              base64Decode(base64),
+                              enableDoubleTapZooming: false,
+                              interactionMode: PdfInteractionMode.pan,
+                            ),
+                            Container(
+                              color: Colors.transparent,
+                            ),
+                          ],
                         )
                       : Image.memory(
                           base64Decode(base64),

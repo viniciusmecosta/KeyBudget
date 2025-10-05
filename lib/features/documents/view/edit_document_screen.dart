@@ -59,7 +59,8 @@ class _EditDocumentScreenState extends State<EditDocumentScreen> {
       attachments: _attachments.value,
     );
 
-    final success = await viewModel.updateDocument(userId, updatedDocument);
+    final success = await viewModel.updateDocument(
+        userId, updatedDocument, widget.document);
 
     if (mounted) {
       if (success) {

@@ -113,4 +113,13 @@ class DriveService {
 
     return bytes;
   }
+
+  Future<void> deleteFile(String fileId) async {
+    final driveApi = await _getDriveApi();
+    if (driveApi == null) return;
+
+    try {
+      await driveApi.files.delete(fileId);
+    } catch (e) {}
+  }
 }
