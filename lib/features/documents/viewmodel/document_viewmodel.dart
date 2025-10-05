@@ -1,15 +1,15 @@
 import 'dart:async';
+import 'dart:convert';
 import 'dart:io';
 
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/foundation.dart';
 import 'package:key_budget/core/models/document_model.dart';
+import 'package:key_budget/core/services/drive_service.dart';
 import 'package:key_budget/features/documents/repository/document_repository.dart';
 import 'package:open_file/open_file.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
-
-import '../../../core/services/drive_services.dart';
 
 class DocumentViewModel extends ChangeNotifier {
   final DocumentRepository _repository = DocumentRepository();
@@ -19,6 +19,14 @@ class DocumentViewModel extends ChangeNotifier {
   bool _isLoading = false;
   String? _errorMessage;
   List<Document> _documents = [];
+  final Map<String, String> _attachmentCache = {};
+
+  bool _isUploading = false;
+  double? _uploadProgress;
+
+  bool get isUploading => _isUploading;
+
+  double? get uploadProgress => _uploadProgress;
 
   bool get isLoading => _isLoading;
 
@@ -100,6 +108,7 @@ class DocumentViewModel extends ChangeNotifier {
 
   Future<bool> updateDocument(String userId, Document document) async {
     _setLoading(true);
+    _attachmentCache.clear();
     try {
       await _repository.updateDocument(userId, document);
       await forceRefresh(userId);
@@ -155,6 +164,10 @@ class DocumentViewModel extends ChangeNotifier {
   }
 
   Future<Attachment?> pickAndUploadFile() async {
+    _isUploading = true;
+    _uploadProgress = 0.0;
+    notifyListeners();
+
     try {
       FilePickerResult? result = await FilePicker.platform.pickFiles(
         type: FileType.custom,
@@ -165,8 +178,12 @@ class DocumentViewModel extends ChangeNotifier {
         final file = File(result.files.single.path!);
         final extension = result.files.single.extension?.toLowerCase() ?? '';
 
-        final driveId = await _driveService.uploadFile(file);
-        if (driveId == null) {
+        final driveFile = await _driveService.uploadFile(file, (sent, total) {
+          _uploadProgress = sent / total;
+          notifyListeners();
+        });
+
+        if (driveFile == null || driveFile.id == null) {
           _setErrorMessage(
               'Falha ao fazer upload do arquivo para o Google Drive.');
           return null;
@@ -175,13 +192,17 @@ class DocumentViewModel extends ChangeNotifier {
         return Attachment(
           name: result.files.single.name,
           type: extension,
-          driveId: driveId,
+          driveId: driveFile.id!,
         );
       }
       return null;
     } catch (e) {
       _setErrorMessage('Erro ao selecionar ou processar o arquivo.');
       return null;
+    } finally {
+      _isUploading = false;
+      _uploadProgress = null;
+      notifyListeners();
     }
   }
 
@@ -222,6 +243,19 @@ class DocumentViewModel extends ChangeNotifier {
     }
   }
 
+  Future<String?> downloadAttachmentAsBase64(Attachment attachment) async {
+    if (_attachmentCache.containsKey(attachment.driveId)) {
+      return _attachmentCache[attachment.driveId];
+    }
+    final bytes = await _driveService.downloadFile(attachment.driveId);
+    if (bytes != null) {
+      final base64String = base64Encode(bytes);
+      _attachmentCache[attachment.driveId] = base64String;
+      return base64String;
+    }
+    return null;
+  }
+
   void _setLoading(bool value) {
     _isLoading = value;
     notifyListeners();
@@ -240,6 +274,7 @@ class DocumentViewModel extends ChangeNotifier {
     _documentsSubscription?.cancel();
     _documents = [];
     _isListening = false;
+    _attachmentCache.clear();
     notifyListeners();
   }
 }

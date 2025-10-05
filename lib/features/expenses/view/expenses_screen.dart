@@ -132,9 +132,13 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
           if (monthlyExpenses.isEmpty)
             SliverFillRemaining(
               hasScrollBody: false,
-              child: const EmptyStateWidget(
+              child: EmptyStateWidget(
                 icon: Icons.money_off_rounded,
                 message: 'Nenhuma despesa encontrada para este mês.',
+                buttonText: 'Adicionar Despesa',
+                onButtonPressed: () => Navigator.of(context).push(
+                  MaterialPageRoute(builder: (_) => const AddExpenseScreen()),
+                ),
               ),
             )
           else
