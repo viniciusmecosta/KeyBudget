@@ -98,6 +98,43 @@ class _AddEditRecurringExpenseScreenState
     }
   }
 
+  void _delete() async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Confirmar Exclusão'),
+        content: const Text(
+            'Tem certeza que deseja excluir esta despesa recorrente?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: const Text('Cancelar'),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.of(context).pop(true),
+            child: const Text('Excluir'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed == true && widget.expense != null) {
+      final viewModel = context.read<ExpenseViewModel>();
+      final userId = context.read<AuthViewModel>().currentUser!.id;
+      try {
+        await viewModel.deleteRecurringExpense(userId, widget.expense!.id!);
+        if (mounted) {
+          SnackbarService.showSuccess(context, 'Despesa recorrente excluída!');
+          Navigator.of(context).pop();
+        }
+      } catch (e) {
+        if (mounted) {
+          SnackbarService.showError(context, 'Erro ao excluir despesa.');
+        }
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -105,6 +142,13 @@ class _AddEditRecurringExpenseScreenState
         title: Text(widget.expense == null
             ? 'Nova Despesa Recorrente'
             : 'Editar Despesa Recorrente'),
+        actions: [
+          if (widget.expense != null)
+            IconButton(
+              icon: const Icon(Icons.delete_outline),
+              onPressed: _delete,
+            ),
+        ],
       ),
       body: Padding(
         padding: const EdgeInsets.all(AppTheme.defaultPadding),

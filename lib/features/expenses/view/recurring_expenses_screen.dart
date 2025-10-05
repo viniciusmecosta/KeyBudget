@@ -42,7 +42,7 @@ class RecurringExpensesScreen extends StatelessWidget {
             builder: (_) => const AddEditRecurringExpenseScreen(),
           ),
         ),
-        label: const Text('Adicionar'),
+        label: const Text('Nova Despesa'),
         icon: const Icon(Icons.add),
       ),
     );
