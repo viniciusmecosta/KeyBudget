@@ -77,7 +77,8 @@ class DocumentViewModel extends ChangeNotifier {
       result.add(mainVersion.copyWith(versions: otherVersions));
     });
 
-    result.sort((a, b) => a.documentName.compareTo(b.documentName));
+    result.sort((a, b) =>
+        a.documentName.toLowerCase().compareTo(b.documentName.toLowerCase()));
     return result;
   }
 

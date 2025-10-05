@@ -56,7 +56,7 @@ class DocumentListTile extends StatelessWidget {
                   radius: 24,
                   backgroundColor:
                       theme.colorScheme.primary.withAlpha((255 * 0.1).round()),
-                  child: Icon(Icons.folder_zip_outlined,
+                  child: Icon(Icons.folder_zip_rounded,
                       color: theme.colorScheme.primary, size: 24),
                 ),
                 const SizedBox(width: AppTheme.spaceM),

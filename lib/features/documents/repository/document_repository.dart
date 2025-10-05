@@ -23,15 +23,14 @@ class DocumentRepository {
 
   Stream<List<Document>> getDocumentsStream(String userId) {
     return getDocumentsCollection(userId)
-        .orderBy('issueDate', descending: true)
+        .orderBy('documentName')
         .snapshots()
         .map((snapshot) => snapshot.docs.map((doc) => doc.data()).toList());
   }
 
   Future<List<Document>> getDocumentsForUser(String userId) async {
-    final querySnapshot = await getDocumentsCollection(userId)
-        .orderBy('issueDate', descending: true)
-        .get();
+    final querySnapshot =
+        await getDocumentsCollection(userId).orderBy('documentName').get();
     return querySnapshot.docs.map((doc) => doc.data()).toList();
   }
 
