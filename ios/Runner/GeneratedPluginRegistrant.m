@@ -12,12 +12,6 @@
 @import cloud_firestore;
 #endif
 
-#if __has_include(<connectivity_plus/ConnectivityPlusPlugin.h>)
-#import <connectivity_plus/ConnectivityPlusPlugin.h>
-#else
-@import connectivity_plus;
-#endif
-
 #if __has_include(<device_info_plus/FPPDeviceInfoPlusPlugin.h>)
 #import <device_info_plus/FPPDeviceInfoPlusPlugin.h>
 #else
@@ -46,12 +40,6 @@
 #import <firebase_core/FLTFirebaseCorePlugin.h>
 #else
 @import firebase_core;
-#endif
-
-#if __has_include(<flutter_image_compress_common/ImageCompressPlugin.h>)
-#import <flutter_image_compress_common/ImageCompressPlugin.h>
-#else
-@import flutter_image_compress_common;
 #endif
 
 #if __has_include(<flutter_secure_storage_darwin/FlutterSecureStorageDarwinPlugin.h>)
@@ -118,13 +106,11 @@
 
 + (void)registerWithRegistry:(NSObject<FlutterPluginRegistry>*)registry {
   [FLTFirebaseFirestorePlugin registerWithRegistrar:[registry registrarForPlugin:@"FLTFirebaseFirestorePlugin"]];
-  [ConnectivityPlusPlugin registerWithRegistrar:[registry registrarForPlugin:@"ConnectivityPlusPlugin"]];
   [FPPDeviceInfoPlusPlugin registerWithRegistrar:[registry registrarForPlugin:@"FPPDeviceInfoPlusPlugin"]];
   [FilePickerPlugin registerWithRegistrar:[registry registrarForPlugin:@"FilePickerPlugin"]];
   [FileSaverPlugin registerWithRegistrar:[registry registrarForPlugin:@"FileSaverPlugin"]];
   [FLTFirebaseAuthPlugin registerWithRegistrar:[registry registrarForPlugin:@"FLTFirebaseAuthPlugin"]];
   [FLTFirebaseCorePlugin registerWithRegistrar:[registry registrarForPlugin:@"FLTFirebaseCorePlugin"]];
-  [ImageCompressPlugin registerWithRegistrar:[registry registrarForPlugin:@"ImageCompressPlugin"]];
   [FlutterSecureStorageDarwinPlugin registerWithRegistrar:[registry registrarForPlugin:@"FlutterSecureStorageDarwinPlugin"]];
   [FLTGoogleSignInPlugin registerWithRegistrar:[registry registrarForPlugin:@"FLTGoogleSignInPlugin"]];
   [FLTImagePickerPlugin registerWithRegistrar:[registry registrarForPlugin:@"FLTImagePickerPlugin"]];
