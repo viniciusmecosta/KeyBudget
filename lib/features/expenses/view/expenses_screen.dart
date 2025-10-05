@@ -7,6 +7,7 @@ import 'package:key_budget/features/auth/viewmodel/auth_viewmodel.dart';
 import 'package:key_budget/features/category/viewmodel/category_viewmodel.dart';
 import 'package:key_budget/features/expenses/view/add_expense_screen.dart';
 import 'package:key_budget/features/expenses/view/export_expenses_screen.dart';
+import 'package:key_budget/features/expenses/view/recurring_expenses_screen.dart';
 import 'package:key_budget/features/expenses/viewmodel/expense_viewmodel.dart';
 import 'package:provider/provider.dart';
 
@@ -175,6 +176,17 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
               borderRadius: BorderRadius.circular(AppTheme.radiusM),
             ),
             itemBuilder: (context) => [
+              const PopupMenuItem(
+                value: 'recurring',
+                child: Row(
+                  children: [
+                    Icon(Icons.replay_circle_filled_rounded),
+                    SizedBox(width: AppTheme.spaceS),
+                    Text('Despesas Recorrentes'),
+                  ],
+                ),
+              ),
+              const PopupMenuDivider(),
               PopupMenuItem(
                 value: 'import',
                 child: Row(
@@ -210,6 +222,12 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
                 Navigator.of(context).push(
                   MaterialPageRoute(
                       builder: (_) => const ExportExpensesScreen()),
+                );
+              }
+              if (value == 'recurring') {
+                Navigator.of(context).push(
+                  MaterialPageRoute(
+                      builder: (_) => const RecurringExpensesScreen()),
                 );
               }
             },

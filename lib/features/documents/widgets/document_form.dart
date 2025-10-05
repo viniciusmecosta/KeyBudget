@@ -1,12 +1,9 @@
-import 'dart:convert';
-
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:key_budget/app/config/app_theme.dart';
 import 'package:key_budget/core/models/document_model.dart';
 import 'package:key_budget/features/documents/viewmodel/document_viewmodel.dart';
 import 'package:provider/provider.dart';
-import 'package:syncfusion_flutter_pdfviewer/pdfviewer.dart';
 
 class DocumentForm extends StatefulWidget {
   final GlobalKey<FormState> formKey;
@@ -35,7 +32,7 @@ class DocumentForm extends StatefulWidget {
 class _DocumentFormState extends State<DocumentForm> {
   @override
   Widget build(BuildContext context) {
-    final viewModel = Provider.of<DocumentViewModel>(context, listen: false);
+    final viewModel = context.watch<DocumentViewModel>();
     final theme = Theme.of(context);
 
     return Form(
@@ -110,25 +107,40 @@ class _DocumentFormState extends State<DocumentForm> {
                 children: [
                   Text('Anexos', style: theme.textTheme.titleLarge),
                   const SizedBox(height: AppTheme.spaceM),
-                  ..._buildAttachments(viewModel),
+                  ..._buildAttachments(context),
+                  if (viewModel.isUploading)
+                    Padding(
+                      padding: const EdgeInsets.only(top: AppTheme.spaceS),
+                      child: Column(
+                        children: [
+                          LinearProgressIndicator(
+                            value: viewModel.uploadProgress,
+                            minHeight: 6,
+                          ),
+                          const SizedBox(height: AppTheme.spaceXS),
+                          Text(
+                            'Enviando arquivo...',
+                            style: theme.textTheme.bodySmall,
+                          )
+                        ],
+                      ),
+                    ),
                   Align(
                     alignment: Alignment.centerLeft,
                     child: TextButton.icon(
                       icon: const Icon(Icons.attach_file),
                       label: const Text('Adicionar Anexo'),
-                      onPressed: () async {
-                        final attachment = await viewModel.pickAndConvertFile();
-                        if (attachment != null) {
-                          if (widget.nameController.text.isNotEmpty) {
-                            final extension = attachment.type;
-                            attachment.name =
-                                '${widget.nameController.text}.$extension';
-                          }
-                          setState(() {
-                            widget.attachments.value.add(attachment);
-                          });
-                        }
-                      },
+                      onPressed: viewModel.isUploading
+                          ? null
+                          : () async {
+                              final attachment =
+                                  await viewModel.pickAndUploadFile();
+                              if (attachment != null) {
+                                setState(() {
+                                  widget.attachments.value.add(attachment);
+                                });
+                              }
+                            },
                     ),
                   ),
                 ],
@@ -180,8 +192,9 @@ class _DocumentFormState extends State<DocumentForm> {
     }).toList();
   }
 
-  List<Widget> _buildAttachments(DocumentViewModel viewModel) {
+  List<Widget> _buildAttachments(BuildContext context) {
     return widget.attachments.value.map((attachment) {
+      final nameController = TextEditingController(text: attachment.name);
       return Card(
         elevation: 0,
         shape: RoundedRectangleBorder(
@@ -194,41 +207,26 @@ class _DocumentFormState extends State<DocumentForm> {
           ),
         ),
         margin: const EdgeInsets.only(bottom: AppTheme.spaceM),
-        child: Padding(
-          padding: const EdgeInsets.all(AppTheme.spaceS),
-          child: Column(
-            children: [
-              ListTile(
-                title: TextFormField(
-                  initialValue: attachment.name,
-                  decoration: const InputDecoration(labelText: 'Nome do anexo'),
-                  onChanged: (value) {
-                    attachment.name = value;
-                  },
-                ),
-                trailing: IconButton(
-                  icon: const Icon(Icons.remove_circle_outline),
-                  onPressed: () {
-                    setState(() {
-                      widget.attachments.value.remove(attachment);
-                    });
-                  },
-                ),
-              ),
-              if (attachment.type.contains('pdf'))
-                SizedBox(
-                  height: 200,
-                  child: SfPdfViewer.memory(base64Decode(attachment.base64)),
-                )
-              else
-                Image.memory(
-                  base64Decode(attachment.base64),
-                  height: 150,
-                  fit: BoxFit.cover,
-                  errorBuilder: (context, error, stackTrace) =>
-                      const Icon(Icons.broken_image, size: 50),
-                ),
-            ],
+        child: ListTile(
+          leading: const Icon(Icons.insert_drive_file),
+          title: TextFormField(
+            controller: nameController,
+            decoration: const InputDecoration(
+              labelText: 'Nome do anexo',
+              border: InputBorder.none,
+              filled: false,
+            ),
+            onChanged: (value) {
+              attachment.name = value;
+            },
+          ),
+          trailing: IconButton(
+            icon: const Icon(Icons.remove_circle_outline),
+            onPressed: () {
+              setState(() {
+                widget.attachments.value.remove(attachment);
+              });
+            },
           ),
         ),
       );

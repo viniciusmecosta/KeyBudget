@@ -253,6 +253,14 @@ class AppTheme {
         },
       ),
     ),
+    segmentedButtonTheme: SegmentedButtonThemeData(
+      style: SegmentedButton.styleFrom(
+        backgroundColor: surfaceContainerHighest,
+        foregroundColor: onSurfaceVariant,
+        selectedBackgroundColor: primary,
+        selectedForegroundColor: surface,
+      ),
+    ),
     shadowColor: onSurface.withAlpha(8),
   );
 
@@ -444,6 +452,14 @@ class AppTheme {
           }
           return onDarkSurfaceVariant.withAlpha(51);
         },
+      ),
+    ),
+    segmentedButtonTheme: SegmentedButtonThemeData(
+      style: SegmentedButton.styleFrom(
+        backgroundColor: darkSurfaceContainerHighest,
+        foregroundColor: onDarkSurfaceVariant,
+        selectedBackgroundColor: primaryVariant,
+        selectedForegroundColor: onDarkSurface,
       ),
     ),
     shadowColor: Colors.black.withAlpha(26),

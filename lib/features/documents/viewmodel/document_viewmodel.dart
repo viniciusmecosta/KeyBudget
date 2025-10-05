@@ -4,21 +4,29 @@ import 'dart:io';
 
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/foundation.dart';
-import 'package:flutter_image_compress/flutter_image_compress.dart';
 import 'package:key_budget/core/models/document_model.dart';
+import 'package:key_budget/core/services/drive_service.dart';
 import 'package:key_budget/features/documents/repository/document_repository.dart';
 import 'package:open_file/open_file.dart';
+import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
-import 'package:syncfusion_flutter_pdf/pdf.dart';
 
 class DocumentViewModel extends ChangeNotifier {
   final DocumentRepository _repository = DocumentRepository();
+  final DriveService _driveService = DriveService();
   StreamSubscription? _documentsSubscription;
   bool _isListening = false;
   bool _isLoading = false;
   String? _errorMessage;
   List<Document> _documents = [];
+
+  bool _isUploading = false;
+  double? _uploadProgress;
+
+  bool get isUploading => _isUploading;
+
+  double? get uploadProgress => _uploadProgress;
 
   bool get isLoading => _isLoading;
 
@@ -37,9 +45,6 @@ class DocumentViewModel extends ChangeNotifier {
       _setLoading(false);
     }, onError: (error) {
       _setErrorMessage('Erro ao carregar os documentos.');
-      if (kDebugMode) {
-        print('Erro ao carregar documentos: $error');
-      }
       _setLoading(false);
     });
     _isListening = true;
@@ -89,42 +94,54 @@ class DocumentViewModel extends ChangeNotifier {
       return newId;
     } catch (e) {
       _setErrorMessage('Não foi possível adicionar o documento.');
-      if (kDebugMode) {
-        print('Erro ao adicionar documento: $e');
-      }
       return null;
     } finally {
       _setLoading(false);
     }
   }
 
-  Future<bool> updateDocument(String userId, Document document) async {
+  Future<bool> updateDocument(
+      String userId, Document document, Document originalDocument) async {
     _setLoading(true);
     try {
+      final originalAttachments = originalDocument.attachments;
+      final currentAttachments = document.attachments;
+      final attachmentsToDelete = originalAttachments
+          .where((att) =>
+              !currentAttachments.any((cAtt) => cAtt.driveId == att.driveId))
+          .toList();
+
+      for (final attachment in attachmentsToDelete) {
+        await deleteAttachmentFile(attachment);
+      }
+
       await _repository.updateDocument(userId, document);
       await forceRefresh(userId);
       return true;
     } catch (e) {
       _setErrorMessage('Não foi possível atualizar o documento.');
-      if (kDebugMode) {
-        print('Erro ao atualizar documento: $e');
-      }
       return false;
     } finally {
       _setLoading(false);
     }
   }
 
-  Future<bool> deleteDocument(String userId, String documentId) async {
+  Future<bool> deleteDocument(String userId, Document document) async {
     _setLoading(true);
     try {
-      await _repository.deleteDocument(userId, documentId);
+      for (final attachment in document.attachments) {
+        await deleteAttachmentFile(attachment);
+      }
+      for (final version in document.versions) {
+        for (final attachment in version.attachments) {
+          await deleteAttachmentFile(attachment);
+        }
+      }
+
+      await _repository.deleteDocument(userId, document.id!);
       return true;
     } catch (e) {
       _setErrorMessage('Não foi possível excluir o documento.');
-      if (kDebugMode) {
-        print('Erro ao excluir documento: $e');
-      }
       return false;
     } finally {
       _setLoading(false);
@@ -145,18 +162,16 @@ class DocumentViewModel extends ChangeNotifier {
       return true;
     } catch (e) {
       _setErrorMessage('Não foi possível definir como principal.');
-      if (kDebugMode) {
-        print('Erro ao definir como principal: $e');
-      }
       return false;
     } finally {
       _setLoading(false);
     }
   }
 
-  Future<Attachment?> pickAndConvertFile() async {
-    const firestoreSizeLimit = 1048576;
-    const maxFileSize = 5 * 1048576;
+  Future<Attachment?> pickAndUploadFile() async {
+    _isUploading = true;
+    _uploadProgress = 0.0;
+    notifyListeners();
 
     try {
       FilePickerResult? result = await FilePicker.platform.pickFiles(
@@ -167,77 +182,96 @@ class DocumentViewModel extends ChangeNotifier {
       if (result != null) {
         final file = File(result.files.single.path!);
         final extension = result.files.single.extension?.toLowerCase() ?? '';
-        List<int> bytes = await file.readAsBytes();
 
-        if (bytes.length > firestoreSizeLimit) {
-          if (['jpg', 'jpeg', 'png', 'webp'].contains(extension)) {
-            int quality = 85;
-            while (bytes.length > firestoreSizeLimit && quality > 10) {
-              final compressedBytes =
-                  await FlutterImageCompress.compressWithList(
-                Uint8List.fromList(bytes),
-                quality: quality,
-              );
-              bytes = compressedBytes;
-              quality -= 5;
-            }
-          } else if (extension == 'pdf') {
-            final PdfDocument document = PdfDocument(inputBytes: bytes);
-            document.compressionLevel = PdfCompressionLevel.best;
-            final compressedBytes = await document.save();
-            document.dispose();
-            bytes = compressedBytes.toList();
-          }
-        }
+        final driveFile = await _driveService.uploadFile(file, (sent, total) {
+          _uploadProgress = sent / total;
+          notifyListeners();
+        });
 
-        if (bytes.length > maxFileSize) {
+        if (driveFile == null || driveFile.id == null) {
           _setErrorMessage(
-              'O arquivo é muito grande (${(bytes.length / 1048576).toStringAsFixed(2)}MB). O tamanho máximo permitido, mesmo após a compressão, é de 5MB.');
+              'Falha ao fazer upload do arquivo para o Google Drive.');
           return null;
         }
-
-        final base64 = base64Encode(bytes);
 
         return Attachment(
           name: result.files.single.name,
           type: extension,
-          base64: base64,
+          driveId: driveFile.id!,
         );
       }
       return null;
     } catch (e) {
       _setErrorMessage('Erro ao selecionar ou processar o arquivo.');
       return null;
+    } finally {
+      _isUploading = false;
+      _uploadProgress = null;
+      notifyListeners();
+    }
+  }
+
+  Future<File> _getLocalFile(Attachment attachment) async {
+    final dir = await getApplicationDocumentsDirectory();
+    final filePath =
+        p.join(dir.path, '${attachment.driveId}-${attachment.name}');
+    return File(filePath);
+  }
+
+  Future<File?> getAttachmentFile(Attachment attachment) async {
+    try {
+      final file = await _getLocalFile(attachment);
+
+      if (await file.exists()) {
+        return file;
+      } else {
+        final bytes = await _driveService.downloadFile(attachment.driveId);
+        if (bytes == null) {
+          _setErrorMessage('Não foi possível baixar o anexo do Google Drive.');
+          return null;
+        }
+        await file.writeAsBytes(bytes);
+        return file;
+      }
+    } catch (e) {
+      _setErrorMessage('Ocorreu um erro ao obter o anexo.');
+      return null;
+    }
+  }
+
+  Future<void> deleteAttachmentFile(Attachment attachment) async {
+    try {
+      final file = await _getLocalFile(attachment);
+      if (await file.exists()) {
+        await file.delete();
+      }
+      await _driveService.deleteFile(attachment.driveId);
+    } catch (e) {
+      //
     }
   }
 
   Future<void> openFile(Attachment attachment) async {
-    try {
-      final dir = await getApplicationDocumentsDirectory();
-      final filePath = '${dir.path}/${attachment.name}';
-      final file = File(filePath);
-
-      if (!await file.exists()) {
-        final bytes = base64Decode(attachment.base64);
-        await file.writeAsBytes(bytes);
-      }
-
+    final file = await getAttachmentFile(attachment);
+    if (file != null) {
       await OpenFile.open(file.path);
-    } catch (e) {
-      _setErrorMessage('Não foi possível abrir o anexo.');
     }
   }
 
   Future<void> shareAttachment(Attachment attachment) async {
-    try {
-      final bytes = base64Decode(attachment.base64);
-      final dir = await getTemporaryDirectory();
-      final file = File('${dir.path}/${attachment.name}');
-      await file.writeAsBytes(bytes);
+    final file = await getAttachmentFile(attachment);
+    if (file != null) {
       await Share.shareXFiles([XFile(file.path)], text: attachment.name);
-    } catch (e) {
-      _setErrorMessage('Não foi possível compartilhar o anexo.');
     }
+  }
+
+  Future<String?> getAttachmentAsBase64(Attachment attachment) async {
+    final file = await getAttachmentFile(attachment);
+    if (file != null) {
+      final bytes = await file.readAsBytes();
+      return base64Encode(bytes);
+    }
+    return null;
   }
 
   void _setLoading(bool value) {
