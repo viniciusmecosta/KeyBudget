@@ -2,6 +2,21 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 
 enum RecurrenceFrequency { daily, weekly, monthly, yearly }
 
+extension RecurrenceFrequencyExtension on RecurrenceFrequency {
+  String get nameInPortuguese {
+    switch (this) {
+      case RecurrenceFrequency.daily:
+        return 'Diária';
+      case RecurrenceFrequency.weekly:
+        return 'Semanal';
+      case RecurrenceFrequency.monthly:
+        return 'Mensal';
+      case RecurrenceFrequency.yearly:
+        return 'Anual';
+    }
+  }
+}
+
 class RecurringExpense {
   final String? id;
   final double amount;

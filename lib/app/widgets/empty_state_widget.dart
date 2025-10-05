@@ -3,15 +3,15 @@ import 'package:flutter/material.dart';
 class EmptyStateWidget extends StatelessWidget {
   final IconData icon;
   final String message;
-  final String buttonText;
-  final VoidCallback onButtonPressed;
+  final String? buttonText;
+  final VoidCallback? onButtonPressed;
 
   const EmptyStateWidget({
     super.key,
     required this.icon,
     required this.message,
-    required this.buttonText,
-    required this.onButtonPressed,
+    this.buttonText,
+    this.onButtonPressed,
   });
 
   @override
@@ -39,11 +39,13 @@ class EmptyStateWidget extends StatelessWidget {
                         ?.withAlpha(200),
                   ),
             ),
-            const SizedBox(height: 24),
-            ElevatedButton(
-              onPressed: onButtonPressed,
-              child: Text(buttonText),
-            ),
+            if (buttonText != null && onButtonPressed != null) ...[
+              const SizedBox(height: 24),
+              ElevatedButton(
+                onPressed: onButtonPressed,
+                child: Text(buttonText!),
+              ),
+            ]
           ],
         ),
       ),
