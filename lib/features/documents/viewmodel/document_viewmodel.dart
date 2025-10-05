@@ -9,6 +9,7 @@ import 'package:key_budget/core/models/document_model.dart';
 import 'package:key_budget/features/documents/repository/document_repository.dart';
 import 'package:open_file/open_file.dart';
 import 'package:path_provider/path_provider.dart';
+import 'package:share_plus/share_plus.dart';
 import 'package:syncfusion_flutter_pdf/pdf.dart';
 
 class DocumentViewModel extends ChangeNotifier {
@@ -31,16 +32,16 @@ class DocumentViewModel extends ChangeNotifier {
     _documentsSubscription?.cancel();
     _documentsSubscription =
         _repository.getDocumentsStream(userId).listen((docs) async {
-          final processedDocs = await _processDocuments(docs, userId);
-          _documents = processedDocs;
-          _setLoading(false);
-        }, onError: (error) {
-          _setErrorMessage('Erro ao carregar os documentos.');
-          if (kDebugMode) {
-            print('Erro ao carregar documentos: $error');
-          }
-          _setLoading(false);
-        });
+      final processedDocs = await _processDocuments(docs, userId);
+      _documents = processedDocs;
+      _setLoading(false);
+    }, onError: (error) {
+      _setErrorMessage('Erro ao carregar os documentos.');
+      if (kDebugMode) {
+        print('Erro ao carregar documentos: $error');
+      }
+      _setLoading(false);
+    });
     _isListening = true;
   }
 
@@ -72,7 +73,7 @@ class DocumentViewModel extends ChangeNotifier {
       final mainVersion = versions.firstWhere((v) => v.isPrincipal,
           orElse: () => versions.first);
       final otherVersions =
-      versions.where((v) => v.id != mainVersion.id).toList();
+          versions.where((v) => v.id != mainVersion.id).toList();
       result.add(mainVersion.copyWith(versions: otherVersions));
     });
 
@@ -172,7 +173,7 @@ class DocumentViewModel extends ChangeNotifier {
             int quality = 85;
             while (bytes.length > firestoreSizeLimit && quality > 10) {
               final compressedBytes =
-              await FlutterImageCompress.compressWithList(
+                  await FlutterImageCompress.compressWithList(
                 Uint8List.fromList(bytes),
                 quality: quality,
               );
@@ -223,6 +224,18 @@ class DocumentViewModel extends ChangeNotifier {
       await OpenFile.open(file.path);
     } catch (e) {
       _setErrorMessage('Não foi possível abrir o anexo.');
+    }
+  }
+
+  Future<void> shareAttachment(Attachment attachment) async {
+    try {
+      final bytes = base64Decode(attachment.base64);
+      final dir = await getTemporaryDirectory();
+      final file = File('${dir.path}/${attachment.name}');
+      await file.writeAsBytes(bytes);
+      await Share.shareXFiles([XFile(file.path)], text: attachment.name);
+    } catch (e) {
+      _setErrorMessage('Não foi possível compartilhar o anexo.');
     }
   }
 
