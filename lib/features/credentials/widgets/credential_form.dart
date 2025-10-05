@@ -52,44 +52,51 @@ class CredentialForm extends StatelessWidget {
       child: ListView(
         children: [
           Center(
-            child: ImagePickerWidget(
-              initialImagePath: logoPath,
-              onImageSelected: (path) => onLogoChanged(path),
-              placeholderIcon: Icons.add_photo_alternate_outlined,
-              radius: 40,
+            child: AbsorbPointer(
+              absorbing: !isEditing,
+              child: ImagePickerWidget(
+                initialImagePath: logoPath,
+                onImageSelected: (path) => onLogoChanged(path),
+                placeholderIcon: Icons.add_photo_alternate_outlined,
+                radius: 40,
+              ),
             ),
           ),
           const SizedBox(height: 8),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              TextButton.icon(
-                onPressed: selectSavedLogo,
-                icon: const Icon(Icons.collections_bookmark_outlined, size: 18),
-                label: const Text('Escolher Salva'),
-              ),
-              if (logoPath != null) ...[
-                const SizedBox(width: 8),
+          if (isEditing)
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
                 TextButton.icon(
-                  onPressed: () => onLogoChanged(null),
-                  icon: const Icon(Icons.no_photography_outlined, size: 18),
-                  label: const Text('Remover'),
-                  style: TextButton.styleFrom(
-                      foregroundColor: theme.colorScheme.error),
+                  onPressed: selectSavedLogo,
+                  icon:
+                      const Icon(Icons.collections_bookmark_outlined, size: 18),
+                  label: const Text('Escolher Salva'),
                 ),
-              ]
-            ],
-          ),
+                if (logoPath != null) ...[
+                  const SizedBox(width: 8),
+                  TextButton.icon(
+                    onPressed: () => onLogoChanged(null),
+                    icon: const Icon(Icons.no_photography_outlined, size: 18),
+                    label: const Text('Remover'),
+                    style: TextButton.styleFrom(
+                        foregroundColor: theme.colorScheme.error),
+                  ),
+                ]
+              ],
+            ),
           const SizedBox(height: 24),
           TextFormField(
             controller: locationController,
             textCapitalization: TextCapitalization.sentences,
+            readOnly: !isEditing,
             decoration: const InputDecoration(labelText: 'Local/Serviço *'),
             validator: (value) => value!.isEmpty ? 'Campo obrigatório' : null,
           ),
           const SizedBox(height: 16),
           TextFormField(
             controller: loginController,
+            readOnly: !isEditing,
             decoration: const InputDecoration(labelText: 'Login/Usuário *'),
             validator: (value) => value!.isEmpty ? 'Campo obrigatório' : null,
           ),
@@ -97,17 +104,21 @@ class CredentialForm extends StatelessWidget {
           PasswordFormField(
             controller: passwordController,
             labelText: 'Senha *',
+            readOnly: !isEditing,
+            forceVisible: isEditing,
             validator: (value) => value!.isEmpty ? 'Campo obrigatório' : null,
           ),
           const SizedBox(height: 16),
           TextFormField(
             controller: emailController,
+            readOnly: !isEditing,
             decoration: const InputDecoration(labelText: 'Email'),
             keyboardType: TextInputType.emailAddress,
           ),
           const SizedBox(height: 16),
           TextFormField(
             controller: phoneController,
+            readOnly: !isEditing,
             inputFormatters: [phoneMaskFormatter],
             decoration: const InputDecoration(labelText: 'Número'),
             keyboardType: TextInputType.phone,
@@ -115,6 +126,7 @@ class CredentialForm extends StatelessWidget {
           const SizedBox(height: 16),
           TextFormField(
             controller: notesController,
+            readOnly: !isEditing,
             textCapitalization: TextCapitalization.sentences,
             decoration: const InputDecoration(labelText: 'Observações'),
             maxLines: 3,
