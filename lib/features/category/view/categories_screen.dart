@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
+import 'package:key_budget/app/config/app_theme.dart';
 import 'package:key_budget/core/models/expense_category_model.dart';
 import 'package:key_budget/features/auth/viewmodel/auth_viewmodel.dart';
 import 'package:key_budget/features/category/view/add_edit_category_screen.dart';
@@ -59,6 +60,7 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     return Scaffold(
       appBar: AppBar(
         title: const Text('Minhas Categorias'),
@@ -72,38 +74,63 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
             return const Center(child: Text('Nenhuma categoria cadastrada.'));
           }
           return ListView.builder(
+            padding: const EdgeInsets.all(AppTheme.defaultPadding),
             itemCount: viewModel.categories.length,
             itemBuilder: (context, index) {
               final category = viewModel.categories[index];
-              return Card(
-                margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
-                child: ListTile(
-                  leading: CircleAvatar(
-                    backgroundColor:
-                        category.color.withAlpha((255 * 0.2).round()),
-                    child: Icon(category.icon, color: category.color),
-                  ),
-                  title: Text(category.name),
-                  trailing: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      IconButton(
-                        icon: const Icon(Icons.edit),
-                        onPressed: () {
-                          Navigator.of(context).push(
-                            MaterialPageRoute(
-                              builder: (_) =>
-                                  AddEditCategoryScreen(category: category),
-                            ),
-                          );
-                        },
+              return Container(
+                margin: const EdgeInsets.only(bottom: AppTheme.spaceS),
+                child: Material(
+                  color: theme.colorScheme.surface,
+                  borderRadius: BorderRadius.circular(16),
+                  elevation: 0,
+                  child: InkWell(
+                    onTap: () {
+                      Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder: (_) =>
+                              AddEditCategoryScreen(category: category),
+                        ),
+                      );
+                    },
+                    borderRadius: BorderRadius.circular(16),
+                    child: Container(
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(
+                          color: theme.colorScheme.outline
+                              .withAlpha((255 * 0.1).round()),
+                        ),
                       ),
-                      IconButton(
-                        icon: Icon(Icons.delete,
-                            color: Theme.of(context).colorScheme.error),
-                        onPressed: () => _deleteCategory(context, category),
+                      child: Row(
+                        children: [
+                          CircleAvatar(
+                            backgroundColor:
+                                category.color.withAlpha((255 * 0.2).round()),
+                            child: Icon(category.icon, color: category.color),
+                          ),
+                          const SizedBox(width: AppTheme.spaceM),
+                          Expanded(child: Text(category.name)),
+                          IconButton(
+                            icon: const Icon(Icons.edit_outlined),
+                            onPressed: () {
+                              Navigator.of(context).push(
+                                MaterialPageRoute(
+                                  builder: (_) =>
+                                      AddEditCategoryScreen(category: category),
+                                ),
+                              );
+                            },
+                          ),
+                          IconButton(
+                            icon: Icon(Icons.delete_outline,
+                                color: Theme.of(context).colorScheme.error),
+                            onPressed: () => _deleteCategory(context, category),
+                          ),
+                        ],
                       ),
-                    ],
+                    ),
                   ),
                 ),
               );

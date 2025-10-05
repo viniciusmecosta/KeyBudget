@@ -1,14 +1,12 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:key_budget/app/config/app_theme.dart';
 import 'package:key_budget/app/widgets/empty_state_widget.dart';
-import 'package:key_budget/core/services/snackbar_service.dart';
 import 'package:key_budget/features/auth/viewmodel/auth_viewmodel.dart';
 import 'package:key_budget/features/documents/view/add_document_screen.dart';
 import 'package:key_budget/features/documents/viewmodel/document_viewmodel.dart';
 import 'package:provider/provider.dart';
 
-import 'document_detail_screen.dart';
+import '../widgets/document_list_tile.dart';
 
 class DocumentsScreen extends StatefulWidget {
   const DocumentsScreen({super.key});
@@ -50,33 +48,12 @@ class _DocumentsScreenState extends State<DocumentsScreen> {
                           builder: (_) => const AddDocumentScreen())),
                 )
               : ListView.builder(
-                  padding: const EdgeInsets.all(AppTheme.defaultPadding),
+                  padding: const EdgeInsets.fromLTRB(AppTheme.defaultPadding,
+                      AppTheme.defaultPadding, AppTheme.defaultPadding, 96.0),
                   itemCount: viewModel.documents.length,
                   itemBuilder: (context, index) {
                     final doc = viewModel.documents[index];
-                    return Card(
-                      child: ListTile(
-                        title: Text(doc.documentName),
-                        subtitle: doc.number != null ? Text(doc.number!) : null,
-                        trailing: doc.number != null
-                            ? IconButton(
-                                icon: const Icon(Icons.copy_all_outlined),
-                                tooltip: 'Copiar número',
-                                onPressed: () {
-                                  Clipboard.setData(
-                                      ClipboardData(text: doc.number!));
-                                  SnackbarService.showSuccess(
-                                      context, 'Número copiado!');
-                                },
-                              )
-                            : null,
-                        onTap: () => Navigator.of(context).push(
-                          MaterialPageRoute(
-                            builder: (_) => DocumentDetailScreen(document: doc),
-                          ),
-                        ),
-                      ),
-                    );
+                    return DocumentListTile(doc: doc);
                   },
                 ),
       floatingActionButton: FloatingActionButton.extended(
