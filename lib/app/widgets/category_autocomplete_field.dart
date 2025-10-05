@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 class CategoryAutocompleteField extends StatelessWidget {
   final String label;
   final TextEditingController controller;
-  final List<String> Function() optionsBuilder;
+  final AutocompleteOptionsBuilder<String> optionsBuilder;
   final void Function(String) onSelected;
   final int maxLines;
   final TextCapitalization textCapitalization;
@@ -22,20 +22,13 @@ class CategoryAutocompleteField extends StatelessWidget {
   Widget build(BuildContext context) {
     return Autocomplete<String>(
       initialValue: TextEditingValue(text: controller.text),
-      optionsBuilder: (TextEditingValue textEditingValue) {
-        final suggestions = optionsBuilder();
-        if (textEditingValue.text.isEmpty) {
-          return suggestions;
-        }
-        return suggestions.where((String option) {
-          return option
-              .toLowerCase()
-              .contains(textEditingValue.text.toLowerCase());
-        });
-      },
+      optionsBuilder: optionsBuilder,
       onSelected: onSelected,
       fieldViewBuilder:
           (context, fieldTextEditingController, focusNode, onFieldSubmitted) {
+        if (controller.text != fieldTextEditingController.text) {
+          fieldTextEditingController.text = controller.text;
+        }
         return TextFormField(
           controller: fieldTextEditingController,
           focusNode: focusNode,
