@@ -155,24 +155,21 @@ class _CredentialDetailScreenState extends State<CredentialDetailScreen> {
         child: Column(
           children: [
             Expanded(
-              child: AbsorbPointer(
-                absorbing: !_isEditing,
-                child: CredentialForm(
-                  formKey: _formKey,
-                  locationController: _locationController,
-                  loginController: _loginController,
-                  passwordController: _passwordController,
-                  emailController: _emailController,
-                  phoneController: _phoneController,
-                  notesController: _notesController,
-                  logoPath: _logoPath,
-                  onLogoChanged: (path) {
-                    setState(() {
-                      _logoPath = path;
-                    });
-                  },
-                  isEditing: _isEditing,
-                ),
+              child: CredentialForm(
+                formKey: _formKey,
+                locationController: _locationController,
+                loginController: _loginController,
+                passwordController: _passwordController,
+                emailController: _emailController,
+                phoneController: _phoneController,
+                notesController: _notesController,
+                logoPath: _logoPath,
+                onLogoChanged: (path) {
+                  setState(() {
+                    _logoPath = path;
+                  });
+                },
+                isEditing: _isEditing,
               ),
             ),
             if (_isEditing) ...[
