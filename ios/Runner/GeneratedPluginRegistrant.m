@@ -42,10 +42,10 @@
 @import firebase_core;
 #endif
 
-#if __has_include(<flutter_secure_storage_darwin/FlutterSecureStorageDarwinPlugin.h>)
-#import <flutter_secure_storage_darwin/FlutterSecureStorageDarwinPlugin.h>
+#if __has_include(<flutter_secure_storage/FlutterSecureStoragePlugin.h>)
+#import <flutter_secure_storage/FlutterSecureStoragePlugin.h>
 #else
-@import flutter_secure_storage_darwin;
+@import flutter_secure_storage;
 #endif
 
 #if __has_include(<google_sign_in_ios/FLTGoogleSignInPlugin.h>)
@@ -111,7 +111,7 @@
   [FileSaverPlugin registerWithRegistrar:[registry registrarForPlugin:@"FileSaverPlugin"]];
   [FLTFirebaseAuthPlugin registerWithRegistrar:[registry registrarForPlugin:@"FLTFirebaseAuthPlugin"]];
   [FLTFirebaseCorePlugin registerWithRegistrar:[registry registrarForPlugin:@"FLTFirebaseCorePlugin"]];
-  [FlutterSecureStorageDarwinPlugin registerWithRegistrar:[registry registrarForPlugin:@"FlutterSecureStorageDarwinPlugin"]];
+  [FlutterSecureStoragePlugin registerWithRegistrar:[registry registrarForPlugin:@"FlutterSecureStoragePlugin"]];
   [FLTGoogleSignInPlugin registerWithRegistrar:[registry registrarForPlugin:@"FLTGoogleSignInPlugin"]];
   [FLTImagePickerPlugin registerWithRegistrar:[registry registrarForPlugin:@"FLTImagePickerPlugin"]];
   [LocalAuthPlugin registerWithRegistrar:[registry registrarForPlugin:@"LocalAuthPlugin"]];
