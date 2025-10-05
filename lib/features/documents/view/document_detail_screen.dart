@@ -1,6 +1,7 @@
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
 import 'package:key_budget/app/config/app_theme.dart';
 import 'package:key_budget/core/models/document_model.dart';
@@ -86,8 +87,24 @@ class DocumentDetailScreen extends StatelessWidget {
           children: [
             Text('Informações Principais', style: theme.textTheme.titleLarge),
             const SizedBox(height: AppTheme.spaceL),
-            if (document.number != null)
-              _buildDetailItem('Número', document.number!, context),
+            if (document.number != null && document.number!.isNotEmpty)
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Expanded(
+                    child:
+                        _buildDetailItem('Número', document.number!, context),
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.copy_all_outlined),
+                    tooltip: 'Copiar número',
+                    onPressed: () {
+                      Clipboard.setData(ClipboardData(text: document.number!));
+                      SnackbarService.showSuccess(context, 'Número copiado!');
+                    },
+                  ),
+                ],
+              ),
             if (document.issueDate != null)
               _buildDetailItem(
                   'Data de Expedição',

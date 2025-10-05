@@ -1,7 +1,9 @@
 import 'dart:convert';
 
+import 'package:auto_size_text/auto_size_text.dart';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:key_budget/app/config/app_theme.dart';
 import 'package:key_budget/core/models/supplier_model.dart';
 import 'package:key_budget/features/suppliers/view/supplier_detail_screen.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -59,69 +61,87 @@ class SupplierListTile extends StatelessWidget {
       subtitleText = 'Sem contato';
     }
 
-    return Card(
-      margin: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
-      child: ListTile(
-        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
-        leading: CircleAvatar(
-          backgroundColor:
-              theme.colorScheme.tertiary.withAlpha((255 * 0.15).round()),
-          backgroundImage: photoPath != null && photoPath.isNotEmpty
-              ? MemoryImage(base64Decode(photoPath))
-              : null,
-          child: photoPath == null || photoPath.isEmpty
-              ? Icon(Icons.store_outlined, color: theme.colorScheme.tertiary)
-              : null,
-        ),
-        title: Text(supplier.name,
-            style: const TextStyle(fontWeight: FontWeight.w600)),
-        subtitle: Text(subtitleText),
-        trailing: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            if (supplier.phoneNumber != null &&
-                supplier.phoneNumber!.isNotEmpty)
-              SizedBox(
-                width: 40,
-                height: 40,
-                child: IconButton(
-                  icon: FaIcon(FontAwesomeIcons.whatsapp,
-                      color: Colors.green.shade700),
-                  onPressed: () =>
-                      _launchWhatsApp(context, supplier.phoneNumber!),
-                  style: IconButton.styleFrom(
-                    backgroundColor:
-                        Colors.green.withAlpha((255 * 0.1).round()),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                  ),
-                ),
+    return Container(
+      margin: const EdgeInsets.only(bottom: AppTheme.spaceS),
+      child: Material(
+        color: theme.colorScheme.surface,
+        borderRadius: BorderRadius.circular(16),
+        elevation: 0,
+        child: InkWell(
+          onTap: () {
+            Navigator.of(context).push(
+              MaterialPageRoute(
+                builder: (_) => SupplierDetailScreen(supplier: supplier),
               ),
-            if (supplier.email != null && supplier.email!.isNotEmpty)
-              SizedBox(
-                width: 40,
-                height: 40,
-                child: IconButton(
-                  icon: Icon(Icons.email_outlined, color: Colors.blue.shade600),
-                  onPressed: () => _launchEmail(context, supplier.email!),
-                  style: IconButton.styleFrom(
-                    backgroundColor: Colors.blue.withAlpha((255 * 0.1).round()),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                  ),
-                ),
+            );
+          },
+          borderRadius: BorderRadius.circular(16),
+          child: Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(
+                color: theme.colorScheme.outline.withAlpha((255 * 0.1).round()),
               ),
-          ],
-        ),
-        onTap: () {
-          Navigator.of(context).push(
-            MaterialPageRoute(
-              builder: (_) => SupplierDetailScreen(supplier: supplier),
             ),
-          );
-        },
+            child: Row(
+              children: [
+                CircleAvatar(
+                  radius: 24,
+                  backgroundColor: theme.colorScheme.tertiary
+                      .withAlpha((255 * 0.15).round()),
+                  backgroundImage: photoPath != null && photoPath.isNotEmpty
+                      ? MemoryImage(base64Decode(photoPath))
+                      : null,
+                  child: photoPath == null || photoPath.isEmpty
+                      ? Icon(Icons.store_outlined,
+                          color: theme.colorScheme.tertiary)
+                      : null,
+                ),
+                const SizedBox(width: AppTheme.spaceM),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      AutoSizeText(
+                        supplier.name,
+                        style: theme.textTheme.bodyLarge?.copyWith(
+                          fontWeight: FontWeight.w600,
+                          color: theme.colorScheme.onSurface,
+                        ),
+                        maxLines: 1,
+                        minFontSize: 14,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        subtitleText,
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          color: theme.colorScheme.onSurface
+                              .withAlpha((255 * 0.6).round()),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                if (supplier.phoneNumber != null &&
+                    supplier.phoneNumber!.isNotEmpty)
+                  IconButton(
+                    icon: FaIcon(FontAwesomeIcons.whatsapp,
+                        color: Colors.green.shade700),
+                    onPressed: () =>
+                        _launchWhatsApp(context, supplier.phoneNumber!),
+                  ),
+                if (supplier.email != null && supplier.email!.isNotEmpty)
+                  IconButton(
+                    icon:
+                        Icon(Icons.email_outlined, color: Colors.blue.shade600),
+                    onPressed: () => _launchEmail(context, supplier.email!),
+                  ),
+              ],
+            ),
+          ),
+        ),
       ),
     );
   }

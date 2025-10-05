@@ -1,3 +1,4 @@
+import 'package:auto_size_text/auto_size_text.dart';
 import 'package:flutter/material.dart' hide DateUtils;
 import 'package:intl/intl.dart';
 import 'package:key_budget/app/config/app_theme.dart';
@@ -95,7 +96,7 @@ class ActivityTile extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         mainAxisSize: MainAxisSize.min,
         children: [
-          Text(
+          AutoSizeText(
             expense.location?.isNotEmpty == true
                 ? expense.location!
                 : (category?.name ?? 'Gasto Geral'),
@@ -105,6 +106,7 @@ class ActivityTile extends StatelessWidget {
               height: 1.2,
             ),
             maxLines: 1,
+            minFontSize: 14,
             overflow: TextOverflow.ellipsis,
           ),
           const SizedBox(height: 2),
