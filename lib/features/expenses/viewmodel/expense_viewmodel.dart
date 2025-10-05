@@ -159,8 +159,6 @@ class ExpenseViewModel extends ChangeNotifier {
         return DateTime(lastDate.year, lastDate.month, lastDate.day + 7);
       case RecurrenceFrequency.monthly:
         return DateTime(lastDate.year, lastDate.month + 1, lastDate.day);
-      case RecurrenceFrequency.yearly:
-        return DateTime(lastDate.year + 1, lastDate.month, lastDate.day);
     }
   }
 

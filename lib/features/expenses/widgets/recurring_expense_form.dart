@@ -13,11 +13,11 @@ class RecurringExpenseForm extends StatelessWidget {
   final MoneyMaskedTextController amountController;
   final TextEditingController motivationController;
   final TextEditingController locationController;
-  final Function(ExpenseCategory?) onCategoryChanged;
-  final Function(RecurrenceFrequency) onFrequencyChanged;
-  final Function(DateTime) onStartDateChanged;
-  final Function(DateTime?) onEndDateChanged;
-  final Function(int) onDayOfMonthChanged;
+  final ValueNotifier<ExpenseCategory?> selectedCategory;
+  final ValueNotifier<RecurrenceFrequency> frequency;
+  final ValueNotifier<DateTime> startDate;
+  final ValueNotifier<DateTime?> endDate;
+  final ValueNotifier<int> dayOfMonth;
 
   const RecurringExpenseForm({
     super.key,
@@ -25,74 +25,181 @@ class RecurringExpenseForm extends StatelessWidget {
     required this.amountController,
     required this.motivationController,
     required this.locationController,
-    required this.onCategoryChanged,
-    required this.onFrequencyChanged,
-    required this.onStartDateChanged,
-    required this.onEndDateChanged,
-    required this.onDayOfMonthChanged,
+    required this.selectedCategory,
+    required this.frequency,
+    required this.startDate,
+    required this.endDate,
+    required this.dayOfMonth,
   });
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     return Form(
       key: formKey,
       child: ListView(
         children: [
-          TextFormField(
-            controller: amountController,
-            decoration: const InputDecoration(labelText: 'Valor'),
-            keyboardType: TextInputType.number,
+          Card(
+            child: Padding(
+              padding: const EdgeInsets.all(20),
+              child: Column(
+                children: [
+                  TextFormField(
+                    controller: amountController,
+                    decoration: const InputDecoration(labelText: 'Valor *'),
+                    keyboardType: TextInputType.number,
+                    validator: (v) => amountController.numberValue <= 0
+                        ? 'Valor inválido'
+                        : null,
+                  ),
+                  const SizedBox(height: AppTheme.spaceM),
+                  CategoryPickerField(
+                    label: 'Categoria',
+                    value: selectedCategory.value,
+                    categories: context.watch<CategoryViewModel>().categories,
+                    onChanged: (category) => selectedCategory.value = category,
+                    onManageCategories: () {},
+                    validator: (v) => v == null ? 'Campo obrigatório' : null,
+                  ),
+                  const SizedBox(height: AppTheme.spaceM),
+                  TextFormField(
+                    controller: motivationController,
+                    decoration: const InputDecoration(labelText: 'Motivação'),
+                    textCapitalization: TextCapitalization.sentences,
+                  ),
+                  const SizedBox(height: AppTheme.spaceM),
+                  TextFormField(
+                    controller: locationController,
+                    decoration: const InputDecoration(labelText: 'Local'),
+                    textCapitalization: TextCapitalization.sentences,
+                  ),
+                ],
+              ),
+            ),
           ),
-          const SizedBox(height: AppTheme.spaceM),
-          CategoryPickerField(
-            label: 'Categoria',
-            categories: context.watch<CategoryViewModel>().categories,
-            onChanged: onCategoryChanged,
-            onManageCategories: () {},
-          ),
-          const SizedBox(height: AppTheme.spaceM),
-          TextFormField(
-            controller: motivationController,
-            decoration: const InputDecoration(labelText: 'Motivação'),
-          ),
-          const SizedBox(height: AppTheme.spaceM),
-          TextFormField(
-            controller: locationController,
-            decoration: const InputDecoration(labelText: 'Local'),
-          ),
-          const SizedBox(height: AppTheme.spaceM),
-          DropdownButtonFormField<RecurrenceFrequency>(
-            value: RecurrenceFrequency.monthly,
-            items: RecurrenceFrequency.values
-                .map((e) =>
-                    DropdownMenuItem(value: e, child: Text(e.nameInPortuguese)))
-                .toList(),
-            onChanged: (val) {
-              if (val != null) onFrequencyChanged(val);
-            },
-            decoration: const InputDecoration(labelText: 'Frequência'),
-          ),
-          const SizedBox(height: AppTheme.spaceM),
-          DatePickerField(
-            label: 'Data de Início',
-            selectedDate: DateTime.now(),
-            isEditing: true,
-            onDateSelected: onStartDateChanged,
-          ),
-          const SizedBox(height: AppTheme.spaceM),
-          DropdownButtonFormField<int>(
-            value: DateTime.now().day,
-            items: List.generate(31, (i) => i + 1)
-                .map((day) =>
-                    DropdownMenuItem(value: day, child: Text(day.toString())))
-                .toList(),
-            onChanged: (val) {
-              if (val != null) onDayOfMonthChanged(val);
-            },
-            decoration: const InputDecoration(labelText: 'Dia do Mês'),
-          ),
+          const SizedBox(height: AppTheme.spaceL),
+          Card(
+            child: Padding(
+              padding: const EdgeInsets.all(20),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text('Recorrência', style: theme.textTheme.titleLarge),
+                  const SizedBox(height: AppTheme.spaceL),
+                  _buildFrequencySelector(),
+                  const SizedBox(height: AppTheme.spaceM),
+                  ValueListenableBuilder<RecurrenceFrequency>(
+                    valueListenable: frequency,
+                    builder: (context, value, child) {
+                      if (value == RecurrenceFrequency.monthly) {
+                        return _buildDayOfMonthSelector(context);
+                      }
+                      return const SizedBox.shrink();
+                    },
+                  ),
+                  const SizedBox(height: AppTheme.spaceM),
+                  DatePickerField(
+                    label: 'Data de Início',
+                    selectedDate: startDate.value,
+                    isEditing: true,
+                    onDateSelected: (date) => startDate.value = date,
+                  ),
+                ],
+              ),
+            ),
+          )
         ],
       ),
+    );
+  }
+
+  Widget _buildFrequencySelector() {
+    return ValueListenableBuilder<RecurrenceFrequency>(
+      valueListenable: frequency,
+      builder: (context, currentFrequency, child) {
+        return SizedBox(
+          width: double.infinity,
+          child: SegmentedButton<RecurrenceFrequency>(
+            segments: RecurrenceFrequency.values
+                .map((e) => ButtonSegment(
+                      value: e,
+                      label: FittedBox(
+                        fit: BoxFit.scaleDown,
+                        child: Text(e.nameInPortuguese),
+                      ),
+                    ))
+                .toList(),
+            selected: {currentFrequency},
+            onSelectionChanged: (newSelection) {
+              frequency.value = newSelection.first;
+            },
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildDayOfMonthSelector(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'Dia do Mês',
+          style: Theme.of(context).textTheme.bodySmall,
+        ),
+        const SizedBox(height: AppTheme.spaceS),
+        SizedBox(
+          height: 50,
+          child: ListView.builder(
+            scrollDirection: Axis.horizontal,
+            itemCount: 31,
+            itemBuilder: (context, index) {
+              final day = index + 1;
+              return ValueListenableBuilder(
+                valueListenable: dayOfMonth,
+                builder: (context, selectedDay, child) {
+                  final isSelected = day == selectedDay;
+                  return GestureDetector(
+                    onTap: () => dayOfMonth.value = day,
+                    child: AnimatedContainer(
+                      duration: const Duration(milliseconds: 200),
+                      width: 50,
+                      margin: const EdgeInsets.only(right: AppTheme.spaceS),
+                      decoration: BoxDecoration(
+                        color: isSelected
+                            ? Theme.of(context).colorScheme.primary
+                            : Theme.of(context).colorScheme.surface,
+                        borderRadius: BorderRadius.circular(AppTheme.radiusM),
+                        border: Border.all(
+                          color: isSelected
+                              ? Theme.of(context).colorScheme.primary
+                              : Theme.of(context)
+                                  .colorScheme
+                                  .outline
+                                  .withAlpha(50),
+                        ),
+                      ),
+                      child: Center(
+                        child: Text(
+                          day.toString(),
+                          style: TextStyle(
+                            color: isSelected
+                                ? Theme.of(context).colorScheme.onPrimary
+                                : Theme.of(context).colorScheme.onSurface,
+                            fontWeight: isSelected
+                                ? FontWeight.bold
+                                : FontWeight.normal,
+                          ),
+                        ),
+                      ),
+                    ),
+                  );
+                },
+              );
+            },
+          ),
+        ),
+      ],
     );
   }
 }

@@ -6,6 +6,7 @@ import 'package:key_budget/core/models/expense_category_model.dart';
 import 'package:key_budget/core/models/recurring_expense_model.dart';
 import 'package:key_budget/core/services/snackbar_service.dart';
 import 'package:key_budget/features/auth/viewmodel/auth_viewmodel.dart';
+import 'package:key_budget/features/category/viewmodel/category_viewmodel.dart';
 import 'package:key_budget/features/expenses/viewmodel/expense_viewmodel.dart';
 import 'package:key_budget/features/expenses/widgets/recurring_expense_form.dart';
 import 'package:provider/provider.dart';
@@ -26,16 +27,18 @@ class _AddEditRecurringExpenseScreenState
   late MoneyMaskedTextController _amountController;
   late TextEditingController _motivationController;
   late TextEditingController _locationController;
-  ExpenseCategory? _selectedCategory;
-  RecurrenceFrequency _frequency = RecurrenceFrequency.monthly;
-  DateTime _startDate = DateTime.now();
-  DateTime? _endDate;
-  int _dayOfMonth = DateTime.now().day;
+  late ValueNotifier<ExpenseCategory?> _selectedCategory;
+  late ValueNotifier<RecurrenceFrequency> _frequency;
+  late ValueNotifier<DateTime> _startDate;
+  late ValueNotifier<DateTime?> _endDate;
+  late ValueNotifier<int> _dayOfMonth;
   bool _isSaving = false;
 
   @override
   void initState() {
     super.initState();
+    final categoryViewModel = context.read<CategoryViewModel>();
+
     _amountController = MoneyMaskedTextController(
       decimalSeparator: ',',
       thousandSeparator: '.',
@@ -45,6 +48,14 @@ class _AddEditRecurringExpenseScreenState
     _motivationController =
         TextEditingController(text: widget.expense?.motivation);
     _locationController = TextEditingController(text: widget.expense?.location);
+    _selectedCategory = ValueNotifier(
+        categoryViewModel.getCategoryById(widget.expense?.categoryId));
+    _frequency =
+        ValueNotifier(widget.expense?.frequency ?? RecurrenceFrequency.monthly);
+    _startDate = ValueNotifier(widget.expense?.startDate ?? DateTime.now());
+    _endDate = ValueNotifier(widget.expense?.endDate);
+    _dayOfMonth =
+        ValueNotifier(widget.expense?.dayOfMonth ?? DateTime.now().day);
   }
 
   void _submit() async {
@@ -57,13 +68,13 @@ class _AddEditRecurringExpenseScreenState
     final recurringExpense = RecurringExpense(
       id: widget.expense?.id,
       amount: _amountController.numberValue,
-      categoryId: _selectedCategory?.id,
+      categoryId: _selectedCategory.value?.id,
       motivation: _motivationController.text,
       location: _locationController.text,
-      frequency: _frequency,
-      startDate: _startDate,
-      endDate: _endDate,
-      dayOfMonth: _dayOfMonth,
+      frequency: _frequency.value,
+      startDate: _startDate.value,
+      endDate: _endDate.value,
+      dayOfMonth: _dayOfMonth.value,
     );
 
     try {
@@ -105,12 +116,11 @@ class _AddEditRecurringExpenseScreenState
                 amountController: _amountController,
                 motivationController: _motivationController,
                 locationController: _locationController,
-                onCategoryChanged: (category) =>
-                    setState(() => _selectedCategory = category),
-                onFrequencyChanged: (freq) => setState(() => _frequency = freq),
-                onStartDateChanged: (date) => setState(() => _startDate = date),
-                onEndDateChanged: (date) => setState(() => _endDate = date),
-                onDayOfMonthChanged: (day) => setState(() => _dayOfMonth = day),
+                selectedCategory: _selectedCategory,
+                frequency: _frequency,
+                startDate: _startDate,
+                endDate: _endDate,
+                dayOfMonth: _dayOfMonth,
               ),
             ),
             const SizedBox(height: 16),
