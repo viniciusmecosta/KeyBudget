@@ -119,6 +119,11 @@ class _DocumentFormState extends State<DocumentForm> {
                       onPressed: () async {
                         final attachment = await viewModel.pickAndConvertFile();
                         if (attachment != null) {
+                          if (widget.nameController.text.isNotEmpty) {
+                            final extension = attachment.type;
+                            attachment.name =
+                                '${widget.nameController.text}.$extension';
+                          }
                           setState(() {
                             widget.attachments.value.add(attachment);
                           });
@@ -194,7 +199,13 @@ class _DocumentFormState extends State<DocumentForm> {
           child: Column(
             children: [
               ListTile(
-                title: Text(attachment.name, overflow: TextOverflow.ellipsis),
+                title: TextFormField(
+                  initialValue: attachment.name,
+                  decoration: const InputDecoration(labelText: 'Nome do anexo'),
+                  onChanged: (value) {
+                    attachment.name = value;
+                  },
+                ),
                 trailing: IconButton(
                   icon: const Icon(Icons.remove_circle_outline),
                   onPressed: () {
