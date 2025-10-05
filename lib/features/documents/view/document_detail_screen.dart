@@ -7,7 +7,6 @@ import 'package:key_budget/app/config/app_theme.dart';
 import 'package:key_budget/core/models/document_model.dart';
 import 'package:key_budget/core/services/snackbar_service.dart';
 import 'package:key_budget/features/auth/viewmodel/auth_viewmodel.dart';
-import 'package:key_budget/features/documents/view/image_viewer_screen.dart';
 import 'package:key_budget/features/documents/viewmodel/document_viewmodel.dart';
 import 'package:provider/provider.dart';
 import 'package:syncfusion_flutter_pdfviewer/pdfviewer.dart';
@@ -48,8 +47,7 @@ class DocumentDetailScreen extends StatelessWidget {
           IconButton(
             icon: const Icon(Icons.delete_outline),
             onPressed: () async {
-              final success =
-                  await viewModel.deleteDocument(userId, document.id!);
+              final success = await viewModel.deleteDocument(userId, document);
               if (!context.mounted) return;
               if (success) {
                 SnackbarService.showSuccess(
@@ -220,9 +218,9 @@ class DocumentDetailScreen extends StatelessWidget {
   }
 
   Widget _buildAttachmentItem(Attachment attachment, BuildContext context) {
-    final viewModel = Provider.of<DocumentViewModel>(context, listen: false);
     final theme = Theme.of(context);
     final isPdf = attachment.type.contains('pdf');
+
     return Card(
       elevation: 0,
       clipBehavior: Clip.antiAlias,
@@ -241,42 +239,77 @@ class DocumentDetailScreen extends StatelessWidget {
               icon: const Icon(Icons.share_outlined),
               tooltip: 'Compartilhar',
               onPressed: () async {
+                final viewModel =
+                    Provider.of<DocumentViewModel>(context, listen: false);
                 await viewModel.shareAttachment(attachment);
-                if (!context.mounted) return;
-                if (viewModel.errorMessage != null) {
+                if (context.mounted && viewModel.errorMessage != null) {
                   SnackbarService.showError(context, viewModel.errorMessage!);
                 }
               },
             ),
           ),
-          InkWell(
+          GestureDetector(
             onTap: () async {
+              final viewModel =
+                  Provider.of<DocumentViewModel>(context, listen: false);
+
               if (isPdf) {
-                await viewModel.openFile(attachment);
-                if (!context.mounted) return;
-                if (viewModel.errorMessage != null) {
-                  SnackbarService.showError(context, viewModel.errorMessage!);
+                final file = await viewModel.getAttachmentFile(attachment);
+                if (file != null && context.mounted) {
+                  await viewModel.openFile(attachment);
+                  if (viewModel.errorMessage != null) {
+                    SnackbarService.showError(
+                      context,
+                      viewModel.errorMessage ?? 'Não foi possível abrir o PDF.',
+                    );
+                  }
                 }
               } else {
-                Navigator.of(context).push(MaterialPageRoute(
-                  builder: (_) => ImageViewerScreen(
-                    imageBase64: attachment.base64,
-                    imageName: attachment.name,
-                  ),
-                ));
+                await viewModel.openFile(attachment);
+                if (context.mounted && viewModel.errorMessage != null) {
+                  SnackbarService.showError(
+                    context,
+                    viewModel.errorMessage ??
+                        'Não foi possível abrir a imagem.',
+                  );
+                }
               }
             },
-            child: isPdf
-                ? SizedBox(
-                    height: 200,
-                    child: AbsorbPointer(
-                      child: SfPdfViewer.memory(
-                        base64Decode(attachment.base64),
-                        enableDoubleTapZooming: false,
-                      ),
-                    ),
-                  )
-                : Image.memory(base64Decode(attachment.base64)),
+            child: Container(
+              height: 200,
+              color: theme.colorScheme.surfaceContainerHighest,
+              child: FutureBuilder<String?>(
+                future: Provider.of<DocumentViewModel>(context, listen: false)
+                    .getAttachmentAsBase64(attachment),
+                builder: (context, snapshot) {
+                  if (snapshot.connectionState == ConnectionState.waiting) {
+                    return const Center(child: CircularProgressIndicator());
+                  }
+                  if (snapshot.hasError || !snapshot.hasData) {
+                    return const Center(child: Icon(Icons.error_outline));
+                  }
+                  final base64 = snapshot.data!;
+                  return isPdf
+                      ? Stack(
+                          children: [
+                            SfPdfViewer.memory(
+                              base64Decode(base64),
+                              enableDoubleTapZooming: false,
+                              interactionMode: PdfInteractionMode.pan,
+                            ),
+                            Container(
+                              color: Colors.transparent,
+                            ),
+                          ],
+                        )
+                      : Image.memory(
+                          base64Decode(base64),
+                          fit: BoxFit.cover,
+                          width: double.infinity,
+                        );
+                },
+              ),
+            ),
           ),
         ],
       ),
