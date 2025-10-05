@@ -55,7 +55,7 @@ class _DocumentsScreenState extends State<DocumentsScreen> {
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () => Navigator.of(context)
             .push(MaterialPageRoute(builder: (_) => const AddDocumentScreen())),
-        label: const Text('Adicionar Documento'),
+        label: const Text('Novo Documento'),
         icon: const Icon(Icons.add),
       ),
     );

@@ -75,8 +75,8 @@ class RecurringExpenseListTile extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       AutoSizeText(
-                        expense.motivation ??
-                            expense.location ??
+                        expense.location ??
+                            expense.motivation ??
                             category?.name ??
                             'Despesa Recorrente',
                         style: textTheme.bodyLarge?.copyWith(
