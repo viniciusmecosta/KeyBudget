@@ -8,6 +8,7 @@ import 'package:key_budget/core/models/document_model.dart';
 import 'package:key_budget/core/services/snackbar_service.dart';
 import 'package:key_budget/features/auth/viewmodel/auth_viewmodel.dart';
 import 'package:key_budget/features/documents/view/image_viewer_screen.dart';
+import 'package:key_budget/features/documents/view/pdf_viewer_screen.dart';
 import 'package:key_budget/features/documents/viewmodel/document_viewmodel.dart';
 import 'package:provider/provider.dart';
 import 'package:syncfusion_flutter_pdfviewer/pdfviewer.dart';
@@ -251,12 +252,17 @@ class DocumentDetailScreen extends StatelessWidget {
           ),
           InkWell(
             onTap: () async {
-              if (isPdf) {
-                await viewModel.openFile(attachment);
-              } else {
-                final base64 =
-                    await viewModel.downloadAttachmentAsBase64(attachment);
-                if (base64 != null && context.mounted) {
+              final base64 =
+                  await viewModel.downloadAttachmentAsBase64(attachment);
+              if (base64 != null && context.mounted) {
+                if (isPdf) {
+                  Navigator.of(context).push(MaterialPageRoute(
+                    builder: (_) => PdfViewerScreen(
+                      pdfBase64: base64,
+                      pdfName: attachment.name,
+                    ),
+                  ));
+                } else {
                   Navigator.of(context).push(MaterialPageRoute(
                     builder: (_) => ImageViewerScreen(
                       imageBase64: base64,
