@@ -120,7 +120,7 @@ class ExpenseViewModel extends ChangeNotifier {
   }
 
   List<String> getUniqueLocationsForCategory(String? categoryId, String query) {
-    if (categoryId == null) return [];
+    if (categoryId == null || query.isEmpty) return [];
 
     final locations = _allExpenses.where((exp) =>
         exp.categoryId == categoryId &&
@@ -134,8 +134,13 @@ class ExpenseViewModel extends ChangeNotifier {
       frequencyMap[exp.location!] = (frequencyMap[exp.location!] ?? 0) + 1;
     }
 
-    final filteredLocations = frequencyMap.entries.where(
-        (entry) => entry.key.toLowerCase().contains(query.toLowerCase()));
+    final queryLower = query.toLowerCase();
+    final filteredLocations = frequencyMap.entries.where((entry) {
+      return entry.key
+          .toLowerCase()
+          .split(' ')
+          .any((word) => word.startsWith(queryLower));
+    });
 
     final sortedLocations = filteredLocations.toList()
       ..sort((a, b) => b.value.compareTo(a.value));
@@ -145,7 +150,7 @@ class ExpenseViewModel extends ChangeNotifier {
 
   List<String> getUniqueMotivationsForCategory(
       String? categoryId, String query) {
-    if (categoryId == null) return [];
+    if (categoryId == null || query.isEmpty) return [];
 
     final motivations = _allExpenses.where((exp) =>
         exp.categoryId == categoryId &&
@@ -159,8 +164,13 @@ class ExpenseViewModel extends ChangeNotifier {
       frequencyMap[exp.motivation!] = (frequencyMap[exp.motivation!] ?? 0) + 1;
     }
 
-    final filteredMotivations = frequencyMap.entries.where(
-        (entry) => entry.key.toLowerCase().contains(query.toLowerCase()));
+    final queryLower = query.toLowerCase();
+    final filteredMotivations = frequencyMap.entries.where((entry) {
+      return entry.key
+          .toLowerCase()
+          .split(' ')
+          .any((word) => word.startsWith(queryLower));
+    });
 
     final sortedMotivations = filteredMotivations.toList()
       ..sort((a, b) => b.value.compareTo(a.value));
