@@ -2,22 +2,30 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:key_budget/core/models/expense_model.dart';
+import 'package:key_budget/core/models/recurring_expense_model.dart';
 import 'package:key_budget/core/services/csv_service.dart';
 import 'package:key_budget/core/services/data_import_service.dart';
 import 'package:key_budget/features/expenses/repository/expense_repository.dart';
+import 'package:key_budget/features/expenses/repository/recurring_expense_repository.dart';
 
 class ExpenseViewModel extends ChangeNotifier {
   final ExpenseRepository _repository = ExpenseRepository();
+  final RecurringExpenseRepository _recurringRepository =
+      RecurringExpenseRepository();
   final CsvService _csvService = CsvService();
   final DataImportService _dataImportService = DataImportService();
 
   List<Expense> _allExpenses = [];
+  List<RecurringExpense> _recurringExpenses = [];
   bool _isLoading = true;
   List<String> _selectedCategoryIds = [];
   StreamSubscription? _expensesSubscription;
+  StreamSubscription? _recurringExpensesSubscription;
   bool _isListening = false;
 
   List<Expense> get allExpenses => _allExpenses;
+
+  List<RecurringExpense> get recurringExpenses => _recurringExpenses;
 
   bool get isLoading => _isLoading;
 
@@ -25,7 +33,6 @@ class ExpenseViewModel extends ChangeNotifier {
 
   List<Expense> get filteredExpenses {
     List<Expense> filtered = List.from(_allExpenses);
-
     if (_selectedCategoryIds.isNotEmpty) {
       filtered = filtered
           .where((exp) =>
@@ -33,7 +40,6 @@ class ExpenseViewModel extends ChangeNotifier {
               _selectedCategoryIds.contains(exp.categoryId))
           .toList();
     }
-
     return filtered;
   }
 
@@ -53,11 +59,9 @@ class ExpenseViewModel extends ChangeNotifier {
   }
 
   void listenToExpenses(String userId) {
-    if (_isListening) {
-      return;
-    }
-
+    if (_isListening) return;
     if (!_isLoading) _setLoading(true);
+
     _expensesSubscription?.cancel();
     _expensesSubscription =
         _repository.getExpensesStreamForUser(userId).listen((expenses) {
@@ -65,6 +69,16 @@ class ExpenseViewModel extends ChangeNotifier {
       if (_isLoading) _setLoading(false);
       notifyListeners();
     });
+
+    _recurringExpensesSubscription?.cancel();
+    _recurringExpensesSubscription = _recurringRepository
+        .getRecurringExpensesStream(userId)
+        .listen((recurring) {
+      _recurringExpenses = recurring;
+      checkAndCreateRecurringInstances(userId);
+      notifyListeners();
+    });
+
     _isListening = true;
   }
 
@@ -78,6 +92,76 @@ class ExpenseViewModel extends ChangeNotifier {
 
   Future<void> deleteExpense(String userId, String expenseId) async {
     await _repository.deleteExpense(userId, expenseId);
+  }
+
+  Future<void> addRecurringExpense(
+      String userId, RecurringExpense expense) async {
+    await _recurringRepository.addRecurringExpense(userId, expense);
+  }
+
+  Future<void> updateRecurringExpense(
+      String userId, RecurringExpense expense) async {
+    await _recurringRepository.updateRecurringExpense(userId, expense);
+  }
+
+  Future<void> deleteRecurringExpense(String userId, String expenseId) async {
+    await _recurringRepository.deleteRecurringExpense(userId, expenseId);
+  }
+
+  Future<void> checkAndCreateRecurringInstances(String userId) async {
+    final now = DateTime.now();
+    for (final recurring in _recurringExpenses) {
+      DateTime nextInstanceDate = _calculateNextInstanceDate(recurring);
+
+      while (nextInstanceDate.isBefore(now) ||
+          nextInstanceDate.isAtSameMomentAs(now)) {
+        if (recurring.endDate != null &&
+            nextInstanceDate.isAfter(recurring.endDate!)) {
+          break;
+        }
+
+        final newExpense = Expense(
+          amount: recurring.amount,
+          date: nextInstanceDate,
+          categoryId: recurring.categoryId,
+          motivation: recurring.motivation,
+          location: recurring.location,
+        );
+
+        await addExpense(userId, newExpense);
+        final updatedRecurring = RecurringExpense(
+          id: recurring.id,
+          amount: recurring.amount,
+          categoryId: recurring.categoryId,
+          motivation: recurring.motivation,
+          location: recurring.location,
+          frequency: recurring.frequency,
+          startDate: recurring.startDate,
+          endDate: recurring.endDate,
+          dayOfWeek: recurring.dayOfWeek,
+          dayOfMonth: recurring.dayOfMonth,
+          monthOfYear: recurring.monthOfYear,
+          lastInstanceDate: nextInstanceDate,
+        );
+        await updateRecurringExpense(userId, updatedRecurring);
+
+        nextInstanceDate = _calculateNextInstanceDate(updatedRecurring);
+      }
+    }
+  }
+
+  DateTime _calculateNextInstanceDate(RecurringExpense recurring) {
+    DateTime lastDate = recurring.lastInstanceDate ?? recurring.startDate;
+    switch (recurring.frequency) {
+      case RecurrenceFrequency.daily:
+        return DateTime(lastDate.year, lastDate.month, lastDate.day + 1);
+      case RecurrenceFrequency.weekly:
+        return DateTime(lastDate.year, lastDate.month, lastDate.day + 7);
+      case RecurrenceFrequency.monthly:
+        return DateTime(lastDate.year, lastDate.month + 1, lastDate.day);
+      case RecurrenceFrequency.yearly:
+        return DateTime(lastDate.year + 1, lastDate.month, lastDate.day);
+    }
   }
 
   Future<bool> exportExpensesToCsv(DateTime? start, DateTime? end) async {
@@ -180,7 +264,9 @@ class ExpenseViewModel extends ChangeNotifier {
 
   void clearData() {
     _expensesSubscription?.cancel();
+    _recurringExpensesSubscription?.cancel();
     _allExpenses = [];
+    _recurringExpenses = [];
     _selectedCategoryIds = [];
     _isListening = false;
     notifyListeners();
@@ -189,6 +275,7 @@ class ExpenseViewModel extends ChangeNotifier {
   @override
   void dispose() {
     _expensesSubscription?.cancel();
+    _recurringExpensesSubscription?.cancel();
     super.dispose();
   }
 }
