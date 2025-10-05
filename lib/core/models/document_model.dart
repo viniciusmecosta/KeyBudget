@@ -89,19 +89,19 @@ class Document {
 class Attachment {
   String name;
   final String type;
-  final String base64;
+  final String driveId;
 
   Attachment({
     required this.name,
     required this.type,
-    required this.base64,
+    required this.driveId,
   });
 
   Map<String, dynamic> toMap() {
     return {
       'name': name,
       'type': type,
-      'base64': base64,
+      'driveId': driveId,
     };
   }
 
@@ -109,7 +109,7 @@ class Attachment {
     return Attachment(
       name: map['name'] ?? '',
       type: map['type'] ?? '',
-      base64: map['base64'] ?? '',
+      driveId: map['driveId'] ?? '',
     );
   }
 }

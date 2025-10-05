@@ -10,7 +10,6 @@ import 'package:key_budget/features/auth/viewmodel/auth_viewmodel.dart';
 import 'package:key_budget/features/documents/view/image_viewer_screen.dart';
 import 'package:key_budget/features/documents/viewmodel/document_viewmodel.dart';
 import 'package:provider/provider.dart';
-import 'package:syncfusion_flutter_pdfviewer/pdfviewer.dart';
 
 import 'add_document_screen.dart';
 import 'edit_document_screen.dart';
@@ -221,64 +220,25 @@ class DocumentDetailScreen extends StatelessWidget {
 
   Widget _buildAttachmentItem(Attachment attachment, BuildContext context) {
     final viewModel = Provider.of<DocumentViewModel>(context, listen: false);
-    final theme = Theme.of(context);
-    final isPdf = attachment.type.contains('pdf');
-    return Card(
-      elevation: 0,
-      clipBehavior: Clip.antiAlias,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(AppTheme.radiusM),
-        side: BorderSide(
-          color: theme.colorScheme.outline.withAlpha((255 * 0.2).round()),
-        ),
-      ),
-      margin: const EdgeInsets.only(bottom: AppTheme.spaceM),
-      child: Column(
-        children: [
-          ListTile(
-            title: Text(attachment.name, overflow: TextOverflow.ellipsis),
-            trailing: IconButton(
-              icon: const Icon(Icons.share_outlined),
-              tooltip: 'Compartilhar',
-              onPressed: () async {
-                await viewModel.shareAttachment(attachment);
-                if (!context.mounted) return;
-                if (viewModel.errorMessage != null) {
-                  SnackbarService.showError(context, viewModel.errorMessage!);
-                }
-              },
-            ),
-          ),
-          InkWell(
-            onTap: () async {
-              if (isPdf) {
-                await viewModel.openFile(attachment);
-                if (!context.mounted) return;
-                if (viewModel.errorMessage != null) {
-                  SnackbarService.showError(context, viewModel.errorMessage!);
-                }
-              } else {
-                Navigator.of(context).push(MaterialPageRoute(
-                  builder: (_) => ImageViewerScreen(
-                    imageBase64: attachment.base64,
-                    imageName: attachment.name,
-                  ),
-                ));
-              }
-            },
-            child: isPdf
-                ? SizedBox(
-                    height: 200,
-                    child: AbsorbPointer(
-                      child: SfPdfViewer.memory(
-                        base64Decode(attachment.base64),
-                        enableDoubleTapZooming: false,
-                      ),
-                    ),
-                  )
-                : Image.memory(base64Decode(attachment.base64)),
-          ),
-        ],
+    return ListTile(
+      leading: const Icon(Icons.insert_drive_file),
+      title: Text(attachment.name),
+      onTap: () async {
+        await viewModel.openFile(attachment);
+        if (!context.mounted) return;
+        if (viewModel.errorMessage != null) {
+          SnackbarService.showError(context, viewModel.errorMessage!);
+        }
+      },
+      trailing: IconButton(
+        icon: const Icon(Icons.share),
+        onPressed: () async {
+          await viewModel.shareAttachment(attachment);
+          if (!context.mounted) return;
+          if (viewModel.errorMessage != null) {
+            SnackbarService.showError(context, viewModel.errorMessage!);
+          }
+        },
       ),
     );
   }
