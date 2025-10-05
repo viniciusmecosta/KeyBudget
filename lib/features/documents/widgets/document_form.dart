@@ -1,12 +1,9 @@
-import 'dart:convert';
-
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:key_budget/app/config/app_theme.dart';
 import 'package:key_budget/core/models/document_model.dart';
 import 'package:key_budget/features/documents/viewmodel/document_viewmodel.dart';
 import 'package:provider/provider.dart';
-import 'package:syncfusion_flutter_pdfviewer/pdfviewer.dart';
 
 class DocumentForm extends StatefulWidget {
   final GlobalKey<FormState> formKey;
@@ -117,13 +114,8 @@ class _DocumentFormState extends State<DocumentForm> {
                       icon: const Icon(Icons.attach_file),
                       label: const Text('Adicionar Anexo'),
                       onPressed: () async {
-                        final attachment = await viewModel.pickAndConvertFile();
+                        final attachment = await viewModel.pickAndUploadFile();
                         if (attachment != null) {
-                          if (widget.nameController.text.isNotEmpty) {
-                            final extension = attachment.type;
-                            attachment.name =
-                                '${widget.nameController.text}.$extension';
-                          }
                           setState(() {
                             widget.attachments.value.add(attachment);
                           });
@@ -199,13 +191,8 @@ class _DocumentFormState extends State<DocumentForm> {
           child: Column(
             children: [
               ListTile(
-                title: TextFormField(
-                  initialValue: attachment.name,
-                  decoration: const InputDecoration(labelText: 'Nome do anexo'),
-                  onChanged: (value) {
-                    attachment.name = value;
-                  },
-                ),
+                leading: const Icon(Icons.insert_drive_file),
+                title: Text(attachment.name),
                 trailing: IconButton(
                   icon: const Icon(Icons.remove_circle_outline),
                   onPressed: () {
@@ -215,19 +202,6 @@ class _DocumentFormState extends State<DocumentForm> {
                   },
                 ),
               ),
-              if (attachment.type.contains('pdf'))
-                SizedBox(
-                  height: 200,
-                  child: SfPdfViewer.memory(base64Decode(attachment.base64)),
-                )
-              else
-                Image.memory(
-                  base64Decode(attachment.base64),
-                  height: 150,
-                  fit: BoxFit.cover,
-                  errorBuilder: (context, error, stackTrace) =>
-                      const Icon(Icons.broken_image, size: 50),
-                ),
             ],
           ),
         ),

@@ -87,22 +87,56 @@ class RecurringExpenseForm extends StatelessWidget {
                   Text('Recorrência', style: theme.textTheme.titleLarge),
                   const SizedBox(height: AppTheme.spaceL),
                   _buildFrequencySelector(),
-                  const SizedBox(height: AppTheme.spaceM),
                   ValueListenableBuilder<RecurrenceFrequency>(
                     valueListenable: frequency,
                     builder: (context, value, child) {
-                      if (value == RecurrenceFrequency.monthly) {
-                        return _buildDayOfMonthSelector(context);
-                      }
-                      return const SizedBox.shrink();
+                      return AnimatedSize(
+                        duration: const Duration(milliseconds: 300),
+                        curve: Curves.easeInOut,
+                        alignment: Alignment.topCenter,
+                        child: value == RecurrenceFrequency.monthly
+                            ? Column(
+                                children: [
+                                  const SizedBox(height: AppTheme.spaceL),
+                                  _buildDayOfMonthSelector(context),
+                                ],
+                              )
+                            : const SizedBox.shrink(),
+                      );
                     },
                   ),
-                  const SizedBox(height: AppTheme.spaceM),
+                  const SizedBox(height: AppTheme.spaceL),
                   DatePickerField(
                     label: 'Data de Início',
                     selectedDate: startDate.value,
                     isEditing: true,
                     onDateSelected: (date) => startDate.value = date,
+                  ),
+                  const SizedBox(height: AppTheme.spaceM),
+                  _buildEndDateToggle(context),
+                  ValueListenableBuilder<DateTime?>(
+                    valueListenable: endDate,
+                    builder: (context, date, child) {
+                      return AnimatedSize(
+                        duration: const Duration(milliseconds: 300),
+                        curve: Curves.easeInOut,
+                        alignment: Alignment.topCenter,
+                        child: date != null
+                            ? Column(
+                                children: [
+                                  const SizedBox(height: AppTheme.spaceM),
+                                  DatePickerField(
+                                    label: 'Data de Término',
+                                    selectedDate: date,
+                                    isEditing: true,
+                                    onDateSelected: (newDate) =>
+                                        endDate.value = newDate,
+                                  ),
+                                ],
+                              )
+                            : const SizedBox.shrink(),
+                      );
+                    },
                   ),
                 ],
               ),
@@ -133,6 +167,9 @@ class RecurringExpenseForm extends StatelessWidget {
             onSelectionChanged: (newSelection) {
               frequency.value = newSelection.first;
             },
+            style: ButtonStyle(
+              visualDensity: VisualDensity.comfortable,
+            ),
           ),
         );
       },
@@ -145,9 +182,11 @@ class RecurringExpenseForm extends StatelessWidget {
       children: [
         Text(
           'Dia do Mês',
-          style: Theme.of(context).textTheme.bodySmall,
+          style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                fontWeight: FontWeight.w600,
+              ),
         ),
-        const SizedBox(height: AppTheme.spaceS),
+        const SizedBox(height: AppTheme.spaceM),
         SizedBox(
           height: 50,
           child: ListView.builder(
@@ -163,12 +202,15 @@ class RecurringExpenseForm extends StatelessWidget {
                     onTap: () => dayOfMonth.value = day,
                     child: AnimatedContainer(
                       duration: const Duration(milliseconds: 200),
+                      curve: Curves.easeInOut,
                       width: 50,
                       margin: const EdgeInsets.only(right: AppTheme.spaceS),
                       decoration: BoxDecoration(
                         color: isSelected
                             ? Theme.of(context).colorScheme.primary
-                            : Theme.of(context).colorScheme.surface,
+                            : Theme.of(context)
+                                .colorScheme
+                                .surfaceContainerHighest,
                         borderRadius: BorderRadius.circular(AppTheme.radiusM),
                         border: Border.all(
                           color: isSelected
@@ -177,6 +219,7 @@ class RecurringExpenseForm extends StatelessWidget {
                                   .colorScheme
                                   .outline
                                   .withAlpha(50),
+                          width: isSelected ? 2 : 1,
                         ),
                       ),
                       child: Center(
@@ -189,6 +232,7 @@ class RecurringExpenseForm extends StatelessWidget {
                             fontWeight: isSelected
                                 ? FontWeight.bold
                                 : FontWeight.normal,
+                            fontSize: 16,
                           ),
                         ),
                       ),
@@ -200,6 +244,41 @@ class RecurringExpenseForm extends StatelessWidget {
           ),
         ),
       ],
+    );
+  }
+
+  Widget _buildEndDateToggle(BuildContext context) {
+    return ValueListenableBuilder<DateTime?>(
+      valueListenable: endDate,
+      builder: (context, date, child) {
+        return Row(
+          children: [
+            Expanded(
+              child: Text(
+                'Data de Término',
+                style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                      fontWeight: FontWeight.w500,
+                    ),
+              ),
+            ),
+            Text(
+              'Opcional',
+              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  ),
+            ),
+            const SizedBox(width: AppTheme.spaceS),
+            Switch(
+              value: date != null,
+              onChanged: (value) {
+                endDate.value = value
+                    ? startDate.value.add(const Duration(days: 365))
+                    : null;
+              },
+            ),
+          ],
+        );
+      },
     );
   }
 }

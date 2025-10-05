@@ -1,19 +1,19 @@
 import 'dart:async';
-import 'dart:convert';
 import 'dart:io';
 
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/foundation.dart';
-import 'package:flutter_image_compress/flutter_image_compress.dart';
 import 'package:key_budget/core/models/document_model.dart';
 import 'package:key_budget/features/documents/repository/document_repository.dart';
 import 'package:open_file/open_file.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
-import 'package:syncfusion_flutter_pdf/pdf.dart';
+
+import '../../../core/services/drive_services.dart';
 
 class DocumentViewModel extends ChangeNotifier {
   final DocumentRepository _repository = DocumentRepository();
+  final DriveService _driveService = DriveService();
   StreamSubscription? _documentsSubscription;
   bool _isListening = false;
   bool _isLoading = false;
@@ -154,10 +154,7 @@ class DocumentViewModel extends ChangeNotifier {
     }
   }
 
-  Future<Attachment?> pickAndConvertFile() async {
-    const firestoreSizeLimit = 1048576;
-    const maxFileSize = 5 * 1048576;
-
+  Future<Attachment?> pickAndUploadFile() async {
     try {
       FilePickerResult? result = await FilePicker.platform.pickFiles(
         type: FileType.custom,
@@ -167,41 +164,18 @@ class DocumentViewModel extends ChangeNotifier {
       if (result != null) {
         final file = File(result.files.single.path!);
         final extension = result.files.single.extension?.toLowerCase() ?? '';
-        List<int> bytes = await file.readAsBytes();
 
-        if (bytes.length > firestoreSizeLimit) {
-          if (['jpg', 'jpeg', 'png', 'webp'].contains(extension)) {
-            int quality = 85;
-            while (bytes.length > firestoreSizeLimit && quality > 10) {
-              final compressedBytes =
-                  await FlutterImageCompress.compressWithList(
-                Uint8List.fromList(bytes),
-                quality: quality,
-              );
-              bytes = compressedBytes;
-              quality -= 5;
-            }
-          } else if (extension == 'pdf') {
-            final PdfDocument document = PdfDocument(inputBytes: bytes);
-            document.compressionLevel = PdfCompressionLevel.best;
-            final compressedBytes = await document.save();
-            document.dispose();
-            bytes = compressedBytes.toList();
-          }
-        }
-
-        if (bytes.length > maxFileSize) {
+        final driveId = await _driveService.uploadFile(file);
+        if (driveId == null) {
           _setErrorMessage(
-              'O arquivo é muito grande (${(bytes.length / 1048576).toStringAsFixed(2)}MB). O tamanho máximo permitido, mesmo após a compressão, é de 5MB.');
+              'Falha ao fazer upload do arquivo para o Google Drive.');
           return null;
         }
-
-        final base64 = base64Encode(bytes);
 
         return Attachment(
           name: result.files.single.name,
           type: extension,
-          base64: base64,
+          driveId: driveId,
         );
       }
       return null;
@@ -218,7 +192,11 @@ class DocumentViewModel extends ChangeNotifier {
       final file = File(filePath);
 
       if (!await file.exists()) {
-        final bytes = base64Decode(attachment.base64);
+        final bytes = await _driveService.downloadFile(attachment.driveId);
+        if (bytes == null) {
+          _setErrorMessage('Não foi possível baixar o anexo do Google Drive.');
+          return;
+        }
         await file.writeAsBytes(bytes);
       }
 
@@ -230,7 +208,11 @@ class DocumentViewModel extends ChangeNotifier {
 
   Future<void> shareAttachment(Attachment attachment) async {
     try {
-      final bytes = base64Decode(attachment.base64);
+      final bytes = await _driveService.downloadFile(attachment.driveId);
+      if (bytes == null) {
+        _setErrorMessage('Não foi possível baixar o anexo para compartilhar.');
+        return;
+      }
       final dir = await getTemporaryDirectory();
       final file = File('${dir.path}/${attachment.name}');
       await file.writeAsBytes(bytes);
