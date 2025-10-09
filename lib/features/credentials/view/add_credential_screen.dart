@@ -69,7 +69,7 @@ class _AddCredentialScreenState extends State<AddCredentialScreen> {
     setState(() => _isSaving = true);
 
     final credentialViewModel =
-        Provider.of<CredentialViewModel>(context, listen: false);
+    Provider.of<CredentialViewModel>(context, listen: false);
     final authViewModel = Provider.of<AuthViewModel>(context, listen: false);
     final userId = authViewModel.currentUser!.id;
     final phoneMaskFormatter = MaskTextInputFormatter(mask: '(##) #####-####');
@@ -116,6 +116,7 @@ class _AddCredentialScreenState extends State<AddCredentialScreen> {
                     _logoPath = path;
                   });
                 },
+                isEditing: true,
               ),
             ),
             const SizedBox(height: 16),
@@ -123,11 +124,11 @@ class _AddCredentialScreenState extends State<AddCredentialScreen> {
               onPressed: _isSaving ? null : _submit,
               child: _isSaving
                   ? SizedBox(
-                      height: 24,
-                      width: 24,
-                      child: CircularProgressIndicator(
-                          color: Theme.of(context).colorScheme.onPrimary,
-                          strokeWidth: 2.0))
+                  height: 24,
+                  width: 24,
+                  child: CircularProgressIndicator(
+                      color: Theme.of(context).colorScheme.onPrimary,
+                      strokeWidth: 2.0))
                   : const Text('Salvar Credencial'),
             ),
           ],
