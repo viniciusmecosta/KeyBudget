@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:key_budget/app/config/app_theme.dart';
 import 'package:key_budget/core/models/supplier_model.dart';
+import 'package:key_budget/core/services/snackbar_service.dart';
 import 'package:key_budget/features/auth/viewmodel/auth_viewmodel.dart';
 import 'package:key_budget/features/suppliers/viewmodel/supplier_viewmodel.dart';
 import 'package:mask_text_input_formatter/mask_text_input_formatter.dart';
@@ -82,6 +83,7 @@ class _SupplierDetailScreenState extends State<SupplierDetailScreen> {
       _isSaving = false;
       _isEditing = false;
     });
+    SnackbarService.showSuccess(context, 'Fornecedor atualizado com sucesso!');
     Navigator.of(context).pop();
   }
 
@@ -107,6 +109,8 @@ class _SupplierDetailScreenState extends State<SupplierDetailScreen> {
                   .deleteSupplier(userId, widget.supplier.id!);
 
               if (!mounted) return;
+              SnackbarService.showSuccess(
+                  context, 'Fornecedor excluído com sucesso!');
               Navigator.of(ctx).pop();
               Navigator.of(context).pop();
             },

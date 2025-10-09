@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:key_budget/app/config/app_theme.dart';
 import 'package:key_budget/core/models/expense_category_model.dart';
+import 'package:key_budget/core/services/snackbar_service.dart';
 import 'package:key_budget/features/auth/viewmodel/auth_viewmodel.dart';
 import 'package:key_budget/features/category/view/add_edit_category_screen.dart';
 import 'package:key_budget/features/category/viewmodel/category_viewmodel.dart';
@@ -42,13 +43,17 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
           ),
           ElevatedButton(
             child: const Text('Excluir'),
-            onPressed: () {
+            onPressed: () async {
               final userId = Provider.of<AuthViewModel>(context, listen: false)
                   .currentUser
                   ?.id;
               if (userId != null) {
-                Provider.of<CategoryViewModel>(context, listen: false)
+                await Provider.of<CategoryViewModel>(context, listen: false)
                     .deleteCategory(userId, category.id!);
+                if (mounted) {
+                  SnackbarService.showSuccess(
+                      context, 'Categoria excluída com sucesso!');
+                }
               }
               Navigator.of(ctx).pop();
             },

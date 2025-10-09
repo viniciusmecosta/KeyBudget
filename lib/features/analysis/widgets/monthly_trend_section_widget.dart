@@ -4,6 +4,7 @@ import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:key_budget/app/config/app_theme.dart';
+import 'package:key_budget/core/services/snackbar_service.dart';
 import 'package:provider/provider.dart';
 
 import '../viewmodel/analysis_viewmodel.dart';
@@ -196,12 +197,7 @@ class MonthlyTrendSectionWidget extends StatelessWidget {
       BuildContext context, AnalysisViewModel viewModel) {
     final availableRange = viewModel.availableDateRange;
     if (availableRange == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: const Text('Nenhum dado disponível para seleção'),
-          backgroundColor: Theme.of(context).colorScheme.error,
-        ),
-      );
+      SnackbarService.showError(context, 'Nenhum dado disponível para seleção');
       return;
     }
 

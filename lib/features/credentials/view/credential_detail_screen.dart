@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:key_budget/app/config/app_theme.dart';
 import 'package:key_budget/core/models/credential_model.dart';
+import 'package:key_budget/core/services/snackbar_service.dart';
 import 'package:key_budget/features/auth/viewmodel/auth_viewmodel.dart';
 import 'package:key_budget/features/credentials/viewmodel/credential_viewmodel.dart';
 import 'package:mask_text_input_formatter/mask_text_input_formatter.dart';
@@ -94,6 +95,7 @@ class _CredentialDetailScreenState extends State<CredentialDetailScreen> {
       _isSaving = false;
       _isEditing = false;
     });
+    SnackbarService.showSuccess(context, 'Credencial atualizada com sucesso!');
     Navigator.of(context).pop();
   }
 
@@ -118,6 +120,8 @@ class _CredentialDetailScreenState extends State<CredentialDetailScreen> {
               await Provider.of<CredentialViewModel>(context, listen: false)
                   .deleteCredential(userId, widget.credential.id!);
               if (!mounted) return;
+              SnackbarService.showSuccess(
+                  context, 'Credencial excluída com sucesso!');
               Navigator.of(ctx).pop();
               Navigator.of(context).pop();
             },

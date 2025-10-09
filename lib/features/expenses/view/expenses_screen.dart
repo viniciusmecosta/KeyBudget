@@ -3,6 +3,7 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'package:key_budget/app/config/app_theme.dart';
 import 'package:key_budget/app/widgets/balance_card.dart';
 import 'package:key_budget/app/widgets/empty_state_widget.dart';
+import 'package:key_budget/core/services/snackbar_service.dart';
 import 'package:key_budget/features/auth/viewmodel/auth_viewmodel.dart';
 import 'package:key_budget/features/category/viewmodel/category_viewmodel.dart';
 import 'package:key_budget/features/expenses/view/add_expense_screen.dart';
@@ -51,18 +52,12 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
   void _import(BuildContext context) async {
     final viewModel = Provider.of<ExpenseViewModel>(context, listen: false);
     final authViewModel = Provider.of<AuthViewModel>(context, listen: false);
-    final scaffoldMessenger = ScaffoldMessenger.of(context);
-    final theme = Theme.of(context);
 
     final count =
         await viewModel.importExpensesFromCsv(authViewModel.currentUser!.id);
     if (!mounted) return;
-    scaffoldMessenger.showSnackBar(
-      SnackBar(
-        content: Text('$count despesas importadas com sucesso!'),
-        backgroundColor: theme.colorScheme.secondaryContainer,
-      ),
-    );
+    SnackbarService.showSuccess(
+        context, '$count despesas importadas com sucesso!');
   }
 
   void _showCategoryFilter() {
