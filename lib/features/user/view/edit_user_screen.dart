@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:key_budget/app/config/app_theme.dart';
+import 'package:key_budget/core/services/snackbar_service.dart';
 import 'package:key_budget/features/auth/viewmodel/auth_viewmodel.dart';
 import 'package:mask_text_input_formatter/mask_text_input_formatter.dart';
 import 'package:provider/provider.dart';
@@ -54,7 +55,6 @@ class _EditUserScreenState extends State<EditUserScreen> {
 
     setState(() => _isSaving = true);
     final viewModel = Provider.of<AuthViewModel>(context, listen: false);
-    final theme = Theme.of(context);
 
     final success = await viewModel.updateUser(
       name: _nameController.text,
@@ -70,20 +70,11 @@ class _EditUserScreenState extends State<EditUserScreen> {
       setState(() => _isSaving = false);
 
       if (success) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: const Text('Perfil atualizado com sucesso!'),
-            backgroundColor: theme.colorScheme.secondaryContainer,
-          ),
-        );
+        SnackbarService.showSuccess(context, 'Perfil atualizado com sucesso!');
         Navigator.of(context).pop();
       } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(viewModel.errorMessage ?? 'Erro desconhecido'),
-            backgroundColor: theme.colorScheme.error,
-          ),
-        );
+        SnackbarService.showError(
+            context, viewModel.errorMessage ?? 'Erro desconhecido');
       }
     }
   }
