@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:key_budget/app/config/app_theme.dart';
 import 'package:key_budget/core/models/supplier_model.dart';
+import 'package:key_budget/core/services/snackbar_service.dart';
 import 'package:key_budget/features/suppliers/view/supplier_detail_screen.dart';
 import 'package:url_launcher/url_launcher.dart';
 
@@ -22,9 +23,8 @@ class SupplierListTile extends StatelessWidget {
       await launchUrl(uri);
     } else {
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Não foi possível abrir o WhatsApp.')),
-        );
+        SnackbarService.showError(
+            context, 'Não foi possível abrir o WhatsApp.');
       }
     }
   }
@@ -36,10 +36,8 @@ class SupplierListTile extends StatelessWidget {
       await launchUrl(uri);
     } else {
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-              content: Text('Não foi possível abrir o app de e-mail.')),
-        );
+        SnackbarService.showError(
+            context, 'Não foi possível abrir o app de e-mail.');
       }
     }
   }
