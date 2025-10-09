@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:key_budget/app/config/app_theme.dart';
 import 'package:key_budget/app/widgets/image_picker_widget.dart';
+import 'package:key_budget/core/services/snackbar_service.dart';
 import 'package:key_budget/core/utils/formatters.dart';
 import 'package:key_budget/features/auth/viewmodel/auth_viewmodel.dart';
 import 'package:mask_text_input_formatter/mask_text_input_formatter.dart';
@@ -59,12 +60,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
       if (success) {
         Navigator.of(context).pop();
       } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(authViewModel.errorMessage ?? 'Erro desconhecido'),
-            backgroundColor: Theme.of(context).colorScheme.error,
-          ),
-        );
+        SnackbarService.showError(
+            context, authViewModel.errorMessage ?? 'Erro desconhecido');
       }
     }
   }

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:key_budget/app/config/app_theme.dart';
+import 'package:key_budget/core/services/snackbar_service.dart';
 import 'package:key_budget/features/expenses/viewmodel/expense_viewmodel.dart';
 import 'package:provider/provider.dart';
 
@@ -32,29 +33,25 @@ class _ExportExpensesScreenState extends State<ExportExpensesScreen> {
 
   void _export(BuildContext context, {bool all = false}) async {
     final viewModel = Provider.of<ExpenseViewModel>(context, listen: false);
-    final scaffoldMessenger = ScaffoldMessenger.of(context);
-    final theme = Theme.of(context);
 
     bool success;
     if (all) {
       success = await viewModel.exportExpensesToCsv(null, null);
     } else {
       if (_startDate == null || _endDate == null) {
-        scaffoldMessenger.showSnackBar(
-            const SnackBar(content: Text('Por favor, selecione um período.')));
+        SnackbarService.showError(context, 'Por favor, selecione um período.');
         return;
       }
       success = await viewModel.exportExpensesToCsv(_startDate!, _endDate!);
     }
 
-    if (success) {
-      scaffoldMessenger.showSnackBar(SnackBar(
-          content: const Text('Arquivo CSV exportado com sucesso!'),
-          backgroundColor: theme.colorScheme.secondaryContainer));
-    } else {
-      scaffoldMessenger.showSnackBar(SnackBar(
-          content: const Text('Falha ao exportar arquivo.'),
-          backgroundColor: theme.colorScheme.error));
+    if (mounted) {
+      if (success) {
+        SnackbarService.showSuccess(
+            context, 'Arquivo CSV exportado com sucesso!');
+      } else {
+        SnackbarService.showError(context, 'Falha ao exportar arquivo.');
+      }
     }
   }
 

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:key_budget/app/config/app_theme.dart';
+import 'package:key_budget/core/services/snackbar_service.dart';
 import 'package:key_budget/features/auth/viewmodel/auth_viewmodel.dart';
 import 'package:key_budget/features/suppliers/viewmodel/supplier_viewmodel.dart';
 import 'package:mask_text_input_formatter/mask_text_input_formatter.dart';
@@ -58,6 +59,7 @@ class _AddSupplierScreenState extends State<AddSupplierScreen> {
 
     if (mounted) {
       setState(() => _isSaving = false);
+      SnackbarService.showSuccess(context, 'Fornecedor salvo com sucesso!');
       Navigator.of(context).pop();
     }
   }

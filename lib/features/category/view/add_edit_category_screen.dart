@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:key_budget/core/models/expense_category_model.dart';
+import 'package:key_budget/core/services/snackbar_service.dart';
 import 'package:key_budget/features/auth/viewmodel/auth_viewmodel.dart';
 import 'package:key_budget/features/category/viewmodel/category_viewmodel.dart';
 import 'package:provider/provider.dart';
@@ -34,10 +35,8 @@ class _AddEditCategoryScreenState extends State<AddEditCategoryScreen> {
   void _submit() {
     if (!_formKey.currentState!.validate()) return;
     if (_selectedIcon == null || _selectedColor == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-            content: Text('Por favor, selecione um ícone e uma cor.')),
-      );
+      SnackbarService.showError(
+          context, 'Por favor, selecione um ícone e uma cor.');
       return;
     }
 

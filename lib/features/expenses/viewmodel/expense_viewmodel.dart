@@ -111,54 +111,73 @@ class ExpenseViewModel extends ChangeNotifier {
   Future<void> checkAndCreateRecurringInstances(String userId) async {
     final now = DateTime.now();
     for (final recurring in _recurringExpenses) {
-      DateTime nextInstanceDate = _calculateNextInstanceDate(recurring);
+      var currentRecurring = recurring;
+      while (true) {
+        DateTime nextInstanceDate =
+            _calculateNextInstanceDate(currentRecurring);
 
-      while (nextInstanceDate.isBefore(now) ||
-          nextInstanceDate.isAtSameMomentAs(now)) {
-        if (recurring.endDate != null &&
-            nextInstanceDate.isAfter(recurring.endDate!)) {
+        if (nextInstanceDate.isAfter(now)) {
+          break;
+        }
+
+        if (currentRecurring.endDate != null &&
+            nextInstanceDate.isAfter(currentRecurring.endDate!)) {
           break;
         }
 
         final newExpense = Expense(
-          amount: recurring.amount,
+          amount: currentRecurring.amount,
           date: nextInstanceDate,
-          categoryId: recurring.categoryId,
-          motivation: recurring.motivation,
-          location: recurring.location,
+          categoryId: currentRecurring.categoryId,
+          motivation: currentRecurring.motivation,
+          location: currentRecurring.location,
         );
 
         await addExpense(userId, newExpense);
+
         final updatedRecurring = RecurringExpense(
-          id: recurring.id,
-          amount: recurring.amount,
-          categoryId: recurring.categoryId,
-          motivation: recurring.motivation,
-          location: recurring.location,
-          frequency: recurring.frequency,
-          startDate: recurring.startDate,
-          endDate: recurring.endDate,
-          dayOfWeek: recurring.dayOfWeek,
-          dayOfMonth: recurring.dayOfMonth,
-          monthOfYear: recurring.monthOfYear,
+          id: currentRecurring.id,
+          amount: currentRecurring.amount,
+          categoryId: currentRecurring.categoryId,
+          motivation: currentRecurring.motivation,
+          location: currentRecurring.location,
+          frequency: currentRecurring.frequency,
+          startDate: currentRecurring.startDate,
+          endDate: currentRecurring.endDate,
+          dayOfWeek: currentRecurring.dayOfWeek,
+          dayOfMonth: currentRecurring.dayOfMonth,
+          monthOfYear: currentRecurring.monthOfYear,
           lastInstanceDate: nextInstanceDate,
         );
         await updateRecurringExpense(userId, updatedRecurring);
-
-        nextInstanceDate = _calculateNextInstanceDate(updatedRecurring);
+        currentRecurring = updatedRecurring;
       }
     }
   }
 
   DateTime _calculateNextInstanceDate(RecurringExpense recurring) {
-    DateTime lastDate = recurring.lastInstanceDate ?? recurring.startDate;
+    if (recurring.lastInstanceDate == null) {
+      return recurring.startDate;
+    }
+    DateTime lastDate = recurring.lastInstanceDate!;
     switch (recurring.frequency) {
       case RecurrenceFrequency.daily:
-        return DateTime(lastDate.year, lastDate.month, lastDate.day + 1);
+        return lastDate.add(const Duration(days: 1));
       case RecurrenceFrequency.weekly:
-        return DateTime(lastDate.year, lastDate.month, lastDate.day + 7);
+        return lastDate.add(const Duration(days: 7));
       case RecurrenceFrequency.monthly:
-        return DateTime(lastDate.year, lastDate.month + 1, lastDate.day);
+        var year = lastDate.year;
+        var month = lastDate.month + 1;
+        if (month > 12) {
+          month = 1;
+          year++;
+        }
+        var day = recurring.dayOfMonth ?? lastDate.day;
+        var daysInNextMonth = DateTime(year, month + 1, 0).day;
+        if (day > daysInNextMonth) {
+          day = daysInNextMonth;
+        }
+        return DateTime(year, month, day);
     }
   }
 

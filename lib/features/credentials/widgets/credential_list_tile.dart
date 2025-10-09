@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:key_budget/app/config/app_theme.dart';
 import 'package:key_budget/core/models/credential_model.dart';
+import 'package:key_budget/core/services/snackbar_service.dart';
 import 'package:key_budget/features/credentials/view/credential_detail_screen.dart';
 import 'package:key_budget/features/credentials/viewmodel/credential_viewmodel.dart';
 import 'package:provider/provider.dart';
@@ -65,11 +66,8 @@ class CredentialListTile extends StatelessWidget {
             label: const Text('Copiar Senha'),
             onPressed: () {
               Clipboard.setData(ClipboardData(text: decryptedPassword));
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                    content: Text('Senha copiada para a área de transferência'),
-                    behavior: SnackBarBehavior.floating),
-              );
+              SnackbarService.showSuccess(
+                  context, 'Senha copiada para a área de transferência');
               Navigator.of(context).pop();
             },
           ),

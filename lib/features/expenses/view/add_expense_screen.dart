@@ -4,6 +4,7 @@ import 'package:flutter_masked_text2/flutter_masked_text2.dart';
 import 'package:key_budget/app/config/app_theme.dart';
 import 'package:key_budget/core/models/expense_category_model.dart';
 import 'package:key_budget/core/models/expense_model.dart';
+import 'package:key_budget/core/services/snackbar_service.dart';
 import 'package:key_budget/features/auth/viewmodel/auth_viewmodel.dart';
 import 'package:key_budget/features/expenses/viewmodel/expense_viewmodel.dart';
 import 'package:provider/provider.dart';
@@ -37,15 +38,9 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
 
   void _submit() async {
     if (!_formKey.currentState!.validate()) return;
-    final theme = Theme.of(context);
 
     if (_amountController.numberValue == 0) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: const Text('O valor não pode ser zero.'),
-          backgroundColor: theme.colorScheme.error,
-        ),
-      );
+      SnackbarService.showError(context, 'O valor não pode ser zero.');
       return;
     }
 
@@ -71,12 +66,7 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
 
     if (mounted) {
       setState(() => _isSaving = false);
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: const Text('Despesa salva com sucesso!'),
-          backgroundColor: theme.colorScheme.secondaryContainer,
-        ),
-      );
+      SnackbarService.showSuccess(context, 'Despesa salva com sucesso!');
       Navigator.of(context).pop();
     }
   }

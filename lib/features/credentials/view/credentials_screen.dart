@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:key_budget/app/config/app_theme.dart';
 import 'package:key_budget/app/widgets/empty_state_widget.dart';
+import 'package:key_budget/core/services/snackbar_service.dart';
 import 'package:key_budget/features/auth/viewmodel/auth_viewmodel.dart';
 import 'package:key_budget/features/credentials/view/add_credential_screen.dart';
 import 'package:key_budget/features/credentials/viewmodel/credential_viewmodel.dart';
@@ -42,31 +43,25 @@ class _CredentialsScreenState extends State<CredentialsScreen> {
   void _import(BuildContext context) async {
     final viewModel = Provider.of<CredentialViewModel>(context, listen: false);
     final authViewModel = Provider.of<AuthViewModel>(context, listen: false);
-    final scaffoldMessenger = ScaffoldMessenger.of(context);
-    final theme = Theme.of(context);
 
     final count =
         await viewModel.importCredentialsFromCsv(authViewModel.currentUser!.id);
     if (!mounted) return;
-    scaffoldMessenger.showSnackBar(SnackBar(
-        content: Text('$count credenciais importadas com sucesso!'),
-        backgroundColor: theme.colorScheme.secondaryContainer));
+    SnackbarService.showSuccess(
+        context, '$count credenciais importadas com sucesso!');
   }
 
   void _export(BuildContext context) async {
     final viewModel = Provider.of<CredentialViewModel>(context, listen: false);
-    final scaffoldMessenger = ScaffoldMessenger.of(context);
-    final theme = Theme.of(context);
 
     final success = await viewModel.exportCredentialsToCsv();
-    if (success) {
-      scaffoldMessenger.showSnackBar(SnackBar(
-          content: const Text('Credenciais exportadas com sucesso!'),
-          backgroundColor: theme.colorScheme.secondaryContainer));
-    } else {
-      scaffoldMessenger.showSnackBar(SnackBar(
-          content: const Text('Falha ao exportar.'),
-          backgroundColor: theme.colorScheme.error));
+    if (mounted) {
+      if (success) {
+        SnackbarService.showSuccess(
+            context, 'Credenciais exportadas com sucesso!');
+      } else {
+        SnackbarService.showError(context, 'Falha ao exportar.');
+      }
     }
   }
 
