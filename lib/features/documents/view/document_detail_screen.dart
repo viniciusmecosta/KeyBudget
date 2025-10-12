@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
 import 'package:key_budget/app/config/app_theme.dart';
+import 'package:key_budget/app/utils/navigation_utils.dart';
 import 'package:key_budget/core/models/document_model.dart';
 import 'package:key_budget/core/services/snackbar_service.dart';
 import 'package:key_budget/features/auth/viewmodel/auth_viewmodel.dart';
@@ -32,21 +33,21 @@ class DocumentDetailScreen extends StatelessWidget {
           IconButton(
             icon: const Icon(Icons.edit_outlined),
             tooltip: 'Editar Documento',
-            onPressed: () => Navigator.of(context).push(MaterialPageRoute(
-              builder: (_) => EditDocumentScreen(document: document),
-            )),
+            onPressed: () => NavigationUtils.push(
+                context, EditDocumentScreen(document: document)),
           ),
           IconButton(
             icon: const Icon(Icons.add_box_outlined),
             tooltip: 'Adicionar Nova Versão',
-            onPressed: () => Navigator.of(context).push(MaterialPageRoute(
-              builder: (_) => AddDocumentScreen(
-                  originalDocument: document, isNewVersion: true),
-            )),
+            onPressed: () => NavigationUtils.push(
+                context,
+                AddDocumentScreen(
+                    originalDocument: document, isNewVersion: true)),
           ),
           IconButton(
             icon: const Icon(Icons.delete_outline),
             onPressed: () async {
+              HapticFeedback.mediumImpact();
               final success = await viewModel.deleteDocument(userId, document);
               if (!context.mounted) return;
               if (success) {
@@ -98,6 +99,7 @@ class DocumentDetailScreen extends StatelessWidget {
                     tooltip: 'Copiar número',
                     onPressed: () {
                       Clipboard.setData(ClipboardData(text: document.number!));
+                      HapticFeedback.lightImpact();
                       SnackbarService.showSuccess(context, 'Número copiado!');
                     },
                   ),

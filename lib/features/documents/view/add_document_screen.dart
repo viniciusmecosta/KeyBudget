@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:key_budget/app/config/app_theme.dart';
 import 'package:key_budget/core/models/document_model.dart';
 import 'package:key_budget/core/services/snackbar_service.dart';
@@ -39,6 +40,7 @@ class _AddDocumentScreenState extends State<AddDocumentScreen> {
 
   void _submit() async {
     if (!_formKey.currentState!.validate()) return;
+    HapticFeedback.mediumImpact();
 
     final viewModel = Provider.of<DocumentViewModel>(context, listen: false);
     final userId =

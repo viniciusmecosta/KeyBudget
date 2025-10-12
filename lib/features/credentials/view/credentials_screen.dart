@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:key_budget/app/config/app_theme.dart';
+import 'package:key_budget/app/utils/navigation_utils.dart';
 import 'package:key_budget/app/widgets/empty_state_widget.dart';
 import 'package:key_budget/core/services/snackbar_service.dart';
 import 'package:key_budget/features/auth/viewmodel/auth_viewmodel.dart';
@@ -164,8 +165,8 @@ class _CredentialsScreenState extends State<CredentialsScreen> {
       ),
       floatingActionButton: FloatingActionButton.extended(
         heroTag: 'fab_credentials',
-        onPressed: () => Navigator.of(context).push(
-            MaterialPageRoute(builder: (_) => const AddCredentialScreen())),
+        onPressed: () =>
+            NavigationUtils.push(context, const AddCredentialScreen()),
         icon: const Icon(Icons.add),
         label: const Text("Nova Credencial"),
       ).animate().scale(duration: 250.ms),

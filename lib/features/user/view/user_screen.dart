@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:key_budget/app/config/app_theme.dart';
+import 'package:key_budget/app/utils/navigation_utils.dart';
 import 'package:key_budget/features/auth/viewmodel/auth_viewmodel.dart';
 import 'package:key_budget/features/category/view/categories_screen.dart';
 import 'package:key_budget/features/user/view/edit_user_screen.dart';
@@ -24,8 +25,7 @@ class UserScreen extends StatelessWidget {
           IconButton(
             icon: const Icon(Icons.edit_outlined),
             onPressed: () {
-              Navigator.of(context).push(
-                  MaterialPageRoute(builder: (_) => const EditUserScreen()));
+              NavigationUtils.push(context, const EditUserScreen());
             },
           ),
         ],
@@ -94,11 +94,7 @@ class UserScreen extends StatelessWidget {
                   icon: Icons.category_outlined,
                   title: 'Gerenciar Categorias',
                   onTap: () {
-                    Navigator.of(context).push(
-                      MaterialPageRoute(
-                        builder: (_) => const CategoriesScreen(),
-                      ),
-                    );
+                    NavigationUtils.push(context, const CategoriesScreen());
                   },
                 ),
                 const SizedBox(height: 8),

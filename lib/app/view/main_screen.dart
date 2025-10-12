@@ -32,14 +32,11 @@ class _MainScreenState extends State<MainScreen> {
 
     return Scaffold(
       body: AnimatedSwitcher(
-        duration: const Duration(milliseconds: 250),
+        duration: const Duration(milliseconds: 200),
         transitionBuilder: (Widget child, Animation<double> animation) {
           return FadeTransition(
             opacity: animation,
-            child: ScaleTransition(
-              scale: Tween<double>(begin: 0.95, end: 1.0).animate(animation),
-              child: child,
-            ),
+            child: child,
           );
         },
         child: KeyedSubtree(

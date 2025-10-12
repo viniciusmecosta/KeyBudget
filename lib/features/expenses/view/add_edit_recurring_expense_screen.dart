@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_masked_text2/flutter_masked_text2.dart';
 import 'package:key_budget/app/config/app_theme.dart';
@@ -62,6 +63,8 @@ class _AddEditRecurringExpenseScreenState
     if (!_formKey.currentState!.validate()) return;
 
     setState(() => _isSaving = true);
+    HapticFeedback.mediumImpact();
+
     final viewModel = context.read<ExpenseViewModel>();
     final userId = context.read<AuthViewModel>().currentUser!.id;
 
@@ -119,6 +122,7 @@ class _AddEditRecurringExpenseScreenState
     );
 
     if (confirmed == true && widget.expense != null) {
+      HapticFeedback.mediumImpact();
       final viewModel = context.read<ExpenseViewModel>();
       final userId = context.read<AuthViewModel>().currentUser!.id;
       try {
