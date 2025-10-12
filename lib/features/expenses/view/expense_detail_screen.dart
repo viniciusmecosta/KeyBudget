@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_masked_text2/flutter_masked_text2.dart';
 import 'package:key_budget/app/config/app_theme.dart';
@@ -64,6 +65,7 @@ class _ExpenseDetailScreenState extends State<ExpenseDetailScreen> {
     }
 
     setState(() => _isSaving = true);
+    HapticFeedback.mediumImpact();
 
     final authViewModel = Provider.of<AuthViewModel>(context, listen: false);
     final userId = authViewModel.currentUser!.id;
@@ -104,6 +106,7 @@ class _ExpenseDetailScreenState extends State<ExpenseDetailScreen> {
           TextButton(
             child: const Text('Excluir'),
             onPressed: () async {
+              HapticFeedback.mediumImpact();
               final authViewModel =
                   Provider.of<AuthViewModel>(context, listen: false);
               final userId = authViewModel.currentUser!.id;

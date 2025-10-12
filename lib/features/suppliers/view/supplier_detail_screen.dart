@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:key_budget/app/config/app_theme.dart';
 import 'package:key_budget/core/models/supplier_model.dart';
@@ -62,6 +63,8 @@ class _SupplierDetailScreenState extends State<SupplierDetailScreen> {
     if (!_formKey.currentState!.validate()) return;
 
     setState(() => _isSaving = true);
+    HapticFeedback.mediumImpact();
+
     final authViewModel = Provider.of<AuthViewModel>(context, listen: false);
     final userId = authViewModel.currentUser!.id;
 
@@ -102,6 +105,7 @@ class _SupplierDetailScreenState extends State<SupplierDetailScreen> {
           TextButton(
             child: const Text('Excluir'),
             onPressed: () async {
+              HapticFeedback.mediumImpact();
               final authViewModel =
                   Provider.of<AuthViewModel>(context, listen: false);
               final userId = authViewModel.currentUser!.id;

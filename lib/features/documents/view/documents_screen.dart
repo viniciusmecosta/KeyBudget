@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:key_budget/app/config/app_theme.dart';
+import 'package:key_budget/app/utils/navigation_utils.dart';
 import 'package:key_budget/app/widgets/empty_state_widget.dart';
 import 'package:key_budget/features/auth/viewmodel/auth_viewmodel.dart';
 import 'package:key_budget/features/documents/view/add_document_screen.dart';
@@ -53,8 +54,8 @@ class _DocumentsScreenState extends State<DocumentsScreen> {
                   },
                 ),
       floatingActionButton: FloatingActionButton.extended(
-        onPressed: () => Navigator.of(context)
-            .push(MaterialPageRoute(builder: (_) => const AddDocumentScreen())),
+        onPressed: () =>
+            NavigationUtils.push(context, const AddDocumentScreen()),
         label: const Text('Novo Documento'),
         icon: const Icon(Icons.add),
       ),

@@ -2,6 +2,7 @@ import 'package:auto_size_text/auto_size_text.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:key_budget/app/config/app_theme.dart';
+import 'package:key_budget/app/utils/navigation_utils.dart';
 import 'package:key_budget/core/models/recurring_expense_model.dart';
 import 'package:key_budget/features/category/viewmodel/category_viewmodel.dart';
 import 'package:key_budget/features/expenses/view/add_edit_recurring_expense_screen.dart';
@@ -45,11 +46,8 @@ class RecurringExpenseListTile extends StatelessWidget {
         elevation: 0,
         child: InkWell(
           onTap: () {
-            Navigator.of(context).push(
-              MaterialPageRoute(
-                builder: (_) => AddEditRecurringExpenseScreen(expense: expense),
-              ),
-            );
+            NavigationUtils.push(
+                context, AddEditRecurringExpenseScreen(expense: expense));
           },
           borderRadius: BorderRadius.circular(16),
           child: Container(

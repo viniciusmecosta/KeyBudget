@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:key_budget/app/config/app_theme.dart';
+import 'package:key_budget/app/utils/navigation_utils.dart';
 import 'package:key_budget/app/widgets/empty_state_widget.dart';
 import 'package:key_budget/features/auth/viewmodel/auth_viewmodel.dart';
 import 'package:key_budget/features/suppliers/view/add_supplier_screen.dart';
@@ -62,9 +63,8 @@ class _SuppliersScreenState extends State<SuppliersScreen> {
                         icon: Icons.store_mall_directory_outlined,
                         message: 'Nenhum fornecedor encontrado.',
                         buttonText: 'Adicionar Fornecedor',
-                        onButtonPressed: () => Navigator.of(context).push(
-                            MaterialPageRoute(
-                                builder: (_) => const AddSupplierScreen())),
+                        onButtonPressed: () => NavigationUtils.push(
+                            context, const AddSupplierScreen()),
                       ),
                     ),
                   );
@@ -85,8 +85,8 @@ class _SuppliersScreenState extends State<SuppliersScreen> {
       ),
       floatingActionButton: FloatingActionButton.extended(
         heroTag: 'fab_suppliers',
-        onPressed: () => Navigator.of(context)
-            .push(MaterialPageRoute(builder: (_) => const AddSupplierScreen())),
+        onPressed: () =>
+            NavigationUtils.push(context, const AddSupplierScreen()),
         icon: const Icon(Icons.add),
         label: const Text("Novo Fornecedor"),
       ).animate().scale(duration: 250.ms),

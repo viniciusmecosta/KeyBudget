@@ -4,6 +4,7 @@ import 'package:auto_size_text/auto_size_text.dart';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:key_budget/app/config/app_theme.dart';
+import 'package:key_budget/app/utils/navigation_utils.dart';
 import 'package:key_budget/core/models/supplier_model.dart';
 import 'package:key_budget/core/services/snackbar_service.dart';
 import 'package:key_budget/features/suppliers/view/supplier_detail_screen.dart';
@@ -67,23 +68,8 @@ class SupplierListTile extends StatelessWidget {
         elevation: 0,
         child: InkWell(
           onTap: () {
-            Navigator.of(context).push(
-              PageRouteBuilder(
-                pageBuilder: (context, animation, secondaryAnimation) =>
-                    SupplierDetailScreen(supplier: supplier),
-                transitionsBuilder:
-                    (context, animation, secondaryAnimation, child) {
-                  const begin = Offset(0.0, 1.0);
-                  const end = Offset.zero;
-                  const curve = Curves.easeInOutCubic;
-                  var tween = Tween(begin: begin, end: end)
-                      .chain(CurveTween(curve: curve));
-                  return SlideTransition(
-                      position: animation.drive(tween), child: child);
-                },
-                transitionDuration: const Duration(milliseconds: 300),
-              ),
-            );
+            NavigationUtils.push(
+                context, SupplierDetailScreen(supplier: supplier));
           },
           borderRadius: BorderRadius.circular(16),
           child: Container(

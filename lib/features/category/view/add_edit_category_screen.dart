@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:key_budget/core/models/expense_category_model.dart';
 import 'package:key_budget/core/services/snackbar_service.dart';
@@ -41,6 +42,7 @@ class _AddEditCategoryScreenState extends State<AddEditCategoryScreen> {
     }
 
     setState(() => _isSaving = true);
+    HapticFeedback.mediumImpact();
 
     final viewModel = Provider.of<CategoryViewModel>(context, listen: false);
     final userId =
