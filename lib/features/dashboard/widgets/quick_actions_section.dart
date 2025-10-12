@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:key_budget/app/config/app_theme.dart';
+import 'package:key_budget/app/utils/navigation_utils.dart';
 import 'package:key_budget/app/viewmodel/navigation_viewmodel.dart';
 import 'package:key_budget/features/analysis/view/analysis_screen.dart';
 import 'package:key_budget/features/dashboard/viewmodel/dashboard_viewmodel.dart';
@@ -35,11 +36,7 @@ class QuickActionsSection extends StatelessWidget {
             icon: Icons.bar_chart_rounded,
             color: Theme.of(context).colorScheme.tertiary,
             onTap: () {
-              Navigator.of(context).push(
-                MaterialPageRoute(
-                  builder: (_) => const AnalysisScreen(),
-                ),
-              );
+              NavigationUtils.push(context, const AnalysisScreen());
             },
           ),
         ),

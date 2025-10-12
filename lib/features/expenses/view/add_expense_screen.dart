@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_masked_text2/flutter_masked_text2.dart';
 import 'package:key_budget/app/config/app_theme.dart';
@@ -45,6 +46,7 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
     }
 
     setState(() => _isSaving = true);
+    HapticFeedback.mediumImpact();
 
     final expenseViewModel =
         Provider.of<ExpenseViewModel>(context, listen: false);

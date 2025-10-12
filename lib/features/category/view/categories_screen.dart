@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:key_budget/app/config/app_theme.dart';
+import 'package:key_budget/app/utils/navigation_utils.dart';
 import 'package:key_budget/core/models/expense_category_model.dart';
 import 'package:key_budget/core/services/snackbar_service.dart';
 import 'package:key_budget/features/auth/viewmodel/auth_viewmodel.dart';
@@ -44,6 +46,7 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
           ElevatedButton(
             child: const Text('Excluir'),
             onPressed: () async {
+              HapticFeedback.mediumImpact();
               final userId = Provider.of<AuthViewModel>(context, listen: false)
                   .currentUser
                   ?.id;
@@ -91,12 +94,8 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
                   elevation: 0,
                   child: InkWell(
                     onTap: () {
-                      Navigator.of(context).push(
-                        MaterialPageRoute(
-                          builder: (_) =>
-                              AddEditCategoryScreen(category: category),
-                        ),
-                      );
+                      NavigationUtils.push(
+                          context, AddEditCategoryScreen(category: category));
                     },
                     borderRadius: BorderRadius.circular(16),
                     child: Container(
@@ -120,12 +119,8 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
                           IconButton(
                             icon: const Icon(Icons.edit_outlined),
                             onPressed: () {
-                              Navigator.of(context).push(
-                                MaterialPageRoute(
-                                  builder: (_) =>
-                                      AddEditCategoryScreen(category: category),
-                                ),
-                              );
+                              NavigationUtils.push(context,
+                                  AddEditCategoryScreen(category: category));
                             },
                           ),
                           IconButton(
@@ -146,11 +141,7 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
       floatingActionButton: FloatingActionButton(
         heroTag: 'fab_categories',
         onPressed: () {
-          Navigator.of(context).push(
-            MaterialPageRoute(
-              builder: (_) => const AddEditCategoryScreen(),
-            ),
-          );
+          NavigationUtils.push(context, const AddEditCategoryScreen());
         },
         child: const Icon(Icons.add),
       ),
