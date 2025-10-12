@@ -22,18 +22,44 @@ class _AuthGateState extends State<AuthGate> {
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    final authViewModel = Provider.of<AuthViewModel>(context);
+    final authViewModel = context.watch<AuthViewModel>();
+    final appLockService = context.watch<AppLockService>();
 
-    if (authViewModel.isInitialized &&
-        authViewModel.currentUser != null &&
+    if (appLockService.isLocked) {
+      return;
+    }
+
+    if (appLockService.justUnlocked) {
+      appLockService.consumeJustUnlocked();
+      if (_status != AuthStatus.success) {
+        if (mounted) {
+          setState(() {
+            _status = AuthStatus.success;
+          });
+        }
+      }
+      return;
+    }
+
+    if (authViewModel.currentUser != null &&
         !_isAuthenticating &&
         _status == AuthStatus.pending) {
-      _isAuthenticating = true;
       _authenticateOrBypass();
+    }
+
+    if (authViewModel.currentUser == null && _status != AuthStatus.pending) {
+      if (mounted) {
+        setState(() {
+          _status = AuthStatus.pending;
+        });
+      }
     }
   }
 
   void _authenticateOrBypass() {
+    if (_isAuthenticating) return;
+    _isAuthenticating = true;
+
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       final authViewModel = Provider.of<AuthViewModel>(context, listen: false);
       if (authViewModel.justAuthenticated) {
@@ -41,6 +67,9 @@ class _AuthGateState extends State<AuthGate> {
         if (mounted) setState(() => _status = AuthStatus.success);
       } else {
         await _authenticate();
+      }
+      if (mounted) {
+        _isAuthenticating = false;
       }
     });
   }
@@ -66,6 +95,11 @@ class _AuthGateState extends State<AuthGate> {
   @override
   Widget build(BuildContext context) {
     final authViewModel = context.watch<AuthViewModel>();
+    final appLockService = context.watch<AppLockService>();
+
+    if (appLockService.isLocked) {
+      return const Scaffold(body: Center(child: CircularProgressIndicator()));
+    }
 
     if (!authViewModel.isInitialized) {
       return const Scaffold(body: Center(child: CircularProgressIndicator()));
