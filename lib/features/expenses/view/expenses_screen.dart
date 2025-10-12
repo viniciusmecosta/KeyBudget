@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart' hide DateUtils;
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:key_budget/app/config/app_theme.dart';
+import 'package:key_budget/app/utils/navigation_utils.dart';
 import 'package:key_budget/app/widgets/balance_card.dart';
 import 'package:key_budget/app/widgets/empty_state_widget.dart';
 import 'package:key_budget/core/services/snackbar_service.dart';
@@ -131,9 +132,8 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
                 icon: Icons.money_off_rounded,
                 message: 'Nenhuma despesa encontrada para este mês.',
                 buttonText: 'Adicionar Despesa',
-                onButtonPressed: () => Navigator.of(context).push(
-                  MaterialPageRoute(builder: (_) => const AddExpenseScreen()),
-                ),
+                onButtonPressed: () =>
+                    NavigationUtils.push(context, const AddExpenseScreen()),
               ),
             )
           else
@@ -214,16 +214,10 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
             onSelected: (value) {
               if (value == 'import') _import(context);
               if (value == 'export') {
-                Navigator.of(context).push(
-                  MaterialPageRoute(
-                      builder: (_) => const ExportExpensesScreen()),
-                );
+                NavigationUtils.push(context, const ExportExpensesScreen());
               }
               if (value == 'recurring') {
-                Navigator.of(context).push(
-                  MaterialPageRoute(
-                      builder: (_) => const RecurringExpensesScreen()),
-                );
+                NavigationUtils.push(context, const RecurringExpensesScreen());
               }
             },
           ),
@@ -242,8 +236,8 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
       ),
       floatingActionButton: FloatingActionButton.extended(
         heroTag: 'fab_expenses',
-        onPressed: () => Navigator.of(context)
-            .push(MaterialPageRoute(builder: (_) => const AddExpenseScreen())),
+        onPressed: () =>
+            NavigationUtils.push(context, const AddExpenseScreen()),
         icon: const Icon(Icons.add_rounded),
         label: const Text("Nova Despesa"),
         backgroundColor: theme.colorScheme.primary,

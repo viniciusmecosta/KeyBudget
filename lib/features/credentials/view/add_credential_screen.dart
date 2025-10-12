@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:key_budget/app/config/app_theme.dart';
 import 'package:key_budget/core/services/snackbar_service.dart';
@@ -68,6 +69,7 @@ class _AddCredentialScreenState extends State<AddCredentialScreen> {
     if (!_formKey.currentState!.validate()) return;
 
     setState(() => _isSaving = true);
+    HapticFeedback.mediumImpact();
 
     final credentialViewModel =
         Provider.of<CredentialViewModel>(context, listen: false);
