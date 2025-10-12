@@ -10,6 +10,7 @@ import 'package:provider/provider.dart';
 
 import '../widgets/dashboard_balance_card.dart';
 import '../widgets/dashboard_header.dart';
+import '../widgets/dashboard_skeleton.dart';
 import '../widgets/quick_actions_section.dart';
 import '../widgets/recent_activity_section.dart';
 
@@ -20,35 +21,23 @@ class DashboardScreen extends StatefulWidget {
   State<DashboardScreen> createState() => _DashboardScreenState();
 }
 
-class _DashboardScreenState extends State<DashboardScreen>
-    with TickerProviderStateMixin {
-  late AnimationController _refreshController;
+class _DashboardScreenState extends State<DashboardScreen> {
   bool _isRefreshing = false;
 
   @override
   void initState() {
     super.initState();
-    _refreshController = AnimationController(
-      duration: const Duration(seconds: 1),
-      vsync: this,
-    );
-
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      _fetchInitialData();
+      _fetchInitialData(isRefresh: false);
     });
   }
 
-  @override
-  void dispose() {
-    _refreshController.dispose();
-    super.dispose();
-  }
-
-  Future<void> _fetchInitialData() async {
+  Future<void> _fetchInitialData({bool isRefresh = true}) async {
     if (_isRefreshing) return;
 
-    setState(() => _isRefreshing = true);
-    _refreshController.forward();
+    if (isRefresh) {
+      setState(() => _isRefreshing = true);
+    }
 
     try {
       final authViewModel = Provider.of<AuthViewModel>(context, listen: false);
@@ -65,9 +54,8 @@ class _DashboardScreenState extends State<DashboardScreen>
             .listenToCredentials(userId);
       }
     } finally {
-      if (mounted) {
+      if (mounted && isRefresh) {
         setState(() => _isRefreshing = false);
-        _refreshController.reset();
       }
     }
   }
@@ -82,14 +70,15 @@ class _DashboardScreenState extends State<DashboardScreen>
       appBar: const DashboardHeader(),
       body: SafeArea(
         child: viewModel.isLoading
-            ? _buildLoadingState(theme)
+            ? const DashboardSkeleton()
             : RefreshIndicator(
                 onRefresh: _fetchInitialData,
                 color: theme.colorScheme.primary,
                 backgroundColor: theme.colorScheme.surface,
                 strokeWidth: 2.5,
                 child: CustomScrollView(
-                  physics: const BouncingScrollPhysics(),
+                  physics: const BouncingScrollPhysics(
+                      parent: AlwaysScrollableScrollPhysics()),
                   slivers: [
                     SliverPadding(
                       padding: const EdgeInsets.fromLTRB(AppTheme.spaceM,
@@ -117,28 +106,6 @@ class _DashboardScreenState extends State<DashboardScreen>
                 ),
               ),
       ),
-    );
-  }
-
-  Widget _buildLoadingState(ThemeData theme) {
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          CircularProgressIndicator(
-            color: theme.colorScheme.primary,
-            strokeWidth: 2.5,
-          ),
-          const SizedBox(height: AppTheme.spaceL),
-          Text(
-            'Carregando seus dados...',
-            style: theme.textTheme.bodyMedium?.copyWith(
-              color: theme.colorScheme.onSurface.withAlpha((255 * 0.7).round()),
-              fontWeight: FontWeight.w500,
-            ),
-          ),
-        ],
-      ).animate().fadeIn(duration: 300.ms),
     );
   }
 }
