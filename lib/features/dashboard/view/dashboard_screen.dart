@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart' hide DateUtils;
-import 'package:flutter_animate/flutter_animate.dart';
-import 'package:key_budget/app/config/app_theme.dart';
+import 'package:key_budget/app/utils/app_animations.dart';
 import 'package:key_budget/features/auth/viewmodel/auth_viewmodel.dart';
 import 'package:key_budget/features/category/viewmodel/category_viewmodel.dart';
 import 'package:key_budget/features/credentials/viewmodel/credential_viewmodel.dart';
@@ -8,6 +7,7 @@ import 'package:key_budget/features/dashboard/viewmodel/dashboard_viewmodel.dart
 import 'package:key_budget/features/expenses/viewmodel/expense_viewmodel.dart';
 import 'package:provider/provider.dart';
 
+import '../../../app/config/app_theme.dart';
 import '../widgets/dashboard_balance_card.dart';
 import '../widgets/dashboard_header.dart';
 import '../widgets/dashboard_skeleton.dart';
@@ -85,20 +85,16 @@ class _DashboardScreenState extends State<DashboardScreen> {
                           AppTheme.spaceS, AppTheme.spaceM, AppTheme.spaceL),
                       sliver: SliverList(
                         delegate: SliverChildListDelegate([
-                          const DashboardBalanceCard()
-                              .animate()
-                              .fadeIn(duration: 400.ms, delay: 100.ms)
-                              .slideY(begin: 0.2, end: 0),
+                          AppAnimations.fadeInFromBottom(
+                              const DashboardBalanceCard()),
                           const SizedBox(height: AppTheme.spaceL),
-                          const QuickActionsSection()
-                              .animate()
-                              .fadeIn(duration: 400.ms, delay: 200.ms)
-                              .slideY(begin: 0.2, end: 0),
+                          AppAnimations.fadeInFromBottom(
+                              const QuickActionsSection(),
+                              delay: const Duration(milliseconds: 100)),
                           const SizedBox(height: AppTheme.spaceXL),
-                          const RecentActivitySection()
-                              .animate()
-                              .fadeIn(duration: 400.ms, delay: 300.ms)
-                              .slideX(begin: -0.1, end: 0),
+                          AppAnimations.fadeInFromBottom(
+                              const RecentActivitySection(),
+                              delay: const Duration(milliseconds: 200)),
                         ]),
                       ),
                     ),

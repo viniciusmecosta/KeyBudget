@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart' hide DateUtils;
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:key_budget/app/config/app_theme.dart';
+import 'package:key_budget/app/utils/app_animations.dart';
 import 'package:key_budget/app/utils/navigation_utils.dart';
 import 'package:key_budget/app/widgets/balance_card.dart';
 import 'package:key_budget/app/widgets/empty_state_widget.dart';
@@ -113,13 +114,10 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
                 Padding(
                   padding: const EdgeInsets.symmetric(
                       horizontal: AppTheme.defaultPadding),
-                  child: BalanceCard(
+                  child: AppAnimations.fadeIn(BalanceCard(
                     title: 'Total do mês',
                     totalValue: totalValue,
-                  )
-                      .animate()
-                      .fadeIn(duration: 400.ms)
-                      .slideY(begin: 0.3, end: 0),
+                  )),
                 ),
                 const SizedBox(height: AppTheme.spaceL),
               ],
@@ -226,15 +224,15 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
       body: SafeArea(
         child: expenseViewModel.isLoading || categoryViewModel.isLoading
             ? _buildLoadingState(theme)
-            : body.animate(
-                onComplete: (_) {
-                  if (_isFirstLoad && mounted) {
-                    setState(() => _isFirstLoad = false);
-                  }
-                },
-              ).fadeIn(duration: 250.ms),
+            : body.animate(onComplete: (controller) {
+                if (_isFirstLoad) {
+                  setState(() {
+                    _isFirstLoad = false;
+                  });
+                }
+              }).fadeIn(duration: 300.ms),
       ),
-      floatingActionButton: FloatingActionButton.extended(
+      floatingActionButton: AppAnimations.scaleIn(FloatingActionButton.extended(
         heroTag: 'fab_expenses',
         onPressed: () =>
             NavigationUtils.push(context, const AddExpenseScreen()),
@@ -246,12 +244,12 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(AppTheme.radiusL),
         ),
-      ).animate().scale(duration: 250.ms),
+      )),
     );
   }
 
   Widget _buildLoadingState(ThemeData theme) {
-    return Center(
+    return AppAnimations.fadeIn(Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
@@ -268,7 +266,7 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
             ),
           ),
         ],
-      ).animate().fadeIn(duration: 300.ms),
-    );
+      ),
+    ));
   }
 }

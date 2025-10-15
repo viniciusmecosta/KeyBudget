@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_masked_text2/flutter_masked_text2.dart';
 import 'package:key_budget/app/config/app_theme.dart';
+import 'package:key_budget/app/utils/app_animations.dart';
 import 'package:key_budget/core/models/expense_category_model.dart';
 import 'package:key_budget/core/models/recurring_expense_model.dart';
 import 'package:key_budget/core/services/snackbar_service.dart';
@@ -154,7 +154,7 @@ class _AddEditRecurringExpenseScreenState
             ),
         ],
       ),
-      body: Padding(
+      body: AppAnimations.fadeInFromBottom(Padding(
         padding: const EdgeInsets.all(AppTheme.defaultPadding),
         child: Column(
           children: [
@@ -185,7 +185,7 @@ class _AddEditRecurringExpenseScreenState
             ),
           ],
         ),
-      ).animate().fadeIn(duration: 300.ms).slideY(begin: 0.1, end: 0),
+      )),
     );
   }
 }

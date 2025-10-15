@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:key_budget/app/config/app_theme.dart';
+import 'package:key_budget/app/utils/app_animations.dart';
 import 'package:provider/provider.dart';
 
 import '../viewmodel/analysis_viewmodel.dart';
@@ -8,13 +9,28 @@ import '../widgets/analysis_stats_overview_widget.dart';
 import '../widgets/category_analysis_section_widget.dart';
 import '../widgets/monthly_trend_section_widget.dart';
 
-class AnalysisScreen extends StatelessWidget {
+class AnalysisScreen extends StatefulWidget {
   const AnalysisScreen({super.key});
+
+  @override
+  State<AnalysisScreen> createState() => _AnalysisScreenState();
+}
+
+class _AnalysisScreenState extends State<AnalysisScreen> {
+  bool _isFirstLoad = true;
 
   @override
   Widget build(BuildContext context) {
     final viewModel = Provider.of<AnalysisViewModel>(context);
     final theme = Theme.of(context);
+
+    Widget buildAnimatedWidget(Widget child, int index) {
+      if (_isFirstLoad) {
+        return AppAnimations.fadeInFromBottom(child,
+            delay: Duration(milliseconds: 100 * (index + 1)));
+      }
+      return child;
+    }
 
     return Scaffold(
       appBar: AppBar(
@@ -39,7 +55,7 @@ class AnalysisScreen extends StatelessWidget {
       ),
       body: SafeArea(
         child: viewModel.isLoading
-            ? Center(
+            ? AppAnimations.fadeIn(Center(
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
@@ -55,8 +71,8 @@ class AnalysisScreen extends StatelessWidget {
                       ),
                     ),
                   ],
-                ).animate().fadeIn(duration: const Duration(milliseconds: 300)),
-              )
+                ),
+              ))
             : RefreshIndicator(
                 onRefresh: () async {},
                 color: theme.colorScheme.primary,
@@ -68,47 +84,40 @@ class AnalysisScreen extends StatelessWidget {
                       padding: const EdgeInsets.all(AppTheme.defaultPadding),
                       sliver: SliverList(
                         delegate: SliverChildListDelegate([
-                          const AnalysisStatsOverviewWidget()
-                              .animate()
-                              .fadeIn(
-                                  duration: const Duration(milliseconds: 400),
-                                  delay: const Duration(milliseconds: 100))
-                              .slideY(begin: 0.3, end: 0),
+                          buildAnimatedWidget(
+                              const AnalysisStatsOverviewWidget(), 0),
                           const SizedBox(height: AppTheme.spaceXL),
-                          _buildSectionHeader(context, 'Histórico Mensal',
-                                  'Acompanhe sua evolução ao longo do tempo')
-                              .animate()
-                              .fadeIn(
-                                  duration: const Duration(milliseconds: 400),
-                                  delay: const Duration(milliseconds: 200))
-                              .slideX(begin: -0.2, end: 0),
+                          buildAnimatedWidget(
+                              _buildSectionHeader(context, 'Histórico Mensal',
+                                  'Acompanhe sua evolução ao longo do tempo'),
+                              1),
                           const SizedBox(height: AppTheme.spaceM),
-                          const MonthlyTrendSectionWidget()
-                              .animate()
-                              .fadeIn(
-                                  duration: const Duration(milliseconds: 400),
-                                  delay: const Duration(milliseconds: 300))
-                              .slideY(begin: 0.2, end: 0),
+                          buildAnimatedWidget(
+                              const MonthlyTrendSectionWidget(), 2),
                           const SizedBox(height: AppTheme.spaceXL),
-                          _buildSectionHeader(context, 'Análise por Categoria',
-                                  'Entenda onde seu dinheiro é gasto')
-                              .animate()
-                              .fadeIn(
-                                  duration: const Duration(milliseconds: 400),
-                                  delay: const Duration(milliseconds: 400))
-                              .slideX(begin: -0.2, end: 0),
+                          buildAnimatedWidget(
+                              _buildSectionHeader(
+                                  context,
+                                  'Análise por Categoria',
+                                  'Entenda onde seu dinheiro é gasto'),
+                              3),
                           const SizedBox(height: AppTheme.spaceM),
-                          const CategoryAnalysisSectionWidget()
-                              .animate()
-                              .fadeIn(
-                                  duration: const Duration(milliseconds: 400),
-                                  delay: const Duration(milliseconds: 500))
-                              .slideY(begin: 0.2, end: 0),
+                          buildAnimatedWidget(
+                              const CategoryAnalysisSectionWidget(), 4),
                         ]),
                       ),
                     ),
                   ],
                 ),
+              ).animate(
+                target: _isFirstLoad ? 1.0 : 0.0,
+                onComplete: (controller) {
+                  if (_isFirstLoad) {
+                    setState(() {
+                      _isFirstLoad = false;
+                    });
+                  }
+                },
               ),
       ),
     );

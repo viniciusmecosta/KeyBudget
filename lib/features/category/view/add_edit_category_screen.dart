@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter_animate/flutter_animate.dart';
+import 'package:key_budget/app/utils/app_animations.dart';
 import 'package:key_budget/core/models/expense_category_model.dart';
 import 'package:key_budget/core/services/snackbar_service.dart';
 import 'package:key_budget/features/auth/viewmodel/auth_viewmodel.dart';
@@ -74,7 +74,7 @@ class _AddEditCategoryScreenState extends State<AddEditCategoryScreen> {
         title: Text(
             widget.category == null ? 'Nova Categoria' : 'Editar Categoria'),
       ),
-      body: Padding(
+      body: AppAnimations.fadeInFromBottom(Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
           children: [
@@ -104,7 +104,7 @@ class _AddEditCategoryScreenState extends State<AddEditCategoryScreen> {
             ),
           ],
         ),
-      ).animate().fadeIn(duration: 250.ms).slideY(begin: 0.1, end: 0),
+      )),
     );
   }
 }
