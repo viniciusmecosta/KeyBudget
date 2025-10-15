@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_animate/flutter_animate.dart';
 import 'package:key_budget/app/config/app_theme.dart';
+import 'package:key_budget/app/utils/app_animations.dart';
 import 'package:key_budget/app/widgets/image_picker_widget.dart';
 import 'package:key_budget/core/services/snackbar_service.dart';
 import 'package:key_budget/core/utils/formatters.dart';
@@ -70,7 +70,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: const Text('Criar Conta')),
-      body: Center(
+      body: AppAnimations.fadeInFromBottom(Center(
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(AppTheme.defaultPadding),
           child: Form(
@@ -167,7 +167,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
             ),
           ),
         ),
-      ).animate().fadeIn(duration: 250.ms).slideY(begin: 0.1, end: 0),
+      )),
     );
   }
 }

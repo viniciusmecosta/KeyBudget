@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_animate/flutter_animate.dart';
 import 'package:key_budget/app/config/app_theme.dart';
+import 'package:key_budget/app/utils/app_animations.dart';
 import 'package:key_budget/core/services/snackbar_service.dart';
 import 'package:key_budget/features/expenses/viewmodel/expense_viewmodel.dart';
 import 'package:provider/provider.dart';
@@ -61,7 +61,7 @@ class _ExportExpensesScreenState extends State<ExportExpensesScreen> {
       appBar: AppBar(
         title: const Text('Exportar Despesas'),
       ),
-      body: Padding(
+      body: AppAnimations.fadeInFromBottom(Padding(
         padding: const EdgeInsets.all(AppTheme.defaultPadding),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -92,7 +92,7 @@ class _ExportExpensesScreenState extends State<ExportExpensesScreen> {
             ),
           ],
         ),
-      ).animate().fadeIn(duration: 250.ms).slideY(begin: 0.1, end: 0),
+      )),
     );
   }
 }
