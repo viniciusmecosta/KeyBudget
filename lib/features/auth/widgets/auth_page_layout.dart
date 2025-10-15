@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_animate/flutter_animate.dart';
 import 'package:key_budget/app/config/app_theme.dart';
+import 'package:key_budget/app/utils/app_animations.dart';
 
 class AuthPageLayout extends StatelessWidget {
   final Widget child;
@@ -12,7 +12,7 @@ class AuthPageLayout extends StatelessWidget {
     final theme = Theme.of(context);
 
     return Scaffold(
-      body: Container(
+      body: AppAnimations.fadeIn(Container(
         decoration: BoxDecoration(
           gradient: LinearGradient(
             begin: Alignment.topLeft,
@@ -52,7 +52,7 @@ class AuthPageLayout extends StatelessWidget {
             ),
           ),
         ),
-      ).animate().fadeIn(duration: 250.ms),
+      )),
     );
   }
 }

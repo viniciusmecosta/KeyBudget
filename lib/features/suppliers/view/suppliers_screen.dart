@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_animate/flutter_animate.dart';
 import 'package:key_budget/app/config/app_theme.dart';
+import 'package:key_budget/app/utils/app_animations.dart';
 import 'package:key_budget/app/utils/navigation_utils.dart';
 import 'package:key_budget/app/widgets/empty_state_widget.dart';
 import 'package:key_budget/features/auth/viewmodel/auth_viewmodel.dart';
@@ -45,7 +45,7 @@ class _SuppliersScreenState extends State<SuppliersScreen> {
         title: const Text('Fornecedores'),
       ),
       body: SafeArea(
-        child: RefreshIndicator(
+        child: AppAnimations.fadeIn(RefreshIndicator(
           onRefresh: _handleRefresh,
           child: Consumer<SupplierViewModel>(
             builder: (context, vm, child) {
@@ -81,15 +81,15 @@ class _SuppliersScreenState extends State<SuppliersScreen> {
               );
             },
           ),
-        ).animate().fadeIn(duration: 250.ms),
+        )),
       ),
-      floatingActionButton: FloatingActionButton.extended(
+      floatingActionButton: AppAnimations.scaleIn(FloatingActionButton.extended(
         heroTag: 'fab_suppliers',
         onPressed: () =>
             NavigationUtils.push(context, const AddSupplierScreen()),
         icon: const Icon(Icons.add),
         label: const Text("Novo Fornecedor"),
-      ).animate().scale(duration: 250.ms),
+      )),
     );
   }
 }

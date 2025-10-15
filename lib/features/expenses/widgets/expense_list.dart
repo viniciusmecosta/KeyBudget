@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_animate/flutter_animate.dart';
 import 'package:key_budget/app/config/app_theme.dart';
+import 'package:key_budget/app/utils/app_animations.dart';
 import 'package:key_budget/app/widgets/activity_tile_widget.dart';
 import 'package:key_budget/core/models/expense_model.dart';
 
@@ -38,10 +38,7 @@ class ExpenseList extends StatelessWidget {
     );
 
     if (isFirstLoad) {
-      return tile
-          .animate(delay: Duration(milliseconds: 50 * index))
-          .fadeIn(duration: 400.ms, curve: Curves.easeOut)
-          .slideX(begin: 0.2, end: 0, curve: Curves.easeOutCubic);
+      return AppAnimations.listFadeIn(tile, index: index);
     }
 
     return tile;
