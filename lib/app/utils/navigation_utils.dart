@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:key_budget/app/utils/app_animations.dart';
 
 class NavigationUtils {
   static Future<T?> push<T extends Object?>(BuildContext context, Widget page) {
@@ -8,15 +9,14 @@ class NavigationUtils {
         transitionsBuilder: (context, animation, secondaryAnimation, child) {
           const begin = Offset(0.0, 1.0);
           const end = Offset.zero;
-          const curve = Curves.easeInOutCubic;
-          var tween =
-              Tween(begin: begin, end: end).chain(CurveTween(curve: curve));
+          final tween = Tween(begin: begin, end: end)
+              .chain(CurveTween(curve: AppAnimations.curve));
           return SlideTransition(
             position: animation.drive(tween),
             child: child,
           );
         },
-        transitionDuration: const Duration(milliseconds: 300),
+        transitionDuration: AppAnimations.duration,
       ),
     );
   }

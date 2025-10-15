@@ -1,8 +1,8 @@
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
-import 'package:flutter_animate/flutter_animate.dart';
 import 'package:key_budget/app/config/app_theme.dart';
+import 'package:key_budget/app/utils/app_animations.dart';
 import 'package:key_budget/app/utils/navigation_utils.dart';
 import 'package:key_budget/features/auth/viewmodel/auth_viewmodel.dart';
 import 'package:key_budget/features/category/view/categories_screen.dart';
@@ -49,7 +49,7 @@ class UserScreen extends StatelessWidget {
               }
             }
 
-            return ListView(
+            return AppAnimations.fadeIn(ListView(
               padding: const EdgeInsets.all(AppTheme.defaultPadding),
               children: [
                 const SizedBox(height: 20),
@@ -129,7 +129,7 @@ class UserScreen extends StatelessWidget {
                   },
                 ),
               ],
-            ).animate().fadeIn(duration: 250.ms);
+            ));
           },
         ),
       ),

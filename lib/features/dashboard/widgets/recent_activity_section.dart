@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_animate/flutter_animate.dart';
 import 'package:key_budget/app/config/app_theme.dart';
+import 'package:key_budget/app/utils/app_animations.dart';
 import 'package:key_budget/app/viewmodel/navigation_viewmodel.dart';
 import 'package:key_budget/app/widgets/activity_tile_widget.dart';
 import 'package:key_budget/features/dashboard/viewmodel/dashboard_viewmodel.dart';
@@ -30,13 +30,13 @@ class RecentActivitySection extends StatelessWidget {
             physics: const NeverScrollableScrollPhysics(),
             itemCount: recentExpenses.length > 5 ? 5 : recentExpenses.length,
             itemBuilder: (context, index) {
-              return ActivityTile(
-                expense: recentExpenses[index],
+              return AppAnimations.listFadeIn(
+                ActivityTile(
+                  expense: recentExpenses[index],
+                  index: index,
+                ),
                 index: index,
-              )
-                  .animate(delay: Duration(milliseconds: 50 * index))
-                  .fadeIn(duration: 400.ms, curve: Curves.easeOut)
-                  .slideX(begin: 0.2, end: 0, curve: Curves.easeOutCubic);
+              );
             },
           ),
       ],

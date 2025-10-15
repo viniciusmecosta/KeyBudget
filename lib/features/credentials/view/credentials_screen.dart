@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:key_budget/app/config/app_theme.dart';
+import 'package:key_budget/app/utils/app_animations.dart';
 import 'package:key_budget/app/utils/navigation_utils.dart';
 import 'package:key_budget/app/widgets/empty_state_widget.dart';
 import 'package:key_budget/core/services/snackbar_service.dart';
@@ -91,7 +92,7 @@ class _CredentialsScreenState extends State<CredentialsScreen> {
       ),
       body: SafeArea(
         child: vm.isLoading
-            ? Center(
+            ? AppAnimations.fadeIn(Center(
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
@@ -107,8 +108,8 @@ class _CredentialsScreenState extends State<CredentialsScreen> {
                       ),
                     ),
                   ],
-                ).animate().fadeIn(duration: 300.ms),
-              )
+                ),
+              ))
             : RefreshIndicator(
                 onRefresh: _handleRefresh,
                 color: theme.colorScheme.primary,
@@ -140,12 +141,8 @@ class _CredentialsScreenState extends State<CredentialsScreen> {
                               Widget tile =
                                   CredentialListTile(credential: credential);
                               if (_isFirstLoad) {
-                                return tile
-                                    .animate(
-                                        delay:
-                                            Duration(milliseconds: 100 * index))
-                                    .fadeIn(duration: 300.ms)
-                                    .slideX(begin: 0.2, end: 0);
+                                return AppAnimations.listFadeIn(tile,
+                                    index: index);
                               }
                               return tile;
                             },
@@ -161,15 +158,15 @@ class _CredentialsScreenState extends State<CredentialsScreen> {
                     _isFirstLoad = false;
                   });
                 }
-              }).fadeIn(duration: 250.ms),
+              }).fadeIn(duration: AppAnimations.duration),
       ),
-      floatingActionButton: FloatingActionButton.extended(
+      floatingActionButton: AppAnimations.scaleIn(FloatingActionButton.extended(
         heroTag: 'fab_credentials',
         onPressed: () =>
             NavigationUtils.push(context, const AddCredentialScreen()),
         icon: const Icon(Icons.add),
         label: const Text("Nova Credencial"),
-      ).animate().scale(duration: 250.ms),
+      )),
     );
   }
 }

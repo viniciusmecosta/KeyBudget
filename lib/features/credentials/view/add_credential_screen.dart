@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter_animate/flutter_animate.dart';
 import 'package:key_budget/app/config/app_theme.dart';
+import 'package:key_budget/app/utils/app_animations.dart';
 import 'package:key_budget/core/services/snackbar_service.dart';
 import 'package:key_budget/features/auth/viewmodel/auth_viewmodel.dart';
 import 'package:key_budget/features/credentials/viewmodel/credential_viewmodel.dart';
@@ -101,7 +101,7 @@ class _AddCredentialScreenState extends State<AddCredentialScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: const Text('Adicionar Credencial')),
-      body: Padding(
+      body: AppAnimations.fadeInFromBottom(Padding(
         padding: const EdgeInsets.all(AppTheme.defaultPadding),
         child: Column(
           children: [
@@ -137,7 +137,7 @@ class _AddCredentialScreenState extends State<AddCredentialScreen> {
             ),
           ],
         ),
-      ).animate().fadeIn(duration: 250.ms).slideY(begin: 0.1, end: 0),
+      )),
     );
   }
 }
