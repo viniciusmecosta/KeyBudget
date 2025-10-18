@@ -47,12 +47,13 @@ class _AddEditCategoryScreenState extends State<AddEditCategoryScreen> {
     final viewModel = Provider.of<CategoryViewModel>(context, listen: false);
     final userId =
         Provider.of<AuthViewModel>(context, listen: false).currentUser!.id;
+    final navigator = Navigator.of(context);
 
     final category = ExpenseCategory(
       id: widget.category?.id,
       name: _nameController.text,
       iconCodePoint: _selectedIcon!.codePoint,
-      colorValue: _selectedColor!.value,
+      colorValue: _selectedColor!.toARGB32(),
     );
 
     final future = widget.category == null
@@ -62,7 +63,7 @@ class _AddEditCategoryScreenState extends State<AddEditCategoryScreen> {
     future.whenComplete(() {
       if (mounted) {
         setState(() => _isSaving = false);
-        Navigator.of(context).pop();
+        navigator.pop();
       }
     });
   }

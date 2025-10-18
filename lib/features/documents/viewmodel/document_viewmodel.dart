@@ -20,7 +20,6 @@ class DocumentViewModel extends ChangeNotifier {
   bool _isLoading = false;
   String? _errorMessage;
   List<Document> _documents = [];
-
   bool _isUploading = false;
   double? _uploadProgress;
 
@@ -240,28 +239,33 @@ class DocumentViewModel extends ChangeNotifier {
   }
 
   Future<void> deleteAttachmentFile(Attachment attachment) async {
-    try {
-      final file = await _getLocalFile(attachment);
-      if (await file.exists()) {
-        await file.delete();
-      }
-      await _driveService.deleteFile(attachment.driveId);
-    } catch (e) {
-      //
+    final file = await _getLocalFile(attachment);
+    if (await file.exists()) {
+      await file.delete();
     }
+    await _driveService.deleteFile(attachment.driveId);
   }
 
   Future<void> openFile(Attachment attachment) async {
     final file = await getAttachmentFile(attachment);
     if (file != null) {
-      await OpenFile.open(file.path);
+      final result = await OpenFile.open(file.path);
+      if (result.type != ResultType.done) {
+        _setErrorMessage('Não foi possível abrir o arquivo: ${result.message}');
+      }
     }
   }
 
   Future<void> shareAttachment(Attachment attachment) async {
     final file = await getAttachmentFile(attachment);
     if (file != null) {
-      await Share.shareXFiles([XFile(file.path)], text: attachment.name);
+      final params = ShareParams(
+        files: [XFile(file.path)],
+        text: attachment.name,
+      );
+      await SharePlus.instance.share(params);
+    } else {
+      _setErrorMessage('Não foi possível obter o arquivo para compartilhar.');
     }
   }
 

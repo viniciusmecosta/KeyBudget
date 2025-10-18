@@ -54,12 +54,13 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
   void _import(BuildContext context) async {
     final viewModel = Provider.of<ExpenseViewModel>(context, listen: false);
     final authViewModel = Provider.of<AuthViewModel>(context, listen: false);
+    final scaffoldContext = context;
 
     final count =
         await viewModel.importExpensesFromCsv(authViewModel.currentUser!.id);
-    if (!mounted) return;
+    if (!scaffoldContext.mounted) return;
     SnackbarService.showSuccess(
-        context, '$count despesas importadas com sucesso!');
+        scaffoldContext, '$count despesas importadas com sucesso!');
   }
 
   void _showCategoryFilter() {
