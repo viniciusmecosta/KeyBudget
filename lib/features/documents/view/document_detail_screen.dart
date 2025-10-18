@@ -48,15 +48,17 @@ class DocumentDetailScreen extends StatelessWidget {
             icon: const Icon(Icons.delete_outline),
             onPressed: () async {
               HapticFeedback.mediumImpact();
+              final navigator = Navigator.of(context);
+              final scaffoldContext = context;
               final success = await viewModel.deleteDocument(userId, document);
-              if (!context.mounted) return;
+              if (!scaffoldContext.mounted) return;
               if (success) {
                 SnackbarService.showSuccess(
-                    context, 'Documento excluído com sucesso!');
-                Navigator.of(context).pop();
+                    scaffoldContext, 'Documento excluído com sucesso!');
+                navigator.pop();
               } else {
-                SnackbarService.showError(
-                    context, viewModel.errorMessage ?? 'Erro ao excluir.');
+                SnackbarService.showError(scaffoldContext,
+                    viewModel.errorMessage ?? 'Erro ao excluir.');
               }
             },
           ),
@@ -180,15 +182,17 @@ class DocumentDetailScreen extends StatelessWidget {
                       child: const Text('Marcar como Principal'),
                       onPressed: () async {
                         final allVersions = [document, ...document.versions];
+                        final scaffoldContext = context;
+                        final navigator = Navigator.of(context);
                         final success = await viewModel.setAsPrincipal(
                             userId, v, allVersions);
-                        if (!context.mounted) return;
+                        if (!scaffoldContext.mounted) return;
                         if (success) {
-                          SnackbarService.showSuccess(
-                              context, 'Versão definida como principal!');
-                          Navigator.pop(context);
+                          SnackbarService.showSuccess(scaffoldContext,
+                              'Versão definida como principal!');
+                          navigator.pop();
                         } else {
-                          SnackbarService.showError(context,
+                          SnackbarService.showError(scaffoldContext,
                               viewModel.errorMessage ?? 'Erro ao definir.');
                         }
                       },
@@ -243,9 +247,11 @@ class DocumentDetailScreen extends StatelessWidget {
               onPressed: () async {
                 final viewModel =
                     Provider.of<DocumentViewModel>(context, listen: false);
+                final scaffoldContext = context;
                 await viewModel.shareAttachment(attachment);
-                if (context.mounted && viewModel.errorMessage != null) {
-                  SnackbarService.showError(context, viewModel.errorMessage!);
+                if (scaffoldContext.mounted && viewModel.errorMessage != null) {
+                  SnackbarService.showError(
+                      scaffoldContext, viewModel.errorMessage!);
                 }
               },
             ),
@@ -254,23 +260,25 @@ class DocumentDetailScreen extends StatelessWidget {
             onTap: () async {
               final viewModel =
                   Provider.of<DocumentViewModel>(context, listen: false);
+              final scaffoldContext = context;
 
               if (isPdf) {
                 final file = await viewModel.getAttachmentFile(attachment);
-                if (file != null && context.mounted) {
+                if (file != null && scaffoldContext.mounted) {
                   await viewModel.openFile(attachment);
-                  if (viewModel.errorMessage != null) {
+                  if (scaffoldContext.mounted &&
+                      viewModel.errorMessage != null) {
                     SnackbarService.showError(
-                      context,
+                      scaffoldContext,
                       viewModel.errorMessage ?? 'Não foi possível abrir o PDF.',
                     );
                   }
                 }
               } else {
                 await viewModel.openFile(attachment);
-                if (context.mounted && viewModel.errorMessage != null) {
+                if (scaffoldContext.mounted && viewModel.errorMessage != null) {
                   SnackbarService.showError(
-                    context,
+                    scaffoldContext,
                     viewModel.errorMessage ??
                         'Não foi possível abrir a imagem.',
                   );

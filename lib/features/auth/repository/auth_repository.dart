@@ -58,27 +58,27 @@ class AuthRepository {
         ExpenseCategory(
             name: 'Alimentação',
             iconCodePoint: Icons.restaurant.codePoint,
-            colorValue: AppTheme.chartColors[0].value),
+            colorValue: AppTheme.chartColors[0].toARGB32()),
         ExpenseCategory(
             name: 'Lazer',
             iconCodePoint: Icons.shopping_bag.codePoint,
-            colorValue: AppTheme.chartColors[1].value),
+            colorValue: AppTheme.chartColors[1].toARGB32()),
         ExpenseCategory(
             name: 'Roupa',
             iconCodePoint: Icons.checkroom.codePoint,
-            colorValue: AppTheme.chartColors[2].value),
+            colorValue: AppTheme.chartColors[2].toARGB32()),
         ExpenseCategory(
             name: 'Farmácia',
             iconCodePoint: Icons.medication_rounded.codePoint,
-            colorValue: AppTheme.chartColors[3].value),
+            colorValue: AppTheme.chartColors[3].toARGB32()),
         ExpenseCategory(
             name: 'Transporte',
             iconCodePoint: Icons.directions_bus.codePoint,
-            colorValue: AppTheme.chartColors[4].value),
+            colorValue: AppTheme.chartColors[4].toARGB32()),
         ExpenseCategory(
             name: 'Outros',
             iconCodePoint: Icons.category_rounded.codePoint,
-            colorValue: AppTheme.chartColors[5].value),
+            colorValue: AppTheme.chartColors[5].toARGB32()),
       ];
 
       final batch = _firestore.batch();

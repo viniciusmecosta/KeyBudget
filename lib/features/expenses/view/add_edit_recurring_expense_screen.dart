@@ -67,6 +67,7 @@ class _AddEditRecurringExpenseScreenState
 
     final viewModel = context.read<ExpenseViewModel>();
     final userId = context.read<AuthViewModel>().currentUser!.id;
+    final bool isUpdating = widget.expense != null;
 
     final recurringExpense = RecurringExpense(
       id: widget.expense?.id,
@@ -81,19 +82,17 @@ class _AddEditRecurringExpenseScreenState
     );
 
     try {
-      if (widget.expense == null) {
-        await viewModel.addRecurringExpense(userId, recurringExpense);
-      } else {
+      if (isUpdating) {
         await viewModel.updateRecurringExpense(userId, recurringExpense);
+      } else {
+        await viewModel.addRecurringExpense(userId, recurringExpense);
       }
-      if (mounted) {
-        SnackbarService.showSuccess(context, 'Despesa recorrente salva!');
-        Navigator.of(context).pop();
-      }
+      if (!mounted) return;
+      SnackbarService.showSuccess(context, 'Despesa recorrente salva!');
+      Navigator.of(context).pop();
     } catch (e) {
-      if (mounted) {
-        SnackbarService.showError(context, 'Erro ao salvar despesa.');
-      }
+      if (!mounted) return;
+      SnackbarService.showError(context, 'Erro ao salvar despesa.');
     } finally {
       if (mounted) {
         setState(() => _isSaving = false);
@@ -121,21 +120,22 @@ class _AddEditRecurringExpenseScreenState
       ),
     );
 
-    if (confirmed == true && widget.expense != null) {
-      HapticFeedback.mediumImpact();
-      final viewModel = context.read<ExpenseViewModel>();
-      final userId = context.read<AuthViewModel>().currentUser!.id;
-      try {
-        await viewModel.deleteRecurringExpense(userId, widget.expense!.id!);
-        if (mounted) {
-          SnackbarService.showSuccess(context, 'Despesa recorrente excluída!');
-          Navigator.of(context).pop();
-        }
-      } catch (e) {
-        if (mounted) {
-          SnackbarService.showError(context, 'Erro ao excluir despesa.');
-        }
-      }
+    if (confirmed != true || widget.expense == null) return;
+
+    if (!mounted) return;
+
+    HapticFeedback.mediumImpact();
+    final viewModel = context.read<ExpenseViewModel>();
+    final userId = context.read<AuthViewModel>().currentUser!.id;
+
+    try {
+      await viewModel.deleteRecurringExpense(userId, widget.expense!.id!);
+      if (!mounted) return;
+      SnackbarService.showSuccess(context, 'Despesa recorrente excluída!');
+      Navigator.of(context).pop();
+    } catch (e) {
+      if (!mounted) return;
+      SnackbarService.showError(context, 'Erro ao excluir despesa.');
     }
   }
 

@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'dart:ui' as ui;
+
 import 'package:flutter/material.dart';
 import 'package:google_mlkit_text_recognition/google_mlkit_text_recognition.dart';
 
@@ -308,7 +309,7 @@ class TextOverlayPainter extends CustomPainter {
 
       if (isAssigned) {
         final Paint fillPaint = Paint()
-          ..color = color.withOpacity(assignedFillOpacity)
+          ..color = color.withAlpha((255 * assignedFillOpacity).round())
           ..style = PaintingStyle.fill;
         canvas.drawRect(rect, fillPaint);
       }

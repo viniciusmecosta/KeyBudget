@@ -66,9 +66,12 @@ class _SupplierDetailScreenState extends State<SupplierDetailScreen> {
     HapticFeedback.mediumImpact();
 
     final authViewModel = Provider.of<AuthViewModel>(context, listen: false);
+    final viewModel = Provider.of<SupplierViewModel>(context, listen: false);
+    final scaffoldContext = context;
+    final navigator = Navigator.of(context);
     final userId = authViewModel.currentUser!.id;
 
-    await Provider.of<SupplierViewModel>(context, listen: false).updateSupplier(
+    await viewModel.updateSupplier(
       userId: userId,
       originalSupplier: widget.supplier,
       name: _nameController.text,
@@ -80,14 +83,15 @@ class _SupplierDetailScreenState extends State<SupplierDetailScreen> {
       notes: _notesController.text.isNotEmpty ? _notesController.text : null,
     );
 
-    if (!mounted) return;
+    if (!scaffoldContext.mounted) return;
 
     setState(() {
       _isSaving = false;
       _isEditing = false;
     });
-    SnackbarService.showSuccess(context, 'Fornecedor atualizado com sucesso!');
-    Navigator.of(context).pop();
+    SnackbarService.showSuccess(
+        scaffoldContext, 'Fornecedor atualizado com sucesso!');
+    navigator.pop();
   }
 
   void _deleteSupplier() {
@@ -108,15 +112,20 @@ class _SupplierDetailScreenState extends State<SupplierDetailScreen> {
               HapticFeedback.mediumImpact();
               final authViewModel =
                   Provider.of<AuthViewModel>(context, listen: false);
-              final userId = authViewModel.currentUser!.id;
-              await Provider.of<SupplierViewModel>(context, listen: false)
-                  .deleteSupplier(userId, widget.supplier.id!);
+              final viewModel =
+                  Provider.of<SupplierViewModel>(context, listen: false);
+              final scaffoldContext = context;
+              final dialogNavigator = Navigator.of(ctx);
+              final screenNavigator = Navigator.of(context);
 
-              if (!mounted) return;
+              final userId = authViewModel.currentUser!.id;
+              await viewModel.deleteSupplier(userId, widget.supplier.id!);
+
+              if (!scaffoldContext.mounted) return;
               SnackbarService.showSuccess(
-                  context, 'Fornecedor excluído com sucesso!');
-              Navigator.of(ctx).pop();
-              Navigator.of(context).pop();
+                  scaffoldContext, 'Fornecedor excluído com sucesso!');
+              dialogNavigator.pop();
+              screenNavigator.pop();
             },
           ),
         ],

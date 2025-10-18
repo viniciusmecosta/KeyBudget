@@ -33,25 +33,26 @@ class _ExportExpensesScreenState extends State<ExportExpensesScreen> {
 
   void _export(BuildContext context, {bool all = false}) async {
     final viewModel = Provider.of<ExpenseViewModel>(context, listen: false);
+    final scaffoldContext = context;
 
     bool success;
     if (all) {
       success = await viewModel.exportExpensesToCsv(null, null);
     } else {
       if (_startDate == null || _endDate == null) {
-        SnackbarService.showError(context, 'Por favor, selecione um período.');
+        SnackbarService.showError(
+            scaffoldContext, 'Por favor, selecione um período.');
         return;
       }
       success = await viewModel.exportExpensesToCsv(_startDate!, _endDate!);
     }
 
-    if (mounted) {
-      if (success) {
-        SnackbarService.showSuccess(
-            context, 'Arquivo CSV exportado com sucesso!');
-      } else {
-        SnackbarService.showError(context, 'Falha ao exportar arquivo.');
-      }
+    if (!scaffoldContext.mounted) return;
+    if (success) {
+      SnackbarService.showSuccess(
+          scaffoldContext, 'Arquivo CSV exportado com sucesso!');
+    } else {
+      SnackbarService.showError(scaffoldContext, 'Falha ao exportar arquivo.');
     }
   }
 

@@ -46,29 +46,30 @@ class SnackbarService {
   }
 
   static void showSuccess(BuildContext context, String message) {
-    _showSnackBar(
-      context,
-      message,
-      Colors.green.shade600,
-      Colors.white,
-    );
+    // _showSnackBar(
+    //   context,
+    //   message,
+    //   Colors.green.shade600,
+    //   Colors.white,
+    // );
   }
 
   static void showInfo(BuildContext context, String message) {
-    _showSnackBar(
-      context,
-      message,
-      Colors.blue.shade600,
-      Colors.white,
-    );
+    // _showSnackBar(
+    //   context,
+    //   message,
+    //   Colors.blue.shade600,
+    //   Colors.white,
+    // );
   }
 
   static void showWarning(BuildContext context, String message) {
-    _showSnackBar(
-      context,
-      message,
-      Colors.orange.shade600,
-      Colors.white,
-    );
+    // Não exibir snackbar de aviso
+    // _showSnackBar(
+    //   context,
+    //   message,
+    //   Colors.orange.shade600,
+    //   Colors.white,
+    // );
   }
 }

@@ -74,56 +74,54 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
       final recognizedText = await _ocrService.processImage(fileForOcr);
       final extractedData = _ocrService.extractExpenseData(recognizedText.text);
 
-      if (mounted) {
-        final amount = extractedData['amount'] as double?;
-        final date = extractedData['date'] as DateTime?;
-        final description = extractedData['description'] as String?;
+      if (!mounted) return;
 
-        _amountController.updateValue(0);
-        _locationController.clear();
-        _motivationController.clear();
+      final amount = extractedData['amount'] as double?;
+      final date = extractedData['date'] as DateTime?;
+      final description = extractedData['description'] as String?;
 
-        setState(() {
-          _processedImagePath = pickedFile.path;
-          _recognizedText = recognizedText;
+      _amountController.updateValue(0);
+      _locationController.clear();
+      _motivationController.clear();
 
-          if (amount != null) {
-            _amountController.updateValue(amount);
-            _currentOcrAssignments[OcrTargetField.amount] =
-                _findOriginalTextForAmount(recognizedText, amount) ??
-                    amount.toStringAsFixed(2).replaceAll('.', ',');
-          }
-          if (date != null) {
-            _selectedDate = date;
-            _currentOcrAssignments[OcrTargetField.date] =
-                _findOriginalTextForDate(recognizedText, date) ??
-                    DateFormat('dd/MM/yyyy').format(date);
-          }
-          if (description != null) {
-            _locationController.text = description;
-            _currentOcrAssignments[OcrTargetField.location] = description;
-          }
-        });
+      setState(() {
+        _processedImagePath = pickedFile.path;
+        _recognizedText = recognizedText;
 
-        final foundParts = [
-          if (amount != null) 'valor',
-          if (date != null) 'data',
-          if (description != null) 'descrição'
-        ];
-        if (foundParts.isNotEmpty) {
-          SnackbarService.showInfo(
-              context, '${foundParts.join(', ')} preenchido(s)! Verifique.');
-        } else {
-          SnackbarService.showInfo(
-              context, 'Nenhum dado preenchido automaticamente.');
+        if (amount != null) {
+          _amountController.updateValue(amount);
+          _currentOcrAssignments[OcrTargetField.amount] =
+              _findOriginalTextForAmount(recognizedText, amount) ??
+                  amount.toStringAsFixed(2).replaceAll('.', ',');
         }
+        if (date != null) {
+          _selectedDate = date;
+          _currentOcrAssignments[OcrTargetField.date] =
+              _findOriginalTextForDate(recognizedText, date) ??
+                  DateFormat('dd/MM/yyyy').format(date);
+        }
+        if (description != null) {
+          _locationController.text = description;
+          _currentOcrAssignments[OcrTargetField.location] = description;
+        }
+      });
+
+      final foundParts = [
+        if (amount != null) 'valor',
+        if (date != null) 'data',
+        if (description != null) 'descrição'
+      ];
+      if (foundParts.isNotEmpty) {
+        SnackbarService.showInfo(
+            context, '${foundParts.join(', ')} preenchido(s)! Verifique.');
+      } else {
+        SnackbarService.showInfo(
+            context, 'Nenhum dado preenchido automaticamente.');
       }
     } catch (e) {
-      if (mounted) {
-        
-        SnackbarService.showError(
-            context, 'Falha ao processar a imagem. Tente novamente.');
-      }
+      if (!mounted) return;
+      SnackbarService.showError(
+          context, 'Falha ao processar a imagem. Tente novamente.');
     } finally {
       if (mounted) {
         setState(() => _isScanning = false);
@@ -167,16 +165,16 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
               leading: const Icon(Icons.photo_library),
               title: const Text('Galeria'),
               onTap: () {
-                _scanReceipt(ImageSource.gallery);
                 Navigator.of(context).pop();
+                _scanReceipt(ImageSource.gallery);
               },
             ),
             ListTile(
               leading: const Icon(Icons.photo_camera),
               title: const Text('Câmera'),
               onTap: () {
-                _scanReceipt(ImageSource.camera);
                 Navigator.of(context).pop();
+                _scanReceipt(ImageSource.camera);
               },
             ),
           ],
@@ -190,10 +188,11 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
 
     final initialAssignmentsForViewer = Map<OcrTargetField, String>.fromEntries(
         _currentOcrAssignments.entries
-            .where((e) => e.value != null)
+            .where((e) => e.value.isNotEmpty)
             .cast<MapEntry<OcrTargetField, String>>());
 
-    final corrections = await Navigator.push<Map<OcrTargetField, String>>(
+    final Map<OcrTargetField, String>? corrections =
+        await Navigator.push<Map<OcrTargetField, String>>(
       context,
       MaterialPageRoute(
         builder: (_) => OcrDetailedViewerScreen(
@@ -205,14 +204,15 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
     );
 
     if (corrections != null && mounted) {
-      _applyOcrCorrections(corrections);
+      _applyOcrCorrections(corrections, context);
       setState(() {
         _currentOcrAssignments = corrections;
       });
     }
   }
 
-  void _applyOcrCorrections(Map<OcrTargetField, String> corrections) {
+  void _applyOcrCorrections(
+      Map<OcrTargetField, String> corrections, BuildContext currentContext) {
     setState(() {
       _amountController.updateValue(0);
       _selectedDate = DateTime.now();
@@ -220,50 +220,48 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
       _locationController.clear();
 
       corrections.forEach((field, text) {
-        try {
-          switch (field) {
-            case OcrTargetField.amount:
+        switch (field) {
+          case OcrTargetField.amount:
+            try {
               final cleanValue =
                   text.replaceAll(RegExp(r'[^\d,]'), '').replaceAll(',', '.');
               final doubleValue = double.parse(cleanValue);
               _amountController.updateValue(doubleValue);
-              break;
-            case OcrTargetField.date:
-              DateTime? parsedDate;
+            } catch (e) {
+              _amountController.updateValue(0);
+            }
+            break;
+          case OcrTargetField.date:
+            DateTime? parsedDate;
+            try {
+              parsedDate = DateFormat('dd/MM/yyyy').parseStrict(text);
+            } catch (_) {}
+            if (parsedDate == null) {
               try {
-                parsedDate = DateFormat('dd/MM/yyyy').parseStrict(text);
+                parsedDate = DateFormat('dd-MM-yyyy').parseStrict(text);
               } catch (_) {}
-              if (parsedDate == null) {
-                try {
-                  parsedDate = DateFormat('dd-MM-yyyy').parseStrict(text);
-                } catch (_) {}
-              }
-              if (parsedDate == null) {
-                try {
-                  parsedDate = DateFormat('yyyy-MM-dd').parseStrict(text);
-                } catch (_) {}
-              }
-              if (parsedDate != null) {
-                _selectedDate = parsedDate;
-              } else {
-
-              }
-              break;
-            case OcrTargetField.motivation:
-              _motivationController.text = text;
-              break;
-            case OcrTargetField.location:
-              _locationController.text = text;
-              break;
-            case OcrTargetField.none:
-              break;
-          }
-        } catch (e) {
-
+            }
+            if (parsedDate == null) {
+              try {
+                parsedDate = DateFormat('yyyy-MM-dd').parseStrict(text);
+              } catch (_) {}
+            }
+            if (parsedDate != null) {
+              _selectedDate = parsedDate;
+            }
+            break;
+          case OcrTargetField.motivation:
+            _motivationController.text = text;
+            break;
+          case OcrTargetField.location:
+            _locationController.text = text;
+            break;
+          case OcrTargetField.none:
+            break;
         }
       });
       SnackbarService.showSuccess(
-          context, 'Campos atualizados com as seleções!');
+          currentContext, 'Campos atualizados com as seleções!');
     });
   }
 
@@ -278,6 +276,8 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
     final expenseViewModel =
         Provider.of<ExpenseViewModel>(context, listen: false);
     final authViewModel = Provider.of<AuthViewModel>(context, listen: false);
+    final navigator = Navigator.of(context);
+    final scaffoldContext = context;
     final userId = authViewModel.currentUser!.id;
     final newExpense = Expense(
       amount: _amountController.numberValue,
@@ -290,11 +290,10 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
           _locationController.text.isNotEmpty ? _locationController.text : null,
     );
     await expenseViewModel.addExpense(userId, newExpense);
-    if (mounted) {
-      setState(() => _isSaving = false);
-      SnackbarService.showSuccess(context, 'Despesa salva com sucesso!');
-      Navigator.of(context).pop();
-    }
+    if (!scaffoldContext.mounted) return;
+    setState(() => _isSaving = false);
+    SnackbarService.showSuccess(scaffoldContext, 'Despesa salva com sucesso!');
+    navigator.pop();
   }
 
   @override
@@ -370,13 +369,14 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
                               image: FileImage(File(_processedImagePath!)),
                               fit: BoxFit.cover,
                               colorFilter: ColorFilter.mode(
-                                  Colors.black.withOpacity(0.3),
+                                  Colors.black.withAlpha((255 * 0.3).round()),
                                   BlendMode.darken),
                             ),
                           ),
                           child: Center(
                               child: Icon(Icons.touch_app_outlined,
-                                  color: Colors.white.withOpacity( 0.8),
+                                  color: Colors.white
+                                      .withAlpha((255 * 0.8).round()),
                                   size: 40)),
                         ),
                       )
