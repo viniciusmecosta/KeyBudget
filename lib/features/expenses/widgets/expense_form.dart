@@ -93,8 +93,9 @@ class ExpenseForm extends StatelessWidget {
             controller: motivationController,
             textCapitalization: TextCapitalization.sentences,
             optionsBuilder: (TextEditingValue textEditingValue) {
-              if (textEditingValue.text == '')
+              if (textEditingValue.text == '') {
                 return const Iterable<String>.empty();
+              }
               return expenseViewModel.getUniqueMotivationsForCategory(
                   selectedCategory?.id, textEditingValue.text);
             },
@@ -109,8 +110,9 @@ class ExpenseForm extends StatelessWidget {
             controller: locationController,
             textCapitalization: TextCapitalization.sentences,
             optionsBuilder: (TextEditingValue textEditingValue) {
-              if (textEditingValue.text == '')
+              if (textEditingValue.text == '') {
                 return const Iterable<String>.empty();
+              }
               return expenseViewModel.getUniqueLocationsForCategory(
                   selectedCategory?.id, textEditingValue.text);
             },
