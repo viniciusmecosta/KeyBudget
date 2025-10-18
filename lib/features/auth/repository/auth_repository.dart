@@ -10,7 +10,25 @@ import 'package:key_budget/core/models/user_model.dart';
 class AuthRepository {
   final firebase.FirebaseAuth _firebaseAuth = firebase.FirebaseAuth.instance;
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
-  final GoogleSignIn _googleSignIn = GoogleSignIn();
+  final GoogleSignIn _googleSignIn = GoogleSignIn.instance;
+
+  bool _isInitialized = false;
+
+  Future<void> _ensureGoogleSignInInitialized({String? serverClientId}) async {
+    if (_isInitialized) return;
+
+    try {
+      await _googleSignIn.initialize(
+        serverClientId: serverClientId,
+      );
+      _isInitialized = true;
+    } catch (e) {
+      if (kDebugMode) {
+        print("Error initializing Google Sign-In: $e");
+      }
+      rethrow;
+    }
+  }
 
   Stream<User?> get onAuthStateChanged {
     return _firebaseAuth.authStateChanges().asyncMap((firebaseUser) async {
@@ -121,18 +139,16 @@ class AuthRepository {
     return userCredential;
   }
 
-  Future<User?> signInWithGoogle() async {
+  Future<User?> signInWithGoogle({String? serverClientId}) async {
     try {
-      final GoogleSignInAccount? googleUser = await _googleSignIn.signIn();
-      if (googleUser == null) {
-        return null;
-      }
+      await _ensureGoogleSignInInitialized(serverClientId: serverClientId);
 
-      final GoogleSignInAuthentication googleAuth =
-          await googleUser.authentication;
+      final GoogleSignInAccount googleUser = await _googleSignIn.authenticate();
+
+      final GoogleSignInAuthentication googleAuth = googleUser.authentication;
+
       final firebase.AuthCredential credential =
           firebase.GoogleAuthProvider.credential(
-        accessToken: googleAuth.accessToken,
         idToken: googleAuth.idToken,
       );
 
