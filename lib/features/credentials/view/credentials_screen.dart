@@ -45,25 +45,26 @@ class _CredentialsScreenState extends State<CredentialsScreen> {
   void _import(BuildContext context) async {
     final viewModel = Provider.of<CredentialViewModel>(context, listen: false);
     final authViewModel = Provider.of<AuthViewModel>(context, listen: false);
+    final scaffoldContext = context;
 
     final count =
         await viewModel.importCredentialsFromCsv(authViewModel.currentUser!.id);
-    if (!mounted) return;
+    if (!scaffoldContext.mounted) return;
     SnackbarService.showSuccess(
-        context, '$count credenciais importadas com sucesso!');
+        scaffoldContext, '$count credenciais importadas com sucesso!');
   }
 
   void _export(BuildContext context) async {
     final viewModel = Provider.of<CredentialViewModel>(context, listen: false);
+    final scaffoldContext = context;
 
     final success = await viewModel.exportCredentialsToCsv();
-    if (mounted) {
-      if (success) {
-        SnackbarService.showSuccess(
-            context, 'Credenciais exportadas com sucesso!');
-      } else {
-        SnackbarService.showError(context, 'Falha ao exportar.');
-      }
+    if (!scaffoldContext.mounted) return;
+    if (success) {
+      SnackbarService.showSuccess(
+          scaffoldContext, 'Credenciais exportadas com sucesso!');
+    } else {
+      SnackbarService.showError(scaffoldContext, 'Falha ao exportar.');
     }
   }
 

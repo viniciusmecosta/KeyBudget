@@ -47,18 +47,24 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
             child: const Text('Excluir'),
             onPressed: () async {
               HapticFeedback.mediumImpact();
-              final userId = Provider.of<AuthViewModel>(context, listen: false)
-                  .currentUser
-                  ?.id;
-              if (userId != null) {
-                await Provider.of<CategoryViewModel>(context, listen: false)
-                    .deleteCategory(userId, category.id!);
-                if (mounted) {
-                  SnackbarService.showSuccess(
-                      context, 'Categoria excluída com sucesso!');
-                }
+              final auth = Provider.of<AuthViewModel>(context, listen: false);
+              final viewModel =
+                  Provider.of<CategoryViewModel>(context, listen: false);
+              final navigator = Navigator.of(ctx);
+              final scaffoldContext = context;
+
+              final userId = auth.currentUser?.id;
+              if (userId == null) {
+                navigator.pop();
+                return;
               }
-              Navigator.of(ctx).pop();
+
+              await viewModel.deleteCategory(userId, category.id!);
+
+              if (!scaffoldContext.mounted) return;
+              SnackbarService.showSuccess(
+                  scaffoldContext, 'Categoria excluída com sucesso!');
+              navigator.pop();
             },
           ),
         ],

@@ -63,6 +63,9 @@ dependencies:
 
   # Others
   url_launcher: ^6.3.0
+  google_mlkit_text_recognition: ^0.15.0
+  image_cropper: ^11.0.0
+  http: ^1.2.1
 
 dev_dependencies:
   flutter_test:

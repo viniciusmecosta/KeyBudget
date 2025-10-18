@@ -20,6 +20,7 @@ class ExpenseForm extends StatelessWidget {
   final Function(DateTime) onDateChanged;
   final Function(ExpenseCategory?) onCategoryChanged;
   final bool isEditing;
+  final Widget? imagePreviewWidget;
 
   const ExpenseForm({
     super.key,
@@ -32,6 +33,7 @@ class ExpenseForm extends StatelessWidget {
     required this.onDateChanged,
     required this.onCategoryChanged,
     this.isEditing = false,
+    this.imagePreviewWidget,
   });
 
   @override
@@ -74,9 +76,8 @@ class ExpenseForm extends StatelessWidget {
               final userId = Provider.of<AuthViewModel>(context, listen: false)
                   .currentUser
                   ?.id;
-              await Navigator.of(context).push(MaterialPageRoute(
-                builder: (_) => const CategoriesScreen(),
-              ));
+              await Navigator.of(context).push(
+                  MaterialPageRoute(builder: (_) => const CategoriesScreen()));
               if (userId != null && context.mounted) {
                 await Provider.of<CategoryViewModel>(context, listen: false)
                     .fetchCategories(userId);
@@ -126,6 +127,7 @@ class ExpenseForm extends StatelessWidget {
             isEditing: isEditing,
             onDateSelected: onDateChanged,
           ),
+          if (imagePreviewWidget != null) imagePreviewWidget!,
         ],
       ),
     );

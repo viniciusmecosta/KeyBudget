@@ -78,10 +78,12 @@ class _CredentialDetailScreenState extends State<CredentialDetailScreen> {
     HapticFeedback.mediumImpact();
 
     final authViewModel = Provider.of<AuthViewModel>(context, listen: false);
+    final viewModel = Provider.of<CredentialViewModel>(context, listen: false);
+    final scaffoldContext = context;
+    final navigator = Navigator.of(context);
     final userId = authViewModel.currentUser!.id;
 
-    await Provider.of<CredentialViewModel>(context, listen: false)
-        .updateCredential(
+    await viewModel.updateCredential(
       userId: userId,
       originalCredential: widget.credential,
       location: _locationController.text,
@@ -93,13 +95,14 @@ class _CredentialDetailScreenState extends State<CredentialDetailScreen> {
       logoPath: _logoPath,
     );
 
-    if (!mounted) return;
+    if (!scaffoldContext.mounted) return;
     setState(() {
       _isSaving = false;
       _isEditing = false;
     });
-    SnackbarService.showSuccess(context, 'Credencial atualizada com sucesso!');
-    Navigator.of(context).pop();
+    SnackbarService.showSuccess(
+        scaffoldContext, 'Credencial atualizada com sucesso!');
+    navigator.pop();
   }
 
   void _deleteCredential() {
@@ -120,14 +123,20 @@ class _CredentialDetailScreenState extends State<CredentialDetailScreen> {
               HapticFeedback.mediumImpact();
               final authViewModel =
                   Provider.of<AuthViewModel>(context, listen: false);
+              final viewModel =
+                  Provider.of<CredentialViewModel>(context, listen: false);
+              final scaffoldContext = context;
+              final dialogNavigator = Navigator.of(ctx);
+              final screenNavigator = Navigator.of(context);
+
               final userId = authViewModel.currentUser!.id;
-              await Provider.of<CredentialViewModel>(context, listen: false)
-                  .deleteCredential(userId, widget.credential.id!);
-              if (!mounted) return;
+              await viewModel.deleteCredential(userId, widget.credential.id!);
+
+              if (!scaffoldContext.mounted) return;
               SnackbarService.showSuccess(
-                  context, 'Credencial excluída com sucesso!');
-              Navigator.of(ctx).pop();
-              Navigator.of(context).pop();
+                  scaffoldContext, 'Credencial excluída com sucesso!');
+              dialogNavigator.pop();
+              screenNavigator.pop();
             },
           ),
         ],
