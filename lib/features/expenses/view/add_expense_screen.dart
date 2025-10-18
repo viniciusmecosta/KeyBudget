@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_masked_text2/flutter_masked_text2.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:key_budget/app/config/app_theme.dart';
 import 'package:key_budget/app/utils/app_animations.dart';
 import 'package:key_budget/core/models/expense_category_model.dart';
 import 'package:key_budget/core/models/expense_model.dart';
+import 'package:key_budget/core/services/ocr_service.dart';
 import 'package:key_budget/core/services/snackbar_service.dart';
 import 'package:key_budget/features/auth/viewmodel/auth_viewmodel.dart';
 import 'package:key_budget/features/expenses/viewmodel/expense_viewmodel.dart';
@@ -28,13 +30,97 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
   DateTime _selectedDate = DateTime.now();
   ExpenseCategory? _selectedCategory;
   bool _isSaving = false;
+  bool _isScanning = false;
+
+  final _ocrService = OcrService();
+  final _imagePicker = ImagePicker();
 
   @override
   void dispose() {
     _amountController.dispose();
     _motivationController.dispose();
     _locationController.dispose();
+    _ocrService.dispose();
     super.dispose();
+  }
+
+  Future<void> _scanReceipt(ImageSource source) async {
+    try {
+      final pickedFile = await _imagePicker.pickImage(source: source);
+      if (pickedFile == null) return;
+
+      setState(() => _isScanning = true);
+
+      final recognizedText = await _ocrService.processImage(pickedFile);
+      final extractedData =
+          _ocrService.extractExpenseData(recognizedText.text);
+
+      if (mounted) {
+        final amount = extractedData['amount'] as double?;
+        final date = extractedData['date'] as DateTime?;
+        final description = extractedData['description'] as String?;
+
+        setState(() {
+          if (amount != null) _amountController.updateValue(amount);
+          if (date != null) _selectedDate = date;
+          if (description != null) _motivationController.text = description;
+        });
+
+        final foundParts = [
+          if (amount != null) 'valor',
+          if (date != null) 'data',
+          if (description != null) 'descrição'
+        ];
+
+        String feedbackMessage;
+        if (foundParts.isEmpty) {
+          feedbackMessage =
+              'Nenhum dado extraído. Por favor, preencha manualmente.';
+          SnackbarService.showWarning(context, feedbackMessage);
+        } else {
+          feedbackMessage =
+              '${foundParts.join(', ')} encontrado(s)! Verifique os campos.';
+          SnackbarService.showInfo(context, feedbackMessage);
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        SnackbarService.showError(
+            context, 'Falha ao analisar a imagem. Tente novamente.');
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isScanning = false);
+      }
+    }
+  }
+
+  void _showImageSourceDialog() {
+    showModalBottomSheet(
+      context: context,
+      builder: (context) => SafeArea(
+        child: Wrap(
+          children: <Widget>[
+            ListTile(
+              leading: const Icon(Icons.photo_library),
+              title: const Text('Galeria'),
+              onTap: () {
+                _scanReceipt(ImageSource.gallery);
+                Navigator.of(context).pop();
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.photo_camera),
+              title: const Text('Câmera'),
+              onTap: () {
+                _scanReceipt(ImageSource.camera);
+                Navigator.of(context).pop();
+              },
+            ),
+          ],
+        ),
+      ),
+    );
   }
 
   void _submit() async {
@@ -76,11 +162,31 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Adicionar Despesa')),
+      appBar: AppBar(
+        title: const Text('Adicionar Despesa'),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.document_scanner_outlined),
+            onPressed: _isScanning ? null : _showImageSourceDialog,
+            tooltip: 'Escanear Recibo',
+          ),
+        ],
+      ),
       body: AppAnimations.fadeInFromBottom(Padding(
         padding: const EdgeInsets.all(AppTheme.defaultPadding),
         child: Column(
           children: [
+            if (_isScanning)
+              const Padding(
+                padding: EdgeInsets.symmetric(vertical: 8.0),
+                child: Column(
+                  children: [
+                    LinearProgressIndicator(),
+                    SizedBox(height: 4),
+                    Text('Analisando imagem...'),
+                  ],
+                ),
+              ),
             Expanded(
               child: ExpenseForm(
                 formKey: _formKey,
