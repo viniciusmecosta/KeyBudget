@@ -20,20 +20,73 @@ class GoogleAuthClient extends http.BaseClient {
 }
 
 class DriveService {
-  final _googleSignIn = GoogleSignIn(
-    scopes: [drive.DriveApi.driveFileScope],
-  );
+  final _googleSignIn = GoogleSignIn.instance;
+  bool _isInitialized = false;
+  GoogleSignInAccount? _currentUser;
 
-  Future<drive.DriveApi?> _getDriveApi() async {
+  Future<void> _ensureGoogleSignInInitialized({String? serverClientId}) async {
+    if (_isInitialized) return;
+
     try {
-      GoogleSignInAccount? googleUser = await _googleSignIn.signInSilently();
-      googleUser ??= await _googleSignIn.signIn();
+      await _googleSignIn.initialize(
+        clientId: null,
+        serverClientId: serverClientId,
+      );
+
+      _googleSignIn.authenticationEvents.listen((event) {
+        if (event is GoogleSignInAuthenticationEventSignIn) {
+          _currentUser = event.user;
+        } else {
+          _currentUser = null;
+        }
+      });
+
+      _isInitialized = true;
+    } catch (e) {
+      rethrow;
+    }
+  }
+
+  Future<drive.DriveApi?> _getDriveApi({String? serverClientId}) async {
+    try {
+      await _ensureGoogleSignInInitialized(serverClientId: serverClientId);
+
+      GoogleSignInAccount? googleUser = _currentUser;
 
       if (googleUser == null) {
-        return null;
+        if (_googleSignIn.supportsAuthenticate()) {
+          googleUser = await _googleSignIn.authenticate();
+        } else {
+          throw Exception('Platform does not support authenticate method');
+        }
       }
 
-      final headers = await googleUser.authHeaders;
+      const scopes = [drive.DriveApi.driveFileScope];
+
+      final authorization =
+          await googleUser.authorizationClient.authorizationForScopes(scopes);
+
+      if (authorization == null) {
+        await googleUser.authorizationClient.authorizeScopes(scopes);
+
+        final newAuth =
+            await googleUser.authorizationClient.authorizationForScopes(scopes);
+
+        if (newAuth == null) {
+          throw Exception('Failed to get authorization for Drive API');
+        }
+
+        final headers = {
+          'Authorization': 'Bearer ${newAuth.accessToken}',
+        };
+        final client = GoogleAuthClient(headers);
+        return drive.DriveApi(client);
+      }
+
+      final headers = {
+        'Authorization': 'Bearer ${authorization.accessToken}',
+      };
+
       final client = GoogleAuthClient(headers);
       return drive.DriveApi(client);
     } catch (e) {
@@ -55,9 +108,9 @@ class DriveService {
     );
   }
 
-  Future<drive.File?> uploadFile(
-      File file, void Function(int, int) onProgress) async {
-    final driveApi = await _getDriveApi();
+  Future<drive.File?> uploadFile(File file, void Function(int, int) onProgress,
+      {String? serverClientId}) async {
+    final driveApi = await _getDriveApi(serverClientId: serverClientId);
     if (driveApi == null) return null;
 
     final folderId = await _getFolderId(driveApi);
@@ -99,8 +152,9 @@ class DriveService {
     }
   }
 
-  Future<List<int>?> downloadFile(String fileId) async {
-    final driveApi = await _getDriveApi();
+  Future<List<int>?> downloadFile(String fileId,
+      {String? serverClientId}) async {
+    final driveApi = await _getDriveApi(serverClientId: serverClientId);
     if (driveApi == null) return null;
 
     final response = (await driveApi.files.get(fileId,
@@ -114,8 +168,8 @@ class DriveService {
     return bytes;
   }
 
-  Future<void> deleteFile(String fileId) async {
-    final driveApi = await _getDriveApi();
+  Future<void> deleteFile(String fileId, {String? serverClientId}) async {
+    final driveApi = await _getDriveApi(serverClientId: serverClientId);
     if (driveApi == null) return;
     await driveApi.files.delete(fileId);
   }

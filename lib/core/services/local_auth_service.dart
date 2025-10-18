@@ -30,15 +30,8 @@ class LocalAuthService {
           AndroidAuthMessages(
             signInTitle: ' ',
             cancelButton: 'Cancelar',
-            biometricHint: ' ',
-            biometricNotRecognized: 'Não reconhecido, tente novamente',
-            biometricSuccess: 'Acesso liberado',
           ),
         ],
-        options: const AuthenticationOptions(
-          stickyAuth: true,
-          biometricOnly: false,
-        ),
       );
     } catch (e) {
       return false;
