@@ -21,45 +21,34 @@ class OcrService {
   }
 
   double? _extractAmount(String text) {
-    // Regex to find keywords related to total amount, followed by the value.
-    // This is prioritized.
-    final totalAmountRegex = RegExp(
-      r'(?:total|valor\s+a\s+pagar|conta|final)\s*:?\s*r?\$\s*([\d.,]+)',
-      caseSensitive: false,
-    );
+    final patterns = [
+      RegExp(r'(?:total\s+a\s+pagar|valor\s+total)\s*:?\s*r?\$\s*([\d.,]+)'),
+      RegExp(r'(?:total|conta|final)\s*:?\s*r?\$\s*([\d.,]+)'),
+      RegExp(r'r?\$\s*([\d.,]+)'),
+    ];
 
-    // Generic regex to find any monetary value, used as a fallback.
-    final genericAmountRegex = RegExp(r'r?\$\s*([\d.,]+)', caseSensitive: false);
+    double? maxAmount;
 
-    double? findBestMatch(Iterable<RegExpMatch> matches) {
-      double? maxAmount;
-      for (final match in matches) {
-        final valueString =
-            match.group(1)!.replaceAll('.', '').replaceAll(',', '.');
-        final value = double.tryParse(valueString);
-        if (value != null) {
-          if (maxAmount == null || value > maxAmount) {
-            maxAmount = value;
+    for (final pattern in patterns) {
+      final matches = pattern.allMatches(text);
+      if (matches.isNotEmpty) {
+        for (final match in matches) {
+          final valueString =
+              match.group(1)!.replaceAll('.', '').replaceAll(',', '.');
+          final value = double.tryParse(valueString);
+          if (value != null) {
+            if (maxAmount == null || value > maxAmount) {
+              maxAmount = value;
+            }
           }
         }
+        if (maxAmount != null) return maxAmount;
       }
-      return maxAmount;
     }
-
-    // Prioritize matches with keywords like "total".
-    final totalMatches = totalAmountRegex.allMatches(text);
-    final totalAmount = findBestMatch(totalMatches);
-    if (totalAmount != null) {
-      return totalAmount;
-    }
-
-    // Fallback: if no "total" keyword is found, find the largest amount on the receipt.
-    final genericMatches = genericAmountRegex.allMatches(text);
-    return findBestMatch(genericMatches);
+    return maxAmount;
   }
 
   DateTime? _extractDate(String text) {
-    // Regex to find dates in dd/mm/yyyy, dd-mm-yyyy, or dd.mm.yyyy formats.
     final dateRegex = RegExp(r'(\d{2})[./-](\d{2})[./-](\d{2,4})');
     final match = dateRegex.firstMatch(text);
 
@@ -70,23 +59,28 @@ class OcrService {
         final yearStr = match.group(3)!;
         final year = int.parse(yearStr.length == 2 ? '20$yearStr' : yearStr);
 
-        // Basic validation for date components.
         if (month > 0 && month <= 12 && day > 0 && day <= 31) {
           return DateTime(year, month, day);
         }
       } catch (e) {
-        return null; // Parsing failed.
+        return null;
       }
     }
     return null;
   }
 
   String? _extractSupplier(String text) {
-    // Heuristic: The supplier is often one of the first lines, but we need to
-    // ignore common receipt boilerplate.
     final junkKeywords = [
-      'cupom fiscal', 'cnpj', 'ie:', 'coo:', 'extrato', 'sat',
-      'documento auxiliar', 'venda ao consumidor'
+      'cupom fiscal',
+      'cnpj',
+      'ie:',
+      'coo:',
+      'extrato',
+      'sat',
+      'documento auxiliar',
+      'venda ao consumidor',
+      'endereço',
+      'telefone'
     ];
 
     final lines = text
@@ -95,19 +89,42 @@ class OcrService {
         .where((line) => line.isNotEmpty)
         .toList();
 
-    for (final line in lines) {
+    String? bestCandidate;
+    double bestScore = 0;
+
+    for (int i = 0; i < lines.length && i < 5; i++) {
+      final line = lines[i];
       final lowerLine = line.toLowerCase();
+      double currentScore = 0;
+
       if (junkKeywords.any((keyword) => lowerLine.contains(keyword))) {
-        continue; // Skip this line, it's likely boilerplate.
+        currentScore -= 20;
       }
-      // A potential supplier name is usually short and doesn't contain a price.
-      if (line.length < 30 && !line.contains(RegExp(r'r?\$\s*[\d.,]+'))) {
-        return line;
+
+      if (lowerLine.contains(RegExp(r'\d{5}-\d{3}')) ||
+          lowerLine.contains(RegExp(r'^\d+$'))) {
+        currentScore -= 10;
+      }
+
+      currentScore += (5 - i);
+
+      if (line.length < 25) {
+        currentScore += 5;
+      }
+
+      final alphaRatio =
+          (line.replaceAll(RegExp(r'[^a-zA-Z]'), '').length / line.length);
+      if (alphaRatio > 0.7) {
+        currentScore += 10;
+      }
+
+      if (currentScore > bestScore) {
+        bestScore = currentScore;
+        bestCandidate = line;
       }
     }
 
-    // Fallback to the very first line if the smart search fails.
-    return lines.isNotEmpty ? lines.first : null;
+    return bestCandidate;
   }
 
   void dispose() {

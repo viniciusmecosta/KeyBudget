@@ -17,7 +17,6 @@ List<SingleChildWidget> appProviders = [
   ChangeNotifierProvider(create: (_) => CategoryViewModel()),
   ChangeNotifierProvider(create: (_) => CredentialViewModel()),
   ChangeNotifierProvider(create: (_) => ExpenseViewModel()),
-  // ChangeNotifierProvider(create: (_) => SupplierViewModel()),
   ChangeNotifierProvider(create: (_) => DocumentViewModel()),
   ChangeNotifierProxyProvider2<CategoryViewModel, ExpenseViewModel,
       AnalysisViewModel>(
