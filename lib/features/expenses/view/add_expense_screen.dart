@@ -1,7 +1,11 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_masked_text2/flutter_masked_text2.dart';
+import 'package:google_mlkit_text_recognition/google_mlkit_text_recognition.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:intl/intl.dart';
 import 'package:key_budget/app/config/app_theme.dart';
 import 'package:key_budget/app/utils/app_animations.dart';
 import 'package:key_budget/core/models/expense_category_model.dart';
@@ -9,6 +13,7 @@ import 'package:key_budget/core/models/expense_model.dart';
 import 'package:key_budget/core/services/ocr_service.dart';
 import 'package:key_budget/core/services/snackbar_service.dart';
 import 'package:key_budget/features/auth/viewmodel/auth_viewmodel.dart';
+import 'package:key_budget/features/expenses/view/ocr_detailed_viewer_screen.dart';
 import 'package:key_budget/features/expenses/viewmodel/expense_viewmodel.dart';
 import 'package:provider/provider.dart';
 
@@ -32,6 +37,11 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
   bool _isSaving = false;
   bool _isScanning = false;
 
+  String? _processedImagePath;
+  RecognizedText? _recognizedText;
+
+  Map<OcrTargetField, String> _currentOcrAssignments = {};
+
   final _ocrService = OcrService();
   final _imagePicker = ImagePicker();
 
@@ -46,24 +56,53 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
 
   Future<void> _scanReceipt(ImageSource source) async {
     try {
-      final pickedFile = await _imagePicker.pickImage(source: source);
+      final pickedFile = await _imagePicker.pickImage(
+        source: source,
+        maxWidth: 1024,
+        imageQuality: 85,
+      );
       if (pickedFile == null) return;
 
-      setState(() => _isScanning = true);
+      setState(() {
+        _isScanning = true;
+        _processedImagePath = null;
+        _recognizedText = null;
+        _currentOcrAssignments.clear();
+      });
 
-      final recognizedText = await _ocrService.processImage(pickedFile);
-      final extractedData =
-          _ocrService.extractExpenseData(recognizedText.text);
+      final fileForOcr = XFile(pickedFile.path);
+      final recognizedText = await _ocrService.processImage(fileForOcr);
+      final extractedData = _ocrService.extractExpenseData(recognizedText.text);
 
       if (mounted) {
         final amount = extractedData['amount'] as double?;
         final date = extractedData['date'] as DateTime?;
         final description = extractedData['description'] as String?;
 
+        _amountController.updateValue(0);
+        _locationController.clear();
+        _motivationController.clear();
+
         setState(() {
-          if (amount != null) _amountController.updateValue(amount);
-          if (date != null) _selectedDate = date;
-          if (description != null) _motivationController.text = description;
+          _processedImagePath = pickedFile.path;
+          _recognizedText = recognizedText;
+
+          if (amount != null) {
+            _amountController.updateValue(amount);
+            _currentOcrAssignments[OcrTargetField.amount] =
+                _findOriginalTextForAmount(recognizedText, amount) ??
+                    amount.toStringAsFixed(2).replaceAll('.', ',');
+          }
+          if (date != null) {
+            _selectedDate = date;
+            _currentOcrAssignments[OcrTargetField.date] =
+                _findOriginalTextForDate(recognizedText, date) ??
+                    DateFormat('dd/MM/yyyy').format(date);
+          }
+          if (description != null) {
+            _locationController.text = description;
+            _currentOcrAssignments[OcrTargetField.location] = description;
+          }
         });
 
         final foundParts = [
@@ -71,28 +110,51 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
           if (date != null) 'data',
           if (description != null) 'descrição'
         ];
-
-        String feedbackMessage;
-        if (foundParts.isEmpty) {
-          feedbackMessage =
-              'Nenhum dado extraído. Por favor, preencha manualmente.';
-          SnackbarService.showWarning(context, feedbackMessage);
+        if (foundParts.isNotEmpty) {
+          SnackbarService.showInfo(
+              context, '${foundParts.join(', ')} preenchido(s)! Verifique.');
         } else {
-          feedbackMessage =
-              '${foundParts.join(', ')} encontrado(s)! Verifique os campos.';
-          SnackbarService.showInfo(context, feedbackMessage);
+          SnackbarService.showInfo(
+              context, 'Nenhum dado preenchido automaticamente.');
         }
       }
     } catch (e) {
       if (mounted) {
+        
         SnackbarService.showError(
-            context, 'Falha ao analisar a imagem. Tente novamente.');
+            context, 'Falha ao processar a imagem. Tente novamente.');
       }
     } finally {
       if (mounted) {
         setState(() => _isScanning = false);
       }
     }
+  }
+
+  String? _findOriginalTextForAmount(RecognizedText rText, double amount) {
+    String amountStr = amount.toStringAsFixed(2).replaceAll('.', ',');
+    String amountStrNoComma = amount.toStringAsFixed(0);
+    for (var block in rText.blocks) {
+      var cleanBlock =
+          block.text.replaceAll(RegExp(r'[^0-9,]'), '').replaceAll(',', '.');
+      if (block.text.contains(amountStr) ||
+          cleanBlock.contains(amount.toStringAsFixed(2)) ||
+          block.text.contains(amountStrNoComma)) {
+        return block.text;
+      }
+    }
+    return null;
+  }
+
+  String? _findOriginalTextForDate(RecognizedText rText, DateTime date) {
+    String dateStr = DateFormat('dd/MM/yyyy').format(date);
+    String dateStrAlt = DateFormat('dd-MM-yyyy').format(date);
+    for (var block in rText.blocks) {
+      if (block.text.contains(dateStr) || block.text.contains(dateStrAlt)) {
+        return block.text;
+      }
+    }
+    return null;
   }
 
   void _showImageSourceDialog() {
@@ -123,22 +185,100 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
     );
   }
 
+  void _openDetailedViewer() async {
+    if (_processedImagePath == null || _recognizedText == null) return;
+
+    final initialAssignmentsForViewer = Map<OcrTargetField, String>.fromEntries(
+        _currentOcrAssignments.entries
+            .where((e) => e.value != null)
+            .cast<MapEntry<OcrTargetField, String>>());
+
+    final corrections = await Navigator.push<Map<OcrTargetField, String>>(
+      context,
+      MaterialPageRoute(
+        builder: (_) => OcrDetailedViewerScreen(
+          imagePath: _processedImagePath!,
+          recognizedText: _recognizedText!,
+          initialAssignments: initialAssignmentsForViewer,
+        ),
+      ),
+    );
+
+    if (corrections != null && mounted) {
+      _applyOcrCorrections(corrections);
+      setState(() {
+        _currentOcrAssignments = corrections;
+      });
+    }
+  }
+
+  void _applyOcrCorrections(Map<OcrTargetField, String> corrections) {
+    setState(() {
+      _amountController.updateValue(0);
+      _selectedDate = DateTime.now();
+      _motivationController.clear();
+      _locationController.clear();
+
+      corrections.forEach((field, text) {
+        try {
+          switch (field) {
+            case OcrTargetField.amount:
+              final cleanValue =
+                  text.replaceAll(RegExp(r'[^\d,]'), '').replaceAll(',', '.');
+              final doubleValue = double.parse(cleanValue);
+              _amountController.updateValue(doubleValue);
+              break;
+            case OcrTargetField.date:
+              DateTime? parsedDate;
+              try {
+                parsedDate = DateFormat('dd/MM/yyyy').parseStrict(text);
+              } catch (_) {}
+              if (parsedDate == null) {
+                try {
+                  parsedDate = DateFormat('dd-MM-yyyy').parseStrict(text);
+                } catch (_) {}
+              }
+              if (parsedDate == null) {
+                try {
+                  parsedDate = DateFormat('yyyy-MM-dd').parseStrict(text);
+                } catch (_) {}
+              }
+              if (parsedDate != null) {
+                _selectedDate = parsedDate;
+              } else {
+
+              }
+              break;
+            case OcrTargetField.motivation:
+              _motivationController.text = text;
+              break;
+            case OcrTargetField.location:
+              _locationController.text = text;
+              break;
+            case OcrTargetField.none:
+              break;
+          }
+        } catch (e) {
+
+        }
+      });
+      SnackbarService.showSuccess(
+          context, 'Campos atualizados com as seleções!');
+    });
+  }
+
   void _submit() async {
     if (!_formKey.currentState!.validate()) return;
-
     if (_amountController.numberValue == 0) {
       SnackbarService.showError(context, 'O valor não pode ser zero.');
       return;
     }
-
     setState(() => _isSaving = true);
     HapticFeedback.mediumImpact();
-
     final expenseViewModel =
         Provider.of<ExpenseViewModel>(context, listen: false);
     final authViewModel = Provider.of<AuthViewModel>(context, listen: false);
     final userId = authViewModel.currentUser!.id;
-
     final newExpense = Expense(
       amount: _amountController.numberValue,
       date: _selectedDate,
@@ -149,9 +289,7 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
       location:
           _locationController.text.isNotEmpty ? _locationController.text : null,
     );
-
     await expenseViewModel.addExpense(userId, newExpense);
-
     if (mounted) {
       setState(() => _isSaving = false);
       SnackbarService.showSuccess(context, 'Despesa salva com sucesso!');
@@ -161,15 +299,25 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     return Scaffold(
       appBar: AppBar(
         title: const Text('Adicionar Despesa'),
         actions: [
           IconButton(
-            icon: const Icon(Icons.document_scanner_outlined),
+            icon: Icon(Icons.document_scanner_outlined,
+                color: _processedImagePath != null
+                    ? theme.colorScheme.primary
+                    : null),
             onPressed: _isScanning ? null : _showImageSourceDialog,
             tooltip: 'Escanear Recibo',
           ),
+          if (_processedImagePath != null && _recognizedText != null)
+            IconButton(
+              icon: const Icon(Icons.edit_note),
+              onPressed: _openDetailedViewer,
+              tooltip: 'Corrigir Dados da Imagem',
+            ),
         ],
       ),
       body: AppAnimations.fadeInFromBottom(Padding(
@@ -183,7 +331,7 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
                   children: [
                     LinearProgressIndicator(),
                     SizedBox(height: 4),
-                    Text('Analisando imagem...'),
+                    Text('Analisando imagem...')
                   ],
                 ),
               ),
@@ -203,11 +351,36 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
                 onCategoryChanged: (category) {
                   setState(() {
                     _selectedCategory = category;
-                    _motivationController.clear();
-                    _locationController.clear();
                   });
                 },
                 isEditing: true,
+                imagePreviewWidget: _processedImagePath != null
+                    ? GestureDetector(
+                        onTap: _openDetailedViewer,
+                        child: Container(
+                          height: 100,
+                          margin: const EdgeInsets.only(
+                              top: AppTheme.spaceM, bottom: AppTheme.spaceS),
+                          decoration: BoxDecoration(
+                            borderRadius:
+                                BorderRadius.circular(AppTheme.radiusM),
+                            border: Border.all(
+                                color: Theme.of(context).dividerColor),
+                            image: DecorationImage(
+                              image: FileImage(File(_processedImagePath!)),
+                              fit: BoxFit.cover,
+                              colorFilter: ColorFilter.mode(
+                                  Colors.black.withOpacity(0.3),
+                                  BlendMode.darken),
+                            ),
+                          ),
+                          child: Center(
+                              child: Icon(Icons.touch_app_outlined,
+                                  color: Colors.white.withOpacity( 0.8),
+                                  size: 40)),
+                        ),
+                      )
+                    : null,
               ),
             ),
             const SizedBox(height: 16),
@@ -218,8 +391,7 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
                       height: 24,
                       width: 24,
                       child: CircularProgressIndicator(
-                          color: Theme.of(context).colorScheme.onPrimary,
-                          strokeWidth: 2.0))
+                          color: theme.colorScheme.onPrimary, strokeWidth: 2.0))
                   : const Text('Salvar Despesa'),
             ),
           ],
