@@ -5,15 +5,52 @@ import 'package:key_budget/features/credentials/viewmodel/credential_viewmodel.d
 import 'package:key_budget/features/expenses/viewmodel/expense_viewmodel.dart';
 
 class DashboardViewModel extends ChangeNotifier {
-  final CategoryViewModel categoryViewModel;
-  final ExpenseViewModel expenseViewModel;
-  final CredentialViewModel credentialViewModel;
+  CategoryViewModel categoryViewModel;
+  ExpenseViewModel expenseViewModel;
+  CredentialViewModel credentialViewModel;
 
   DashboardViewModel({
     required this.categoryViewModel,
     required this.expenseViewModel,
     required this.credentialViewModel,
-  });
+  }) {
+    _addListeners();
+  }
+
+  void _addListeners() {
+    categoryViewModel.addListener(notifyListeners);
+    expenseViewModel.addListener(notifyListeners);
+    credentialViewModel.addListener(notifyListeners);
+  }
+
+  void _removeListeners() {
+    categoryViewModel.removeListener(notifyListeners);
+    expenseViewModel.removeListener(notifyListeners);
+    credentialViewModel.removeListener(notifyListeners);
+  }
+
+  void updateDependencies({
+    required CategoryViewModel categoryViewModel,
+    required ExpenseViewModel expenseViewModel,
+    required CredentialViewModel credentialViewModel,
+  }) {
+    if (this.categoryViewModel != categoryViewModel ||
+        this.expenseViewModel != expenseViewModel ||
+        this.credentialViewModel != credentialViewModel) {
+      _removeListeners();
+      this.categoryViewModel = categoryViewModel;
+      this.expenseViewModel = expenseViewModel;
+      this.credentialViewModel = credentialViewModel;
+      _addListeners();
+      notifyListeners();
+    }
+  }
+
+  @override
+  void dispose() {
+    _removeListeners();
+    super.dispose();
+  }
 
   bool get isLoading =>
       categoryViewModel.isLoading ||

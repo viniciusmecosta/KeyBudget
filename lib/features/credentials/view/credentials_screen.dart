@@ -11,6 +11,7 @@ import 'package:key_budget/features/credentials/viewmodel/credential_viewmodel.d
 import 'package:provider/provider.dart';
 
 import '../widgets/credential_list_tile.dart';
+import '../widgets/credentials_list_skeleton.dart';
 
 class CredentialsScreen extends StatefulWidget {
   const CredentialsScreen({super.key});
@@ -54,17 +55,22 @@ class _CredentialsScreenState extends State<CredentialsScreen> {
         scaffoldContext, '$count credenciais importadas com sucesso!');
   }
 
-  void _export(BuildContext context) async {
+  void _export(BuildContext context, {String type = 'csv'}) async {
     final viewModel = Provider.of<CredentialViewModel>(context, listen: false);
     final scaffoldContext = context;
 
-    final success = await viewModel.exportCredentialsToCsv();
-    if (!scaffoldContext.mounted) return;
-    if (success) {
-      SnackbarService.showSuccess(
-          scaffoldContext, 'Credenciais exportadas com sucesso!');
-    } else {
-      SnackbarService.showError(scaffoldContext, 'Falha ao exportar.');
+    bool success = false;
+    if (type == 'csv') {
+      success = await viewModel.exportCredentialsToCsv(scaffoldContext);
+      if (!scaffoldContext.mounted) return;
+      if (success) {
+        SnackbarService.showSuccess(
+            scaffoldContext, 'Credenciais exportadas com sucesso!');
+      } else if (!viewModel.isExportingCsv) {
+        SnackbarService.showError(scaffoldContext, 'Falha ao exportar.');
+      }
+    } else if (type == 'pdf') {
+      await viewModel.exportCredentialsToPdf(scaffoldContext);
     }
   }
 
@@ -72,6 +78,7 @@ class _CredentialsScreenState extends State<CredentialsScreen> {
   Widget build(BuildContext context) {
     final vm = context.watch<CredentialViewModel>();
     final theme = Theme.of(context);
+    final isLoading = vm.isLoading && _isFirstLoad;
 
     return Scaffold(
       appBar: AppBar(
@@ -81,85 +88,95 @@ class _CredentialsScreenState extends State<CredentialsScreen> {
             itemBuilder: (context) => [
               const PopupMenuItem(
                   value: 'import', child: Text('Importar de CSV')),
-              const PopupMenuItem(
-                  value: 'export', child: Text('Exportar para CSV')),
+              PopupMenuItem(
+                value: 'export_csv',
+                enabled: !vm.isExportingCsv && !vm.isExportingPdf,
+                child: Row(
+                  children: [
+                    const Text('Exportar para CSV'),
+                    if (vm.isExportingCsv) ...[
+                      const SizedBox(width: 8),
+                      const SizedBox(
+                          height: 16,
+                          width: 16,
+                          child: CircularProgressIndicator(strokeWidth: 2)),
+                    ],
+                  ],
+                ),
+              ),
+              PopupMenuItem(
+                value: 'export_pdf',
+                enabled: !vm.isExportingCsv && !vm.isExportingPdf,
+                child: Row(
+                  children: [
+                    const Text('Exportar para PDF'),
+                    if (vm.isExportingPdf) ...[
+                      const SizedBox(width: 8),
+                      const SizedBox(
+                          height: 16,
+                          width: 16,
+                          child: CircularProgressIndicator(strokeWidth: 2)),
+                    ],
+                  ],
+                ),
+              ),
             ],
             onSelected: (value) {
               if (value == 'import') _import(context);
-              if (value == 'export') _export(context);
+              if (value == 'export_csv') _export(context, type: 'csv');
+              if (value == 'export_pdf') _export(context, type: 'pdf');
             },
           ),
         ],
       ),
       body: SafeArea(
-        child: vm.isLoading
-            ? AppAnimations.fadeIn(Center(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    CircularProgressIndicator(
-                      color: theme.colorScheme.primary,
+        child: RefreshIndicator(
+          onRefresh: _handleRefresh,
+          color: theme.colorScheme.primary,
+          backgroundColor: theme.colorScheme.surface,
+          child: CustomScrollView(
+            physics: const BouncingScrollPhysics(),
+            slivers: [
+              if (isLoading)
+                const CredentialsListSkeleton()
+              else if (vm.allCredentials.isEmpty)
+                SliverFillRemaining(
+                  child: SingleChildScrollView(
+                    physics: const AlwaysScrollableScrollPhysics(),
+                    child: const EmptyStateWidget(
+                      icon: Icons.key_off,
+                      message: 'Nenhuma credencial encontrada.',
                     ),
-                    const SizedBox(height: AppTheme.spaceM),
-                    Text(
-                      'Carregando credenciais...',
-                      style: theme.textTheme.bodyMedium?.copyWith(
-                        color: theme.colorScheme.onSurface
-                            .withAlpha((255 * 0.7).round()),
-                      ),
+                  ),
+                )
+              else
+                SliverPadding(
+                  padding: const EdgeInsets.fromLTRB(AppTheme.defaultPadding,
+                      AppTheme.defaultPadding, AppTheme.defaultPadding, 96.0),
+                  sliver: SliverList(
+                    delegate: SliverChildBuilderDelegate(
+                      (context, index) {
+                        final credential = vm.allCredentials[index];
+                        Widget tile =
+                            CredentialListTile(credential: credential);
+                        if (_isFirstLoad) {
+                          return AppAnimations.listFadeIn(tile, index: index);
+                        }
+                        return tile;
+                      },
+                      childCount: vm.allCredentials.length,
                     ),
-                  ],
+                  ),
                 ),
-              ))
-            : RefreshIndicator(
-                onRefresh: _handleRefresh,
-                color: theme.colorScheme.primary,
-                backgroundColor: theme.colorScheme.surface,
-                child: CustomScrollView(
-                  physics: const BouncingScrollPhysics(),
-                  slivers: [
-                    if (vm.allCredentials.isEmpty)
-                      SliverFillRemaining(
-                        child: SingleChildScrollView(
-                          physics: const AlwaysScrollableScrollPhysics(),
-                          child: const EmptyStateWidget(
-                            icon: Icons.key_off,
-                            message: 'Nenhuma credencial encontrada.',
-                          ),
-                        ),
-                      )
-                    else
-                      SliverPadding(
-                        padding: const EdgeInsets.fromLTRB(
-                            AppTheme.defaultPadding,
-                            AppTheme.defaultPadding,
-                            AppTheme.defaultPadding,
-                            96.0),
-                        sliver: SliverList(
-                          delegate: SliverChildBuilderDelegate(
-                            (context, index) {
-                              final credential = vm.allCredentials[index];
-                              Widget tile =
-                                  CredentialListTile(credential: credential);
-                              if (_isFirstLoad) {
-                                return AppAnimations.listFadeIn(tile,
-                                    index: index);
-                              }
-                              return tile;
-                            },
-                            childCount: vm.allCredentials.length,
-                          ),
-                        ),
-                      ),
-                  ],
-                ),
-              ).animate(onComplete: (_) {
-                if (_isFirstLoad && mounted) {
-                  setState(() {
-                    _isFirstLoad = false;
-                  });
-                }
-              }).fadeIn(duration: AppAnimations.duration),
+            ],
+          ),
+        ).animate(onComplete: (_) {
+          if (_isFirstLoad && mounted) {
+            setState(() {
+              _isFirstLoad = false;
+            });
+          }
+        }).fadeIn(duration: AppAnimations.duration),
       ),
       floatingActionButton: AppAnimations.scaleIn(FloatingActionButton.extended(
         heroTag: 'fab_credentials',

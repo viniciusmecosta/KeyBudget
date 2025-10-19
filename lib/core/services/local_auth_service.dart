@@ -1,3 +1,4 @@
+import 'package:flutter/services.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:local_auth/local_auth.dart';
 import 'package:local_auth_android/local_auth_android.dart';
@@ -24,16 +25,26 @@ class LocalAuthService {
     if (!canAuth) return false;
 
     try {
-      return await _auth.authenticate(
+      final bool authenticated = await _auth.authenticate(
         localizedReason: 'Confirme sua identidade',
         authMessages: const <AuthMessages>[
           AndroidAuthMessages(
             signInTitle: ' ',
             cancelButton: 'Cancelar',
+            signInHint: ' ',
           ),
         ],
       );
+
+      if (authenticated) {
+        await HapticFeedback.lightImpact();
+      } else {
+        await HapticFeedback.vibrate();
+      }
+
+      return authenticated;
     } catch (e) {
+      await HapticFeedback.vibrate();
       return false;
     }
   }

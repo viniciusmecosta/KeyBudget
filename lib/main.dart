@@ -1,8 +1,6 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:key_budget/app/config/app_config.dart';
 import 'package:key_budget/app/config/app_providers.dart';
 import 'package:key_budget/app/config/app_theme.dart';
 import 'package:key_budget/app/view/auth_gate.dart';
@@ -14,12 +12,7 @@ import 'package:provider/provider.dart';
 Future<void> main() async {
   try {
     WidgetsFlutterBinding.ensureInitialized();
-    await Firebase.initializeApp();
-    FirebaseFirestore.instance.settings = const Settings(
-      persistenceEnabled: true,
-      cacheSizeBytes: Settings.CACHE_SIZE_UNLIMITED,
-    );
-    await dotenv.load(fileName: "assets/.env");
+    await AppConfig.initialize();
 
     runApp(
       MultiProvider(
