@@ -5,17 +5,16 @@ import 'package:key_budget/app/utils/app_animations.dart';
 import 'package:key_budget/app/utils/navigation_utils.dart';
 import 'package:key_budget/app/widgets/balance_card.dart';
 import 'package:key_budget/app/widgets/empty_state_widget.dart';
-import 'package:key_budget/core/services/snackbar_service.dart';
 import 'package:key_budget/features/auth/viewmodel/auth_viewmodel.dart';
 import 'package:key_budget/features/category/viewmodel/category_viewmodel.dart';
 import 'package:key_budget/features/expenses/view/add_expense_screen.dart';
-import 'package:key_budget/features/expenses/view/export_expenses_screen.dart';
-import 'package:key_budget/features/expenses/view/recurring_expenses_screen.dart';
 import 'package:key_budget/features/expenses/viewmodel/expense_viewmodel.dart';
 import 'package:provider/provider.dart';
 
 import '../widgets/category_filter_modal.dart';
+import '../widgets/expense_actions_popup_menu.dart';
 import '../widgets/expense_list.dart';
+import '../widgets/expenses_list_skeleton.dart';
 import '../widgets/month_selector.dart';
 
 class ExpensesScreen extends StatefulWidget {
@@ -26,7 +25,6 @@ class ExpensesScreen extends StatefulWidget {
 }
 
 class _ExpensesScreenState extends State<ExpensesScreen> {
-  DateTime _selectedMonth = DateTime(DateTime.now().year, DateTime.now().month);
   bool _isFirstLoad = true;
 
   @override
@@ -51,18 +49,6 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
     }
   }
 
-  void _import(BuildContext context) async {
-    final viewModel = Provider.of<ExpenseViewModel>(context, listen: false);
-    final authViewModel = Provider.of<AuthViewModel>(context, listen: false);
-    final scaffoldContext = context;
-
-    final count =
-        await viewModel.importExpensesFromCsv(authViewModel.currentUser!.id);
-    if (!scaffoldContext.mounted) return;
-    SnackbarService.showSuccess(
-        scaffoldContext, '$count despesas importadas com sucesso!');
-  }
-
   void _showCategoryFilter() {
     showModalBottomSheet(
       context: context,
@@ -83,15 +69,9 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
     final expenseViewModel = context.watch<ExpenseViewModel>();
     final categoryViewModel = context.watch<CategoryViewModel>();
 
-    final monthlyExpenses = expenseViewModel.filteredExpenses
-        .where((exp) =>
-            exp.date.year == _selectedMonth.year &&
-            exp.date.month == _selectedMonth.month)
-        .toList()
-      ..sort((a, b) => b.date.compareTo(a.date));
-
-    final totalValue =
-        monthlyExpenses.fold<double>(0.0, (sum, exp) => sum + exp.amount);
+    final bool isLoading =
+        (expenseViewModel.isLoading || categoryViewModel.isLoading) &&
+            _isFirstLoad;
 
     Widget body = RefreshIndicator(
       onRefresh: _handleRefresh,
@@ -99,17 +79,16 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
       backgroundColor: theme.colorScheme.surface,
       strokeWidth: 2.5,
       child: CustomScrollView(
-        physics: const BouncingScrollPhysics(),
+        physics: const BouncingScrollPhysics(
+            parent: AlwaysScrollableScrollPhysics()),
         slivers: [
           SliverList(
             delegate: SliverChildListDelegate(
               [
                 MonthSelector(
-                  selectedMonth: _selectedMonth,
+                  selectedMonth: expenseViewModel.selectedMonth,
                   onMonthChanged: (newMonth) {
-                    setState(() {
-                      _selectedMonth = newMonth;
-                    });
+                    expenseViewModel.setSelectedMonth(newMonth);
                   },
                 ),
                 Padding(
@@ -117,14 +96,16 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
                       horizontal: AppTheme.defaultPadding),
                   child: AppAnimations.fadeIn(BalanceCard(
                     title: 'Total do mês',
-                    totalValue: totalValue,
+                    totalValue: expenseViewModel.currentMonthTotal,
                   )),
                 ),
                 const SizedBox(height: AppTheme.spaceL),
               ],
             ),
           ),
-          if (monthlyExpenses.isEmpty)
+          if (isLoading)
+            const ExpensesListSkeleton()
+          else if (expenseViewModel.monthlyFilteredExpenses.isEmpty)
             SliverFillRemaining(
               hasScrollBody: false,
               child: EmptyStateWidget(
@@ -137,7 +118,7 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
             )
           else
             ExpenseList(
-              monthlyExpenses: monthlyExpenses,
+              monthlyExpenses: expenseViewModel.monthlyFilteredExpenses,
               isFirstLoad: _isFirstLoad,
             ),
         ],
@@ -161,77 +142,17 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
             ),
             onPressed: _showCategoryFilter,
           ),
-          PopupMenuButton<String>(
-            icon: Icon(
-              Icons.more_vert_rounded,
-              color: theme.colorScheme.onSurface,
-            ),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(AppTheme.radiusM),
-            ),
-            itemBuilder: (context) => [
-              const PopupMenuItem(
-                value: 'recurring',
-                child: Row(
-                  children: [
-                    Icon(Icons.replay_circle_filled_rounded),
-                    SizedBox(width: AppTheme.spaceS),
-                    Text('Despesas Recorrentes'),
-                  ],
-                ),
-              ),
-              const PopupMenuDivider(),
-              PopupMenuItem(
-                value: 'import',
-                child: Row(
-                  children: [
-                    Icon(
-                      Icons.upload_file_rounded,
-                      size: 18,
-                      color: theme.colorScheme.onSurface,
-                    ),
-                    const SizedBox(width: AppTheme.spaceS),
-                    const Text('Importar de CSV'),
-                  ],
-                ),
-              ),
-              PopupMenuItem(
-                value: 'export',
-                child: Row(
-                  children: [
-                    Icon(
-                      Icons.download_rounded,
-                      size: 18,
-                      color: theme.colorScheme.onSurface,
-                    ),
-                    const SizedBox(width: AppTheme.spaceS),
-                    const Text('Exportar para CSV'),
-                  ],
-                ),
-              ),
-            ],
-            onSelected: (value) {
-              if (value == 'import') _import(context);
-              if (value == 'export') {
-                NavigationUtils.push(context, const ExportExpensesScreen());
-              }
-              if (value == 'recurring') {
-                NavigationUtils.push(context, const RecurringExpensesScreen());
-              }
-            },
-          ),
+          const ExpenseActionsPopupMenu(),
         ],
       ),
       body: SafeArea(
-        child: expenseViewModel.isLoading || categoryViewModel.isLoading
-            ? _buildLoadingState(theme)
-            : body.animate(onComplete: (controller) {
-                if (_isFirstLoad) {
-                  setState(() {
-                    _isFirstLoad = false;
-                  });
-                }
-              }).fadeIn(duration: 300.ms),
+        child: body.animate(onComplete: (controller) {
+          if (_isFirstLoad) {
+            setState(() {
+              _isFirstLoad = false;
+            });
+          }
+        }).fadeIn(duration: 300.ms),
       ),
       floatingActionButton: AppAnimations.scaleIn(FloatingActionButton.extended(
         heroTag: 'fab_expenses',
@@ -247,27 +168,5 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
         ),
       )),
     );
-  }
-
-  Widget _buildLoadingState(ThemeData theme) {
-    return AppAnimations.fadeIn(Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          CircularProgressIndicator(
-            color: theme.colorScheme.primary,
-            strokeWidth: 2.5,
-          ),
-          const SizedBox(height: AppTheme.spaceL),
-          Text(
-            'Carregando suas despesas...',
-            style: theme.textTheme.bodyMedium?.copyWith(
-              color: theme.colorScheme.onSurface.withAlpha((255 * 0.7).round()),
-              fontWeight: FontWeight.w500,
-            ),
-          ),
-        ],
-      ),
-    ));
   }
 }

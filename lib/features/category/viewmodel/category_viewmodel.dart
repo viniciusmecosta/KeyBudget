@@ -18,16 +18,6 @@ class CategoryViewModel extends ChangeNotifier {
   }
 
   Future<void> fetchCategories(String userId) async {
-    if (_categories.isNotEmpty) {
-      return;
-    }
-    _setLoading(true);
-    _categories = await _repository.getCategoriesForUser(userId);
-    _categories.sort((a, b) => a.name.compareTo(b.name));
-    _setLoading(false);
-  }
-
-  Future<void> _forceRefreshCategories(String userId) async {
     _setLoading(true);
     _categories = await _repository.getCategoriesForUser(userId);
     _categories.sort((a, b) => a.name.compareTo(b.name));
@@ -36,17 +26,17 @@ class CategoryViewModel extends ChangeNotifier {
 
   Future<void> addCategory(String userId, ExpenseCategory category) async {
     await _repository.addCategory(userId, category);
-    await _forceRefreshCategories(userId);
+    await fetchCategories(userId);
   }
 
   Future<void> updateCategory(String userId, ExpenseCategory category) async {
     await _repository.updateCategory(userId, category);
-    await _forceRefreshCategories(userId);
+    await fetchCategories(userId);
   }
 
   Future<void> deleteCategory(String userId, String categoryId) async {
     await _repository.deleteCategory(userId, categoryId);
-    await _forceRefreshCategories(userId);
+    await fetchCategories(userId);
   }
 
   ExpenseCategory? getCategoryById(String? id) {

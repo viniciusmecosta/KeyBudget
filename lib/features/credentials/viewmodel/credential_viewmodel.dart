@@ -5,16 +5,20 @@ import 'package:key_budget/core/models/credential_model.dart';
 import 'package:key_budget/core/services/csv_service.dart';
 import 'package:key_budget/core/services/data_import_service.dart';
 import 'package:key_budget/core/services/encryption_service.dart';
+import 'package:key_budget/core/services/pdf_service.dart';
 import 'package:key_budget/features/credentials/repository/credential_repository.dart';
 
 class CredentialViewModel extends ChangeNotifier {
   final CredentialRepository _repository = CredentialRepository();
   final EncryptionService _encryptionService = EncryptionService();
   final CsvService _csvService = CsvService();
+  final PdfService _pdfService = PdfService();
   final DataImportService _dataImportService = DataImportService();
 
   List<Credential> _allCredentials = [];
   bool _isLoading = false;
+  bool _isExportingCsv = false;
+  bool _isExportingPdf = false;
   StreamSubscription? _credentialsSubscription;
   bool _isListening = false;
 
@@ -29,9 +33,29 @@ class CredentialViewModel extends ChangeNotifier {
 
   bool get isLoading => _isLoading;
 
+  bool get isExportingCsv => _isExportingCsv;
+
+  bool get isExportingPdf => _isExportingPdf;
+
   void _setLoading(bool value) {
-    _isLoading = value;
-    notifyListeners();
+    if (_isLoading != value) {
+      _isLoading = value;
+      notifyListeners();
+    }
+  }
+
+  void _setExportingCsv(bool value) {
+    if (_isExportingCsv != value) {
+      _isExportingCsv = value;
+      notifyListeners();
+    }
+  }
+
+  void _setExportingPdf(bool value) {
+    if (_isExportingPdf != value) {
+      _isExportingPdf = value;
+      notifyListeners();
+    }
   }
 
   void listenToCredentials(String userId) {
@@ -87,7 +111,11 @@ class CredentialViewModel extends ChangeNotifier {
   }) async {
     String passwordToSave = originalCredential.encryptedPassword;
     if (newPlainPassword != null && newPlainPassword.isNotEmpty) {
-      passwordToSave = _encryptionService.encryptData(newPlainPassword);
+      final decryptedOriginal =
+          decryptPassword(originalCredential.encryptedPassword);
+      if (newPlainPassword != decryptedOriginal) {
+        passwordToSave = _encryptionService.encryptData(newPlainPassword);
+      }
     }
     final updatedCredential = Credential(
       id: originalCredential.id,
@@ -106,8 +134,22 @@ class CredentialViewModel extends ChangeNotifier {
     await _repository.deleteCredential(userId, credentialId);
   }
 
-  Future<bool> exportCredentialsToCsv() async {
-    return await _csvService.exportCredentials(_allCredentials);
+  Future<bool> exportCredentialsToCsv(BuildContext context) async {
+    _setExportingCsv(true);
+    try {
+      return await _csvService.exportCredentials(context, _allCredentials);
+    } finally {
+      _setExportingCsv(false);
+    }
+  }
+
+  Future<void> exportCredentialsToPdf(BuildContext context) async {
+    _setExportingPdf(true);
+    try {
+      await _pdfService.exportCredentialsPdf(context, this);
+    } finally {
+      _setExportingPdf(false);
+    }
   }
 
   Future<int> importCredentialsFromCsv(String userId) async {
