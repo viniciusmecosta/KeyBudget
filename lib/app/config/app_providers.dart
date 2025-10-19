@@ -24,11 +24,13 @@ List<SingleChildWidget> appProviders = [
       categoryViewModel: context.read<CategoryViewModel>(),
       expenseViewModel: context.read<ExpenseViewModel>(),
     ),
-    update: (context, categoryViewModel, expenseViewModel, analysisViewModel) =>
-        AnalysisViewModel(
-      categoryViewModel: categoryViewModel,
-      expenseViewModel: expenseViewModel,
-    ),
+    update: (context, categoryViewModel, expenseViewModel, analysisViewModel) {
+      analysisViewModel!.updateDependencies(
+        categoryViewModel: categoryViewModel,
+        expenseViewModel: expenseViewModel,
+      );
+      return analysisViewModel;
+    },
   ),
   ChangeNotifierProxyProvider3<CategoryViewModel, ExpenseViewModel,
       CredentialViewModel, DashboardViewModel>(
@@ -38,11 +40,13 @@ List<SingleChildWidget> appProviders = [
       credentialViewModel: context.read<CredentialViewModel>(),
     ),
     update: (context, categoryViewModel, expenseViewModel, credentialViewModel,
-            dashboardViewModel) =>
-        DashboardViewModel(
-      categoryViewModel: categoryViewModel,
-      expenseViewModel: expenseViewModel,
-      credentialViewModel: credentialViewModel,
-    ),
+        dashboardViewModel) {
+      dashboardViewModel!.updateDependencies(
+        categoryViewModel: categoryViewModel,
+        expenseViewModel: expenseViewModel,
+        credentialViewModel: credentialViewModel,
+      );
+      return dashboardViewModel;
+    },
   ),
 ];

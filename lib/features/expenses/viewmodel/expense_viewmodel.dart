@@ -5,6 +5,9 @@ import 'package:key_budget/core/models/expense_model.dart';
 import 'package:key_budget/core/models/recurring_expense_model.dart';
 import 'package:key_budget/core/services/csv_service.dart';
 import 'package:key_budget/core/services/data_import_service.dart';
+import 'package:key_budget/core/services/pdf_service.dart';
+import 'package:key_budget/features/analysis/viewmodel/analysis_viewmodel.dart';
+import 'package:key_budget/features/category/viewmodel/category_viewmodel.dart';
 import 'package:key_budget/features/expenses/repository/expense_repository.dart';
 import 'package:key_budget/features/expenses/repository/recurring_expense_repository.dart';
 
@@ -13,12 +16,16 @@ class ExpenseViewModel extends ChangeNotifier {
   final RecurringExpenseRepository _recurringRepository =
       RecurringExpenseRepository();
   final CsvService _csvService = CsvService();
+  final PdfService _pdfService = PdfService();
   final DataImportService _dataImportService = DataImportService();
 
   List<Expense> _allExpenses = [];
   List<RecurringExpense> _recurringExpenses = [];
   bool _isLoading = true;
+  bool _isExportingCsv = false;
+  bool _isExportingPdf = false;
   List<String> _selectedCategoryIds = [];
+  DateTime _selectedMonth = DateTime(DateTime.now().year, DateTime.now().month);
   StreamSubscription? _expensesSubscription;
   StreamSubscription? _recurringExpensesSubscription;
   bool _isListening = false;
@@ -29,7 +36,13 @@ class ExpenseViewModel extends ChangeNotifier {
 
   bool get isLoading => _isLoading;
 
+  bool get isExportingCsv => _isExportingCsv;
+
+  bool get isExportingPdf => _isExportingPdf;
+
   List<String> get selectedCategoryIds => _selectedCategoryIds;
+
+  DateTime get selectedMonth => _selectedMonth;
 
   List<Expense> get filteredExpenses {
     List<Expense> filtered = List.from(_allExpenses);
@@ -43,6 +56,25 @@ class ExpenseViewModel extends ChangeNotifier {
     return filtered;
   }
 
+  List<Expense> get monthlyFilteredExpenses {
+    return filteredExpenses
+        .where((exp) =>
+            exp.date.year == _selectedMonth.year &&
+            exp.date.month == _selectedMonth.month)
+        .toList()
+      ..sort((a, b) => b.date.compareTo(a.date));
+  }
+
+  double get currentMonthTotal {
+    return monthlyFilteredExpenses.fold<double>(
+        0.0, (sum, exp) => sum + exp.amount);
+  }
+
+  void setSelectedMonth(DateTime month) {
+    _selectedMonth = month;
+    notifyListeners();
+  }
+
   void setCategoryFilter(List<String> categoryIds) {
     _selectedCategoryIds = categoryIds;
     notifyListeners();
@@ -54,8 +86,24 @@ class ExpenseViewModel extends ChangeNotifier {
   }
 
   void _setLoading(bool value) {
-    _isLoading = value;
-    notifyListeners();
+    if (_isLoading != value) {
+      _isLoading = value;
+      notifyListeners();
+    }
+  }
+
+  void _setExportingCsv(bool value) {
+    if (_isExportingCsv != value) {
+      _isExportingCsv = value;
+      notifyListeners();
+    }
+  }
+
+  void _setExportingPdf(bool value) {
+    if (_isExportingPdf != value) {
+      _isExportingPdf = value;
+      notifyListeners();
+    }
   }
 
   void listenToExpenses(String userId) {
@@ -181,16 +229,46 @@ class ExpenseViewModel extends ChangeNotifier {
     }
   }
 
-  Future<bool> exportExpensesToCsv(DateTime? start, DateTime? end) async {
-    List<Expense> expensesToExport = _allExpenses;
-    if (start != null && end != null) {
-      expensesToExport = _allExpenses
-          .where((exp) =>
-              exp.date.isAfter(start.subtract(const Duration(days: 1))) &&
-              exp.date.isBefore(end.add(const Duration(days: 1))))
-          .toList();
+  Future<bool> exportExpensesToCsv(
+      BuildContext context, DateTime? start, DateTime? end) async {
+    _setExportingCsv(true);
+    try {
+      List<Expense> expensesToExport = _allExpenses;
+      if (start != null && end != null) {
+        expensesToExport = _allExpenses
+            .where((exp) =>
+                exp.date.isAfter(start.subtract(const Duration(days: 1))) &&
+                exp.date.isBefore(end.add(const Duration(days: 1))))
+            .toList();
+      }
+      return await _csvService.exportExpenses(context, expensesToExport);
+    } finally {
+      _setExportingCsv(false);
     }
-    return await _csvService.exportExpenses(expensesToExport);
+  }
+
+  Future<void> exportExpensesToPdf(
+      BuildContext context,
+      DateTime? start,
+      DateTime? end,
+      AnalysisViewModel analysisViewModel,
+      CategoryViewModel categoryViewModel) async {
+    _setExportingPdf(true);
+    try {
+      List<Expense> expensesToExport = _allExpenses;
+      if (start != null && end != null) {
+        expensesToExport = _allExpenses
+            .where((exp) =>
+                exp.date.isAfter(start.subtract(const Duration(days: 1))) &&
+                exp.date.isBefore(end.add(const Duration(days: 1))))
+            .toList();
+      }
+      expensesToExport.sort((a, b) => a.date.compareTo(b.date));
+      await _pdfService.exportExpensesPdf(
+          context, expensesToExport, analysisViewModel, categoryViewModel);
+    } finally {
+      _setExportingPdf(false);
+    }
   }
 
   Future<int> importExpensesFromCsv(String userId) async {

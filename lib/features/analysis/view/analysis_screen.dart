@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:key_budget/app/config/app_theme.dart';
 import 'package:key_budget/app/utils/app_animations.dart';
+import 'package:key_budget/core/services/csv_service.dart';
+import 'package:key_budget/core/services/pdf_service.dart';
 import 'package:provider/provider.dart';
 
 import '../viewmodel/analysis_viewmodel.dart';
@@ -44,6 +46,24 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
             color: theme.colorScheme.onSurface,
           ),
         ),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.picture_as_pdf),
+            onPressed: () {
+              final viewModel =
+                  Provider.of<AnalysisViewModel>(context, listen: false);
+              PdfService().exportAnalysisPdf(context, viewModel);
+            },
+          ),
+          IconButton(
+            icon: const Icon(Icons.grid_on),
+            onPressed: () {
+              final viewModel =
+                  Provider.of<AnalysisViewModel>(context, listen: false);
+              CsvService().exportAnalysisCsv(context, viewModel);
+            },
+          ),
+        ],
         leading: IconButton(
           icon: Icon(
             Icons.arrow_back_ios,
