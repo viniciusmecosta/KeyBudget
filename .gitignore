@@ -53,3 +53,5 @@ app.*.map.json
 
 .gradle/
 .metadata
+
+GEMINI.md

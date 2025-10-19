@@ -6,8 +6,8 @@ import 'package:key_budget/features/category/viewmodel/category_viewmodel.dart';
 import 'package:key_budget/features/expenses/viewmodel/expense_viewmodel.dart';
 
 class AnalysisViewModel extends ChangeNotifier {
-  final CategoryViewModel categoryViewModel;
-  final ExpenseViewModel expenseViewModel;
+  CategoryViewModel categoryViewModel;
+  ExpenseViewModel expenseViewModel;
   DateTime? _selectedMonthForCategory;
   int _periodOffset = 0;
   int _selectedMonthsCount = 6;
@@ -19,6 +19,23 @@ class AnalysisViewModel extends ChangeNotifier {
     required this.categoryViewModel,
     required this.expenseViewModel,
   }) {
+    _initialize();
+  }
+
+  void updateDependencies({
+    required CategoryViewModel categoryViewModel,
+    required ExpenseViewModel expenseViewModel,
+  }) {
+    if (this.categoryViewModel != categoryViewModel ||
+        this.expenseViewModel != expenseViewModel) {
+      this.categoryViewModel = categoryViewModel;
+      this.expenseViewModel = expenseViewModel;
+      _initialize();
+      notifyListeners();
+    }
+  }
+
+  void _initialize() {
     allExpenses.sort((a, b) => a.date.compareTo(b.date));
     if (availableMonthsForFilter.isNotEmpty) {
       _selectedMonthForCategory = availableMonthsForFilter.first;
