@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:key_budget/app/config/app_theme.dart';
 import 'package:key_budget/app/utils/app_animations.dart';
-import 'package:key_budget/core/services/snackbar_service.dart';
 import 'package:key_budget/features/auth/viewmodel/auth_viewmodel.dart';
 import 'package:key_budget/features/credentials/viewmodel/credential_viewmodel.dart';
 import 'package:mask_text_input_formatter/mask_text_input_formatter.dart';
@@ -92,7 +91,6 @@ class _AddCredentialScreenState extends State<AddCredentialScreen> {
 
     if (mounted) {
       setState(() => _isSaving = false);
-      SnackbarService.showSuccess(context, 'Credencial salva com sucesso!');
       Navigator.of(context).pop();
     }
   }
