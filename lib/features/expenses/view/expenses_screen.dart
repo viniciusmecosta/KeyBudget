@@ -119,7 +119,6 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
           else
             ExpenseList(
               monthlyExpenses: expenseViewModel.monthlyFilteredExpenses,
-              isFirstLoad: _isFirstLoad,
             ),
         ],
       ),
