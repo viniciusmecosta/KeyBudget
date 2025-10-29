@@ -1,10 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_animate/flutter_animate.dart';
 import 'package:key_budget/app/config/app_theme.dart';
 import 'package:key_budget/app/utils/app_animations.dart';
 import 'package:key_budget/app/utils/navigation_utils.dart';
+import 'package:key_budget/app/widgets/animated_list_item.dart';
 import 'package:key_budget/app/widgets/empty_state_widget.dart';
-import 'package:key_budget/core/services/snackbar_service.dart';
 import 'package:key_budget/features/auth/viewmodel/auth_viewmodel.dart';
 import 'package:key_budget/features/credentials/view/add_credential_screen.dart';
 import 'package:key_budget/features/credentials/viewmodel/credential_viewmodel.dart';
@@ -21,7 +20,8 @@ class CredentialsScreen extends StatefulWidget {
 }
 
 class _CredentialsScreenState extends State<CredentialsScreen> {
-  bool _isFirstLoad = true;
+  final GlobalKey<SliverAnimatedListState> _listKey =
+      GlobalKey<SliverAnimatedListState>();
 
   @override
   void initState() {
@@ -29,8 +29,10 @@ class _CredentialsScreenState extends State<CredentialsScreen> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final authViewModel = Provider.of<AuthViewModel>(context, listen: false);
       if (authViewModel.currentUser != null) {
-        Provider.of<CredentialViewModel>(context, listen: false)
-            .listenToCredentials(authViewModel.currentUser!.id);
+        final credentialViewModel =
+            Provider.of<CredentialViewModel>(context, listen: false);
+        credentialViewModel.listKey = _listKey;
+        credentialViewModel.listenToCredentials(authViewModel.currentUser!.id);
       }
     });
   }
@@ -46,31 +48,19 @@ class _CredentialsScreenState extends State<CredentialsScreen> {
   void _import(BuildContext context) async {
     final viewModel = Provider.of<CredentialViewModel>(context, listen: false);
     final authViewModel = Provider.of<AuthViewModel>(context, listen: false);
-    final scaffoldContext = context;
 
-    final count =
-        await viewModel.importCredentialsFromCsv(authViewModel.currentUser!.id);
-    if (!scaffoldContext.mounted) return;
-    SnackbarService.showSuccess(
-        scaffoldContext, '$count credenciais importadas com sucesso!');
+    await viewModel.importCredentialsFromCsv(authViewModel.currentUser!.id);
+    if (!context.mounted) return;
   }
 
   void _export(BuildContext context, {String type = 'csv'}) async {
     final viewModel = Provider.of<CredentialViewModel>(context, listen: false);
-    final scaffoldContext = context;
 
-    bool success = false;
     if (type == 'csv') {
-      success = await viewModel.exportCredentialsToCsv(scaffoldContext);
-      if (!scaffoldContext.mounted) return;
-      if (success) {
-        SnackbarService.showSuccess(
-            scaffoldContext, 'Credenciais exportadas com sucesso!');
-      } else if (!viewModel.isExportingCsv) {
-        SnackbarService.showError(scaffoldContext, 'Falha ao exportar.');
-      }
+      await viewModel.exportCredentialsToCsv(context);
+      if (!context.mounted) return;
     } else if (type == 'pdf') {
-      await viewModel.exportCredentialsToPdf(scaffoldContext);
+      await viewModel.exportCredentialsToPdf(context);
     }
   }
 
@@ -78,7 +68,6 @@ class _CredentialsScreenState extends State<CredentialsScreen> {
   Widget build(BuildContext context) {
     final vm = context.watch<CredentialViewModel>();
     final theme = Theme.of(context);
-    final isLoading = vm.isLoading && _isFirstLoad;
 
     return Scaffold(
       appBar: AppBar(
@@ -137,7 +126,7 @@ class _CredentialsScreenState extends State<CredentialsScreen> {
           child: CustomScrollView(
             physics: const BouncingScrollPhysics(),
             slivers: [
-              if (isLoading)
+              if (vm.isLoading)
                 const CredentialsListSkeleton()
               else if (vm.allCredentials.isEmpty)
                 SliverFillRemaining(
@@ -153,30 +142,21 @@ class _CredentialsScreenState extends State<CredentialsScreen> {
                 SliverPadding(
                   padding: const EdgeInsets.fromLTRB(AppTheme.defaultPadding,
                       AppTheme.defaultPadding, AppTheme.defaultPadding, 96.0),
-                  sliver: SliverList(
-                    delegate: SliverChildBuilderDelegate(
-                      (context, index) {
-                        final credential = vm.allCredentials[index];
-                        Widget tile =
-                            CredentialListTile(credential: credential);
-                        if (_isFirstLoad) {
-                          return AppAnimations.listFadeIn(tile, index: index);
-                        }
-                        return tile;
-                      },
-                      childCount: vm.allCredentials.length,
-                    ),
+                  sliver: SliverAnimatedList(
+                    key: _listKey,
+                    initialItemCount: vm.allCredentials.length,
+                    itemBuilder: (context, index, animation) {
+                      final credential = vm.allCredentials[index];
+                      return AnimatedListItem(
+                        animation: animation,
+                        child: CredentialListTile(credential: credential),
+                      );
+                    },
                   ),
                 ),
             ],
           ),
-        ).animate(onComplete: (_) {
-          if (_isFirstLoad && mounted) {
-            setState(() {
-              _isFirstLoad = false;
-            });
-          }
-        }).fadeIn(duration: AppAnimations.duration),
+        ),
       ),
       floatingActionButton: AppAnimations.scaleIn(FloatingActionButton.extended(
         heroTag: 'fab_credentials',
