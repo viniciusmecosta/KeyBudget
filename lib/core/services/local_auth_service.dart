@@ -49,6 +49,10 @@ class LocalAuthService {
     }
   }
 
+  Future<void> stopAuthentication() async {
+    await _auth.stopAuthentication();
+  }
+
   Future<void> saveCredentials(String email, String password) async {
     await _storage.write(key: _emailKey, value: email);
     await _storage.write(key: _passwordKey, value: password);
