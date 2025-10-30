@@ -34,7 +34,7 @@ class _LockScreenState extends State<LockScreen> with WidgetsBindingObserver {
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
-  super.didChangeAppLifecycleState(state);
+    super.didChangeAppLifecycleState(state);
     if (state == AppLifecycleState.resumed) {
       _authenticate();
     } else if (state == AppLifecycleState.paused) {

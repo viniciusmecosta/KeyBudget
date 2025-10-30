@@ -52,8 +52,9 @@ class CsvService {
   Future<File?> _pickCsvFile() async {
     FilePickerResult? result = await FilePicker.platform
         .pickFiles(type: FileType.custom, allowedExtensions: ['csv']);
-    if (result != null && result.files.single.path != null)
+    if (result != null && result.files.single.path != null) {
       return File(result.files.single.path!);
+    }
     return null;
   }
 
@@ -88,8 +89,10 @@ class CsvService {
       final filePath = '${directory.path}/$fileName';
       final file = File(filePath);
       await file.writeAsBytes(utf8.encode(data));
-      await Share.shareXFiles([XFile(filePath)],
-          text: 'Exportação CSV do KeyBudget');
+      if (!context.mounted) return false;
+      final params = ShareParams(
+          files: [XFile(filePath)], text: 'Exportação CSV do KeyBudget');
+      await SharePlus.instance.share(params);
       return true;
     } catch (e) {
       if (!context.mounted) return false;
