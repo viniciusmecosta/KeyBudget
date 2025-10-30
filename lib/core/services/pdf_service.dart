@@ -44,15 +44,21 @@ class PdfService {
           style: PdfFontStyle.bold);
 
       final PdfColor primaryColor = PdfColor(
-          AppTheme.primary.red, AppTheme.primary.green, AppTheme.primary.blue);
-      final PdfColor onSurfaceColor = PdfColor(AppTheme.onSurface.red,
-          AppTheme.onSurface.green, AppTheme.onSurface.blue);
+          (AppTheme.primary.r * 255.0).round() & 0xff,
+          (AppTheme.primary.g * 255.0).round() & 0xff,
+          (AppTheme.primary.b * 255.0).round() & 0xff);
+      final PdfColor onSurfaceColor = PdfColor(
+          (AppTheme.onSurface.r * 255.0).round() & 0xff,
+          (AppTheme.onSurface.g * 255.0).round() & 0xff,
+          (AppTheme.onSurface.b * 255.0).round() & 0xff);
       final PdfColor surfaceColor = PdfColor(
-          AppTheme.surface.red, AppTheme.surface.green, AppTheme.surface.blue);
+          (AppTheme.surface.r * 255.0).round() & 0xff,
+          (AppTheme.surface.g * 255.0).round() & 0xff,
+          (AppTheme.surface.b * 255.0).round() & 0xff);
       final PdfColor lightGreyColor = PdfColor(
-          AppTheme.surfaceContainerHighest.red,
-          AppTheme.surfaceContainerHighest.green,
-          AppTheme.surfaceContainerHighest.blue);
+          (AppTheme.surfaceContainerHighest.r * 255.0).round() & 0xff,
+          (AppTheme.surfaceContainerHighest.g * 255.0).round() & 0xff,
+          (AppTheme.surfaceContainerHighest.b * 255.0).round() & 0xff);
 
       page.graphics.drawImage(logo, const Rect.fromLTWH(0, 0, 40, 40));
       page.graphics.drawString('Relatório de Despesas', titleFont,
@@ -187,6 +193,8 @@ class PdfService {
             child: CategoryAnalysisSectionWidget(),
           ));
 
+      if (!context.mounted) return;
+
       final monthlyTrendImageBytes =
           await WidgetToImage.captureWidgetFromProvider(
         context,
@@ -200,6 +208,8 @@ class PdfService {
         ),
         wait: const Duration(milliseconds: 500),
       );
+
+      if (!context.mounted) return;
 
       final categoryAnalysisImageBytes =
           await WidgetToImage.captureWidgetFromProvider(
@@ -288,8 +298,13 @@ class PdfService {
       final file = File(filePath);
       await file.writeAsBytes(Uint8List.fromList(bytes));
 
-      await Share.shareXFiles([XFile(filePath)],
-          text: 'Relatório de Despesas e Análise');
+      if (!context.mounted) return;
+
+      final params = ShareParams(
+        files: [XFile(filePath)],
+        text: 'Relatório de Despesas e Análise',
+      );
+      await SharePlus.instance.share(params);
     } catch (e, s) {
       if (!context.mounted) return;
       debugPrint('Erro ao exportar PDF de despesas: $e\n$s');
@@ -322,15 +337,21 @@ class PdfService {
           style: PdfFontStyle.bold);
 
       final PdfColor primaryColor = PdfColor(
-          AppTheme.primary.red, AppTheme.primary.green, AppTheme.primary.blue);
-      final PdfColor onSurfaceColor = PdfColor(AppTheme.onSurface.red,
-          AppTheme.onSurface.green, AppTheme.onSurface.blue);
+          (AppTheme.primary.r * 255.0).round() & 0xff,
+          (AppTheme.primary.g * 255.0).round() & 0xff,
+          (AppTheme.primary.b * 255.0).round() & 0xff);
+      final PdfColor onSurfaceColor = PdfColor(
+          (AppTheme.onSurface.r * 255.0).round() & 0xff,
+          (AppTheme.onSurface.g * 255.0).round() & 0xff,
+          (AppTheme.onSurface.b * 255.0).round() & 0xff);
       final PdfColor surfaceColor = PdfColor(
-          AppTheme.surface.red, AppTheme.surface.green, AppTheme.surface.blue);
+          (AppTheme.surface.r * 255.0).round() & 0xff,
+          (AppTheme.surface.g * 255.0).round() & 0xff,
+          (AppTheme.surface.b * 255.0).round() & 0xff);
       final PdfColor lightGreyColor = PdfColor(
-          AppTheme.surfaceContainerHighest.red,
-          AppTheme.surfaceContainerHighest.green,
-          AppTheme.surfaceContainerHighest.blue);
+          (AppTheme.surfaceContainerHighest.r * 255.0).round() & 0xff,
+          (AppTheme.surfaceContainerHighest.g * 255.0).round() & 0xff,
+          (AppTheme.surfaceContainerHighest.b * 255.0).round() & 0xff);
 
       page.graphics.drawImage(logo, const Rect.fromLTWH(0, 0, 40, 40));
       page.graphics.drawString('Relatório de Credenciais', titleFont,
@@ -412,8 +433,13 @@ class PdfService {
       final file = File(filePath);
       await file.writeAsBytes(Uint8List.fromList(bytes));
 
-      await Share.shareXFiles([XFile(filePath)],
-          text: 'Relatório de Credenciais');
+      if (!context.mounted) return;
+
+      final params = ShareParams(
+        files: [XFile(filePath)],
+        text: 'Relatório de Credenciais',
+      );
+      await SharePlus.instance.share(params);
     } catch (e, s) {
       if (!context.mounted) return;
       debugPrint('Erro ao exportar PDF de credenciais: $e\n$s');
@@ -454,6 +480,8 @@ class PdfService {
         ),
       );
 
+      if (!context.mounted) return;
+
       final Uint8List? imageBytes = await WidgetToImage.captureWidget(
         context,
         reportWidget,
@@ -491,7 +519,13 @@ class PdfService {
       final file = File(filePath);
       await file.writeAsBytes(Uint8List.fromList(bytes));
 
-      await Share.shareXFiles([XFile(filePath)], text: 'Relatório de Análise');
+      if (!context.mounted) return;
+
+      final params = ShareParams(
+        files: [XFile(filePath)],
+        text: 'Relatório de Análise',
+      );
+      await SharePlus.instance.share(params);
     } catch (e, s) {
       if (!context.mounted) return;
       debugPrint('Erro ao exportar PDF de análise: $e\n$s');
