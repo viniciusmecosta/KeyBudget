@@ -21,7 +21,10 @@ class _LockScreenState extends State<LockScreen> with WidgetsBindingObserver {
     WidgetsBinding.instance.addObserver(this);
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) {
-        _authenticate();
+        if (WidgetsBinding.instance.lifecycleState ==
+            AppLifecycleState.resumed) {
+          _authenticate();
+        }
       }
     });
   }
@@ -48,14 +51,18 @@ class _LockScreenState extends State<LockScreen> with WidgetsBindingObserver {
   }
 
   Future<void> _authenticate() async {
-    if (_isAuthenticating) return;
+    if (_isAuthenticating) {
+      return;
+    }
 
     setState(() => _isAuthenticating = true);
 
     final localAuthService = LocalAuthService();
     final isAuthenticated = await localAuthService.authenticate();
 
-    if (!mounted) return;
+    if (!mounted) {
+      return;
+    }
 
     if (isAuthenticated) {
       Provider.of<AppLockService>(context, listen: false).unlockApp();
@@ -79,7 +86,11 @@ class _LockScreenState extends State<LockScreen> with WidgetsBindingObserver {
                 style: theme.textTheme.headlineSmall),
             const SizedBox(height: 32),
             ElevatedButton.icon(
-              onPressed: _isAuthenticating ? null : _authenticate,
+              onPressed: _isAuthenticating
+                  ? null
+                  : () {
+                      _authenticate();
+                    },
               icon: _isAuthenticating
                   ? SizedBox(
                       width: 24,
