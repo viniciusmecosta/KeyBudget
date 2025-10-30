@@ -12,28 +12,57 @@ class LockScreen extends StatefulWidget {
   State<LockScreen> createState() => _LockScreenState();
 }
 
-class _LockScreenState extends State<LockScreen> {
+class _LockScreenState extends State<LockScreen> with WidgetsBindingObserver {
   bool _isAuthenticating = false;
 
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) {
-        _authenticate();
+        if (WidgetsBinding.instance.lifecycleState ==
+            AppLifecycleState.resumed) {
+          _authenticate();
+        }
       }
     });
   }
 
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    super.didChangeAppLifecycleState(state);
+    if (state == AppLifecycleState.resumed) {
+      _authenticate();
+    } else if (state == AppLifecycleState.paused) {
+      LocalAuthService().stopAuthentication();
+      if (mounted) {
+        setState(() {
+          _isAuthenticating = false;
+        });
+      }
+    }
+  }
+
   Future<void> _authenticate() async {
-    if (_isAuthenticating) return;
+    if (_isAuthenticating) {
+      return;
+    }
 
     setState(() => _isAuthenticating = true);
 
     final localAuthService = LocalAuthService();
     final isAuthenticated = await localAuthService.authenticate();
 
-    if (!mounted) return;
+    if (!mounted) {
+      return;
+    }
 
     if (isAuthenticated) {
       Provider.of<AppLockService>(context, listen: false).unlockApp();
@@ -57,7 +86,11 @@ class _LockScreenState extends State<LockScreen> {
                 style: theme.textTheme.headlineSmall),
             const SizedBox(height: 32),
             ElevatedButton.icon(
-              onPressed: _isAuthenticating ? null : _authenticate,
+              onPressed: _isAuthenticating
+                  ? null
+                  : () {
+                      _authenticate();
+                    },
               icon: _isAuthenticating
                   ? SizedBox(
                       width: 24,
