@@ -1,5 +1,7 @@
 # KeyBudget
 
+Version: 0.9.0 (Pre-release)
+
 O **KeyBudget** é um aplicativo móvel completo, desenvolvido em Flutter, projetado para ser a
 ferramenta definitiva no gerenciamento de despesas pessoais e no armazenamento seguro de
 credenciais. Com uma interface moderna, intuitiva e reativa, o aplicativo permite que os usuários
