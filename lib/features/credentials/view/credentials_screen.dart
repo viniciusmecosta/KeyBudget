@@ -149,7 +149,8 @@ class _CredentialsScreenState extends State<CredentialsScreen> {
                       final credential = vm.allCredentials[index];
                       return AnimatedListItem(
                         animation: animation,
-                        child: CredentialListTile(credential: credential),
+                        child: CredentialListTile(
+                            key: ValueKey(credential), credential: credential),
                       );
                     },
                   ),

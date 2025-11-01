@@ -33,7 +33,6 @@ class ActivityTile extends StatelessWidget {
     final categoryColor = category?.color ?? colorScheme.primary;
 
     return Container(
-      margin: const EdgeInsets.only(bottom: AppTheme.spaceS),
       decoration: BoxDecoration(
         color: colorScheme.surface,
         borderRadius: BorderRadius.circular(AppTheme.radiusM),
