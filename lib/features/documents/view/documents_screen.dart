@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:key_budget/app/config/app_theme.dart';
 import 'package:key_budget/app/utils/navigation_utils.dart';
+import 'package:key_budget/app/widgets/animated_list_item.dart';
 import 'package:key_budget/app/widgets/empty_state_widget.dart';
 import 'package:key_budget/features/auth/viewmodel/auth_viewmodel.dart';
 import 'package:key_budget/features/documents/view/add_document_screen.dart';
 import 'package:key_budget/features/documents/viewmodel/document_viewmodel.dart';
 import 'package:provider/provider.dart';
-import 'package:key_budget/app/widgets/animated_list_item.dart';
 
 import '../widgets/document_list_tile.dart';
 
@@ -58,7 +58,7 @@ class _DocumentsScreenState extends State<DocumentsScreen> {
                     final doc = viewModel.documents[index];
                     return AnimatedListItem(
                       animation: animation,
-                      child: DocumentListTile(doc: doc),
+                      child: DocumentListTile(key: ValueKey(doc), doc: doc),
                     );
                   },
                 ),

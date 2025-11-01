@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:key_budget/app/config/app_theme.dart';
 import 'package:key_budget/app/widgets/activity_tile_widget.dart';
+import 'package:key_budget/app/widgets/animated_list_item.dart';
 import 'package:key_budget/core/models/expense_model.dart';
 import 'package:key_budget/features/expenses/viewmodel/expense_viewmodel.dart';
 import 'package:provider/provider.dart';
-import 'package:key_budget/app/widgets/animated_list_item.dart';
 
 class ExpenseList extends StatefulWidget {
   final List<Expense> monthlyExpenses;
@@ -46,23 +46,15 @@ class _ExpenseListState extends State<ExpenseList> {
     );
   }
 
-    Widget _buildExpenseTile(
-
-        Expense expense, int index, Animation<double> animation) {
-
-      return AnimatedListItem(
-
-        animation: animation,
-
-        child: ActivityTile(
-
-          expense: expense,
-
-          index: index,
-
-        ),
-
-      );
-
-    }
+  Widget _buildExpenseTile(
+      Expense expense, int index, Animation<double> animation) {
+    return AnimatedListItem(
+      animation: animation,
+      child: ActivityTile(
+        key: ValueKey(expense),
+        expense: expense,
+        index: index,
+      ),
+    );
+  }
 }
