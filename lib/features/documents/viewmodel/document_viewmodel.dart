@@ -3,14 +3,16 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:file_picker/file_picker.dart';
-import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
 import 'package:key_budget/core/models/document_model.dart';
 import 'package:key_budget/core/services/drive_service.dart';
 import 'package:key_budget/features/documents/repository/document_repository.dart';
+import 'package:key_budget/features/documents/widgets/document_list_tile.dart';
 import 'package:open_file/open_file.dart';
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
+import 'package:key_budget/app/widgets/animated_list_item.dart';
 
 class DocumentViewModel extends ChangeNotifier {
   final DocumentRepository _repository = DocumentRepository();
@@ -22,6 +24,8 @@ class DocumentViewModel extends ChangeNotifier {
   List<Document> _documents = [];
   bool _isUploading = false;
   double? _uploadProgress;
+
+  GlobalKey<AnimatedListState>? listKey;
 
   bool get isUploading => _isUploading;
 
@@ -38,9 +42,70 @@ class DocumentViewModel extends ChangeNotifier {
     _setLoading(true);
     _documentsSubscription?.cancel();
     _documentsSubscription =
-        _repository.getDocumentsStream(userId).listen((docs) async {
-      final processedDocs = await _processDocuments(docs, userId);
-      _documents = processedDocs;
+        _repository.getDocumentsStream(userId).listen((newDocs) async {
+      final processedNewDocs = await _processDocuments(newDocs, userId);
+
+      final oldList = List<Document>.from(_documents);
+      final newList = List<Document>.from(processedNewDocs);
+
+      
+      oldList.sort((a, b) =>
+          a.documentName.toLowerCase().compareTo(b.documentName.toLowerCase()));
+      newList.sort((a, b) =>
+          a.documentName.toLowerCase().compareTo(b.documentName.toLowerCase()));
+
+      
+      for (var i = oldList.length - 1; i >= 0; i--) {
+        final oldDoc = oldList[i];
+        if (!newList.any((newDoc) => newDoc.id == oldDoc.id)) {
+          final indexInCurrent =
+              _documents.indexWhere((e) => e.id == oldDoc.id);
+          if (indexInCurrent != -1) {
+            final item = _documents.removeAt(indexInCurrent);
+            listKey?.currentState?.removeItem(
+              indexInCurrent,
+              (context, animation) => AnimatedListItem(
+                animation: animation,
+                child: DocumentListTile(doc: item),
+              ),
+              duration: const Duration(milliseconds: 500),
+            );
+          }
+        }
+      }
+
+      
+      for (var i = 0; i < newList.length; i++) {
+        final newDoc = newList[i];
+        final oldIndex = _documents.indexWhere((e) => e.id == newDoc.id);
+
+        if (oldIndex == -1) {
+          
+          _documents.insert(i, newDoc);
+          listKey?.currentState
+              ?.insertItem(i, duration: const Duration(milliseconds: 500));
+        } else if (_documents[oldIndex].id == newDoc.id &&
+            _documents[oldIndex] != newDoc) {
+          
+          _documents[oldIndex] = newDoc;
+          
+          notifyListeners(); 
+        } else if (oldIndex != i) {
+          
+          final itemToMove = _documents.removeAt(oldIndex);
+          _documents.insert(i, itemToMove);
+          listKey?.currentState?.removeItem(
+            oldIndex,
+            (context, animation) => Container(), 
+            duration: const Duration(milliseconds: 10),
+          );
+          listKey?.currentState
+              ?.insertItem(i, duration: const Duration(milliseconds: 500));
+        }
+      }
+
+      
+      _documents = newList;
       _setLoading(false);
     }, onError: (error) {
       _setErrorMessage('Erro ao carregar os documentos.');
@@ -115,7 +180,6 @@ class DocumentViewModel extends ChangeNotifier {
       }
 
       await _repository.updateDocument(userId, document);
-      await forceRefresh(userId);
       return true;
     } catch (e) {
       _setErrorMessage('Não foi possível atualizar o documento.');
@@ -126,6 +190,20 @@ class DocumentViewModel extends ChangeNotifier {
   }
 
   Future<bool> deleteDocument(String userId, Document document) async {
+    final index = _documents.indexWhere((d) => d.id == document.id);
+    if (index == -1) return false;
+
+    final docToDelete = _documents[index];
+    listKey?.currentState?.removeItem(
+      index,
+      (context, animation) => AnimatedListItem(
+        animation: animation,
+        child: DocumentListTile(doc: docToDelete),
+      ),
+      duration: const Duration(milliseconds: 500),
+    );
+    _documents.removeAt(index);
+
     _setLoading(true);
     try {
       for (final attachment in document.attachments) {
@@ -141,6 +219,8 @@ class DocumentViewModel extends ChangeNotifier {
       return true;
     } catch (e) {
       _setErrorMessage('Não foi possível excluir o documento.');
+      _documents.insert(index, docToDelete);
+      listKey?.currentState?.insertItem(index);
       return false;
     } finally {
       _setLoading(false);

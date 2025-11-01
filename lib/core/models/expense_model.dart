@@ -35,4 +35,25 @@ class Expense {
       location: map['location'],
     );
   }
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is Expense &&
+          runtimeType == other.runtimeType &&
+          id == other.id &&
+          amount == other.amount &&
+          date == other.date &&
+          categoryId == other.categoryId &&
+          motivation == other.motivation &&
+          location == other.location;
+
+  @override
+  int get hashCode =>
+      id.hashCode ^
+      amount.hashCode ^
+      date.hashCode ^
+      categoryId.hashCode ^
+      motivation.hashCode ^
+      location.hashCode;
 }

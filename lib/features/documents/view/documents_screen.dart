@@ -6,6 +6,7 @@ import 'package:key_budget/features/auth/viewmodel/auth_viewmodel.dart';
 import 'package:key_budget/features/documents/view/add_document_screen.dart';
 import 'package:key_budget/features/documents/viewmodel/document_viewmodel.dart';
 import 'package:provider/provider.dart';
+import 'package:key_budget/app/widgets/animated_list_item.dart';
 
 import '../widgets/document_list_tile.dart';
 
@@ -17,14 +18,18 @@ class DocumentsScreen extends StatefulWidget {
 }
 
 class _DocumentsScreenState extends State<DocumentsScreen> {
+  final GlobalKey<AnimatedListState> _listKey = GlobalKey<AnimatedListState>();
+
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final authViewModel = Provider.of<AuthViewModel>(context, listen: false);
       if (authViewModel.currentUser != null) {
-        Provider.of<DocumentViewModel>(context, listen: false)
-            .listenToDocuments(authViewModel.currentUser!.id);
+        final documentViewModel =
+            Provider.of<DocumentViewModel>(context, listen: false);
+        documentViewModel.listKey = _listKey;
+        documentViewModel.listenToDocuments(authViewModel.currentUser!.id);
       }
     });
   }
@@ -44,13 +49,17 @@ class _DocumentsScreenState extends State<DocumentsScreen> {
                   icon: Icons.folder_off_outlined,
                   message: 'Nenhum documento encontrado.',
                 )
-              : ListView.builder(
+              : AnimatedList(
+                  key: _listKey,
+                  initialItemCount: viewModel.documents.length,
                   padding: const EdgeInsets.fromLTRB(AppTheme.defaultPadding,
                       AppTheme.defaultPadding, AppTheme.defaultPadding, 96.0),
-                  itemCount: viewModel.documents.length,
-                  itemBuilder: (context, index) {
+                  itemBuilder: (context, index, animation) {
                     final doc = viewModel.documents[index];
-                    return DocumentListTile(doc: doc);
+                    return AnimatedListItem(
+                      animation: animation,
+                      child: DocumentListTile(key: ValueKey(doc), doc: doc),
+                    );
                   },
                 ),
       floatingActionButton: FloatingActionButton.extended(

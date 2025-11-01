@@ -76,7 +76,6 @@ class _AddDocumentScreenState extends State<AddDocumentScreen> {
               userId, newDocumentWithId, allVersions);
         }
         if (!mounted) return;
-        SnackbarService.showSuccess(context, 'Documento salvo com sucesso!');
         Navigator.of(context).pop();
       } else {
         SnackbarService.showError(
