@@ -46,23 +46,15 @@ class _ExpenseListState extends State<ExpenseList> {
     );
   }
 
-    Widget _buildExpenseTile(
-
-        Expense expense, int index, Animation<double> animation) {
-
-      return AnimatedListItem(
-
-        animation: animation,
-
-        child: ActivityTile(
-
-          expense: expense,
-
-          index: index,
-
-        ),
-
-      );
-
-    }
+  Widget _buildExpenseTile(
+      Expense expense, int index, Animation<double> animation) {
+    return AnimatedListItem(
+      animation: animation,
+      child: ActivityTile(
+        key: ValueKey(expense),
+        expense: expense,
+        index: index,
+      ),
+    );
+  }
 }

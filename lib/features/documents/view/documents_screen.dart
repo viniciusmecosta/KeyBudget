@@ -58,7 +58,7 @@ class _DocumentsScreenState extends State<DocumentsScreen> {
                     final doc = viewModel.documents[index];
                     return AnimatedListItem(
                       animation: animation,
-                      child: DocumentListTile(doc: doc),
+                      child: DocumentListTile(key: ValueKey(doc), doc: doc),
                     );
                   },
                 ),

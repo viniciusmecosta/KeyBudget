@@ -117,65 +117,48 @@ class ExpenseViewModel extends ChangeNotifier {
     _expensesSubscription?.cancel();
     _expensesSubscription =
         _repository.getExpensesStreamForUser(userId).listen((newExpenses) {
-      final oldList = List<Expense>.from(_allExpenses);
-      final newList = List<Expense>.from(newExpenses);
+      final oldMonthlyList = List<Expense>.from(monthlyFilteredExpenses);
 
-      // Sort both lists to ensure consistent order for diffing
-      oldList.sort((a, b) => b.date.compareTo(a.date));
-      newList.sort((a, b) => b.date.compareTo(a.date));
+      _allExpenses = newExpenses;
 
-      // Identify removed items
-      for (var i = oldList.length - 1; i >= 0; i--) {
-        final oldExpense = oldList[i];
-        if (!newList.any((newExp) => newExp.id == oldExpense.id)) {
-          final indexInCurrent = _allExpenses.indexWhere((e) => e.id == oldExpense.id);
-          if (indexInCurrent != -1) {
-            final item = _allExpenses.removeAt(indexInCurrent);
-            listKey?.currentState?.removeItem(
-              indexInCurrent,
-              (context, animation) => AnimatedListItem(
-                animation: animation,
-                child: ActivityTile(
-                  expense: item,
-                  index: indexInCurrent,
-                ),
-              ),
-              duration: const Duration(milliseconds: 500),
-            );
-          }
-        }
-      }
+      final newMonthlyList = monthlyFilteredExpenses;
 
-      // Identify added and updated items
-      for (var i = 0; i < newList.length; i++) {
-        final newExpense = newList[i];
-        final oldIndex = _allExpenses.indexWhere((e) => e.id == newExpense.id);
+      final removedItems = oldMonthlyList
+          .where((oldItem) => !newMonthlyList.any((newItem) => newItem.id == oldItem.id))
+          .toList();
 
-        if (oldIndex == -1) {
-          // Item added
-          _allExpenses.insert(i, newExpense);
-          listKey?.currentState?.insertItem(i, duration: const Duration(milliseconds: 500));
-        } else if (_allExpenses[oldIndex].id == newExpense.id && _allExpenses[oldIndex] != newExpense) {
-          // Item updated (content changed, but ID is same)
-          _allExpenses[oldIndex] = newExpense;
-          // No explicit AnimatedList call needed here, AnimatedListItem will react to child change
-          notifyListeners(); // To ensure the UI rebuilds the updated item
-        } else if (oldIndex != i) {
-          // Item moved
-          final itemToMove = _allExpenses.removeAt(oldIndex);
-          _allExpenses.insert(i, itemToMove);
+      final removalIndices = removedItems
+          .map((item) => oldMonthlyList.indexWhere((oldItem) => oldItem.id == item.id))
+          .toList();
+      removalIndices.sort((a, b) => b.compareTo(a));
+
+      for (final index in removalIndices) {
+        if (index != -1) {
+          final expense = oldMonthlyList[index];
           listKey?.currentState?.removeItem(
-            oldIndex,
-            (context, animation) => Container(), // Fast remove
-            duration: const Duration(milliseconds: 10),
+            index,
+            (context, animation) => AnimatedListItem(
+              animation: animation,
+              child: ActivityTile(expense: expense, index: index),
+            ),
+            duration: const Duration(milliseconds: 500),
           );
-          listKey?.currentState?.insertItem(i, duration: const Duration(milliseconds: 500));
         }
       }
 
-      // Ensure _allExpenses is always in sync with the sorted newList for subsequent diffing
-      _allExpenses = newList;
+      final addedItems = newMonthlyList
+          .where((newItem) => !oldMonthlyList.any((oldItem) => oldItem.id == newItem.id))
+          .toList();
+
+      for (final item in addedItems) {
+        final index = newMonthlyList.indexWhere((newItem) => newItem.id == item.id);
+        if (index != -1) {
+          listKey?.currentState?.insertItem(index, duration: const Duration(milliseconds: 500));
+        }
+      }
+
       _setLoading(false);
+      notifyListeners();
     });
 
     _recurringExpensesSubscription?.cancel();
@@ -199,23 +182,7 @@ class ExpenseViewModel extends ChangeNotifier {
   }
 
   Future<void> deleteExpense(String userId, String expenseId) async {
-    final index = monthlyFilteredExpenses
-        .indexWhere((element) => element.id == expenseId);
-    if (index != -1) {
-      final expense = monthlyFilteredExpenses[index];
-      listKey?.currentState?.removeItem(
-        index,
-        (context, animation) => AnimatedListItem(
-          animation: animation,
-          child: ActivityTile(
-            expense: expense,
-            index: index,
-          ),
-        ),
-        duration: const Duration(milliseconds: 500),
-      );
-      await _repository.deleteExpense(userId, expenseId);
-    }
+    await _repository.deleteExpense(userId, expenseId);
   }
 
   Future<void> addRecurringExpense(

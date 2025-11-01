@@ -48,15 +48,18 @@ class DocumentViewModel extends ChangeNotifier {
       final oldList = List<Document>.from(_documents);
       final newList = List<Document>.from(processedNewDocs);
 
-      // Sort both lists to ensure consistent order for diffing
-      oldList.sort((a, b) => a.documentName.toLowerCase().compareTo(b.documentName.toLowerCase()));
-      newList.sort((a, b) => a.documentName.toLowerCase().compareTo(b.documentName.toLowerCase()));
+      
+      oldList.sort((a, b) =>
+          a.documentName.toLowerCase().compareTo(b.documentName.toLowerCase()));
+      newList.sort((a, b) =>
+          a.documentName.toLowerCase().compareTo(b.documentName.toLowerCase()));
 
-      // Identify removed items
+      
       for (var i = oldList.length - 1; i >= 0; i--) {
         final oldDoc = oldList[i];
         if (!newList.any((newDoc) => newDoc.id == oldDoc.id)) {
-          final indexInCurrent = _documents.indexWhere((e) => e.id == oldDoc.id);
+          final indexInCurrent =
+              _documents.indexWhere((e) => e.id == oldDoc.id);
           if (indexInCurrent != -1) {
             final item = _documents.removeAt(indexInCurrent);
             listKey?.currentState?.removeItem(
@@ -71,34 +74,37 @@ class DocumentViewModel extends ChangeNotifier {
         }
       }
 
-      // Identify added and updated items
+      
       for (var i = 0; i < newList.length; i++) {
         final newDoc = newList[i];
         final oldIndex = _documents.indexWhere((e) => e.id == newDoc.id);
 
         if (oldIndex == -1) {
-          // Item added
+          
           _documents.insert(i, newDoc);
-          listKey?.currentState?.insertItem(i, duration: const Duration(milliseconds: 500));
-        } else if (_documents[oldIndex].id == newDoc.id && _documents[oldIndex] != newDoc) {
-          // Item updated (content changed, but ID is same)
+          listKey?.currentState
+              ?.insertItem(i, duration: const Duration(milliseconds: 500));
+        } else if (_documents[oldIndex].id == newDoc.id &&
+            _documents[oldIndex] != newDoc) {
+          
           _documents[oldIndex] = newDoc;
-          // No explicit AnimatedList call needed here, AnimatedListItem will react to child change
-          notifyListeners(); // To ensure the UI rebuilds the updated item
+          
+          notifyListeners(); 
         } else if (oldIndex != i) {
-          // Item moved
+          
           final itemToMove = _documents.removeAt(oldIndex);
           _documents.insert(i, itemToMove);
           listKey?.currentState?.removeItem(
             oldIndex,
-            (context, animation) => Container(), // Fast remove
+            (context, animation) => Container(), 
             duration: const Duration(milliseconds: 10),
           );
-          listKey?.currentState?.insertItem(i, duration: const Duration(milliseconds: 500));
+          listKey?.currentState
+              ?.insertItem(i, duration: const Duration(milliseconds: 500));
         }
       }
 
-      // Ensure _documents is always in sync with the sorted newList for subsequent diffing
+      
       _documents = newList;
       _setLoading(false);
     }, onError: (error) {
