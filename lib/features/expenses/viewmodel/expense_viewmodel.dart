@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:key_budget/app/widgets/activity_tile_widget.dart';
 import 'package:key_budget/core/models/expense_model.dart';
 import 'package:key_budget/core/models/recurring_expense_model.dart';
 import 'package:key_budget/core/services/csv_service.dart';
@@ -10,6 +11,7 @@ import 'package:key_budget/features/analysis/viewmodel/analysis_viewmodel.dart';
 import 'package:key_budget/features/category/viewmodel/category_viewmodel.dart';
 import 'package:key_budget/features/expenses/repository/expense_repository.dart';
 import 'package:key_budget/features/expenses/repository/recurring_expense_repository.dart';
+import 'package:key_budget/app/widgets/animated_list_item.dart';
 
 class ExpenseViewModel extends ChangeNotifier {
   final ExpenseRepository _repository = ExpenseRepository();
@@ -29,6 +31,8 @@ class ExpenseViewModel extends ChangeNotifier {
   StreamSubscription? _expensesSubscription;
   StreamSubscription? _recurringExpensesSubscription;
   bool _isListening = false;
+
+  GlobalKey<SliverAnimatedListState>? listKey;
 
   List<Expense> get allExpenses => _allExpenses;
 
@@ -112,9 +116,48 @@ class ExpenseViewModel extends ChangeNotifier {
 
     _expensesSubscription?.cancel();
     _expensesSubscription =
-        _repository.getExpensesStreamForUser(userId).listen((expenses) {
-      _allExpenses = expenses;
-      if (_isLoading) _setLoading(false);
+        _repository.getExpensesStreamForUser(userId).listen((newExpenses) {
+      final oldMonthlyList = List<Expense>.from(monthlyFilteredExpenses);
+
+      _allExpenses = newExpenses;
+
+      final newMonthlyList = monthlyFilteredExpenses;
+
+      final removedItems = oldMonthlyList
+          .where((oldItem) => !newMonthlyList.any((newItem) => newItem.id == oldItem.id))
+          .toList();
+
+      final removalIndices = removedItems
+          .map((item) => oldMonthlyList.indexWhere((oldItem) => oldItem.id == item.id))
+          .toList();
+      removalIndices.sort((a, b) => b.compareTo(a));
+
+      for (final index in removalIndices) {
+        if (index != -1) {
+          final expense = oldMonthlyList[index];
+          listKey?.currentState?.removeItem(
+            index,
+            (context, animation) => AnimatedListItem(
+              animation: animation,
+              child: ActivityTile(expense: expense, index: index),
+            ),
+            duration: const Duration(milliseconds: 500),
+          );
+        }
+      }
+
+      final addedItems = newMonthlyList
+          .where((newItem) => !oldMonthlyList.any((oldItem) => oldItem.id == newItem.id))
+          .toList();
+
+      for (final item in addedItems) {
+        final index = newMonthlyList.indexWhere((newItem) => newItem.id == item.id);
+        if (index != -1) {
+          listKey?.currentState?.insertItem(index, duration: const Duration(milliseconds: 500));
+        }
+      }
+
+      _setLoading(false);
       notifyListeners();
     });
 

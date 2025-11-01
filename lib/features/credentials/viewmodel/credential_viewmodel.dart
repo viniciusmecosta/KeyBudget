@@ -7,6 +7,8 @@ import 'package:key_budget/core/services/data_import_service.dart';
 import 'package:key_budget/core/services/encryption_service.dart';
 import 'package:key_budget/core/services/pdf_service.dart';
 import 'package:key_budget/features/credentials/repository/credential_repository.dart';
+import 'package:key_budget/features/credentials/widgets/credential_list_tile.dart';
+import 'package:key_budget/app/widgets/animated_list_item.dart';
 
 class CredentialViewModel extends ChangeNotifier {
   final CredentialRepository _repository = CredentialRepository();
@@ -21,6 +23,8 @@ class CredentialViewModel extends ChangeNotifier {
   bool _isExportingPdf = false;
   StreamSubscription? _credentialsSubscription;
   bool _isListening = false;
+
+  GlobalKey<SliverAnimatedListState>? listKey;
 
   List<Credential> get allCredentials => _allCredentials;
 
@@ -65,11 +69,65 @@ class CredentialViewModel extends ChangeNotifier {
 
     _setLoading(true);
     _credentialsSubscription?.cancel();
-    _credentialsSubscription =
-        _repository.getCredentialsStreamForUser(userId).listen((credentials) {
-      _allCredentials = credentials;
-      _allCredentials.sort((a, b) =>
+    _credentialsSubscription = _repository
+        .getCredentialsStreamForUser(userId)
+        .listen((newCredentials) {
+      final oldList = List<Credential>.from(_allCredentials);
+      final newList = List<Credential>.from(newCredentials);
+
+      newList.sort((a, b) =>
           a.location.toLowerCase().compareTo(b.location.toLowerCase()));
+
+      
+      for (var i = oldList.length - 1; i >= 0; i--) {
+        final oldCredential = oldList[i];
+        if (!newList.any((newCred) => newCred.id == oldCredential.id)) {
+          final indexInCurrent =
+              _allCredentials.indexWhere((e) => e.id == oldCredential.id);
+          if (indexInCurrent != -1) {
+            final item = _allCredentials.removeAt(indexInCurrent);
+            listKey?.currentState?.removeItem(
+              indexInCurrent,
+              (context, animation) => AnimatedListItem(
+                animation: animation,
+                child: CredentialListTile(credential: item),
+              ),
+              duration: const Duration(milliseconds: 500),
+            );
+          }
+        }
+      }
+
+      
+      for (var i = 0; i < newList.length; i++) {
+        final newCredential = newList[i];
+        final oldIndex =
+            _allCredentials.indexWhere((e) => e.id == newCredential.id);
+
+        if (oldIndex == -1) {
+          
+          _allCredentials.insert(i, newCredential);
+          listKey?.currentState
+              ?.insertItem(i, duration: const Duration(milliseconds: 500));
+        } else if (_allCredentials[oldIndex].id == newCredential.id &&
+            _allCredentials[oldIndex] != newCredential) {
+          
+          _allCredentials[oldIndex] = newCredential;
+          notifyListeners();
+        } else if (oldIndex != i) {
+          
+          final itemToMove = _allCredentials.removeAt(oldIndex);
+          _allCredentials.insert(i, itemToMove);
+          listKey?.currentState?.removeItem(
+            oldIndex,
+            (context, animation) => Container(), 
+            duration: const Duration(milliseconds: 10),
+          );
+          listKey?.currentState
+              ?.insertItem(i, duration: const Duration(milliseconds: 500));
+        }
+      }
+      _allCredentials = newList;
       _setLoading(false);
     });
     _isListening = true;
@@ -95,6 +153,7 @@ class CredentialViewModel extends ChangeNotifier {
       notes: notes,
       logoPath: logoPath,
     );
+    
     await _repository.addCredential(userId, newCredential);
   }
 
@@ -127,11 +186,25 @@ class CredentialViewModel extends ChangeNotifier {
       notes: notes,
       logoPath: logoPath,
     );
+
     await _repository.updateCredential(userId, updatedCredential);
   }
 
   Future<void> deleteCredential(String userId, String credentialId) async {
-    await _repository.deleteCredential(userId, credentialId);
+    final index =
+        _allCredentials.indexWhere((element) => element.id == credentialId);
+    if (index != -1) {
+      final credential = _allCredentials[index];
+      listKey?.currentState?.removeItem(
+        index,
+        (context, animation) => AnimatedListItem(
+          animation: animation,
+          child: CredentialListTile(credential: credential),
+        ),
+        duration: const Duration(milliseconds: 500),
+      );
+      await _repository.deleteCredential(userId, credentialId);
+    }
   }
 
   Future<bool> exportCredentialsToCsv(BuildContext context) async {

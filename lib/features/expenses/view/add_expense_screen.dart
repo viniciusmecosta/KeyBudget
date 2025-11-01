@@ -292,7 +292,6 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
     await expenseViewModel.addExpense(userId, newExpense);
     if (!scaffoldContext.mounted) return;
     setState(() => _isSaving = false);
-    SnackbarService.showSuccess(scaffoldContext, 'Despesa salva com sucesso!');
     navigator.pop();
   }
 

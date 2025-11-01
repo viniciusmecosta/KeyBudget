@@ -118,8 +118,8 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
             )
           else
             ExpenseList(
+              key: ValueKey(expenseViewModel.selectedMonth),
               monthlyExpenses: expenseViewModel.monthlyFilteredExpenses,
-              isFirstLoad: _isFirstLoad,
             ),
         ],
       ),
