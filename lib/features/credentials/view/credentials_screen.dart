@@ -141,7 +141,7 @@ class _CredentialsScreenState extends State<CredentialsScreen> {
               else
                 SliverPadding(
                   padding: const EdgeInsets.fromLTRB(AppTheme.defaultPadding,
-                      AppTheme.defaultPadding, AppTheme.defaultPadding, 96.0),
+                      AppTheme.spaceL, AppTheme.defaultPadding, 96.0),
                   sliver: SliverAnimatedList(
                     key: _listKey,
                     initialItemCount: vm.allCredentials.length,

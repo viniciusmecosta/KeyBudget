@@ -33,13 +33,13 @@ class _AnimatedListItemState extends State<AnimatedListItem>
       vsync: this,
     );
     _editController = AnimationController(
-      duration: const Duration(milliseconds: 300),
+      duration: const Duration(milliseconds: 700),
       vsync: this,
       value: 1.0,
     );
 
     _shakeController = AnimationController(
-      duration: const Duration(milliseconds: 400),
+      duration: const Duration(milliseconds: 800),
       vsync: this,
     );
 

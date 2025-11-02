@@ -84,7 +84,6 @@ class CredentialListTile extends StatelessWidget {
     final logoPath = credential.logoPath;
 
     return Container(
-      margin: const EdgeInsets.only(bottom: AppTheme.spaceS),
       child: Material(
         color: theme.colorScheme.surface,
         borderRadius: BorderRadius.circular(16),
