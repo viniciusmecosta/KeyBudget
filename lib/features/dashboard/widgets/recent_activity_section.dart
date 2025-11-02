@@ -31,9 +31,12 @@ class RecentActivitySection extends StatelessWidget {
             itemCount: recentExpenses.length > 5 ? 5 : recentExpenses.length,
             itemBuilder: (context, index) {
               return AppAnimations.listFadeIn(
-                ActivityTile(
-                  expense: recentExpenses[index],
-                  index: index,
+                Padding(
+                  padding: EdgeInsets.only(bottom: AppTheme.spaceS),
+                  child: ActivityTile(
+                    expense: recentExpenses[index],
+                    index: index,
+                  ),
                 ),
                 index: index,
               );

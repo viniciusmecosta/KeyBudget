@@ -53,7 +53,7 @@ class _DocumentsScreenState extends State<DocumentsScreen> {
                   key: _listKey,
                   initialItemCount: viewModel.documents.length,
                   padding: const EdgeInsets.fromLTRB(AppTheme.defaultPadding,
-                      AppTheme.defaultPadding, AppTheme.defaultPadding, 96.0),
+                      AppTheme.spaceL, AppTheme.defaultPadding, 96.0),
                   itemBuilder: (context, index, animation) {
                     final doc = viewModel.documents[index];
                     return AnimatedListItem(
