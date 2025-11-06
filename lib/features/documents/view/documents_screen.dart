@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_animate/flutter_animate.dart';
 import 'package:key_budget/app/config/app_theme.dart';
+import 'package:key_budget/app/utils/app_animations.dart';
 import 'package:key_budget/app/utils/navigation_utils.dart';
 import 'package:key_budget/app/widgets/animated_list_item.dart';
 import 'package:key_budget/app/widgets/empty_state_widget.dart';
@@ -8,7 +8,6 @@ import 'package:key_budget/features/auth/viewmodel/auth_viewmodel.dart';
 import 'package:key_budget/features/documents/view/add_document_screen.dart';
 import 'package:key_budget/features/documents/viewmodel/document_viewmodel.dart';
 import 'package:provider/provider.dart';
-import 'package:key_budget/app/utils/app_animations.dart';
 
 import '../widgets/document_list_tile.dart';
 
@@ -21,7 +20,6 @@ class DocumentsScreen extends StatefulWidget {
 
 class _DocumentsScreenState extends State<DocumentsScreen> {
   final GlobalKey<AnimatedListState> _listKey = GlobalKey<AnimatedListState>();
-  bool _isFirstLoad = true;
 
   @override
   void initState() {
@@ -67,13 +65,7 @@ class _DocumentsScreenState extends State<DocumentsScreen> {
         title: const Text('Documentos'),
       ),
       body: SafeArea(
-        child: body.animate(onComplete: (controller) {
-          if (_isFirstLoad) {
-            setState(() {
-              _isFirstLoad = false;
-            });
-          }
-        }).fadeIn(duration: 300.ms),
+        child: AppAnimations.fadeInFromBottom(body),
       ),
       floatingActionButton: AppAnimations.scaleIn(FloatingActionButton.extended(
         onPressed: () =>
