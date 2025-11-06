@@ -76,7 +76,7 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
     Widget body = RefreshIndicator(
       onRefresh: _handleRefresh,
       color: theme.colorScheme.primary,
-      backgroundColor: theme.colorScheme.surface,
+      backgroundColor: theme.scaffoldBackgroundColor,
       strokeWidth: 2.5,
       child: CustomScrollView(
         physics: const BouncingScrollPhysics(
@@ -97,6 +97,15 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
                   child: AppAnimations.fadeIn(BalanceCard(
                     title: 'Total do mês',
                     totalValue: expenseViewModel.currentMonthTotal,
+                    gradient: LinearGradient(
+                      colors: [
+                        theme.colorScheme.primary,
+                        Color.lerp(theme.colorScheme.primary, theme.colorScheme.secondary,
+                            0.4)!,
+                      ],
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                    ),
                   )),
                 ),
                 const SizedBox(height: AppTheme.spaceL),
@@ -106,14 +115,11 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
           if (isLoading)
             const ExpensesListSkeleton()
           else if (expenseViewModel.monthlyFilteredExpenses.isEmpty)
-            SliverFillRemaining(
+            const SliverFillRemaining(
               hasScrollBody: false,
               child: EmptyStateWidget(
                 icon: Icons.money_off_rounded,
                 message: 'Nenhuma despesa encontrada para este mês.',
-                buttonText: 'Adicionar Despesa',
-                onButtonPressed: () =>
-                    NavigationUtils.push(context, const AddExpenseScreen()),
               ),
             )
           else
@@ -160,11 +166,8 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
             NavigationUtils.push(context, const AddExpenseScreen()),
         icon: const Icon(Icons.add_rounded),
         label: const Text("Nova Despesa"),
-        backgroundColor: theme.colorScheme.primary,
-        foregroundColor: theme.colorScheme.onPrimary,
-        elevation: 4,
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(AppTheme.radiusL),
+          borderRadius: BorderRadius.circular(AppTheme.radiusXXL),
         ),
       )),
     );

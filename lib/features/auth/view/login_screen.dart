@@ -86,7 +86,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       ? 'Insira um email válido'
                       : null,
                 ),
-                const SizedBox(height: 20),
+                const SizedBox(height: AppTheme.spaceM),
                 TextFormField(
                   controller: _passwordController,
                   decoration: const InputDecoration(
@@ -101,7 +101,7 @@ class _LoginScreenState extends State<LoginScreen> {
               ],
             ),
           ),
-          const SizedBox(height: 28),
+          const SizedBox(height: AppTheme.spaceL),
           Consumer<AuthViewModel>(
             builder: (context, viewModel, child) {
               return Column(
@@ -138,7 +138,7 @@ class _LoginScreenState extends State<LoginScreen> {
               );
             },
           ),
-          const SizedBox(height: 20),
+          const SizedBox(height: AppTheme.spaceM),
           TextButton(
             onPressed: () {
               NavigationUtils.push(context, const RegisterScreen());

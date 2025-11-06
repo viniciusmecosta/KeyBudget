@@ -32,39 +32,22 @@ class ActivityTile extends StatelessWidget {
 
     final categoryColor = category?.color ?? colorScheme.primary;
 
-    return Container(
-      decoration: BoxDecoration(
-        color: colorScheme.surface,
-        borderRadius: BorderRadius.circular(AppTheme.radiusM),
-        border: Border.all(
-          color: colorScheme.outline.withAlpha((255 * 0.08).round()),
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: colorScheme.shadow.withAlpha((255 * 0.04).round()),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Material(
-        color: Colors.transparent,
-        borderRadius: BorderRadius.circular(AppTheme.radiusM),
-        child: InkWell(
-          onTap: () => NavigationUtils.push(
-              context, ExpenseDetailScreen(expense: expense)),
-          borderRadius: BorderRadius.circular(AppTheme.radiusM),
-          child: Padding(
-            padding: const EdgeInsets.all(AppTheme.spaceM),
-            child: Row(
-              children: [
-                _buildCategoryIcon(categoryColor, category),
-                const SizedBox(width: AppTheme.spaceM),
-                _buildExpenseInfo(context, textTheme, colorScheme, category),
-                const SizedBox(width: AppTheme.spaceS),
-                _buildAmountInfo(textTheme, currencyFormatter),
-              ],
-            ),
+    return Card(
+      margin: EdgeInsets.zero,
+      child: InkWell(
+        onTap: () =>
+            NavigationUtils.push(context, ExpenseDetailScreen(expense: expense)),
+        borderRadius: BorderRadius.circular(AppTheme.radiusL),
+        child: Padding(
+          padding: const EdgeInsets.all(AppTheme.spaceM),
+          child: Row(
+            children: [
+              _buildCategoryIcon(categoryColor, category),
+              const SizedBox(width: AppTheme.spaceM),
+              _buildExpenseInfo(context, textTheme, colorScheme, category),
+              const SizedBox(width: AppTheme.spaceS),
+              _buildAmountInfo(textTheme, currencyFormatter, colorScheme),
+            ],
           ),
         ),
       ),
@@ -76,16 +59,12 @@ class ActivityTile extends StatelessWidget {
       padding: const EdgeInsets.all(AppTheme.spaceS + 2),
       decoration: BoxDecoration(
         color: categoryColor.withAlpha((255 * 0.12).round()),
-        borderRadius: BorderRadius.circular(AppTheme.spaceS + 2),
-        border: Border.all(
-          color: categoryColor.withAlpha((255 * 0.2).round()),
-          width: 1,
-        ),
+        borderRadius: BorderRadius.circular(AppTheme.radiusM),
       ),
       child: Icon(
         category?.icon ?? Icons.shopping_bag_rounded,
         color: categoryColor,
-        size: 20,
+        size: 22,
       ),
     );
   }
@@ -95,7 +74,7 @@ class ActivityTile extends StatelessWidget {
     return Expanded(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisSize: MainAxisSize.min,
+        mainAxisAlignment: MainAxisAlignment.center,
         children: [
           AutoSizeText(
             expense.location?.isNotEmpty == true
@@ -110,50 +89,31 @@ class ActivityTile extends StatelessWidget {
             minFontSize: 14,
             overflow: TextOverflow.ellipsis,
           ),
-          const SizedBox(height: 2),
-          Row(
-            children: [
-              Icon(
-                Icons.schedule_rounded,
-                size: 12,
-                color:
-                    colorScheme.onSurfaceVariant.withAlpha((255 * 0.7).round()),
-              ),
-              const SizedBox(width: 4),
-              Flexible(
-                child: Text(
-                  DateUtils.getRelativeDate(expense.date),
-                  style: textTheme.bodySmall?.copyWith(
-                    color: colorScheme.onSurfaceVariant
-                        .withAlpha((255 * 0.8).round()),
-                    fontSize: 12,
-                    height: 1.2,
-                  ),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ),
-            ],
+          const SizedBox(height: 4),
+          Text(
+            DateUtils.getRelativeDate(expense.date),
+            style: textTheme.bodySmall?.copyWith(
+              color: colorScheme.onSurfaceVariant,
+              fontSize: 12,
+              height: 1.2,
+            ),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
           ),
         ],
       ),
     );
   }
 
-  Widget _buildAmountInfo(TextTheme textTheme, NumberFormat currencyFormatter) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.end,
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Text(
-          currencyFormatter.format(expense.amount),
-          style: textTheme.titleSmall?.copyWith(
-            fontWeight: FontWeight.w700,
-            color: AppTheme.error,
-            fontSize: 15,
-          ),
-        ),
-      ],
+  Widget _buildAmountInfo(
+      TextTheme textTheme, NumberFormat currencyFormatter, colorScheme) {
+    return Text(
+      currencyFormatter.format(expense.amount),
+      style: textTheme.titleSmall?.copyWith(
+        fontWeight: FontWeight.w700,
+        color: AppTheme.negativeChange,
+        fontSize: 15,
+      ),
     );
   }
 }

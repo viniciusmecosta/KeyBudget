@@ -17,11 +17,20 @@ class DashboardBalanceCard extends StatelessWidget {
     final hasPreviousMonths = viewModel.averageOfPreviousMonths > 0;
     final isIncrease = percentageChange >= 0;
     final formattedPercentage =
-        '${isIncrease ? '+ ' : '- '}${percentageChange.abs().toStringAsFixed(1)}%';
+        '${isIncrease ? '+ ' : ''}${percentageChange.abs().toStringAsFixed(1)}%';
 
     return BalanceCard(
       title: 'Gasto Total do Mês',
       totalValue: viewModel.totalAmountForMonth,
+      gradient: LinearGradient(
+        colors: [
+          theme.colorScheme.primary,
+          Color.lerp(
+              theme.colorScheme.primary, theme.colorScheme.secondary, 0.4)!,
+        ],
+        begin: Alignment.topLeft,
+        end: Alignment.bottomRight,
+      ),
       onTap: () {
         Provider.of<NavigationViewModel>(context, listen: false).selectedIndex =
             1;
@@ -41,7 +50,9 @@ class DashboardBalanceCard extends StatelessWidget {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   Icon(
-                    isIncrease ? Icons.trending_up : Icons.trending_down,
+                    isIncrease
+                        ? Icons.arrow_upward_rounded
+                        : Icons.arrow_downward_rounded,
                     color: theme.colorScheme.onPrimary,
                     size: 16,
                   ),
@@ -51,6 +62,16 @@ class DashboardBalanceCard extends StatelessWidget {
                     style: theme.textTheme.bodyMedium?.copyWith(
                       color: theme.colorScheme.onPrimary,
                       fontWeight: FontWeight.w700,
+                      fontSize: 13,
+                    ),
+                  ),
+                  const SizedBox(width: AppTheme.spaceXS),
+                  Text(
+                    'em relação à média',
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: theme.colorScheme.onPrimary
+                          .withAlpha((255 * 0.8).round()),
+                      fontWeight: FontWeight.w500,
                       fontSize: 13,
                     ),
                   ),
