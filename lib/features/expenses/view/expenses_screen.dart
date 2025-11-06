@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart' hide DateUtils;
-import 'package:flutter_animate/flutter_animate.dart';
 import 'package:key_budget/app/config/app_theme.dart';
 import 'package:key_budget/app/utils/app_animations.dart';
 import 'package:key_budget/app/utils/navigation_utils.dart';
@@ -25,8 +24,6 @@ class ExpensesScreen extends StatefulWidget {
 }
 
 class _ExpensesScreenState extends State<ExpensesScreen> {
-  bool _isFirstLoad = true;
-
   @override
   void initState() {
     super.initState();
@@ -70,13 +67,12 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
     final categoryViewModel = context.watch<CategoryViewModel>();
 
     final bool isLoading =
-        (expenseViewModel.isLoading || categoryViewModel.isLoading) &&
-            _isFirstLoad;
+        (expenseViewModel.isLoading || categoryViewModel.isLoading);
 
     Widget body = RefreshIndicator(
       onRefresh: _handleRefresh,
       color: theme.colorScheme.primary,
-      backgroundColor: theme.colorScheme.surface,
+      backgroundColor: theme.scaffoldBackgroundColor,
       strokeWidth: 2.5,
       child: CustomScrollView(
         physics: const BouncingScrollPhysics(
@@ -94,9 +90,18 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
                 Padding(
                   padding: const EdgeInsets.symmetric(
                       horizontal: AppTheme.defaultPadding),
-                  child: AppAnimations.fadeIn(BalanceCard(
+                  child: AppAnimations.fadeInFromBottom(BalanceCard(
                     title: 'Total do mês',
                     totalValue: expenseViewModel.currentMonthTotal,
+                    gradient: LinearGradient(
+                      colors: [
+                        theme.colorScheme.primary,
+                        Color.lerp(theme.colorScheme.primary,
+                            theme.colorScheme.secondary, 0.4)!,
+                      ],
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                    ),
                   )),
                 ),
                 const SizedBox(height: AppTheme.spaceL),
@@ -106,14 +111,11 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
           if (isLoading)
             const ExpensesListSkeleton()
           else if (expenseViewModel.monthlyFilteredExpenses.isEmpty)
-            SliverFillRemaining(
+            const SliverFillRemaining(
               hasScrollBody: false,
               child: EmptyStateWidget(
                 icon: Icons.money_off_rounded,
                 message: 'Nenhuma despesa encontrada para este mês.',
-                buttonText: 'Adicionar Despesa',
-                onButtonPressed: () =>
-                    NavigationUtils.push(context, const AddExpenseScreen()),
               ),
             )
           else
@@ -146,13 +148,7 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
         ],
       ),
       body: SafeArea(
-        child: body.animate(onComplete: (controller) {
-          if (_isFirstLoad) {
-            setState(() {
-              _isFirstLoad = false;
-            });
-          }
-        }).fadeIn(duration: 300.ms),
+        child: AppAnimations.fadeInFromBottom(body),
       ),
       floatingActionButton: AppAnimations.scaleIn(FloatingActionButton.extended(
         heroTag: 'fab_expenses',
@@ -160,11 +156,8 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
             NavigationUtils.push(context, const AddExpenseScreen()),
         icon: const Icon(Icons.add_rounded),
         label: const Text("Nova Despesa"),
-        backgroundColor: theme.colorScheme.primary,
-        foregroundColor: theme.colorScheme.onPrimary,
-        elevation: 4,
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(AppTheme.radiusL),
+          borderRadius: BorderRadius.circular(AppTheme.radiusXXL),
         ),
       )),
     );

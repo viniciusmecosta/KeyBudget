@@ -7,6 +7,8 @@ class BalanceCard extends StatelessWidget {
   final double totalValue;
   final Widget? subtitle;
   final VoidCallback? onTap;
+  final Gradient? gradient;
+  final Color? backgroundColor;
 
   const BalanceCard({
     super.key,
@@ -14,6 +16,8 @@ class BalanceCard extends StatelessWidget {
     required this.totalValue,
     this.subtitle,
     this.onTap,
+    this.gradient,
+    this.backgroundColor,
   });
 
   @override
@@ -25,17 +29,11 @@ class BalanceCard extends StatelessWidget {
     return Container(
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(AppTheme.radiusXL),
-        gradient: LinearGradient(
-          colors: [
-            theme.colorScheme.primary,
-            theme.colorScheme.primary.withAlpha((255 * 0.85).round()),
-          ],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
+        gradient: gradient,
+        color: backgroundColor,
         boxShadow: [
           BoxShadow(
-            color: theme.colorScheme.primary.withAlpha((255 * 0.25).round()),
+            color: theme.shadowColor,
             blurRadius: 24,
             offset: const Offset(0, 8),
           ),
@@ -64,17 +62,15 @@ class BalanceCard extends StatelessWidget {
                             style: theme.textTheme.titleMedium?.copyWith(
                               color: theme.colorScheme.onPrimary
                                   .withAlpha((255 * 0.9).round()),
-                              fontWeight: FontWeight.w600,
-                              fontSize: 15,
+                              fontWeight: FontWeight.w500,
                             ),
                           ),
                           const SizedBox(height: AppTheme.spaceS),
                           Text(
                             currencyFormatter.format(totalValue),
-                            style: theme.textTheme.displaySmall?.copyWith(
-                              fontWeight: FontWeight.w800,
+                            style: theme.textTheme.headlineMedium?.copyWith(
+                              fontWeight: FontWeight.bold,
                               color: theme.colorScheme.onPrimary,
-                              fontSize: 30,
                               height: 1.1,
                             ),
                           ),

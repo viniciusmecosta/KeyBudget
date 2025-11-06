@@ -16,66 +16,56 @@ class DocumentListTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    return Container(
-      child: Material(
-        color: theme.colorScheme.surface,
-        borderRadius: BorderRadius.circular(16),
-        elevation: 0,
-        child: InkWell(
-          onTap: () {
-            NavigationUtils.push(context, DocumentDetailScreen(document: doc));
-          },
-          borderRadius: BorderRadius.circular(16),
-          child: Container(
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(16),
-              border: Border.all(
-                color: theme.colorScheme.outline.withAlpha((255 * 0.1).round()),
+    return Card(
+      margin: EdgeInsets.zero,
+      child: InkWell(
+        onTap: () {
+          NavigationUtils.push(context, DocumentDetailScreen(document: doc));
+        },
+        borderRadius: BorderRadius.circular(AppTheme.radiusL),
+        child: Padding(
+          padding: const EdgeInsets.all(AppTheme.spaceM),
+          child: Row(
+            children: [
+              CircleAvatar(
+                radius: 24,
+                backgroundColor:
+                    theme.colorScheme.primary.withAlpha((255 * 0.1).round()),
+                child: Icon(Icons.folder_zip_rounded,
+                    color: theme.colorScheme.primary, size: 24),
               ),
-            ),
-            child: Row(
-              children: [
-                CircleAvatar(
-                  radius: 24,
-                  backgroundColor:
-                      theme.colorScheme.primary.withAlpha((255 * 0.1).round()),
-                  child: Icon(Icons.folder_zip_rounded,
-                      color: theme.colorScheme.primary, size: 24),
-                ),
-                const SizedBox(width: AppTheme.spaceM),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      AutoSizeText(
-                        doc.documentName,
-                        style: theme.textTheme.bodyLarge?.copyWith(
-                          fontWeight: FontWeight.w600,
-                          color: theme.colorScheme.onSurface,
-                        ),
-                        maxLines: 1,
-                        minFontSize: 14,
-                        overflow: TextOverflow.ellipsis,
+              const SizedBox(width: AppTheme.spaceM),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    AutoSizeText(
+                      doc.documentName,
+                      style: theme.textTheme.bodyLarge?.copyWith(
+                        fontWeight: FontWeight.w600,
+                        color: theme.colorScheme.onSurface,
                       ),
-                      if (doc.number != null && doc.number!.isNotEmpty)
-                        Padding(
-                          padding: const EdgeInsets.only(top: 4.0),
-                          child: Text(
-                            'Nº: ${doc.number!}',
-                            style: theme.textTheme.bodySmall?.copyWith(
-                              color: theme.colorScheme.onSurface
-                                  .withAlpha((255 * 0.6).round()),
-                            ),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
+                      maxLines: 1,
+                      minFontSize: 14,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    if (doc.number != null && doc.number!.isNotEmpty)
+                      Padding(
+                        padding: const EdgeInsets.only(top: 4.0),
+                        child: Text(
+                          'Nº: ${doc.number!}',
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            color: theme.colorScheme.onSurface
+                                .withAlpha((255 * 0.6).round()),
                           ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
                         ),
-                    ],
-                  ),
+                      ),
+                  ],
                 ),
-              ],
-            ),
+              ),
+            ],
           ),
         ),
       ),

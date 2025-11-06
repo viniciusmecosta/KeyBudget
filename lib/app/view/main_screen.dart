@@ -30,29 +30,15 @@ class _MainScreenState extends State<MainScreen> {
 
     return Scaffold(
       body: AnimatedSwitcher(
-        duration: const Duration(milliseconds: 300),
+        duration: const Duration(milliseconds: 350),
         child: KeyedSubtree(
           key: ValueKey<int>(navigationViewModel.selectedIndex),
           child: _widgetOptions[navigationViewModel.selectedIndex],
         ),
         transitionBuilder: (Widget child, Animation<double> animation) {
-          final isGoingForward = navigationViewModel.selectedIndex >
-              navigationViewModel.previousIndex;
-          final beginOffset =
-              isGoingForward ? const Offset(0.2, 0.0) : const Offset(-0.2, 0.0);
-
-          final tween = Tween(begin: beginOffset, end: Offset.zero);
-          final curvedAnimation = CurvedAnimation(
-            parent: animation,
-            curve: Curves.easeInOutCubic,
-          );
-
-          return SlideTransition(
-            position: tween.animate(curvedAnimation),
-            child: FadeTransition(
-              opacity: animation,
-              child: child,
-            ),
+          return FadeTransition(
+            opacity: animation,
+            child: child,
           );
         },
       ),

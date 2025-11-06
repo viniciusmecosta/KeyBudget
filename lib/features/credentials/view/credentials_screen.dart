@@ -119,43 +119,46 @@ class _CredentialsScreenState extends State<CredentialsScreen> {
         ],
       ),
       body: SafeArea(
-        child: RefreshIndicator(
-          onRefresh: _handleRefresh,
-          color: theme.colorScheme.primary,
-          backgroundColor: theme.colorScheme.surface,
-          child: CustomScrollView(
-            physics: const BouncingScrollPhysics(),
-            slivers: [
-              if (vm.isLoading)
-                const CredentialsListSkeleton()
-              else if (vm.allCredentials.isEmpty)
-                SliverFillRemaining(
-                  child: SingleChildScrollView(
-                    physics: const AlwaysScrollableScrollPhysics(),
-                    child: const EmptyStateWidget(
-                      icon: Icons.key_off,
-                      message: 'Nenhuma credencial encontrada.',
+        child: AppAnimations.fadeInFromBottom(
+          RefreshIndicator(
+            onRefresh: _handleRefresh,
+            color: theme.colorScheme.primary,
+            backgroundColor: theme.colorScheme.surface,
+            child: CustomScrollView(
+              physics: const BouncingScrollPhysics(),
+              slivers: [
+                if (vm.isLoading)
+                  const CredentialsListSkeleton()
+                else if (vm.allCredentials.isEmpty)
+                  SliverFillRemaining(
+                    child: SingleChildScrollView(
+                      physics: const AlwaysScrollableScrollPhysics(),
+                      child: const EmptyStateWidget(
+                        icon: Icons.key_off,
+                        message: 'Nenhuma credencial encontrada.',
+                      ),
+                    ),
+                  )
+                else
+                  SliverPadding(
+                    padding: const EdgeInsets.fromLTRB(AppTheme.defaultPadding,
+                        AppTheme.spaceL, AppTheme.defaultPadding, 96.0),
+                    sliver: SliverAnimatedList(
+                      key: _listKey,
+                      initialItemCount: vm.allCredentials.length,
+                      itemBuilder: (context, index, animation) {
+                        final credential = vm.allCredentials[index];
+                        return AnimatedListItem(
+                          animation: animation,
+                          child: CredentialListTile(
+                              key: ValueKey(credential),
+                              credential: credential),
+                        );
+                      },
                     ),
                   ),
-                )
-              else
-                SliverPadding(
-                  padding: const EdgeInsets.fromLTRB(AppTheme.defaultPadding,
-                      AppTheme.spaceL, AppTheme.defaultPadding, 96.0),
-                  sliver: SliverAnimatedList(
-                    key: _listKey,
-                    initialItemCount: vm.allCredentials.length,
-                    itemBuilder: (context, index, animation) {
-                      final credential = vm.allCredentials[index];
-                      return AnimatedListItem(
-                        animation: animation,
-                        child: CredentialListTile(
-                            key: ValueKey(credential), credential: credential),
-                      );
-                    },
-                  ),
-                ),
-            ],
+              ],
+            ),
           ),
         ),
       ),
@@ -165,6 +168,9 @@ class _CredentialsScreenState extends State<CredentialsScreen> {
             NavigationUtils.push(context, const AddCredentialScreen()),
         icon: const Icon(Icons.add),
         label: const Text("Nova Credencial"),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(AppTheme.radiusXXL),
+        ),
       )),
     );
   }

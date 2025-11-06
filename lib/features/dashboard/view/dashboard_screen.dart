@@ -66,7 +66,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
     final theme = Theme.of(context);
 
     return Scaffold(
-      backgroundColor: theme.colorScheme.surface,
+      backgroundColor: theme.scaffoldBackgroundColor,
       appBar: const DashboardHeader(),
       body: SafeArea(
         child: viewModel.isLoading
@@ -81,21 +81,30 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       parent: AlwaysScrollableScrollPhysics()),
                   slivers: [
                     SliverPadding(
-                      padding: const EdgeInsets.fromLTRB(AppTheme.spaceM,
-                          AppTheme.spaceS, AppTheme.spaceM, AppTheme.spaceL),
+                      padding: const EdgeInsets.fromLTRB(
+                        AppTheme.spaceM,
+                        AppTheme.spaceS,
+                        AppTheme.spaceM,
+                        AppTheme.spaceL,
+                      ),
                       sliver: SliverList(
-                        delegate: SliverChildListDelegate([
-                          AppAnimations.fadeInFromBottom(
-                              const DashboardBalanceCard()),
-                          const SizedBox(height: AppTheme.spaceL),
-                          AppAnimations.fadeInFromBottom(
+                        delegate: SliverChildListDelegate(
+                          [
+                            AppAnimations.fadeInFromBottom(
+                              const DashboardBalanceCard(),
+                            ),
+                            const SizedBox(height: AppTheme.spaceXL),
+                            AppAnimations.fadeInFromBottom(
                               const QuickActionsSection(),
-                              delay: const Duration(milliseconds: 100)),
-                          const SizedBox(height: AppTheme.spaceXL),
-                          AppAnimations.fadeInFromBottom(
+                              delay: const Duration(milliseconds: 100),
+                            ),
+                            const SizedBox(height: AppTheme.spaceXL),
+                            AppAnimations.fadeInFromBottom(
                               const RecentActivitySection(),
-                              delay: const Duration(milliseconds: 200)),
-                        ]),
+                              delay: const Duration(milliseconds: 200),
+                            ),
+                          ],
+                        ),
                       ),
                     ),
                   ],

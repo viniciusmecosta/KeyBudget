@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:key_budget/app/widgets/animated_list_item.dart';
 import 'package:key_budget/core/models/credential_model.dart';
 import 'package:key_budget/core/services/csv_service.dart';
 import 'package:key_budget/core/services/data_import_service.dart';
@@ -8,7 +9,6 @@ import 'package:key_budget/core/services/encryption_service.dart';
 import 'package:key_budget/core/services/pdf_service.dart';
 import 'package:key_budget/features/credentials/repository/credential_repository.dart';
 import 'package:key_budget/features/credentials/widgets/credential_list_tile.dart';
-import 'package:key_budget/app/widgets/animated_list_item.dart';
 
 class CredentialViewModel extends ChangeNotifier {
   final CredentialRepository _repository = CredentialRepository();
@@ -78,7 +78,6 @@ class CredentialViewModel extends ChangeNotifier {
       newList.sort((a, b) =>
           a.location.toLowerCase().compareTo(b.location.toLowerCase()));
 
-      
       for (var i = oldList.length - 1; i >= 0; i--) {
         final oldCredential = oldList[i];
         if (!newList.any((newCred) => newCred.id == oldCredential.id)) {
@@ -98,29 +97,25 @@ class CredentialViewModel extends ChangeNotifier {
         }
       }
 
-      
       for (var i = 0; i < newList.length; i++) {
         final newCredential = newList[i];
         final oldIndex =
             _allCredentials.indexWhere((e) => e.id == newCredential.id);
 
         if (oldIndex == -1) {
-          
           _allCredentials.insert(i, newCredential);
           listKey?.currentState
               ?.insertItem(i, duration: const Duration(milliseconds: 500));
         } else if (_allCredentials[oldIndex].id == newCredential.id &&
             _allCredentials[oldIndex] != newCredential) {
-          
           _allCredentials[oldIndex] = newCredential;
           notifyListeners();
         } else if (oldIndex != i) {
-          
           final itemToMove = _allCredentials.removeAt(oldIndex);
           _allCredentials.insert(i, itemToMove);
           listKey?.currentState?.removeItem(
             oldIndex,
-            (context, animation) => Container(), 
+            (context, animation) => Container(),
             duration: const Duration(milliseconds: 10),
           );
           listKey?.currentState
@@ -153,7 +148,7 @@ class CredentialViewModel extends ChangeNotifier {
       notes: notes,
       logoPath: logoPath,
     );
-    
+
     await _repository.addCredential(userId, newCredential);
   }
 

@@ -20,7 +20,10 @@ class UserScreen extends StatelessWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Meu Perfil'),
+        title: Text(
+          'Meu Perfil',
+          style: theme.textTheme.titleLarge,
+        ),
         actions: [
           IconButton(
             icon: const Icon(Icons.edit_outlined),
@@ -49,10 +52,10 @@ class UserScreen extends StatelessWidget {
               }
             }
 
-            return AppAnimations.fadeIn(ListView(
+            return AppAnimations.fadeInFromBottom(ListView(
               padding: const EdgeInsets.all(AppTheme.defaultPadding),
               children: [
-                const SizedBox(height: 20),
+                const SizedBox(height: AppTheme.spaceL),
                 Center(
                   child: CircleAvatar(
                     radius: 50,
@@ -64,7 +67,7 @@ class UserScreen extends StatelessWidget {
                         : null,
                   ),
                 ),
-                const SizedBox(height: 16),
+                const SizedBox(height: AppTheme.spaceM),
                 Center(
                   child: Text(
                     user?.name ?? 'Usuário',
@@ -72,7 +75,7 @@ class UserScreen extends StatelessWidget {
                         ?.copyWith(fontWeight: FontWeight.bold),
                   ),
                 ),
-                const SizedBox(height: 4),
+                const SizedBox(height: AppTheme.spaceXS),
                 Center(
                   child: Text(
                     user?.email ?? '',
@@ -81,7 +84,7 @@ class UserScreen extends StatelessWidget {
                 ),
                 if (user?.phoneNumber != null && user!.phoneNumber!.isNotEmpty)
                   Padding(
-                    padding: const EdgeInsets.only(top: 4.0),
+                    padding: const EdgeInsets.only(top: AppTheme.spaceXS),
                     child: Center(
                       child: Text(
                         user.phoneNumber!,
@@ -89,7 +92,7 @@ class UserScreen extends StatelessWidget {
                       ),
                     ),
                   ),
-                const SizedBox(height: 32),
+                const SizedBox(height: AppTheme.spaceXL),
                 SettingsTile(
                   icon: Icons.category_outlined,
                   title: 'Gerenciar Categorias',
@@ -97,7 +100,7 @@ class UserScreen extends StatelessWidget {
                     NavigationUtils.push(context, const CategoriesScreen());
                   },
                 ),
-                const SizedBox(height: 8),
+                const SizedBox(height: AppTheme.spaceS),
                 SettingsTile(
                   icon: Icons.logout,
                   title: 'Sair do Aplicativo',
@@ -107,13 +110,15 @@ class UserScreen extends StatelessWidget {
                     showDialog(
                       context: context,
                       builder: (_) => AlertDialog(
-                        title: const Text("Confirmar Logout"),
-                        content:
-                            const Text("Deseja realmente sair do aplicativo?"),
+                        title: Text("Confirmar Logout",
+                            style: theme.textTheme.titleMedium),
+                        content: Text("Deseja realmente sair do aplicativo?",
+                            style: theme.textTheme.bodyMedium),
                         actions: [
                           TextButton(
                             onPressed: () => Navigator.of(context).pop(),
-                            child: const Text("Cancelar"),
+                            child: Text("Cancelar",
+                                style: theme.textTheme.labelLarge),
                           ),
                           ElevatedButton(
                             onPressed: () {
@@ -121,7 +126,8 @@ class UserScreen extends StatelessWidget {
                               Provider.of<AuthViewModel>(context, listen: false)
                                   .logout(context);
                             },
-                            child: const Text("Sair"),
+                            child:
+                                Text("Sair", style: theme.textTheme.labelLarge),
                           ),
                         ],
                       ),
