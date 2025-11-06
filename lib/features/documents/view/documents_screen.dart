@@ -1,12 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:key_budget/app/config/app_theme.dart';
+import 'package:key_budget/app/utils/app_animations.dart';
 import 'package:key_budget/app/utils/navigation_utils.dart';
+import 'package:key_budget/app/widgets/animated_list_item.dart';
 import 'package:key_budget/app/widgets/empty_state_widget.dart';
 import 'package:key_budget/features/auth/viewmodel/auth_viewmodel.dart';
 import 'package:key_budget/features/documents/view/add_document_screen.dart';
 import 'package:key_budget/features/documents/viewmodel/document_viewmodel.dart';
 import 'package:provider/provider.dart';
-import 'package:key_budget/app/widgets/animated_list_item.dart';
 
 import '../widgets/document_list_tile.dart';
 
@@ -38,36 +39,43 @@ class _DocumentsScreenState extends State<DocumentsScreen> {
   Widget build(BuildContext context) {
     final viewModel = context.watch<DocumentViewModel>();
 
+    Widget body = viewModel.isLoading
+        ? const Center(child: CircularProgressIndicator())
+        : viewModel.documents.isEmpty
+            ? const EmptyStateWidget(
+                icon: Icons.folder_off_outlined,
+                message: 'Nenhum documento encontrado.',
+              )
+            : AnimatedList(
+                key: _listKey,
+                initialItemCount: viewModel.documents.length,
+                padding: const EdgeInsets.fromLTRB(AppTheme.defaultPadding,
+                    AppTheme.spaceL, AppTheme.defaultPadding, 96.0),
+                itemBuilder: (context, index, animation) {
+                  final doc = viewModel.documents[index];
+                  return AnimatedListItem(
+                    animation: animation,
+                    child: DocumentListTile(key: ValueKey(doc), doc: doc),
+                  );
+                },
+              );
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('Documentos'),
       ),
-      body: viewModel.isLoading
-          ? const Center(child: CircularProgressIndicator())
-          : viewModel.documents.isEmpty
-              ? const EmptyStateWidget(
-                  icon: Icons.folder_off_outlined,
-                  message: 'Nenhum documento encontrado.',
-                )
-              : AnimatedList(
-                  key: _listKey,
-                  initialItemCount: viewModel.documents.length,
-                  padding: const EdgeInsets.fromLTRB(AppTheme.defaultPadding,
-                      AppTheme.spaceL, AppTheme.defaultPadding, 96.0),
-                  itemBuilder: (context, index, animation) {
-                    final doc = viewModel.documents[index];
-                    return AnimatedListItem(
-                      animation: animation,
-                      child: DocumentListTile(key: ValueKey(doc), doc: doc),
-                    );
-                  },
-                ),
-      floatingActionButton: FloatingActionButton.extended(
+      body: SafeArea(
+        child: AppAnimations.fadeInFromBottom(body),
+      ),
+      floatingActionButton: AppAnimations.scaleIn(FloatingActionButton.extended(
         onPressed: () =>
             NavigationUtils.push(context, const AddDocumentScreen()),
         label: const Text('Novo Documento'),
         icon: const Icon(Icons.add),
-      ),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(AppTheme.radiusXXL),
+        ),
+      )),
     );
   }
 }

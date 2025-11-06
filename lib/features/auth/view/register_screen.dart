@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:key_budget/app/config/app_theme.dart';
 import 'package:key_budget/app/utils/app_animations.dart';
 import 'package:key_budget/app/widgets/image_picker_widget.dart';
+import 'package:key_budget/app/widgets/password_form_field.dart';
 import 'package:key_budget/core/services/snackbar_service.dart';
 import 'package:key_budget/core/utils/formatters.dart';
 import 'package:key_budget/features/auth/viewmodel/auth_viewmodel.dart';
@@ -23,8 +24,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
   final _passwordController = TextEditingController();
   final _confirmPasswordController = TextEditingController();
   String? _avatarPath;
-  bool _isPasswordVisible = false;
-  bool _isConfirmPasswordVisible = false;
 
   final _phoneMaskFormatter = MaskTextInputFormatter(
     mask: '(##) #####-####',
@@ -68,8 +67,14 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     return Scaffold(
-      appBar: AppBar(title: const Text('Criar Conta')),
+      appBar: AppBar(
+        title: Text(
+          'Criar Conta',
+          style: theme.textTheme.titleLarge,
+        ),
+      ),
       body: AppAnimations.fadeInFromBottom(Center(
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(AppTheme.defaultPadding),
@@ -78,12 +83,13 @@ class _RegisterScreenState extends State<RegisterScreen> {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
+                const SizedBox(height: AppTheme.spaceXL),
                 ImagePickerWidget(
                   onImageSelected: (path) {
                     _avatarPath = path;
                   },
                 ),
-                const SizedBox(height: 24),
+                const SizedBox(height: AppTheme.spaceL),
                 TextFormField(
                   controller: _nameController,
                   textCapitalization: TextCapitalization.words,
@@ -92,7 +98,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       ? 'Insira seu nome'
                       : null,
                 ),
-                const SizedBox(height: 16),
+                const SizedBox(height: AppTheme.spaceM),
                 TextFormField(
                   controller: _emailController,
                   decoration: const InputDecoration(labelText: 'Email *'),
@@ -101,7 +107,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       ? 'Insira um email válido'
                       : null,
                 ),
-                const SizedBox(height: 16),
+                const SizedBox(height: AppTheme.spaceM),
                 TextFormField(
                   controller: _phoneController,
                   inputFormatters: [
@@ -111,57 +117,44 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   decoration: const InputDecoration(labelText: 'Número'),
                   keyboardType: TextInputType.phone,
                 ),
-                const SizedBox(height: 16),
-                TextFormField(
+                const SizedBox(height: AppTheme.spaceM),
+                PasswordFormField(
                   controller: _passwordController,
-                  obscureText: !_isPasswordVisible,
-                  decoration: InputDecoration(
-                    labelText: 'Senha *',
-                    suffixIcon: IconButton(
-                      icon: Icon(_isPasswordVisible
-                          ? Icons.visibility_off
-                          : Icons.visibility),
-                      onPressed: () => setState(
-                          () => _isPasswordVisible = !_isPasswordVisible),
-                    ),
-                  ),
+                  labelText: 'Senha *',
                   validator: (value) => (value == null || value.length < 6)
                       ? 'A senha deve ter pelo menos 6 caracteres'
                       : null,
                 ),
-                const SizedBox(height: 16),
-                TextFormField(
+                const SizedBox(height: AppTheme.spaceM),
+                PasswordFormField(
                   controller: _confirmPasswordController,
-                  obscureText: !_isConfirmPasswordVisible,
-                  decoration: InputDecoration(
-                    labelText: 'Confirmar Senha *',
-                    suffixIcon: IconButton(
-                      icon: Icon(_isConfirmPasswordVisible
-                          ? Icons.visibility_off
-                          : Icons.visibility),
-                      onPressed: () => setState(() =>
-                          _isConfirmPasswordVisible =
-                              !_isConfirmPasswordVisible),
-                    ),
-                  ),
+                  labelText: 'Confirmar Senha *',
                   validator: (value) => value != _passwordController.text
                       ? 'As senhas não coincidem'
                       : null,
                 ),
-                const SizedBox(height: 32),
+                const SizedBox(height: AppTheme.spaceXL),
                 Consumer<AuthViewModel>(
                   builder: (context, viewModel, child) {
-                    return viewModel.isLoading
-                        ? const CircularProgressIndicator()
-                        : ElevatedButton(
-                            onPressed: _submit,
-                            child: const Text('Cadastrar'),
-                          );
+                    return SizedBox(
+                      width: double.infinity,
+                      child: viewModel.isLoading
+                          ? const Center(child: CircularProgressIndicator())
+                          : ElevatedButton(
+                              onPressed: _submit,
+                              child: const Text('Cadastrar'),
+                            ),
+                    );
                   },
                 ),
                 TextButton(
                   onPressed: () => Navigator.of(context).pop(),
-                  child: const Text('Já tem uma conta? Faça login'),
+                  child: Text(
+                    'Já tem uma conta? Faça login',
+                    style: theme.textTheme.bodyMedium?.copyWith(
+                      color: theme.colorScheme.primary,
+                    ),
+                  ),
                 )
               ],
             ),

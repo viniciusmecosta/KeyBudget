@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_masked_text2/flutter_masked_text2.dart';
+import 'package:key_budget/app/config/app_theme.dart';
 import 'package:key_budget/app/widgets/category_autocomplete_field.dart';
 import 'package:key_budget/app/widgets/category_picker_field.dart';
 import 'package:key_budget/app/widgets/date_picker_field.dart';
@@ -52,7 +53,8 @@ class ExpenseForm extends StatelessWidget {
             readOnly: !isEditing,
             style: isEditing
                 ? null
-                : TextStyle(color: theme.colorScheme.onSurface),
+                : theme.textTheme.bodyLarge
+                    ?.copyWith(color: theme.colorScheme.onSurface),
             decoration: const InputDecoration(labelText: 'Valor *'),
             keyboardType: const TextInputType.numberWithOptions(decimal: true),
             validator: (value) {
@@ -65,7 +67,7 @@ class ExpenseForm extends StatelessWidget {
               return null;
             },
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: AppTheme.spaceM),
           CategoryPickerField(
             label: 'Categoria',
             value: selectedCategory,
@@ -86,7 +88,7 @@ class ExpenseForm extends StatelessWidget {
             validator: (value) =>
                 value == null ? 'Selecione uma categoria' : null,
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: AppTheme.spaceM),
           CategoryAutocompleteField(
             key: ValueKey('motivation_${selectedCategory?.id}'),
             label: 'Motivação',
@@ -103,7 +105,7 @@ class ExpenseForm extends StatelessWidget {
               motivationController.text = selection;
             },
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: AppTheme.spaceM),
           CategoryAutocompleteField(
             key: ValueKey('location_${selectedCategory?.id}'),
             label: 'Local',
@@ -120,7 +122,7 @@ class ExpenseForm extends StatelessWidget {
               locationController.text = selection;
             },
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: AppTheme.spaceM),
           DatePickerField(
             label: 'Data',
             selectedDate: selectedDate,
