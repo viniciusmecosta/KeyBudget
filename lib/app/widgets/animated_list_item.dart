@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:key_budget/app/config/app_theme.dart';
 
 class AnimatedListItem extends StatefulWidget {
   final Widget child;
@@ -56,18 +57,18 @@ class _AnimatedListItemState extends State<AnimatedListItem>
     _shadowColorAnimation = TweenSequence<Color?>([
       TweenSequenceItem(
           tween: ColorTween(
-              begin: Colors.black.withOpacity(0),
-              end: Colors.black.withOpacity(0.15)),
+              begin: Colors.black.withAlpha(0),
+              end: Colors.black.withAlpha((255 * 0.15).round())),
           weight: 1),
       TweenSequenceItem(
           tween: ColorTween(
-              begin: Colors.black.withOpacity(0.15),
-              end: Colors.black.withOpacity(0.15)),
+              begin: Colors.black.withAlpha((255 * 0.15).round()),
+              end: Colors.black.withAlpha((255 * 0.15).round())),
           weight: 2),
       TweenSequenceItem(
           tween: ColorTween(
-              begin: Colors.black.withOpacity(0.15),
-              end: Colors.black.withOpacity(0)),
+              begin: Colors.black.withAlpha((255 * 0.15).round()),
+              end: Colors.black.withAlpha(0)),
           weight: 1),
     ]).animate(
         CurvedAnimation(parent: _shakeController, curve: Curves.easeOut));
@@ -118,7 +119,7 @@ class _AnimatedListItemState extends State<AnimatedListItem>
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     _highlightAnimation = ColorTween(
-      begin: theme.colorScheme.primary.withAlpha(51),
+      begin: theme.colorScheme.primary.withAlpha((255 * 0.2).round()),
       end: theme.colorScheme.surface.withAlpha(0),
     ).animate(
       CurvedAnimation(
@@ -161,7 +162,7 @@ class _AnimatedListItemState extends State<AnimatedListItem>
             );
           },
           child: Padding(
-            padding: const EdgeInsets.only(bottom: 8.0),
+            padding: const EdgeInsets.only(bottom: AppTheme.spaceS),
             child: FadeTransition(
               opacity: widget.animation,
               child: SizeTransition(

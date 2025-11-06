@@ -165,6 +165,9 @@ class _CredentialsScreenState extends State<CredentialsScreen> {
             NavigationUtils.push(context, const AddCredentialScreen()),
         icon: const Icon(Icons.add),
         label: const Text("Nova Credencial"),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(AppTheme.radiusXXL),
+        ),
       )),
     );
   }

@@ -20,31 +20,31 @@ class AppTheme {
   static const double radiusXL = 20.0;
   static const double radiusXXL = 24.0;
 
-  static const Color primary = Color(0xFF3F51B5);
-  static const Color primaryVariant = Color(0xFF5C6BC0);
-  static const Color primaryLight = Color(0xFFE8EAF6);
+  static const Color primary = Color(0xFF6750A4);
+  static const Color primaryVariant = Color(0xFF7E65BF);
+  static const Color primaryLight = Color(0xFFEADDFF);
   static const Color secondary = Color(0xFF009688);
-  static const Color secondaryLight = Color(0xFFE0F2F1);
+  static const Color secondaryLight = Color(0xFFDCE775);
 
-  static const Color background = Color(0xFFFDFDFE);
+  static const Color background = Color(0xFFF7F2FA);
   static const Color surface = Color(0xFFFFFFFF);
-  static const Color surfaceContainerHighest = Color(0xFFF3F4F6);
-  static const Color onSurface = Color(0xFF111827);
-  static const Color onSurfaceVariant = Color(0xFF6B7280);
+  static const Color surfaceContainerHighest = Color(0xFFE6E0E9);
+  static const Color onSurface = Color(0xFF1D1B20);
+  static const Color onSurfaceVariant = Color(0xFF49454F);
 
-  static const Color darkBackground = Color(0xFF0D1117);
-  static const Color darkSurface = Color(0xFF161B22);
-  static const Color darkSurfaceContainerHighest = Color(0xFF1F2937);
-  static const Color onDarkSurface = Color(0xFFF3F4F6);
-  static const Color onDarkSurfaceVariant = Color(0xFF9CA3AF);
+  static const Color darkBackground = Color(0xFF141218);
+  static const Color darkSurface = Color(0xFF201F24);
+  static const Color darkSurfaceContainerHighest = Color(0xFF36343B);
+  static const Color onDarkSurface = Color(0xFFE6E1E5);
+  static const Color onDarkSurfaceVariant = Color(0xFFCAC4D0);
 
   static const Color success = Color(0xFF22C55E);
-  static const Color error = Color(0xFFEF4444);
+  static const Color error = Color(0xFFB3261E);
   static const Color warning = Color(0xFFFACC15);
   static const Color info = Color(0xFF3B82F6);
 
   static const Color positiveChange = Color(0xFF22C55E);
-  static const Color negativeChange = Color(0xFFEF4444);
+  static const Color negativeChange = Color(0xFFB3261E);
 
   static final List<Color> chartColors = [
     const Color(0xFF3B82F6),
@@ -70,26 +70,24 @@ class AppTheme {
     primaryColor: primary,
     colorScheme: ColorScheme.light(
       primary: primary,
-      onPrimary: surface,
+      onPrimary: Colors.white,
       secondary: secondary,
-      onSecondary: surface,
+      onSecondary: Colors.white,
       surface: surface,
       onSurface: onSurface,
       error: error,
-      onError: surface,
+      onError: Colors.white,
       brightness: Brightness.light,
-      tertiary: chartColors[5],
       surfaceContainerHighest: surfaceContainerHighest,
       onSurfaceVariant: onSurfaceVariant,
-      outline: onSurfaceVariant.withAlpha(51),
-      outlineVariant: onSurfaceVariant.withAlpha(26),
-      shadow: onSurface.withAlpha(26),
-    ).copyWith(
-      secondaryContainer: success,
+      outline: onSurfaceVariant.withAlpha((255 * 0.2).round()),
+      outlineVariant: onSurfaceVariant.withAlpha((255 * 0.1).round()),
+      shadow: onSurface.withAlpha((255 * 0.05).round()),
     ),
-    textTheme: GoogleFonts.interTextTheme(ThemeData.light().textTheme).copyWith(
+    textTheme:
+        GoogleFonts.robotoTextTheme(ThemeData.light().textTheme).copyWith(
       headlineMedium: const TextStyle(
-        fontWeight: FontWeight.w700,
+        fontWeight: FontWeight.w600,
         color: onSurface,
         fontSize: 28,
         height: 1.2,
@@ -154,10 +152,10 @@ class AppTheme {
     elevatedButtonTheme: ElevatedButtonThemeData(
       style: ElevatedButton.styleFrom(
         backgroundColor: primary,
-        foregroundColor: surface,
+        foregroundColor: Colors.white,
         padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
         shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(radiusM)),
+            borderRadius: BorderRadius.circular(radiusXXL)),
         textStyle: const TextStyle(
           fontSize: 16,
           fontWeight: FontWeight.w600,
@@ -169,10 +167,10 @@ class AppTheme {
     outlinedButtonTheme: OutlinedButtonThemeData(
       style: OutlinedButton.styleFrom(
         foregroundColor: primary,
-        side: BorderSide(color: primary.withAlpha(77)),
+        side: BorderSide(color: primary.withAlpha((255 * 0.3).round())),
         padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
         shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(radiusM)),
+            borderRadius: BorderRadius.circular(radiusXXL)),
         textStyle: const TextStyle(
           fontSize: 16,
           fontWeight: FontWeight.w600,
@@ -183,8 +181,8 @@ class AppTheme {
       style: TextButton.styleFrom(
         foregroundColor: primary,
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-        shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(radiusS)),
+        shape:
+            RoundedRectangleBorder(borderRadius: BorderRadius.circular(radiusXXL)),
         textStyle: const TextStyle(
           fontSize: 14,
           fontWeight: FontWeight.w600,
@@ -193,7 +191,7 @@ class AppTheme {
     ),
     inputDecorationTheme: InputDecorationTheme(
       filled: true,
-      fillColor: surfaceContainerHighest,
+      fillColor: surface,
       border: OutlineInputBorder(
         borderRadius: BorderRadius.circular(radiusM),
         borderSide: BorderSide.none,
@@ -201,7 +199,7 @@ class AppTheme {
       enabledBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(radiusM),
         borderSide: BorderSide(
-          color: onSurfaceVariant.withAlpha(26),
+          color: onSurfaceVariant.withAlpha((255 * 0.2).round()),
         ),
       ),
       focusedBorder: OutlineInputBorder(
@@ -219,19 +217,19 @@ class AppTheme {
       contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 18),
       labelStyle: const TextStyle(color: onSurfaceVariant),
       floatingLabelStyle: const TextStyle(color: primary),
-      hintStyle: TextStyle(color: onSurfaceVariant.withAlpha(153)),
+      hintStyle: TextStyle(color: onSurfaceVariant.withAlpha((255 * 0.6).round())),
     ),
     cardTheme: CardThemeData(
       elevation: 0,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(radiusL),
-        side: BorderSide(color: onSurfaceVariant.withAlpha(20), width: 1),
+        side: BorderSide(color: onSurface.withAlpha((255 * 0.08).round()), width: 1),
       ),
       color: surface,
-      shadowColor: onSurface.withAlpha(13),
+      shadowColor: onSurface.withAlpha((255 * 0.02).round()),
     ),
     dividerTheme: DividerThemeData(
-      color: onSurfaceVariant.withAlpha(31),
+      color: onSurfaceVariant.withAlpha((255 * 0.15).round()),
       thickness: 1,
       space: 1,
     ),
@@ -247,9 +245,9 @@ class AppTheme {
       trackColor: WidgetStateProperty.resolveWith<Color>(
         (Set<WidgetState> states) {
           if (states.contains(WidgetState.selected)) {
-            return primary.withAlpha(77);
+            return primary.withAlpha((255 * 0.3).round());
           }
-          return onSurfaceVariant.withAlpha(51);
+          return onSurfaceVariant.withAlpha((255 * 0.2).round());
         },
       ),
     ),
@@ -258,10 +256,10 @@ class AppTheme {
         backgroundColor: surfaceContainerHighest,
         foregroundColor: onSurfaceVariant,
         selectedBackgroundColor: primary,
-        selectedForegroundColor: surface,
+        selectedForegroundColor: Colors.white,
       ),
     ),
-    shadowColor: onSurface.withAlpha(8),
+    shadowColor: onSurface.withAlpha((255 * 0.08).round()),
   );
 
   static final ThemeData darkTheme = ThemeData(
@@ -277,20 +275,18 @@ class AppTheme {
       surface: darkSurface,
       onSurface: onDarkSurface,
       error: error,
-      onError: surface,
+      onError: onDarkSurface,
       brightness: Brightness.dark,
-      tertiary: chartColors[5],
       surfaceContainerHighest: darkSurfaceContainerHighest,
       onSurfaceVariant: onDarkSurfaceVariant,
-      outline: onDarkSurfaceVariant.withAlpha(51),
-      outlineVariant: onDarkSurfaceVariant.withAlpha(26),
-      shadow: Colors.black.withAlpha(77),
-    ).copyWith(
-      secondaryContainer: success,
+      outline: onDarkSurfaceVariant.withAlpha((255 * 0.2).round()),
+      outlineVariant: onDarkSurfaceVariant.withAlpha((255 * 0.1).round()),
+      shadow: Colors.black.withAlpha((255 * 0.2).round()),
     ),
-    textTheme: GoogleFonts.interTextTheme(ThemeData.dark().textTheme).copyWith(
+    textTheme:
+        GoogleFonts.robotoTextTheme(ThemeData.dark().textTheme).copyWith(
       headlineMedium: const TextStyle(
-        fontWeight: FontWeight.w700,
+        fontWeight: FontWeight.w600,
         color: onDarkSurface,
         fontSize: 28,
         height: 1.2,
@@ -358,7 +354,7 @@ class AppTheme {
         foregroundColor: onDarkSurface,
         padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
         shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(radiusM)),
+            borderRadius: BorderRadius.circular(radiusXXL)),
         textStyle: const TextStyle(
           fontSize: 16,
           fontWeight: FontWeight.w600,
@@ -370,10 +366,10 @@ class AppTheme {
     outlinedButtonTheme: OutlinedButtonThemeData(
       style: OutlinedButton.styleFrom(
         foregroundColor: primaryVariant,
-        side: BorderSide(color: primaryVariant.withAlpha(77)),
+        side: BorderSide(color: primaryVariant.withAlpha((255 * 0.3).round())),
         padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
         shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(radiusM)),
+            borderRadius: BorderRadius.circular(radiusXXL)),
         textStyle: const TextStyle(
           fontSize: 16,
           fontWeight: FontWeight.w600,
@@ -384,8 +380,8 @@ class AppTheme {
       style: TextButton.styleFrom(
         foregroundColor: primaryVariant,
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-        shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(radiusS)),
+        shape:
+            RoundedRectangleBorder(borderRadius: BorderRadius.circular(radiusXXL)),
         textStyle: const TextStyle(
           fontSize: 14,
           fontWeight: FontWeight.w600,
@@ -394,7 +390,7 @@ class AppTheme {
     ),
     inputDecorationTheme: InputDecorationTheme(
       filled: true,
-      fillColor: darkSurfaceContainerHighest,
+      fillColor: darkSurface,
       border: OutlineInputBorder(
         borderRadius: BorderRadius.circular(radiusM),
         borderSide: BorderSide.none,
@@ -402,7 +398,7 @@ class AppTheme {
       enabledBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(radiusM),
         borderSide: BorderSide(
-          color: onDarkSurfaceVariant.withAlpha(26),
+          color: onDarkSurfaceVariant.withAlpha((255 * 0.2).round()),
         ),
       ),
       focusedBorder: OutlineInputBorder(
@@ -420,19 +416,19 @@ class AppTheme {
       contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 18),
       labelStyle: const TextStyle(color: onDarkSurfaceVariant),
       floatingLabelStyle: const TextStyle(color: primaryVariant),
-      hintStyle: TextStyle(color: onDarkSurfaceVariant.withAlpha(153)),
+      hintStyle: TextStyle(color: onDarkSurfaceVariant.withAlpha((255 * 0.6).round())),
     ),
     cardTheme: CardThemeData(
       elevation: 0,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(radiusL),
-        side: BorderSide(color: onDarkSurfaceVariant.withAlpha(20), width: 1),
+        side: BorderSide(color: onDarkSurface.withAlpha((255 * 0.1).round()), width: 1),
       ),
       color: darkSurface,
-      shadowColor: Colors.black.withAlpha(51),
+      shadowColor: Colors.black.withAlpha((255 * 0.1).round()),
     ),
     dividerTheme: DividerThemeData(
-      color: onDarkSurfaceVariant.withAlpha(31),
+      color: onDarkSurfaceVariant.withAlpha((255 * 0.15).round()),
       thickness: 1,
       space: 1,
     ),
@@ -448,9 +444,9 @@ class AppTheme {
       trackColor: WidgetStateProperty.resolveWith<Color>(
         (Set<WidgetState> states) {
           if (states.contains(WidgetState.selected)) {
-            return primaryVariant.withAlpha(77);
+            return primaryVariant.withAlpha((255 * 0.3).round());
           }
-          return onDarkSurfaceVariant.withAlpha(51);
+          return onDarkSurfaceVariant.withAlpha((255 * 0.2).round());
         },
       ),
     ),
@@ -462,6 +458,6 @@ class AppTheme {
         selectedForegroundColor: onDarkSurface,
       ),
     ),
-    shadowColor: Colors.black.withAlpha(26),
+    shadowColor: Colors.black.withAlpha((255 * 0.2).round()),
   );
 }

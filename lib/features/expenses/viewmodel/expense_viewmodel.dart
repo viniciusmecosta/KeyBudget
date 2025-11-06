@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:key_budget/app/widgets/activity_tile_widget.dart';
+import 'package:key_budget/app/widgets/animated_list_item.dart';
 import 'package:key_budget/core/models/expense_model.dart';
 import 'package:key_budget/core/models/recurring_expense_model.dart';
 import 'package:key_budget/core/services/csv_service.dart';
@@ -11,7 +12,6 @@ import 'package:key_budget/features/analysis/viewmodel/analysis_viewmodel.dart';
 import 'package:key_budget/features/category/viewmodel/category_viewmodel.dart';
 import 'package:key_budget/features/expenses/repository/expense_repository.dart';
 import 'package:key_budget/features/expenses/repository/recurring_expense_repository.dart';
-import 'package:key_budget/app/widgets/animated_list_item.dart';
 
 class ExpenseViewModel extends ChangeNotifier {
   final ExpenseRepository _repository = ExpenseRepository();
@@ -124,11 +124,13 @@ class ExpenseViewModel extends ChangeNotifier {
       final newMonthlyList = monthlyFilteredExpenses;
 
       final removedItems = oldMonthlyList
-          .where((oldItem) => !newMonthlyList.any((newItem) => newItem.id == oldItem.id))
+          .where((oldItem) =>
+              !newMonthlyList.any((newItem) => newItem.id == oldItem.id))
           .toList();
 
       final removalIndices = removedItems
-          .map((item) => oldMonthlyList.indexWhere((oldItem) => oldItem.id == item.id))
+          .map((item) =>
+              oldMonthlyList.indexWhere((oldItem) => oldItem.id == item.id))
           .toList();
       removalIndices.sort((a, b) => b.compareTo(a));
 
@@ -147,13 +149,16 @@ class ExpenseViewModel extends ChangeNotifier {
       }
 
       final addedItems = newMonthlyList
-          .where((newItem) => !oldMonthlyList.any((oldItem) => oldItem.id == newItem.id))
+          .where((newItem) =>
+              !oldMonthlyList.any((oldItem) => oldItem.id == newItem.id))
           .toList();
 
       for (final item in addedItems) {
-        final index = newMonthlyList.indexWhere((newItem) => newItem.id == item.id);
+        final index =
+            newMonthlyList.indexWhere((newItem) => newItem.id == item.id);
         if (index != -1) {
-          listKey?.currentState?.insertItem(index, duration: const Duration(milliseconds: 500));
+          listKey?.currentState
+              ?.insertItem(index, duration: const Duration(milliseconds: 500));
         }
       }
 

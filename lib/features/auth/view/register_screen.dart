@@ -83,7 +83,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     _avatarPath = path;
                   },
                 ),
-                const SizedBox(height: 24),
+                const SizedBox(height: AppTheme.spaceL),
                 TextFormField(
                   controller: _nameController,
                   textCapitalization: TextCapitalization.words,
@@ -92,7 +92,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       ? 'Insira seu nome'
                       : null,
                 ),
-                const SizedBox(height: 16),
+                const SizedBox(height: AppTheme.spaceM),
                 TextFormField(
                   controller: _emailController,
                   decoration: const InputDecoration(labelText: 'Email *'),
@@ -101,7 +101,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       ? 'Insira um email válido'
                       : null,
                 ),
-                const SizedBox(height: 16),
+                const SizedBox(height: AppTheme.spaceM),
                 TextFormField(
                   controller: _phoneController,
                   inputFormatters: [
@@ -111,7 +111,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   decoration: const InputDecoration(labelText: 'Número'),
                   keyboardType: TextInputType.phone,
                 ),
-                const SizedBox(height: 16),
+                const SizedBox(height: AppTheme.spaceM),
                 TextFormField(
                   controller: _passwordController,
                   obscureText: !_isPasswordVisible,
@@ -129,7 +129,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       ? 'A senha deve ter pelo menos 6 caracteres'
                       : null,
                 ),
-                const SizedBox(height: 16),
+                const SizedBox(height: AppTheme.spaceM),
                 TextFormField(
                   controller: _confirmPasswordController,
                   obscureText: !_isConfirmPasswordVisible,
@@ -148,15 +148,18 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       ? 'As senhas não coincidem'
                       : null,
                 ),
-                const SizedBox(height: 32),
+                const SizedBox(height: AppTheme.spaceXL),
                 Consumer<AuthViewModel>(
                   builder: (context, viewModel, child) {
-                    return viewModel.isLoading
-                        ? const CircularProgressIndicator()
-                        : ElevatedButton(
-                            onPressed: _submit,
-                            child: const Text('Cadastrar'),
-                          );
+                    return SizedBox(
+                      width: double.infinity,
+                      child: viewModel.isLoading
+                          ? const Center(child: CircularProgressIndicator())
+                          : ElevatedButton(
+                              onPressed: _submit,
+                              child: const Text('Cadastrar'),
+                            ),
+                    );
                   },
                 ),
                 TextButton(
