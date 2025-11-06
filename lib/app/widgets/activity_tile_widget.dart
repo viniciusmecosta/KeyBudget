@@ -35,8 +35,8 @@ class ActivityTile extends StatelessWidget {
     return Card(
       margin: EdgeInsets.zero,
       child: InkWell(
-        onTap: () =>
-            NavigationUtils.push(context, ExpenseDetailScreen(expense: expense)),
+        onTap: () => NavigationUtils.push(
+            context, ExpenseDetailScreen(expense: expense)),
         borderRadius: BorderRadius.circular(AppTheme.radiusL),
         child: Padding(
           padding: const EdgeInsets.all(AppTheme.spaceM),

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:key_budget/app/config/app_theme.dart';
 import 'package:key_budget/app/utils/navigation_utils.dart';
+import 'package:key_budget/app/widgets/password_form_field.dart';
 import 'package:key_budget/core/services/snackbar_service.dart';
 import 'package:key_budget/features/auth/view/register_screen.dart';
 import 'package:key_budget/features/auth/viewmodel/auth_viewmodel.dart';
@@ -68,6 +69,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     return AuthPageLayout(
       child: Column(
         children: [
@@ -87,13 +89,9 @@ class _LoginScreenState extends State<LoginScreen> {
                       : null,
                 ),
                 const SizedBox(height: AppTheme.spaceM),
-                TextFormField(
+                PasswordFormField(
                   controller: _passwordController,
-                  decoration: const InputDecoration(
-                    labelText: 'Senha',
-                    prefixIcon: Icon(Icons.lock_outline),
-                  ),
-                  obscureText: true,
+                  labelText: 'Senha',
                   validator: (value) => (value == null || value.length < 6)
                       ? 'A senha deve ter pelo menos 6 caracteres'
                       : null,
@@ -101,7 +99,7 @@ class _LoginScreenState extends State<LoginScreen> {
               ],
             ),
           ),
-          const SizedBox(height: AppTheme.spaceL),
+          const SizedBox(height: AppTheme.spaceXL),
           Consumer<AuthViewModel>(
             builder: (context, viewModel, child) {
               return Column(
@@ -138,12 +136,17 @@ class _LoginScreenState extends State<LoginScreen> {
               );
             },
           ),
-          const SizedBox(height: AppTheme.spaceM),
+          const SizedBox(height: AppTheme.spaceL),
           TextButton(
             onPressed: () {
               NavigationUtils.push(context, const RegisterScreen());
             },
-            child: const Text("Não tem uma conta? Cadastre-se"),
+            child: Text(
+              "Não tem uma conta? Cadastre-se",
+              style: theme.textTheme.bodyMedium?.copyWith(
+                color: theme.colorScheme.primary,
+              ),
+            ),
           )
         ],
       ),

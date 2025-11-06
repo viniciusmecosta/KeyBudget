@@ -29,15 +29,18 @@ class MainBottomNavigationBar extends StatelessWidget {
           padding: const EdgeInsets.symmetric(
               horizontal: AppTheme.spaceM, vertical: AppTheme.spaceS),
           child: GNav(
-            rippleColor: theme.colorScheme.primary.withAlpha((255 * 0.1).round()),
-            hoverColor: theme.colorScheme.primary.withAlpha((255 * 0.05).round()),
+            rippleColor:
+                theme.colorScheme.primary.withAlpha((255 * 0.1).round()),
+            hoverColor:
+                theme.colorScheme.primary.withAlpha((255 * 0.05).round()),
             gap: 8,
             activeColor: theme.colorScheme.primary,
             iconSize: 24,
             padding: const EdgeInsets.symmetric(
                 horizontal: AppTheme.spaceS, vertical: AppTheme.spaceS + 2),
             duration: const Duration(milliseconds: 400),
-            tabBackgroundColor: theme.colorScheme.primary.withAlpha((255 * 0.1).round()),
+            tabBackgroundColor:
+                theme.colorScheme.primary.withAlpha((255 * 0.1).round()),
             color: theme.colorScheme.onSurfaceVariant,
             tabs: const [
               GButton(icon: Icons.home_rounded, text: 'Painel'),

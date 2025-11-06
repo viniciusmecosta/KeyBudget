@@ -181,8 +181,8 @@ class AppTheme {
       style: TextButton.styleFrom(
         foregroundColor: primary,
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-        shape:
-            RoundedRectangleBorder(borderRadius: BorderRadius.circular(radiusXXL)),
+        shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(radiusXXL)),
         textStyle: const TextStyle(
           fontSize: 14,
           fontWeight: FontWeight.w600,
@@ -217,13 +217,15 @@ class AppTheme {
       contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 18),
       labelStyle: const TextStyle(color: onSurfaceVariant),
       floatingLabelStyle: const TextStyle(color: primary),
-      hintStyle: TextStyle(color: onSurfaceVariant.withAlpha((255 * 0.6).round())),
+      hintStyle:
+          TextStyle(color: onSurfaceVariant.withAlpha((255 * 0.6).round())),
     ),
     cardTheme: CardThemeData(
       elevation: 0,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(radiusL),
-        side: BorderSide(color: onSurface.withAlpha((255 * 0.08).round()), width: 1),
+        side: BorderSide(
+            color: onSurface.withAlpha((255 * 0.08).round()), width: 1),
       ),
       color: surface,
       shadowColor: onSurface.withAlpha((255 * 0.02).round()),
@@ -283,8 +285,7 @@ class AppTheme {
       outlineVariant: onDarkSurfaceVariant.withAlpha((255 * 0.1).round()),
       shadow: Colors.black.withAlpha((255 * 0.2).round()),
     ),
-    textTheme:
-        GoogleFonts.robotoTextTheme(ThemeData.dark().textTheme).copyWith(
+    textTheme: GoogleFonts.robotoTextTheme(ThemeData.dark().textTheme).copyWith(
       headlineMedium: const TextStyle(
         fontWeight: FontWeight.w600,
         color: onDarkSurface,
@@ -380,8 +381,8 @@ class AppTheme {
       style: TextButton.styleFrom(
         foregroundColor: primaryVariant,
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-        shape:
-            RoundedRectangleBorder(borderRadius: BorderRadius.circular(radiusXXL)),
+        shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(radiusXXL)),
         textStyle: const TextStyle(
           fontSize: 14,
           fontWeight: FontWeight.w600,
@@ -416,13 +417,15 @@ class AppTheme {
       contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 18),
       labelStyle: const TextStyle(color: onDarkSurfaceVariant),
       floatingLabelStyle: const TextStyle(color: primaryVariant),
-      hintStyle: TextStyle(color: onDarkSurfaceVariant.withAlpha((255 * 0.6).round())),
+      hintStyle:
+          TextStyle(color: onDarkSurfaceVariant.withAlpha((255 * 0.6).round())),
     ),
     cardTheme: CardThemeData(
       elevation: 0,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(radiusL),
-        side: BorderSide(color: onDarkSurface.withAlpha((255 * 0.1).round()), width: 1),
+        side: BorderSide(
+            color: onDarkSurface.withAlpha((255 * 0.1).round()), width: 1),
       ),
       color: darkSurface,
       shadowColor: Colors.black.withAlpha((255 * 0.1).round()),

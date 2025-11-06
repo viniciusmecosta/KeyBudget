@@ -63,7 +63,7 @@ class QuickActionsSection extends StatelessWidget {
         onTap: onTap,
         borderRadius: BorderRadius.circular(AppTheme.radiusL),
         child: Container(
-          padding: const EdgeInsets.all(AppTheme.spaceM + 2),
+          padding: const EdgeInsets.all(AppTheme.spaceL),
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(AppTheme.radiusL),
             border: Border.all(
@@ -74,7 +74,7 @@ class QuickActionsSection extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Container(
-                padding: const EdgeInsets.all(AppTheme.spaceM - 2),
+                padding: const EdgeInsets.all(AppTheme.spaceS + 2),
                 decoration: BoxDecoration(
                   color: color.withAlpha((255 * 0.12).round()),
                   borderRadius: BorderRadius.circular(AppTheme.radiusM),
@@ -91,7 +91,6 @@ class QuickActionsSection extends StatelessWidget {
                 style: theme.textTheme.titleMedium?.copyWith(
                   fontWeight: FontWeight.w700,
                   color: theme.colorScheme.onSurface,
-                  fontSize: 16,
                 ),
               ),
               const SizedBox(height: AppTheme.spaceXS),
@@ -100,7 +99,6 @@ class QuickActionsSection extends StatelessWidget {
                 style: theme.textTheme.bodySmall?.copyWith(
                   color: theme.colorScheme.onSurface
                       .withAlpha((255 * 0.65).round()),
-                  fontSize: 13,
                   fontWeight: FontWeight.w500,
                 ),
               ),

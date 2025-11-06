@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart' hide DateUtils;
-import 'package:flutter_animate/flutter_animate.dart';
 import 'package:key_budget/app/config/app_theme.dart';
 import 'package:key_budget/app/utils/app_animations.dart';
 import 'package:key_budget/app/utils/navigation_utils.dart';
@@ -25,8 +24,6 @@ class ExpensesScreen extends StatefulWidget {
 }
 
 class _ExpensesScreenState extends State<ExpensesScreen> {
-  bool _isFirstLoad = true;
-
   @override
   void initState() {
     super.initState();
@@ -70,8 +67,7 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
     final categoryViewModel = context.watch<CategoryViewModel>();
 
     final bool isLoading =
-        (expenseViewModel.isLoading || categoryViewModel.isLoading) &&
-            _isFirstLoad;
+        (expenseViewModel.isLoading || categoryViewModel.isLoading);
 
     Widget body = RefreshIndicator(
       onRefresh: _handleRefresh,
@@ -94,14 +90,14 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
                 Padding(
                   padding: const EdgeInsets.symmetric(
                       horizontal: AppTheme.defaultPadding),
-                  child: AppAnimations.fadeIn(BalanceCard(
+                  child: AppAnimations.fadeInFromBottom(BalanceCard(
                     title: 'Total do mês',
                     totalValue: expenseViewModel.currentMonthTotal,
                     gradient: LinearGradient(
                       colors: [
                         theme.colorScheme.primary,
-                        Color.lerp(theme.colorScheme.primary, theme.colorScheme.secondary,
-                            0.4)!,
+                        Color.lerp(theme.colorScheme.primary,
+                            theme.colorScheme.secondary, 0.4)!,
                       ],
                       begin: Alignment.topLeft,
                       end: Alignment.bottomRight,
@@ -152,13 +148,7 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
         ],
       ),
       body: SafeArea(
-        child: body.animate(onComplete: (controller) {
-          if (_isFirstLoad) {
-            setState(() {
-              _isFirstLoad = false;
-            });
-          }
-        }).fadeIn(duration: 300.ms),
+        child: AppAnimations.fadeInFromBottom(body),
       ),
       floatingActionButton: AppAnimations.scaleIn(FloatingActionButton.extended(
         heroTag: 'fab_expenses',
