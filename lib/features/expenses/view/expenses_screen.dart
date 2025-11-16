@@ -115,7 +115,7 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
               hasScrollBody: false,
               child: EmptyStateWidget(
                 icon: Icons.money_off_rounded,
-                message: 'Nenhuma despesa encontrada para este mês.',
+                message: 'Tudo limpo por aqui! Nenhuma despesa registrada este mês.',
               ),
             )
           else
