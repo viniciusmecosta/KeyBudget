@@ -90,19 +90,29 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
                 Padding(
                   padding: const EdgeInsets.symmetric(
                       horizontal: AppTheme.defaultPadding),
-                  child: AppAnimations.fadeInFromBottom(BalanceCard(
-                    title: 'Total do mês',
-                    totalValue: expenseViewModel.currentMonthTotal,
-                    gradient: LinearGradient(
-                      colors: [
-                        theme.colorScheme.primary,
-                        Color.lerp(theme.colorScheme.primary,
-                            theme.colorScheme.secondary, 0.4)!,
-                      ],
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
+                  child: AppAnimations.fadeInFromBottom(
+                    TweenAnimationBuilder<double>(
+                      tween: Tween<double>(
+                          begin: 0, end: expenseViewModel.currentMonthTotal),
+                      duration: const Duration(milliseconds: 1500),
+                      curve: Curves.easeOutExpo,
+                      builder: (context, value, child) {
+                        return BalanceCard(
+                          title: 'Total do mês',
+                          totalValue: value,
+                          gradient: LinearGradient(
+                            colors: [
+                              theme.colorScheme.primary,
+                              Color.lerp(theme.colorScheme.primary,
+                                  theme.colorScheme.secondary, 0.4)!,
+                            ],
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                          ),
+                        );
+                      },
                     ),
-                  )),
+                  ),
                 ),
                 const SizedBox(height: AppTheme.spaceL),
               ],
@@ -115,7 +125,8 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
               hasScrollBody: false,
               child: EmptyStateWidget(
                 icon: Icons.money_off_rounded,
-                message: 'Tudo limpo por aqui! Nenhuma despesa registrada este mês.',
+                message:
+                    'Tudo limpo por aqui! Nenhuma despesa registrada este mês.',
               ),
             )
           else
