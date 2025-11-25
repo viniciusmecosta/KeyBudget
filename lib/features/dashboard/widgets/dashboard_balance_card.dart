@@ -13,27 +13,6 @@ class DashboardBalanceCard extends StatefulWidget {
 }
 
 class _DashboardBalanceCardState extends State<DashboardBalanceCard> {
-  double _animatedTotalValue = 0.0;
-
-  @override
-  void didUpdateWidget(covariant DashboardBalanceCard oldWidget) {
-    super.didUpdateWidget(oldWidget);
-    _updateAnimatedValue();
-  }
-
-  @override
-  void initState() {
-    super.initState();
-    _updateAnimatedValue();
-  }
-
-  void _updateAnimatedValue() {
-    final viewModel = Provider.of<DashboardViewModel>(context, listen: false);
-    setState(() {
-      _animatedTotalValue = viewModel.totalAmountForMonth;
-    });
-  }
-
   @override
   Widget build(BuildContext context) {
     final viewModel = Provider.of<DashboardViewModel>(context);
@@ -46,8 +25,9 @@ class _DashboardBalanceCardState extends State<DashboardBalanceCard> {
         '${isIncrease ? '+ ' : ''}${percentageChange.abs().toStringAsFixed(1)}%';
 
     return TweenAnimationBuilder<double>(
-      tween: Tween<double>(begin: _animatedTotalValue, end: viewModel.totalAmountForMonth),
-      duration: const Duration(milliseconds: 500),
+      tween: Tween<double>(begin: 0, end: viewModel.totalAmountForMonth),
+      duration: const Duration(milliseconds: 1500),
+      curve: Curves.easeOutExpo,
       builder: (context, value, child) {
         return BalanceCard(
           title: 'Gasto Total do Mês',
