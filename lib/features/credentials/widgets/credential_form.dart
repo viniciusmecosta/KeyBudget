@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:key_budget/app/widgets/image_picker_widget.dart';
 import 'package:key_budget/app/widgets/password_form_field.dart';
+import 'package:key_budget/core/models/folder_model.dart';
 import 'package:key_budget/features/credentials/widgets/saved_logos_screen.dart';
 import 'package:mask_text_input_formatter/mask_text_input_formatter.dart';
 
@@ -15,6 +16,9 @@ class CredentialForm extends StatelessWidget {
   final String? logoPath;
   final Function(String?) onLogoChanged;
   final bool isEditing;
+  final List<Folder> availableFolders;
+  final String? selectedFolderId;
+  final Function(String?) onFolderChanged;
 
   const CredentialForm({
     super.key,
@@ -28,6 +32,9 @@ class CredentialForm extends StatelessWidget {
     required this.logoPath,
     required this.onLogoChanged,
     this.isEditing = false,
+    this.availableFolders = const [],
+    this.selectedFolderId,
+    required this.onFolderChanged,
   });
 
   @override
@@ -70,7 +77,7 @@ class CredentialForm extends StatelessWidget {
                 TextButton.icon(
                   onPressed: selectSavedLogo,
                   icon:
-                      const Icon(Icons.collections_bookmark_outlined, size: 18),
+                  const Icon(Icons.collections_bookmark_outlined, size: 18),
                   label: const Text('Escolher Salva'),
                 ),
                 if (logoPath != null) ...[
@@ -86,6 +93,28 @@ class CredentialForm extends StatelessWidget {
               ],
             ),
           const SizedBox(height: 24),
+          if (availableFolders.isNotEmpty) ...[
+            DropdownButtonFormField<String?>(
+              key: ValueKey(selectedFolderId),
+              initialValue: selectedFolderId,
+              decoration: const InputDecoration(
+                labelText: 'Pasta',
+                prefixIcon: Icon(Icons.folder_outlined),
+              ),
+              items: [
+                const DropdownMenuItem<String?>(
+                  value: null,
+                  child: Text('Nenhuma (Principal)'),
+                ),
+                ...availableFolders.map((folder) => DropdownMenuItem(
+                  value: folder.id,
+                  child: Text(folder.name),
+                )),
+              ],
+              onChanged: isEditing ? onFolderChanged : null,
+            ),
+            const SizedBox(height: 16),
+          ],
           TextFormField(
             controller: locationController,
             textCapitalization: TextCapitalization.sentences,

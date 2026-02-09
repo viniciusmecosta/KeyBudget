@@ -29,6 +29,7 @@ class _CredentialDetailScreenState extends State<CredentialDetailScreen> {
   late TextEditingController _phoneController;
   late TextEditingController _notesController;
   String? _logoPath;
+  String? _selectedFolderId;
   bool _isEditing = false;
   bool _isSaving = false;
   bool _decryptionError = false;
@@ -42,8 +43,8 @@ class _CredentialDetailScreenState extends State<CredentialDetailScreen> {
   void initState() {
     super.initState();
     final decryptedPassword =
-        Provider.of<CredentialViewModel>(context, listen: false)
-            .decryptPassword(widget.credential.encryptedPassword);
+    Provider.of<CredentialViewModel>(context, listen: false)
+        .decryptPassword(widget.credential.encryptedPassword);
 
     _decryptionError = decryptedPassword == 'ERRO_DECRIPT';
 
@@ -55,9 +56,10 @@ class _CredentialDetailScreenState extends State<CredentialDetailScreen> {
     _emailController = TextEditingController(text: widget.credential.email);
     _phoneController = TextEditingController(
         text:
-            _phoneMaskFormatter.maskText(widget.credential.phoneNumber ?? ''));
+        _phoneMaskFormatter.maskText(widget.credential.phoneNumber ?? ''));
     _notesController = TextEditingController(text: widget.credential.notes);
     _logoPath = widget.credential.logoPath;
+    _selectedFolderId = widget.credential.folderId;
   }
 
   @override
@@ -93,6 +95,7 @@ class _CredentialDetailScreenState extends State<CredentialDetailScreen> {
       phoneNumber: _phoneMaskFormatter.unmaskText(_phoneController.text),
       notes: _notesController.text,
       logoPath: _logoPath,
+      folderId: _selectedFolderId,
     );
 
     if (!scaffoldContext.mounted) return;
@@ -111,7 +114,7 @@ class _CredentialDetailScreenState extends State<CredentialDetailScreen> {
       builder: (ctx) => AlertDialog(
         title: const Text('Confirmar Exclusão'),
         content:
-            const Text('Você tem certeza que deseja excluir esta credencial?'),
+        const Text('Você tem certeza que deseja excluir esta credencial?'),
         actions: [
           TextButton(
             child: const Text('Cancelar'),
@@ -122,9 +125,9 @@ class _CredentialDetailScreenState extends State<CredentialDetailScreen> {
             onPressed: () async {
               HapticFeedback.mediumImpact();
               final authViewModel =
-                  Provider.of<AuthViewModel>(context, listen: false);
+              Provider.of<AuthViewModel>(context, listen: false);
               final viewModel =
-                  Provider.of<CredentialViewModel>(context, listen: false);
+              Provider.of<CredentialViewModel>(context, listen: false);
               final scaffoldContext = context;
               final dialogNavigator = Navigator.of(ctx);
               final screenNavigator = Navigator.of(context);
@@ -146,6 +149,8 @@ class _CredentialDetailScreenState extends State<CredentialDetailScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final vm = Provider.of<CredentialViewModel>(context);
+
     return Scaffold(
       appBar: AppBar(
         title: Text(_isEditing ? 'Editar Credencial' : 'Detalhes'),
@@ -187,6 +192,13 @@ class _CredentialDetailScreenState extends State<CredentialDetailScreen> {
                   });
                 },
                 isEditing: _isEditing,
+                availableFolders: vm.allFolders,
+                selectedFolderId: _selectedFolderId,
+                onFolderChanged: (folderId) {
+                  setState(() {
+                    _selectedFolderId = folderId;
+                  });
+                },
               ),
             ),
             if (_isEditing) ...[
@@ -195,9 +207,9 @@ class _CredentialDetailScreenState extends State<CredentialDetailScreen> {
                 onPressed: _isSaving ? null : _saveChanges,
                 child: _isSaving
                     ? const SizedBox(
-                        height: 24,
-                        width: 24,
-                        child: CircularProgressIndicator(strokeWidth: 2.0))
+                    height: 24,
+                    width: 24,
+                    child: CircularProgressIndicator(strokeWidth: 2.0))
                     : const Text('Salvar Alterações'),
               )
             ]

@@ -7,6 +7,7 @@ class Credential {
   final String? phoneNumber;
   final String? notes;
   final String? logoPath;
+  final String? folderId;
 
   Credential({
     this.id,
@@ -17,6 +18,7 @@ class Credential {
     this.phoneNumber,
     this.notes,
     this.logoPath,
+    this.folderId,
   });
 
   Map<String, dynamic> toMap() {
@@ -28,6 +30,7 @@ class Credential {
       'phone_number': phoneNumber,
       'notes': notes,
       'logo_path': logoPath,
+      'folder_id': folderId,
     };
   }
 
@@ -41,6 +44,7 @@ class Credential {
       phoneNumber: map['phone_number'],
       notes: map['notes'],
       logoPath: map['logo_path'],
+      folderId: map['folder_id'],
     );
   }
 }
