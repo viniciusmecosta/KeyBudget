@@ -1,5 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:key_budget/core/models/credential_model.dart';
+import 'package:key_budget/core/models/folder_model.dart';
 
 class CredentialRepository {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
@@ -10,10 +11,22 @@ class CredentialRepository {
         .doc(userId)
         .collection('credentials')
         .withConverter<Credential>(
-          fromFirestore: (snapshots, _) =>
-              Credential.fromMap(snapshots.data()!, snapshots.id),
-          toFirestore: (credential, _) => credential.toMap(),
-        );
+      fromFirestore: (snapshots, _) =>
+          Credential.fromMap(snapshots.data()!, snapshots.id),
+      toFirestore: (credential, _) => credential.toMap(),
+    );
+  }
+
+  CollectionReference<Folder> _getFoldersCollection(String userId) {
+    return _firestore
+        .collection('users')
+        .doc(userId)
+        .collection('folders')
+        .withConverter<Folder>(
+      fromFirestore: (snapshots, _) =>
+          Folder.fromMap(snapshots.data()!, snapshots.id),
+      toFirestore: (folder, _) => folder.toMap(),
+    );
   }
 
   Future<void> addCredential(String userId, Credential credential) async {
@@ -22,14 +35,14 @@ class CredentialRepository {
 
   Stream<List<Credential>> getCredentialsStreamForUser(String userId) {
     final querySnapshot =
-        _getCredentialsCollection(userId).orderBy('location').snapshots();
+    _getCredentialsCollection(userId).orderBy('location').snapshots();
     return querySnapshot
         .map((snapshot) => snapshot.docs.map((doc) => doc.data()).toList());
   }
 
   Future<List<Credential>> getCredentialsForUser(String userId) async {
     final querySnapshot =
-        await _getCredentialsCollection(userId).orderBy('location').get();
+    await _getCredentialsCollection(userId).orderBy('location').get();
     return querySnapshot.docs.map((doc) => doc.data()).toList();
   }
 
@@ -52,5 +65,30 @@ class CredentialRepository {
         .toSet()
         .toList();
     return logoPaths;
+  }
+
+  Stream<List<Folder>> getFoldersStreamForUser(String userId) {
+    final querySnapshot =
+    _getFoldersCollection(userId).orderBy('name').snapshots();
+    return querySnapshot
+        .map((snapshot) => snapshot.docs.map((doc) => doc.data()).toList());
+  }
+
+  Future<void> addFolder(String userId, Folder folder) async {
+    await _getFoldersCollection(userId).add(folder);
+  }
+
+  Future<void> deleteFolder(String userId, String folderId) async {
+    await _getFoldersCollection(userId).doc(folderId).delete();
+
+    final batch = _firestore.batch();
+    final credentials = await _getCredentialsCollection(userId)
+        .where('folder_id', isEqualTo: folderId)
+        .get();
+
+    for (var doc in credentials.docs) {
+      batch.update(doc.reference, {'folder_id': null});
+    }
+    await batch.commit();
   }
 }
