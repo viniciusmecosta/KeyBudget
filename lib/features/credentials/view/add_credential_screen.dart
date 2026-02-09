@@ -25,12 +25,15 @@ class _AddCredentialScreenState extends State<AddCredentialScreen> {
   final _phoneController = TextEditingController();
   final _notesController = TextEditingController();
   String? _logoPath;
+  String? _selectedFolderId;
   bool _isSaving = false;
 
   @override
   void initState() {
     super.initState();
     _loginController.addListener(_updateFields);
+    final vm = Provider.of<CredentialViewModel>(context, listen: false);
+    _selectedFolderId = vm.currentFolderId;
   }
 
   @override
@@ -71,7 +74,7 @@ class _AddCredentialScreenState extends State<AddCredentialScreen> {
     HapticFeedback.mediumImpact();
 
     final credentialViewModel =
-        Provider.of<CredentialViewModel>(context, listen: false);
+    Provider.of<CredentialViewModel>(context, listen: false);
     final authViewModel = Provider.of<AuthViewModel>(context, listen: false);
     final userId = authViewModel.currentUser!.id;
     final phoneMaskFormatter = MaskTextInputFormatter(mask: '(##) #####-####');
@@ -87,6 +90,7 @@ class _AddCredentialScreenState extends State<AddCredentialScreen> {
           : null,
       notes: _notesController.text.isNotEmpty ? _notesController.text : null,
       logoPath: _logoPath,
+      folderId: _selectedFolderId,
     );
 
     if (mounted) {
@@ -97,6 +101,8 @@ class _AddCredentialScreenState extends State<AddCredentialScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final vm = Provider.of<CredentialViewModel>(context);
+
     return Scaffold(
       appBar: AppBar(title: const Text('Adicionar Credencial')),
       body: AppAnimations.fadeInFromBottom(Padding(
@@ -119,6 +125,13 @@ class _AddCredentialScreenState extends State<AddCredentialScreen> {
                   });
                 },
                 isEditing: true,
+                availableFolders: vm.allFolders,
+                selectedFolderId: _selectedFolderId,
+                onFolderChanged: (folderId) {
+                  setState(() {
+                    _selectedFolderId = folderId;
+                  });
+                },
               ),
             ),
             const SizedBox(height: 16),
@@ -126,11 +139,11 @@ class _AddCredentialScreenState extends State<AddCredentialScreen> {
               onPressed: _isSaving ? null : _submit,
               child: _isSaving
                   ? SizedBox(
-                      height: 24,
-                      width: 24,
-                      child: CircularProgressIndicator(
-                          color: Theme.of(context).colorScheme.onPrimary,
-                          strokeWidth: 2.0))
+                  height: 24,
+                  width: 24,
+                  child: CircularProgressIndicator(
+                      color: Theme.of(context).colorScheme.onPrimary,
+                      strokeWidth: 2.0))
                   : const Text('Salvar Credencial'),
             ),
           ],
