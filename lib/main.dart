@@ -8,6 +8,7 @@ import 'package:key_budget/app/view/auth_gate.dart';
 import 'package:key_budget/app/view/lock_screen.dart';
 import 'package:key_budget/core/services/app_lock_service.dart';
 import 'package:key_budget/core/services/home_widget_service.dart';
+import 'package:key_budget/core/services/notification_service.dart';
 import 'package:key_budget/features/auth/viewmodel/auth_viewmodel.dart';
 import 'package:key_budget/features/expenses/view/add_expense_screen.dart';
 import 'package:provider/provider.dart';
@@ -19,6 +20,7 @@ Future<void> main() async {
     WidgetsFlutterBinding.ensureInitialized();
     await AppConfig.initialize();
     await HomeWidgetService.initialize();
+    await NotificationService.initialize();
 
     runApp(
       MultiProvider(
