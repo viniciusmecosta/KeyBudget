@@ -77,7 +77,7 @@ class CredentialForm extends StatelessWidget {
                 TextButton.icon(
                   onPressed: selectSavedLogo,
                   icon:
-                  const Icon(Icons.collections_bookmark_outlined, size: 18),
+                      const Icon(Icons.collections_bookmark_outlined, size: 18),
                   label: const Text('Escolher Salva'),
                 ),
                 if (logoPath != null) ...[
@@ -107,9 +107,9 @@ class CredentialForm extends StatelessWidget {
                   child: Text('Nenhuma (Principal)'),
                 ),
                 ...availableFolders.map((folder) => DropdownMenuItem(
-                  value: folder.id,
-                  child: Text(folder.name),
-                )),
+                      value: folder.id,
+                      child: Text(folder.name),
+                    )),
               ],
               onChanged: isEditing ? onFolderChanged : null,
             ),

@@ -4,16 +4,16 @@ import 'package:timezone/timezone.dart' as tz;
 
 class NotificationService {
   static final FlutterLocalNotificationsPlugin _notificationsPlugin =
-  FlutterLocalNotificationsPlugin();
+      FlutterLocalNotificationsPlugin();
 
   static Future<void> initialize() async {
     tz.initializeTimeZones();
 
     const AndroidInitializationSettings androidSettings =
-    AndroidInitializationSettings('@mipmap/ic_launcher');
+        AndroidInitializationSettings('@mipmap/ic_launcher');
 
     const DarwinInitializationSettings iosSettings =
-    DarwinInitializationSettings(
+        DarwinInitializationSettings(
       requestAlertPermission: true,
       requestBadgePermission: true,
       requestSoundPermission: true,
@@ -28,16 +28,16 @@ class NotificationService {
 
     await _notificationsPlugin
         .resolvePlatformSpecificImplementation<
-        AndroidFlutterLocalNotificationsPlugin>()
+            AndroidFlutterLocalNotificationsPlugin>()
         ?.requestNotificationsPermission();
   }
 
   static Future<void> scheduleExpenseNotification(
-      int id,
-      String title,
-      String body,
-      DateTime scheduledDate,
-      ) async {
+    int id,
+    String title,
+    String body,
+    DateTime scheduledDate,
+  ) async {
     final tz.TZDateTime tzScheduledDate = tz.TZDateTime.from(
       DateTime(
         scheduledDate.year,
@@ -52,7 +52,7 @@ class NotificationService {
     if (tzScheduledDate.isBefore(tz.TZDateTime.now(tz.local))) return;
 
     const AndroidNotificationDetails androidDetails =
-    AndroidNotificationDetails(
+        AndroidNotificationDetails(
       'recorrentes_channel',
       'Despesas Recorrentes',
       importance: Importance.max,
@@ -60,7 +60,7 @@ class NotificationService {
     );
 
     const NotificationDetails details =
-    NotificationDetails(android: androidDetails);
+        NotificationDetails(android: androidDetails);
 
     await _notificationsPlugin.zonedSchedule(
       id,
@@ -70,7 +70,7 @@ class NotificationService {
       details,
       androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
       uiLocalNotificationDateInterpretation:
-      UILocalNotificationDateInterpretation.absoluteTime,
+          UILocalNotificationDateInterpretation.absoluteTime,
     );
   }
 }

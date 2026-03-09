@@ -17,7 +17,7 @@ import 'package:key_budget/features/expenses/repository/recurring_expense_reposi
 class ExpenseViewModel extends ChangeNotifier {
   final ExpenseRepository _repository = ExpenseRepository();
   final RecurringExpenseRepository _recurringRepository =
-  RecurringExpenseRepository();
+      RecurringExpenseRepository();
   final CsvService _csvService = CsvService();
   final PdfService _pdfService = PdfService();
   final DataImportService _dataImportService = DataImportService();
@@ -54,8 +54,8 @@ class ExpenseViewModel extends ChangeNotifier {
     if (_selectedCategoryIds.isNotEmpty) {
       filtered = filtered
           .where((exp) =>
-      exp.categoryId != null &&
-          _selectedCategoryIds.contains(exp.categoryId))
+              exp.categoryId != null &&
+              _selectedCategoryIds.contains(exp.categoryId))
           .toList();
     }
     return filtered;
@@ -64,8 +64,8 @@ class ExpenseViewModel extends ChangeNotifier {
   List<Expense> get monthlyFilteredExpenses {
     return filteredExpenses
         .where((exp) =>
-    exp.date.year == _selectedMonth.year &&
-        exp.date.month == _selectedMonth.month)
+            exp.date.year == _selectedMonth.year &&
+            exp.date.month == _selectedMonth.month)
         .toList()
       ..sort((a, b) => b.date.compareTo(a.date));
   }
@@ -118,54 +118,54 @@ class ExpenseViewModel extends ChangeNotifier {
     _expensesSubscription?.cancel();
     _expensesSubscription =
         _repository.getExpensesStreamForUser(userId).listen((newExpenses) {
-          final oldMonthlyList = List<Expense>.from(monthlyFilteredExpenses);
+      final oldMonthlyList = List<Expense>.from(monthlyFilteredExpenses);
 
-          _allExpenses = newExpenses;
+      _allExpenses = newExpenses;
 
-          final newMonthlyList = monthlyFilteredExpenses;
+      final newMonthlyList = monthlyFilteredExpenses;
 
-          final removedItems = oldMonthlyList
-              .where((oldItem) =>
-          !newMonthlyList.any((newItem) => newItem.id == oldItem.id))
-              .toList();
+      final removedItems = oldMonthlyList
+          .where((oldItem) =>
+              !newMonthlyList.any((newItem) => newItem.id == oldItem.id))
+          .toList();
 
-          final removalIndices = removedItems
-              .map((item) =>
+      final removalIndices = removedItems
+          .map((item) =>
               oldMonthlyList.indexWhere((oldItem) => oldItem.id == item.id))
-              .toList();
-          removalIndices.sort((a, b) => b.compareTo(a));
+          .toList();
+      removalIndices.sort((a, b) => b.compareTo(a));
 
-          for (final index in removalIndices) {
-            if (index != -1) {
-              final expense = oldMonthlyList[index];
-              listKey?.currentState?.removeItem(
-                index,
-                    (context, animation) => AnimatedListItem(
-                  animation: animation,
-                  child: ActivityTile(expense: expense, index: index),
-                ),
-                duration: const Duration(milliseconds: 500),
-              );
-            }
-          }
+      for (final index in removalIndices) {
+        if (index != -1) {
+          final expense = oldMonthlyList[index];
+          listKey?.currentState?.removeItem(
+            index,
+            (context, animation) => AnimatedListItem(
+              animation: animation,
+              child: ActivityTile(expense: expense, index: index),
+            ),
+            duration: const Duration(milliseconds: 500),
+          );
+        }
+      }
 
-          final addedItems = newMonthlyList
-              .where((newItem) =>
-          !oldMonthlyList.any((oldItem) => oldItem.id == newItem.id))
-              .toList();
+      final addedItems = newMonthlyList
+          .where((newItem) =>
+              !oldMonthlyList.any((oldItem) => oldItem.id == newItem.id))
+          .toList();
 
-          for (final item in addedItems) {
-            final index =
+      for (final item in addedItems) {
+        final index =
             newMonthlyList.indexWhere((newItem) => newItem.id == item.id);
-            if (index != -1) {
-              listKey?.currentState
-                  ?.insertItem(index, duration: const Duration(milliseconds: 500));
-            }
-          }
+        if (index != -1) {
+          listKey?.currentState
+              ?.insertItem(index, duration: const Duration(milliseconds: 500));
+        }
+      }
 
-          _setLoading(false);
-          notifyListeners();
-        });
+      _setLoading(false);
+      notifyListeners();
+    });
 
     _recurringExpensesSubscription?.cancel();
     _recurringExpensesSubscription = _recurringRepository
@@ -211,7 +211,7 @@ class ExpenseViewModel extends ChangeNotifier {
       var currentRecurring = recurring;
       while (true) {
         DateTime nextInstanceDate =
-        _calculateNextInstanceDate(currentRecurring);
+            _calculateNextInstanceDate(currentRecurring);
 
         if (nextInstanceDate.isAfter(now)) {
           final int notificationId = currentRecurring.id?.hashCode ??
@@ -294,8 +294,8 @@ class ExpenseViewModel extends ChangeNotifier {
       if (start != null && end != null) {
         expensesToExport = _allExpenses
             .where((exp) =>
-        exp.date.isAfter(start.subtract(const Duration(days: 1))) &&
-            exp.date.isBefore(end.add(const Duration(days: 1))))
+                exp.date.isAfter(start.subtract(const Duration(days: 1))) &&
+                exp.date.isBefore(end.add(const Duration(days: 1))))
             .toList();
       }
       return await _csvService.exportExpenses(context, expensesToExport);
@@ -316,8 +316,8 @@ class ExpenseViewModel extends ChangeNotifier {
       if (start != null && end != null) {
         expensesToExport = _allExpenses
             .where((exp) =>
-        exp.date.isAfter(start.subtract(const Duration(days: 1))) &&
-            exp.date.isBefore(end.add(const Duration(days: 1))))
+                exp.date.isAfter(start.subtract(const Duration(days: 1))) &&
+                exp.date.isBefore(end.add(const Duration(days: 1))))
             .toList();
       }
       expensesToExport.sort((a, b) => a.date.compareTo(b.date));
@@ -336,7 +336,7 @@ class ExpenseViewModel extends ChangeNotifier {
     for (var row in data) {
       final newExpense = Expense(
         date:
-        DateTime.tryParse(row['date']?.toString() ?? '') ?? DateTime.now(),
+            DateTime.tryParse(row['date']?.toString() ?? '') ?? DateTime.now(),
         amount: double.tryParse(row['amount']?.toString() ?? '0.0') ?? 0.0,
         categoryId: null,
         motivation: row['motivation']?.toString(),
@@ -359,7 +359,7 @@ class ExpenseViewModel extends ChangeNotifier {
     if (categoryId == null || query.isEmpty) return [];
 
     final locations = _allExpenses.where((exp) =>
-    exp.categoryId == categoryId &&
+        exp.categoryId == categoryId &&
         exp.location != null &&
         exp.location!.isNotEmpty);
 
@@ -389,7 +389,7 @@ class ExpenseViewModel extends ChangeNotifier {
     if (categoryId == null || query.isEmpty) return [];
 
     final motivations = _allExpenses.where((exp) =>
-    exp.categoryId == categoryId &&
+        exp.categoryId == categoryId &&
         exp.motivation != null &&
         exp.motivation!.isNotEmpty);
 

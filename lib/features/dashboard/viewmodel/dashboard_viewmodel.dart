@@ -66,8 +66,8 @@ class DashboardViewModel extends ChangeNotifier {
 
   bool get isLoading =>
       categoryViewModel.isLoading ||
-          expenseViewModel.isLoading ||
-          credentialViewModel.isLoading;
+      expenseViewModel.isLoading ||
+      credentialViewModel.isLoading;
 
   List<Expense> get allExpenses => expenseViewModel.allExpenses;
 
