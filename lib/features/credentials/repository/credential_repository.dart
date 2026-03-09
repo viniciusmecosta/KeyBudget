@@ -11,10 +11,10 @@ class CredentialRepository {
         .doc(userId)
         .collection('credentials')
         .withConverter<Credential>(
-      fromFirestore: (snapshots, _) =>
-          Credential.fromMap(snapshots.data()!, snapshots.id),
-      toFirestore: (credential, _) => credential.toMap(),
-    );
+          fromFirestore: (snapshots, _) =>
+              Credential.fromMap(snapshots.data()!, snapshots.id),
+          toFirestore: (credential, _) => credential.toMap(),
+        );
   }
 
   CollectionReference<Folder> _getFoldersCollection(String userId) {
@@ -23,10 +23,10 @@ class CredentialRepository {
         .doc(userId)
         .collection('folders')
         .withConverter<Folder>(
-      fromFirestore: (snapshots, _) =>
-          Folder.fromMap(snapshots.data()!, snapshots.id),
-      toFirestore: (folder, _) => folder.toMap(),
-    );
+          fromFirestore: (snapshots, _) =>
+              Folder.fromMap(snapshots.data()!, snapshots.id),
+          toFirestore: (folder, _) => folder.toMap(),
+        );
   }
 
   Future<void> addCredential(String userId, Credential credential) async {
@@ -35,14 +35,14 @@ class CredentialRepository {
 
   Stream<List<Credential>> getCredentialsStreamForUser(String userId) {
     final querySnapshot =
-    _getCredentialsCollection(userId).orderBy('location').snapshots();
+        _getCredentialsCollection(userId).orderBy('location').snapshots();
     return querySnapshot
         .map((snapshot) => snapshot.docs.map((doc) => doc.data()).toList());
   }
 
   Future<List<Credential>> getCredentialsForUser(String userId) async {
     final querySnapshot =
-    await _getCredentialsCollection(userId).orderBy('location').get();
+        await _getCredentialsCollection(userId).orderBy('location').get();
     return querySnapshot.docs.map((doc) => doc.data()).toList();
   }
 
@@ -69,7 +69,7 @@ class CredentialRepository {
 
   Stream<List<Folder>> getFoldersStreamForUser(String userId) {
     final querySnapshot =
-    _getFoldersCollection(userId).orderBy('name').snapshots();
+        _getFoldersCollection(userId).orderBy('name').snapshots();
     return querySnapshot
         .map((snapshot) => snapshot.docs.map((doc) => doc.data()).toList());
   }
