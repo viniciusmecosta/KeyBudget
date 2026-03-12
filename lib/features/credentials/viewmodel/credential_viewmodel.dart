@@ -36,8 +36,11 @@ class CredentialViewModel extends ChangeNotifier {
   GlobalKey<SliverAnimatedListState>? listKey;
 
   List<Credential> get allCredentials => _allCredentials;
+
   List<Folder> get allFolders => _allFolders;
+
   List<dynamic> get currentDisplayItems => _currentDisplayItems;
+
   String? get currentFolderId => _currentFolderId;
 
   Folder? get currentFolder {
@@ -57,7 +60,9 @@ class CredentialViewModel extends ChangeNotifier {
       .toList();
 
   bool get isLoading => _isLoading;
+
   bool get isExportingCsv => _isExportingCsv;
+
   bool get isExportingPdf => _isExportingPdf;
 
   void _setLoading(bool value) {
@@ -88,7 +93,8 @@ class CredentialViewModel extends ChangeNotifier {
     _credentialsSubscription?.cancel();
     _foldersSubscription?.cancel();
 
-    _foldersSubscription = _repository.getFoldersStreamForUser(userId).listen((folders) {
+    _foldersSubscription =
+        _repository.getFoldersStreamForUser(userId).listen((folders) {
       _allFolders = folders;
       _updateDisplayList();
     });
@@ -112,14 +118,17 @@ class CredentialViewModel extends ChangeNotifier {
       newList.addAll(_allFolders);
       newList.addAll(_allCredentials.where((c) => c.folderId == null));
     } else {
-      newList.addAll(_allCredentials.where((c) => c.folderId == _currentFolderId));
+      newList
+          .addAll(_allCredentials.where((c) => c.folderId == _currentFolderId));
     }
 
     newList.sort((a, b) {
       if (a is Folder && b is Credential) return -1;
       if (a is Credential && b is Folder) return 1;
-      if (a is Folder && b is Folder) return a.name.toLowerCase().compareTo(b.name.toLowerCase());
-      if (a is Credential && b is Credential) return a.location.toLowerCase().compareTo(b.location.toLowerCase());
+      if (a is Folder && b is Folder)
+        return a.name.toLowerCase().compareTo(b.name.toLowerCase());
+      if (a is Credential && b is Credential)
+        return a.location.toLowerCase().compareTo(b.location.toLowerCase());
       return 0;
     });
 
@@ -128,9 +137,11 @@ class CredentialViewModel extends ChangeNotifier {
       bool existsInNew = false;
 
       if (oldItem is Folder) {
-        existsInNew = newList.any((newItem) => newItem is Folder && newItem.id == oldItem.id);
+        existsInNew = newList
+            .any((newItem) => newItem is Folder && newItem.id == oldItem.id);
       } else if (oldItem is Credential) {
-        existsInNew = newList.any((newItem) => newItem is Credential && newItem.id == oldItem.id);
+        existsInNew = newList.any(
+            (newItem) => newItem is Credential && newItem.id == oldItem.id);
       }
 
       if (!existsInNew) {
@@ -139,10 +150,11 @@ class CredentialViewModel extends ChangeNotifier {
           _currentDisplayItems.removeAt(indexToRemove);
           listKey?.currentState?.removeItem(
             indexToRemove,
-                (context, animation) => AnimatedListItem(
+            (context, animation) => AnimatedListItem(
               animation: animation,
               child: oldItem is Folder
-                  ? FolderListTile(folder: oldItem, onTap: () {}, onDelete: () {})
+                  ? FolderListTile(
+                      folder: oldItem, onTap: () {}, onDelete: () {})
                   : CredentialListTile(credential: oldItem as Credential),
             ),
             duration: const Duration(milliseconds: 300),
@@ -156,14 +168,17 @@ class CredentialViewModel extends ChangeNotifier {
       int oldIndex = -1;
 
       if (newItem is Folder) {
-        oldIndex = _currentDisplayItems.indexWhere((item) => item is Folder && item.id == newItem.id);
+        oldIndex = _currentDisplayItems
+            .indexWhere((item) => item is Folder && item.id == newItem.id);
       } else if (newItem is Credential) {
-        oldIndex = _currentDisplayItems.indexWhere((item) => item is Credential && item.id == newItem.id);
+        oldIndex = _currentDisplayItems
+            .indexWhere((item) => item is Credential && item.id == newItem.id);
       }
 
       if (oldIndex == -1) {
         _currentDisplayItems.insert(i, newItem);
-        listKey?.currentState?.insertItem(i, duration: const Duration(milliseconds: 300));
+        listKey?.currentState
+            ?.insertItem(i, duration: const Duration(milliseconds: 300));
       } else {
         if (_currentDisplayItems[oldIndex] != newItem) {
           _currentDisplayItems[oldIndex] = newItem;
@@ -191,10 +206,8 @@ class CredentialViewModel extends ChangeNotifier {
     if (listKey?.currentState != null) {
       for (int i = _currentDisplayItems.length - 1; i >= 0; i--) {
         listKey!.currentState!.removeItem(
-            i,
-                (context, animation) => const SizedBox(),
-            duration: Duration.zero
-        );
+            i, (context, animation) => const SizedBox(),
+            duration: Duration.zero);
       }
     }
     _currentDisplayItems.clear();
@@ -207,10 +220,8 @@ class CredentialViewModel extends ChangeNotifier {
     if (listKey?.currentState != null) {
       for (int i = _currentDisplayItems.length - 1; i >= 0; i--) {
         listKey!.currentState!.removeItem(
-            i,
-                (context, animation) => const SizedBox(),
-            duration: Duration.zero
-        );
+            i, (context, animation) => const SizedBox(),
+            duration: Duration.zero);
       }
     }
     _currentDisplayItems.clear();
@@ -272,7 +283,7 @@ class CredentialViewModel extends ChangeNotifier {
     String passwordToSave = originalCredential.encryptedPassword;
     if (newPlainPassword != null && newPlainPassword.isNotEmpty) {
       final decryptedOriginal =
-      decryptPassword(originalCredential.encryptedPassword);
+          decryptPassword(originalCredential.encryptedPassword);
       if (newPlainPassword != decryptedOriginal) {
         passwordToSave = _encryptionService.encryptData(newPlainPassword);
       }
@@ -293,13 +304,14 @@ class CredentialViewModel extends ChangeNotifier {
   }
 
   Future<void> deleteCredential(String userId, String credentialId) async {
-    final index = _currentDisplayItems.indexWhere((element) => element is Credential && element.id == credentialId);
+    final index = _currentDisplayItems.indexWhere(
+        (element) => element is Credential && element.id == credentialId);
 
     if (index != -1) {
       final item = _currentDisplayItems[index] as Credential;
       listKey?.currentState?.removeItem(
         index,
-            (context, animation) => AnimatedListItem(
+        (context, animation) => AnimatedListItem(
           animation: animation,
           child: CredentialListTile(credential: item),
         ),

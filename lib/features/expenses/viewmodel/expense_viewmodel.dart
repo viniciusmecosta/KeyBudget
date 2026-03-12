@@ -7,6 +7,7 @@ import 'package:key_budget/core/models/expense_model.dart';
 import 'package:key_budget/core/models/recurring_expense_model.dart';
 import 'package:key_budget/core/services/csv_service.dart';
 import 'package:key_budget/core/services/data_import_service.dart';
+import 'package:key_budget/core/services/notification_service.dart';
 import 'package:key_budget/core/services/pdf_service.dart';
 import 'package:key_budget/features/analysis/viewmodel/analysis_viewmodel.dart';
 import 'package:key_budget/features/category/viewmodel/category_viewmodel.dart';
@@ -213,6 +214,14 @@ class ExpenseViewModel extends ChangeNotifier {
             _calculateNextInstanceDate(currentRecurring);
 
         if (nextInstanceDate.isAfter(now)) {
+          final int notificationId = currentRecurring.id?.hashCode ??
+              nextInstanceDate.millisecondsSinceEpoch;
+          await NotificationService.scheduleExpenseNotification(
+            notificationId,
+            'Despesa Recorrente Automática',
+            'Lembrete: "${currentRecurring.motivation ?? "Sua despesa"}" já foi registrada para hoje.',
+            nextInstanceDate,
+          );
           break;
         }
 

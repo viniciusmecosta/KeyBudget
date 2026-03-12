@@ -47,8 +47,8 @@ class FolderListTile extends StatelessWidget {
                 child: Text(
                   folder.name,
                   style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.bold,
-                  ),
+                        fontWeight: FontWeight.bold,
+                      ),
                 ),
               ),
               IconButton(
@@ -61,9 +61,11 @@ class FolderListTile extends StatelessWidget {
                         mainAxisSize: MainAxisSize.min,
                         children: [
                           ListTile(
-                            leading: const Icon(Icons.delete, color: Colors.red),
+                            leading:
+                                const Icon(Icons.delete, color: Colors.red),
                             title: const Text('Excluir Pasta'),
-                            subtitle: const Text('As credenciais voltarão para a tela principal'),
+                            subtitle: const Text(
+                                'As credenciais voltarão para a tela principal'),
                             onTap: () {
                               Navigator.pop(context);
                               onDelete();
