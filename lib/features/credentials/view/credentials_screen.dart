@@ -24,7 +24,7 @@ class CredentialsScreen extends StatefulWidget {
 
 class _CredentialsScreenState extends State<CredentialsScreen> {
   final GlobalKey<SliverAnimatedListState> _listKey =
-  GlobalKey<SliverAnimatedListState>();
+      GlobalKey<SliverAnimatedListState>();
 
   @override
   void initState() {
@@ -33,7 +33,7 @@ class _CredentialsScreenState extends State<CredentialsScreen> {
       final authViewModel = Provider.of<AuthViewModel>(context, listen: false);
       if (authViewModel.currentUser != null) {
         final credentialViewModel =
-        Provider.of<CredentialViewModel>(context, listen: false);
+            Provider.of<CredentialViewModel>(context, listen: false);
         credentialViewModel.listKey = _listKey;
         credentialViewModel.listenToCredentials(authViewModel.currentUser!.id);
       }
@@ -120,9 +120,9 @@ class _CredentialsScreenState extends State<CredentialsScreen> {
         appBar: AppBar(
           leading: vm.currentFolderId != null
               ? IconButton(
-            icon: const Icon(Icons.arrow_back),
-            onPressed: () => vm.exitFolder(),
-          )
+                  icon: const Icon(Icons.arrow_back),
+                  onPressed: () => vm.exitFolder(),
+                )
               : null,
           title: Text(vm.currentFolder?.name ?? 'Credenciais'),
           actions: [
@@ -187,7 +187,9 @@ class _CredentialsScreenState extends State<CredentialsScreen> {
                       child: SingleChildScrollView(
                         physics: const AlwaysScrollableScrollPhysics(),
                         child: EmptyStateWidget(
-                          icon: vm.currentFolderId != null ? Icons.folder_open : Icons.key_off,
+                          icon: vm.currentFolderId != null
+                              ? Icons.folder_open
+                              : Icons.key_off,
                           message: vm.currentFolderId != null
                               ? 'Esta pasta está vazia.'
                               : 'Nenhuma credencial ou pasta encontrada.',
@@ -196,13 +198,17 @@ class _CredentialsScreenState extends State<CredentialsScreen> {
                     )
                   else
                     SliverPadding(
-                      padding: const EdgeInsets.fromLTRB(AppTheme.defaultPadding,
-                          AppTheme.spaceL, AppTheme.defaultPadding, 96.0),
+                      padding: const EdgeInsets.fromLTRB(
+                          AppTheme.defaultPadding,
+                          AppTheme.spaceL,
+                          AppTheme.defaultPadding,
+                          96.0),
                       sliver: SliverAnimatedList(
                         key: _listKey,
                         initialItemCount: vm.currentDisplayItems.length,
                         itemBuilder: (context, index, animation) {
-                          if (index >= vm.currentDisplayItems.length) return const SizedBox.shrink();
+                          if (index >= vm.currentDisplayItems.length)
+                            return const SizedBox.shrink();
 
                           final item = vm.currentDisplayItems[index];
 
@@ -213,7 +219,8 @@ class _CredentialsScreenState extends State<CredentialsScreen> {
                                 key: ValueKey('folder_${item.id}'),
                                 folder: item,
                                 onTap: () => vm.enterFolder(item.id!),
-                                onDelete: () => vm.deleteFolder(authVm.currentUser!.id, item.id!),
+                                onDelete: () => vm.deleteFolder(
+                                    authVm.currentUser!.id, item.id!),
                               ),
                             );
                           } else if (item is Credential) {
@@ -233,7 +240,8 @@ class _CredentialsScreenState extends State<CredentialsScreen> {
             ),
           ),
         ),
-        floatingActionButton: AppAnimations.scaleIn(FloatingActionButton.extended(
+        floatingActionButton:
+            AppAnimations.scaleIn(FloatingActionButton.extended(
           heroTag: 'fab_credentials',
           onPressed: () {
             showModalBottomSheet(
@@ -247,7 +255,8 @@ class _CredentialsScreenState extends State<CredentialsScreen> {
                       title: const Text('Nova Credencial'),
                       onTap: () {
                         Navigator.pop(ctx);
-                        NavigationUtils.push(context, const AddCredentialScreen());
+                        NavigationUtils.push(
+                            context, const AddCredentialScreen());
                       },
                     ),
                     if (vm.currentFolderId == null)
@@ -256,7 +265,8 @@ class _CredentialsScreenState extends State<CredentialsScreen> {
                         title: const Text('Nova Pasta'),
                         onTap: () {
                           Navigator.pop(ctx);
-                          _showCreateFolderDialog(context, authVm.currentUser!.id);
+                          _showCreateFolderDialog(
+                              context, authVm.currentUser!.id);
                         },
                       ),
                   ],
