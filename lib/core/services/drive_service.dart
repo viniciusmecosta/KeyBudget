@@ -109,12 +109,17 @@ class DriveService {
   }
 
   Future<drive.File?> uploadFile(File file, void Function(int, int) onProgress,
-      {String? serverClientId}) async {
+      {String? serverClientId, bool isBackup = false}) async {
     final driveApi = await _getDriveApi(serverClientId: serverClientId);
     if (driveApi == null) return null;
 
-    final folderId = await _getFolderId(driveApi);
+    String? folderId = await _getFolderId(driveApi);
     if (folderId == null) return null;
+
+    if (isBackup) {
+      folderId = await _getSubFolderId(driveApi, folderId, 'Backup');
+      if (folderId == null) return null;
+    }
 
     final driveFile = drive.File()
       ..name = path.basename(file.absolute.path)
@@ -146,6 +151,24 @@ class DriveService {
     } else {
       final folder = drive.File()
         ..name = folderName
+        ..mimeType = 'application/vnd.google-apps.folder';
+      final createdFolder = await driveApi.files.create(folder, $fields: 'id');
+      return createdFolder.id;
+    }
+  }
+
+  Future<String?> _getSubFolderId(
+      drive.DriveApi driveApi, String parentId, String folderName) async {
+    final query =
+        "mimeType='application/vnd.google-apps.folder' and name='$folderName' and '$parentId' in parents and trashed=false";
+
+    final response = await driveApi.files.list(q: query, $fields: 'files(id)');
+    if (response.files != null && response.files!.isNotEmpty) {
+      return response.files!.first.id;
+    } else {
+      final folder = drive.File()
+        ..name = folderName
+        ..parents = [parentId]
         ..mimeType = 'application/vnd.google-apps.folder';
       final createdFolder = await driveApi.files.create(folder, $fields: 'id');
       return createdFolder.id;

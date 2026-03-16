@@ -5,39 +5,51 @@ import 'package:csv/csv.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:key_budget/core/models/credential_model.dart';
+import 'package:key_budget/core/models/expense_category_model.dart';
 import 'package:key_budget/core/models/expense_model.dart';
+import 'package:key_budget/core/models/recurring_expense_model.dart';
 import 'package:key_budget/core/services/snackbar_service.dart';
 import 'package:key_budget/features/analysis/viewmodel/analysis_viewmodel.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
 
 class CsvService {
-  Future<bool> exportCredentials(
-      BuildContext context, List<Credential> credentials) async {
+  String generateCredentialsCsvString(
+      List<Credential> credentials, String Function(String) decrypt) {
     List<List<dynamic>> rows = [
-      ['location', 'login', 'email', 'phone_number', 'notes', 'password']
+      [
+        'id',
+        'location',
+        'login',
+        'email',
+        'phone_number',
+        'notes',
+        'password',
+        'folderId'
+      ]
     ];
     for (var cred in credentials) {
       rows.add([
+        cred.id ?? '',
         cred.location,
         cred.login,
         cred.email ?? '',
         cred.phoneNumber ?? '',
         cred.notes ?? '',
-        cred.encryptedPassword
+        decrypt(cred.encryptedPassword),
+        cred.folderId ?? ''
       ]);
     }
-    String csv = const ListToCsvConverter().convert(rows);
-    return _saveCsvFile(context, 'keybudget_credentials', csv);
+    return '\uFEFF' + const ListToCsvConverter().convert(rows);
   }
 
-  Future<bool> exportExpenses(
-      BuildContext context, List<Expense> expenses) async {
+  String generateExpensesCsvString(List<Expense> expenses) {
     List<List<dynamic>> rows = [
-      ['date', 'amount', 'categoryId', 'motivation', 'location']
+      ['id', 'date', 'amount', 'categoryId', 'motivation', 'location']
     ];
     for (var exp in expenses) {
       rows.add([
+        exp.id ?? '',
         exp.date.toIso8601String(),
         exp.amount,
         exp.categoryId ?? '',
@@ -45,7 +57,56 @@ class CsvService {
         exp.location ?? ''
       ]);
     }
-    String csv = const ListToCsvConverter().convert(rows);
+    return '\uFEFF' + const ListToCsvConverter().convert(rows);
+  }
+
+  String generateCategoriesCsvString(List<ExpenseCategory> categories) {
+    List<List<dynamic>> rows = [
+      ['id', 'name', 'color', 'icon']
+    ];
+    for (var cat in categories) {
+      rows.add([cat.id ?? '', cat.name, cat.colorValue, cat.iconCodePoint]);
+    }
+    return '\uFEFF' + const ListToCsvConverter().convert(rows);
+  }
+
+  String generateRecurringExpensesCsvString(List<RecurringExpense> expenses) {
+    List<List<dynamic>> rows = [
+      [
+        'id',
+        'amount',
+        'categoryId',
+        'motivation',
+        'location',
+        'frequency',
+        'startDate',
+        'endDate'
+      ]
+    ];
+    for (var exp in expenses) {
+      rows.add([
+        exp.id ?? '',
+        exp.amount,
+        exp.categoryId ?? '',
+        exp.motivation ?? '',
+        exp.location ?? '',
+        exp.frequency.toString(),
+        exp.startDate.toIso8601String(),
+        exp.endDate?.toIso8601String() ?? ''
+      ]);
+    }
+    return '\uFEFF' + const ListToCsvConverter().convert(rows);
+  }
+
+  Future<bool> exportCredentials(BuildContext context,
+      List<Credential> credentials, String Function(String) decrypt) async {
+    String csv = generateCredentialsCsvString(credentials, decrypt);
+    return _saveCsvFile(context, 'keybudget_credentials', csv);
+  }
+
+  Future<bool> exportExpenses(
+      BuildContext context, List<Expense> expenses) async {
+    String csv = generateExpensesCsvString(expenses);
     return _saveCsvFile(context, 'keybudget_expenses', csv);
   }
 
@@ -117,7 +178,7 @@ class CsvService {
     for (var entry in categoryData.entries) {
       rows.add([entry.key.name, entry.value]);
     }
-    String csv = const ListToCsvConverter().convert(rows);
+    String csv = '\uFEFF' + const ListToCsvConverter().convert(rows);
     return _saveCsvFile(context, 'keybudget_analysis', csv);
   }
 }
