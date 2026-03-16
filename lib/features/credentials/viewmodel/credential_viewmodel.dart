@@ -325,7 +325,8 @@ class CredentialViewModel extends ChangeNotifier {
   Future<bool> exportCredentialsToCsv(BuildContext context) async {
     _setExportingCsv(true);
     try {
-      return await _csvService.exportCredentials(context, _allCredentials);
+      return await _csvService.exportCredentials(
+          context, _allCredentials, decryptPassword);
     } finally {
       _setExportingCsv(false);
     }
