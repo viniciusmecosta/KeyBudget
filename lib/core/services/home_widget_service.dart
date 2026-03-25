@@ -11,8 +11,14 @@ class HomeWidgetService {
   }
 
   static Future<void> updateWidgetData(double monthlySpent) async {
-    final currencyFormatter =
-        NumberFormat.currency(locale: 'pt_BR', symbol: 'R\$');
+    final int decimalDigits = monthlySpent >= 1000 ? 0 : 2;
+
+    final currencyFormatter = NumberFormat.currency(
+      locale: 'pt_BR',
+      symbol: 'R\$',
+      decimalDigits: decimalDigits,
+    );
+
     final formattedAmount = currencyFormatter.format(monthlySpent);
 
     await HomeWidget.saveWidgetData<String>('monthly_spent', formattedAmount);
