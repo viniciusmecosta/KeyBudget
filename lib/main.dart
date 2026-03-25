@@ -41,6 +41,8 @@ class MyApp extends StatefulWidget {
 }
 
 class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
+  Uri? _pendingWidgetUri;
+
   @override
   void initState() {
     super.initState();
@@ -51,16 +53,54 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
 
   Future<void> _checkInitialWidgetLaunch() async {
     final uri = await HomeWidget.initiallyLaunchedFromHomeWidget();
-    if (uri != null) {
+    if (uri != null && mounted) {
       _launchedFromWidget(uri);
     }
   }
 
   void _launchedFromWidget(Uri? uri) {
     if (uri?.host == 'addexpense') {
+      _pendingWidgetUri = uri;
+      _processPendingWidgetUri();
+    }
+  }
+
+  void _processPendingWidgetUri() {
+    if (_pendingWidgetUri == null) return;
+    final context = navigatorKey.currentContext;
+
+    if (context == null) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        _processPendingWidgetUri();
+      });
+      return;
+    }
+
+    final authViewModel = Provider.of<AuthViewModel>(context, listen: false);
+    final appLockService = Provider.of<AppLockService>(context, listen: false);
+
+    void navigateAndClear() {
+      _pendingWidgetUri = null;
       navigatorKey.currentState?.push(
         MaterialPageRoute(builder: (context) => const AddExpenseScreen()),
       );
+    }
+
+    void checkReady() {
+      if (authViewModel.currentUser != null && !appLockService.isLocked) {
+        authViewModel.removeListener(checkReady);
+        appLockService.removeListener(checkReady);
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          navigateAndClear();
+        });
+      }
+    }
+
+    if (authViewModel.currentUser != null && !appLockService.isLocked) {
+      navigateAndClear();
+    } else {
+      authViewModel.addListener(checkReady);
+      appLockService.addListener(checkReady);
     }
   }
 
