@@ -26,7 +26,8 @@ class _ExpenseListState extends State<ExpenseList> {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      Provider.of<ExpenseViewModel>(context, listen: false).listKey = _listKey;
+      Provider.of<ExpenseViewModel>(context, listen: false)
+          .setListKey(_listKey);
     });
   }
 
@@ -39,6 +40,9 @@ class _ExpenseListState extends State<ExpenseList> {
         key: _listKey,
         initialItemCount: widget.monthlyExpenses.length,
         itemBuilder: (context, index, animation) {
+          if (index >= widget.monthlyExpenses.length) {
+            return const SizedBox.shrink();
+          }
           final expense = widget.monthlyExpenses[index];
           return _buildExpenseTile(expense, index, animation);
         },
@@ -48,12 +52,16 @@ class _ExpenseListState extends State<ExpenseList> {
 
   Widget _buildExpenseTile(
       Expense expense, int index, Animation<double> animation) {
+    final isAllPeriods =
+        Provider.of<ExpenseViewModel>(context, listen: false).searchAllPeriods;
+
     return AnimatedListItem(
       animation: animation,
       child: ActivityTile(
-        key: ValueKey(expense),
+        key: ValueKey(expense.id),
         expense: expense,
         index: index,
+        showFullDate: isAllPeriods,
       ),
     );
   }

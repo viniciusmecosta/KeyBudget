@@ -1,7 +1,7 @@
 name: key_budget
 description: "Key Budget"
 publish_to: 'Vinicius'
-version: 0.9.4
+version: 0.9.7
 
 environment:
   sdk: ">=3.4.3 <4.0.0"

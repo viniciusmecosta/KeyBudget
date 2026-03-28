@@ -26,6 +26,7 @@ class CredentialViewModel extends ChangeNotifier {
   bool _isLoading = false;
   bool _isExportingCsv = false;
   bool _isExportingPdf = false;
+  String _searchQuery = '';
 
   StreamSubscription? _credentialsSubscription;
   StreamSubscription? _foldersSubscription;
@@ -33,7 +34,11 @@ class CredentialViewModel extends ChangeNotifier {
 
   String? _currentFolderId;
 
-  GlobalKey<SliverAnimatedListState>? listKey;
+  GlobalKey<SliverAnimatedListState>? _listKey;
+
+  void setListKey(GlobalKey<SliverAnimatedListState> key) {
+    _listKey = key;
+  }
 
   List<Credential> get allCredentials => _allCredentials;
 
@@ -42,6 +47,8 @@ class CredentialViewModel extends ChangeNotifier {
   List<dynamic> get currentDisplayItems => _currentDisplayItems;
 
   String? get currentFolderId => _currentFolderId;
+
+  String get searchQuery => _searchQuery;
 
   Folder? get currentFolder {
     if (_currentFolderId == null) return null;
@@ -86,6 +93,21 @@ class CredentialViewModel extends ChangeNotifier {
     }
   }
 
+  String _sanitize(String input) {
+    var text = input.toLowerCase().replaceAll(RegExp(r'\s+'), ' ').trim();
+    const withDia = 'áàãâäéèêëíìîïóòõôöúùûüçñ';
+    const withoutDia = 'aaaaaeeeeiiiiooooouuuucn';
+    for (int i = 0; i < withDia.length; i++) {
+      text = text.replaceAll(withDia[i], withoutDia[i]);
+    }
+    return text;
+  }
+
+  void setSearchQuery(String query) {
+    _searchQuery = _sanitize(query);
+    _updateDisplayList(animate: true);
+  }
+
   void listenToCredentials(String userId) {
     if (_isListening) return;
 
@@ -96,21 +118,21 @@ class CredentialViewModel extends ChangeNotifier {
     _foldersSubscription =
         _repository.getFoldersStreamForUser(userId).listen((folders) {
       _allFolders = folders;
-      _updateDisplayList();
+      _updateDisplayList(animate: true);
     });
 
     _credentialsSubscription = _repository
         .getCredentialsStreamForUser(userId)
         .listen((newCredentials) {
       _allCredentials = newCredentials;
-      _updateDisplayList();
+      _updateDisplayList(animate: true);
       if (_isLoading) _setLoading(false);
     });
 
     _isListening = true;
   }
 
-  void _updateDisplayList() {
+  void _updateDisplayList({bool animate = true}) {
     final oldList = List<dynamic>.from(_currentDisplayItems);
     final List<dynamic> newList = [];
 
@@ -122,15 +144,37 @@ class CredentialViewModel extends ChangeNotifier {
           .addAll(_allCredentials.where((c) => c.folderId == _currentFolderId));
     }
 
+    if (_searchQuery.isNotEmpty) {
+      newList.retainWhere((item) {
+        if (item is Folder) {
+          return _sanitize(item.name).contains(_searchQuery);
+        } else if (item is Credential) {
+          return _sanitize(item.location).contains(_searchQuery) ||
+              _sanitize(item.login).contains(_searchQuery) ||
+              (item.notes != null &&
+                  _sanitize(item.notes!).contains(_searchQuery));
+        }
+        return false;
+      });
+    }
+
     newList.sort((a, b) {
       if (a is Folder && b is Credential) return -1;
       if (a is Credential && b is Folder) return 1;
-      if (a is Folder && b is Folder)
+      if (a is Folder && b is Folder) {
         return a.name.toLowerCase().compareTo(b.name.toLowerCase());
-      if (a is Credential && b is Credential)
+      }
+      if (a is Credential && b is Credential) {
         return a.location.toLowerCase().compareTo(b.location.toLowerCase());
+      }
       return 0;
     });
+
+    if (!animate || _listKey?.currentState == null) {
+      _currentDisplayItems = List.from(newList);
+      notifyListeners();
+      return;
+    }
 
     for (var i = oldList.length - 1; i >= 0; i--) {
       final oldItem = oldList[i];
@@ -147,15 +191,15 @@ class CredentialViewModel extends ChangeNotifier {
       if (!existsInNew) {
         final indexToRemove = _currentDisplayItems.indexOf(oldItem);
         if (indexToRemove != -1) {
-          _currentDisplayItems.removeAt(indexToRemove);
-          listKey?.currentState?.removeItem(
+          final removedItem = _currentDisplayItems.removeAt(indexToRemove);
+          _listKey?.currentState?.removeItem(
             indexToRemove,
             (context, animation) => AnimatedListItem(
               animation: animation,
-              child: oldItem is Folder
+              child: removedItem is Folder
                   ? FolderListTile(
-                      folder: oldItem, onTap: () {}, onDelete: () {})
-                  : CredentialListTile(credential: oldItem as Credential),
+                      folder: removedItem, onTap: () {}, onDelete: () {})
+                  : CredentialListTile(credential: removedItem as Credential),
             ),
             duration: const Duration(milliseconds: 300),
           );
@@ -177,7 +221,7 @@ class CredentialViewModel extends ChangeNotifier {
 
       if (oldIndex == -1) {
         _currentDisplayItems.insert(i, newItem);
-        listKey?.currentState
+        _listKey?.currentState
             ?.insertItem(i, duration: const Duration(milliseconds: 300));
       } else {
         if (_currentDisplayItems[oldIndex] != newItem) {
@@ -188,10 +232,7 @@ class CredentialViewModel extends ChangeNotifier {
         if (oldIndex != i) {
           final item = _currentDisplayItems.removeAt(oldIndex);
           _currentDisplayItems.insert(i, item);
-
-          if (oldIndex < _currentDisplayItems.length) {
-            notifyListeners();
-          }
+          notifyListeners();
         }
       }
     }
@@ -203,31 +244,13 @@ class CredentialViewModel extends ChangeNotifier {
   }
 
   void enterFolder(String folderId) {
-    if (listKey?.currentState != null) {
-      for (int i = _currentDisplayItems.length - 1; i >= 0; i--) {
-        listKey!.currentState!.removeItem(
-            i, (context, animation) => const SizedBox(),
-            duration: Duration.zero);
-      }
-    }
-    _currentDisplayItems.clear();
     _currentFolderId = folderId;
-    _updateDisplayList();
-    notifyListeners();
+    _updateDisplayList(animate: false);
   }
 
   void exitFolder() {
-    if (listKey?.currentState != null) {
-      for (int i = _currentDisplayItems.length - 1; i >= 0; i--) {
-        listKey!.currentState!.removeItem(
-            i, (context, animation) => const SizedBox(),
-            duration: Duration.zero);
-      }
-    }
-    _currentDisplayItems.clear();
     _currentFolderId = null;
-    _updateDisplayList();
-    notifyListeners();
+    _updateDisplayList(animate: false);
   }
 
   Future<void> createFolder(String userId, String name) async {
@@ -304,21 +327,6 @@ class CredentialViewModel extends ChangeNotifier {
   }
 
   Future<void> deleteCredential(String userId, String credentialId) async {
-    final index = _currentDisplayItems.indexWhere(
-        (element) => element is Credential && element.id == credentialId);
-
-    if (index != -1) {
-      final item = _currentDisplayItems[index] as Credential;
-      listKey?.currentState?.removeItem(
-        index,
-        (context, animation) => AnimatedListItem(
-          animation: animation,
-          child: CredentialListTile(credential: item),
-        ),
-        duration: const Duration(milliseconds: 500),
-      );
-      _currentDisplayItems.removeAt(index);
-    }
     await _repository.deleteCredential(userId, credentialId);
   }
 

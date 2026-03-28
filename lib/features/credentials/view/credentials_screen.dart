@@ -25,6 +25,8 @@ class CredentialsScreen extends StatefulWidget {
 class _CredentialsScreenState extends State<CredentialsScreen> {
   final GlobalKey<SliverAnimatedListState> _listKey =
       GlobalKey<SliverAnimatedListState>();
+  bool _isSearching = false;
+  final TextEditingController _searchController = TextEditingController();
 
   @override
   void initState() {
@@ -34,10 +36,16 @@ class _CredentialsScreenState extends State<CredentialsScreen> {
       if (authViewModel.currentUser != null) {
         final credentialViewModel =
             Provider.of<CredentialViewModel>(context, listen: false);
-        credentialViewModel.listKey = _listKey;
+        credentialViewModel.setListKey(_listKey);
         credentialViewModel.listenToCredentials(authViewModel.currentUser!.id);
       }
     });
+  }
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
   }
 
   Future<void> _handleRefresh() async {
@@ -109,66 +117,132 @@ class _CredentialsScreenState extends State<CredentialsScreen> {
     final authVm = context.read<AuthViewModel>();
 
     return PopScope(
-      canPop: vm.currentFolderId == null,
+      canPop: vm.currentFolderId == null && !_isSearching,
       onPopInvokedWithResult: (didPop, result) {
         if (didPop) return;
+        if (_isSearching) {
+          setState(() {
+            _isSearching = false;
+            _searchController.clear();
+            vm.setSearchQuery('');
+          });
+          return;
+        }
         if (vm.currentFolderId != null) {
           vm.exitFolder();
         }
       },
       child: Scaffold(
         appBar: AppBar(
-          leading: vm.currentFolderId != null
+          leading: (_isSearching || vm.currentFolderId != null)
               ? IconButton(
                   icon: const Icon(Icons.arrow_back),
-                  onPressed: () => vm.exitFolder(),
+                  onPressed: () {
+                    if (_isSearching) {
+                      setState(() {
+                        _isSearching = false;
+                        _searchController.clear();
+                        vm.setSearchQuery('');
+                      });
+                    } else if (vm.currentFolderId != null) {
+                      vm.exitFolder();
+                    }
+                  },
                 )
               : null,
-          title: Text(vm.currentFolder?.name ?? 'Credenciais'),
+          title: AnimatedSwitcher(
+            duration: const Duration(milliseconds: 300),
+            transitionBuilder: (child, animation) =>
+                FadeTransition(opacity: animation, child: child),
+            child: _isSearching
+                ? Container(
+                    key: const ValueKey('searchBox'),
+                    height: 40,
+                    decoration: BoxDecoration(
+                      color: theme.colorScheme.onSurface.withOpacity(0.08),
+                      borderRadius: BorderRadius.circular(AppTheme.radiusXXL),
+                    ),
+                    child: TextField(
+                      controller: _searchController,
+                      autofocus: true,
+                      textAlignVertical: TextAlignVertical.center,
+                      style: theme.textTheme.bodyLarge,
+                      decoration: InputDecoration(
+                        hintText: 'Buscar credenciais...',
+                        border: InputBorder.none,
+                        isDense: true,
+                        contentPadding: const EdgeInsets.symmetric(
+                            horizontal: 16, vertical: 10),
+                        suffixIcon: _searchController.text.isNotEmpty
+                            ? IconButton(
+                                icon: const Icon(Icons.clear, size: 20),
+                                onPressed: () {
+                                  _searchController.clear();
+                                  vm.setSearchQuery('');
+                                },
+                              )
+                            : null,
+                      ),
+                      onChanged: (val) => vm.setSearchQuery(val),
+                    ),
+                  )
+                : Text(vm.currentFolder?.name ?? 'Credenciais',
+                    key: const ValueKey('titleText')),
+          ),
           actions: [
-            PopupMenuButton(
-              itemBuilder: (context) => [
-                const PopupMenuItem(
-                    value: 'import', child: Text('Importar de CSV')),
-                PopupMenuItem(
-                  value: 'export_csv',
-                  enabled: !vm.isExportingCsv && !vm.isExportingPdf,
-                  child: Row(
-                    children: [
-                      const Text('Exportar para CSV'),
-                      if (vm.isExportingCsv) ...[
-                        const SizedBox(width: 8),
-                        const SizedBox(
-                            height: 16,
-                            width: 16,
-                            child: CircularProgressIndicator(strokeWidth: 2)),
+            if (!_isSearching)
+              IconButton(
+                icon: const Icon(Icons.search),
+                onPressed: () {
+                  setState(() {
+                    _isSearching = true;
+                  });
+                },
+              ),
+            if (!_isSearching)
+              PopupMenuButton(
+                itemBuilder: (context) => [
+                  const PopupMenuItem(
+                      value: 'import', child: Text('Importar de CSV')),
+                  PopupMenuItem(
+                    value: 'export_csv',
+                    enabled: !vm.isExportingCsv && !vm.isExportingPdf,
+                    child: Row(
+                      children: [
+                        const Text('Exportar para CSV'),
+                        if (vm.isExportingCsv) ...[
+                          const SizedBox(width: 8),
+                          const SizedBox(
+                              height: 16,
+                              width: 16,
+                              child: CircularProgressIndicator(strokeWidth: 2)),
+                        ],
                       ],
-                    ],
+                    ),
                   ),
-                ),
-                PopupMenuItem(
-                  value: 'export_pdf',
-                  enabled: !vm.isExportingCsv && !vm.isExportingPdf,
-                  child: Row(
-                    children: [
-                      const Text('Exportar para PDF'),
-                      if (vm.isExportingPdf) ...[
-                        const SizedBox(width: 8),
-                        const SizedBox(
-                            height: 16,
-                            width: 16,
-                            child: CircularProgressIndicator(strokeWidth: 2)),
+                  PopupMenuItem(
+                    value: 'export_pdf',
+                    enabled: !vm.isExportingCsv && !vm.isExportingPdf,
+                    child: Row(
+                      children: [
+                        const Text('Exportar para PDF'),
+                        if (vm.isExportingPdf) ...[
+                          const SizedBox(width: 8),
+                          const SizedBox(
+                              height: 16,
+                              width: 16,
+                              child: CircularProgressIndicator(strokeWidth: 2)),
+                        ],
                       ],
-                    ],
+                    ),
                   ),
-                ),
-              ],
-              onSelected: (value) {
-                if (value == 'import') _import(context);
-                if (value == 'export_csv') _export(context, type: 'csv');
-                if (value == 'export_pdf') _export(context, type: 'pdf');
-              },
-            ),
+                ],
+                onSelected: (value) {
+                  if (value == 'import') _import(context);
+                  if (value == 'export_csv') _export(context, type: 'csv');
+                  if (value == 'export_pdf') _export(context, type: 'pdf');
+                },
+              ),
           ],
         ),
         body: SafeArea(
@@ -178,7 +252,8 @@ class _CredentialsScreenState extends State<CredentialsScreen> {
               color: theme.colorScheme.primary,
               backgroundColor: theme.colorScheme.surface,
               child: CustomScrollView(
-                physics: const BouncingScrollPhysics(),
+                physics: const BouncingScrollPhysics(
+                    parent: AlwaysScrollableScrollPhysics()),
                 slivers: [
                   if (vm.isLoading)
                     const CredentialsListSkeleton()
@@ -207,8 +282,9 @@ class _CredentialsScreenState extends State<CredentialsScreen> {
                         key: _listKey,
                         initialItemCount: vm.currentDisplayItems.length,
                         itemBuilder: (context, index, animation) {
-                          if (index >= vm.currentDisplayItems.length)
+                          if (index >= vm.currentDisplayItems.length) {
                             return const SizedBox.shrink();
+                          }
 
                           final item = vm.currentDisplayItems[index];
 
