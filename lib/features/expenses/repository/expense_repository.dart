@@ -20,6 +20,15 @@ class ExpenseRepository {
     await _getExpensesCollection(userId).add(expense);
   }
 
+  Future<void> addExpensesBatch(String userId, List<Expense> expenses) async {
+    final batch = _firestore.batch();
+    final collection = _getExpensesCollection(userId);
+    for (var expense in expenses) {
+      batch.set(collection.doc(), expense);
+    }
+    await batch.commit();
+  }
+
   Stream<List<Expense>> getExpensesStreamForUser(String userId) {
     final querySnapshot = _getExpensesCollection(userId)
         .orderBy('date', descending: true)
