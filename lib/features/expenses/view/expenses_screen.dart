@@ -24,6 +24,9 @@ class ExpensesScreen extends StatefulWidget {
 }
 
 class _ExpensesScreenState extends State<ExpensesScreen> {
+  bool _isSearching = false;
+  final TextEditingController _searchController = TextEditingController();
+
   @override
   void initState() {
     super.initState();
@@ -36,6 +39,12 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
             .listenToExpenses(authViewModel.currentUser!.id);
       }
     });
+  }
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
   }
 
   Future<void> _handleRefresh() async {
@@ -83,8 +92,12 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
               [
                 MonthSelector(
                   selectedMonth: expenseViewModel.selectedMonth,
+                  isAllPeriods: expenseViewModel.searchAllPeriods,
                   onMonthChanged: (newMonth) {
                     expenseViewModel.setSelectedMonth(newMonth);
+                  },
+                  onAllPeriodsChanged: (isAll) {
+                    expenseViewModel.setSearchAllPeriods(isAll);
                   },
                 ),
                 Padding(
@@ -98,7 +111,9 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
                       curve: Curves.easeOutExpo,
                       builder: (context, value, child) {
                         return BalanceCard(
-                          title: 'Total do mês',
+                          title: expenseViewModel.searchAllPeriods
+                              ? 'Total filtrado'
+                              : 'Total do mês',
                           totalValue: value,
                           gradient: LinearGradient(
                             colors: [
@@ -120,57 +135,207 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
           ),
           if (isLoading)
             const ExpensesListSkeleton()
-          else if (expenseViewModel.monthlyFilteredExpenses.isEmpty)
+          else if (expenseViewModel.currentDisplayItems.isEmpty)
             const SliverFillRemaining(
               hasScrollBody: false,
               child: EmptyStateWidget(
                 icon: Icons.money_off_rounded,
-                message:
-                    'Tudo limpo por aqui! Nenhuma despesa registrada este mês.',
+                message: 'Nenhuma despesa encontrada.',
               ),
             )
           else
             ExpenseList(
-              key: ValueKey(expenseViewModel.selectedMonth),
-              monthlyExpenses: expenseViewModel.monthlyFilteredExpenses,
+              key: ValueKey(
+                  '${expenseViewModel.selectedMonth}_${expenseViewModel.searchAllPeriods}'),
+              monthlyExpenses: expenseViewModel.currentDisplayItems,
             ),
         ],
       ),
     );
 
-    return Scaffold(
-      backgroundColor: theme.scaffoldBackgroundColor,
-      appBar: AppBar(
-        title: Text(
-          'Despesas',
-          style: theme.textTheme.titleLarge?.copyWith(
-            fontWeight: FontWeight.w700,
+    return PopScope(
+      canPop: !_isSearching,
+      onPopInvokedWithResult: (didPop, result) {
+        if (didPop) return;
+        if (_isSearching) {
+          setState(() {
+            _isSearching = false;
+            _searchController.clear();
+            expenseViewModel.setSearchQuery('');
+          });
+        }
+      },
+      child: Scaffold(
+        backgroundColor: theme.scaffoldBackgroundColor,
+        appBar: AppBar(
+          leading: _isSearching
+              ? IconButton(
+                  icon: const Icon(Icons.arrow_back),
+                  onPressed: () {
+                    setState(() {
+                      _isSearching = false;
+                      _searchController.clear();
+                      expenseViewModel.setSearchQuery('');
+                    });
+                  },
+                )
+              : null,
+          title: AnimatedSwitcher(
+            duration: const Duration(milliseconds: 300),
+            transitionBuilder: (child, animation) =>
+                FadeTransition(opacity: animation, child: child),
+            child: _isSearching
+                ? Container(
+                    key: const ValueKey('searchBox'),
+                    height: 40,
+                    decoration: BoxDecoration(
+                      color: theme.colorScheme.onSurface.withOpacity(0.08),
+                      borderRadius: BorderRadius.circular(AppTheme.radiusXXL),
+                    ),
+                    child: TextField(
+                      controller: _searchController,
+                      autofocus: true,
+                      textAlignVertical: TextAlignVertical.center,
+                      style: theme.textTheme.bodyLarge,
+                      decoration: InputDecoration(
+                        hintText: 'Buscar despesas...',
+                        border: InputBorder.none,
+                        isDense: true,
+                        contentPadding: const EdgeInsets.symmetric(
+                            horizontal: 16, vertical: 10),
+                        suffixIcon: _searchController.text.isNotEmpty
+                            ? IconButton(
+                                icon: const Icon(Icons.clear, size: 20),
+                                onPressed: () {
+                                  _searchController.clear();
+                                  expenseViewModel.setSearchQuery('');
+                                },
+                              )
+                            : null,
+                      ),
+                      onChanged: (val) => expenseViewModel.setSearchQuery(val),
+                    ),
+                  )
+                : Text(
+                    'Despesas',
+                    key: const ValueKey('titleText'),
+                    style: theme.textTheme.titleLarge?.copyWith(
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
           ),
+          actions: [
+            if (!_isSearching)
+              IconButton(
+                icon: Icon(
+                  Icons.search_rounded,
+                  color: theme.colorScheme.onSurface,
+                ),
+                onPressed: () {
+                  setState(() {
+                    _isSearching = true;
+                  });
+                },
+              ),
+            if (!_isSearching)
+              IconButton(
+                icon: Icon(
+                  Icons.filter_list_rounded,
+                  color: theme.colorScheme.onSurface,
+                ),
+                onPressed: _showCategoryFilter,
+              ),
+            if (!_isSearching) const ExpenseActionsPopupMenu(),
+          ],
+          bottom: _isSearching
+              ? PreferredSize(
+                  preferredSize: const Size.fromHeight(56),
+                  child: AnimatedSize(
+                    duration: const Duration(milliseconds: 300),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: AppTheme.defaultPadding, vertical: 8),
+                      alignment: Alignment.centerLeft,
+                      child: SingleChildScrollView(
+                        scrollDirection: Axis.horizontal,
+                        child: Row(
+                          children: [
+                            ChoiceChip(
+                              label: Text(
+                                'Mês Atual',
+                                style: TextStyle(
+                                  color: !expenseViewModel.searchAllPeriods
+                                      ? theme.colorScheme.onPrimary
+                                      : theme.colorScheme.primary,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                              selected: !expenseViewModel.searchAllPeriods,
+                              selectedColor: theme.colorScheme.primary,
+                              backgroundColor: theme.colorScheme.surface,
+                              side:
+                                  BorderSide(color: theme.colorScheme.primary),
+                              showCheckmark: false,
+                              onSelected: (val) {
+                                if (val) {
+                                  expenseViewModel.setSearchAllPeriods(false);
+                                }
+                              },
+                              shape: RoundedRectangleBorder(
+                                borderRadius:
+                                    BorderRadius.circular(AppTheme.radiusXL),
+                              ),
+                            ),
+                            const SizedBox(width: AppTheme.spaceM),
+                            ChoiceChip(
+                              label: Text(
+                                'Todo o Período',
+                                style: TextStyle(
+                                  color: expenseViewModel.searchAllPeriods
+                                      ? theme.colorScheme.onPrimary
+                                      : theme.colorScheme.primary,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                              selected: expenseViewModel.searchAllPeriods,
+                              selectedColor: theme.colorScheme.primary,
+                              backgroundColor: theme.colorScheme.surface,
+                              side:
+                                  BorderSide(color: theme.colorScheme.primary),
+                              showCheckmark: false,
+                              onSelected: (val) {
+                                if (val) {
+                                  expenseViewModel.setSearchAllPeriods(true);
+                                }
+                              },
+                              shape: RoundedRectangleBorder(
+                                borderRadius:
+                                    BorderRadius.circular(AppTheme.radiusXL),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                )
+              : null,
         ),
-        actions: [
-          IconButton(
-            icon: Icon(
-              Icons.filter_list_rounded,
-              color: theme.colorScheme.onSurface,
-            ),
-            onPressed: _showCategoryFilter,
+        body: SafeArea(
+          child: AppAnimations.fadeInFromBottom(body),
+        ),
+        floatingActionButton:
+            AppAnimations.scaleIn(FloatingActionButton.extended(
+          heroTag: 'fab_expenses',
+          onPressed: () =>
+              NavigationUtils.push(context, const AddExpenseScreen()),
+          icon: const Icon(Icons.add_rounded),
+          label: const Text("Nova Despesa"),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(AppTheme.radiusXXL),
           ),
-          const ExpenseActionsPopupMenu(),
-        ],
+        )),
       ),
-      body: SafeArea(
-        child: AppAnimations.fadeInFromBottom(body),
-      ),
-      floatingActionButton: AppAnimations.scaleIn(FloatingActionButton.extended(
-        heroTag: 'fab_expenses',
-        onPressed: () =>
-            NavigationUtils.push(context, const AddExpenseScreen()),
-        icon: const Icon(Icons.add_rounded),
-        label: const Text("Nova Despesa"),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(AppTheme.radiusXXL),
-        ),
-      )),
     );
   }
 }

@@ -92,6 +92,7 @@ class _AnimatedListItemState extends State<AnimatedListItem>
         CurvedAnimation(parent: _shakeController, curve: Curves.easeOut));
 
     _highlightController.forward();
+    _shakeController.forward();
   }
 
   @override
