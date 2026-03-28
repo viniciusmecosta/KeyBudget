@@ -27,11 +27,12 @@ class UserScreen extends StatelessWidget {
     try {
       final driveService = DriveService();
       final csvService = CsvService();
-      final dir = await getTemporaryDirectory();
 
       final expVm = Provider.of<ExpenseViewModel>(context, listen: false);
       final credVm = Provider.of<CredentialViewModel>(context, listen: false);
       final catVm = Provider.of<CategoryViewModel>(context, listen: false);
+
+      final dir = await getTemporaryDirectory();
 
       int successCount = 0;
 
@@ -118,7 +119,7 @@ class UserScreen extends StatelessWidget {
                     color: Theme.of(context)
                         .colorScheme
                         .onSurface
-                        .withOpacity(0.2),
+                        .withValues(alpha: 0.2),
                     borderRadius: BorderRadius.circular(2),
                   ),
                 ),
@@ -137,7 +138,7 @@ class UserScreen extends StatelessWidget {
                         color: Theme.of(context)
                             .colorScheme
                             .onSurface
-                            .withOpacity(0.7),
+                            .withValues(alpha: 0.7),
                       ),
                 ),
                 const SizedBox(height: 24),

@@ -40,7 +40,7 @@ class CsvService {
         cred.folderId ?? ''
       ]);
     }
-    return '\uFEFF' + const ListToCsvConverter().convert(rows);
+    return '\uFEFF${csv.encode(rows)}';
   }
 
   String generateExpensesCsvString(List<Expense> expenses) {
@@ -57,7 +57,7 @@ class CsvService {
         exp.location ?? ''
       ]);
     }
-    return '\uFEFF' + const ListToCsvConverter().convert(rows);
+    return '\uFEFF${csv.encode(rows)}';
   }
 
   String generateCategoriesCsvString(List<ExpenseCategory> categories) {
@@ -67,7 +67,7 @@ class CsvService {
     for (var cat in categories) {
       rows.add([cat.id ?? '', cat.name, cat.colorValue, cat.iconCodePoint]);
     }
-    return '\uFEFF' + const ListToCsvConverter().convert(rows);
+    return '\uFEFF${csv.encode(rows)}';
   }
 
   String generateRecurringExpensesCsvString(List<RecurringExpense> expenses) {
@@ -95,19 +95,19 @@ class CsvService {
         exp.endDate?.toIso8601String() ?? ''
       ]);
     }
-    return '\uFEFF' + const ListToCsvConverter().convert(rows);
+    return '\uFEFF${csv.encode(rows)}';
   }
 
   Future<bool> exportCredentials(BuildContext context,
       List<Credential> credentials, String Function(String) decrypt) async {
-    String csv = generateCredentialsCsvString(credentials, decrypt);
-    return _saveCsvFile(context, 'keybudget_credentials', csv);
+    String csvStr = generateCredentialsCsvString(credentials, decrypt);
+    return _saveCsvFile(context, 'keybudget_credentials', csvStr);
   }
 
   Future<bool> exportExpenses(
       BuildContext context, List<Expense> expenses) async {
-    String csv = generateExpensesCsvString(expenses);
-    return _saveCsvFile(context, 'keybudget_expenses', csv);
+    String csvStr = generateExpensesCsvString(expenses);
+    return _saveCsvFile(context, 'keybudget_expenses', csvStr);
   }
 
   Future<File?> _pickCsvFile() async {
@@ -123,10 +123,8 @@ class CsvService {
     final file = await _pickCsvFile();
     if (file == null) return null;
     final input = file.openRead();
-    final fields = await input
-        .transform(utf8.decoder)
-        .transform(const CsvToListConverter())
-        .toList();
+    final fields =
+        await input.transform(utf8.decoder).transform(csv.decoder).toList();
     if (fields.length < 2) return [];
     final headers = fields.first.map((e) => e.toString()).toList();
     List<Map<String, dynamic>> result = [];
@@ -178,7 +176,7 @@ class CsvService {
     for (var entry in categoryData.entries) {
       rows.add([entry.key.name, entry.value]);
     }
-    String csv = '\uFEFF' + const ListToCsvConverter().convert(rows);
-    return _saveCsvFile(context, 'keybudget_analysis', csv);
+    String csvStr = '\uFEFF${csv.encode(rows)}';
+    return _saveCsvFile(context, 'keybudget_analysis', csvStr);
   }
 }

@@ -8,7 +8,7 @@ import 'package:key_budget/app/utils/widget_to_image.dart';
 import 'package:key_budget/core/models/expense_model.dart';
 import 'package:key_budget/core/services/snackbar_service.dart';
 import 'package:key_budget/features/analysis/viewmodel/analysis_viewmodel.dart';
-import 'package:key_budget/features/analysis/widgets/analysis_report_widget.dart';
+import 'package:key_budget/features/analysis/widgets/analysis_stats_overview_widget.dart';
 import 'package:key_budget/features/analysis/widgets/category_analysis_section_widget.dart';
 import 'package:key_budget/features/analysis/widgets/monthly_trend_section_widget.dart';
 import 'package:key_budget/features/category/viewmodel/category_viewmodel.dart';
@@ -167,30 +167,27 @@ class PdfService {
         currentY += 30;
       }
 
-      if (currentY + 300 > pageSize.height) {
-        page = document.pages.add();
-        currentY = 0;
-      }
-
-      page.graphics.drawString('Gráficos de Análise', headerFont,
-          brush: PdfSolidBrush(onSurfaceColor),
-          bounds: Rect.fromLTWH(0, currentY, pageSize.width, 20));
-      currentY += 30;
-
       final monthlyTrendKey = GlobalKey();
       final categoryAnalysisKey = GlobalKey();
 
       final monthlyTrendChart = Material(
           color: Colors.white,
-          child: SizedBox(
-            width: 500,
-            child: MonthlyTrendSectionWidget(),
+          child: SingleChildScrollView(
+            child: Container(
+              width: 800,
+              padding: const EdgeInsets.all(24),
+              child: const MonthlyTrendSectionWidget(),
+            ),
           ));
+
       final categoryAnalysisChart = Material(
           color: Colors.white,
-          child: SizedBox(
-            width: 500,
-            child: CategoryAnalysisSectionWidget(),
+          child: SingleChildScrollView(
+            child: Container(
+              width: 800,
+              padding: const EdgeInsets.all(24),
+              child: const CategoryAnalysisSectionWidget(),
+            ),
           ));
 
       if (!context.mounted) return;
@@ -203,10 +200,10 @@ class PdfService {
           child: Builder(
             key: monthlyTrendKey,
             builder: (ctx) =>
-                Theme(data: Theme.of(ctx), child: monthlyTrendChart),
+                Theme(data: AppTheme.lightTheme, child: monthlyTrendChart),
           ),
         ),
-        wait: const Duration(milliseconds: 500),
+        wait: const Duration(milliseconds: 1500),
       );
 
       if (!context.mounted) return;
@@ -222,70 +219,55 @@ class PdfService {
           child: Builder(
             key: categoryAnalysisKey,
             builder: (ctx) =>
-                Theme(data: Theme.of(ctx), child: categoryAnalysisChart),
+                Theme(data: AppTheme.lightTheme, child: categoryAnalysisChart),
           ),
         ),
-        wait: const Duration(milliseconds: 500),
+        wait: const Duration(milliseconds: 1500),
       );
 
-      double availableHeight = pageSize.height - currentY;
-
       if (monthlyTrendImageBytes != null) {
+        page = document.pages.add();
+        currentY = 0;
+
+        page.graphics.drawString(
+            'Gráficos de Análise - Evolução Mensal', headerFont,
+            brush: PdfSolidBrush(onSurfaceColor),
+            bounds: Rect.fromLTWH(0, currentY, pageSize.width, 20));
+        currentY += 30;
+
         final PdfBitmap monthlyTrendImage = PdfBitmap(monthlyTrendImageBytes);
         final imageSize = Size(monthlyTrendImage.width.toDouble(),
             monthlyTrendImage.height.toDouble());
-        final drawSize = _calculatePdfImageSize(
-            imageSize, Size(pageSize.width * 0.9, availableHeight * 0.45));
-
-        if (currentY + drawSize.height > pageSize.height) {
-          page = document.pages.add();
-          currentY = 0;
-          availableHeight = pageSize.height;
-        }
+        final drawSize = _calculatePdfImageSize(imageSize,
+            Size(pageSize.width * 0.9, pageSize.height - currentY - 20));
 
         page.graphics.drawImage(
             monthlyTrendImage,
             Rect.fromLTWH((pageSize.width - drawSize.width) / 2, currentY,
                 drawSize.width, drawSize.height));
-        currentY += drawSize.height + 20;
-        availableHeight = pageSize.height - currentY;
-      } else {
-        page.graphics.drawString(
-            'Erro ao gerar gráfico de tendência mensal.', font,
-            brush: PdfSolidBrush(PdfColor(255, 0, 0)),
-            bounds: Rect.fromLTWH(0, currentY, pageSize.width, 20));
-        currentY += 20;
-        availableHeight = pageSize.height - currentY;
-      }
-
-      if (currentY + 150 > pageSize.height) {
-        page = document.pages.add();
-        currentY = 0;
-        availableHeight = pageSize.height;
       }
 
       if (categoryAnalysisImageBytes != null) {
+        page = document.pages.add();
+        currentY = 0;
+
+        page.graphics.drawString(
+            'Gráficos de Análise - Por Categoria', headerFont,
+            brush: PdfSolidBrush(onSurfaceColor),
+            bounds: Rect.fromLTWH(0, currentY, pageSize.width, 20));
+        currentY += 30;
+
         final PdfBitmap categoryAnalysisImage =
             PdfBitmap(categoryAnalysisImageBytes);
         final imageSize = Size(categoryAnalysisImage.width.toDouble(),
             categoryAnalysisImage.height.toDouble());
-        final drawSize = _calculatePdfImageSize(
-            imageSize, Size(pageSize.width * 0.9, availableHeight * 0.8));
-
-        if (currentY + drawSize.height > pageSize.height) {
-          page = document.pages.add();
-          currentY = 0;
-        }
+        final drawSize = _calculatePdfImageSize(imageSize,
+            Size(pageSize.width * 0.9, pageSize.height - currentY - 20));
 
         page.graphics.drawImage(
             categoryAnalysisImage,
             Rect.fromLTWH((pageSize.width - drawSize.width) / 2, currentY,
                 drawSize.width, drawSize.height));
-      } else {
-        page.graphics.drawString(
-            'Erro ao gerar gráfico de análise por categoria.', font,
-            brush: PdfSolidBrush(PdfColor(255, 0, 0)),
-            bounds: Rect.fromLTWH(0, currentY, pageSize.width, 20));
       }
 
       final List<int> bytes = await document.save();
@@ -305,9 +287,8 @@ class PdfService {
         text: 'Relatório de Despesas e Análise',
       );
       await SharePlus.instance.share(params);
-    } catch (e, s) {
+    } catch (e) {
       if (!context.mounted) return;
-      debugPrint('Erro ao exportar PDF de despesas: $e\n$s');
       SnackbarService.showError(
           context, 'Falha ao gerar relatório de despesas: $e',
           title: 'Erro Exportação PDF');
@@ -440,9 +421,8 @@ class PdfService {
         text: 'Relatório de Credenciais',
       );
       await SharePlus.instance.share(params);
-    } catch (e, s) {
+    } catch (e) {
       if (!context.mounted) return;
-      debugPrint('Erro ao exportar PDF de credenciais: $e\n$s');
       SnackbarService.showError(
           context, 'Falha ao gerar relatório de credenciais: $e',
           title: 'Erro Exportação PDF');
@@ -452,62 +432,179 @@ class PdfService {
   Future<void> exportAnalysisPdf(
       BuildContext context, AnalysisViewModel analysisViewModel) async {
     try {
-      final Widget reportWidget = MaterialApp(
-        debugShowCheckedModeBanner: false,
-        theme: AppTheme.lightTheme,
-        home: Scaffold(
-          body: MultiProvider(
-            providers: [
-              ChangeNotifierProvider.value(value: analysisViewModel),
-              ChangeNotifierProvider.value(
-                  value: context.read<CategoryViewModel>()),
-            ],
-            child: Builder(
-              builder: (ctx) => Theme(
-                data: Theme.of(ctx),
-                child: Container(
-                  color: Colors.white,
-                  child: SizedBox(
-                      width: 600,
-                      child: SingleChildScrollView(
-                        child: AnalysisReportWidget(
-                            analysisViewModel: analysisViewModel),
-                      )),
-                ),
-              ),
+      final statsChart = Material(
+          color: Colors.white,
+          child: SingleChildScrollView(
+            child: Container(
+              width: 800,
+              padding: const EdgeInsets.all(24),
+              child: const AnalysisStatsOverviewWidget(),
             ),
+          ));
+
+      final monthlyTrendChart = Material(
+          color: Colors.white,
+          child: SingleChildScrollView(
+            child: Container(
+              width: 800,
+              padding: const EdgeInsets.all(24),
+              child: const MonthlyTrendSectionWidget(),
+            ),
+          ));
+
+      final categoryAnalysisChart = Material(
+          color: Colors.white,
+          child: SingleChildScrollView(
+            child: Container(
+              width: 800,
+              padding: const EdgeInsets.all(24),
+              child: const CategoryAnalysisSectionWidget(),
+            ),
+          ));
+
+      if (!context.mounted) return;
+
+      final Uint8List? statsImageBytes =
+          await WidgetToImage.captureWidgetFromProvider(
+        context,
+        ChangeNotifierProvider.value(
+          value: analysisViewModel,
+          child: Builder(
+            builder: (ctx) =>
+                Theme(data: AppTheme.lightTheme, child: statsChart),
           ),
         ),
+        wait: const Duration(milliseconds: 1500),
       );
 
       if (!context.mounted) return;
 
-      final Uint8List? imageBytes = await WidgetToImage.captureWidget(
+      final Uint8List? trendImageBytes =
+          await WidgetToImage.captureWidgetFromProvider(
         context,
-        reportWidget,
+        ChangeNotifierProvider.value(
+          value: analysisViewModel,
+          child: Builder(
+            builder: (ctx) =>
+                Theme(data: AppTheme.lightTheme, child: monthlyTrendChart),
+          ),
+        ),
         wait: const Duration(milliseconds: 1500),
       );
 
-      if (imageBytes == null) {
-        if (!context.mounted) return;
-        SnackbarService.showError(
-            context, 'Falha ao capturar imagem do relatório.',
-            title: 'Erro Exportação PDF');
-        return;
-      }
+      if (!context.mounted) return;
+
+      final Uint8List? categoryImageBytes =
+          await WidgetToImage.captureWidgetFromProvider(
+        context,
+        MultiProvider(
+          providers: [
+            ChangeNotifierProvider.value(value: analysisViewModel),
+            ChangeNotifierProvider.value(
+                value: context.read<CategoryViewModel>()),
+          ],
+          child: Builder(
+            builder: (ctx) =>
+                Theme(data: AppTheme.lightTheme, child: categoryAnalysisChart),
+          ),
+        ),
+        wait: const Duration(milliseconds: 1500),
+      );
 
       final PdfDocument document = PdfDocument();
-      final PdfPage page = document.pages.add();
-      final Size pageSize = page.getClientSize();
-      final PdfBitmap image = PdfBitmap(imageBytes);
 
-      final imageSize = Size(image.width.toDouble(), image.height.toDouble());
-      final drawSize = _calculatePdfImageSize(imageSize, pageSize);
+      final ByteData logoData = await rootBundle.load('assets/icon/logov2.png');
+      final PdfBitmap logo = PdfBitmap(logoData.buffer.asUint8List());
+      final ByteData fontData =
+          await rootBundle.load('assets/fonts/Roboto-Regular.ttf');
+      final PdfFont font = PdfTrueTypeFont(fontData.buffer.asUint8List(), 10);
+      final PdfFont headerFont = PdfTrueTypeFont(
+          fontData.buffer.asUint8List(), 16,
+          style: PdfFontStyle.bold);
+      final PdfFont titleFont = PdfTrueTypeFont(
+          fontData.buffer.asUint8List(), 22,
+          style: PdfFontStyle.bold);
 
-      page.graphics.drawImage(
-          image,
-          Rect.fromLTWH((pageSize.width - drawSize.width) / 2, 0,
-              drawSize.width, drawSize.height));
+      final PdfColor primaryColor = PdfColor(
+          (AppTheme.primary.r * 255.0).round() & 0xff,
+          (AppTheme.primary.g * 255.0).round() & 0xff,
+          (AppTheme.primary.b * 255.0).round() & 0xff);
+      final PdfColor onSurfaceColor = PdfColor(
+          (AppTheme.onSurface.r * 255.0).round() & 0xff,
+          (AppTheme.onSurface.g * 255.0).round() & 0xff,
+          (AppTheme.onSurface.b * 255.0).round() & 0xff);
+
+      if (statsImageBytes != null) {
+        PdfPage page = document.pages.add();
+        final Size pageSize = page.getClientSize();
+        double currentY = 0;
+
+        page.graphics.drawImage(logo, const Rect.fromLTWH(0, 0, 50, 50));
+        page.graphics.drawString('Relatório de Análise Financeira', titleFont,
+            brush: PdfSolidBrush(primaryColor),
+            bounds: Rect.fromLTWH(60, 10, pageSize.width - 60, 30));
+        page.graphics.drawString(
+            'Gerado em: ${DateFormat('dd/MM/yyyy HH:mm').format(DateTime.now())}',
+            font,
+            brush: PdfSolidBrush(onSurfaceColor),
+            bounds: Rect.fromLTWH(60, 40, pageSize.width - 60, 20));
+        currentY += 80;
+
+        page.graphics.drawString('Visão Geral', headerFont,
+            brush: PdfSolidBrush(onSurfaceColor),
+            bounds: Rect.fromLTWH(0, currentY, pageSize.width, 25));
+        currentY += 35;
+
+        final PdfBitmap statsImage = PdfBitmap(statsImageBytes);
+        final imageSize =
+            Size(statsImage.width.toDouble(), statsImage.height.toDouble());
+        final drawSize = _calculatePdfImageSize(
+            imageSize, Size(pageSize.width, pageSize.height - currentY));
+        page.graphics.drawImage(
+            statsImage,
+            Rect.fromLTWH((pageSize.width - drawSize.width) / 2, currentY,
+                drawSize.width, drawSize.height));
+      }
+
+      if (trendImageBytes != null) {
+        PdfPage page = document.pages.add();
+        final Size pageSize = page.getClientSize();
+
+        page.graphics.drawString('Histórico Mensal', headerFont,
+            brush: PdfSolidBrush(onSurfaceColor),
+            bounds: Rect.fromLTWH(0, 0, pageSize.width, 25));
+
+        final PdfBitmap trendImage = PdfBitmap(trendImageBytes);
+        final imageSize =
+            Size(trendImage.width.toDouble(), trendImage.height.toDouble());
+        final drawSize = _calculatePdfImageSize(
+            imageSize, Size(pageSize.width, pageSize.height - 40));
+
+        page.graphics.drawImage(
+            trendImage,
+            Rect.fromLTWH((pageSize.width - drawSize.width) / 2, 40,
+                drawSize.width, drawSize.height));
+      }
+
+      if (categoryImageBytes != null) {
+        PdfPage page = document.pages.add();
+        final Size pageSize = page.getClientSize();
+
+        page.graphics.drawString('Análise por Categoria', headerFont,
+            brush: PdfSolidBrush(onSurfaceColor),
+            bounds: Rect.fromLTWH(0, 0, pageSize.width, 25));
+
+        final PdfBitmap categoryImage = PdfBitmap(categoryImageBytes);
+        final imageSize = Size(
+            categoryImage.width.toDouble(), categoryImage.height.toDouble());
+        final drawSize = _calculatePdfImageSize(
+            imageSize, Size(pageSize.width, pageSize.height - 40));
+
+        page.graphics.drawImage(
+            categoryImage,
+            Rect.fromLTWH((pageSize.width - drawSize.width) / 2, 40,
+                drawSize.width, drawSize.height));
+      }
 
       final List<int> bytes = await document.save();
       document.dispose();
@@ -526,25 +623,21 @@ class PdfService {
         text: 'Relatório de Análise',
       );
       await SharePlus.instance.share(params);
-    } catch (e, s) {
+    } catch (e) {
       if (!context.mounted) return;
-      debugPrint('Erro ao exportar PDF de análise: $e\n$s');
       SnackbarService.showError(
           context, 'Falha ao gerar relatório de análise: $e',
           title: 'Erro Exportação PDF');
     }
   }
 
-  Size _calculatePdfImageSize(Size imageSize, Size pageSize) {
+  Size _calculatePdfImageSize(Size imageSize, Size maxSize) {
     final double imageAspectRatio = imageSize.width / imageSize.height;
-    double drawWidth;
-    double drawHeight;
+    double drawWidth = maxSize.width;
+    double drawHeight = drawWidth / imageAspectRatio;
 
-    drawWidth = pageSize.width;
-    drawHeight = drawWidth / imageAspectRatio;
-
-    if (drawHeight > pageSize.height) {
-      drawHeight = pageSize.height;
+    if (drawHeight > maxSize.height) {
+      drawHeight = maxSize.height;
       drawWidth = drawHeight * imageAspectRatio;
     }
 

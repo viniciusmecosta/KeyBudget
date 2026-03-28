@@ -23,6 +23,14 @@ class ExpenseForm extends StatelessWidget {
   final bool isEditing;
   final Widget? imagePreviewWidget;
 
+  final bool isInstallment;
+  final Function(bool)? onInstallmentChanged;
+  final int installmentsValue;
+  final Function(int)? onInstallmentsValueChanged;
+  final bool startNextMonth;
+  final Function(bool)? onStartNextMonthChanged;
+  final List<Widget>? bottomWidgets;
+
   const ExpenseForm({
     super.key,
     required this.formKey,
@@ -35,6 +43,13 @@ class ExpenseForm extends StatelessWidget {
     required this.onCategoryChanged,
     this.isEditing = false,
     this.imagePreviewWidget,
+    this.isInstallment = false,
+    this.onInstallmentChanged,
+    this.installmentsValue = 2,
+    this.onInstallmentsValueChanged,
+    this.startNextMonth = false,
+    this.onStartNextMonthChanged,
+    this.bottomWidgets,
   });
 
   @override
@@ -48,13 +63,10 @@ class ExpenseForm extends StatelessWidget {
       key: formKey,
       child: ListView(
         children: [
+          const SizedBox(height: 12),
           TextFormField(
             controller: amountController,
             readOnly: !isEditing,
-            style: isEditing
-                ? null
-                : theme.textTheme.bodyLarge
-                    ?.copyWith(color: theme.colorScheme.onSurface),
             decoration: const InputDecoration(labelText: 'Valor *'),
             keyboardType: const TextInputType.numberWithOptions(decimal: true),
             validator: (value) {
@@ -89,38 +101,44 @@ class ExpenseForm extends StatelessWidget {
                 value == null ? 'Selecione uma categoria' : null,
           ),
           const SizedBox(height: AppTheme.spaceM),
-          CategoryAutocompleteField(
-            key: ValueKey('motivation_${selectedCategory?.id}'),
-            label: 'Motivação',
-            controller: motivationController,
-            textCapitalization: TextCapitalization.sentences,
-            optionsBuilder: (TextEditingValue textEditingValue) {
-              if (textEditingValue.text == '') {
-                return const Iterable<String>.empty();
-              }
-              return expenseViewModel.getUniqueMotivationsForCategory(
-                  selectedCategory?.id, textEditingValue.text);
-            },
-            onSelected: (selection) {
-              motivationController.text = selection;
-            },
+          AbsorbPointer(
+            absorbing: !isEditing,
+            child: CategoryAutocompleteField(
+              key: ValueKey('motivation_${selectedCategory?.id}'),
+              label: 'Motivação',
+              controller: motivationController,
+              textCapitalization: TextCapitalization.sentences,
+              optionsBuilder: (TextEditingValue textEditingValue) {
+                if (textEditingValue.text == '') {
+                  return const Iterable<String>.empty();
+                }
+                return expenseViewModel.getUniqueMotivationsForCategory(
+                    selectedCategory?.id, textEditingValue.text);
+              },
+              onSelected: (selection) {
+                motivationController.text = selection;
+              },
+            ),
           ),
           const SizedBox(height: AppTheme.spaceM),
-          CategoryAutocompleteField(
-            key: ValueKey('location_${selectedCategory?.id}'),
-            label: 'Local',
-            controller: locationController,
-            textCapitalization: TextCapitalization.sentences,
-            optionsBuilder: (TextEditingValue textEditingValue) {
-              if (textEditingValue.text == '') {
-                return const Iterable<String>.empty();
-              }
-              return expenseViewModel.getUniqueLocationsForCategory(
-                  selectedCategory?.id, textEditingValue.text);
-            },
-            onSelected: (selection) {
-              locationController.text = selection;
-            },
+          AbsorbPointer(
+            absorbing: !isEditing,
+            child: CategoryAutocompleteField(
+              key: ValueKey('location_${selectedCategory?.id}'),
+              label: 'Local',
+              controller: locationController,
+              textCapitalization: TextCapitalization.sentences,
+              optionsBuilder: (TextEditingValue textEditingValue) {
+                if (textEditingValue.text == '') {
+                  return const Iterable<String>.empty();
+                }
+                return expenseViewModel.getUniqueLocationsForCategory(
+                    selectedCategory?.id, textEditingValue.text);
+              },
+              onSelected: (selection) {
+                locationController.text = selection;
+              },
+            ),
           ),
           const SizedBox(height: AppTheme.spaceM),
           DatePickerField(
@@ -129,7 +147,65 @@ class ExpenseForm extends StatelessWidget {
             isEditing: isEditing,
             onDateSelected: onDateChanged,
           ),
+          if (onInstallmentChanged != null) ...[
+            const SizedBox(height: AppTheme.spaceM),
+            AbsorbPointer(
+              absorbing: !isEditing,
+              child: SwitchListTile(
+                title: const Text('Parcelar Despesa'),
+                value: isInstallment,
+                onChanged: onInstallmentChanged,
+                contentPadding: EdgeInsets.zero,
+              ),
+            ),
+            if (isInstallment && onInstallmentsValueChanged != null) ...[
+              AbsorbPointer(
+                absorbing: !isEditing,
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text('Quantidade de Parcelas',
+                        style: theme.textTheme.bodyLarge),
+                    Row(
+                      children: [
+                        IconButton(
+                          icon: Icon(Icons.remove_circle_outline,
+                              color: theme.colorScheme.primary),
+                          onPressed: installmentsValue > 2
+                              ? () => onInstallmentsValueChanged!(
+                                  installmentsValue - 1)
+                              : null,
+                        ),
+                        Text('$installmentsValue',
+                            style: theme.textTheme.titleMedium
+                                ?.copyWith(fontWeight: FontWeight.bold)),
+                        IconButton(
+                          icon: Icon(Icons.add_circle_outline,
+                              color: theme.colorScheme.primary),
+                          onPressed: installmentsValue < 120
+                              ? () => onInstallmentsValueChanged!(
+                                  installmentsValue + 1)
+                              : null,
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: AppTheme.spaceS),
+              AbsorbPointer(
+                absorbing: !isEditing,
+                child: SwitchListTile(
+                  title: const Text('Começar no próximo mês'),
+                  value: startNextMonth,
+                  onChanged: onStartNextMonthChanged,
+                  contentPadding: EdgeInsets.zero,
+                ),
+              ),
+            ]
+          ],
           if (imagePreviewWidget != null) imagePreviewWidget!,
+          if (bottomWidgets != null) ...bottomWidgets!,
         ],
       ),
     );

@@ -36,6 +36,9 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
   ExpenseCategory? _selectedCategory;
   bool _isSaving = false;
   bool _isScanning = false;
+  bool _isInstallment = false;
+  int _installmentsValue = 2;
+  bool _startNextMonth = false;
 
   String? _processedImagePath;
   RecognizedText? _recognizedText;
@@ -289,7 +292,14 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
       location:
           _locationController.text.isNotEmpty ? _locationController.text : null,
     );
-    await expenseViewModel.addExpense(userId, newExpense);
+
+    if (_isInstallment) {
+      await expenseViewModel.addInstallmentExpenses(
+          userId, newExpense, _installmentsValue, _startNextMonth);
+    } else {
+      await expenseViewModel.addExpense(userId, newExpense);
+    }
+
     if (!scaffoldContext.mounted) return;
     setState(() => _isSaving = false);
     navigator.pop();
@@ -352,6 +362,15 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
                   });
                 },
                 isEditing: true,
+                isInstallment: _isInstallment,
+                onInstallmentChanged: (val) =>
+                    setState(() => _isInstallment = val),
+                installmentsValue: _installmentsValue,
+                onInstallmentsValueChanged: (val) =>
+                    setState(() => _installmentsValue = val),
+                startNextMonth: _startNextMonth,
+                onStartNextMonthChanged: (val) =>
+                    setState(() => _startNextMonth = val),
                 imagePreviewWidget: _processedImagePath != null
                     ? GestureDetector(
                         onTap: _openDetailedViewer,
