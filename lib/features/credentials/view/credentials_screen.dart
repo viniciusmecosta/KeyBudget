@@ -36,7 +36,7 @@ class _CredentialsScreenState extends State<CredentialsScreen> {
       if (authViewModel.currentUser != null) {
         final credentialViewModel =
             Provider.of<CredentialViewModel>(context, listen: false);
-        credentialViewModel.listKey = _listKey;
+        credentialViewModel.setListKey(_listKey);
         credentialViewModel.listenToCredentials(authViewModel.currentUser!.id);
       }
     });

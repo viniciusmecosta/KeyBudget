@@ -34,7 +34,11 @@ class CredentialViewModel extends ChangeNotifier {
 
   String? _currentFolderId;
 
-  GlobalKey<SliverAnimatedListState>? listKey;
+  GlobalKey<SliverAnimatedListState>? _listKey;
+
+  void setListKey(GlobalKey<SliverAnimatedListState> key) {
+    _listKey = key;
+  }
 
   List<Credential> get allCredentials => _allCredentials;
 
@@ -101,7 +105,7 @@ class CredentialViewModel extends ChangeNotifier {
 
   void setSearchQuery(String query) {
     _searchQuery = _sanitize(query);
-    _updateDisplayList();
+    _updateDisplayList(animate: true);
   }
 
   void listenToCredentials(String userId) {
@@ -114,21 +118,21 @@ class CredentialViewModel extends ChangeNotifier {
     _foldersSubscription =
         _repository.getFoldersStreamForUser(userId).listen((folders) {
       _allFolders = folders;
-      _updateDisplayList();
+      _updateDisplayList(animate: true);
     });
 
     _credentialsSubscription = _repository
         .getCredentialsStreamForUser(userId)
         .listen((newCredentials) {
       _allCredentials = newCredentials;
-      _updateDisplayList();
+      _updateDisplayList(animate: true);
       if (_isLoading) _setLoading(false);
     });
 
     _isListening = true;
   }
 
-  void _updateDisplayList() {
+  void _updateDisplayList({bool animate = true}) {
     final oldList = List<dynamic>.from(_currentDisplayItems);
     final List<dynamic> newList = [];
 
@@ -166,6 +170,12 @@ class CredentialViewModel extends ChangeNotifier {
       return 0;
     });
 
+    if (!animate || _listKey?.currentState == null) {
+      _currentDisplayItems = List.from(newList);
+      notifyListeners();
+      return;
+    }
+
     for (var i = oldList.length - 1; i >= 0; i--) {
       final oldItem = oldList[i];
       bool existsInNew = false;
@@ -181,15 +191,15 @@ class CredentialViewModel extends ChangeNotifier {
       if (!existsInNew) {
         final indexToRemove = _currentDisplayItems.indexOf(oldItem);
         if (indexToRemove != -1) {
-          _currentDisplayItems.removeAt(indexToRemove);
-          listKey?.currentState?.removeItem(
+          final removedItem = _currentDisplayItems.removeAt(indexToRemove);
+          _listKey?.currentState?.removeItem(
             indexToRemove,
             (context, animation) => AnimatedListItem(
               animation: animation,
-              child: oldItem is Folder
+              child: removedItem is Folder
                   ? FolderListTile(
-                      folder: oldItem, onTap: () {}, onDelete: () {})
-                  : CredentialListTile(credential: oldItem as Credential),
+                      folder: removedItem, onTap: () {}, onDelete: () {})
+                  : CredentialListTile(credential: removedItem as Credential),
             ),
             duration: const Duration(milliseconds: 300),
           );
@@ -211,7 +221,7 @@ class CredentialViewModel extends ChangeNotifier {
 
       if (oldIndex == -1) {
         _currentDisplayItems.insert(i, newItem);
-        listKey?.currentState
+        _listKey?.currentState
             ?.insertItem(i, duration: const Duration(milliseconds: 300));
       } else {
         if (_currentDisplayItems[oldIndex] != newItem) {
@@ -222,10 +232,7 @@ class CredentialViewModel extends ChangeNotifier {
         if (oldIndex != i) {
           final item = _currentDisplayItems.removeAt(oldIndex);
           _currentDisplayItems.insert(i, item);
-
-          if (oldIndex < _currentDisplayItems.length) {
-            notifyListeners();
-          }
+          notifyListeners();
         }
       }
     }
@@ -237,31 +244,13 @@ class CredentialViewModel extends ChangeNotifier {
   }
 
   void enterFolder(String folderId) {
-    if (listKey?.currentState != null) {
-      for (int i = _currentDisplayItems.length - 1; i >= 0; i--) {
-        listKey!.currentState!.removeItem(
-            i, (context, animation) => const SizedBox(),
-            duration: Duration.zero);
-      }
-    }
-    _currentDisplayItems.clear();
     _currentFolderId = folderId;
-    _updateDisplayList();
-    notifyListeners();
+    _updateDisplayList(animate: false);
   }
 
   void exitFolder() {
-    if (listKey?.currentState != null) {
-      for (int i = _currentDisplayItems.length - 1; i >= 0; i--) {
-        listKey!.currentState!.removeItem(
-            i, (context, animation) => const SizedBox(),
-            duration: Duration.zero);
-      }
-    }
-    _currentDisplayItems.clear();
     _currentFolderId = null;
-    _updateDisplayList();
-    notifyListeners();
+    _updateDisplayList(animate: false);
   }
 
   Future<void> createFolder(String userId, String name) async {

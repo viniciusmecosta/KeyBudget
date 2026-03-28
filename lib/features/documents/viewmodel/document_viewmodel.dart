@@ -27,7 +27,11 @@ class DocumentViewModel extends ChangeNotifier {
   double? _uploadProgress;
   String _searchQuery = '';
 
-  GlobalKey<SliverAnimatedListState>? listKey;
+  GlobalKey<SliverAnimatedListState>? _listKey;
+
+  void setListKey(GlobalKey<SliverAnimatedListState> key) {
+    _listKey = key;
+  }
 
   bool get isUploading => _isUploading;
 
@@ -53,7 +57,7 @@ class DocumentViewModel extends ChangeNotifier {
 
   void setSearchQuery(String query) {
     _searchQuery = _sanitize(query);
-    _updateDisplayList();
+    _updateDisplayList(animate: true);
   }
 
   void listenToDocuments(String userId) {
@@ -64,7 +68,7 @@ class DocumentViewModel extends ChangeNotifier {
         _repository.getDocumentsStream(userId).listen((newDocs) async {
       final processedNewDocs = await _processDocuments(newDocs, userId);
       _documents = processedNewDocs;
-      _updateDisplayList();
+      _updateDisplayList(animate: true);
       _setLoading(false);
     }, onError: (error) {
       _setErrorMessage('Erro ao carregar os documentos.');
@@ -73,7 +77,7 @@ class DocumentViewModel extends ChangeNotifier {
     _isListening = true;
   }
 
-  void _updateDisplayList() {
+  void _updateDisplayList({bool animate = true}) {
     final oldList = List<Document>.from(_currentDisplayItems);
     final List<Document> newList = List.from(_documents);
 
@@ -85,18 +89,25 @@ class DocumentViewModel extends ChangeNotifier {
     newList.sort((a, b) =>
         a.documentName.toLowerCase().compareTo(b.documentName.toLowerCase()));
 
+    if (!animate || _listKey?.currentState == null) {
+      _currentDisplayItems = List.from(newList);
+      notifyListeners();
+      return;
+    }
+
     for (var i = oldList.length - 1; i >= 0; i--) {
       final oldItem = oldList[i];
       if (!newList.any((newItem) => newItem.id == oldItem.id)) {
         final indexToRemove =
             _currentDisplayItems.indexWhere((item) => item.id == oldItem.id);
         if (indexToRemove != -1) {
-          _currentDisplayItems.removeAt(indexToRemove);
-          listKey?.currentState?.removeItem(
+          final removedDoc = _currentDisplayItems.removeAt(indexToRemove);
+          _listKey?.currentState?.removeItem(
             indexToRemove,
             (context, animation) => AnimatedListItem(
               animation: animation,
-              child: DocumentListTile(key: ValueKey(oldItem.id), doc: oldItem),
+              child: DocumentListTile(
+                  key: ValueKey(removedDoc.id), doc: removedDoc),
             ),
             duration: const Duration(milliseconds: 300),
           );
@@ -111,7 +122,7 @@ class DocumentViewModel extends ChangeNotifier {
 
       if (oldIndex == -1) {
         _currentDisplayItems.insert(i, newItem);
-        listKey?.currentState
+        _listKey?.currentState
             ?.insertItem(i, duration: const Duration(milliseconds: 300));
       } else {
         if (_currentDisplayItems[oldIndex] != newItem) {
@@ -137,7 +148,7 @@ class DocumentViewModel extends ChangeNotifier {
     final docs = await _repository.getDocumentsForUser(userId);
     final processedDocs = await _processDocuments(docs, userId);
     _documents = processedDocs;
-    _updateDisplayList();
+    _updateDisplayList(animate: true);
     _setLoading(false);
   }
 

@@ -36,7 +36,11 @@ class ExpenseViewModel extends ChangeNotifier {
   StreamSubscription? _recurringExpensesSubscription;
   bool _isListening = false;
 
-  GlobalKey<SliverAnimatedListState>? listKey;
+  GlobalKey<SliverAnimatedListState>? _listKey;
+
+  void setListKey(GlobalKey<SliverAnimatedListState> key) {
+    _listKey = key;
+  }
 
   List<Expense> get allExpenses => _allExpenses;
 
@@ -180,7 +184,7 @@ class ExpenseViewModel extends ChangeNotifier {
       });
     }
 
-    if (!animate || listKey?.currentState == null) {
+    if (!animate || _listKey?.currentState == null) {
       _currentDisplayItems = List.from(newList);
       notifyListeners();
       return;
@@ -195,7 +199,7 @@ class ExpenseViewModel extends ChangeNotifier {
             _currentDisplayItems.indexWhere((item) => item.id == oldItem.id);
         if (indexToRemove != -1) {
           final removedItem = _currentDisplayItems.removeAt(indexToRemove);
-          listKey?.currentState?.removeItem(
+          _listKey?.currentState?.removeItem(
             indexToRemove,
             (context, animation) => AnimatedListItem(
               animation: animation,
@@ -214,7 +218,7 @@ class ExpenseViewModel extends ChangeNotifier {
 
       if (oldIndex == -1) {
         _currentDisplayItems.insert(i, newItem);
-        listKey?.currentState
+        _listKey?.currentState
             ?.insertItem(i, duration: const Duration(milliseconds: 300));
       } else {
         if (_currentDisplayItems[oldIndex] != newItem) {
