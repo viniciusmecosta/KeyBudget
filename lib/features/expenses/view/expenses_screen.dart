@@ -90,25 +90,19 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
           SliverList(
             delegate: SliverChildListDelegate(
               [
-                if (expenseViewModel.searchAllPeriods)
-                  Container(
-                    padding: const EdgeInsets.symmetric(vertical: 16),
-                    alignment: Alignment.center,
-                    child: Text(
-                      'Todo o Período',
-                      style: theme.textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.bold,
-                        color: theme.colorScheme.primary,
-                      ),
+                AnimatedOpacity(
+                  opacity: expenseViewModel.searchAllPeriods ? 0.4 : 1.0,
+                  duration: const Duration(milliseconds: 300),
+                  child: IgnorePointer(
+                    ignoring: expenseViewModel.searchAllPeriods,
+                    child: MonthSelector(
+                      selectedMonth: expenseViewModel.selectedMonth,
+                      onMonthChanged: (newMonth) {
+                        expenseViewModel.setSelectedMonth(newMonth);
+                      },
                     ),
-                  )
-                else
-                  MonthSelector(
-                    selectedMonth: expenseViewModel.selectedMonth,
-                    onMonthChanged: (newMonth) {
-                      expenseViewModel.setSelectedMonth(newMonth);
-                    },
                   ),
+                ),
                 Padding(
                   padding: const EdgeInsets.symmetric(
                       horizontal: AppTheme.defaultPadding),

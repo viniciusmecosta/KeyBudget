@@ -32,7 +32,7 @@ class _DocumentsScreenState extends State<DocumentsScreen> {
       if (authViewModel.currentUser != null) {
         final documentViewModel =
             Provider.of<DocumentViewModel>(context, listen: false);
-        documentViewModel.listKey = _listKey;
+        documentViewModel.setListKey(_listKey);
         documentViewModel.listenToDocuments(authViewModel.currentUser!.id);
       }
     });

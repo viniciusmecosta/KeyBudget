@@ -26,7 +26,8 @@ class _ExpenseListState extends State<ExpenseList> {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      Provider.of<ExpenseViewModel>(context, listen: false).listKey = _listKey;
+      Provider.of<ExpenseViewModel>(context, listen: false)
+          .setListKey(_listKey);
     });
   }
 
