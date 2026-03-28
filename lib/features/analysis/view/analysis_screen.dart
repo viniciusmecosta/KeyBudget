@@ -49,18 +49,48 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
         actions: [
           IconButton(
             icon: const Icon(Icons.picture_as_pdf),
-            onPressed: () {
-              final viewModel =
-                  Provider.of<AnalysisViewModel>(context, listen: false);
-              PdfService().exportAnalysisPdf(context, viewModel);
+            onPressed: () async {
+              showDialog(
+                context: context,
+                barrierDismissible: false,
+                builder: (ctx) => const AlertDialog(
+                  content: Row(
+                    children: [
+                      CircularProgressIndicator(),
+                      SizedBox(width: 24),
+                      Text('Gerando PDF...'),
+                    ],
+                  ),
+                ),
+              );
+              final vm = Provider.of<AnalysisViewModel>(context, listen: false);
+              await PdfService().exportAnalysisPdf(context, vm);
+              if (context.mounted) {
+                Navigator.of(context).pop();
+              }
             },
           ),
           IconButton(
             icon: const Icon(Icons.grid_on),
-            onPressed: () {
-              final viewModel =
-                  Provider.of<AnalysisViewModel>(context, listen: false);
-              CsvService().exportAnalysisCsv(context, viewModel);
+            onPressed: () async {
+              showDialog(
+                context: context,
+                barrierDismissible: false,
+                builder: (ctx) => const AlertDialog(
+                  content: Row(
+                    children: [
+                      CircularProgressIndicator(),
+                      SizedBox(width: 24),
+                      Text('Gerando CSV...'),
+                    ],
+                  ),
+                ),
+              );
+              final vm = Provider.of<AnalysisViewModel>(context, listen: false);
+              await CsvService().exportAnalysisCsv(context, vm);
+              if (context.mounted) {
+                Navigator.of(context).pop();
+              }
             },
           ),
         ],
@@ -86,8 +116,8 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
                     Text(
                       'Analisando seus dados...',
                       style: theme.textTheme.bodyMedium?.copyWith(
-                        color: theme.colorScheme.onSurface
-                            .withAlpha((255 * 0.7).round()),
+                        color:
+                            theme.colorScheme.onSurface.withValues(alpha: 0.7),
                       ),
                     ),
                   ],
@@ -160,7 +190,7 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
         Text(
           subtitle,
           style: theme.textTheme.bodyMedium?.copyWith(
-            color: theme.colorScheme.onSurface.withAlpha((255 * 0.6).round()),
+            color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
           ),
         ),
       ],
