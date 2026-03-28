@@ -16,11 +16,28 @@ class ExpenseActionsPopupMenu extends StatelessWidget {
     final authViewModel = Provider.of<AuthViewModel>(context, listen: false);
     final scaffoldContext = context;
 
+    showDialog(
+      context: scaffoldContext,
+      barrierDismissible: false,
+      builder: (ctx) => const AlertDialog(
+        content: Row(
+          children: [
+            CircularProgressIndicator(),
+            SizedBox(width: 24),
+            Text('Importando despesas...'),
+          ],
+        ),
+      ),
+    );
+
     final count =
         await viewModel.importExpensesFromCsv(authViewModel.currentUser!.id);
-    if (!scaffoldContext.mounted) return;
-    SnackbarService.showSuccess(
-        scaffoldContext, '$count despesas importadas com sucesso!');
+
+    if (scaffoldContext.mounted) {
+      Navigator.of(scaffoldContext).pop();
+      SnackbarService.showSuccess(
+          scaffoldContext, '$count despesas importadas com sucesso!');
+    }
   }
 
   @override

@@ -80,8 +80,8 @@ class WidgetToImage {
 
     final OverlayEntry overlayEntry = OverlayEntry(
       builder: (context) => Positioned(
-        top: MediaQuery.of(context).size.height,
-        left: 0,
+        top: -9999,
+        left: -9999,
         child: Material(
           type: MaterialType.transparency,
           child: RepaintBoundary(

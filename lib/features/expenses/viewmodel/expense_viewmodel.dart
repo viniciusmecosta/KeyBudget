@@ -247,12 +247,75 @@ class ExpenseViewModel extends ChangeNotifier {
     await _repository.addExpense(userId, expense);
   }
 
+  Future<void> addInstallmentExpenses(String userId, Expense baseExpense,
+      int installments, bool startNextMonth) async {
+    final String groupId = DateTime.now().millisecondsSinceEpoch.toString();
+    final double installmentAmount = baseExpense.amount / installments;
+    final List<Expense> toAdd = [];
+    int monthOffset = startNextMonth ? 1 : 0;
+
+    for (int i = 1; i <= installments; i++) {
+      int year = baseExpense.date.year;
+      int month = baseExpense.date.month + monthOffset + (i - 1);
+
+      while (month > 12) {
+        month -= 12;
+        year += 1;
+      }
+
+      int day = baseExpense.date.day;
+      int daysInMonth = DateTime(year, month + 1, 0).day;
+      if (day > daysInMonth) {
+        day = daysInMonth;
+      }
+
+      DateTime date = DateTime(year, month, day);
+
+      String baseMotivation = baseExpense.motivation ?? '';
+      String motivation = baseMotivation.isNotEmpty
+          ? '$baseMotivation ($i/$installments)'
+          : 'Parcela $i/$installments';
+
+      toAdd.add(Expense(
+        amount: installmentAmount,
+        date: date,
+        categoryId: baseExpense.categoryId,
+        motivation: motivation,
+        location: baseExpense.location,
+        installmentGroupId: groupId,
+        currentInstallment: i,
+        totalInstallments: installments,
+      ));
+    }
+
+    await _repository.addExpensesBatch(userId, toAdd);
+  }
+
+  List<Expense> getRelatedInstallments(String groupId) {
+    final list =
+        _allExpenses.where((e) => e.installmentGroupId == groupId).toList();
+    list.sort((a, b) => a.date.compareTo(b.date));
+    return list;
+  }
+
   Future<void> updateExpense(String userId, Expense expense) async {
     await _repository.updateExpense(userId, expense);
   }
 
   Future<void> deleteExpense(String userId, String expenseId) async {
     await _repository.deleteExpense(userId, expenseId);
+  }
+
+  Future<void> deleteInstallmentGroup(String userId, String groupId) async {
+    final related =
+        _allExpenses.where((e) => e.installmentGroupId == groupId).toList();
+    final futures = related.map((exp) {
+      if (exp.id != null) {
+        return _repository.deleteExpense(userId, exp.id!);
+      }
+      return Future.value();
+    });
+    await Future.wait(futures);
   }
 
   Future<void> addRecurringExpense(

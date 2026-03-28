@@ -5,6 +5,9 @@ class Expense {
   final String? categoryId;
   final String? motivation;
   final String? location;
+  final String? installmentGroupId;
+  final int? currentInstallment;
+  final int? totalInstallments;
 
   Expense({
     this.id,
@@ -13,6 +16,9 @@ class Expense {
     this.categoryId,
     this.motivation,
     this.location,
+    this.installmentGroupId,
+    this.currentInstallment,
+    this.totalInstallments,
   });
 
   Map<String, dynamic> toMap() {
@@ -22,6 +28,9 @@ class Expense {
       'categoryId': categoryId,
       'motivation': motivation,
       'location': location,
+      'installmentGroupId': installmentGroupId,
+      'currentInstallment': currentInstallment,
+      'totalInstallments': totalInstallments,
     };
   }
 
@@ -33,6 +42,9 @@ class Expense {
       categoryId: map['categoryId'],
       motivation: map['motivation'],
       location: map['location'],
+      installmentGroupId: map['installmentGroupId'],
+      currentInstallment: map['currentInstallment'],
+      totalInstallments: map['totalInstallments'],
     );
   }
 
@@ -46,7 +58,10 @@ class Expense {
           date == other.date &&
           categoryId == other.categoryId &&
           motivation == other.motivation &&
-          location == other.location;
+          location == other.location &&
+          installmentGroupId == other.installmentGroupId &&
+          currentInstallment == other.currentInstallment &&
+          totalInstallments == other.totalInstallments;
 
   @override
   int get hashCode =>
@@ -55,5 +70,8 @@ class Expense {
       date.hashCode ^
       categoryId.hashCode ^
       motivation.hashCode ^
-      location.hashCode;
+      location.hashCode ^
+      installmentGroupId.hashCode ^
+      currentInstallment.hashCode ^
+      totalInstallments.hashCode;
 }

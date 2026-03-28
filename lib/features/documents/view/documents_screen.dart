@@ -92,7 +92,8 @@ class _DocumentsScreenState extends State<DocumentsScreen> {
                     key: const ValueKey('searchBox'),
                     height: 40,
                     decoration: BoxDecoration(
-                      color: theme.colorScheme.onSurface.withOpacity(0.08),
+                      color:
+                          theme.colorScheme.onSurface.withValues(alpha: 0.08),
                       borderRadius: BorderRadius.circular(AppTheme.radiusXXL),
                     ),
                     child: TextField(

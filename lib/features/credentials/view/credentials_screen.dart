@@ -57,21 +57,55 @@ class _CredentialsScreenState extends State<CredentialsScreen> {
   }
 
   void _import(BuildContext context) async {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (ctx) => const AlertDialog(
+        content: Row(
+          children: [
+            CircularProgressIndicator(),
+            SizedBox(width: 24),
+            Text('Importando credenciais...'),
+          ],
+        ),
+      ),
+    );
+
     final viewModel = Provider.of<CredentialViewModel>(context, listen: false);
     final authViewModel = Provider.of<AuthViewModel>(context, listen: false);
 
     await viewModel.importCredentialsFromCsv(authViewModel.currentUser!.id);
-    if (!context.mounted) return;
+
+    if (context.mounted) {
+      Navigator.of(context).pop();
+    }
   }
 
   void _export(BuildContext context, {String type = 'csv'}) async {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (ctx) => AlertDialog(
+        content: Row(
+          children: [
+            const CircularProgressIndicator(),
+            const SizedBox(width: 24),
+            Text(type == 'csv' ? 'Gerando CSV...' : 'Gerando PDF...'),
+          ],
+        ),
+      ),
+    );
+
     final viewModel = Provider.of<CredentialViewModel>(context, listen: false);
 
     if (type == 'csv') {
       await viewModel.exportCredentialsToCsv(context);
-      if (!context.mounted) return;
     } else if (type == 'pdf') {
       await viewModel.exportCredentialsToPdf(context);
+    }
+
+    if (context.mounted) {
+      Navigator.of(context).pop();
     }
   }
 
@@ -159,7 +193,8 @@ class _CredentialsScreenState extends State<CredentialsScreen> {
                     key: const ValueKey('searchBox'),
                     height: 40,
                     decoration: BoxDecoration(
-                      color: theme.colorScheme.onSurface.withOpacity(0.08),
+                      color:
+                          theme.colorScheme.onSurface.withValues(alpha: 0.08),
                       borderRadius: BorderRadius.circular(AppTheme.radiusXXL),
                     ),
                     child: TextField(
@@ -202,37 +237,36 @@ class _CredentialsScreenState extends State<CredentialsScreen> {
             if (!_isSearching)
               PopupMenuButton(
                 itemBuilder: (context) => [
-                  const PopupMenuItem(
-                      value: 'import', child: Text('Importar de CSV')),
                   PopupMenuItem(
-                    value: 'export_csv',
-                    enabled: !vm.isExportingCsv && !vm.isExportingPdf,
+                    value: 'import',
                     child: Row(
                       children: [
+                        Icon(Icons.upload_file_rounded,
+                            size: 18, color: theme.colorScheme.onSurface),
+                        const SizedBox(width: AppTheme.spaceS),
+                        const Text('Importar de CSV'),
+                      ],
+                    ),
+                  ),
+                  PopupMenuItem(
+                    value: 'export_csv',
+                    child: Row(
+                      children: [
+                        Icon(Icons.grid_on,
+                            size: 18, color: theme.colorScheme.onSurface),
+                        const SizedBox(width: AppTheme.spaceS),
                         const Text('Exportar para CSV'),
-                        if (vm.isExportingCsv) ...[
-                          const SizedBox(width: 8),
-                          const SizedBox(
-                              height: 16,
-                              width: 16,
-                              child: CircularProgressIndicator(strokeWidth: 2)),
-                        ],
                       ],
                     ),
                   ),
                   PopupMenuItem(
                     value: 'export_pdf',
-                    enabled: !vm.isExportingCsv && !vm.isExportingPdf,
                     child: Row(
                       children: [
+                        Icon(Icons.picture_as_pdf,
+                            size: 18, color: theme.colorScheme.onSurface),
+                        const SizedBox(width: AppTheme.spaceS),
                         const Text('Exportar para PDF'),
-                        if (vm.isExportingPdf) ...[
-                          const SizedBox(width: 8),
-                          const SizedBox(
-                              height: 16,
-                              width: 16,
-                              child: CircularProgressIndicator(strokeWidth: 2)),
-                        ],
                       ],
                     ),
                   ),

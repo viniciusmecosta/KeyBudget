@@ -171,8 +171,10 @@ class _CredentialDetailScreenState extends State<CredentialDetailScreen> {
                 height: 4,
                 margin: const EdgeInsets.only(bottom: 16),
                 decoration: BoxDecoration(
-                  color:
-                      Theme.of(context).colorScheme.onSurface.withOpacity(0.2),
+                  color: Theme.of(context)
+                      .colorScheme
+                      .onSurface
+                      .withValues(alpha: 0.2),
                   borderRadius: BorderRadius.circular(2),
                 ),
               ),
@@ -182,8 +184,10 @@ class _CredentialDetailScreenState extends State<CredentialDetailScreen> {
                 leading: Container(
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
-                    color:
-                        Theme.of(context).colorScheme.primary.withOpacity(0.1),
+                    color: Theme.of(context)
+                        .colorScheme
+                        .primary
+                        .withValues(alpha: 0.1),
                     shape: BoxShape.circle,
                   ),
                   child: Icon(Icons.light_mode,
@@ -202,8 +206,10 @@ class _CredentialDetailScreenState extends State<CredentialDetailScreen> {
                 leading: Container(
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
-                    color:
-                        Theme.of(context).colorScheme.primary.withOpacity(0.1),
+                    color: Theme.of(context)
+                        .colorScheme
+                        .primary
+                        .withValues(alpha: 0.1),
                     shape: BoxShape.circle,
                   ),
                   child: Icon(Icons.dark_mode,
@@ -247,19 +253,25 @@ class _CredentialDetailScreenState extends State<CredentialDetailScreen> {
         final imageFile = File(imagePath);
         await imageFile.writeAsBytes(bytes);
 
-        await Share.shareXFiles(
-          [XFile(imagePath)],
+        final params = ShareParams(
+          files: [XFile(imagePath)],
           text: 'Credencial: ${widget.credential.location}',
         );
+
+        await SharePlus.instance.share(params);
       } catch (e) {
-        SnackbarService.showError(
-            context, 'Erro ao compartilhar a credencial.');
+        if (mounted) {
+          SnackbarService.showError(
+              context, 'Erro ao compartilhar a credencial.');
+        }
       }
     } else {
-      SnackbarService.showError(context, 'Erro ao gerar a imagem.');
+      if (mounted) {
+        SnackbarService.showError(context, 'Erro ao gerar a imagem.');
+      }
     }
 
-    setState(() => _isExporting = false);
+    if (mounted) setState(() => _isExporting = false);
   }
 
   Widget _buildFallbackIcon(ThemeData theme) {
@@ -267,7 +279,7 @@ class _CredentialDetailScreenState extends State<CredentialDetailScreen> {
       width: 56,
       height: 56,
       decoration: BoxDecoration(
-        color: theme.colorScheme.primary.withOpacity(0.1),
+        color: theme.colorScheme.primary.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(16),
       ),
       child: Icon(
@@ -323,13 +335,13 @@ class _CredentialDetailScreenState extends State<CredentialDetailScreen> {
               borderRadius: BorderRadius.circular(24),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withOpacity(0.1),
+                  color: Colors.black.withValues(alpha: 0.1),
                   blurRadius: 15,
                   offset: const Offset(0, 8),
                 )
               ],
               border: Border.all(
-                color: theme.colorScheme.primary.withOpacity(0.2),
+                color: theme.colorScheme.primary.withValues(alpha: 0.2),
                 width: 2,
               ),
             ),
@@ -383,7 +395,7 @@ class _CredentialDetailScreenState extends State<CredentialDetailScreen> {
                   child: Text(
                     'GERADO VIA KEYBUDGET',
                     style: theme.textTheme.labelSmall?.copyWith(
-                      color: theme.colorScheme.primary.withOpacity(0.8),
+                      color: theme.colorScheme.primary.withValues(alpha: 0.8),
                       letterSpacing: 1.5,
                       fontWeight: FontWeight.bold,
                     ),
@@ -407,7 +419,7 @@ class _CredentialDetailScreenState extends State<CredentialDetailScreen> {
           Container(
             padding: const EdgeInsets.all(10),
             decoration: BoxDecoration(
-              color: theme.colorScheme.primary.withOpacity(0.1),
+              color: theme.colorScheme.primary.withValues(alpha: 0.1),
               shape: BoxShape.circle,
             ),
             child: Icon(icon, size: 20, color: theme.colorScheme.primary),
@@ -420,7 +432,7 @@ class _CredentialDetailScreenState extends State<CredentialDetailScreen> {
                 Text(
                   label.toUpperCase(),
                   style: theme.textTheme.labelSmall?.copyWith(
-                    color: theme.colorScheme.onSurface.withOpacity(0.6),
+                    color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
                     fontWeight: FontWeight.w600,
                     letterSpacing: 1.0,
                   ),
