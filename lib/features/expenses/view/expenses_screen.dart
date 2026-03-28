@@ -90,18 +90,15 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
           SliverList(
             delegate: SliverChildListDelegate(
               [
-                AnimatedOpacity(
-                  opacity: expenseViewModel.searchAllPeriods ? 0.4 : 1.0,
-                  duration: const Duration(milliseconds: 300),
-                  child: IgnorePointer(
-                    ignoring: expenseViewModel.searchAllPeriods,
-                    child: MonthSelector(
-                      selectedMonth: expenseViewModel.selectedMonth,
-                      onMonthChanged: (newMonth) {
-                        expenseViewModel.setSelectedMonth(newMonth);
-                      },
-                    ),
-                  ),
+                MonthSelector(
+                  selectedMonth: expenseViewModel.selectedMonth,
+                  isAllPeriods: expenseViewModel.searchAllPeriods,
+                  onMonthChanged: (newMonth) {
+                    expenseViewModel.setSelectedMonth(newMonth);
+                  },
+                  onAllPeriodsChanged: (isAll) {
+                    expenseViewModel.setSearchAllPeriods(isAll);
+                  },
                 ),
                 Padding(
                   padding: const EdgeInsets.symmetric(
@@ -165,7 +162,6 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
             _isSearching = false;
             _searchController.clear();
             expenseViewModel.setSearchQuery('');
-            expenseViewModel.setSearchAllPeriods(false);
           });
         }
       },
@@ -180,7 +176,6 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
                       _isSearching = false;
                       _searchController.clear();
                       expenseViewModel.setSearchQuery('');
-                      expenseViewModel.setSearchAllPeriods(false);
                     });
                   },
                 )
