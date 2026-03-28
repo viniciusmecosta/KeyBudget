@@ -26,6 +26,7 @@ class CredentialViewModel extends ChangeNotifier {
   bool _isLoading = false;
   bool _isExportingCsv = false;
   bool _isExportingPdf = false;
+  String _searchQuery = '';
 
   StreamSubscription? _credentialsSubscription;
   StreamSubscription? _foldersSubscription;
@@ -42,6 +43,8 @@ class CredentialViewModel extends ChangeNotifier {
   List<dynamic> get currentDisplayItems => _currentDisplayItems;
 
   String? get currentFolderId => _currentFolderId;
+
+  String get searchQuery => _searchQuery;
 
   Folder? get currentFolder {
     if (_currentFolderId == null) return null;
@@ -86,6 +89,21 @@ class CredentialViewModel extends ChangeNotifier {
     }
   }
 
+  String _sanitize(String input) {
+    var text = input.toLowerCase().replaceAll(RegExp(r'\s+'), ' ').trim();
+    const withDia = 'áàãâäéèêëíìîïóòõôöúùûüçñ';
+    const withoutDia = 'aaaaaeeeeiiiiooooouuuucn';
+    for (int i = 0; i < withDia.length; i++) {
+      text = text.replaceAll(withDia[i], withoutDia[i]);
+    }
+    return text;
+  }
+
+  void setSearchQuery(String query) {
+    _searchQuery = _sanitize(query);
+    _updateDisplayList();
+  }
+
   void listenToCredentials(String userId) {
     if (_isListening) return;
 
@@ -122,13 +140,29 @@ class CredentialViewModel extends ChangeNotifier {
           .addAll(_allCredentials.where((c) => c.folderId == _currentFolderId));
     }
 
+    if (_searchQuery.isNotEmpty) {
+      newList.retainWhere((item) {
+        if (item is Folder) {
+          return _sanitize(item.name).contains(_searchQuery);
+        } else if (item is Credential) {
+          return _sanitize(item.location).contains(_searchQuery) ||
+              _sanitize(item.login).contains(_searchQuery) ||
+              (item.notes != null &&
+                  _sanitize(item.notes!).contains(_searchQuery));
+        }
+        return false;
+      });
+    }
+
     newList.sort((a, b) {
       if (a is Folder && b is Credential) return -1;
       if (a is Credential && b is Folder) return 1;
-      if (a is Folder && b is Folder)
+      if (a is Folder && b is Folder) {
         return a.name.toLowerCase().compareTo(b.name.toLowerCase());
-      if (a is Credential && b is Credential)
+      }
+      if (a is Credential && b is Credential) {
         return a.location.toLowerCase().compareTo(b.location.toLowerCase());
+      }
       return 0;
     });
 
@@ -304,21 +338,6 @@ class CredentialViewModel extends ChangeNotifier {
   }
 
   Future<void> deleteCredential(String userId, String credentialId) async {
-    final index = _currentDisplayItems.indexWhere(
-        (element) => element is Credential && element.id == credentialId);
-
-    if (index != -1) {
-      final item = _currentDisplayItems[index] as Credential;
-      listKey?.currentState?.removeItem(
-        index,
-        (context, animation) => AnimatedListItem(
-          animation: animation,
-          child: CredentialListTile(credential: item),
-        ),
-        duration: const Duration(milliseconds: 500),
-      );
-      _currentDisplayItems.removeAt(index);
-    }
     await _repository.deleteCredential(userId, credentialId);
   }
 
