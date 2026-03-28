@@ -12,11 +12,13 @@ import 'package:provider/provider.dart';
 class ActivityTile extends StatelessWidget {
   final Expense expense;
   final int index;
+  final bool showFullDate;
 
   const ActivityTile({
     super.key,
     required this.expense,
     required this.index,
+    this.showFullDate = false,
   });
 
   @override
@@ -71,6 +73,10 @@ class ActivityTile extends StatelessWidget {
 
   Widget _buildExpenseInfo(BuildContext context, TextTheme textTheme,
       ColorScheme colorScheme, category) {
+    final String dateText = showFullDate
+        ? DateFormat('dd/MM/yyyy').format(expense.date)
+        : DateUtils.getRelativeDate(expense.date);
+
     return Expanded(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -91,7 +97,7 @@ class ActivityTile extends StatelessWidget {
           ),
           const SizedBox(height: 4),
           Text(
-            DateUtils.getRelativeDate(expense.date),
+            dateText,
             style: textTheme.bodySmall?.copyWith(
               color: colorScheme.onSurfaceVariant,
               fontSize: 12,

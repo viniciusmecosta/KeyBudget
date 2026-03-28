@@ -203,7 +203,11 @@ class ExpenseViewModel extends ChangeNotifier {
             indexToRemove,
             (context, animation) => AnimatedListItem(
               animation: animation,
-              child: ActivityTile(expense: removedItem, index: indexToRemove),
+              child: ActivityTile(
+                expense: removedItem,
+                index: indexToRemove,
+                showFullDate: _searchAllPeriods,
+              ),
             ),
             duration: const Duration(milliseconds: 300),
           );
