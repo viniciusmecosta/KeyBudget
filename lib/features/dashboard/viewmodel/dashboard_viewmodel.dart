@@ -103,7 +103,14 @@ class DashboardViewModel extends ChangeNotifier {
   }
 
   List<Expense> get recentExpenses {
-    List<Expense> sortedExpenses = List.from(allExpenses);
+    final now = DateTime.now();
+    final endOfToday = DateTime(now.year, now.month, now.day, 23, 59, 59);
+
+    List<Expense> sortedExpenses = allExpenses.where((exp) {
+      return exp.date.isBefore(endOfToday) ||
+          exp.date.isAtSameMomentAs(endOfToday);
+    }).toList();
+
     sortedExpenses.sort((a, b) => b.date.compareTo(a.date));
     return sortedExpenses.take(5).toList();
   }
