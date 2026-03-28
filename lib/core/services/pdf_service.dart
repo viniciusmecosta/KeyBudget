@@ -182,15 +182,20 @@ class PdfService {
 
       final monthlyTrendChart = Material(
           color: Colors.white,
-          child: SizedBox(
-            width: 500,
-            child: MonthlyTrendSectionWidget(),
+          child: Container(
+            width: 600,
+            height: 400,
+            padding: const EdgeInsets.all(16),
+            child: const MonthlyTrendSectionWidget(),
           ));
+
       final categoryAnalysisChart = Material(
           color: Colors.white,
-          child: SizedBox(
-            width: 500,
-            child: CategoryAnalysisSectionWidget(),
+          child: Container(
+            width: 600,
+            height: 400,
+            padding: const EdgeInsets.all(16),
+            child: const CategoryAnalysisSectionWidget(),
           ));
 
       if (!context.mounted) return;
@@ -206,7 +211,7 @@ class PdfService {
                 Theme(data: Theme.of(ctx), child: monthlyTrendChart),
           ),
         ),
-        wait: const Duration(milliseconds: 500),
+        wait: const Duration(milliseconds: 1500),
       );
 
       if (!context.mounted) return;
@@ -225,7 +230,7 @@ class PdfService {
                 Theme(data: Theme.of(ctx), child: categoryAnalysisChart),
           ),
         ),
-        wait: const Duration(milliseconds: 500),
+        wait: const Duration(milliseconds: 1500),
       );
 
       double availableHeight = pageSize.height - currentY;
@@ -452,11 +457,12 @@ class PdfService {
   Future<void> exportAnalysisPdf(
       BuildContext context, AnalysisViewModel analysisViewModel) async {
     try {
-      final Widget reportWidget = MaterialApp(
-        debugShowCheckedModeBanner: false,
-        theme: AppTheme.lightTheme,
-        home: Scaffold(
-          body: MultiProvider(
+      final Widget reportWidget = Material(
+        color: Colors.white,
+        child: Container(
+          width: 800,
+          padding: const EdgeInsets.all(24),
+          child: MultiProvider(
             providers: [
               ChangeNotifierProvider.value(value: analysisViewModel),
               ChangeNotifierProvider.value(
@@ -464,15 +470,10 @@ class PdfService {
             ],
             child: Builder(
               builder: (ctx) => Theme(
-                data: Theme.of(ctx),
-                child: Container(
-                  color: Colors.white,
-                  child: SizedBox(
-                      width: 600,
-                      child: SingleChildScrollView(
-                        child: AnalysisReportWidget(
-                            analysisViewModel: analysisViewModel),
-                      )),
+                data: AppTheme.lightTheme,
+                child: SingleChildScrollView(
+                  child: AnalysisReportWidget(
+                      analysisViewModel: analysisViewModel),
                 ),
               ),
             ),
@@ -482,7 +483,8 @@ class PdfService {
 
       if (!context.mounted) return;
 
-      final Uint8List? imageBytes = await WidgetToImage.captureWidget(
+      final Uint8List? imageBytes =
+          await WidgetToImage.captureWidgetFromProvider(
         context,
         reportWidget,
         wait: const Duration(milliseconds: 1500),
