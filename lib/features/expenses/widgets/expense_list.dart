@@ -39,6 +39,9 @@ class _ExpenseListState extends State<ExpenseList> {
         key: _listKey,
         initialItemCount: widget.monthlyExpenses.length,
         itemBuilder: (context, index, animation) {
+          if (index >= widget.monthlyExpenses.length) {
+            return const SizedBox.shrink();
+          }
           final expense = widget.monthlyExpenses[index];
           return _buildExpenseTile(expense, index, animation);
         },
@@ -51,7 +54,7 @@ class _ExpenseListState extends State<ExpenseList> {
     return AnimatedListItem(
       animation: animation,
       child: ActivityTile(
-        key: ValueKey(expense),
+        key: ValueKey(expense.id),
         expense: expense,
         index: index,
       ),
