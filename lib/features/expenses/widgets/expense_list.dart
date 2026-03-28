@@ -52,12 +52,16 @@ class _ExpenseListState extends State<ExpenseList> {
 
   Widget _buildExpenseTile(
       Expense expense, int index, Animation<double> animation) {
+    final isAllPeriods =
+        Provider.of<ExpenseViewModel>(context, listen: false).searchAllPeriods;
+
     return AnimatedListItem(
       animation: animation,
       child: ActivityTile(
         key: ValueKey(expense.id),
         expense: expense,
         index: index,
+        showFullDate: isAllPeriods,
       ),
     );
   }
