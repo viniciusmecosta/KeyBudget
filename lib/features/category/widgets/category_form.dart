@@ -24,6 +24,7 @@ class CategoryForm extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final displayColor = selectedColor ?? theme.colorScheme.primary;
 
     return Form(
       key: formKey,
@@ -46,7 +47,8 @@ class CategoryForm extends StatelessWidget {
                       context: context,
                       isScrollControlled: true,
                       backgroundColor: Colors.transparent,
-                      builder: (_) => const IconPickerWidget(),
+                      builder: (_) =>
+                          IconPickerWidget(selectedColor: displayColor),
                     );
                     if (icon != null) {
                       onIconChanged(icon);
@@ -59,11 +61,17 @@ class CategoryForm extends StatelessWidget {
                       contentPadding: EdgeInsets.symmetric(vertical: 20),
                     ),
                     child: Center(
-                      child: Icon(
-                        selectedIcon ?? Icons.category,
-                        size: 36,
-                        color:
-                            selectedColor ?? theme.colorScheme.onSurfaceVariant,
+                      child: Container(
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: displayColor.withAlpha(50),
+                          shape: BoxShape.circle,
+                        ),
+                        child: Icon(
+                          selectedIcon ?? Icons.category,
+                          size: 32,
+                          color: displayColor,
+                        ),
                       ),
                     ),
                   ),
@@ -76,7 +84,7 @@ class CategoryForm extends StatelessWidget {
                     final color = await showDialog<Color>(
                       context: context,
                       builder: (_) =>
-                          ColorPickerWidget(initialColor: selectedColor),
+                          ColorPickerWidget(initialColor: displayColor),
                     );
                     if (color != null) {
                       onColorChanged(color);
@@ -89,9 +97,13 @@ class CategoryForm extends StatelessWidget {
                       contentPadding: EdgeInsets.symmetric(vertical: 20),
                     ),
                     child: Center(
-                      child: CircleAvatar(
-                        backgroundColor: selectedColor ?? Colors.grey,
-                        radius: 18,
+                      child: Container(
+                        width: 56,
+                        height: 56,
+                        decoration: BoxDecoration(
+                          color: displayColor,
+                          shape: BoxShape.circle,
+                        ),
                       ),
                     ),
                   ),
