@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 
 class IconPickerWidget extends StatefulWidget {
-  const IconPickerWidget({super.key});
+  final Color? selectedColor;
+
+  const IconPickerWidget({super.key, this.selectedColor});
 
   @override
   State<IconPickerWidget> createState() => _IconPickerWidgetState();
@@ -278,6 +280,7 @@ class _IconPickerWidgetState extends State<IconPickerWidget> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final baseColor = widget.selectedColor ?? theme.colorScheme.primary;
 
     return DraggableScrollableSheet(
       initialChildSize: 0.7,
@@ -320,16 +323,12 @@ class _IconPickerWidgetState extends State<IconPickerWidget> {
                       icon: Icon(
                         icon,
                         size: 32,
-                        color: theme.colorScheme.onSurfaceVariant,
+                        color: baseColor,
                       ),
                       onPressed: () => Navigator.of(context).pop(icon),
                       style: IconButton.styleFrom(
-                        backgroundColor: theme
-                            .colorScheme.surfaceContainerHighest
-                            .withAlpha((255 * 0.3).round()),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
+                        backgroundColor: baseColor.withAlpha(50),
+                        shape: const CircleBorder(),
                       ),
                     );
                   },
