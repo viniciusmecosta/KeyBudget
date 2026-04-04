@@ -105,24 +105,7 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
       ),
       body: SafeArea(
         child: viewModel.isLoading
-            ? AppAnimations.fadeIn(Center(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    CircularProgressIndicator(
-                      color: theme.colorScheme.primary,
-                    ),
-                    const SizedBox(height: AppTheme.spaceM),
-                    Text(
-                      'Analisando seus dados...',
-                      style: theme.textTheme.bodyMedium?.copyWith(
-                        color:
-                            theme.colorScheme.onSurface.withValues(alpha: 0.7),
-                      ),
-                    ),
-                  ],
-                ),
-              ))
+            ? const AnalysisSkeleton()
             : RefreshIndicator(
                 onRefresh: () async {},
                 color: theme.colorScheme.primary,
@@ -195,5 +178,90 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
         ),
       ],
     );
+  }
+}
+
+class AnalysisSkeleton extends StatelessWidget {
+  const AnalysisSkeleton({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final shimmerColor = theme.colorScheme.surface;
+
+    return CustomScrollView(
+      physics: const NeverScrollableScrollPhysics(),
+      slivers: [
+        SliverPadding(
+          padding: const EdgeInsets.all(AppTheme.defaultPadding),
+          sliver: SliverList(
+            delegate: SliverChildListDelegate([
+              Container(
+                height: 120,
+                decoration: BoxDecoration(
+                  color: theme.colorScheme.surfaceContainerHighest,
+                  borderRadius: BorderRadius.circular(AppTheme.radiusXL),
+                ),
+              ),
+              const SizedBox(height: AppTheme.spaceXL),
+              Container(
+                height: 24,
+                width: 150,
+                decoration: BoxDecoration(
+                  color: theme.colorScheme.surfaceContainerHighest,
+                  borderRadius: BorderRadius.circular(AppTheme.radiusM),
+                ),
+              ),
+              const SizedBox(height: 8),
+              Container(
+                height: 16,
+                width: 200,
+                decoration: BoxDecoration(
+                  color: theme.colorScheme.surfaceContainerHighest,
+                  borderRadius: BorderRadius.circular(AppTheme.radiusM),
+                ),
+              ),
+              const SizedBox(height: AppTheme.spaceM),
+              Container(
+                height: 200,
+                decoration: BoxDecoration(
+                  color: theme.colorScheme.surfaceContainerHighest,
+                  borderRadius: BorderRadius.circular(AppTheme.radiusXL),
+                ),
+              ),
+              const SizedBox(height: AppTheme.spaceXL),
+              Container(
+                height: 24,
+                width: 180,
+                decoration: BoxDecoration(
+                  color: theme.colorScheme.surfaceContainerHighest,
+                  borderRadius: BorderRadius.circular(AppTheme.radiusM),
+                ),
+              ),
+              const SizedBox(height: 8),
+              Container(
+                height: 16,
+                width: 220,
+                decoration: BoxDecoration(
+                  color: theme.colorScheme.surfaceContainerHighest,
+                  borderRadius: BorderRadius.circular(AppTheme.radiusM),
+                ),
+              ),
+              const SizedBox(height: AppTheme.spaceM),
+              Container(
+                height: 250,
+                decoration: BoxDecoration(
+                  color: theme.colorScheme.surfaceContainerHighest,
+                  borderRadius: BorderRadius.circular(AppTheme.radiusXL),
+                ),
+              ),
+            ]),
+          ),
+        ),
+      ],
+    ).animate(onPlay: (controller) => controller.repeat()).shimmer(
+          duration: 1500.ms,
+          color: shimmerColor,
+        );
   }
 }
