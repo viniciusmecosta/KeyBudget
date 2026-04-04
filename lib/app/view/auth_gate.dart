@@ -4,6 +4,7 @@ import 'package:key_budget/core/services/app_lock_service.dart';
 import 'package:key_budget/core/services/local_auth_service.dart';
 import 'package:key_budget/features/auth/view/login_screen.dart';
 import 'package:key_budget/features/auth/viewmodel/auth_viewmodel.dart';
+import 'package:key_budget/features/dashboard/widgets/dashboard_skeleton.dart';
 import 'package:provider/provider.dart';
 
 enum AuthStatus { pending, success, failed }
@@ -98,11 +99,11 @@ class _AuthGateState extends State<AuthGate> {
     final appLockService = context.watch<AppLockService>();
 
     if (appLockService.isLocked) {
-      return const Scaffold(body: Center(child: CircularProgressIndicator()));
+      return const Scaffold(body: SafeArea(child: DashboardSkeleton()));
     }
 
     if (!authViewModel.isInitialized) {
-      return const Scaffold(body: Center(child: CircularProgressIndicator()));
+      return const Scaffold(body: SafeArea(child: DashboardSkeleton()));
     }
 
     if (authViewModel.currentUser == null) {
@@ -119,7 +120,7 @@ class _AuthGateState extends State<AuthGate> {
         return const Scaffold(
             body: Center(child: Text("Falha na autenticação")));
       case AuthStatus.pending:
-        return const Scaffold(body: Center(child: CircularProgressIndicator()));
+        return const Scaffold(body: SafeArea(child: DashboardSkeleton()));
     }
   }
 }
