@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import 'package:key_budget/app/config/app_theme.dart';
 import 'package:key_budget/app/utils/app_animations.dart';
 import 'package:key_budget/app/utils/navigation_utils.dart';
@@ -145,9 +146,7 @@ class _DocumentsScreenState extends State<DocumentsScreen> {
                     parent: AlwaysScrollableScrollPhysics()),
                 slivers: [
                   if (viewModel.isLoading)
-                    const SliverFillRemaining(
-                      child: Center(child: CircularProgressIndicator()),
-                    )
+                    const DocumentsListSkeleton()
                   else if (viewModel.currentDisplayItems.isEmpty)
                     const SliverFillRemaining(
                       child: SingleChildScrollView(
@@ -196,6 +195,83 @@ class _DocumentsScreenState extends State<DocumentsScreen> {
             borderRadius: BorderRadius.circular(AppTheme.radiusXXL),
           ),
         )),
+      ),
+    );
+  }
+}
+
+class DocumentsListSkeleton extends StatelessWidget {
+  const DocumentsListSkeleton({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final shimmerHighlightColor = theme.colorScheme.surface;
+
+    return SliverPadding(
+      padding: const EdgeInsets.fromLTRB(AppTheme.defaultPadding,
+          AppTheme.spaceL, AppTheme.defaultPadding, 96.0),
+      sliver: SliverList(
+        delegate: SliverChildBuilderDelegate(
+          (context, index) => Container(
+            margin: const EdgeInsets.only(bottom: AppTheme.spaceS),
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: theme.colorScheme.surfaceContainerHighest,
+              borderRadius: BorderRadius.circular(16),
+            ),
+            child: Row(
+              children: [
+                Container(
+                  width: 40,
+                  height: 40,
+                  decoration: BoxDecoration(
+                    color: theme.colorScheme.surface,
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                ),
+                const SizedBox(width: AppTheme.spaceM),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Container(
+                        height: 16,
+                        width: double.infinity,
+                        decoration: BoxDecoration(
+                          color: theme.colorScheme.surface,
+                          borderRadius: BorderRadius.circular(AppTheme.radiusS),
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      Container(
+                        height: 12,
+                        width: 100,
+                        decoration: BoxDecoration(
+                          color: theme.colorScheme.surface,
+                          borderRadius: BorderRadius.circular(AppTheme.radiusS),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(width: AppTheme.spaceM),
+                Container(
+                  width: 24,
+                  height: 24,
+                  decoration: BoxDecoration(
+                    color: theme.colorScheme.surface,
+                    shape: BoxShape.circle,
+                  ),
+                ),
+              ],
+            ),
+          ).animate(onPlay: (controller) => controller.repeat()).shimmer(
+                duration: 1500.ms,
+                color: shimmerHighlightColor,
+              ),
+          childCount: 8,
+        ),
       ),
     );
   }

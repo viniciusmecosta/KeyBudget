@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import 'package:key_budget/app/config/app_theme.dart';
 import 'package:key_budget/app/utils/app_animations.dart';
 import 'package:key_budget/app/utils/navigation_utils.dart';
@@ -82,7 +83,7 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
       body: Consumer<CategoryViewModel>(
         builder: (context, viewModel, child) {
           if (viewModel.isLoading) {
-            return const Center(child: CircularProgressIndicator());
+            return const CategoriesSkeleton();
           }
           if (viewModel.categories.isEmpty) {
             return const Center(child: Text('Nenhuma categoria cadastrada.'));
@@ -155,6 +156,67 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
         },
         child: const Icon(Icons.add),
       )),
+    );
+  }
+}
+
+class CategoriesSkeleton extends StatelessWidget {
+  const CategoriesSkeleton({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final shimmerColor = theme.colorScheme.surface;
+
+    return ListView.builder(
+      padding: const EdgeInsets.all(AppTheme.defaultPadding),
+      itemCount: 8,
+      itemBuilder: (context, index) {
+        return Container(
+          margin: const EdgeInsets.only(bottom: AppTheme.spaceS),
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: theme.colorScheme.surfaceContainerHighest,
+            borderRadius: BorderRadius.circular(16),
+          ),
+          child: Row(
+            children: [
+              CircleAvatar(backgroundColor: theme.colorScheme.surface),
+              const SizedBox(width: AppTheme.spaceM),
+              Expanded(
+                child: Container(
+                  height: 16,
+                  decoration: BoxDecoration(
+                    color: theme.colorScheme.surface,
+                    borderRadius: BorderRadius.circular(AppTheme.radiusS),
+                  ),
+                ),
+              ),
+              const SizedBox(width: AppTheme.spaceM),
+              Container(
+                width: 24,
+                height: 24,
+                decoration: BoxDecoration(
+                  color: theme.colorScheme.surface,
+                  borderRadius: BorderRadius.circular(AppTheme.radiusS),
+                ),
+              ),
+              const SizedBox(width: 16),
+              Container(
+                width: 24,
+                height: 24,
+                decoration: BoxDecoration(
+                  color: theme.colorScheme.surface,
+                  borderRadius: BorderRadius.circular(AppTheme.radiusS),
+                ),
+              ),
+            ],
+          ),
+        ).animate(onPlay: (controller) => controller.repeat()).shimmer(
+              duration: 1500.ms,
+              color: shimmerColor,
+            );
+      },
     );
   }
 }

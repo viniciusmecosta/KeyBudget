@@ -48,7 +48,7 @@ class ActivityTile extends StatelessWidget {
               const SizedBox(width: AppTheme.spaceM),
               _buildExpenseInfo(context, textTheme, colorScheme, category),
               const SizedBox(width: AppTheme.spaceS),
-              _buildAmountInfo(textTheme, currencyFormatter, colorScheme),
+              _buildAmountInfo(textTheme, currencyFormatter),
             ],
           ),
         ),
@@ -56,23 +56,23 @@ class ActivityTile extends StatelessWidget {
     );
   }
 
-  Widget _buildCategoryIcon(Color categoryColor, category) {
+  Widget _buildCategoryIcon(Color categoryColor, dynamic category) {
     return Container(
-      padding: const EdgeInsets.all(AppTheme.spaceS + 2),
+      padding: const EdgeInsets.all(AppTheme.spaceS + 4),
       decoration: BoxDecoration(
-        color: categoryColor.withAlpha((255 * 0.12).round()),
-        borderRadius: BorderRadius.circular(AppTheme.radiusM),
+        color: categoryColor.withAlpha(50),
+        shape: BoxShape.circle,
       ),
       child: Icon(
         category?.icon ?? Icons.shopping_bag_rounded,
         color: categoryColor,
-        size: 22,
+        size: 24,
       ),
     );
   }
 
   Widget _buildExpenseInfo(BuildContext context, TextTheme textTheme,
-      ColorScheme colorScheme, category) {
+      ColorScheme colorScheme, dynamic category) {
     final String dateText = showFullDate
         ? DateFormat('dd/MM/yyyy').format(expense.date)
         : DateUtils.getRelativeDate(expense.date);
@@ -111,8 +111,7 @@ class ActivityTile extends StatelessWidget {
     );
   }
 
-  Widget _buildAmountInfo(
-      TextTheme textTheme, NumberFormat currencyFormatter, colorScheme) {
+  Widget _buildAmountInfo(TextTheme textTheme, NumberFormat currencyFormatter) {
     return Text(
       currencyFormatter.format(expense.amount),
       style: textTheme.titleSmall?.copyWith(
