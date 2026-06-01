@@ -191,6 +191,7 @@ class ExpenseViewModel extends ChangeNotifier {
     }
 
     final oldList = List<Expense>.from(_currentDisplayItems);
+    bool hasChanges = false;
 
     for (var i = oldList.length - 1; i >= 0; i--) {
       final oldItem = oldList[i];
@@ -211,6 +212,7 @@ class ExpenseViewModel extends ChangeNotifier {
             ),
             duration: const Duration(milliseconds: 300),
           );
+          hasChanges = true;
         }
       }
     }
@@ -224,20 +226,21 @@ class ExpenseViewModel extends ChangeNotifier {
         _currentDisplayItems.insert(i, newItem);
         _listKey?.currentState
             ?.insertItem(i, duration: const Duration(milliseconds: 300));
+        hasChanges = true;
       } else {
         if (_currentDisplayItems[oldIndex] != newItem) {
           _currentDisplayItems[oldIndex] = newItem;
-          notifyListeners();
+          hasChanges = true;
         }
         if (oldIndex != i) {
           final item = _currentDisplayItems.removeAt(oldIndex);
           _currentDisplayItems.insert(i, item);
-          notifyListeners();
+          hasChanges = true;
         }
       }
     }
 
-    if (_currentDisplayItems.length != newList.length) {
+    if (hasChanges || _currentDisplayItems.length != newList.length) {
       _currentDisplayItems = List.from(newList);
       notifyListeners();
     }
