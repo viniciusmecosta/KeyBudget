@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'package:key_budget/app/config/app_theme.dart';
 import 'package:key_budget/app/utils/widget_to_image.dart';
@@ -14,7 +15,6 @@ import 'package:key_budget/features/analysis/widgets/monthly_trend_section_widge
 import 'package:key_budget/features/category/viewmodel/category_viewmodel.dart';
 import 'package:key_budget/features/credentials/viewmodel/credential_viewmodel.dart';
 import 'package:path_provider/path_provider.dart';
-import 'package:provider/provider.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:syncfusion_flutter_pdf/pdf.dart';
 
@@ -195,8 +195,7 @@ class PdfService {
       final monthlyTrendImageBytes =
           await WidgetToImage.captureWidgetFromProvider(
         context,
-        ChangeNotifierProvider.value(
-          value: analysisViewModel,
+        ProviderScope(
           child: Builder(
             key: monthlyTrendKey,
             builder: (ctx) =>
@@ -211,11 +210,7 @@ class PdfService {
       final categoryAnalysisImageBytes =
           await WidgetToImage.captureWidgetFromProvider(
         context,
-        MultiProvider(
-          providers: [
-            ChangeNotifierProvider.value(value: analysisViewModel),
-            ChangeNotifierProvider.value(value: categoryViewModel),
-          ],
+        ProviderScope(
           child: Builder(
             key: categoryAnalysisKey,
             builder: (ctx) =>
@@ -467,8 +462,7 @@ class PdfService {
       final Uint8List? statsImageBytes =
           await WidgetToImage.captureWidgetFromProvider(
         context,
-        ChangeNotifierProvider.value(
-          value: analysisViewModel,
+        ProviderScope(
           child: Builder(
             builder: (ctx) =>
                 Theme(data: AppTheme.lightTheme, child: statsChart),
@@ -482,8 +476,7 @@ class PdfService {
       final Uint8List? trendImageBytes =
           await WidgetToImage.captureWidgetFromProvider(
         context,
-        ChangeNotifierProvider.value(
-          value: analysisViewModel,
+        ProviderScope(
           child: Builder(
             builder: (ctx) =>
                 Theme(data: AppTheme.lightTheme, child: monthlyTrendChart),
@@ -497,12 +490,7 @@ class PdfService {
       final Uint8List? categoryImageBytes =
           await WidgetToImage.captureWidgetFromProvider(
         context,
-        MultiProvider(
-          providers: [
-            ChangeNotifierProvider.value(value: analysisViewModel),
-            ChangeNotifierProvider.value(
-                value: context.read<CategoryViewModel>()),
-          ],
+        ProviderScope(
           child: Builder(
             builder: (ctx) =>
                 Theme(data: AppTheme.lightTheme, child: categoryAnalysisChart),
