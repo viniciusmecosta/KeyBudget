@@ -1,14 +1,17 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 class AppLockService extends ChangeNotifier {
   bool _isLocked = false;
   bool _justUnlocked = false;
+  bool isAuthenticating = false;
 
   bool get isLocked => _isLocked;
 
   bool get justUnlocked => _justUnlocked;
 
   void lockApp() {
+    if (isAuthenticating) return;
     if (!_isLocked) {
       _isLocked = true;
       _justUnlocked = false;
@@ -30,3 +33,6 @@ class AppLockService extends ChangeNotifier {
     }
   }
 }
+
+final appLockServiceProvider =
+    ChangeNotifierProvider<AppLockService>((ref) => AppLockService());

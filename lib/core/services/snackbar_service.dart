@@ -8,11 +8,13 @@ class SnackbarService {
     String? title,
     Color? backgroundColor,
     Color? textColor,
+    SnackBarAction? action,
   }) {
     ScaffoldMessenger.of(context)
       ..clearSnackBars()
       ..showSnackBar(
         SnackBar(
+          action: action,
           content: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
@@ -62,14 +64,19 @@ class SnackbarService {
     );
   }
 
-  static void showSuccess(BuildContext context, String message,
-      {String? title}) {
+  static void showSuccess(
+    BuildContext context,
+    String message, {
+    String? title,
+    SnackBarAction? action,
+  }) {
     showSnackbar(
       context,
       message,
       title: title,
       backgroundColor: Colors.green.shade600,
       textColor: Colors.white,
+      action: action,
     );
   }
 
