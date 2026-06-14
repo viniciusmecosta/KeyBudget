@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:key_budget/app/config/app_theme.dart';
 import 'package:key_budget/app/utils/app_animations.dart';
 import 'package:key_budget/app/widgets/image_picker_widget.dart';
@@ -7,16 +8,15 @@ import 'package:key_budget/core/services/snackbar_service.dart';
 import 'package:key_budget/core/utils/formatters.dart';
 import 'package:key_budget/features/auth/viewmodel/auth_viewmodel.dart';
 import 'package:mask_text_input_formatter/mask_text_input_formatter.dart';
-import 'package:provider/provider.dart';
 
-class RegisterScreen extends StatefulWidget {
+class RegisterScreen extends ConsumerStatefulWidget {
   const RegisterScreen({super.key});
 
   @override
-  State<RegisterScreen> createState() => _RegisterScreenState();
+  ConsumerState<RegisterScreen> createState() => _RegisterScreenState();
 }
 
-class _RegisterScreenState extends State<RegisterScreen> {
+class _RegisterScreenState extends ConsumerState<RegisterScreen> {
   final _formKey = GlobalKey<FormState>();
   final _nameController = TextEditingController();
   final _emailController = TextEditingController();
@@ -43,7 +43,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
   void _submit() async {
     if (!_formKey.currentState!.validate()) return;
 
-    final authViewModel = Provider.of<AuthViewModel>(context, listen: false);
+    final authViewModel = ref.read(authViewModelProvider);
 
     final success = await authViewModel.registerUser(
       name: _nameController.text.trim(),
@@ -134,8 +134,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       : null,
                 ),
                 const SizedBox(height: AppTheme.spaceXL),
-                Consumer<AuthViewModel>(
-                  builder: (context, viewModel, child) {
+                Consumer(
+                  builder: (context, ref, _) {
+                    final viewModel = ref.watch(authViewModelProvider);
                     return SizedBox(
                       width: double.infinity,
                       child: viewModel.isLoading

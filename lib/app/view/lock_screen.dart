@@ -1,18 +1,19 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:key_budget/app/utils/app_animations.dart';
 import 'package:key_budget/core/services/app_lock_service.dart';
 import 'package:key_budget/core/services/local_auth_service.dart';
 import 'package:key_budget/features/auth/viewmodel/auth_viewmodel.dart';
-import 'package:provider/provider.dart';
 
-class LockScreen extends StatefulWidget {
+class LockScreen extends ConsumerStatefulWidget {
   const LockScreen({super.key});
 
   @override
-  State<LockScreen> createState() => _LockScreenState();
+  ConsumerState<LockScreen> createState() => _LockScreenState();
 }
 
-class _LockScreenState extends State<LockScreen> with WidgetsBindingObserver {
+class _LockScreenState extends ConsumerState<LockScreen>
+    with WidgetsBindingObserver {
   bool _isAuthenticating = false;
 
   @override
@@ -57,15 +58,20 @@ class _LockScreenState extends State<LockScreen> with WidgetsBindingObserver {
 
     setState(() => _isAuthenticating = true);
 
+    final appLockService = ref.read(appLockServiceProvider);
+    appLockService.isAuthenticating = true;
+
     final localAuthService = LocalAuthService();
     final isAuthenticated = await localAuthService.authenticate();
+
+    appLockService.isAuthenticating = false;
 
     if (!mounted) {
       return;
     }
 
     if (isAuthenticated) {
-      Provider.of<AppLockService>(context, listen: false).unlockApp();
+      ref.read(appLockServiceProvider).unlockApp();
     } else {
       setState(() => _isAuthenticating = false);
     }
@@ -106,11 +112,9 @@ class _LockScreenState extends State<LockScreen> with WidgetsBindingObserver {
             const SizedBox(height: 16),
             OutlinedButton.icon(
               onPressed: () async {
-                final authViewModel =
-                    Provider.of<AuthViewModel>(context, listen: false);
-                final appLockService =
-                    Provider.of<AppLockService>(context, listen: false);
-                await authViewModel.logout(context);
+                final authViewModel = ref.read(authViewModelProvider);
+                final appLockService = ref.read(appLockServiceProvider);
+                await authViewModel.logout(context, ref);
                 appLockService.unlockApp();
               },
               icon:
