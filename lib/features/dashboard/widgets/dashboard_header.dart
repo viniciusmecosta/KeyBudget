@@ -1,15 +1,15 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:key_budget/app/config/app_theme.dart';
 import 'package:key_budget/features/auth/viewmodel/auth_viewmodel.dart';
-import 'package:provider/provider.dart';
 
-class DashboardHeader extends StatelessWidget implements PreferredSizeWidget {
+class DashboardHeader extends ConsumerWidget implements PreferredSizeWidget {
   const DashboardHeader({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
-    final user = Provider.of<AuthViewModel>(context).currentUser;
+    final user = ref.watch(authViewModelProvider).currentUser;
 
     return AppBar(
       elevation: 0,
