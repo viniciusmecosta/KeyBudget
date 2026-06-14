@@ -1,5 +1,6 @@
 import 'package:firebase_auth/firebase_auth.dart' as firebase;
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:key_budget/app/viewmodel/navigation_viewmodel.dart';
 import 'package:key_budget/core/models/user_model.dart';
 import 'package:key_budget/core/services/local_auth_service.dart';
@@ -8,7 +9,6 @@ import 'package:key_budget/features/category/viewmodel/category_viewmodel.dart';
 import 'package:key_budget/features/credentials/viewmodel/credential_viewmodel.dart';
 import 'package:key_budget/features/dashboard/viewmodel/dashboard_viewmodel.dart';
 import 'package:key_budget/features/expenses/viewmodel/expense_viewmodel.dart';
-import 'package:provider/provider.dart';
 
 class AuthViewModel extends ChangeNotifier {
   final AuthRepository _authRepository = AuthRepository();
@@ -195,13 +195,13 @@ class AuthViewModel extends ChangeNotifier {
     }
   }
 
-  Future<void> logout(BuildContext context) async {
-    context.read<DashboardViewModel>().clearData();
-    context.read<ExpenseViewModel>().clearData();
-    context.read<CredentialViewModel>().clearData();
+  Future<void> logout(BuildContext context, dynamic ref) async {
+    ref.read(dashboardViewModelProvider).clearData();
+    ref.read(expenseViewModelProvider).clearData();
+    ref.read(credentialViewModelProvider).clearData();
 
-    context.read<NavigationViewModel>().clearData(notify: false);
-    context.read<CategoryViewModel>().clearData();
+    ref.read(navigationViewModelProvider).clearData(notify: false);
+    ref.read(categoryViewModelProvider).clearData();
 
     await _authRepository.signOut();
     await _localAuthService.clearCredentials();
@@ -227,3 +227,6 @@ class AuthViewModel extends ChangeNotifier {
     }
   }
 }
+
+final authViewModelProvider =
+    ChangeNotifierProvider<AuthViewModel>((ref) => AuthViewModel());

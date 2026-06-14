@@ -1,45 +1,41 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:key_budget/app/view/main_screen.dart';
 import 'package:key_budget/core/services/app_lock_service.dart';
 import 'package:key_budget/core/services/local_auth_service.dart';
 import 'package:key_budget/features/auth/view/login_screen.dart';
 import 'package:key_budget/features/auth/viewmodel/auth_viewmodel.dart';
 import 'package:key_budget/features/dashboard/widgets/dashboard_skeleton.dart';
-import 'package:provider/provider.dart';
 
 enum AuthStatus { pending, success, failed }
 
-class AuthGate extends StatefulWidget {
+class AuthGate extends ConsumerStatefulWidget {
   const AuthGate({super.key});
 
   @override
-  State<AuthGate> createState() => _AuthGateState();
+  ConsumerState<AuthGate> createState() => _AuthGateState();
 }
 
-class _AuthGateState extends State<AuthGate> {
+class _AuthGateState extends ConsumerState<AuthGate> {
   AuthStatus _status = AuthStatus.pending;
   bool _isAuthenticating = false;
 
   @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    final authViewModel = context.watch<AuthViewModel>();
-    final appLockService = context.watch<AppLockService>();
-
-    if (appLockService.isLocked) {
-      return;
-    }
+  Widget build(BuildContext context) {
+    final authViewModel = ref.watch(authViewModelProvider);
+    final appLockService = ref.watch(appLockServiceProvider);
 
     if (appLockService.justUnlocked) {
-      appLockService.consumeJustUnlocked();
-      if (_status != AuthStatus.success) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
         if (mounted) {
-          setState(() {
-            _status = AuthStatus.success;
-          });
+          ref.read(appLockServiceProvider).consumeJustUnlocked();
+          if (_status != AuthStatus.success) {
+            setState(() {
+              _status = AuthStatus.success;
+            });
+          }
         }
-      }
-      return;
+      });
     }
 
     if (authViewModel.currentUser != null &&
@@ -49,11 +45,38 @@ class _AuthGateState extends State<AuthGate> {
     }
 
     if (authViewModel.currentUser == null && _status != AuthStatus.pending) {
-      if (mounted) {
-        setState(() {
-          _status = AuthStatus.pending;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) {
+          setState(() {
+            _status = AuthStatus.pending;
+          });
+        }
+      });
+    }
+
+    if (appLockService.isLocked) {
+      return const Scaffold(body: SafeArea(child: DashboardSkeleton()));
+    }
+
+    if (!authViewModel.isInitialized) {
+      return const Scaffold(body: SafeArea(child: DashboardSkeleton()));
+    }
+
+    if (authViewModel.currentUser == null) {
+      return const LoginScreen(key: ValueKey('loginScreen'));
+    }
+
+    switch (_status) {
+      case AuthStatus.success:
+        return MainScreen(key: ValueKey(authViewModel.currentUser!.id));
+      case AuthStatus.failed:
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          ref.read(appLockServiceProvider).lockApp();
         });
-      }
+        return const Scaffold(
+            body: Center(child: Text("Falha na autenticação")));
+      case AuthStatus.pending:
+        return const Scaffold(body: SafeArea(child: DashboardSkeleton()));
     }
   }
 
@@ -62,13 +85,16 @@ class _AuthGateState extends State<AuthGate> {
     _isAuthenticating = true;
 
     WidgetsBinding.instance.addPostFrameCallback((_) async {
-      final authViewModel = Provider.of<AuthViewModel>(context, listen: false);
+      final appLockService = ref.read(appLockServiceProvider);
+      appLockService.isAuthenticating = true;
+      final authViewModel = ref.read(authViewModelProvider);
       if (authViewModel.justAuthenticated) {
         authViewModel.consumeJustAuthenticated();
         if (mounted) setState(() => _status = AuthStatus.success);
       } else {
         await _authenticate();
       }
+      appLockService.isAuthenticating = false;
       if (mounted) {
         _isAuthenticating = false;
       }
@@ -90,37 +116,6 @@ class _AuthGateState extends State<AuthGate> {
       setState(() {
         _status = isAuthenticated ? AuthStatus.success : AuthStatus.failed;
       });
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final authViewModel = context.watch<AuthViewModel>();
-    final appLockService = context.watch<AppLockService>();
-
-    if (appLockService.isLocked) {
-      return const Scaffold(body: SafeArea(child: DashboardSkeleton()));
-    }
-
-    if (!authViewModel.isInitialized) {
-      return const Scaffold(body: SafeArea(child: DashboardSkeleton()));
-    }
-
-    if (authViewModel.currentUser == null) {
-      return LoginScreen(key: const ValueKey('loginScreen'));
-    }
-
-    switch (_status) {
-      case AuthStatus.success:
-        return MainScreen(key: ValueKey(authViewModel.currentUser!.id));
-      case AuthStatus.failed:
-        WidgetsBinding.instance.addPostFrameCallback((_) {
-          Provider.of<AppLockService>(context, listen: false).lockApp();
-        });
-        return const Scaffold(
-            body: Center(child: Text("Falha na autenticação")));
-      case AuthStatus.pending:
-        return const Scaffold(body: SafeArea(child: DashboardSkeleton()));
     }
   }
 }

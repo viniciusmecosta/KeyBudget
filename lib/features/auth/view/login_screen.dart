@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:key_budget/app/config/app_theme.dart';
 import 'package:key_budget/app/utils/navigation_utils.dart';
@@ -6,18 +7,17 @@ import 'package:key_budget/app/widgets/password_form_field.dart';
 import 'package:key_budget/core/services/snackbar_service.dart';
 import 'package:key_budget/features/auth/view/register_screen.dart';
 import 'package:key_budget/features/auth/viewmodel/auth_viewmodel.dart';
-import 'package:provider/provider.dart';
 
 import '../widgets/auth_page_layout.dart';
 
-class LoginScreen extends StatefulWidget {
+class LoginScreen extends ConsumerStatefulWidget {
   const LoginScreen({super.key});
 
   @override
-  State<LoginScreen> createState() => _LoginScreenState();
+  ConsumerState<LoginScreen> createState() => _LoginScreenState();
 }
 
-class _LoginScreenState extends State<LoginScreen> {
+class _LoginScreenState extends ConsumerState<LoginScreen> {
   final _formKey = GlobalKey<FormState>();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
@@ -38,7 +38,7 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 
   Future<void> _tryBiometricAuth() async {
-    final authViewModel = Provider.of<AuthViewModel>(context, listen: false);
+    final authViewModel = ref.read(authViewModelProvider);
     if (authViewModel.currentUser == null) {
       await authViewModel.authenticateWithBiometrics();
     }
@@ -46,7 +46,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
   void _submit() async {
     if (!_formKey.currentState!.validate()) return;
-    final authViewModel = Provider.of<AuthViewModel>(context, listen: false);
+    final authViewModel = ref.read(authViewModelProvider);
     final success = await authViewModel.loginUser(
       email: _emailController.text.trim(),
       password: _passwordController.text.trim(),
@@ -59,7 +59,7 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 
   void _submitGoogle() async {
-    final authViewModel = Provider.of<AuthViewModel>(context, listen: false);
+    final authViewModel = ref.read(authViewModelProvider);
     final success = await authViewModel.loginWithGoogle();
     if (mounted && !success) {
       SnackbarService.showError(
@@ -100,8 +100,9 @@ class _LoginScreenState extends State<LoginScreen> {
             ),
           ),
           const SizedBox(height: AppTheme.spaceXL),
-          Consumer<AuthViewModel>(
-            builder: (context, viewModel, child) {
+          Consumer(
+            builder: (context, ref, _) {
+              final viewModel = ref.watch(authViewModelProvider);
               return Column(
                 children: [
                   SizedBox(

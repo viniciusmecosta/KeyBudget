@@ -1,14 +1,15 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:key_budget/app/config/app_theme.dart';
 import 'package:key_budget/app/utils/app_animations.dart';
 
-class AuthPageLayout extends StatelessWidget {
+class AuthPageLayout extends ConsumerWidget {
   final Widget child;
 
   const AuthPageLayout({super.key, required this.child});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
 
     return Scaffold(
