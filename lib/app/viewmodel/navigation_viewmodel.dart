@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 class NavigationViewModel extends ChangeNotifier {
   int _selectedIndex = 0;
@@ -24,3 +25,6 @@ class NavigationViewModel extends ChangeNotifier {
     }
   }
 }
+
+final navigationViewModelProvider =
+    ChangeNotifierProvider<NavigationViewModel>((ref) => NavigationViewModel());

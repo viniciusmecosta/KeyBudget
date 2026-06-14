@@ -1,19 +1,18 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:key_budget/app/config/app_theme.dart';
 import 'package:key_budget/app/utils/navigation_utils.dart';
 import 'package:key_budget/app/viewmodel/navigation_viewmodel.dart';
 import 'package:key_budget/features/analysis/view/analysis_screen.dart';
 import 'package:key_budget/features/dashboard/viewmodel/dashboard_viewmodel.dart';
-import 'package:provider/provider.dart';
 
-class QuickActionsSection extends StatelessWidget {
+class QuickActionsSection extends ConsumerWidget {
   const QuickActionsSection({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    final viewModel = Provider.of<DashboardViewModel>(context);
-    final navigationViewModel =
-        Provider.of<NavigationViewModel>(context, listen: false);
+  Widget build(BuildContext context, WidgetRef ref) {
+    final viewModel = ref.watch(dashboardViewModelProvider);
+    final navigationViewModel = ref.read(navigationViewModelProvider);
 
     return Row(
       children: [

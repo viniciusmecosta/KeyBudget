@@ -1,17 +1,17 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:key_budget/app/config/app_theme.dart';
 import 'package:key_budget/app/utils/app_animations.dart';
 import 'package:key_budget/app/viewmodel/navigation_viewmodel.dart';
 import 'package:key_budget/app/widgets/activity_tile_widget.dart';
 import 'package:key_budget/features/dashboard/viewmodel/dashboard_viewmodel.dart';
-import 'package:provider/provider.dart';
 
-class RecentActivitySection extends StatelessWidget {
+class RecentActivitySection extends ConsumerWidget {
   const RecentActivitySection({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    final viewModel = Provider.of<DashboardViewModel>(context);
+  Widget build(BuildContext context, WidgetRef ref) {
+    final viewModel = ref.watch(dashboardViewModelProvider);
     final recentExpenses = viewModel.recentExpenses;
 
     if (viewModel.isLoading) {
@@ -20,10 +20,10 @@ class RecentActivitySection extends StatelessWidget {
 
     return Column(
       children: [
-        _buildSectionHeader(context, 'Atividades Recentes'),
+        _buildSectionHeader(context, ref, 'Atividades Recentes'),
         const SizedBox(height: AppTheme.spaceM),
         if (recentExpenses.isEmpty)
-          _buildEmptyState(context)
+          _buildEmptyState(context, ref)
         else
           ListView.builder(
             shrinkWrap: true,
@@ -46,7 +46,8 @@ class RecentActivitySection extends StatelessWidget {
     );
   }
 
-  Widget _buildSectionHeader(BuildContext context, String title) {
+  Widget _buildSectionHeader(
+      BuildContext context, WidgetRef ref, String title) {
     final theme = Theme.of(context);
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -65,8 +66,7 @@ class RecentActivitySection extends StatelessWidget {
           borderRadius: BorderRadius.circular(AppTheme.radiusM),
           child: InkWell(
             onTap: () {
-              Provider.of<NavigationViewModel>(context, listen: false)
-                  .selectedIndex = 1;
+              ref.read(navigationViewModelProvider).selectedIndex = 1;
             },
             borderRadius: BorderRadius.circular(AppTheme.radiusM),
             child: Padding(
@@ -100,7 +100,7 @@ class RecentActivitySection extends StatelessWidget {
     );
   }
 
-  Widget _buildEmptyState(BuildContext context) {
+  Widget _buildEmptyState(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
 
     return Container(
