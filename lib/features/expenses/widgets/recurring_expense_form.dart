@@ -1,14 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_masked_text2/flutter_masked_text2.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:key_budget/app/config/app_theme.dart';
 import 'package:key_budget/app/widgets/category_picker_field.dart';
 import 'package:key_budget/app/widgets/date_picker_field.dart';
 import 'package:key_budget/core/models/expense_category_model.dart';
 import 'package:key_budget/core/models/recurring_expense_model.dart';
 import 'package:key_budget/features/category/viewmodel/category_viewmodel.dart';
-import 'package:provider/provider.dart';
 
-class RecurringExpenseForm extends StatelessWidget {
+class RecurringExpenseForm extends ConsumerWidget {
   final GlobalKey<FormState> formKey;
   final MoneyMaskedTextController amountController;
   final TextEditingController motivationController;
@@ -33,7 +33,7 @@ class RecurringExpenseForm extends StatelessWidget {
   });
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
     return Form(
       key: formKey,
@@ -56,7 +56,7 @@ class RecurringExpenseForm extends StatelessWidget {
                   CategoryPickerField(
                     label: 'Categoria',
                     value: selectedCategory.value,
-                    categories: context.watch<CategoryViewModel>().categories,
+                    categories: ref.watch(categoryViewModelProvider).categories,
                     onChanged: (category) => selectedCategory.value = category,
                     onManageCategories: () {},
                     validator: (v) => v == null ? 'Campo obrigatório' : null,

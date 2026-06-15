@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_masked_text2/flutter_masked_text2.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'package:key_budget/app/config/app_theme.dart';
 import 'package:key_budget/app/utils/app_animations.dart';
@@ -10,20 +11,20 @@ import 'package:key_budget/core/services/snackbar_service.dart';
 import 'package:key_budget/features/auth/viewmodel/auth_viewmodel.dart';
 import 'package:key_budget/features/category/viewmodel/category_viewmodel.dart';
 import 'package:key_budget/features/expenses/viewmodel/expense_viewmodel.dart';
-import 'package:provider/provider.dart';
 
 import '../widgets/expense_form.dart';
 
-class ExpenseDetailScreen extends StatefulWidget {
+class ExpenseDetailScreen extends ConsumerStatefulWidget {
   final Expense expense;
 
   const ExpenseDetailScreen({super.key, required this.expense});
 
   @override
-  State<ExpenseDetailScreen> createState() => _ExpenseDetailScreenState();
+  ConsumerState<ExpenseDetailScreen> createState() =>
+      _ExpenseDetailScreenState();
 }
 
-class _ExpenseDetailScreenState extends State<ExpenseDetailScreen> {
+class _ExpenseDetailScreenState extends ConsumerState<ExpenseDetailScreen> {
   final _formKey = GlobalKey<FormState>();
   late MoneyMaskedTextController _amountController;
   late TextEditingController _motivationController;
@@ -45,7 +46,8 @@ class _ExpenseDetailScreenState extends State<ExpenseDetailScreen> {
         TextEditingController(text: widget.expense.motivation);
     _locationController = TextEditingController(text: widget.expense.location);
     _selectedDate = widget.expense.date;
-    _selectedCategory = Provider.of<CategoryViewModel>(context, listen: false)
+    _selectedCategory = ref
+        .read(categoryViewModelProvider)
         .getCategoryById(widget.expense.categoryId);
   }
 
@@ -68,7 +70,7 @@ class _ExpenseDetailScreenState extends State<ExpenseDetailScreen> {
     setState(() => _isSaving = true);
     HapticFeedback.mediumImpact();
 
-    final authViewModel = Provider.of<AuthViewModel>(context, listen: false);
+    final authViewModel = ref.read(authViewModelProvider);
     final userId = authViewModel.currentUser!.id;
 
     final updatedExpense = Expense(
@@ -86,7 +88,8 @@ class _ExpenseDetailScreenState extends State<ExpenseDetailScreen> {
       totalInstallments: widget.expense.totalInstallments,
     );
 
-    await Provider.of<ExpenseViewModel>(context, listen: false)
+    await ref
+        .read(expenseViewModelProvider)
         .updateExpense(userId, updatedExpense);
 
     if (mounted) {
@@ -98,81 +101,89 @@ class _ExpenseDetailScreenState extends State<ExpenseDetailScreen> {
   void _deleteExpense() {
     final hasInstallments = widget.expense.installmentGroupId != null;
 
-    showDialog(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text('Confirmar Exclusão'),
-        content: Text(hasInstallments
-            ? 'Esta despesa faz parte de um parcelamento. Deseja excluir apenas esta parcela ou todas as parcelas associadas?'
-            : 'Você tem certeza que deseja excluir esta despesa?'),
-        actions: [
-          TextButton(
-            child: const Text('Cancelar'),
-            onPressed: () => Navigator.of(ctx).pop(),
+    if (hasInstallments) {
+      showModalBottomSheet(
+        context: context,
+        shape: const RoundedRectangleBorder(
+          borderRadius:
+              BorderRadius.vertical(top: Radius.circular(AppTheme.radiusL)),
+        ),
+        builder: (ctx) => SafeArea(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const ListTile(
+                title: Text('Opções de Exclusão',
+                    style: TextStyle(fontWeight: FontWeight.bold)),
+                subtitle: Text('Esta despesa faz parte de um parcelamento.'),
+              ),
+              ListTile(
+                leading: const Icon(Icons.delete),
+                title: const Text('Excluir Apenas Esta Parcela'),
+                onTap: () {
+                  Navigator.pop(ctx);
+                  _executeDelete(deleteGroup: false);
+                },
+              ),
+              ListTile(
+                leading: const Icon(Icons.delete_sweep),
+                title: const Text('Excluir Todas as Parcelas'),
+                onTap: () {
+                  Navigator.pop(ctx);
+                  _executeDelete(deleteGroup: true);
+                },
+              ),
+            ],
           ),
-          if (hasInstallments)
-            TextButton(
-              child: const Text('Excluir Todas'),
-              onPressed: () async {
-                HapticFeedback.mediumImpact();
-                Navigator.of(ctx).pop();
+        ),
+      );
+    } else {
+      _executeDelete(deleteGroup: false);
+    }
+  }
 
-                showDialog(
-                  context: context,
-                  barrierDismissible: false,
-                  builder: (c) =>
-                      const Center(child: CircularProgressIndicator()),
-                );
+  void _executeDelete({required bool deleteGroup}) async {
+    HapticFeedback.mediumImpact();
 
-                final authViewModel =
-                    Provider.of<AuthViewModel>(context, listen: false);
-                final userId = authViewModel.currentUser!.id;
+    final authViewModel = ref.read(authViewModelProvider);
+    final userId = authViewModel.currentUser!.id;
+    final expenseViewModel = ref.read(expenseViewModelProvider);
 
-                await Provider.of<ExpenseViewModel>(context, listen: false)
-                    .deleteInstallmentGroup(
-                        userId, widget.expense.installmentGroupId!);
+    final deletedExpense = widget.expense;
+    final currentContext = context;
 
-                if (mounted) {
-                  Navigator.of(context).pop();
-                  Navigator.of(context).pop();
-                }
-              },
-            ),
-          TextButton(
-            child: Text(hasInstallments ? 'Excluir Apenas Esta' : 'Excluir'),
+    if (deleteGroup && deletedExpense.installmentGroupId != null) {
+      await expenseViewModel.deleteInstallmentGroup(
+          userId, deletedExpense.installmentGroupId!);
+      if (currentContext.mounted) {
+        SnackbarService.showSuccess(
+            currentContext, 'Parcelamento excluído com sucesso!');
+        Navigator.of(currentContext).pop();
+      }
+    } else {
+      await expenseViewModel.deleteExpense(userId, deletedExpense.id!);
+      if (currentContext.mounted) {
+        SnackbarService.showSuccess(
+          currentContext,
+          'Despesa excluída.',
+          action: SnackBarAction(
+            label: 'Desfazer',
+            textColor: Colors.white,
             onPressed: () async {
-              HapticFeedback.mediumImpact();
-              Navigator.of(ctx).pop();
-
-              showDialog(
-                context: context,
-                barrierDismissible: false,
-                builder: (c) =>
-                    const Center(child: CircularProgressIndicator()),
-              );
-
-              final authViewModel =
-                  Provider.of<AuthViewModel>(context, listen: false);
-              final userId = authViewModel.currentUser!.id;
-
-              await Provider.of<ExpenseViewModel>(context, listen: false)
-                  .deleteExpense(userId, widget.expense.id!);
-
-              if (mounted) {
-                Navigator.of(context).pop();
-                Navigator.of(context).pop();
-              }
+              await expenseViewModel.restoreExpense(userId, deletedExpense);
             },
           ),
-        ],
-      ),
-    );
+        );
+        Navigator.of(currentContext).pop();
+      }
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     final related = widget.expense.installmentGroupId != null
-        ? Provider.of<ExpenseViewModel>(context)
+        ? ref
+            .watch(expenseViewModelProvider)
             .getRelatedInstallments(widget.expense.installmentGroupId!)
         : <Expense>[];
 

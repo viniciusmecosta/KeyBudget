@@ -1,3 +1,4 @@
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'dart:async';
 
 import 'package:flutter/material.dart';
@@ -28,6 +29,7 @@ class ExpenseViewModel extends ChangeNotifier {
   bool _isLoading = true;
   bool _isExportingCsv = false;
   bool _isExportingPdf = false;
+  bool _isImportingCsv = false;
   List<String> _selectedCategoryIds = [];
   DateTime _selectedMonth = DateTime(DateTime.now().year, DateTime.now().month);
   String _searchQuery = '';
@@ -53,6 +55,8 @@ class ExpenseViewModel extends ChangeNotifier {
   bool get isExportingCsv => _isExportingCsv;
 
   bool get isExportingPdf => _isExportingPdf;
+
+  bool get isImportingCsv => _isImportingCsv;
 
   List<String> get selectedCategoryIds => _selectedCategoryIds;
 
@@ -146,6 +150,13 @@ class ExpenseViewModel extends ChangeNotifier {
     }
   }
 
+  void _setImportingCsv(bool value) {
+    if (_isImportingCsv != value) {
+      _isImportingCsv = value;
+      notifyListeners();
+    }
+  }
+
   void listenToExpenses(String userId) {
     if (_isListening) return;
     if (!_isLoading) _setLoading(true);
@@ -191,6 +202,7 @@ class ExpenseViewModel extends ChangeNotifier {
     }
 
     final oldList = List<Expense>.from(_currentDisplayItems);
+    bool hasChanges = false;
 
     for (var i = oldList.length - 1; i >= 0; i--) {
       final oldItem = oldList[i];
@@ -211,6 +223,7 @@ class ExpenseViewModel extends ChangeNotifier {
             ),
             duration: const Duration(milliseconds: 300),
           );
+          hasChanges = true;
         }
       }
     }
@@ -224,27 +237,36 @@ class ExpenseViewModel extends ChangeNotifier {
         _currentDisplayItems.insert(i, newItem);
         _listKey?.currentState
             ?.insertItem(i, duration: const Duration(milliseconds: 300));
+        hasChanges = true;
       } else {
         if (_currentDisplayItems[oldIndex] != newItem) {
           _currentDisplayItems[oldIndex] = newItem;
-          notifyListeners();
+          hasChanges = true;
         }
         if (oldIndex != i) {
           final item = _currentDisplayItems.removeAt(oldIndex);
           _currentDisplayItems.insert(i, item);
-          notifyListeners();
+          hasChanges = true;
         }
       }
     }
 
     if (_currentDisplayItems.length != newList.length) {
       _currentDisplayItems = List.from(newList);
+      hasChanges = true;
+    }
+
+    if (hasChanges) {
       notifyListeners();
     }
   }
 
   Future<void> addExpense(String userId, Expense expense) async {
     await _repository.addExpense(userId, expense);
+  }
+
+  Future<void> restoreExpense(String userId, Expense expense) async {
+    await _repository.restoreExpense(userId, expense);
   }
 
   Future<void> addInstallmentExpenses(String userId, Expense baseExpense,
@@ -330,6 +352,11 @@ class ExpenseViewModel extends ChangeNotifier {
 
   Future<void> deleteRecurringExpense(String userId, String expenseId) async {
     await _recurringRepository.deleteRecurringExpense(userId, expenseId);
+  }
+
+  Future<void> restoreRecurringExpense(
+      String userId, RecurringExpense expense) async {
+    await _recurringRepository.restoreRecurringExpense(userId, expense);
   }
 
   Future<void> checkAndCreateRecurringInstances(String userId) async {
@@ -456,23 +483,28 @@ class ExpenseViewModel extends ChangeNotifier {
   }
 
   Future<int> importExpensesFromCsv(String userId) async {
-    final data = await _csvService.importCsv();
-    if (data == null) return 0;
+    _setImportingCsv(true);
+    try {
+      final data = await _csvService.importCsv();
+      if (data == null) return 0;
 
-    int count = 0;
-    for (var row in data) {
-      final newExpense = Expense(
-        date:
-            DateTime.tryParse(row['date']?.toString() ?? '') ?? DateTime.now(),
-        amount: double.tryParse(row['amount']?.toString() ?? '0.0') ?? 0.0,
-        categoryId: null,
-        motivation: row['motivation']?.toString(),
-        location: row['location']?.toString(),
-      );
-      await _repository.addExpense(userId, newExpense);
-      count++;
+      int count = 0;
+      for (var row in data) {
+        final newExpense = Expense(
+          date: DateTime.tryParse(row['date']?.toString() ?? '') ??
+              DateTime.now(),
+          amount: double.tryParse(row['amount']?.toString() ?? '0.0') ?? 0.0,
+          categoryId: null,
+          motivation: row['motivation']?.toString(),
+          location: row['location']?.toString(),
+        );
+        await _repository.addExpense(userId, newExpense);
+        count++;
+      }
+      return count;
+    } finally {
+      _setImportingCsv(false);
     }
-    return count;
   }
 
   Future<int> importAllExpensesFromJson(String userId) async {
@@ -559,3 +591,6 @@ class ExpenseViewModel extends ChangeNotifier {
     super.dispose();
   }
 }
+
+final expenseViewModelProvider =
+    ChangeNotifierProvider<ExpenseViewModel>((ref) => ExpenseViewModel());
