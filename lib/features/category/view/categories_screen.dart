@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_animate/flutter_animate.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:key_budget/app/config/app_theme.dart';
 import 'package:key_budget/app/utils/app_animations.dart';
 import 'package:key_budget/app/utils/navigation_utils.dart';
@@ -9,66 +10,47 @@ import 'package:key_budget/core/services/snackbar_service.dart';
 import 'package:key_budget/features/auth/viewmodel/auth_viewmodel.dart';
 import 'package:key_budget/features/category/view/add_edit_category_screen.dart';
 import 'package:key_budget/features/category/viewmodel/category_viewmodel.dart';
-import 'package:provider/provider.dart';
 
-class CategoriesScreen extends StatefulWidget {
+class CategoriesScreen extends ConsumerStatefulWidget {
   const CategoriesScreen({super.key});
 
   @override
-  State<CategoriesScreen> createState() => _CategoriesScreenState();
+  ConsumerState<CategoriesScreen> createState() => _CategoriesScreenState();
 }
 
-class _CategoriesScreenState extends State<CategoriesScreen> {
+class _CategoriesScreenState extends ConsumerState<CategoriesScreen> {
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      final userId =
-          Provider.of<AuthViewModel>(context, listen: false).currentUser?.id;
+      final userId = ref.read(authViewModelProvider).currentUser?.id;
       if (userId != null) {
-        Provider.of<CategoryViewModel>(context, listen: false)
-            .fetchCategories(userId);
+        ref.read(categoryViewModelProvider).fetchCategories(userId);
       }
     });
   }
 
-  void _deleteCategory(BuildContext context, ExpenseCategory category) {
-    showDialog(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text('Confirmar Exclusão'),
-        content: Text(
-            'Tem certeza que deseja excluir a categoria "${category.name}"?'),
-        actions: [
-          TextButton(
-            child: const Text('Cancelar'),
-            onPressed: () => Navigator.of(ctx).pop(),
-          ),
-          ElevatedButton(
-            child: const Text('Excluir'),
-            onPressed: () async {
-              HapticFeedback.mediumImpact();
-              final auth = Provider.of<AuthViewModel>(context, listen: false);
-              final viewModel =
-                  Provider.of<CategoryViewModel>(context, listen: false);
-              final navigator = Navigator.of(ctx);
-              final scaffoldContext = context;
+  void _deleteCategory(BuildContext context, ExpenseCategory category) async {
+    HapticFeedback.mediumImpact();
+    final auth = ref.read(authViewModelProvider);
+    final viewModel = ref.read(categoryViewModelProvider);
+    final scaffoldContext = context;
 
-              final userId = auth.currentUser?.id;
-              if (userId == null) {
-                navigator.pop();
-                return;
-              }
+    final userId = auth.currentUser?.id;
+    if (userId == null) return;
 
-              await viewModel.deleteCategory(userId, category.id!);
+    await viewModel.deleteCategory(userId, category.id!);
 
-              if (!scaffoldContext.mounted) return;
-              SnackbarService.showSuccess(
-                  scaffoldContext, 'Categoria excluída com sucesso!');
-              navigator.pop();
-            },
-          ),
-        ],
+    if (!scaffoldContext.mounted) return;
+    SnackbarService.showSuccess(
+      scaffoldContext,
+      'Categoria excluída.',
+      action: SnackBarAction(
+        label: 'Desfazer',
+        textColor: Colors.white,
+        onPressed: () async {
+          await viewModel.restoreCategory(userId, category);
+        },
       ),
     );
   }
@@ -80,8 +62,9 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
       appBar: AppBar(
         title: const Text('Minhas Categorias'),
       ),
-      body: Consumer<CategoryViewModel>(
-        builder: (context, viewModel, child) {
+      body: Consumer(
+        builder: (context, ref, _) {
+          final viewModel = ref.watch(categoryViewModelProvider);
           if (viewModel.isLoading) {
             return const CategoriesSkeleton();
           }
@@ -160,11 +143,11 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
   }
 }
 
-class CategoriesSkeleton extends StatelessWidget {
+class CategoriesSkeleton extends ConsumerWidget {
   const CategoriesSkeleton({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
     final shimmerColor = theme.colorScheme.surface;
 
