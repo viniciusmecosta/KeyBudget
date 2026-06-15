@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'color_picker_widget.dart';
 import 'icon_picker_widget.dart';
 
-class CategoryForm extends StatelessWidget {
+class CategoryForm extends ConsumerWidget {
   final GlobalKey<FormState> formKey;
   final TextEditingController nameController;
   final IconData? selectedIcon;
@@ -22,7 +23,7 @@ class CategoryForm extends StatelessWidget {
   });
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
     final displayColor = selectedColor ?? theme.colorScheme.primary;
 

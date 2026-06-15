@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:key_budget/core/models/expense_category_model.dart';
 
 class CategoryRepository {
@@ -20,6 +21,14 @@ class CategoryRepository {
     await _getCategoriesCollection(userId).add(category);
   }
 
+  Future<void> restoreCategory(String userId, ExpenseCategory category) async {
+    if (category.id != null) {
+      await _getCategoriesCollection(userId).doc(category.id).set(category);
+    } else {
+      await addCategory(userId, category);
+    }
+  }
+
   Future<List<ExpenseCategory>> getCategoriesForUser(String userId) async {
     final querySnapshot =
         await _getCategoriesCollection(userId).orderBy('name').get();
@@ -36,3 +45,6 @@ class CategoryRepository {
     await _getCategoriesCollection(userId).doc(categoryId).delete();
   }
 }
+
+final categoryRepositoryProvider =
+    Provider<CategoryRepository>((ref) => CategoryRepository());
