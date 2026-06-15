@@ -1,21 +1,22 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:key_budget/app/config/app_theme.dart';
 import 'package:key_budget/features/category/viewmodel/category_viewmodel.dart';
 import 'package:key_budget/features/expenses/viewmodel/expense_viewmodel.dart';
-import 'package:provider/provider.dart';
 
-class CategoryFilterModal extends StatefulWidget {
+class CategoryFilterModal extends ConsumerStatefulWidget {
   const CategoryFilterModal({super.key});
 
   @override
-  State<CategoryFilterModal> createState() => _CategoryFilterModalState();
+  ConsumerState<CategoryFilterModal> createState() =>
+      _CategoryFilterModalState();
 }
 
-class _CategoryFilterModalState extends State<CategoryFilterModal> {
+class _CategoryFilterModalState extends ConsumerState<CategoryFilterModal> {
   @override
   Widget build(BuildContext context) {
-    final expenseViewModel = Provider.of<ExpenseViewModel>(context);
-    final categoryViewModel = Provider.of<CategoryViewModel>(context);
+    final expenseViewModel = ref.watch(expenseViewModelProvider);
+    final categoryViewModel = ref.watch(categoryViewModelProvider);
     final theme = Theme.of(context);
 
     return Container(

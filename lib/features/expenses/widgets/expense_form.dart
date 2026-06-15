@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_masked_text2/flutter_masked_text2.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:key_budget/app/config/app_theme.dart';
 import 'package:key_budget/app/widgets/category_autocomplete_field.dart';
 import 'package:key_budget/app/widgets/category_picker_field.dart';
@@ -9,9 +10,8 @@ import 'package:key_budget/features/auth/viewmodel/auth_viewmodel.dart';
 import 'package:key_budget/features/category/view/categories_screen.dart';
 import 'package:key_budget/features/category/viewmodel/category_viewmodel.dart';
 import 'package:key_budget/features/expenses/viewmodel/expense_viewmodel.dart';
-import 'package:provider/provider.dart';
 
-class ExpenseForm extends StatelessWidget {
+class ExpenseForm extends ConsumerWidget {
   final GlobalKey<FormState> formKey;
   final MoneyMaskedTextController amountController;
   final TextEditingController motivationController;
@@ -53,10 +53,9 @@ class ExpenseForm extends StatelessWidget {
   });
 
   @override
-  Widget build(BuildContext context) {
-    final expenseViewModel =
-        Provider.of<ExpenseViewModel>(context, listen: false);
-    final categoryViewModel = Provider.of<CategoryViewModel>(context);
+  Widget build(BuildContext context, WidgetRef ref) {
+    final expenseViewModel = ref.read(expenseViewModelProvider);
+    final categoryViewModel = ref.watch(categoryViewModelProvider);
     final theme = Theme.of(context);
 
     return Form(
@@ -87,13 +86,12 @@ class ExpenseForm extends StatelessWidget {
             isEnabled: isEditing,
             onChanged: onCategoryChanged,
             onManageCategories: () async {
-              final userId = Provider.of<AuthViewModel>(context, listen: false)
-                  .currentUser
-                  ?.id;
+              final userId = ref.read(authViewModelProvider).currentUser?.id;
               await Navigator.of(context).push(
                   MaterialPageRoute(builder: (_) => const CategoriesScreen()));
               if (userId != null && context.mounted) {
-                await Provider.of<CategoryViewModel>(context, listen: false)
+                await ref
+                    .read(categoryViewModelProvider)
                     .fetchCategories(userId);
               }
             },

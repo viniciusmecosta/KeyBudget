@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:key_budget/app/config/app_theme.dart';
 import 'package:key_budget/core/utils/date_utils.dart' as app_date_utils;
 
-class MonthSelector extends StatelessWidget {
+class MonthSelector extends ConsumerWidget {
   final DateTime selectedMonth;
   final ValueChanged<DateTime> onMonthChanged;
   final bool isAllPeriods;
@@ -39,7 +40,7 @@ class MonthSelector extends StatelessWidget {
   }
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
 
     return Container(
@@ -134,7 +135,7 @@ class MonthSelector extends StatelessWidget {
   }
 }
 
-class _MonthPickerModal extends StatefulWidget {
+class _MonthPickerModal extends ConsumerStatefulWidget {
   final DateTime initialMonth;
   final bool isAllPeriods;
   final ValueChanged<DateTime> onMonthSelected;
@@ -148,10 +149,10 @@ class _MonthPickerModal extends StatefulWidget {
   });
 
   @override
-  State<_MonthPickerModal> createState() => _MonthPickerModalState();
+  ConsumerState<_MonthPickerModal> createState() => _MonthPickerModalState();
 }
 
-class _MonthPickerModalState extends State<_MonthPickerModal> {
+class _MonthPickerModalState extends ConsumerState<_MonthPickerModal> {
   late int _selectedYear;
   late bool _isAllPeriods;
 

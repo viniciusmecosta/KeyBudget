@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_masked_text2/flutter_masked_text2.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_mlkit_text_recognition/google_mlkit_text_recognition.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
@@ -15,18 +16,17 @@ import 'package:key_budget/core/services/snackbar_service.dart';
 import 'package:key_budget/features/auth/viewmodel/auth_viewmodel.dart';
 import 'package:key_budget/features/expenses/view/ocr_detailed_viewer_screen.dart';
 import 'package:key_budget/features/expenses/viewmodel/expense_viewmodel.dart';
-import 'package:provider/provider.dart';
 
 import '../widgets/expense_form.dart';
 
-class AddExpenseScreen extends StatefulWidget {
+class AddExpenseScreen extends ConsumerStatefulWidget {
   const AddExpenseScreen({super.key});
 
   @override
-  State<AddExpenseScreen> createState() => _AddExpenseScreenState();
+  ConsumerState<AddExpenseScreen> createState() => _AddExpenseScreenState();
 }
 
-class _AddExpenseScreenState extends State<AddExpenseScreen> {
+class _AddExpenseScreenState extends ConsumerState<AddExpenseScreen> {
   final _formKey = GlobalKey<FormState>();
   final _amountController = MoneyMaskedTextController(
       decimalSeparator: ',', thousandSeparator: '.', leftSymbol: 'R\$ ');
@@ -49,7 +49,18 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
   final _imagePicker = ImagePicker();
 
   @override
+  void initState() {
+    super.initState();
+    _amountController.addListener(_onAmountChanged);
+  }
+
+  void _onAmountChanged() {
+    setState(() {});
+  }
+
+  @override
   void dispose() {
+    _amountController.removeListener(_onAmountChanged);
     _amountController.dispose();
     _motivationController.dispose();
     _locationController.dispose();
@@ -276,9 +287,8 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
     }
     setState(() => _isSaving = true);
     HapticFeedback.mediumImpact();
-    final expenseViewModel =
-        Provider.of<ExpenseViewModel>(context, listen: false);
-    final authViewModel = Provider.of<AuthViewModel>(context, listen: false);
+    final expenseViewModel = ref.read(expenseViewModelProvider);
+    final authViewModel = ref.read(authViewModelProvider);
     final navigator = Navigator.of(context);
     final scaffoldContext = context;
     final userId = authViewModel.currentUser!.id;

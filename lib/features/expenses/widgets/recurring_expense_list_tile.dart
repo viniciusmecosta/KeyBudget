@@ -1,20 +1,20 @@
 import 'package:auto_size_text/auto_size_text.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'package:key_budget/app/config/app_theme.dart';
 import 'package:key_budget/app/utils/navigation_utils.dart';
 import 'package:key_budget/core/models/recurring_expense_model.dart';
 import 'package:key_budget/features/category/viewmodel/category_viewmodel.dart';
 import 'package:key_budget/features/expenses/view/add_edit_recurring_expense_screen.dart';
-import 'package:provider/provider.dart';
 
-class RecurringExpenseListTile extends StatelessWidget {
+class RecurringExpenseListTile extends ConsumerWidget {
   final RecurringExpense expense;
 
   const RecurringExpenseListTile({super.key, required this.expense});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
     final textTheme = theme.textTheme;
@@ -22,7 +22,7 @@ class RecurringExpenseListTile extends StatelessWidget {
         NumberFormat.currency(locale: 'pt_BR', symbol: 'R\$');
 
     final category =
-        context.read<CategoryViewModel>().getCategoryById(expense.categoryId);
+        ref.read(categoryViewModelProvider).getCategoryById(expense.categoryId);
     final categoryColor = category?.color ?? colorScheme.primary;
 
     String recurrenceInfo;

@@ -1,20 +1,21 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:key_budget/app/config/app_theme.dart';
 import 'package:key_budget/app/utils/app_animations.dart';
 import 'package:key_budget/core/services/snackbar_service.dart';
 import 'package:key_budget/features/analysis/viewmodel/analysis_viewmodel.dart';
 import 'package:key_budget/features/category/viewmodel/category_viewmodel.dart';
 import 'package:key_budget/features/expenses/viewmodel/expense_viewmodel.dart';
-import 'package:provider/provider.dart';
 
-class ExportExpensesScreen extends StatefulWidget {
+class ExportExpensesScreen extends ConsumerStatefulWidget {
   const ExportExpensesScreen({super.key});
 
   @override
-  State<ExportExpensesScreen> createState() => _ExportExpensesScreenState();
+  ConsumerState<ExportExpensesScreen> createState() =>
+      _ExportExpensesScreenState();
 }
 
-class _ExportExpensesScreenState extends State<ExportExpensesScreen> {
+class _ExportExpensesScreenState extends ConsumerState<ExportExpensesScreen> {
   DateTime? _startDate;
   DateTime? _endDate;
 
@@ -35,11 +36,9 @@ class _ExportExpensesScreenState extends State<ExportExpensesScreen> {
 
   void _export(BuildContext context,
       {required bool all, required String type}) async {
-    final viewModel = Provider.of<ExpenseViewModel>(context, listen: false);
-    final analysisViewModel =
-        Provider.of<AnalysisViewModel>(context, listen: false);
-    final categoryViewModel =
-        Provider.of<CategoryViewModel>(context, listen: false);
+    final viewModel = ref.read(expenseViewModelProvider);
+    final analysisViewModel = ref.read(analysisViewModelProvider);
+    final categoryViewModel = ref.read(categoryViewModelProvider);
     final scaffoldContext = context;
 
     if (!all && (_startDate == null || _endDate == null)) {
@@ -81,7 +80,7 @@ class _ExportExpensesScreenState extends State<ExportExpensesScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final viewModel = context.watch<ExpenseViewModel>();
+    final viewModel = ref.watch(expenseViewModelProvider);
     final isExporting = viewModel.isExportingCsv || viewModel.isExportingPdf;
     final theme = Theme.of(context);
 
