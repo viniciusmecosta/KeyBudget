@@ -1,24 +1,24 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:key_budget/app/config/app_theme.dart';
 import 'package:key_budget/core/models/document_model.dart';
 import 'package:key_budget/core/services/snackbar_service.dart';
 import 'package:key_budget/features/auth/viewmodel/auth_viewmodel.dart';
 import 'package:key_budget/features/documents/viewmodel/document_viewmodel.dart';
-import 'package:provider/provider.dart';
 
 import '../widgets/document_form.dart';
 
-class EditDocumentScreen extends StatefulWidget {
+class EditDocumentScreen extends ConsumerStatefulWidget {
   final Document document;
 
   const EditDocumentScreen({super.key, required this.document});
 
   @override
-  State<EditDocumentScreen> createState() => _EditDocumentScreenState();
+  ConsumerState<EditDocumentScreen> createState() => _EditDocumentScreenState();
 }
 
-class _EditDocumentScreenState extends State<EditDocumentScreen> {
+class _EditDocumentScreenState extends ConsumerState<EditDocumentScreen> {
   final _formKey = GlobalKey<FormState>();
   late TextEditingController _nameController;
   late TextEditingController _numberController;
@@ -45,9 +45,8 @@ class _EditDocumentScreenState extends State<EditDocumentScreen> {
     if (!_formKey.currentState!.validate()) return;
     HapticFeedback.mediumImpact();
 
-    final viewModel = Provider.of<DocumentViewModel>(context, listen: false);
-    final userId =
-        Provider.of<AuthViewModel>(context, listen: false).currentUser!.id;
+    final viewModel = ref.read(documentViewModelProvider);
+    final userId = ref.read(authViewModelProvider).currentUser!.id;
 
     final updatedDocument = widget.document.copyWith(
       documentName: _nameController.text,
@@ -78,7 +77,7 @@ class _EditDocumentScreenState extends State<EditDocumentScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final viewModel = context.watch<DocumentViewModel>();
+    final viewModel = ref.watch(documentViewModelProvider);
     return Scaffold(
       appBar: AppBar(
         title: const Text('Editar Documento'),

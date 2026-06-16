@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'package:key_budget/app/config/app_theme.dart';
 import 'package:key_budget/core/models/document_model.dart';
 import 'package:key_budget/features/documents/viewmodel/document_viewmodel.dart';
-import 'package:provider/provider.dart';
 
-class DocumentForm extends StatefulWidget {
+class DocumentForm extends ConsumerStatefulWidget {
   final GlobalKey<FormState> formKey;
   final TextEditingController nameController;
   final TextEditingController numberController;
@@ -26,13 +26,13 @@ class DocumentForm extends StatefulWidget {
   });
 
   @override
-  State<DocumentForm> createState() => _DocumentFormState();
+  ConsumerState<DocumentForm> createState() => _DocumentFormState();
 }
 
-class _DocumentFormState extends State<DocumentForm> {
+class _DocumentFormState extends ConsumerState<DocumentForm> {
   @override
   Widget build(BuildContext context) {
-    final viewModel = context.watch<DocumentViewModel>();
+    final viewModel = ref.watch(documentViewModelProvider);
     final theme = Theme.of(context);
 
     return Form(
