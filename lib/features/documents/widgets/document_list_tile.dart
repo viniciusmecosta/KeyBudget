@@ -1,11 +1,12 @@
 import 'package:auto_size_text/auto_size_text.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:key_budget/app/config/app_theme.dart';
 import 'package:key_budget/app/utils/navigation_utils.dart';
 import 'package:key_budget/core/models/document_model.dart';
 import 'package:key_budget/features/documents/view/document_detail_screen.dart';
 
-class DocumentListTile extends StatelessWidget {
+class DocumentListTile extends ConsumerWidget {
   const DocumentListTile({
     super.key,
     required this.doc,
@@ -14,7 +15,7 @@ class DocumentListTile extends StatelessWidget {
   final Document doc;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
     return Card(
       margin: EdgeInsets.zero,

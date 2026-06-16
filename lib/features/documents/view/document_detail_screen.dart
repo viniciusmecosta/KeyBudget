@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'package:key_budget/app/config/app_theme.dart';
 import 'package:key_budget/app/utils/navigation_utils.dart';
@@ -9,22 +10,20 @@ import 'package:key_budget/core/models/document_model.dart';
 import 'package:key_budget/core/services/snackbar_service.dart';
 import 'package:key_budget/features/auth/viewmodel/auth_viewmodel.dart';
 import 'package:key_budget/features/documents/viewmodel/document_viewmodel.dart';
-import 'package:provider/provider.dart';
 import 'package:syncfusion_flutter_pdfviewer/pdfviewer.dart';
 
 import 'add_document_screen.dart';
 import 'edit_document_screen.dart';
 
-class DocumentDetailScreen extends StatelessWidget {
+class DocumentDetailScreen extends ConsumerWidget {
   final Document document;
 
   const DocumentDetailScreen({super.key, required this.document});
 
   @override
-  Widget build(BuildContext context) {
-    final viewModel = context.watch<DocumentViewModel>();
-    final userId =
-        Provider.of<AuthViewModel>(context, listen: false).currentUser!.id;
+  Widget build(BuildContext context, WidgetRef ref) {
+    final viewModel = ref.watch(documentViewModelProvider);
+    final userId = ref.read(authViewModelProvider).currentUser!.id;
 
     return Scaffold(
       appBar: AppBar(
@@ -70,7 +69,8 @@ class DocumentDetailScreen extends StatelessWidget {
           _buildInfoCard(context),
           if (document.additionalFields.isNotEmpty)
             _buildAdditionalFieldsCard(context),
-          if (document.attachments.isNotEmpty) _buildAttachmentsCard(context),
+          if (document.attachments.isNotEmpty)
+            _buildAttachmentsCard(context, ref),
           if (document.versions.isNotEmpty)
             _buildVersionsCard(context, viewModel, userId),
         ],
@@ -144,7 +144,7 @@ class DocumentDetailScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildAttachmentsCard(BuildContext context) {
+  Widget _buildAttachmentsCard(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
     return Padding(
       padding: const EdgeInsets.only(top: AppTheme.spaceL),
@@ -156,8 +156,8 @@ class DocumentDetailScreen extends StatelessWidget {
             children: [
               Text('Anexos', style: theme.textTheme.titleLarge),
               const SizedBox(height: AppTheme.spaceM),
-              ...document.attachments.map(
-                  (attachment) => _buildAttachmentItem(attachment, context)),
+              ...document.attachments.map((attachment) =>
+                  _buildAttachmentItem(attachment, context, ref)),
             ],
           ),
         ),
@@ -223,7 +223,8 @@ class DocumentDetailScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildAttachmentItem(Attachment attachment, BuildContext context) {
+  Widget _buildAttachmentItem(
+      Attachment attachment, BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
     final isPdf = attachment.type.contains('pdf');
 
@@ -245,8 +246,7 @@ class DocumentDetailScreen extends StatelessWidget {
               icon: const Icon(Icons.share_outlined),
               tooltip: 'Compartilhar',
               onPressed: () async {
-                final viewModel =
-                    Provider.of<DocumentViewModel>(context, listen: false);
+                final viewModel = ref.read(documentViewModelProvider);
                 final scaffoldContext = context;
                 await viewModel.shareAttachment(attachment);
                 if (scaffoldContext.mounted && viewModel.errorMessage != null) {
@@ -258,8 +258,7 @@ class DocumentDetailScreen extends StatelessWidget {
           ),
           GestureDetector(
             onTap: () async {
-              final viewModel =
-                  Provider.of<DocumentViewModel>(context, listen: false);
+              final viewModel = ref.read(documentViewModelProvider);
               final scaffoldContext = context;
 
               if (isPdf) {
@@ -289,7 +288,8 @@ class DocumentDetailScreen extends StatelessWidget {
               height: 200,
               color: theme.colorScheme.surfaceContainerHighest,
               child: FutureBuilder<String?>(
-                future: Provider.of<DocumentViewModel>(context, listen: false)
+                future: ref
+                    .read(documentViewModelProvider)
                     .getAttachmentAsBase64(attachment),
                 builder: (context, snapshot) {
                   if (snapshot.connectionState == ConnectionState.waiting) {

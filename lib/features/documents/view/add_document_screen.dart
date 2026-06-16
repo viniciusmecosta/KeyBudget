@@ -1,15 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:key_budget/app/config/app_theme.dart';
 import 'package:key_budget/core/models/document_model.dart';
 import 'package:key_budget/core/services/snackbar_service.dart';
 import 'package:key_budget/features/auth/viewmodel/auth_viewmodel.dart';
 import 'package:key_budget/features/documents/viewmodel/document_viewmodel.dart';
-import 'package:provider/provider.dart';
 
 import '../widgets/document_form.dart';
 
-class AddDocumentScreen extends StatefulWidget {
+class AddDocumentScreen extends ConsumerStatefulWidget {
   final Document? originalDocument;
   final bool isNewVersion;
 
@@ -17,10 +17,10 @@ class AddDocumentScreen extends StatefulWidget {
       {super.key, this.originalDocument, this.isNewVersion = false});
 
   @override
-  State<AddDocumentScreen> createState() => _AddDocumentScreenState();
+  ConsumerState<AddDocumentScreen> createState() => _AddDocumentScreenState();
 }
 
-class _AddDocumentScreenState extends State<AddDocumentScreen> {
+class _AddDocumentScreenState extends ConsumerState<AddDocumentScreen> {
   final _formKey = GlobalKey<FormState>();
   late TextEditingController _nameController;
   late TextEditingController _numberController;
@@ -42,9 +42,8 @@ class _AddDocumentScreenState extends State<AddDocumentScreen> {
     if (!_formKey.currentState!.validate()) return;
     HapticFeedback.mediumImpact();
 
-    final viewModel = Provider.of<DocumentViewModel>(context, listen: false);
-    final userId =
-        Provider.of<AuthViewModel>(context, listen: false).currentUser!.id;
+    final viewModel = ref.read(documentViewModelProvider);
+    final userId = ref.read(authViewModelProvider).currentUser!.id;
 
     final newDocumentData = Document(
       documentName: _nameController.text,
@@ -86,7 +85,7 @@ class _AddDocumentScreenState extends State<AddDocumentScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final viewModel = context.watch<DocumentViewModel>();
+    final viewModel = ref.watch(documentViewModelProvider);
     return Scaffold(
       appBar: AppBar(
         title:
