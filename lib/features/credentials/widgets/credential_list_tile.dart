@@ -3,21 +3,22 @@ import 'dart:convert';
 import 'package:auto_size_text/auto_size_text.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:key_budget/app/config/app_theme.dart';
 import 'package:key_budget/app/utils/navigation_utils.dart';
 import 'package:key_budget/core/models/credential_model.dart';
 import 'package:key_budget/core/services/snackbar_service.dart';
 import 'package:key_budget/features/credentials/view/credential_detail_screen.dart';
 import 'package:key_budget/features/credentials/viewmodel/credential_viewmodel.dart';
-import 'package:provider/provider.dart';
 
-class CredentialListTile extends StatelessWidget {
+class CredentialListTile extends ConsumerWidget {
   final Credential credential;
 
   const CredentialListTile({super.key, required this.credential});
 
-  void _showDecryptedPassword(BuildContext context, String encryptedPassword) {
-    final viewModel = Provider.of<CredentialViewModel>(context, listen: false);
+  void _showDecryptedPassword(
+      BuildContext context, WidgetRef ref, String encryptedPassword) {
+    final viewModel = ref.read(credentialViewModelProvider);
     final decryptedPassword = viewModel.decryptPassword(encryptedPassword);
     final theme = Theme.of(context);
 
@@ -79,7 +80,7 @@ class CredentialListTile extends StatelessWidget {
   }
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
     final logoPath = credential.logoPath;
 
@@ -141,7 +142,7 @@ class CredentialListTile extends StatelessWidget {
               IconButton(
                 icon: const Icon(Icons.visibility_outlined),
                 onPressed: () => _showDecryptedPassword(
-                    context, credential.encryptedPassword),
+                    context, ref, credential.encryptedPassword),
               ),
             ],
           ),

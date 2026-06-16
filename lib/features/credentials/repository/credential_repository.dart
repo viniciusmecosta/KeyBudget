@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:key_budget/core/models/credential_model.dart';
 import 'package:key_budget/core/models/folder_model.dart';
 
@@ -31,6 +32,16 @@ class CredentialRepository {
 
   Future<void> addCredential(String userId, Credential credential) async {
     await _getCredentialsCollection(userId).add(credential);
+  }
+
+  Future<void> restoreCredential(String userId, Credential credential) async {
+    if (credential.id != null) {
+      await _getCredentialsCollection(userId)
+          .doc(credential.id)
+          .set(credential);
+    } else {
+      await addCredential(userId, credential);
+    }
   }
 
   Stream<List<Credential>> getCredentialsStreamForUser(String userId) {
@@ -92,3 +103,6 @@ class CredentialRepository {
     await batch.commit();
   }
 }
+
+final credentialRepositoryProvider =
+    Provider<CredentialRepository>((ref) => CredentialRepository());
