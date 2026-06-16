@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:key_budget/app/widgets/animated_list_item.dart';
 import 'package:key_budget/core/models/credential_model.dart';
 import 'package:key_budget/core/models/folder_model.dart';
@@ -330,6 +331,10 @@ class CredentialViewModel extends ChangeNotifier {
     await _repository.deleteCredential(userId, credentialId);
   }
 
+  Future<void> restoreCredential(String userId, Credential credential) async {
+    await _repository.restoreCredential(userId, credential);
+  }
+
   Future<bool> exportCredentialsToCsv(BuildContext context) async {
     _setExportingCsv(true);
     try {
@@ -400,3 +405,6 @@ class CredentialViewModel extends ChangeNotifier {
     super.dispose();
   }
 }
+
+final credentialViewModelProvider =
+    ChangeNotifierProvider<CredentialViewModel>((ref) => CredentialViewModel());

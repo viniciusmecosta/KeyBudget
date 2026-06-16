@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:key_budget/core/models/folder_model.dart';
 
-class FolderListTile extends StatelessWidget {
+class FolderListTile extends ConsumerWidget {
   final Folder folder;
   final VoidCallback onTap;
   final VoidCallback onDelete;
@@ -14,7 +15,7 @@ class FolderListTile extends StatelessWidget {
   });
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     return Card(
       margin: const EdgeInsets.only(bottom: 12),
       elevation: 2,

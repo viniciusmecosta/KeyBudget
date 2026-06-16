@@ -3,6 +3,7 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:key_budget/app/config/app_theme.dart';
 import 'package:key_budget/app/utils/app_animations.dart';
 import 'package:key_budget/app/utils/widget_to_image.dart';
@@ -12,21 +13,22 @@ import 'package:key_budget/features/auth/viewmodel/auth_viewmodel.dart';
 import 'package:key_budget/features/credentials/viewmodel/credential_viewmodel.dart';
 import 'package:mask_text_input_formatter/mask_text_input_formatter.dart';
 import 'package:path_provider/path_provider.dart';
-import 'package:provider/provider.dart';
 import 'package:share_plus/share_plus.dart';
 
 import '../widgets/credential_form.dart';
 
-class CredentialDetailScreen extends StatefulWidget {
+class CredentialDetailScreen extends ConsumerStatefulWidget {
   final Credential credential;
 
   const CredentialDetailScreen({super.key, required this.credential});
 
   @override
-  State<CredentialDetailScreen> createState() => _CredentialDetailScreenState();
+  ConsumerState<CredentialDetailScreen> createState() =>
+      _CredentialDetailScreenState();
 }
 
-class _CredentialDetailScreenState extends State<CredentialDetailScreen> {
+class _CredentialDetailScreenState
+    extends ConsumerState<CredentialDetailScreen> {
   final _formKey = GlobalKey<FormState>();
   late TextEditingController _locationController;
   late TextEditingController _loginController;
@@ -49,9 +51,9 @@ class _CredentialDetailScreenState extends State<CredentialDetailScreen> {
   @override
   void initState() {
     super.initState();
-    final decryptedPassword =
-        Provider.of<CredentialViewModel>(context, listen: false)
-            .decryptPassword(widget.credential.encryptedPassword);
+    final decryptedPassword = ref
+        .read(credentialViewModelProvider)
+        .decryptPassword(widget.credential.encryptedPassword);
 
     _decryptionError = decryptedPassword == 'ERRO_DECRIPT';
 
@@ -86,8 +88,8 @@ class _CredentialDetailScreenState extends State<CredentialDetailScreen> {
     setState(() => _isSaving = true);
     HapticFeedback.mediumImpact();
 
-    final authViewModel = Provider.of<AuthViewModel>(context, listen: false);
-    final viewModel = Provider.of<CredentialViewModel>(context, listen: false);
+    final authViewModel = ref.read(authViewModelProvider);
+    final viewModel = ref.read(credentialViewModelProvider);
     final scaffoldContext = context;
     final navigator = Navigator.of(context);
     final userId = authViewModel.currentUser!.id;
@@ -115,43 +117,30 @@ class _CredentialDetailScreenState extends State<CredentialDetailScreen> {
     navigator.pop();
   }
 
-  void _deleteCredential() {
-    showDialog(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text('Confirmar Exclusão'),
-        content:
-            const Text('Você tem certeza que deseja excluir esta credencial?'),
-        actions: [
-          TextButton(
-            child: const Text('Cancelar'),
-            onPressed: () => Navigator.of(ctx).pop(),
-          ),
-          TextButton(
-            child: const Text('Excluir'),
-            onPressed: () async {
-              HapticFeedback.mediumImpact();
-              final authViewModel =
-                  Provider.of<AuthViewModel>(context, listen: false);
-              final viewModel =
-                  Provider.of<CredentialViewModel>(context, listen: false);
-              final scaffoldContext = context;
-              final dialogNavigator = Navigator.of(ctx);
-              final screenNavigator = Navigator.of(context);
+  void _deleteCredential() async {
+    HapticFeedback.mediumImpact();
+    final authViewModel = ref.read(authViewModelProvider);
+    final viewModel = ref.read(credentialViewModelProvider);
+    final currentContext = context;
+    final screenNavigator = Navigator.of(context);
+    final deletedCredential = widget.credential;
 
-              final userId = authViewModel.currentUser!.id;
-              await viewModel.deleteCredential(userId, widget.credential.id!);
+    final userId = authViewModel.currentUser!.id;
+    await viewModel.deleteCredential(userId, deletedCredential.id!);
 
-              if (!scaffoldContext.mounted) return;
-              SnackbarService.showSuccess(
-                  scaffoldContext, 'Credencial excluída com sucesso!');
-              dialogNavigator.pop();
-              screenNavigator.pop();
-            },
-          ),
-        ],
+    if (!currentContext.mounted) return;
+    SnackbarService.showSuccess(
+      currentContext,
+      'Credencial excluída.',
+      action: SnackBarAction(
+        label: 'Desfazer',
+        textColor: Colors.white,
+        onPressed: () async {
+          await viewModel.restoreCredential(userId, deletedCredential);
+        },
       ),
     );
+    screenNavigator.pop();
   }
 
   void _showExportOptions() {
@@ -455,7 +444,7 @@ class _CredentialDetailScreenState extends State<CredentialDetailScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final vm = Provider.of<CredentialViewModel>(context);
+    final vm = ref.watch(credentialViewModelProvider);
 
     return Scaffold(
       appBar: AppBar(
