@@ -1,16 +1,16 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'package:key_budget/app/config/app_theme.dart';
-import 'package:provider/provider.dart';
 
 import '../viewmodel/analysis_viewmodel.dart';
 
-class AnalysisStatsOverviewWidget extends StatelessWidget {
+class AnalysisStatsOverviewWidget extends ConsumerWidget {
   const AnalysisStatsOverviewWidget({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    final viewModel = Provider.of<AnalysisViewModel>(context);
+  Widget build(BuildContext context, WidgetRef ref) {
+    final viewModel = ref.watch(analysisViewModelProvider);
     return Column(
       children: [
         Row(

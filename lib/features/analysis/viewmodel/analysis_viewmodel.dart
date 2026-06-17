@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'package:key_budget/core/models/expense_category_model.dart';
 import 'package:key_budget/core/models/expense_model.dart';
@@ -310,3 +311,9 @@ class AnalysisViewModel extends ChangeNotifier {
     };
   }
 }
+
+final analysisViewModelProvider =
+    ChangeNotifierProvider<AnalysisViewModel>((ref) => AnalysisViewModel(
+          categoryViewModel: ref.read(categoryViewModelProvider),
+          expenseViewModel: ref.read(expenseViewModelProvider),
+        ));

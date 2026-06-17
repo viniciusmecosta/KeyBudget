@@ -1,8 +1,8 @@
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'package:key_budget/app/config/app_theme.dart';
-import 'package:provider/provider.dart';
 
 import '../viewmodel/analysis_viewmodel.dart';
 import 'empty_chart_state_widget.dart';
@@ -14,21 +14,21 @@ extension StringCapitalize on String {
   }
 }
 
-class CategoryAnalysisSectionWidget extends StatefulWidget {
+class CategoryAnalysisSectionWidget extends ConsumerStatefulWidget {
   const CategoryAnalysisSectionWidget({super.key});
 
   @override
-  State<CategoryAnalysisSectionWidget> createState() =>
+  ConsumerState<CategoryAnalysisSectionWidget> createState() =>
       _CategoryAnalysisSectionWidgetState();
 }
 
 class _CategoryAnalysisSectionWidgetState
-    extends State<CategoryAnalysisSectionWidget> {
+    extends ConsumerState<CategoryAnalysisSectionWidget> {
   int _touchedPieIndex = -1;
 
   @override
   Widget build(BuildContext context) {
-    final viewModel = Provider.of<AnalysisViewModel>(context);
+    final viewModel = ref.watch(analysisViewModelProvider);
     return Column(
       children: [
         _buildCategoryMonthSelector(context, viewModel),

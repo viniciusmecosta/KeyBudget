@@ -2,20 +2,20 @@ import 'dart:math';
 
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'package:key_budget/app/config/app_theme.dart';
 import 'package:key_budget/core/services/snackbar_service.dart';
-import 'package:provider/provider.dart';
 
 import '../viewmodel/analysis_viewmodel.dart';
 import 'empty_chart_state_widget.dart';
 
-class MonthlyTrendSectionWidget extends StatelessWidget {
+class MonthlyTrendSectionWidget extends ConsumerWidget {
   const MonthlyTrendSectionWidget({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    final viewModel = Provider.of<AnalysisViewModel>(context);
+  Widget build(BuildContext context, WidgetRef ref) {
+    final viewModel = ref.watch(analysisViewModelProvider);
     final data = viewModel.lastNMonthsData;
     final chartEntries = data.entries.toList();
 
