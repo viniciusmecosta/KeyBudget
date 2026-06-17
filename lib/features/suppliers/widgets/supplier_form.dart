@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:key_budget/app/widgets/image_picker_widget.dart';
 import 'package:key_budget/core/utils/formatters.dart';
 import 'package:key_budget/features/credentials/widgets/saved_logos_screen.dart';
 import 'package:mask_text_input_formatter/mask_text_input_formatter.dart';
 
-class SupplierForm extends StatelessWidget {
+class SupplierForm extends ConsumerWidget {
   final GlobalKey<FormState> formKey;
   final TextEditingController nameController;
   final TextEditingController repNameController;
@@ -29,7 +30,7 @@ class SupplierForm extends StatelessWidget {
   });
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
     final phoneMaskFormatter = MaskTextInputFormatter(
       mask: '(##) #####-####',

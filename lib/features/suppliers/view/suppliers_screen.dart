@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:key_budget/app/config/app_theme.dart';
 import 'package:key_budget/app/utils/app_animations.dart';
 import 'package:key_budget/app/utils/navigation_utils.dart';
@@ -7,34 +8,35 @@ import 'package:key_budget/app/widgets/empty_state_widget.dart';
 import 'package:key_budget/features/auth/viewmodel/auth_viewmodel.dart';
 import 'package:key_budget/features/suppliers/view/add_supplier_screen.dart';
 import 'package:key_budget/features/suppliers/viewmodel/supplier_viewmodel.dart';
-import 'package:provider/provider.dart';
 
 import '../widgets/supplier_list_tile.dart';
 
-class SuppliersScreen extends StatefulWidget {
+class SuppliersScreen extends ConsumerStatefulWidget {
   const SuppliersScreen({super.key});
 
   @override
-  State<SuppliersScreen> createState() => _SuppliersScreenState();
+  ConsumerState<SuppliersScreen> createState() => _SuppliersScreenState();
 }
 
-class _SuppliersScreenState extends State<SuppliersScreen> {
+class _SuppliersScreenState extends ConsumerState<SuppliersScreen> {
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      final authViewModel = Provider.of<AuthViewModel>(context, listen: false);
+      final authViewModel = ref.read(authViewModelProvider);
       if (authViewModel.currentUser != null) {
-        Provider.of<SupplierViewModel>(context, listen: false)
+        ref
+            .read(supplierViewModelProvider)
             .listenToSuppliers(authViewModel.currentUser!.id);
       }
     });
   }
 
   Future<void> _handleRefresh() async {
-    final authViewModel = Provider.of<AuthViewModel>(context, listen: false);
+    final authViewModel = ref.read(authViewModelProvider);
     if (mounted && authViewModel.currentUser != null) {
-      Provider.of<SupplierViewModel>(context, listen: false)
+      ref
+          .read(supplierViewModelProvider)
           .listenToSuppliers(authViewModel.currentUser!.id);
     }
   }
@@ -48,8 +50,9 @@ class _SuppliersScreenState extends State<SuppliersScreen> {
       body: SafeArea(
         child: AppAnimations.fadeIn(RefreshIndicator(
           onRefresh: _handleRefresh,
-          child: Consumer<SupplierViewModel>(
-            builder: (context, vm, child) {
+          child: Consumer(
+            builder: (context, ref, _) {
+              final vm = ref.watch(supplierViewModelProvider);
               if (vm.isLoading) {
                 return const SuppliersSkeleton();
               }
@@ -95,11 +98,11 @@ class _SuppliersScreenState extends State<SuppliersScreen> {
   }
 }
 
-class SuppliersSkeleton extends StatelessWidget {
+class SuppliersSkeleton extends ConsumerWidget {
   const SuppliersSkeleton({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
     final shimmerColor = theme.colorScheme.surface;
 
