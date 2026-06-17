@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:auto_size_text/auto_size_text.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:key_budget/app/config/app_theme.dart';
 import 'package:key_budget/app/utils/navigation_utils.dart';
@@ -10,7 +11,7 @@ import 'package:key_budget/core/services/snackbar_service.dart';
 import 'package:key_budget/features/suppliers/view/supplier_detail_screen.dart';
 import 'package:url_launcher/url_launcher.dart';
 
-class SupplierListTile extends StatelessWidget {
+class SupplierListTile extends ConsumerWidget {
   final Supplier supplier;
 
   const SupplierListTile({super.key, required this.supplier});
@@ -44,7 +45,7 @@ class SupplierListTile extends StatelessWidget {
   }
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
     final photoPath = supplier.photoPath;
     String subtitleText;

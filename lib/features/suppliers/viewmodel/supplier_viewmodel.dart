@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:key_budget/core/models/supplier_model.dart';
 import 'package:key_budget/features/suppliers/repository/supplier_repository.dart';
 
@@ -91,6 +92,10 @@ class SupplierViewModel extends ChangeNotifier {
     await _repository.deleteSupplier(userId, supplierId);
   }
 
+  Future<void> restoreSupplier(String userId, Supplier supplier) async {
+    await _repository.restoreSupplier(userId, supplier);
+  }
+
   void clearData() {
     _suppliersSubscription?.cancel();
     _allSuppliers = [];
@@ -104,3 +109,6 @@ class SupplierViewModel extends ChangeNotifier {
     super.dispose();
   }
 }
+
+final supplierViewModelProvider =
+    ChangeNotifierProvider<SupplierViewModel>((ref) => SupplierViewModel());

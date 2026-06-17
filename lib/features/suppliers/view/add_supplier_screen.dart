@@ -1,23 +1,23 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:key_budget/app/config/app_theme.dart';
 import 'package:key_budget/app/utils/app_animations.dart';
 import 'package:key_budget/core/services/snackbar_service.dart';
 import 'package:key_budget/features/auth/viewmodel/auth_viewmodel.dart';
 import 'package:key_budget/features/suppliers/viewmodel/supplier_viewmodel.dart';
 import 'package:mask_text_input_formatter/mask_text_input_formatter.dart';
-import 'package:provider/provider.dart';
 
 import '../widgets/supplier_form.dart';
 
-class AddSupplierScreen extends StatefulWidget {
+class AddSupplierScreen extends ConsumerStatefulWidget {
   const AddSupplierScreen({super.key});
 
   @override
-  State<AddSupplierScreen> createState() => _AddSupplierScreenState();
+  ConsumerState<AddSupplierScreen> createState() => _AddSupplierScreenState();
 }
 
-class _AddSupplierScreenState extends State<AddSupplierScreen> {
+class _AddSupplierScreenState extends ConsumerState<AddSupplierScreen> {
   final _formKey = GlobalKey<FormState>();
   final _nameController = TextEditingController();
   final _repNameController = TextEditingController();
@@ -43,8 +43,8 @@ class _AddSupplierScreenState extends State<AddSupplierScreen> {
     setState(() => _isSaving = true);
     HapticFeedback.mediumImpact();
 
-    final viewModel = Provider.of<SupplierViewModel>(context, listen: false);
-    final authViewModel = Provider.of<AuthViewModel>(context, listen: false);
+    final viewModel = ref.read(supplierViewModelProvider);
+    final authViewModel = ref.read(authViewModelProvider);
     final userId = authViewModel.currentUser!.id;
     final phoneMaskFormatter = MaskTextInputFormatter(mask: '(##) #####-####');
 
