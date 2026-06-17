@@ -1,29 +1,30 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:key_budget/app/config/app_theme.dart';
 import 'package:key_budget/app/utils/app_animations.dart';
 import 'package:key_budget/core/services/csv_service.dart';
 import 'package:key_budget/core/services/pdf_service.dart';
-import 'package:provider/provider.dart';
 
 import '../viewmodel/analysis_viewmodel.dart';
 import '../widgets/analysis_stats_overview_widget.dart';
 import '../widgets/category_analysis_section_widget.dart';
 import '../widgets/monthly_trend_section_widget.dart';
 
-class AnalysisScreen extends StatefulWidget {
+class AnalysisScreen extends ConsumerStatefulWidget {
   const AnalysisScreen({super.key});
 
   @override
-  State<AnalysisScreen> createState() => _AnalysisScreenState();
+  ConsumerState<AnalysisScreen> createState() => _AnalysisScreenState();
 }
 
-class _AnalysisScreenState extends State<AnalysisScreen> {
+class _AnalysisScreenState extends ConsumerState<AnalysisScreen> {
   bool _isFirstLoad = true;
+  bool _isExporting = false;
 
   @override
   Widget build(BuildContext context) {
-    final viewModel = Provider.of<AnalysisViewModel>(context);
+    final viewModel = ref.watch(analysisViewModelProvider);
     final theme = Theme.of(context);
 
     Widget buildAnimatedWidget(Widget child, int index) {
@@ -46,52 +47,34 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
             color: theme.colorScheme.onSurface,
           ),
         ),
+        bottom: PreferredSize(
+          preferredSize: const Size.fromHeight(4),
+          child: _isExporting
+              ? const LinearProgressIndicator()
+              : const SizedBox(height: 4),
+        ),
         actions: [
           IconButton(
             icon: const Icon(Icons.picture_as_pdf),
-            onPressed: () async {
-              showDialog(
-                context: context,
-                barrierDismissible: false,
-                builder: (ctx) => const AlertDialog(
-                  content: Row(
-                    children: [
-                      CircularProgressIndicator(),
-                      SizedBox(width: 24),
-                      Text('Gerando PDF...'),
-                    ],
-                  ),
-                ),
-              );
-              final vm = Provider.of<AnalysisViewModel>(context, listen: false);
-              await PdfService().exportAnalysisPdf(context, vm);
-              if (context.mounted) {
-                Navigator.of(context).pop();
-              }
-            },
+            onPressed: _isExporting
+                ? null
+                : () async {
+                    setState(() => _isExporting = true);
+                    final vm = ref.read(analysisViewModelProvider);
+                    await PdfService().exportAnalysisPdf(context, vm);
+                    if (mounted) setState(() => _isExporting = false);
+                  },
           ),
           IconButton(
             icon: const Icon(Icons.grid_on),
-            onPressed: () async {
-              showDialog(
-                context: context,
-                barrierDismissible: false,
-                builder: (ctx) => const AlertDialog(
-                  content: Row(
-                    children: [
-                      CircularProgressIndicator(),
-                      SizedBox(width: 24),
-                      Text('Gerando CSV...'),
-                    ],
-                  ),
-                ),
-              );
-              final vm = Provider.of<AnalysisViewModel>(context, listen: false);
-              await CsvService().exportAnalysisCsv(context, vm);
-              if (context.mounted) {
-                Navigator.of(context).pop();
-              }
-            },
+            onPressed: _isExporting
+                ? null
+                : () async {
+                    setState(() => _isExporting = true);
+                    final vm = ref.read(analysisViewModelProvider);
+                    await CsvService().exportAnalysisCsv(context, vm);
+                    if (mounted) setState(() => _isExporting = false);
+                  },
           ),
         ],
         leading: IconButton(
@@ -181,11 +164,11 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
   }
 }
 
-class AnalysisSkeleton extends StatelessWidget {
+class AnalysisSkeleton extends ConsumerWidget {
   const AnalysisSkeleton({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
     final shimmerColor = theme.colorScheme.surface;
 
