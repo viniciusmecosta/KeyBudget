@@ -2,9 +2,11 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:key_budget/app/config/app_theme.dart';
 import 'package:key_budget/app/utils/app_animations.dart';
 import 'package:key_budget/app/utils/navigation_utils.dart';
+import 'package:key_budget/app/widgets/responsive_center.dart';
 import 'package:key_budget/core/services/csv_service.dart';
 import 'package:key_budget/core/services/drive_service.dart';
 import 'package:key_budget/core/services/snackbar_service.dart';
@@ -15,22 +17,21 @@ import 'package:key_budget/features/credentials/viewmodel/credential_viewmodel.d
 import 'package:key_budget/features/expenses/viewmodel/expense_viewmodel.dart';
 import 'package:key_budget/features/user/view/edit_user_screen.dart';
 import 'package:path_provider/path_provider.dart';
-import 'package:provider/provider.dart';
 
 import '../widgets/settings_tile.dart';
 
-class UserScreen extends StatelessWidget {
+class UserScreen extends ConsumerWidget {
   const UserScreen({super.key});
 
-  Future<void> _performBackup(
-      BuildContext context, bool exp, bool rec, bool cred, bool cat) async {
+  Future<void> _performBackup(BuildContext context, WidgetRef ref, bool exp,
+      bool rec, bool cred, bool cat) async {
     try {
       final driveService = DriveService();
       final csvService = CsvService();
 
-      final expVm = Provider.of<ExpenseViewModel>(context, listen: false);
-      final credVm = Provider.of<CredentialViewModel>(context, listen: false);
-      final catVm = Provider.of<CategoryViewModel>(context, listen: false);
+      final expVm = ref.read(expenseViewModelProvider);
+      final credVm = ref.read(credentialViewModelProvider);
+      final catVm = ref.read(categoryViewModelProvider);
 
       final dir = await getTemporaryDirectory();
 
@@ -90,7 +91,7 @@ class UserScreen extends StatelessWidget {
     }
   }
 
-  void _showBackupDialog(BuildContext context) {
+  void _showBackupDialog(BuildContext context, WidgetRef ref) {
     bool backupExpenses = true;
     bool backupRecurring = true;
     bool backupCredentials = true;
@@ -197,6 +198,7 @@ class UserScreen extends StatelessWidget {
                             setState(() => isBackingUp = true);
                             await _performBackup(
                               context,
+                              ref,
                               backupExpenses,
                               backupRecurring,
                               backupCredentials,
@@ -221,7 +223,7 @@ class UserScreen extends StatelessWidget {
   }
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
 
     return Scaffold(
@@ -240,8 +242,9 @@ class UserScreen extends StatelessWidget {
         ],
       ),
       body: SafeArea(
-        child: Consumer<AuthViewModel>(
-          builder: (context, authViewModel, child) {
+        child: Consumer(
+          builder: (context, ref, _) {
+            final authViewModel = ref.watch(authViewModelProvider);
             final user = authViewModel.currentUser;
             final avatarPath = user?.avatarPath;
             ImageProvider? imageProvider;
@@ -258,7 +261,8 @@ class UserScreen extends StatelessWidget {
               }
             }
 
-            return AppAnimations.fadeInFromBottom(ListView(
+            return AppAnimations.fadeInFromBottom(ResponsiveCenter(
+                child: ListView(
               padding: const EdgeInsets.all(AppTheme.defaultPadding),
               children: [
                 const SizedBox(height: AppTheme.spaceL),
@@ -310,7 +314,7 @@ class UserScreen extends StatelessWidget {
                 SettingsTile(
                   icon: Icons.cloud_upload_outlined,
                   title: 'Backup no Google Drive',
-                  onTap: () => _showBackupDialog(context),
+                  onTap: () => _showBackupDialog(context, ref),
                 ),
                 const SizedBox(height: AppTheme.spaceS),
                 SettingsTile(
@@ -335,8 +339,9 @@ class UserScreen extends StatelessWidget {
                           ElevatedButton(
                             onPressed: () {
                               Navigator.of(context).pop();
-                              Provider.of<AuthViewModel>(context, listen: false)
-                                  .logout(context);
+                              ref
+                                  .read(authViewModelProvider)
+                                  .logout(context, ref);
                             },
                             child:
                                 Text("Sair", style: theme.textTheme.labelLarge),
@@ -347,7 +352,7 @@ class UserScreen extends StatelessWidget {
                   },
                 ),
               ],
-            ));
+            )));
           },
         ),
       ),

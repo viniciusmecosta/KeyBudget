@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:key_budget/app/widgets/image_picker_widget.dart';
 import 'package:key_budget/app/widgets/password_form_field.dart';
 import 'package:mask_text_input_formatter/mask_text_input_formatter.dart';
 
-class UserForm extends StatefulWidget {
+class UserForm extends ConsumerStatefulWidget {
   final GlobalKey<FormState> formKey;
   final TextEditingController nameController;
   final TextEditingController phoneController;
@@ -24,10 +25,10 @@ class UserForm extends StatefulWidget {
   });
 
   @override
-  State<UserForm> createState() => _UserFormState();
+  ConsumerState<UserForm> createState() => _UserFormState();
 }
 
-class _UserFormState extends State<UserForm> {
+class _UserFormState extends ConsumerState<UserForm> {
   final _phoneMaskFormatter = MaskTextInputFormatter(
     mask: '(##) #####-####',
     filter: {"#": RegExp(r'[0-9]')},

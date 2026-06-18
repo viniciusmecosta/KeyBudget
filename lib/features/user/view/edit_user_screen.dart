@@ -1,22 +1,22 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:key_budget/app/config/app_theme.dart';
 import 'package:key_budget/app/utils/app_animations.dart';
 import 'package:key_budget/core/services/snackbar_service.dart';
 import 'package:key_budget/features/auth/viewmodel/auth_viewmodel.dart';
 import 'package:mask_text_input_formatter/mask_text_input_formatter.dart';
-import 'package:provider/provider.dart';
 
 import '../widgets/user_form.dart';
 
-class EditUserScreen extends StatefulWidget {
+class EditUserScreen extends ConsumerStatefulWidget {
   const EditUserScreen({super.key});
 
   @override
-  State<EditUserScreen> createState() => _EditUserScreenState();
+  ConsumerState<EditUserScreen> createState() => _EditUserScreenState();
 }
 
-class _EditUserScreenState extends State<EditUserScreen> {
+class _EditUserScreenState extends ConsumerState<EditUserScreen> {
   final _formKey = GlobalKey<FormState>();
   late TextEditingController _nameController;
   late TextEditingController _phoneController;
@@ -33,7 +33,7 @@ class _EditUserScreenState extends State<EditUserScreen> {
   @override
   void initState() {
     super.initState();
-    final user = Provider.of<AuthViewModel>(context, listen: false).currentUser;
+    final user = ref.read(authViewModelProvider).currentUser;
     _nameController = TextEditingController(text: user?.name);
     _phoneController = TextEditingController(
         text: _phoneMaskFormatter.maskText(user?.phoneNumber ?? ''));
@@ -57,7 +57,7 @@ class _EditUserScreenState extends State<EditUserScreen> {
     setState(() => _isSaving = true);
     HapticFeedback.mediumImpact();
 
-    final viewModel = Provider.of<AuthViewModel>(context, listen: false);
+    final viewModel = ref.read(authViewModelProvider);
 
     final success = await viewModel.updateUser(
       name: _nameController.text,
