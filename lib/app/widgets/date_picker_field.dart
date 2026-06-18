@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
-class DatePickerField extends StatelessWidget {
+class DatePickerField extends ConsumerWidget {
   final String label;
   final DateTime selectedDate;
   final bool isEditing;
@@ -44,7 +45,7 @@ class DatePickerField extends StatelessWidget {
   }
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     return InkWell(
       onTap: isEditing ? () => _pickDate(context) : null,
       borderRadius: BorderRadius.circular(12),

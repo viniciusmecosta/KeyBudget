@@ -1,5 +1,6 @@
 import 'package:auto_size_text/auto_size_text.dart';
 import 'package:flutter/material.dart' hide DateUtils;
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'package:key_budget/app/config/app_theme.dart';
 import 'package:key_budget/app/utils/navigation_utils.dart';
@@ -7,9 +8,8 @@ import 'package:key_budget/core/models/expense_model.dart';
 import 'package:key_budget/core/utils/date_utils.dart';
 import 'package:key_budget/features/category/viewmodel/category_viewmodel.dart';
 import 'package:key_budget/features/expenses/view/expense_detail_screen.dart';
-import 'package:provider/provider.dart';
 
-class ActivityTile extends StatelessWidget {
+class ActivityTile extends ConsumerWidget {
   final Expense expense;
   final int index;
   final bool showFullDate;
@@ -22,15 +22,15 @@ class ActivityTile extends StatelessWidget {
   });
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
     final textTheme = theme.textTheme;
     final currencyFormatter =
         NumberFormat.currency(locale: 'pt_BR', symbol: 'R\$');
 
-    final category = Provider.of<CategoryViewModel>(context, listen: false)
-        .getCategoryById(expense.categoryId);
+    final category =
+        ref.read(categoryViewModelProvider).getCategoryById(expense.categoryId);
 
     final categoryColor = category?.color ?? colorScheme.primary;
 
@@ -48,7 +48,7 @@ class ActivityTile extends StatelessWidget {
               const SizedBox(width: AppTheme.spaceM),
               _buildExpenseInfo(context, textTheme, colorScheme, category),
               const SizedBox(width: AppTheme.spaceS),
-              _buildAmountInfo(textTheme, currencyFormatter),
+              _buildAmountInfo(textTheme, currencyFormatter, colorScheme),
             ],
           ),
         ),
@@ -111,12 +111,13 @@ class ActivityTile extends StatelessWidget {
     );
   }
 
-  Widget _buildAmountInfo(TextTheme textTheme, NumberFormat currencyFormatter) {
+  Widget _buildAmountInfo(TextTheme textTheme, NumberFormat currencyFormatter,
+      ColorScheme colorScheme) {
     return Text(
       currencyFormatter.format(expense.amount),
       style: textTheme.titleSmall?.copyWith(
         fontWeight: FontWeight.w700,
-        color: AppTheme.negativeChange,
+        color: colorScheme.error,
         fontSize: 15,
       ),
     );

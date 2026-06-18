@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-class PasswordFormField extends StatefulWidget {
+class PasswordFormField extends ConsumerStatefulWidget {
   final TextEditingController controller;
   final String labelText;
   final String? Function(String?)? validator;
@@ -17,10 +18,10 @@ class PasswordFormField extends StatefulWidget {
   });
 
   @override
-  State<PasswordFormField> createState() => _PasswordFormFieldState();
+  ConsumerState<PasswordFormField> createState() => _PasswordFormFieldState();
 }
 
-class _PasswordFormFieldState extends State<PasswordFormField> {
+class _PasswordFormFieldState extends ConsumerState<PasswordFormField> {
   bool _isPasswordVisible = false;
 
   @override

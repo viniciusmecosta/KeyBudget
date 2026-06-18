@@ -1,9 +1,10 @@
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
 
-class ImagePickerWidget extends StatefulWidget {
+class ImagePickerWidget extends ConsumerStatefulWidget {
   final Function(String) onImageSelected;
   final String? initialImagePath;
   final IconData placeholderIcon;
@@ -18,10 +19,10 @@ class ImagePickerWidget extends StatefulWidget {
   });
 
   @override
-  State<ImagePickerWidget> createState() => _ImagePickerWidgetState();
+  ConsumerState<ImagePickerWidget> createState() => _ImagePickerWidgetState();
 }
 
-class _ImagePickerWidgetState extends State<ImagePickerWidget> {
+class _ImagePickerWidgetState extends ConsumerState<ImagePickerWidget> {
   String? _imageBase64;
 
   @override

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-class EmptyStateWidget extends StatelessWidget {
+class EmptyStateWidget extends ConsumerWidget {
   final IconData icon;
   final String message;
   final String? buttonText;
@@ -15,7 +16,7 @@ class EmptyStateWidget extends StatelessWidget {
   });
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     return Center(
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 32.0),

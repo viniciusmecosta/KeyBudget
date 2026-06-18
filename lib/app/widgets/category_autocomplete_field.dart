@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-class CategoryAutocompleteField extends StatelessWidget {
+class CategoryAutocompleteField extends ConsumerWidget {
   final String label;
   final TextEditingController controller;
   final AutocompleteOptionsBuilder<String> optionsBuilder;
@@ -19,7 +20,7 @@ class CategoryAutocompleteField extends StatelessWidget {
   });
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     return Autocomplete<String>(
       initialValue: TextEditingValue(text: controller.text),
       optionsBuilder: optionsBuilder,
