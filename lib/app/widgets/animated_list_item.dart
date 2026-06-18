@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:key_budget/app/config/app_theme.dart';
 
-class AnimatedListItem extends StatefulWidget {
+class AnimatedListItem extends ConsumerStatefulWidget {
   final Widget child;
   final Animation<double> animation;
 
@@ -12,10 +13,10 @@ class AnimatedListItem extends StatefulWidget {
   });
 
   @override
-  State<AnimatedListItem> createState() => _AnimatedListItemState();
+  ConsumerState<AnimatedListItem> createState() => _AnimatedListItemState();
 }
 
-class _AnimatedListItemState extends State<AnimatedListItem>
+class _AnimatedListItemState extends ConsumerState<AnimatedListItem>
     with TickerProviderStateMixin {
   late AnimationController _highlightController;
   late Animation<Color?> _highlightAnimation;
