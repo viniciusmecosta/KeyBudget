@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:key_budget/app/config/app_theme.dart';
+import 'package:key_budget/core/design_system/spacing/app_spacing.dart';
+import 'package:key_budget/core/design_system/borders/app_borders.dart';
 import 'package:key_budget/app/utils/app_animations.dart';
 import 'package:key_budget/core/services/csv_service.dart';
 import 'package:key_budget/core/services/pdf_service.dart';
@@ -97,27 +98,27 @@ class _AnalysisScreenState extends ConsumerState<AnalysisScreen> {
                   physics: const BouncingScrollPhysics(),
                   slivers: [
                     SliverPadding(
-                      padding: const EdgeInsets.all(AppTheme.defaultPadding),
+                      padding: const EdgeInsets.all(AppSpacing.md),
                       sliver: SliverList(
                         delegate: SliverChildListDelegate([
                           buildAnimatedWidget(
                               const AnalysisStatsOverviewWidget(), 0),
-                          const SizedBox(height: AppTheme.spaceXL),
+                          const SizedBox(height: AppSpacing.xl),
                           buildAnimatedWidget(
                               _buildSectionHeader(context, 'Histórico Mensal',
                                   'Acompanhe sua evolução ao longo do tempo'),
                               1),
-                          const SizedBox(height: AppTheme.spaceM),
+                          const SizedBox(height: AppSpacing.md),
                           buildAnimatedWidget(
                               const MonthlyTrendSectionWidget(), 2),
-                          const SizedBox(height: AppTheme.spaceXL),
+                          const SizedBox(height: AppSpacing.xl),
                           buildAnimatedWidget(
                               _buildSectionHeader(
                                   context,
                                   'Análise por Categoria',
                                   'Entenda onde seu dinheiro é gasto'),
                               3),
-                          const SizedBox(height: AppTheme.spaceM),
+                          const SizedBox(height: AppSpacing.md),
                           buildAnimatedWidget(
                               const CategoryAnalysisSectionWidget(), 4),
                         ]),
@@ -176,23 +177,23 @@ class AnalysisSkeleton extends ConsumerWidget {
       physics: const NeverScrollableScrollPhysics(),
       slivers: [
         SliverPadding(
-          padding: const EdgeInsets.all(AppTheme.defaultPadding),
+          padding: const EdgeInsets.all(AppSpacing.md),
           sliver: SliverList(
             delegate: SliverChildListDelegate([
               Container(
                 height: 120,
                 decoration: BoxDecoration(
                   color: theme.colorScheme.surfaceContainerHighest,
-                  borderRadius: BorderRadius.circular(AppTheme.radiusXL),
+                  borderRadius: AppBorders.borderRadiusXL,
                 ),
               ),
-              const SizedBox(height: AppTheme.spaceXL),
+              const SizedBox(height: AppSpacing.xl),
               Container(
                 height: 24,
                 width: 150,
                 decoration: BoxDecoration(
                   color: theme.colorScheme.surfaceContainerHighest,
-                  borderRadius: BorderRadius.circular(AppTheme.radiusM),
+                  borderRadius: AppBorders.borderRadiusMD,
                 ),
               ),
               const SizedBox(height: 8),
@@ -201,24 +202,24 @@ class AnalysisSkeleton extends ConsumerWidget {
                 width: 200,
                 decoration: BoxDecoration(
                   color: theme.colorScheme.surfaceContainerHighest,
-                  borderRadius: BorderRadius.circular(AppTheme.radiusM),
+                  borderRadius: AppBorders.borderRadiusMD,
                 ),
               ),
-              const SizedBox(height: AppTheme.spaceM),
+              const SizedBox(height: AppSpacing.md),
               Container(
                 height: 200,
                 decoration: BoxDecoration(
                   color: theme.colorScheme.surfaceContainerHighest,
-                  borderRadius: BorderRadius.circular(AppTheme.radiusXL),
+                  borderRadius: AppBorders.borderRadiusXL,
                 ),
               ),
-              const SizedBox(height: AppTheme.spaceXL),
+              const SizedBox(height: AppSpacing.xl),
               Container(
                 height: 24,
                 width: 180,
                 decoration: BoxDecoration(
                   color: theme.colorScheme.surfaceContainerHighest,
-                  borderRadius: BorderRadius.circular(AppTheme.radiusM),
+                  borderRadius: AppBorders.borderRadiusMD,
                 ),
               ),
               const SizedBox(height: 8),
@@ -227,15 +228,15 @@ class AnalysisSkeleton extends ConsumerWidget {
                 width: 220,
                 decoration: BoxDecoration(
                   color: theme.colorScheme.surfaceContainerHighest,
-                  borderRadius: BorderRadius.circular(AppTheme.radiusM),
+                  borderRadius: AppBorders.borderRadiusMD,
                 ),
               ),
-              const SizedBox(height: AppTheme.spaceM),
+              const SizedBox(height: AppSpacing.md),
               Container(
                 height: 250,
                 decoration: BoxDecoration(
                   color: theme.colorScheme.surfaceContainerHighest,
-                  borderRadius: BorderRadius.circular(AppTheme.radiusXL),
+                  borderRadius: AppBorders.borderRadiusXL,
                 ),
               ),
             ]),

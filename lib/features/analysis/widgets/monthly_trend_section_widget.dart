@@ -4,7 +4,7 @@ import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
-import 'package:key_budget/app/config/app_theme.dart';
+import 'package:key_budget/core/design_system/spacing/app_spacing.dart';
 import 'package:key_budget/core/services/snackbar_service.dart';
 
 import '../viewmodel/analysis_viewmodel.dart';
@@ -27,7 +27,7 @@ class MonthlyTrendSectionWidget extends ConsumerWidget {
     return Column(
       children: [
         _buildPeriodSelector(context, viewModel),
-        const SizedBox(height: AppTheme.spaceM),
+        const SizedBox(height: AppSpacing.md),
         _buildLineChart(context, viewModel),
       ],
     );
@@ -38,7 +38,7 @@ class MonthlyTrendSectionWidget extends ConsumerWidget {
     final theme = Theme.of(context);
 
     return Container(
-      padding: const EdgeInsets.all(AppTheme.spaceM),
+      padding: const EdgeInsets.all(AppSpacing.md),
       decoration: BoxDecoration(
         color: theme.colorScheme.surface,
         borderRadius: BorderRadius.circular(16),
@@ -87,7 +87,7 @@ class MonthlyTrendSectionWidget extends ConsumerWidget {
                 );
               }).toList(),
             ),
-            const SizedBox(height: AppTheme.spaceM),
+            const SizedBox(height: AppSpacing.md),
           ],
           Row(
             children: [
@@ -103,7 +103,7 @@ class MonthlyTrendSectionWidget extends ConsumerWidget {
                     foregroundColor: theme.colorScheme.primary,
                   ),
                 ),
-                const SizedBox(width: AppTheme.spaceS),
+                const SizedBox(width: AppSpacing.sm),
               ],
               Expanded(
                 child: Material(
@@ -138,7 +138,7 @@ class MonthlyTrendSectionWidget extends ConsumerWidget {
                                 ? theme.colorScheme.secondary
                                 : theme.colorScheme.primary,
                           ),
-                          const SizedBox(width: AppTheme.spaceS),
+                          const SizedBox(width: AppSpacing.sm),
                           Flexible(
                             child: Text(
                               viewModel.currentPeriodLabel,
@@ -160,7 +160,7 @@ class MonthlyTrendSectionWidget extends ConsumerWidget {
                 ),
               ),
               if (!viewModel.useCustomRange) ...[
-                const SizedBox(width: AppTheme.spaceS),
+                const SizedBox(width: AppSpacing.sm),
                 IconButton(
                   icon: const Icon(Icons.chevron_right, size: 24),
                   onPressed: viewModel.canGoToNextPeriod
@@ -176,7 +176,7 @@ class MonthlyTrendSectionWidget extends ConsumerWidget {
             ],
           ),
           if (viewModel.useCustomRange) ...[
-            const SizedBox(height: AppTheme.spaceM),
+            const SizedBox(height: AppSpacing.md),
             TextButton.icon(
               onPressed: () => viewModel.clearCustomRange(),
               icon: const Icon(Icons.clear, size: 16),
@@ -265,7 +265,7 @@ class MonthlyTrendSectionWidget extends ConsumerWidget {
     final roundedMaxValue = _getRoundedMaxValue(maxValue);
 
     return Container(
-      padding: const EdgeInsets.all(AppTheme.spaceM),
+      padding: const EdgeInsets.all(AppSpacing.md),
       decoration: BoxDecoration(
         color: theme.colorScheme.surface,
         borderRadius: BorderRadius.circular(16),
