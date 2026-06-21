@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
-import 'package:key_budget/app/config/app_theme.dart';
+
+import 'package:key_budget/core/design_system/spacing/app_spacing.dart';
+import 'package:key_budget/core/design_system/borders/app_borders.dart';
+import 'package:key_budget/core/design_system/shadows/app_shadows.dart';
 
 class BalanceCard extends ConsumerWidget {
   final String title;
@@ -36,21 +39,22 @@ class BalanceCard extends ConsumerWidget {
 
     return Container(
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(AppTheme.radiusM),
+        borderRadius: AppBorders.borderRadiusL,
         gradient: gradient,
         color: bgColor,
+        boxShadow: gradient != null ? AppShadows.soft : null,
         border: bgColor == theme.colorScheme.surface
             ? Border.all(color: theme.colorScheme.outlineVariant)
             : null,
       ),
       child: Material(
         color: Colors.transparent,
-        borderRadius: BorderRadius.circular(AppTheme.radiusM),
+        borderRadius: AppBorders.borderRadiusL,
         child: InkWell(
           onTap: onTap,
-          borderRadius: BorderRadius.circular(AppTheme.radiusM),
+          borderRadius: AppBorders.borderRadiusL,
           child: Padding(
-            padding: const EdgeInsets.all(AppTheme.spaceL),
+            padding: const EdgeInsets.all(AppSpacing.xl),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -64,13 +68,13 @@ class BalanceCard extends ConsumerWidget {
                         children: [
                           Text(
                             title,
-                            style: theme.textTheme.titleSmall?.copyWith(
-                              color: textColor.withAlpha((255 * 0.7).round()),
+                            style: theme.textTheme.titleMedium?.copyWith(
+                              color: textColor.withAlpha((255 * 0.8).round()),
                               fontWeight: FontWeight.w600,
                               letterSpacing: 0.5,
                             ),
                           ),
-                          const SizedBox(height: AppTheme.spaceS),
+                          const SizedBox(height: AppSpacing.sm),
                           Text(
                             currencyFormatter.format(totalValue),
                             style: theme.textTheme.headlineMedium?.copyWith(
@@ -84,21 +88,21 @@ class BalanceCard extends ConsumerWidget {
                     ),
                     if (gradient != null || backgroundColor != null)
                       Container(
-                        padding: const EdgeInsets.all(AppTheme.spaceS),
+                        padding: const EdgeInsets.all(AppSpacing.sm),
                         decoration: BoxDecoration(
-                          color: textColor.withAlpha((255 * 0.1).round()),
-                          borderRadius: BorderRadius.circular(AppTheme.radiusS),
+                          color: textColor.withAlpha((255 * 0.15).round()),
+                          borderRadius: AppBorders.borderRadiusM,
                         ),
                         child: Icon(
                           Icons.account_balance_wallet_rounded,
                           color: textColor,
-                          size: 24,
+                          size: 28,
                         ),
                       ),
                   ],
                 ),
                 if (subtitle != null) ...[
-                  const SizedBox(height: AppTheme.spaceM),
+                  const SizedBox(height: AppSpacing.lg),
                   subtitle!,
                 ],
               ],

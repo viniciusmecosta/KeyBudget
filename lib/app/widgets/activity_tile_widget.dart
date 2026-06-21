@@ -2,8 +2,10 @@ import 'package:auto_size_text/auto_size_text.dart';
 import 'package:flutter/material.dart' hide DateUtils;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
-import 'package:key_budget/app/config/app_theme.dart';
+
 import 'package:key_budget/app/utils/navigation_utils.dart';
+import 'package:key_budget/core/design_system/spacing/app_spacing.dart';
+import 'package:key_budget/core/design_system/widgets/app_card.dart';
 import 'package:key_budget/core/models/expense_model.dart';
 import 'package:key_budget/core/utils/date_utils.dart';
 import 'package:key_budget/features/category/viewmodel/category_viewmodel.dart';
@@ -34,33 +36,27 @@ class ActivityTile extends ConsumerWidget {
 
     final categoryColor = category?.color ?? colorScheme.primary;
 
-    return Card(
-      margin: EdgeInsets.zero,
-      child: InkWell(
-        onTap: () => NavigationUtils.push(
-            context, ExpenseDetailScreen(expense: expense)),
-        borderRadius: BorderRadius.circular(AppTheme.radiusL),
-        child: Padding(
-          padding: const EdgeInsets.all(AppTheme.spaceM),
-          child: Row(
-            children: [
-              _buildCategoryIcon(categoryColor, category),
-              const SizedBox(width: AppTheme.spaceM),
-              _buildExpenseInfo(context, textTheme, colorScheme, category),
-              const SizedBox(width: AppTheme.spaceS),
-              _buildAmountInfo(textTheme, currencyFormatter, colorScheme),
-            ],
-          ),
-        ),
+    return AppCard(
+      padding: const EdgeInsets.all(AppSpacing.md),
+      onTap: () => NavigationUtils.push(
+          context, ExpenseDetailScreen(expense: expense)),
+      child: Row(
+        children: [
+          _buildCategoryIcon(categoryColor, category),
+          const SizedBox(width: AppSpacing.md),
+          _buildExpenseInfo(context, textTheme, colorScheme, category),
+          const SizedBox(width: AppSpacing.xs),
+          _buildAmountInfo(textTheme, currencyFormatter, colorScheme),
+        ],
       ),
     );
   }
 
   Widget _buildCategoryIcon(Color categoryColor, dynamic category) {
     return Container(
-      padding: const EdgeInsets.all(AppTheme.spaceS + 4),
+      padding: const EdgeInsets.all(AppSpacing.sm),
       decoration: BoxDecoration(
-        color: categoryColor.withAlpha(50),
+        color: categoryColor.withAlpha(40),
         shape: BoxShape.circle,
       ),
       child: Icon(

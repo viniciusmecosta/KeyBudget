@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
+import 'package:key_budget/core/design_system/borders/app_borders.dart';
 
 class DatePickerField extends ConsumerWidget {
   final String label;
@@ -48,7 +49,7 @@ class DatePickerField extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     return InkWell(
       onTap: isEditing ? () => _pickDate(context) : null,
-      borderRadius: BorderRadius.circular(12),
+      borderRadius: AppBorders.borderRadiusM,
       child: InputDecorator(
         decoration: InputDecoration(
           labelText: label,
