@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:key_budget/app/config/app_theme.dart';
+import 'package:key_budget/core/design_system/spacing/app_spacing.dart';
+import 'package:key_budget/core/design_system/borders/app_borders.dart';
 
 class AnimatedListItem extends ConsumerStatefulWidget {
   final Widget child;
@@ -151,7 +152,7 @@ class _AnimatedListItemState extends ConsumerState<AnimatedListItem>
             return DecoratedBox(
               decoration: BoxDecoration(
                 color: _highlightAnimation.value,
-                borderRadius: BorderRadius.circular(12),
+                borderRadius: AppBorders.borderRadiusL,
                 boxShadow: [
                   BoxShadow(
                     color: _shadowColorAnimation.value!,
@@ -164,7 +165,7 @@ class _AnimatedListItemState extends ConsumerState<AnimatedListItem>
             );
           },
           child: Padding(
-            padding: const EdgeInsets.only(bottom: AppTheme.spaceS),
+            padding: const EdgeInsets.only(bottom: AppSpacing.sm),
             child: FadeTransition(
               opacity: widget.animation,
               child: SizeTransition(

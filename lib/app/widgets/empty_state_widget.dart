@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:key_budget/core/design_system/spacing/app_spacing.dart';
+import 'package:key_budget/core/design_system/widgets/app_button.dart';
 
 class EmptyStateWidget extends ConsumerWidget {
   final IconData icon;
@@ -28,7 +30,7 @@ class EmptyStateWidget extends ConsumerWidget {
               size: 80,
               color: Theme.of(context).colorScheme.primary.withAlpha(180),
             ),
-            const SizedBox(height: 24),
+            const SizedBox(height: AppSpacing.lg),
             Text(
               message,
               textAlign: TextAlign.center,
@@ -41,10 +43,10 @@ class EmptyStateWidget extends ConsumerWidget {
                   ),
             ),
             if (buttonText != null && onButtonPressed != null) ...[
-              const SizedBox(height: 24),
-              ElevatedButton(
-                onPressed: onButtonPressed,
-                child: Text(buttonText!),
+              const SizedBox(height: AppSpacing.lg),
+              AppButton(
+                onPressed: onButtonPressed!,
+                label: buttonText!,
               ),
             ]
           ],
