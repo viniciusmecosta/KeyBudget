@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
+import 'package:key_budget/core/design_system/spacing/app_spacing.dart';
+import 'package:key_budget/core/design_system/borders/app_borders.dart';
 import 'package:key_budget/app/config/app_theme.dart';
 
 import '../viewmodel/analysis_viewmodel.dart';
@@ -24,7 +26,7 @@ class AnalysisStatsOverviewWidget extends ConsumerWidget {
                 icon: Icons.calendar_month,
               ),
             ),
-            const SizedBox(width: AppTheme.spaceM),
+            const SizedBox(width: AppSpacing.md),
             Expanded(
               child: _buildEnhancedStatCard(
                 context,
@@ -36,7 +38,7 @@ class AnalysisStatsOverviewWidget extends ConsumerWidget {
             ),
           ],
         ),
-        const SizedBox(height: AppTheme.spaceM),
+        const SizedBox(height: AppSpacing.md),
         Row(
           children: [
             Expanded(
@@ -48,7 +50,7 @@ class AnalysisStatsOverviewWidget extends ConsumerWidget {
                 icon: Icons.trending_up,
               ),
             ),
-            const SizedBox(width: AppTheme.spaceM),
+            const SizedBox(width: AppSpacing.md),
             Expanded(
               child: _buildEnhancedStatCard(
                 context,
@@ -91,12 +93,12 @@ class AnalysisStatsOverviewWidget extends ConsumerWidget {
 
     return Material(
       color: theme.colorScheme.surface,
-      borderRadius: BorderRadius.circular(16),
+      borderRadius: AppBorders.borderRadiusL,
       elevation: 0,
       child: Container(
-        padding: const EdgeInsets.all(20),
+        padding: const EdgeInsets.all(AppSpacing.lg),
         decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: AppBorders.borderRadiusL,
           border: Border.all(
             color: theme.colorScheme.outline.withAlpha((255 * 0.1).round()),
           ),
@@ -105,10 +107,10 @@ class AnalysisStatsOverviewWidget extends ConsumerWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Container(
-              padding: const EdgeInsets.all(12),
+              padding: const EdgeInsets.all(AppSpacing.md),
               decoration: BoxDecoration(
                 color: color.withAlpha((255 * 0.1).round()),
-                borderRadius: BorderRadius.circular(12),
+                borderRadius: AppBorders.borderRadiusM,
               ),
               child: Icon(
                 icon ?? Icons.analytics,
@@ -116,7 +118,7 @@ class AnalysisStatsOverviewWidget extends ConsumerWidget {
                 size: 24,
               ),
             ),
-            const SizedBox(height: AppTheme.spaceM),
+            const SizedBox(height: AppSpacing.md),
             Text(
               title,
               style: theme.textTheme.titleMedium?.copyWith(

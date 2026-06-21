@@ -2,7 +2,7 @@ import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
-import 'package:key_budget/app/config/app_theme.dart';
+import 'package:key_budget/core/design_system/spacing/app_spacing.dart';
 
 import '../viewmodel/analysis_viewmodel.dart';
 import 'empty_chart_state_widget.dart';
@@ -32,7 +32,7 @@ class _CategoryAnalysisSectionWidgetState
     return Column(
       children: [
         _buildCategoryMonthSelector(context, viewModel),
-        const SizedBox(height: AppTheme.spaceM),
+        const SizedBox(height: AppSpacing.md),
         _buildEnhancedCategoryBreakdown(context, viewModel),
       ],
     );
@@ -77,7 +77,7 @@ class _CategoryAnalysisSectionWidgetState
                   size: 24,
                 ),
               ),
-              const SizedBox(width: AppTheme.spaceM),
+              const SizedBox(width: AppSpacing.md),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -139,7 +139,7 @@ class _CategoryAnalysisSectionWidgetState
               ),
             ),
             Padding(
-              padding: const EdgeInsets.all(AppTheme.spaceM),
+              padding: const EdgeInsets.all(AppSpacing.md),
               child: Text(
                 'Selecionar Período',
                 style: theme.textTheme.titleLarge?.copyWith(
@@ -168,7 +168,7 @@ class _CategoryAnalysisSectionWidgetState
 
                   return Container(
                     margin: const EdgeInsets.symmetric(
-                      horizontal: AppTheme.spaceM,
+                      horizontal: AppSpacing.md,
                       vertical: 4,
                     ),
                     child: Material(
@@ -216,7 +216,7 @@ class _CategoryAnalysisSectionWidgetState
                                   size: 20,
                                 ),
                               ),
-                              const SizedBox(width: AppTheme.spaceM),
+                              const SizedBox(width: AppSpacing.md),
                               Expanded(
                                 child: Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -288,7 +288,7 @@ class _CategoryAnalysisSectionWidgetState
     final showPercentageInChart = chartData.length <= 5;
 
     return Container(
-      padding: const EdgeInsets.all(AppTheme.spaceM),
+      padding: const EdgeInsets.all(AppSpacing.md),
       decoration: BoxDecoration(
         color: theme.colorScheme.surface,
         borderRadius: BorderRadius.circular(16),
@@ -377,7 +377,7 @@ class _CategoryAnalysisSectionWidgetState
               ],
             ),
           ),
-          const SizedBox(height: AppTheme.spaceL),
+          const SizedBox(height: AppSpacing.lg),
           ...chartData.asMap().entries.map((entry) {
             final index = entry.key;
             final category = entry.value;
