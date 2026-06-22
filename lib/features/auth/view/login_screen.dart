@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:font_awesome_flutter/font_awesome_flutter.dart';
-import 'package:key_budget/app/config/app_theme.dart';
 import 'package:key_budget/app/utils/navigation_utils.dart';
-import 'package:key_budget/app/widgets/password_form_field.dart';
+import 'package:key_budget/core/design_system/spacing/app_spacing.dart';
+import 'package:key_budget/core/design_system/widgets/app_button.dart';
+import 'package:key_budget/core/design_system/widgets/app_text_field.dart';
 import 'package:key_budget/core/services/snackbar_service.dart';
 import 'package:key_budget/features/auth/view/register_screen.dart';
 import 'package:key_budget/features/auth/viewmodel/auth_viewmodel.dart';
@@ -21,6 +21,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   final _formKey = GlobalKey<FormState>();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
+  bool _isPasswordVisible = false;
 
   @override
   void initState() {
@@ -53,7 +54,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     );
     if (mounted && !success) {
       SnackbarService.showError(
-          context, authViewModel.errorMessage ?? 'Erro desconhecido');
+          context,
+          authViewModel.errorMessage ??
+              'Erro ao fazer login. Verifique suas credenciais.');
       _passwordController.clear();
     }
   }
@@ -62,94 +65,76 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     final authViewModel = ref.read(authViewModelProvider);
     final success = await authViewModel.loginWithGoogle();
     if (mounted && !success) {
-      SnackbarService.showError(
-          context, authViewModel.errorMessage ?? 'Erro desconhecido');
+      SnackbarService.showError(context,
+          authViewModel.errorMessage ?? 'Erro ao fazer login com Google.');
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
+    final viewModel = ref.watch(authViewModelProvider);
+
     return AuthPageLayout(
-      child: Column(
-        children: [
-          Form(
-            key: _formKey,
-            child: Column(
-              children: [
-                TextFormField(
-                  controller: _emailController,
-                  decoration: const InputDecoration(
-                    labelText: 'Email',
-                    prefixIcon: Icon(Icons.email_outlined),
-                  ),
-                  keyboardType: TextInputType.emailAddress,
-                  validator: (value) => (value == null || !value.contains('@'))
-                      ? 'Insira um email válido'
-                      : null,
-                ),
-                const SizedBox(height: AppTheme.spaceM),
-                PasswordFormField(
-                  controller: _passwordController,
-                  labelText: 'Senha',
-                  validator: (value) => (value == null || value.length < 6)
-                      ? 'A senha deve ter pelo menos 6 caracteres'
-                      : null,
-                ),
-              ],
+      title: "Bem-vindo de volta",
+      subtitle: "Faça login para continuar",
+      child: Form(
+        key: _formKey,
+        child: Column(
+          children: [
+            AppTextField(
+              controller: _emailController,
+              label: 'Email',
+              prefixIcon: Icons.email_outlined,
+              keyboardType: TextInputType.emailAddress,
+              validator: (value) => (value == null || !value.contains('@'))
+                  ? 'Insira um email válido'
+                  : null,
             ),
-          ),
-          const SizedBox(height: AppTheme.spaceXL),
-          Consumer(
-            builder: (context, ref, _) {
-              final viewModel = ref.watch(authViewModelProvider);
-              return Column(
-                children: [
-                  SizedBox(
-                    width: double.infinity,
-                    child: ElevatedButton(
-                      onPressed: viewModel.isLoading ? null : _submit,
-                      child: viewModel.isLoading
-                          ? const SizedBox(
-                              height: AppTheme.spaceL,
-                              width: AppTheme.spaceL,
-                              child: CircularProgressIndicator(
-                                color: Colors.white,
-                                strokeWidth: 2.5,
-                              ),
-                            )
-                          : const Text('Entrar'),
-                    ),
-                  ),
-                  const SizedBox(height: AppTheme.spaceM),
-                  SizedBox(
-                    width: double.infinity,
-                    child: OutlinedButton.icon(
-                      onPressed: viewModel.isLoading ? null : _submitGoogle,
-                      icon: const FaIcon(
-                        FontAwesomeIcons.google,
-                        size: 20,
-                      ),
-                      label: const Text('Entrar com Google'),
-                    ),
-                  ),
-                ],
-              );
-            },
-          ),
-          const SizedBox(height: AppTheme.spaceL),
-          TextButton(
-            onPressed: () {
-              NavigationUtils.push(context, const RegisterScreen());
-            },
-            child: Text(
-              "Não tem uma conta? Cadastre-se",
-              style: theme.textTheme.bodyMedium?.copyWith(
-                color: theme.colorScheme.primary,
+            const SizedBox(height: AppSpacing.md),
+            AppTextField(
+              controller: _passwordController,
+              label: 'Senha',
+              prefixIcon: Icons.lock_outline,
+              obscureText: !_isPasswordVisible,
+              suffixIcon: IconButton(
+                icon: Icon(
+                  _isPasswordVisible ? Icons.visibility_off : Icons.visibility,
+                ),
+                onPressed: () {
+                  setState(() {
+                    _isPasswordVisible = !_isPasswordVisible;
+                  });
+                },
               ),
+              validator: (value) => (value == null || value.length < 6)
+                  ? 'A senha deve ter pelo menos 6 caracteres'
+                  : null,
             ),
-          )
-        ],
+            const SizedBox(height: AppSpacing.xl),
+            AppButton(
+              label: 'Entrar',
+              isFullWidth: true,
+              isLoading: viewModel.isLoading,
+              onPressed: _submit,
+            ),
+            const SizedBox(height: AppSpacing.md),
+            AppButton(
+              label: 'Entrar com Google',
+              variant: AppButtonVariant.outline,
+              isFullWidth: true,
+              isLoading: viewModel.isLoading,
+              onPressed: _submitGoogle,
+            ),
+            const SizedBox(height: AppSpacing.lg),
+            AppButton(
+              label: 'Não tem uma conta? Cadastre-se',
+              variant: AppButtonVariant.ghost,
+              onPressed: () {
+                NavigationUtils.push(context, const RegisterScreen());
+              },
+            ),
+          ],
+        ),
       ),
     );
   }
