@@ -1,12 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:key_budget/app/config/app_theme.dart';
-import 'package:key_budget/app/utils/app_animations.dart';
+import 'package:key_budget/core/design_system/spacing/app_spacing.dart';
 import 'package:key_budget/app/widgets/image_picker_widget.dart';
-import 'package:key_budget/app/widgets/password_form_field.dart';
+import 'package:key_budget/core/design_system/widgets/app_button.dart';
+import 'package:key_budget/core/design_system/widgets/app_text_field.dart';
 import 'package:key_budget/core/services/snackbar_service.dart';
 import 'package:key_budget/core/utils/formatters.dart';
 import 'package:key_budget/features/auth/viewmodel/auth_viewmodel.dart';
+import 'package:key_budget/features/auth/widgets/auth_page_layout.dart';
 import 'package:mask_text_input_formatter/mask_text_input_formatter.dart';
 
 class RegisterScreen extends ConsumerStatefulWidget {
@@ -24,6 +25,8 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
   final _passwordController = TextEditingController();
   final _confirmPasswordController = TextEditingController();
   String? _avatarPath;
+  bool _isPasswordVisible = false;
+  bool _isConfirmPasswordVisible = false;
 
   final _phoneMaskFormatter = MaskTextInputFormatter(
     mask: '(##) #####-####',
@@ -60,108 +63,115 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
         Navigator.of(context).pop();
       } else {
         SnackbarService.showError(
-            context, authViewModel.errorMessage ?? 'Erro desconhecido');
+            context, authViewModel.errorMessage ?? 'Erro ao cadastrar.');
       }
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(
-          'Criar Conta',
-          style: theme.textTheme.titleLarge,
-        ),
-      ),
-      body: AppAnimations.fadeInFromBottom(Center(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(AppTheme.defaultPadding),
-          child: Form(
-            key: _formKey,
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                const SizedBox(height: AppTheme.spaceXL),
-                ImagePickerWidget(
-                  onImageSelected: (path) {
-                    _avatarPath = path;
-                  },
-                ),
-                const SizedBox(height: AppTheme.spaceL),
-                TextFormField(
-                  controller: _nameController,
-                  textCapitalization: TextCapitalization.words,
-                  decoration: const InputDecoration(labelText: 'Nome *'),
-                  validator: (value) => (value == null || value.isEmpty)
-                      ? 'Insira seu nome'
-                      : null,
-                ),
-                const SizedBox(height: AppTheme.spaceM),
-                TextFormField(
-                  controller: _emailController,
-                  decoration: const InputDecoration(labelText: 'Email *'),
-                  keyboardType: TextInputType.emailAddress,
-                  validator: (value) => (value == null || !value.contains('@'))
-                      ? 'Insira um email válido'
-                      : null,
-                ),
-                const SizedBox(height: AppTheme.spaceM),
-                TextFormField(
-                  controller: _phoneController,
-                  inputFormatters: [
-                    PasteSanitizerInputFormatter(),
-                    _phoneMaskFormatter,
-                  ],
-                  decoration: const InputDecoration(labelText: 'Número'),
-                  keyboardType: TextInputType.phone,
-                ),
-                const SizedBox(height: AppTheme.spaceM),
-                PasswordFormField(
-                  controller: _passwordController,
-                  labelText: 'Senha *',
-                  validator: (value) => (value == null || value.length < 6)
-                      ? 'A senha deve ter pelo menos 6 caracteres'
-                      : null,
-                ),
-                const SizedBox(height: AppTheme.spaceM),
-                PasswordFormField(
-                  controller: _confirmPasswordController,
-                  labelText: 'Confirmar Senha *',
-                  validator: (value) => value != _passwordController.text
-                      ? 'As senhas não coincidem'
-                      : null,
-                ),
-                const SizedBox(height: AppTheme.spaceXL),
-                Consumer(
-                  builder: (context, ref, _) {
-                    final viewModel = ref.watch(authViewModelProvider);
-                    return SizedBox(
-                      width: double.infinity,
-                      child: viewModel.isLoading
-                          ? const Center(child: CircularProgressIndicator())
-                          : ElevatedButton(
-                              onPressed: _submit,
-                              child: const Text('Cadastrar'),
-                            ),
-                    );
-                  },
-                ),
-                TextButton(
-                  onPressed: () => Navigator.of(context).pop(),
-                  child: Text(
-                    'Já tem uma conta? Faça login',
-                    style: theme.textTheme.bodyMedium?.copyWith(
-                      color: theme.colorScheme.primary,
-                    ),
-                  ),
-                )
+    final viewModel = ref.watch(authViewModelProvider);
+
+    return AuthPageLayout(
+      title: "Criar Conta",
+      subtitle: "Preencha seus dados para começar",
+      showBackButton: true,
+      child: Form(
+        key: _formKey,
+        child: Column(
+          children: [
+            ImagePickerWidget(
+              onImageSelected: (path) {
+                _avatarPath = path;
+              },
+            ),
+            const SizedBox(height: AppSpacing.lg),
+            AppTextField(
+              controller: _nameController,
+              label: 'Nome completo *',
+              prefixIcon: Icons.person_outline,
+              validator: (value) => (value == null || value.isEmpty)
+                  ? 'Insira seu nome'
+                  : null,
+            ),
+            const SizedBox(height: AppSpacing.md),
+            AppTextField(
+              controller: _emailController,
+              label: 'Email *',
+              prefixIcon: Icons.email_outlined,
+              keyboardType: TextInputType.emailAddress,
+              validator: (value) => (value == null || !value.contains('@'))
+                  ? 'Insira um email válido'
+                  : null,
+            ),
+            const SizedBox(height: AppSpacing.md),
+            AppTextField(
+              controller: _phoneController,
+              label: 'Telefone (Opcional)',
+              prefixIcon: Icons.phone_outlined,
+              keyboardType: TextInputType.phone,
+              inputFormatters: [
+                PasteSanitizerInputFormatter(),
+                _phoneMaskFormatter,
               ],
             ),
-          ),
+            const SizedBox(height: AppSpacing.md),
+            AppTextField(
+              controller: _passwordController,
+              label: 'Senha *',
+              prefixIcon: Icons.lock_outline,
+              obscureText: !_isPasswordVisible,
+              suffixIcon: IconButton(
+                icon: Icon(
+                  _isPasswordVisible ? Icons.visibility_off : Icons.visibility,
+                ),
+                onPressed: () {
+                  setState(() {
+                    _isPasswordVisible = !_isPasswordVisible;
+                  });
+                },
+              ),
+              validator: (value) => (value == null || value.length < 6)
+                  ? 'A senha deve ter pelo menos 6 caracteres'
+                  : null,
+            ),
+            const SizedBox(height: AppSpacing.md),
+            AppTextField(
+              controller: _confirmPasswordController,
+              label: 'Confirmar Senha *',
+              prefixIcon: Icons.lock_outline,
+              obscureText: !_isConfirmPasswordVisible,
+              suffixIcon: IconButton(
+                icon: Icon(
+                  _isConfirmPasswordVisible ? Icons.visibility_off : Icons.visibility,
+                ),
+                onPressed: () {
+                  setState(() {
+                    _isConfirmPasswordVisible = !_isConfirmPasswordVisible;
+                  });
+                },
+              ),
+              validator: (value) => value != _passwordController.text
+                  ? 'As senhas não coincidem'
+                  : null,
+            ),
+            const SizedBox(height: AppSpacing.xl),
+            AppButton(
+              label: 'Cadastrar',
+              isFullWidth: true,
+              isLoading: viewModel.isLoading,
+              onPressed: _submit,
+            ),
+            const SizedBox(height: AppSpacing.md),
+            AppButton(
+              label: 'Já tem uma conta? Faça login',
+              variant: AppButtonVariant.ghost,
+              isFullWidth: true,
+              onPressed: () => Navigator.of(context).pop(),
+            ),
+          ],
         ),
-      )),
+      ),
     );
   }
 }
