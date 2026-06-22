@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:key_budget/app/config/app_theme.dart';
+
 import 'package:key_budget/app/utils/app_animations.dart';
 import 'package:key_budget/app/utils/navigation_utils.dart';
 import 'package:key_budget/app/widgets/animated_list_item.dart';
@@ -11,6 +11,8 @@ import 'package:key_budget/core/models/folder_model.dart';
 import 'package:key_budget/features/auth/viewmodel/auth_viewmodel.dart';
 import 'package:key_budget/features/credentials/view/add_credential_screen.dart';
 import 'package:key_budget/features/credentials/viewmodel/credential_viewmodel.dart';
+import 'package:key_budget/core/design_system/spacing/app_spacing.dart';
+import 'package:key_budget/core/design_system/borders/app_borders.dart';
 import 'package:key_budget/features/credentials/widgets/folder_list_tile.dart';
 
 import '../widgets/credential_list_tile.dart';
@@ -170,7 +172,7 @@ class _CredentialsScreenState extends ConsumerState<CredentialsScreen> {
                     decoration: BoxDecoration(
                       color:
                           theme.colorScheme.onSurface.withValues(alpha: 0.08),
-                      borderRadius: BorderRadius.circular(AppTheme.radiusXXL),
+                      borderRadius: AppBorders.borderRadiusXXL,
                     ),
                     child: TextField(
                       controller: _searchController,
@@ -224,7 +226,7 @@ class _CredentialsScreenState extends ConsumerState<CredentialsScreen> {
                       children: [
                         Icon(Icons.upload_file_rounded,
                             size: 18, color: theme.colorScheme.onSurface),
-                        const SizedBox(width: AppTheme.spaceS),
+                        const SizedBox(width: AppSpacing.sm),
                         const Text('Importar de CSV'),
                       ],
                     ),
@@ -235,7 +237,7 @@ class _CredentialsScreenState extends ConsumerState<CredentialsScreen> {
                       children: [
                         Icon(Icons.grid_on,
                             size: 18, color: theme.colorScheme.onSurface),
-                        const SizedBox(width: AppTheme.spaceS),
+                        const SizedBox(width: AppSpacing.sm),
                         const Text('Exportar para CSV'),
                       ],
                     ),
@@ -246,7 +248,7 @@ class _CredentialsScreenState extends ConsumerState<CredentialsScreen> {
                       children: [
                         Icon(Icons.picture_as_pdf,
                             size: 18, color: theme.colorScheme.onSurface),
-                        const SizedBox(width: AppTheme.spaceS),
+                        const SizedBox(width: AppSpacing.sm),
                         const Text('Exportar para PDF'),
                       ],
                     ),
@@ -290,9 +292,9 @@ class _CredentialsScreenState extends ConsumerState<CredentialsScreen> {
                     else
                       SliverPadding(
                         padding: const EdgeInsets.fromLTRB(
-                            AppTheme.defaultPadding,
-                            AppTheme.spaceL,
-                            AppTheme.defaultPadding,
+                            AppSpacing.md,
+                            AppSpacing.lg,
+                            AppSpacing.md,
                             96.0),
                         sliver: SliverAnimatedList(
                           key: _listKey,
@@ -370,7 +372,7 @@ class _CredentialsScreenState extends ConsumerState<CredentialsScreen> {
           icon: const Icon(Icons.add),
           label: const Text("Novo"),
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(AppTheme.radiusXXL),
+            borderRadius: AppBorders.borderRadiusXXL,
           ),
         )),
       ),
