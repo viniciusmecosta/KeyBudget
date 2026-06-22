@@ -14,6 +14,9 @@ import 'package:key_budget/features/credentials/viewmodel/credential_viewmodel.d
 import 'package:mask_text_input_formatter/mask_text_input_formatter.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
+import 'package:key_budget/core/design_system/spacing/app_spacing.dart';
+import 'package:key_budget/core/design_system/borders/app_borders.dart';
+import 'package:key_budget/core/design_system/widgets/app_button.dart';
 
 import '../widgets/credential_form.dart';
 
@@ -146,8 +149,8 @@ class _CredentialDetailScreenState
   void _showExportOptions() {
     showModalBottomSheet(
       context: context,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      shape: RoundedRectangleBorder(
+        borderRadius: AppBorders.borderRadiusVerticalXL,
       ),
       builder: (ctx) => SafeArea(
         child: Padding(
@@ -269,7 +272,7 @@ class _CredentialDetailScreenState
       height: 56,
       decoration: BoxDecoration(
         color: theme.colorScheme.primary.withValues(alpha: 0.1),
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: AppBorders.borderRadiusL,
       ),
       child: Icon(
         Icons.lock_outline,
@@ -318,10 +321,10 @@ class _CredentialDetailScreenState
           type: MaterialType.transparency,
           child: Container(
             width: 400,
-            padding: const EdgeInsets.all(32),
+            padding: const EdgeInsets.all(AppSpacing.xxl),
             decoration: BoxDecoration(
               color: theme.colorScheme.surface,
-              borderRadius: BorderRadius.circular(24),
+              borderRadius: AppBorders.borderRadiusXL,
               boxShadow: [
                 BoxShadow(
                   color: Colors.black.withValues(alpha: 0.1),
@@ -342,7 +345,7 @@ class _CredentialDetailScreenState
                   children: [
                     if (_logoPath != null && _logoPath!.trim().isNotEmpty)
                       ClipRRect(
-                        borderRadius: BorderRadius.circular(16),
+                        borderRadius: AppBorders.borderRadiusL,
                         child: _buildLogoWidget(_logoPath!, theme),
                       )
                     else
@@ -485,7 +488,7 @@ class _CredentialDetailScreenState
         ],
       ),
       body: AppAnimations.fadeInFromBottom(Padding(
-        padding: const EdgeInsets.all(AppTheme.defaultPadding),
+        padding: const EdgeInsets.all(AppSpacing.md),
         child: Column(
           children: [
             Expanded(
@@ -514,15 +517,14 @@ class _CredentialDetailScreenState
               ),
             ),
             if (_isEditing) ...[
-              const SizedBox(height: 16),
-              ElevatedButton(
-                onPressed: _isSaving ? null : _saveChanges,
-                child: _isSaving
-                    ? const SizedBox(
-                        height: 24,
-                        width: 24,
-                        child: CircularProgressIndicator(strokeWidth: 2.0))
-                    : const Text('Salvar Alterações'),
+              const SizedBox(height: AppSpacing.md),
+              SizedBox(
+                width: double.infinity,
+                child: AppButton(
+                  onPressed: _saveChanges,
+                  isLoading: _isSaving,
+                  label: 'Salvar Alterações',
+                ),
               )
             ]
           ],

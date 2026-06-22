@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:key_budget/app/widgets/image_picker_widget.dart';
 import 'package:key_budget/app/widgets/password_form_field.dart';
+import 'package:key_budget/core/design_system/spacing/app_spacing.dart';
+import 'package:key_budget/core/design_system/widgets/app_text_field.dart';
 import 'package:key_budget/core/models/folder_model.dart';
 import 'package:key_budget/features/credentials/widgets/saved_logos_screen.dart';
 import 'package:mask_text_input_formatter/mask_text_input_formatter.dart';
@@ -70,7 +72,7 @@ class CredentialForm extends ConsumerWidget {
               ),
             ),
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: AppSpacing.sm),
           if (isEditing)
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
@@ -82,7 +84,7 @@ class CredentialForm extends ConsumerWidget {
                   label: const Text('Escolher Salva'),
                 ),
                 if (logoPath != null) ...[
-                  const SizedBox(width: 8),
+                  const SizedBox(width: AppSpacing.sm),
                   TextButton.icon(
                     onPressed: () => onLogoChanged(null),
                     icon: const Icon(Icons.no_photography_outlined, size: 18),
@@ -93,7 +95,7 @@ class CredentialForm extends ConsumerWidget {
                 ]
               ],
             ),
-          const SizedBox(height: 24),
+          const SizedBox(height: AppSpacing.xl),
           if (availableFolders.isNotEmpty) ...[
             DropdownButtonFormField<String?>(
               key: ValueKey(selectedFolderId),
@@ -114,23 +116,23 @@ class CredentialForm extends ConsumerWidget {
               ],
               onChanged: isEditing ? onFolderChanged : null,
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: AppSpacing.md),
           ],
-          TextFormField(
+          AppTextField(
             controller: locationController,
+            label: 'Local/Serviço *',
+            readOnly: !isEditing,
             textCapitalization: TextCapitalization.sentences,
-            readOnly: !isEditing,
-            decoration: const InputDecoration(labelText: 'Local/Serviço *'),
             validator: (value) => value!.isEmpty ? 'Campo obrigatório' : null,
           ),
-          const SizedBox(height: 16),
-          TextFormField(
+          const SizedBox(height: AppSpacing.md),
+          AppTextField(
             controller: loginController,
+            label: 'Login/Usuário *',
             readOnly: !isEditing,
-            decoration: const InputDecoration(labelText: 'Login/Usuário *'),
             validator: (value) => value!.isEmpty ? 'Campo obrigatório' : null,
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: AppSpacing.md),
           PasswordFormField(
             controller: passwordController,
             labelText: 'Senha *',
@@ -138,28 +140,28 @@ class CredentialForm extends ConsumerWidget {
             forceVisible: isEditing,
             validator: (value) => value!.isEmpty ? 'Campo obrigatório' : null,
           ),
-          const SizedBox(height: 16),
-          TextFormField(
+          const SizedBox(height: AppSpacing.md),
+          AppTextField(
             controller: emailController,
+            label: 'Email',
             readOnly: !isEditing,
-            decoration: const InputDecoration(labelText: 'Email'),
             keyboardType: TextInputType.emailAddress,
           ),
-          const SizedBox(height: 16),
-          TextFormField(
+          const SizedBox(height: AppSpacing.md),
+          AppTextField(
             controller: phoneController,
+            label: 'Número',
             readOnly: !isEditing,
             inputFormatters: [phoneMaskFormatter],
-            decoration: const InputDecoration(labelText: 'Número'),
             keyboardType: TextInputType.phone,
           ),
-          const SizedBox(height: 16),
-          TextFormField(
+          const SizedBox(height: AppSpacing.md),
+          AppTextField(
             controller: notesController,
+            label: 'Observações',
             readOnly: !isEditing,
-            textCapitalization: TextCapitalization.sentences,
-            decoration: const InputDecoration(labelText: 'Observações'),
             maxLines: 3,
+            textCapitalization: TextCapitalization.sentences,
           ),
         ],
       ),
