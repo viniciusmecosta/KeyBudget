@@ -8,7 +8,8 @@ import 'package:key_budget/features/credentials/viewmodel/credential_viewmodel.d
 import 'package:key_budget/features/dashboard/viewmodel/dashboard_viewmodel.dart';
 import 'package:key_budget/features/expenses/viewmodel/expense_viewmodel.dart';
 
-import '../../../app/config/app_theme.dart';
+import 'package:key_budget/core/design_system/spacing/app_spacing.dart';
+
 import '../widgets/dashboard_balance_card.dart';
 import '../widgets/dashboard_header.dart';
 import '../widgets/dashboard_skeleton.dart';
@@ -81,10 +82,10 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                     slivers: [
                       SliverPadding(
                         padding: const EdgeInsets.fromLTRB(
-                          AppTheme.spaceM,
-                          AppTheme.spaceS,
-                          AppTheme.spaceM,
-                          AppTheme.spaceL,
+                          AppSpacing.md,
+                          AppSpacing.sm,
+                          AppSpacing.md,
+                          AppSpacing.xl,
                         ),
                         sliver: SliverList(
                           delegate: SliverChildListDelegate(
@@ -92,12 +93,12 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                               AppAnimations.fadeInFromBottom(
                                 const DashboardBalanceCard(),
                               ),
-                              const SizedBox(height: AppTheme.spaceXL),
+                              const SizedBox(height: AppSpacing.xl),
                               AppAnimations.fadeInFromBottom(
                                 const QuickActionsSection(),
                                 delay: const Duration(milliseconds: 100),
                               ),
-                              const SizedBox(height: AppTheme.spaceXL),
+                              const SizedBox(height: AppSpacing.xl),
                               AppAnimations.fadeInFromBottom(
                                 const RecentActivitySection(),
                                 delay: const Duration(milliseconds: 200),
