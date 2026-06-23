@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:key_budget/app/config/app_theme.dart';
+import 'package:key_budget/core/design_system/spacing/app_spacing.dart';
+import 'package:key_budget/core/design_system/borders/app_borders.dart';
 
 class DashboardSkeleton extends ConsumerWidget {
   const DashboardSkeleton({super.key});
@@ -17,18 +18,18 @@ class DashboardSkeleton extends ConsumerWidget {
         slivers: [
           SliverPadding(
             padding: const EdgeInsets.fromLTRB(
-              AppTheme.spaceM,
-              AppTheme.spaceS,
-              AppTheme.spaceM,
-              AppTheme.spaceL,
+              AppSpacing.md,
+              AppSpacing.sm,
+              AppSpacing.md,
+              AppSpacing.lg,
             ),
             sliver: SliverList(
               delegate: SliverChildListDelegate(
                 [
                   _buildBalanceCardSkeleton(context),
-                  const SizedBox(height: AppTheme.spaceL),
+                  const SizedBox(height: AppSpacing.lg),
                   _buildQuickActionsSkeleton(context),
-                  const SizedBox(height: AppTheme.spaceXL),
+                  const SizedBox(height: AppSpacing.xl),
                   _buildRecentActivitySkeleton(context),
                 ],
               ),
@@ -46,7 +47,7 @@ class DashboardSkeleton extends ConsumerWidget {
       {required BuildContext context,
       required double height,
       double? width,
-      double radius = AppTheme.radiusM,
+      BorderRadiusGeometry? radius,
       EdgeInsets margin = EdgeInsets.zero}) {
     final theme = Theme.of(context);
     return Container(
@@ -55,7 +56,7 @@ class DashboardSkeleton extends ConsumerWidget {
       margin: margin,
       decoration: BoxDecoration(
         color: theme.colorScheme.surfaceContainerHighest,
-        borderRadius: BorderRadius.circular(radius),
+        borderRadius: radius ?? AppBorders.borderRadiusM,
       ),
     );
   }
@@ -64,7 +65,7 @@ class DashboardSkeleton extends ConsumerWidget {
     return _buildContainer(
       context: context,
       height: 150,
-      radius: AppTheme.radiusXL,
+      radius: AppBorders.borderRadiusXL,
     );
   }
 
@@ -73,11 +74,11 @@ class DashboardSkeleton extends ConsumerWidget {
       children: [
         Expanded(
             child: _buildContainer(
-                context: context, height: 140, radius: AppTheme.radiusL)),
-        const SizedBox(width: AppTheme.spaceM),
+                context: context, height: 140, radius: AppBorders.borderRadiusL)),
+        const SizedBox(width: AppSpacing.md),
         Expanded(
             child: _buildContainer(
-                context: context, height: 140, radius: AppTheme.radiusL)),
+                context: context, height: 140, radius: AppBorders.borderRadiusL)),
       ],
     );
   }
@@ -92,14 +93,14 @@ class DashboardSkeleton extends ConsumerWidget {
             _buildContainer(context: context, height: 16, width: 80),
           ],
         ),
-        const SizedBox(height: AppTheme.spaceM),
+        const SizedBox(height: AppSpacing.md),
         ...List.generate(
           3,
           (index) => _buildContainer(
             context: context,
             height: 70,
-            radius: AppTheme.radiusM,
-            margin: const EdgeInsets.only(bottom: AppTheme.spaceS),
+            radius: AppBorders.borderRadiusM,
+            margin: const EdgeInsets.only(bottom: AppSpacing.sm),
           ),
         ),
       ],

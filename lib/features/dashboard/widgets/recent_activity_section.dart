@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:key_budget/app/config/app_theme.dart';
+import 'package:key_budget/core/design_system/spacing/app_spacing.dart';
 import 'package:key_budget/app/utils/app_animations.dart';
 import 'package:key_budget/app/viewmodel/navigation_viewmodel.dart';
 import 'package:key_budget/app/widgets/activity_tile_widget.dart';
+import 'package:key_budget/core/design_system/widgets/app_card.dart';
 import 'package:key_budget/features/dashboard/viewmodel/dashboard_viewmodel.dart';
 
 class RecentActivitySection extends ConsumerWidget {
@@ -21,7 +22,7 @@ class RecentActivitySection extends ConsumerWidget {
     return Column(
       children: [
         _buildSectionHeader(context, ref, 'Atividades Recentes'),
-        const SizedBox(height: AppTheme.spaceM),
+        const SizedBox(height: AppSpacing.md),
         if (recentExpenses.isEmpty)
           _buildEmptyState(context, ref)
         else
@@ -32,7 +33,7 @@ class RecentActivitySection extends ConsumerWidget {
             itemBuilder: (context, index) {
               return AppAnimations.listFadeIn(
                 Padding(
-                  padding: EdgeInsets.only(bottom: AppTheme.spaceS),
+                  padding: const EdgeInsets.only(bottom: AppSpacing.sm),
                   child: ActivityTile(
                     expense: recentExpenses[index],
                     index: index,
@@ -55,45 +56,33 @@ class RecentActivitySection extends ConsumerWidget {
       children: [
         Text(
           title,
-          style: theme.textTheme.titleLarge?.copyWith(
-            fontWeight: FontWeight.w700,
-            color: theme.colorScheme.onSurface,
-            fontSize: 20,
-          ),
+          style: theme.textTheme.titleLarge,
         ),
-        Material(
-          color: Colors.transparent,
-          borderRadius: BorderRadius.circular(AppTheme.radiusM),
-          child: InkWell(
-            onTap: () {
-              ref.read(navigationViewModelProvider).selectedIndex = 1;
-            },
-            borderRadius: BorderRadius.circular(AppTheme.radiusM),
-            child: Padding(
-              padding: const EdgeInsets.symmetric(
-                horizontal: AppTheme.spaceM,
-                vertical: AppTheme.spaceS,
+        TextButton(
+          onPressed: () {
+            ref.read(navigationViewModelProvider).selectedIndex = 1;
+          },
+          style: TextButton.styleFrom(
+            padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md, vertical: AppSpacing.sm),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                'Ver todas',
+                style: TextStyle(
+                  color: theme.colorScheme.primary,
+                  fontWeight: FontWeight.w600,
+                  fontSize: 14,
+                ),
               ),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(
-                    'Ver todas',
-                    style: TextStyle(
-                      color: theme.colorScheme.primary,
-                      fontWeight: FontWeight.w600,
-                      fontSize: 14,
-                    ),
-                  ),
-                  const SizedBox(width: AppTheme.spaceXS),
-                  Icon(
-                    Icons.arrow_forward_ios_rounded,
-                    color: theme.colorScheme.primary,
-                    size: 14,
-                  ),
-                ],
+              const SizedBox(width: AppSpacing.xs),
+              Icon(
+                Icons.arrow_forward_ios_rounded,
+                color: theme.colorScheme.primary,
+                size: 14,
               ),
-            ),
+            ],
           ),
         ),
       ],
@@ -103,22 +92,15 @@ class RecentActivitySection extends ConsumerWidget {
   Widget _buildEmptyState(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
 
-    return Container(
-      padding: const EdgeInsets.all(AppTheme.spaceXL),
-      decoration: BoxDecoration(
-        color: theme.colorScheme.surface,
-        borderRadius: BorderRadius.circular(AppTheme.radiusL),
-        border: Border.all(
-          color: theme.colorScheme.outline.withAlpha((255 * 0.08).round()),
-        ),
-      ),
+    return AppCard(
+      padding: const EdgeInsets.all(AppSpacing.xl),
       child: Column(
         children: [
           Container(
-            padding: const EdgeInsets.all(AppTheme.spaceL),
+            padding: const EdgeInsets.all(AppSpacing.lg),
             decoration: BoxDecoration(
               color: theme.colorScheme.primary.withAlpha((255 * 0.1).round()),
-              borderRadius: BorderRadius.circular(AppTheme.spaceXL),
+              shape: BoxShape.circle,
             ),
             child: Icon(
               Icons.receipt_long_rounded,
@@ -126,21 +108,17 @@ class RecentActivitySection extends ConsumerWidget {
               color: theme.colorScheme.primary.withAlpha((255 * 0.7).round()),
             ),
           ),
-          const SizedBox(height: AppTheme.spaceL),
+          const SizedBox(height: AppSpacing.lg),
           Text(
             'Nenhuma atividade recente',
-            style: theme.textTheme.titleMedium?.copyWith(
-              fontWeight: FontWeight.w600,
-              color: theme.colorScheme.onSurface,
-            ),
+            style: theme.textTheme.titleMedium,
           ),
-          const SizedBox(height: AppTheme.spaceS),
+          const SizedBox(height: AppSpacing.sm),
           Text(
             'Suas transações aparecerão aqui assim que forem registradas',
             textAlign: TextAlign.center,
             style: theme.textTheme.bodyMedium?.copyWith(
-              color: theme.colorScheme.onSurface.withAlpha((255 * 0.6).round()),
-              height: 1.4,
+              color: theme.colorScheme.onSurfaceVariant,
             ),
           ),
         ],

@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:key_budget/app/config/app_theme.dart';
+import 'package:key_budget/core/design_system/spacing/app_spacing.dart';
+import 'package:key_budget/core/design_system/borders/app_borders.dart';
+import 'package:key_budget/core/design_system/widgets/app_card.dart';
 import 'package:key_budget/app/utils/navigation_utils.dart';
 import 'package:key_budget/app/viewmodel/navigation_viewmodel.dart';
 import 'package:key_budget/features/analysis/view/analysis_screen.dart';
@@ -26,7 +28,7 @@ class QuickActionsSection extends ConsumerWidget {
             onTap: () => navigationViewModel.selectedIndex = 2,
           ),
         ),
-        const SizedBox(width: AppTheme.spaceM),
+        const SizedBox(width: AppSpacing.md),
         Expanded(
           child: _buildQuickActionCard(
             context,
@@ -53,57 +55,41 @@ class QuickActionsSection extends ConsumerWidget {
   }) {
     final theme = Theme.of(context);
 
-    return Material(
-      color: theme.colorScheme.surface,
-      borderRadius: BorderRadius.circular(AppTheme.radiusL),
-      elevation: 0,
-      shadowColor: theme.colorScheme.shadow.withAlpha((255 * 0.05).round()),
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(AppTheme.radiusL),
-        child: Container(
-          padding: const EdgeInsets.all(AppTheme.spaceL),
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(AppTheme.radiusL),
-            border: Border.all(
-              color: theme.colorScheme.outline.withAlpha((255 * 0.08).round()),
+    return AppCard(
+      padding: const EdgeInsets.all(AppSpacing.lg),
+      onTap: onTap,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            padding: const EdgeInsets.all(AppSpacing.sm + 2),
+            decoration: BoxDecoration(
+              color: color.withAlpha((255 * 0.12).round()),
+              borderRadius: AppBorders.borderRadiusM,
+            ),
+            child: Icon(
+              icon,
+              color: color,
+              size: 22,
             ),
           ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Container(
-                padding: const EdgeInsets.all(AppTheme.spaceS + 2),
-                decoration: BoxDecoration(
-                  color: color.withAlpha((255 * 0.12).round()),
-                  borderRadius: BorderRadius.circular(AppTheme.radiusM),
-                ),
-                child: Icon(
-                  icon,
-                  color: color,
-                  size: 22,
-                ),
-              ),
-              const SizedBox(height: AppTheme.spaceM),
-              Text(
-                title,
-                style: theme.textTheme.titleMedium?.copyWith(
-                  fontWeight: FontWeight.w700,
-                  color: theme.colorScheme.onSurface,
-                ),
-              ),
-              const SizedBox(height: AppTheme.spaceXS),
-              Text(
-                subtitle,
-                style: theme.textTheme.bodySmall?.copyWith(
-                  color: theme.colorScheme.onSurface
-                      .withAlpha((255 * 0.65).round()),
-                  fontWeight: FontWeight.w500,
-                ),
-              ),
-            ],
+          const SizedBox(height: AppSpacing.md),
+          Text(
+            title,
+            style: theme.textTheme.titleMedium?.copyWith(
+              fontWeight: FontWeight.w700,
+              color: theme.colorScheme.onSurface,
+            ),
           ),
-        ),
+          const SizedBox(height: AppSpacing.xs),
+          Text(
+            subtitle,
+            style: theme.textTheme.bodySmall?.copyWith(
+              color: theme.colorScheme.onSurfaceVariant,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+        ],
       ),
     );
   }

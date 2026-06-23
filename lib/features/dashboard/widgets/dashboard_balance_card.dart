@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:key_budget/app/config/app_theme.dart';
 import 'package:key_budget/app/utils/app_animations.dart';
 import 'package:key_budget/app/viewmodel/navigation_viewmodel.dart';
 import 'package:key_budget/app/widgets/balance_card.dart';
+import 'package:key_budget/core/design_system/spacing/app_spacing.dart';
+import 'package:key_budget/core/design_system/borders/app_borders.dart';
 import 'package:key_budget/features/dashboard/viewmodel/dashboard_viewmodel.dart';
 
 class DashboardBalanceCard extends ConsumerStatefulWidget {
@@ -52,12 +53,12 @@ class _DashboardBalanceCardState extends ConsumerState<DashboardBalanceCard> {
                   children: [
                     Container(
                       padding: const EdgeInsets.symmetric(
-                          horizontal: AppTheme.spaceS,
-                          vertical: AppTheme.spaceXS),
+                          horizontal: AppSpacing.sm,
+                          vertical: AppSpacing.xs),
                       decoration: BoxDecoration(
                         color: theme.colorScheme.onPrimary
                             .withAlpha((255 * 0.1).round()),
-                        borderRadius: BorderRadius.circular(AppTheme.radiusS),
+                        borderRadius: AppBorders.borderRadiusS,
                       ),
                       child: Row(
                         children: [
@@ -68,7 +69,7 @@ class _DashboardBalanceCardState extends ConsumerState<DashboardBalanceCard> {
                             color: theme.colorScheme.onPrimary,
                             size: 14,
                           ),
-                          const SizedBox(width: AppTheme.spaceXS),
+                          const SizedBox(width: AppSpacing.xs),
                           Text(
                             formattedPercentage,
                             style: theme.textTheme.bodySmall?.copyWith(
@@ -79,7 +80,7 @@ class _DashboardBalanceCardState extends ConsumerState<DashboardBalanceCard> {
                         ],
                       ),
                     ),
-                    const SizedBox(width: AppTheme.spaceS),
+                    const SizedBox(width: AppSpacing.sm),
                     Text(
                       'em relação à média',
                       style: theme.textTheme.bodySmall?.copyWith(
