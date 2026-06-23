@@ -4,12 +4,15 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
-import 'package:key_budget/app/config/app_theme.dart';
+
 import 'package:key_budget/app/utils/navigation_utils.dart';
 import 'package:key_budget/core/models/document_model.dart';
 import 'package:key_budget/core/services/snackbar_service.dart';
 import 'package:key_budget/features/auth/viewmodel/auth_viewmodel.dart';
 import 'package:key_budget/features/documents/viewmodel/document_viewmodel.dart';
+import 'package:key_budget/core/design_system/spacing/app_spacing.dart';
+import 'package:key_budget/core/design_system/borders/app_borders.dart';
+import 'package:key_budget/core/design_system/widgets/app_card.dart';
 import 'package:syncfusion_flutter_pdfviewer/pdfviewer.dart';
 
 import 'add_document_screen.dart';
@@ -64,7 +67,7 @@ class DocumentDetailScreen extends ConsumerWidget {
         ],
       ),
       body: ListView(
-        padding: const EdgeInsets.all(AppTheme.defaultPadding),
+        padding: const EdgeInsets.all(AppSpacing.md),
         children: [
           _buildInfoCard(context),
           if (document.additionalFields.isNotEmpty)
@@ -80,45 +83,43 @@ class DocumentDetailScreen extends ConsumerWidget {
 
   Widget _buildInfoCard(BuildContext context) {
     final theme = Theme.of(context);
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(AppTheme.cardPadding),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text('Informações Principais', style: theme.textTheme.titleLarge),
-            const SizedBox(height: AppTheme.spaceL),
-            if (document.number != null && document.number!.isNotEmpty)
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Expanded(
-                    child:
-                        _buildDetailItem('Número', document.number!, context),
-                  ),
-                  IconButton(
-                    icon: const Icon(Icons.copy_all_outlined),
-                    tooltip: 'Copiar número',
-                    onPressed: () {
-                      Clipboard.setData(ClipboardData(text: document.number!));
-                      HapticFeedback.lightImpact();
-                      SnackbarService.showSuccess(context, 'Número copiado!');
-                    },
-                  ),
-                ],
-              ),
-            if (document.issueDate != null)
-              _buildDetailItem(
-                  'Data de Expedição',
-                  DateFormat('dd/MM/yyyy').format(document.issueDate!),
-                  context),
-            if (document.expiryDate != null)
-              _buildDetailItem(
-                  'Validade',
-                  DateFormat('dd/MM/yyyy').format(document.expiryDate!),
-                  context),
-          ],
-        ),
+    return AppCard(
+      padding: const EdgeInsets.all(AppSpacing.lg),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text('Informações Principais', style: theme.textTheme.titleLarge),
+          const SizedBox(height: AppSpacing.lg),
+          if (document.number != null && document.number!.isNotEmpty)
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Expanded(
+                  child:
+                      _buildDetailItem('Número', document.number!, context),
+                ),
+                IconButton(
+                  icon: const Icon(Icons.copy_all_outlined),
+                  tooltip: 'Copiar número',
+                  onPressed: () {
+                    Clipboard.setData(ClipboardData(text: document.number!));
+                    HapticFeedback.lightImpact();
+                    SnackbarService.showSuccess(context, 'Número copiado!');
+                  },
+                ),
+              ],
+            ),
+          if (document.issueDate != null)
+            _buildDetailItem(
+                'Data de Expedição',
+                DateFormat('dd/MM/yyyy').format(document.issueDate!),
+                context),
+          if (document.expiryDate != null)
+            _buildDetailItem(
+                'Validade',
+                DateFormat('dd/MM/yyyy').format(document.expiryDate!),
+                context),
+        ],
       ),
     );
   }
@@ -126,19 +127,17 @@ class DocumentDetailScreen extends ConsumerWidget {
   Widget _buildAdditionalFieldsCard(BuildContext context) {
     final theme = Theme.of(context);
     return Padding(
-      padding: const EdgeInsets.only(top: AppTheme.spaceL),
-      child: Card(
-        child: Padding(
-          padding: const EdgeInsets.all(AppTheme.cardPadding),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text('Campos Adicionais', style: theme.textTheme.titleLarge),
-              const SizedBox(height: AppTheme.spaceL),
-              ...document.additionalFields.entries
-                  .map((e) => _buildDetailItem(e.key, e.value, context)),
-            ],
-          ),
+      padding: const EdgeInsets.only(top: AppSpacing.lg),
+      child: AppCard(
+        padding: const EdgeInsets.all(AppSpacing.lg),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text('Campos Adicionais', style: theme.textTheme.titleLarge),
+            const SizedBox(height: AppSpacing.lg),
+            ...document.additionalFields.entries
+                .map((e) => _buildDetailItem(e.key, e.value, context)),
+          ],
         ),
       ),
     );
@@ -147,19 +146,17 @@ class DocumentDetailScreen extends ConsumerWidget {
   Widget _buildAttachmentsCard(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
     return Padding(
-      padding: const EdgeInsets.only(top: AppTheme.spaceL),
-      child: Card(
-        child: Padding(
-          padding: const EdgeInsets.all(AppTheme.cardPadding),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text('Anexos', style: theme.textTheme.titleLarge),
-              const SizedBox(height: AppTheme.spaceM),
-              ...document.attachments.map((attachment) =>
-                  _buildAttachmentItem(attachment, context, ref)),
-            ],
-          ),
+      padding: const EdgeInsets.only(top: AppSpacing.lg),
+      child: AppCard(
+        padding: const EdgeInsets.all(AppSpacing.lg),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text('Anexos', style: theme.textTheme.titleLarge),
+            const SizedBox(height: AppSpacing.md),
+            ...document.attachments.map((attachment) =>
+                _buildAttachmentItem(attachment, context, ref)),
+          ],
         ),
       ),
     );
@@ -169,8 +166,15 @@ class DocumentDetailScreen extends ConsumerWidget {
       BuildContext context, DocumentViewModel viewModel, String userId) {
     final theme = Theme.of(context);
     return Padding(
-      padding: const EdgeInsets.only(top: AppTheme.spaceL),
+      padding: const EdgeInsets.only(top: AppSpacing.lg),
       child: Card(
+        elevation: 0,
+        shape: RoundedRectangleBorder(
+          borderRadius: AppBorders.borderRadiusM,
+          side: BorderSide(
+            color: Theme.of(context).colorScheme.outlineVariant,
+          ),
+        ),
         child: ExpansionTile(
           title: Text('Versões Anteriores', style: theme.textTheme.titleLarge),
           children: document.versions
@@ -211,7 +215,7 @@ class DocumentDetailScreen extends ConsumerWidget {
 
   Widget _buildDetailItem(String label, String value, BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.only(bottom: AppTheme.spaceM),
+      padding: const EdgeInsets.only(bottom: AppSpacing.md),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -232,12 +236,12 @@ class DocumentDetailScreen extends ConsumerWidget {
       elevation: 0,
       clipBehavior: Clip.antiAlias,
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(AppTheme.radiusM),
+        borderRadius: AppBorders.borderRadiusM,
         side: BorderSide(
-          color: theme.colorScheme.outline.withAlpha((255 * 0.2).round()),
+          color: theme.colorScheme.outlineVariant,
         ),
       ),
-      margin: const EdgeInsets.only(bottom: AppTheme.spaceM),
+      margin: const EdgeInsets.only(bottom: AppSpacing.md),
       child: Column(
         children: [
           ListTile(
