@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:key_budget/app/config/app_theme.dart';
+
 import 'package:key_budget/core/models/document_model.dart';
 import 'package:key_budget/core/services/snackbar_service.dart';
 import 'package:key_budget/features/auth/viewmodel/auth_viewmodel.dart';
 import 'package:key_budget/features/documents/viewmodel/document_viewmodel.dart';
+import 'package:key_budget/core/design_system/spacing/app_spacing.dart';
+import 'package:key_budget/core/design_system/widgets/app_button.dart';
 
 import '../widgets/document_form.dart';
 
@@ -101,12 +103,11 @@ class _AddDocumentScreenState extends ConsumerState<AddDocumentScreen> {
         attachments: _attachments,
       ),
       bottomNavigationBar: Padding(
-        padding: const EdgeInsets.all(AppTheme.defaultPadding),
-        child: ElevatedButton(
-          onPressed: viewModel.isLoading ? null : _submit,
-          child: viewModel.isLoading
-              ? const CircularProgressIndicator()
-              : const Text('Salvar'),
+        padding: const EdgeInsets.all(AppSpacing.md),
+        child: AppButton(
+          onPressed: _submit,
+          isLoading: viewModel.isLoading,
+          label: 'Salvar',
         ),
       ),
     );

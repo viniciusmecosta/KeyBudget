@@ -11,6 +11,9 @@ import 'package:key_budget/features/auth/viewmodel/auth_viewmodel.dart';
 import 'package:key_budget/features/documents/view/add_document_screen.dart';
 import 'package:key_budget/features/documents/viewmodel/document_viewmodel.dart';
 
+import 'package:key_budget/core/design_system/spacing/app_spacing.dart';
+import 'package:key_budget/core/design_system/borders/app_borders.dart';
+
 import '../widgets/document_list_tile.dart';
 
 class DocumentsScreen extends ConsumerStatefulWidget {
@@ -96,7 +99,7 @@ class _DocumentsScreenState extends ConsumerState<DocumentsScreen> {
                     decoration: BoxDecoration(
                       color:
                           theme.colorScheme.onSurface.withValues(alpha: 0.08),
-                      borderRadius: BorderRadius.circular(AppTheme.radiusXXL),
+                      borderRadius: AppBorders.borderRadiusXXL,
                     ),
                     child: TextField(
                       controller: _searchController,
@@ -162,9 +165,9 @@ class _DocumentsScreenState extends ConsumerState<DocumentsScreen> {
                     else
                       SliverPadding(
                         padding: const EdgeInsets.fromLTRB(
-                            AppTheme.defaultPadding,
-                            AppTheme.spaceL,
-                            AppTheme.defaultPadding,
+                            AppSpacing.md,
+                            AppSpacing.lg,
+                            AppSpacing.md,
                             96.0),
                         sliver: SliverAnimatedList(
                           key: _listKey,
@@ -196,7 +199,7 @@ class _DocumentsScreenState extends ConsumerState<DocumentsScreen> {
           label: const Text('Novo Documento'),
           icon: const Icon(Icons.add),
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(AppTheme.radiusXXL),
+            borderRadius: AppBorders.borderRadiusXXL,
           ),
         )),
       ),
@@ -213,16 +216,16 @@ class DocumentsListSkeleton extends ConsumerWidget {
     final shimmerHighlightColor = theme.colorScheme.surface;
 
     return SliverPadding(
-      padding: const EdgeInsets.fromLTRB(AppTheme.defaultPadding,
-          AppTheme.spaceL, AppTheme.defaultPadding, 96.0),
+      padding: const EdgeInsets.fromLTRB(AppSpacing.md,
+          AppSpacing.lg, AppSpacing.md, 96.0),
       sliver: SliverList(
         delegate: SliverChildBuilderDelegate(
           (context, index) => Container(
-            margin: const EdgeInsets.only(bottom: AppTheme.spaceS),
-            padding: const EdgeInsets.all(16),
+            margin: const EdgeInsets.only(bottom: AppSpacing.sm),
+            padding: const EdgeInsets.all(AppSpacing.md),
             decoration: BoxDecoration(
               color: theme.colorScheme.surfaceContainerHighest,
-              borderRadius: BorderRadius.circular(16),
+              borderRadius: AppBorders.borderRadiusL,
             ),
             child: Row(
               children: [
@@ -231,10 +234,10 @@ class DocumentsListSkeleton extends ConsumerWidget {
                   height: 40,
                   decoration: BoxDecoration(
                     color: theme.colorScheme.surface,
-                    borderRadius: BorderRadius.circular(8),
+                    borderRadius: AppBorders.borderRadiusM,
                   ),
                 ),
-                const SizedBox(width: AppTheme.spaceM),
+                const SizedBox(width: AppSpacing.md),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -259,7 +262,7 @@ class DocumentsListSkeleton extends ConsumerWidget {
                     ],
                   ),
                 ),
-                const SizedBox(width: AppTheme.spaceM),
+                const SizedBox(width: AppSpacing.md),
                 Container(
                   width: 24,
                   height: 24,
