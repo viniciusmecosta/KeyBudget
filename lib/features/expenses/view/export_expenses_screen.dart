@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:key_budget/app/config/app_theme.dart';
 import 'package:key_budget/app/utils/app_animations.dart';
+import 'package:key_budget/core/design_system/spacing/app_spacing.dart';
+import 'package:key_budget/core/design_system/widgets/app_button.dart';
 import 'package:key_budget/core/services/snackbar_service.dart';
 import 'package:key_budget/features/analysis/viewmodel/analysis_viewmodel.dart';
 import 'package:key_budget/features/category/viewmodel/category_viewmodel.dart';
@@ -82,80 +83,64 @@ class _ExportExpensesScreenState extends ConsumerState<ExportExpensesScreen> {
   Widget build(BuildContext context) {
     final viewModel = ref.watch(expenseViewModelProvider);
     final isExporting = viewModel.isExportingCsv || viewModel.isExportingPdf;
-    final theme = Theme.of(context);
 
     return Scaffold(
       appBar: AppBar(
         title: const Text('Exportar Despesas'),
       ),
       body: AppAnimations.fadeInFromBottom(Padding(
-        padding: const EdgeInsets.all(AppTheme.defaultPadding),
+        padding: const EdgeInsets.all(AppSpacing.md),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            ElevatedButton.icon(
-              icon: const Icon(Icons.date_range),
-              label: const Text('Selecionar Período'),
+            AppButton(
               onPressed: isExporting ? null : _pickDateRange,
+              icon: Icons.date_range,
+              label: 'Selecionar Período',
+              variant: AppButtonVariant.secondary,
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: AppSpacing.md),
             if (_startDate != null && _endDate != null)
               Text(
                 'Período: ${_startDate!.day}/${_startDate!.month}/${_startDate!.year} - ${_endDate!.day}/${_endDate!.month}/${_endDate!.year}',
                 textAlign: TextAlign.center,
                 style: Theme.of(context).textTheme.titleMedium,
               ),
-            const SizedBox(height: 24),
-            ElevatedButton(
+            const SizedBox(height: AppSpacing.lg),
+            AppButton(
               onPressed: isExporting || _startDate == null || _endDate == null
                   ? null
                   : () => _export(context, all: false, type: 'csv'),
-              child: viewModel.isExportingCsv
-                  ? SizedBox(
-                      height: 24,
-                      width: 24,
-                      child: CircularProgressIndicator(
-                          color: theme.colorScheme.onPrimary, strokeWidth: 2.0))
-                  : const Text('Exportar Período Selecionado (CSV)'),
+              isLoading: viewModel.isExportingCsv,
+              label: 'Exportar Período (CSV)',
             ),
-            const SizedBox(height: 16),
-            ElevatedButton(
+            const SizedBox(height: AppSpacing.md),
+            AppButton(
               onPressed: isExporting || _startDate == null || _endDate == null
                   ? null
                   : () => _export(context, all: false, type: 'pdf'),
-              child: viewModel.isExportingPdf
-                  ? SizedBox(
-                      height: 24,
-                      width: 24,
-                      child: CircularProgressIndicator(
-                          color: theme.colorScheme.onPrimary, strokeWidth: 2.0))
-                  : const Text('Exportar Período Selecionado (PDF)'),
+              isLoading: viewModel.isExportingPdf,
+              label: 'Exportar Período (PDF)',
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: AppSpacing.md),
             const Divider(),
-            const SizedBox(height: 16),
-            OutlinedButton(
+            const SizedBox(height: AppSpacing.md),
+            AppButton(
               onPressed: isExporting
                   ? null
                   : () => _export(context, all: true, type: 'csv'),
-              child: viewModel.isExportingCsv
-                  ? SizedBox(
-                      height: 24,
-                      width: 24,
-                      child: CircularProgressIndicator(strokeWidth: 2.0))
-                  : const Text('Exportar Todo o Histórico (CSV)'),
+              isLoading: viewModel.isExportingCsv,
+              label: 'Exportar Histórico (CSV)',
+              variant: AppButtonVariant.outline,
             ),
-            const SizedBox(height: 16),
-            OutlinedButton(
+            const SizedBox(height: AppSpacing.md),
+            AppButton(
               onPressed: isExporting
                   ? null
                   : () => _export(context, all: true, type: 'pdf'),
-              child: viewModel.isExportingPdf
-                  ? SizedBox(
-                      height: 24,
-                      width: 24,
-                      child: CircularProgressIndicator(strokeWidth: 2.0))
-                  : const Text('Exportar Todo o Histórico (PDF)'),
+              isLoading: viewModel.isExportingPdf,
+              label: 'Exportar Histórico (PDF)',
+              variant: AppButtonVariant.outline,
             ),
           ],
         ),

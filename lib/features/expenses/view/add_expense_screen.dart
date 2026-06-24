@@ -7,8 +7,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_mlkit_text_recognition/google_mlkit_text_recognition.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
-import 'package:key_budget/app/config/app_theme.dart';
 import 'package:key_budget/app/utils/app_animations.dart';
+import 'package:key_budget/core/design_system/spacing/app_spacing.dart';
+import 'package:key_budget/core/design_system/borders/app_borders.dart';
+import 'package:key_budget/core/design_system/widgets/app_button.dart';
 import 'package:key_budget/core/models/expense_category_model.dart';
 import 'package:key_budget/core/models/expense_model.dart';
 import 'package:key_budget/core/services/ocr_service.dart';
@@ -339,7 +341,7 @@ class _AddExpenseScreenState extends ConsumerState<AddExpenseScreen> {
         ],
       ),
       body: AppAnimations.fadeInFromBottom(Padding(
-        padding: const EdgeInsets.all(AppTheme.defaultPadding),
+        padding: const EdgeInsets.all(AppSpacing.md),
         child: Column(
           children: [
             if (_isScanning)
@@ -387,10 +389,9 @@ class _AddExpenseScreenState extends ConsumerState<AddExpenseScreen> {
                         child: Container(
                           height: 100,
                           margin: const EdgeInsets.only(
-                              top: AppTheme.spaceM, bottom: AppTheme.spaceS),
+                              top: AppSpacing.md, bottom: AppSpacing.sm),
                           decoration: BoxDecoration(
-                            borderRadius:
-                                BorderRadius.circular(AppTheme.radiusM),
+                            borderRadius: AppBorders.borderRadiusMD,
                             border: Border.all(
                                 color: Theme.of(context).dividerColor),
                             image: DecorationImage(
@@ -411,16 +412,14 @@ class _AddExpenseScreenState extends ConsumerState<AddExpenseScreen> {
                     : null,
               ),
             ),
-            const SizedBox(height: 16),
-            ElevatedButton(
-              onPressed: _isSaving ? null : _submit,
-              child: _isSaving
-                  ? SizedBox(
-                      height: 24,
-                      width: 24,
-                      child: CircularProgressIndicator(
-                          color: theme.colorScheme.onPrimary, strokeWidth: 2.0))
-                  : const Text('Salvar Despesa'),
+            const SizedBox(height: AppSpacing.md),
+            SizedBox(
+              width: double.infinity,
+              child: AppButton(
+                label: 'Salvar Despesa',
+                onPressed: _submit,
+                isLoading: _isSaving,
+              ),
             ),
           ],
         ),

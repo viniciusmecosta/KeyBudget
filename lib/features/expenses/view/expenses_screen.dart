@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart' hide DateUtils;
 import 'package:flutter/services.dart';
-import 'package:key_budget/app/config/app_theme.dart';
 import 'package:key_budget/app/utils/app_animations.dart';
 import 'package:key_budget/app/utils/navigation_utils.dart';
 import 'package:key_budget/app/widgets/balance_card.dart';
@@ -10,6 +9,8 @@ import 'package:key_budget/features/auth/viewmodel/auth_viewmodel.dart';
 import 'package:key_budget/features/category/viewmodel/category_viewmodel.dart';
 import 'package:key_budget/features/expenses/view/add_expense_screen.dart';
 import 'package:key_budget/features/expenses/viewmodel/expense_viewmodel.dart';
+import 'package:key_budget/core/design_system/spacing/app_spacing.dart';
+import 'package:key_budget/core/design_system/borders/app_borders.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../widgets/category_filter_modal.dart';
@@ -63,9 +64,8 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen> {
   void _showCategoryFilter() {
     showModalBottomSheet(
       context: context,
-      shape: const RoundedRectangleBorder(
-        borderRadius:
-            BorderRadius.vertical(top: Radius.circular(AppTheme.radiusXL)),
+      shape: RoundedRectangleBorder(
+        borderRadius: AppBorders.borderRadiusVerticalXL,
       ),
       backgroundColor: Theme.of(context).colorScheme.surface,
       builder: (context) {
@@ -108,7 +108,7 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen> {
                   ),
                   Padding(
                     padding: const EdgeInsets.symmetric(
-                        horizontal: AppTheme.defaultPadding),
+                        horizontal: AppSpacing.md),
                     child: AppAnimations.fadeInFromBottom(
                       TweenAnimationBuilder<double>(
                         key: ValueKey(expenseViewModel.currentMonthTotal),
@@ -128,7 +128,7 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen> {
                       ),
                     ),
                   ),
-                  const SizedBox(height: AppTheme.spaceL),
+                  const SizedBox(height: AppSpacing.lg),
                 ],
               ),
             ),
@@ -191,7 +191,7 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen> {
                     decoration: BoxDecoration(
                       color: theme.colorScheme.onSurface
                           .withAlpha((255 * 0.08).round()),
-                      borderRadius: BorderRadius.circular(AppTheme.radiusXXL),
+                      borderRadius: AppBorders.borderRadiusXXL,
                     ),
                     child: TextField(
                       controller: _searchController,
@@ -265,7 +265,7 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen> {
                   child: _isSearching
                       ? Container(
                           padding: const EdgeInsets.symmetric(
-                              horizontal: AppTheme.defaultPadding, vertical: 8),
+                              horizontal: AppSpacing.md, vertical: 8),
                           alignment: Alignment.centerLeft,
                           child: SingleChildScrollView(
                             scrollDirection: Axis.horizontal,
@@ -294,11 +294,10 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen> {
                                     }
                                   },
                                   shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(
-                                        AppTheme.radiusXL),
+                                    borderRadius: AppBorders.borderRadiusXL,
                                   ),
                                 ),
-                                const SizedBox(width: AppTheme.spaceM),
+                                const SizedBox(width: AppSpacing.md),
                                 ChoiceChip(
                                   label: Text(
                                     'Todo o Período',
@@ -322,8 +321,7 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen> {
                                     }
                                   },
                                   shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(
-                                        AppTheme.radiusXL),
+                                    borderRadius: AppBorders.borderRadiusXL,
                                   ),
                                 ),
                               ],
@@ -353,7 +351,7 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen> {
           icon: const Icon(Icons.add_rounded),
           label: const Text("Nova Despesa"),
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(AppTheme.radiusXXL),
+            borderRadius: AppBorders.borderRadiusXXL,
           ),
           backgroundColor: theme.colorScheme.primary,
           foregroundColor: theme.colorScheme.onPrimary,

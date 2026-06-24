@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_masked_text2/flutter_masked_text2.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:key_budget/app/config/app_theme.dart';
+
 import 'package:key_budget/app/widgets/category_autocomplete_field.dart';
 import 'package:key_budget/app/widgets/category_picker_field.dart';
 import 'package:key_budget/app/widgets/date_picker_field.dart';
+import 'package:key_budget/core/design_system/spacing/app_spacing.dart';
+import 'package:key_budget/core/design_system/widgets/app_text_field.dart';
 import 'package:key_budget/core/models/expense_category_model.dart';
 import 'package:key_budget/features/auth/viewmodel/auth_viewmodel.dart';
 import 'package:key_budget/features/category/view/categories_screen.dart';
@@ -62,11 +64,11 @@ class ExpenseForm extends ConsumerWidget {
       key: formKey,
       child: ListView(
         children: [
-          const SizedBox(height: 12),
-          TextFormField(
+          const SizedBox(height: AppSpacing.sm),
+          AppTextField(
             controller: amountController,
+            label: 'Valor *',
             readOnly: !isEditing,
-            decoration: const InputDecoration(labelText: 'Valor *'),
             keyboardType: const TextInputType.numberWithOptions(decimal: true),
             validator: (value) {
               if (value == null || value.isEmpty) {
@@ -78,7 +80,7 @@ class ExpenseForm extends ConsumerWidget {
               return null;
             },
           ),
-          const SizedBox(height: AppTheme.spaceM),
+          const SizedBox(height: AppSpacing.md),
           CategoryPickerField(
             label: 'Categoria',
             value: selectedCategory,
@@ -98,7 +100,7 @@ class ExpenseForm extends ConsumerWidget {
             validator: (value) =>
                 value == null ? 'Selecione uma categoria' : null,
           ),
-          const SizedBox(height: AppTheme.spaceM),
+          const SizedBox(height: AppSpacing.md),
           AbsorbPointer(
             absorbing: !isEditing,
             child: CategoryAutocompleteField(
@@ -118,7 +120,7 @@ class ExpenseForm extends ConsumerWidget {
               },
             ),
           ),
-          const SizedBox(height: AppTheme.spaceM),
+          const SizedBox(height: AppSpacing.md),
           AbsorbPointer(
             absorbing: !isEditing,
             child: CategoryAutocompleteField(
@@ -138,7 +140,7 @@ class ExpenseForm extends ConsumerWidget {
               },
             ),
           ),
-          const SizedBox(height: AppTheme.spaceM),
+          const SizedBox(height: AppSpacing.md),
           DatePickerField(
             label: 'Data',
             selectedDate: selectedDate,
@@ -146,7 +148,7 @@ class ExpenseForm extends ConsumerWidget {
             onDateSelected: onDateChanged,
           ),
           if (onInstallmentChanged != null) ...[
-            const SizedBox(height: AppTheme.spaceM),
+            const SizedBox(height: AppSpacing.md),
             AbsorbPointer(
               absorbing: !isEditing,
               child: SwitchListTile(
@@ -190,7 +192,7 @@ class ExpenseForm extends ConsumerWidget {
                   ],
                 ),
               ),
-              const SizedBox(height: AppTheme.spaceS),
+              const SizedBox(height: AppSpacing.sm),
               AbsorbPointer(
                 absorbing: !isEditing,
                 child: SwitchListTile(

@@ -2,7 +2,8 @@ import 'package:auto_size_text/auto_size_text.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
-import 'package:key_budget/app/config/app_theme.dart';
+import 'package:key_budget/core/design_system/spacing/app_spacing.dart';
+import 'package:key_budget/core/design_system/borders/app_borders.dart';
 import 'package:key_budget/app/utils/navigation_utils.dart';
 import 'package:key_budget/core/models/recurring_expense_model.dart';
 import 'package:key_budget/features/category/viewmodel/category_viewmodel.dart';
@@ -39,21 +40,21 @@ class RecurringExpenseListTile extends ConsumerWidget {
     }
 
     return Container(
-      margin: const EdgeInsets.only(bottom: AppTheme.spaceS),
+      margin: const EdgeInsets.only(bottom: AppSpacing.sm),
       child: Material(
         color: theme.colorScheme.surface,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: AppBorders.borderRadiusL,
         elevation: 0,
         child: InkWell(
           onTap: () {
             NavigationUtils.push(
                 context, AddEditRecurringExpenseScreen(expense: expense));
           },
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: AppBorders.borderRadiusL,
           child: Container(
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.all(AppSpacing.md),
             decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(16),
+              borderRadius: AppBorders.borderRadiusL,
               border: Border.all(
                 color: theme.colorScheme.outline.withAlpha((255 * 0.1).round()),
               ),
@@ -67,7 +68,7 @@ class RecurringExpenseListTile extends ConsumerWidget {
                   child: Icon(category?.icon ?? Icons.category,
                       color: categoryColor, size: 24),
                 ),
-                const SizedBox(width: AppTheme.spaceM),
+                const SizedBox(width: AppSpacing.md),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -105,12 +106,12 @@ class RecurringExpenseListTile extends ConsumerWidget {
                     ],
                   ),
                 ),
-                const SizedBox(width: AppTheme.spaceS),
+                const SizedBox(width: AppSpacing.sm),
                 Text(
                   currencyFormatter.format(expense.amount),
                   style: textTheme.titleMedium?.copyWith(
                     fontWeight: FontWeight.w700,
-                    color: AppTheme.error,
+                    color: theme.colorScheme.error,
                   ),
                 ),
               ],

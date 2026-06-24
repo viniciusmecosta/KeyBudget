@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_masked_text2/flutter_masked_text2.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:key_budget/app/config/app_theme.dart';
+import 'package:key_budget/core/design_system/spacing/app_spacing.dart';
+import 'package:key_budget/core/design_system/borders/app_borders.dart';
+import 'package:key_budget/core/design_system/widgets/app_text_field.dart';
+import 'package:key_budget/core/design_system/widgets/app_card.dart';
 import 'package:key_budget/app/widgets/category_picker_field.dart';
 import 'package:key_budget/app/widgets/date_picker_field.dart';
 import 'package:key_budget/core/models/expense_category_model.dart';
@@ -39,53 +42,50 @@ class RecurringExpenseForm extends ConsumerWidget {
       key: formKey,
       child: ListView(
         children: [
-          Card(
-            child: Padding(
-              padding: const EdgeInsets.all(20),
-              child: Column(
-                children: [
-                  TextFormField(
-                    controller: amountController,
-                    decoration: const InputDecoration(labelText: 'Valor *'),
-                    keyboardType: TextInputType.number,
-                    validator: (v) => amountController.numberValue <= 0
-                        ? 'Valor inválido'
-                        : null,
-                  ),
-                  const SizedBox(height: AppTheme.spaceM),
-                  CategoryPickerField(
-                    label: 'Categoria',
-                    value: selectedCategory.value,
-                    categories: ref.watch(categoryViewModelProvider).categories,
-                    onChanged: (category) => selectedCategory.value = category,
-                    onManageCategories: () {},
-                    validator: (v) => v == null ? 'Campo obrigatório' : null,
-                  ),
-                  const SizedBox(height: AppTheme.spaceM),
-                  TextFormField(
-                    controller: motivationController,
-                    decoration: const InputDecoration(labelText: 'Motivação'),
-                    textCapitalization: TextCapitalization.sentences,
-                  ),
-                  const SizedBox(height: AppTheme.spaceM),
-                  TextFormField(
-                    controller: locationController,
-                    decoration: const InputDecoration(labelText: 'Local'),
-                    textCapitalization: TextCapitalization.sentences,
-                  ),
-                ],
-              ),
+          AppCard(
+            padding: const EdgeInsets.all(AppSpacing.lg),
+            child: Column(
+              children: [
+                AppTextField(
+                  controller: amountController,
+                  label: 'Valor *',
+                  keyboardType: TextInputType.number,
+                  validator: (v) => amountController.numberValue <= 0
+                      ? 'Valor inválido'
+                      : null,
+                ),
+                const SizedBox(height: AppSpacing.md),
+                CategoryPickerField(
+                  label: 'Categoria',
+                  value: selectedCategory.value,
+                  categories: ref.watch(categoryViewModelProvider).categories,
+                  onChanged: (category) => selectedCategory.value = category,
+                  onManageCategories: () {},
+                  validator: (v) => v == null ? 'Campo obrigatório' : null,
+                ),
+                const SizedBox(height: AppSpacing.md),
+                AppTextField(
+                  controller: motivationController,
+                  label: 'Motivação',
+                  textCapitalization: TextCapitalization.sentences,
+                ),
+                const SizedBox(height: AppSpacing.md),
+                AppTextField(
+                  controller: locationController,
+                  label: 'Local',
+                  textCapitalization: TextCapitalization.sentences,
+                ),
+              ],
             ),
           ),
-          const SizedBox(height: AppTheme.spaceL),
-          Card(
-            child: Padding(
-              padding: const EdgeInsets.all(20),
-              child: Column(
+          const SizedBox(height: AppSpacing.lg),
+          AppCard(
+            padding: const EdgeInsets.all(AppSpacing.lg),
+            child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text('Recorrência', style: theme.textTheme.titleLarge),
-                  const SizedBox(height: AppTheme.spaceL),
+                  const SizedBox(height: AppSpacing.lg),
                   _buildFrequencySelector(),
                   ValueListenableBuilder<RecurrenceFrequency>(
                     valueListenable: frequency,
@@ -97,7 +97,7 @@ class RecurringExpenseForm extends ConsumerWidget {
                         child: value == RecurrenceFrequency.monthly
                             ? Column(
                                 children: [
-                                  const SizedBox(height: AppTheme.spaceL),
+                                  const SizedBox(height: AppSpacing.lg),
                                   _buildDayOfMonthSelector(context),
                                 ],
                               )
@@ -105,14 +105,14 @@ class RecurringExpenseForm extends ConsumerWidget {
                       );
                     },
                   ),
-                  const SizedBox(height: AppTheme.spaceL),
+                  const SizedBox(height: AppSpacing.lg),
                   DatePickerField(
                     label: 'Data de Início',
                     selectedDate: startDate.value,
                     isEditing: true,
                     onDateSelected: (date) => startDate.value = date,
                   ),
-                  const SizedBox(height: AppTheme.spaceM),
+                  const SizedBox(height: AppSpacing.md),
                   _buildEndDateToggle(context),
                   ValueListenableBuilder<DateTime?>(
                     valueListenable: endDate,
@@ -124,7 +124,7 @@ class RecurringExpenseForm extends ConsumerWidget {
                         child: date != null
                             ? Column(
                                 children: [
-                                  const SizedBox(height: AppTheme.spaceM),
+                                  const SizedBox(height: AppSpacing.md),
                                   DatePickerField(
                                     label: 'Data de Término',
                                     selectedDate: date,
@@ -140,8 +140,7 @@ class RecurringExpenseForm extends ConsumerWidget {
                   ),
                 ],
               ),
-            ),
-          )
+          ),
         ],
       ),
     );
@@ -186,7 +185,7 @@ class RecurringExpenseForm extends ConsumerWidget {
                 fontWeight: FontWeight.w600,
               ),
         ),
-        const SizedBox(height: AppTheme.spaceM),
+        const SizedBox(height: AppSpacing.md),
         SizedBox(
           height: 50,
           child: ListView.builder(
@@ -204,14 +203,14 @@ class RecurringExpenseForm extends ConsumerWidget {
                       duration: const Duration(milliseconds: 200),
                       curve: Curves.easeInOut,
                       width: 50,
-                      margin: const EdgeInsets.only(right: AppTheme.spaceS),
+                      margin: const EdgeInsets.only(right: AppSpacing.sm),
                       decoration: BoxDecoration(
                         color: isSelected
                             ? Theme.of(context).colorScheme.primary
                             : Theme.of(context)
                                 .colorScheme
                                 .surfaceContainerHighest,
-                        borderRadius: BorderRadius.circular(AppTheme.radiusM),
+                        borderRadius: AppBorders.borderRadiusMD,
                         border: Border.all(
                           color: isSelected
                               ? Theme.of(context).colorScheme.primary
@@ -267,7 +266,7 @@ class RecurringExpenseForm extends ConsumerWidget {
                     color: Theme.of(context).colorScheme.onSurfaceVariant,
                   ),
             ),
-            const SizedBox(width: AppTheme.spaceS),
+            const SizedBox(width: AppSpacing.sm),
             Switch(
               value: date != null,
               onChanged: (value) {

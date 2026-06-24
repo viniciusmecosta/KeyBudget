@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:key_budget/app/config/app_theme.dart';
+import 'package:key_budget/core/design_system/spacing/app_spacing.dart';
+import 'package:key_budget/core/design_system/borders/app_borders.dart';
 import 'package:key_budget/app/utils/navigation_utils.dart';
 import 'package:key_budget/core/services/snackbar_service.dart';
 import 'package:key_budget/features/auth/viewmodel/auth_viewmodel.dart';
@@ -40,7 +41,7 @@ class ExpenseActionsPopupMenu extends ConsumerWidget {
         color: theme.colorScheme.onSurface,
       ),
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(AppTheme.radiusM),
+        borderRadius: AppBorders.borderRadiusMD,
       ),
       itemBuilder: (context) => [
         const PopupMenuItem(
@@ -48,7 +49,7 @@ class ExpenseActionsPopupMenu extends ConsumerWidget {
           child: Row(
             children: [
               Icon(Icons.replay_circle_filled_rounded),
-              SizedBox(width: AppTheme.spaceS),
+              SizedBox(width: AppSpacing.sm),
               Text('Despesas Recorrentes'),
             ],
           ),
@@ -64,7 +65,7 @@ class ExpenseActionsPopupMenu extends ConsumerWidget {
                 size: 18,
                 color: theme.colorScheme.onSurface,
               ),
-              const SizedBox(width: AppTheme.spaceS),
+              const SizedBox(width: AppSpacing.sm),
               const Text('Importar de CSV'),
             ],
           ),
@@ -79,7 +80,7 @@ class ExpenseActionsPopupMenu extends ConsumerWidget {
                 size: 18,
                 color: theme.colorScheme.onSurface,
               ),
-              const SizedBox(width: AppTheme.spaceS),
+              const SizedBox(width: AppSpacing.sm),
               const Text('Exportar Despesas'),
             ],
           ),
