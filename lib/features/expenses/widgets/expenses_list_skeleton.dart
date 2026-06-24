@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:key_budget/app/config/app_theme.dart';
+import 'package:key_budget/core/design_system/spacing/app_spacing.dart';
+import 'package:key_budget/core/design_system/borders/app_borders.dart';
 
 class ExpensesListSkeleton extends ConsumerWidget {
   const ExpensesListSkeleton({super.key});
@@ -12,7 +13,7 @@ class ExpensesListSkeleton extends ConsumerWidget {
     final shimmerHighlightColor = theme.colorScheme.surface;
 
     return SliverPadding(
-      padding: const EdgeInsets.symmetric(horizontal: AppTheme.defaultPadding),
+      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
       sliver: SliverList(
         delegate: SliverChildBuilderDelegate(
           (context, index) => _buildSkeletonTile(context)
@@ -30,11 +31,11 @@ class ExpensesListSkeleton extends ConsumerWidget {
   Widget _buildSkeletonTile(BuildContext context) {
     final theme = Theme.of(context);
     return Container(
-      margin: const EdgeInsets.only(bottom: AppTheme.spaceS),
-      padding: const EdgeInsets.all(AppTheme.spaceM),
+      margin: const EdgeInsets.only(bottom: AppSpacing.sm),
+      padding: const EdgeInsets.all(AppSpacing.md),
       decoration: BoxDecoration(
         color: theme.colorScheme.surfaceContainerHighest,
-        borderRadius: BorderRadius.circular(AppTheme.radiusM),
+        borderRadius: AppBorders.borderRadiusMD,
       ),
       child: Row(
         children: [
@@ -43,10 +44,10 @@ class ExpensesListSkeleton extends ConsumerWidget {
             height: 44,
             decoration: BoxDecoration(
               color: theme.colorScheme.surface,
-              borderRadius: BorderRadius.circular(AppTheme.spaceS + 2),
+              borderRadius: AppBorders.borderRadiusS,
             ),
           ),
-          const SizedBox(width: AppTheme.spaceM),
+          const SizedBox(width: AppSpacing.md),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,

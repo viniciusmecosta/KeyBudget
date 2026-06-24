@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:key_budget/app/config/app_theme.dart';
+import 'package:key_budget/core/design_system/spacing/app_spacing.dart';
 import 'package:key_budget/app/widgets/activity_tile_widget.dart';
 import 'package:key_budget/app/widgets/animated_list_item.dart';
 import 'package:key_budget/core/models/expense_model.dart';
@@ -34,7 +34,7 @@ class _ExpenseListState extends ConsumerState<ExpenseList> {
   Widget build(BuildContext context) {
     return SliverPadding(
       padding: const EdgeInsets.fromLTRB(
-          AppTheme.defaultPadding, 0, AppTheme.defaultPadding, 96.0),
+          AppSpacing.md, 0, AppSpacing.md, 96.0),
       sliver: SliverAnimatedList(
         key: _listKey,
         initialItemCount: widget.monthlyExpenses.length,

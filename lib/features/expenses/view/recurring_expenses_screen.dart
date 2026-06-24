@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:key_budget/app/config/app_theme.dart';
+import 'package:key_budget/core/design_system/spacing/app_spacing.dart';
 import 'package:key_budget/app/widgets/empty_state_widget.dart';
 import 'package:key_budget/features/expenses/view/add_edit_recurring_expense_screen.dart';
 import 'package:key_budget/features/expenses/viewmodel/expense_viewmodel.dart';
@@ -29,7 +29,7 @@ class RecurringExpensesScreen extends ConsumerWidget {
                   message: 'Nenhuma despesa recorrente encontrada.',
                 )
               : ListView.builder(
-                  padding: const EdgeInsets.all(AppTheme.defaultPadding),
+                  padding: const EdgeInsets.all(AppSpacing.md),
                   itemCount: viewModel.recurringExpenses.length,
                   itemBuilder: (context, index) {
                     final recurring = viewModel.recurringExpenses[index];

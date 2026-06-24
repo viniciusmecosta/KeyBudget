@@ -2,8 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_masked_text2/flutter_masked_text2.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:key_budget/app/config/app_theme.dart';
 import 'package:key_budget/app/utils/app_animations.dart';
+import 'package:key_budget/core/design_system/spacing/app_spacing.dart';
+import 'package:key_budget/core/design_system/widgets/app_button.dart';
 import 'package:key_budget/core/models/expense_category_model.dart';
 import 'package:key_budget/core/models/recurring_expense_model.dart';
 import 'package:key_budget/core/services/snackbar_service.dart';
@@ -146,7 +147,7 @@ class _AddEditRecurringExpenseScreenState
         ],
       ),
       body: AppAnimations.fadeInFromBottom(Padding(
-        padding: const EdgeInsets.all(AppTheme.defaultPadding),
+        padding: const EdgeInsets.all(AppSpacing.md),
         child: Column(
           children: [
             Expanded(
@@ -162,17 +163,14 @@ class _AddEditRecurringExpenseScreenState
                 dayOfMonth: _dayOfMonth,
               ),
             ),
-            const SizedBox(height: 16),
-            ElevatedButton(
-              onPressed: _isSaving ? null : _submit,
-              child: _isSaving
-                  ? SizedBox(
-                      height: 24,
-                      width: 24,
-                      child: CircularProgressIndicator(
-                          color: Theme.of(context).colorScheme.onPrimary,
-                          strokeWidth: 2.0))
-                  : const Text('Salvar'),
+            const SizedBox(height: AppSpacing.md),
+            SizedBox(
+              width: double.infinity,
+              child: AppButton(
+                onPressed: _submit,
+                isLoading: _isSaving,
+                label: 'Salvar',
+              ),
             ),
           ],
         ),

@@ -3,7 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_masked_text2/flutter_masked_text2.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
-import 'package:key_budget/app/config/app_theme.dart';
+
 import 'package:key_budget/app/utils/app_animations.dart';
 import 'package:key_budget/core/models/expense_category_model.dart';
 import 'package:key_budget/core/models/expense_model.dart';
@@ -11,6 +11,9 @@ import 'package:key_budget/core/services/snackbar_service.dart';
 import 'package:key_budget/features/auth/viewmodel/auth_viewmodel.dart';
 import 'package:key_budget/features/category/viewmodel/category_viewmodel.dart';
 import 'package:key_budget/features/expenses/viewmodel/expense_viewmodel.dart';
+import 'package:key_budget/core/design_system/spacing/app_spacing.dart';
+import 'package:key_budget/core/design_system/borders/app_borders.dart';
+import 'package:key_budget/core/design_system/widgets/app_button.dart';
 
 import '../widgets/expense_form.dart';
 
@@ -104,9 +107,8 @@ class _ExpenseDetailScreenState extends ConsumerState<ExpenseDetailScreen> {
     if (hasInstallments) {
       showModalBottomSheet(
         context: context,
-        shape: const RoundedRectangleBorder(
-          borderRadius:
-              BorderRadius.vertical(top: Radius.circular(AppTheme.radiusL)),
+        shape: RoundedRectangleBorder(
+          borderRadius: AppBorders.borderRadiusVerticalL,
         ),
         builder: (ctx) => SafeArea(
           child: Column(
@@ -213,7 +215,7 @@ class _ExpenseDetailScreenState extends ConsumerState<ExpenseDetailScreen> {
         ],
       ),
       body: AppAnimations.fadeInFromBottom(Padding(
-        padding: const EdgeInsets.all(AppTheme.defaultPadding),
+        padding: const EdgeInsets.all(AppSpacing.md),
         child: Column(
           children: [
             Expanded(
@@ -238,14 +240,14 @@ class _ExpenseDetailScreenState extends ConsumerState<ExpenseDetailScreen> {
                 bottomWidgets: related.isEmpty
                     ? null
                     : [
-                        const SizedBox(height: 24),
+                        const SizedBox(height: AppSpacing.lg),
                         Text('Parcelas Relacionadas',
                             style: Theme.of(context).textTheme.titleMedium),
-                        const SizedBox(height: 8),
+                        const SizedBox(height: AppSpacing.sm),
                         ...related.map((e) {
                           final isCurrent = e.id == widget.expense.id;
                           return Padding(
-                            padding: const EdgeInsets.only(bottom: 8.0),
+                            padding: const EdgeInsets.only(bottom: AppSpacing.sm),
                             child: InkWell(
                               borderRadius: BorderRadius.circular(8),
                               onTap: () {
@@ -286,17 +288,14 @@ class _ExpenseDetailScreenState extends ConsumerState<ExpenseDetailScreen> {
               ),
             ),
             if (_isEditing) ...[
-              const SizedBox(height: 16),
-              ElevatedButton(
-                onPressed: _isSaving ? null : _saveChanges,
-                child: _isSaving
-                    ? SizedBox(
-                        height: 24,
-                        width: 24,
-                        child: CircularProgressIndicator(
-                            color: Theme.of(context).colorScheme.onPrimary,
-                            strokeWidth: 2.0))
-                    : const Text('Salvar Alterações'),
+              const SizedBox(height: AppSpacing.md),
+              SizedBox(
+                width: double.infinity,
+                child: AppButton(
+                  onPressed: _saveChanges,
+                  isLoading: _isSaving,
+                  label: 'Salvar Alterações',
+                ),
               )
             ]
           ],

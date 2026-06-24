@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:key_budget/app/config/app_theme.dart';
+import 'package:key_budget/core/design_system/spacing/app_spacing.dart';
+import 'package:key_budget/core/design_system/borders/app_borders.dart';
 import 'package:key_budget/core/utils/date_utils.dart' as app_date_utils;
 
 class MonthSelector extends ConsumerWidget {
@@ -21,9 +22,8 @@ class MonthSelector extends ConsumerWidget {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      shape: const RoundedRectangleBorder(
-        borderRadius:
-            BorderRadius.vertical(top: Radius.circular(AppTheme.radiusXL)),
+      shape: RoundedRectangleBorder(
+        borderRadius: AppBorders.borderRadiusVerticalXL,
       ),
       builder: (ctx) => _MonthPickerModal(
         initialMonth: selectedMonth,
@@ -45,12 +45,12 @@ class MonthSelector extends ConsumerWidget {
 
     return Container(
       margin: const EdgeInsets.symmetric(
-          horizontal: AppTheme.defaultPadding, vertical: AppTheme.spaceS),
+          horizontal: AppSpacing.md, vertical: AppSpacing.sm),
       padding: const EdgeInsets.symmetric(
-          horizontal: AppTheme.spaceS, vertical: AppTheme.spaceXS),
+          horizontal: AppSpacing.sm, vertical: AppSpacing.xs),
       decoration: BoxDecoration(
         color: theme.colorScheme.surface,
-        borderRadius: BorderRadius.circular(AppTheme.radiusL),
+        borderRadius: AppBorders.borderRadiusL,
         border: Border.all(
           color: theme.colorScheme.outline.withAlpha((255 * 0.08).round()),
         ),
@@ -58,7 +58,7 @@ class MonthSelector extends ConsumerWidget {
       child: isAllPeriods
           ? InkWell(
               onTap: () => _showPicker(context),
-              borderRadius: BorderRadius.circular(AppTheme.radiusM),
+              borderRadius: AppBorders.borderRadiusMD,
               child: Padding(
                 padding: const EdgeInsets.symmetric(vertical: 12.0),
                 child: Row(
@@ -94,7 +94,7 @@ class MonthSelector extends ConsumerWidget {
                 Expanded(
                   child: InkWell(
                     onTap: () => _showPicker(context),
-                    borderRadius: BorderRadius.circular(AppTheme.radiusM),
+                    borderRadius: AppBorders.borderRadiusMD,
                     child: Padding(
                       padding: const EdgeInsets.symmetric(vertical: 8.0),
                       child: Row(
@@ -183,11 +183,10 @@ class _MonthPickerModalState extends ConsumerState<_MonthPickerModal> {
     final theme = Theme.of(context);
 
     return Container(
-      padding: const EdgeInsets.all(AppTheme.defaultPadding),
+      padding: const EdgeInsets.all(AppSpacing.md),
       decoration: BoxDecoration(
         color: theme.colorScheme.surface,
-        borderRadius: const BorderRadius.vertical(
-            top: Radius.circular(AppTheme.radiusXL)),
+        borderRadius: AppBorders.borderRadiusVerticalXL,
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
@@ -195,7 +194,7 @@ class _MonthPickerModalState extends ConsumerState<_MonthPickerModal> {
           Container(
             width: 40,
             height: 4,
-            margin: const EdgeInsets.only(bottom: AppTheme.spaceL),
+            margin: const EdgeInsets.only(bottom: AppSpacing.lg),
             decoration: BoxDecoration(
               color: theme.colorScheme.onSurface.withAlpha((255 * 0.2).round()),
               borderRadius: BorderRadius.circular(2),
@@ -206,21 +205,21 @@ class _MonthPickerModalState extends ConsumerState<_MonthPickerModal> {
             style: theme.textTheme.titleLarge
                 ?.copyWith(fontWeight: FontWeight.bold),
           ),
-          const SizedBox(height: AppTheme.spaceL),
+          const SizedBox(height: AppSpacing.lg),
           InkWell(
             onTap: () {
               widget.onAllPeriodsSelected();
               Navigator.pop(context);
             },
-            borderRadius: BorderRadius.circular(AppTheme.radiusL),
+            borderRadius: AppBorders.borderRadiusL,
             child: Container(
               width: double.infinity,
-              padding: const EdgeInsets.symmetric(vertical: AppTheme.spaceM),
+              padding: const EdgeInsets.symmetric(vertical: AppSpacing.md),
               decoration: BoxDecoration(
                 color: _isAllPeriods
                     ? theme.colorScheme.primary
                     : theme.colorScheme.surface,
-                borderRadius: BorderRadius.circular(AppTheme.radiusL),
+                borderRadius: AppBorders.borderRadiusL,
                 border: Border.all(
                   color: _isAllPeriods
                       ? theme.colorScheme.primary
@@ -240,9 +239,9 @@ class _MonthPickerModalState extends ConsumerState<_MonthPickerModal> {
               ),
             ),
           ),
-          const SizedBox(height: AppTheme.spaceL),
+          const SizedBox(height: AppSpacing.lg),
           const Divider(),
-          const SizedBox(height: AppTheme.spaceM),
+          const SizedBox(height: AppSpacing.md),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
@@ -267,7 +266,7 @@ class _MonthPickerModalState extends ConsumerState<_MonthPickerModal> {
               ),
             ],
           ),
-          const SizedBox(height: AppTheme.spaceM),
+          const SizedBox(height: AppSpacing.md),
           GridView.builder(
             shrinkWrap: true,
             physics: const NeverScrollableScrollPhysics(),
@@ -288,14 +287,14 @@ class _MonthPickerModalState extends ConsumerState<_MonthPickerModal> {
                   widget.onMonthSelected(DateTime(_selectedYear, index + 1));
                   Navigator.pop(context);
                 },
-                borderRadius: BorderRadius.circular(AppTheme.radiusM),
+                borderRadius: AppBorders.borderRadiusMD,
                 child: Container(
                   alignment: Alignment.center,
                   decoration: BoxDecoration(
                     color: isSelected
                         ? theme.colorScheme.primary
                         : theme.colorScheme.surface,
-                    borderRadius: BorderRadius.circular(AppTheme.radiusM),
+                    borderRadius: AppBorders.borderRadiusMD,
                     border: Border.all(
                       color: isSelected
                           ? theme.colorScheme.primary
@@ -317,7 +316,7 @@ class _MonthPickerModalState extends ConsumerState<_MonthPickerModal> {
               );
             },
           ),
-          const SizedBox(height: AppTheme.spaceL),
+          const SizedBox(height: AppSpacing.lg),
         ],
       ),
     );
