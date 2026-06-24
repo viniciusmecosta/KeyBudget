@@ -3,7 +3,9 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:key_budget/app/config/app_theme.dart';
+import 'package:key_budget/core/design_system/spacing/app_spacing.dart';
+import 'package:key_budget/core/design_system/borders/app_borders.dart';
+import 'package:key_budget/core/design_system/widgets/app_button.dart';
 import 'package:key_budget/app/utils/app_animations.dart';
 import 'package:key_budget/app/utils/navigation_utils.dart';
 import 'package:key_budget/app/widgets/responsive_center.dart';
@@ -101,8 +103,8 @@ class UserScreen extends ConsumerWidget {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      shape: RoundedRectangleBorder(
+        borderRadius: AppBorders.borderRadiusVerticalXL,
       ),
       builder: (ctx) => StatefulBuilder(builder: (context, setState) {
         return SafeArea(
@@ -182,37 +184,28 @@ class UserScreen extends ConsumerWidget {
                 const SizedBox(height: 24),
                 SizedBox(
                   width: double.infinity,
-                  child: ElevatedButton(
-                    style: ElevatedButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(vertical: 16),
-                      shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(16)),
-                    ),
-                    onPressed: isBackingUp ||
-                            (!backupExpenses &&
-                                !backupRecurring &&
-                                !backupCredentials &&
-                                !backupCategories)
-                        ? null
-                        : () async {
-                            setState(() => isBackingUp = true);
-                            await _performBackup(
-                              context,
-                              ref,
-                              backupExpenses,
-                              backupRecurring,
-                              backupCredentials,
-                              backupCategories,
-                            );
-                            if (context.mounted) Navigator.pop(context);
-                          },
-                    child: isBackingUp
-                        ? const SizedBox(
-                            width: 24,
-                            height: 24,
-                            child: CircularProgressIndicator(strokeWidth: 2))
-                        : const Text('Iniciar Backup'),
-                  ),
+                child: AppButton(
+                  onPressed: isBackingUp ||
+                          (!backupExpenses &&
+                              !backupRecurring &&
+                              !backupCredentials &&
+                              !backupCategories)
+                      ? () {}
+                      : () async {
+                          setState(() => isBackingUp = true);
+                          await _performBackup(
+                            context,
+                            ref,
+                            backupExpenses,
+                            backupRecurring,
+                            backupCredentials,
+                            backupCategories,
+                          );
+                          if (context.mounted) Navigator.pop(context);
+                        },
+                  isLoading: isBackingUp,
+                  label: 'Iniciar Backup',
+                ),
                 ),
               ],
             ),
@@ -263,9 +256,9 @@ class UserScreen extends ConsumerWidget {
 
             return AppAnimations.fadeInFromBottom(ResponsiveCenter(
                 child: ListView(
-              padding: const EdgeInsets.all(AppTheme.defaultPadding),
+              padding: const EdgeInsets.all(AppSpacing.md),
               children: [
-                const SizedBox(height: AppTheme.spaceL),
+                const SizedBox(height: AppSpacing.lg),
                 Center(
                   child: CircleAvatar(
                     radius: 50,
@@ -277,7 +270,7 @@ class UserScreen extends ConsumerWidget {
                         : null,
                   ),
                 ),
-                const SizedBox(height: AppTheme.spaceM),
+                const SizedBox(height: AppSpacing.md),
                 Center(
                   child: Text(
                     user?.name ?? 'Usuário',
@@ -285,7 +278,7 @@ class UserScreen extends ConsumerWidget {
                         ?.copyWith(fontWeight: FontWeight.bold),
                   ),
                 ),
-                const SizedBox(height: AppTheme.spaceXS),
+                const SizedBox(height: AppSpacing.xs),
                 Center(
                   child: Text(
                     user?.email ?? '',
@@ -294,7 +287,7 @@ class UserScreen extends ConsumerWidget {
                 ),
                 if (user?.phoneNumber != null && user!.phoneNumber!.isNotEmpty)
                   Padding(
-                    padding: const EdgeInsets.only(top: AppTheme.spaceXS),
+                    padding: const EdgeInsets.only(top: AppSpacing.xs),
                     child: Center(
                       child: Text(
                         user.phoneNumber!,
@@ -302,7 +295,7 @@ class UserScreen extends ConsumerWidget {
                       ),
                     ),
                   ),
-                const SizedBox(height: AppTheme.spaceXL),
+                const SizedBox(height: AppSpacing.xl),
                 SettingsTile(
                   icon: Icons.category_outlined,
                   title: 'Gerenciar Categorias',
@@ -310,13 +303,13 @@ class UserScreen extends ConsumerWidget {
                     NavigationUtils.push(context, const CategoriesScreen());
                   },
                 ),
-                const SizedBox(height: AppTheme.spaceS),
+                const SizedBox(height: AppSpacing.sm),
                 SettingsTile(
                   icon: Icons.cloud_upload_outlined,
                   title: 'Backup no Google Drive',
                   onTap: () => _showBackupDialog(context, ref),
                 ),
-                const SizedBox(height: AppTheme.spaceS),
+                const SizedBox(height: AppSpacing.sm),
                 SettingsTile(
                   icon: Icons.logout,
                   title: 'Sair do Aplicativo',
