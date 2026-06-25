@@ -76,14 +76,23 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
       title: "Criar Conta",
       subtitle: "Preencha seus dados para começar",
       showBackButton: true,
+      footer: AppButton(
+        label: 'Já tem uma conta? Faça login',
+        variant: AppButtonVariant.ghost,
+        isFullWidth: true,
+        onPressed: () => Navigator.of(context).pop(),
+      ),
       child: Form(
         key: _formKey,
         child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            ImagePickerWidget(
-              onImageSelected: (path) {
-                _avatarPath = path;
-              },
+            Center(
+              child: ImagePickerWidget(
+                onImageSelected: (path) {
+                  _avatarPath = path;
+                },
+              ),
             ),
             const SizedBox(height: AppSpacing.lg),
             AppTextField(
@@ -162,16 +171,10 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
               isLoading: viewModel.isLoading,
               onPressed: _submit,
             ),
-            const SizedBox(height: AppSpacing.md),
-            AppButton(
-              label: 'Já tem uma conta? Faça login',
-              variant: AppButtonVariant.ghost,
-              isFullWidth: true,
-              onPressed: () => Navigator.of(context).pop(),
-            ),
           ],
         ),
       ),
     );
   }
 }
+

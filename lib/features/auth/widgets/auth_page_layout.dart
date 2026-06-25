@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:key_budget/core/design_system/spacing/app_spacing.dart';
+import 'package:key_budget/core/design_system/widgets/app_card.dart';
 import 'package:key_budget/app/utils/app_animations.dart';
 
 class AuthPageLayout extends StatelessWidget {
@@ -7,6 +8,7 @@ class AuthPageLayout extends StatelessWidget {
   final String title;
   final String subtitle;
   final bool showBackButton;
+  final Widget? footer;
 
   const AuthPageLayout({
     super.key,
@@ -14,6 +16,7 @@ class AuthPageLayout extends StatelessWidget {
     this.title = "KeyBudget",
     this.subtitle = "Gerencie suas finanças com segurança",
     this.showBackButton = false,
+    this.footer,
   });
 
   @override
@@ -36,7 +39,7 @@ class AuthPageLayout extends StatelessWidget {
         child: AppAnimations.fadeIn(
           Center(
             child: SingleChildScrollView(
-              padding: const EdgeInsets.all(AppSpacing.xl),
+              padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xl, vertical: AppSpacing.md),
               child: ConstrainedBox(
                 constraints: const BoxConstraints(maxWidth: 450),
                 child: Column(
@@ -44,20 +47,38 @@ class AuthPageLayout extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
                     if (!showBackButton)
-                      Icon(
-                        Icons.account_balance_wallet,
-                        size: 64,
-                        color: theme.colorScheme.primary,
+                      Hero(
+                        tag: 'auth_logo',
+                        child: Container(
+                          padding: const EdgeInsets.all(AppSpacing.xl),
+                          decoration: BoxDecoration(
+                            color: theme.colorScheme.primaryContainer.withOpacity(0.5),
+                            shape: BoxShape.circle,
+                          ),
+                          child: Container(
+                            padding: const EdgeInsets.all(AppSpacing.md),
+                            decoration: BoxDecoration(
+                              color: theme.colorScheme.primaryContainer,
+                              shape: BoxShape.circle,
+                            ),
+                            child: Icon(
+                              Icons.account_balance_wallet_rounded,
+                              size: 48,
+                              color: theme.colorScheme.primary,
+                            ),
+                          ),
+                        ),
                       ),
-                    if (!showBackButton) const SizedBox(height: AppSpacing.lg),
+                    if (!showBackButton) const SizedBox(height: AppSpacing.xl),
                     Text(
                       title,
                       textAlign: TextAlign.center,
                       style: theme.textTheme.headlineMedium?.copyWith(
                         color: theme.colorScheme.primary,
+                        fontWeight: FontWeight.bold,
                       ),
                     ),
-                    const SizedBox(height: AppSpacing.sm),
+                    const SizedBox(height: AppSpacing.xs),
                     Text(
                       subtitle,
                       textAlign: TextAlign.center,
@@ -66,7 +87,14 @@ class AuthPageLayout extends StatelessWidget {
                       ),
                     ),
                     const SizedBox(height: AppSpacing.xxl),
-                    child,
+                    AppCard(
+                      padding: const EdgeInsets.all(AppSpacing.xl),
+                      child: child,
+                    ),
+                    if (footer != null) ...[
+                      const SizedBox(height: AppSpacing.xl),
+                      footer!,
+                    ],
                   ],
                 ),
               ),
@@ -77,3 +105,4 @@ class AuthPageLayout extends StatelessWidget {
     );
   }
 }
+
