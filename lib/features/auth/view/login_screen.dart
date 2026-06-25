@@ -77,9 +77,30 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     return AuthPageLayout(
       title: "Bem-vindo de volta",
       subtitle: "Faça login para continuar",
+      footer: Column(
+        children: [
+          AppButton(
+            label: 'Entrar com Google',
+            icon: Icons.account_circle_outlined,
+            variant: AppButtonVariant.outline,
+            isFullWidth: true,
+            isLoading: viewModel.isLoading,
+            onPressed: _submitGoogle,
+          ),
+          const SizedBox(height: AppSpacing.lg),
+          AppButton(
+            label: 'Não tem uma conta? Cadastre-se',
+            variant: AppButtonVariant.ghost,
+            onPressed: () {
+              NavigationUtils.push(context, const RegisterScreen());
+            },
+          ),
+        ],
+      ),
       child: Form(
         key: _formKey,
         child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             AppTextField(
               controller: _emailController,
@@ -107,9 +128,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 },
               ),
               validator: (value) => (value == null || value.length < 6)
-                  ? 'A senha deve ter pelo menos 6 caracteres'
-                  : null,
-            ),
             const SizedBox(height: AppSpacing.xl),
             AppButton(
               label: 'Entrar',
@@ -117,25 +135,10 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
               isLoading: viewModel.isLoading,
               onPressed: _submit,
             ),
-            const SizedBox(height: AppSpacing.md),
-            AppButton(
-              label: 'Entrar com Google',
-              variant: AppButtonVariant.outline,
-              isFullWidth: true,
-              isLoading: viewModel.isLoading,
-              onPressed: _submitGoogle,
-            ),
-            const SizedBox(height: AppSpacing.lg),
-            AppButton(
-              label: 'Não tem uma conta? Cadastre-se',
-              variant: AppButtonVariant.ghost,
-              onPressed: () {
-                NavigationUtils.push(context, const RegisterScreen());
-              },
-            ),
           ],
         ),
       ),
     );
   }
 }
+
