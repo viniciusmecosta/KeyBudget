@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'package:key_budget/core/design_system/spacing/app_spacing.dart';
-import 'package:key_budget/core/design_system/borders/app_borders.dart';
+import 'package:key_budget/core/design_system/widgets/app_card.dart';
 import 'package:key_budget/app/config/app_theme.dart';
 
 import '../viewmodel/analysis_viewmodel.dart';
@@ -23,7 +23,7 @@ class AnalysisStatsOverviewWidget extends ConsumerWidget {
                 'Este Mês',
                 viewModel.totalCurrentMonth,
                 Theme.of(context).colorScheme.primary,
-                icon: Icons.calendar_month,
+                icon: Icons.calendar_today_rounded,
               ),
             ),
             const SizedBox(width: AppSpacing.md),
@@ -47,7 +47,7 @@ class AnalysisStatsOverviewWidget extends ConsumerWidget {
                 'Gasto Total',
                 viewModel.totalOverall,
                 Theme.of(context).colorScheme.tertiary,
-                icon: Icons.trending_up,
+                icon: Icons.account_balance_wallet_rounded,
               ),
             ),
             const SizedBox(width: AppSpacing.md),
@@ -57,7 +57,7 @@ class AnalysisStatsOverviewWidget extends ConsumerWidget {
                 'Média Mensal',
                 viewModel.averageMonthlyExpense,
                 AppTheme.chartColors[2],
-                icon: Icons.insights,
+                icon: Icons.insights_rounded,
               ),
             ),
           ],
@@ -91,55 +91,52 @@ class AnalysisStatsOverviewWidget extends ConsumerWidget {
         ? currencyFormatterNoCents.format(value)
         : formatCurrencyFlexible(value);
 
-    return Material(
-      color: theme.colorScheme.surface,
-      borderRadius: AppBorders.borderRadiusL,
-      elevation: 0,
-      child: Container(
-        padding: const EdgeInsets.all(AppSpacing.lg),
-        decoration: BoxDecoration(
-          borderRadius: AppBorders.borderRadiusL,
-          border: Border.all(
-            color: theme.colorScheme.outline.withAlpha((255 * 0.1).round()),
+    return AppCard(
+      padding: const EdgeInsets.all(AppSpacing.md),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(AppSpacing.sm),
+                decoration: BoxDecoration(
+                  color: color.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Icon(
+                  icon ?? Icons.analytics,
+                  color: color,
+                  size: 20,
+                ),
+              ),
+              const SizedBox(width: AppSpacing.sm),
+              Expanded(
+                child: Text(
+                  title,
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    fontWeight: FontWeight.w600,
+                    color: theme.colorScheme.onSurfaceVariant,
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+            ],
           ),
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Container(
-              padding: const EdgeInsets.all(AppSpacing.md),
-              decoration: BoxDecoration(
-                color: color.withAlpha((255 * 0.1).round()),
-                borderRadius: AppBorders.borderRadiusM,
-              ),
-              child: Icon(
-                icon ?? Icons.analytics,
-                color: color,
-                size: 24,
-              ),
-            ),
-            const SizedBox(height: AppSpacing.md),
-            Text(
-              title,
-              style: theme.textTheme.titleMedium?.copyWith(
+          const SizedBox(height: AppSpacing.md),
+          FittedBox(
+            fit: BoxFit.scaleDown,
+            alignment: Alignment.centerLeft,
+            child: Text(
+              formattedValue,
+              style: theme.textTheme.titleLarge?.copyWith(
                 fontWeight: FontWeight.bold,
                 color: theme.colorScheme.onSurface,
               ),
             ),
-            const SizedBox(height: 4),
-            FittedBox(
-              fit: BoxFit.scaleDown,
-              child: Text(
-                formattedValue,
-                style: theme.textTheme.headlineSmall?.copyWith(
-                  fontWeight: FontWeight.bold,
-                  color: color,
-                  fontSize: 20,
-                ),
-              ),
-            ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
