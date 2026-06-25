@@ -105,22 +105,11 @@ class _AnalysisScreenState extends ConsumerState<AnalysisScreen> {
                               const AnalysisStatsOverviewWidget(), 0),
                           const SizedBox(height: AppSpacing.xl),
                           buildAnimatedWidget(
-                              _buildSectionHeader(context, 'Histórico Mensal',
-                                  'Acompanhe sua evolução ao longo do tempo'),
-                              1),
-                          const SizedBox(height: AppSpacing.md),
-                          buildAnimatedWidget(
-                              const MonthlyTrendSectionWidget(), 2),
+                              const MonthlyTrendSectionWidget(), 1),
                           const SizedBox(height: AppSpacing.xl),
                           buildAnimatedWidget(
-                              _buildSectionHeader(
-                                  context,
-                                  'Análise por Categoria',
-                                  'Entenda onde seu dinheiro é gasto'),
-                              3),
-                          const SizedBox(height: AppSpacing.md),
-                          buildAnimatedWidget(
-                              const CategoryAnalysisSectionWidget(), 4),
+                              const CategoryAnalysisSectionWidget(), 2),
+                          const SizedBox(height: AppSpacing.xxl),
                         ]),
                       ),
                     ),
@@ -137,30 +126,6 @@ class _AnalysisScreenState extends ConsumerState<AnalysisScreen> {
                 },
               ),
       ),
-    );
-  }
-
-  Widget _buildSectionHeader(
-      BuildContext context, String title, String subtitle) {
-    final theme = Theme.of(context);
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          title,
-          style: theme.textTheme.titleLarge?.copyWith(
-            fontWeight: FontWeight.bold,
-            color: theme.colorScheme.onSurface,
-          ),
-        ),
-        const SizedBox(height: 4),
-        Text(
-          subtitle,
-          style: theme.textTheme.bodyMedium?.copyWith(
-            color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
-          ),
-        ),
-      ],
     );
   }
 }
@@ -189,49 +154,13 @@ class AnalysisSkeleton extends ConsumerWidget {
               ),
               const SizedBox(height: AppSpacing.xl),
               Container(
-                height: 24,
-                width: 150,
-                decoration: BoxDecoration(
-                  color: theme.colorScheme.surfaceContainerHighest,
-                  borderRadius: AppBorders.borderRadiusMD,
-                ),
-              ),
-              const SizedBox(height: 8),
-              Container(
-                height: 16,
-                width: 200,
-                decoration: BoxDecoration(
-                  color: theme.colorScheme.surfaceContainerHighest,
-                  borderRadius: AppBorders.borderRadiusMD,
-                ),
-              ),
-              const SizedBox(height: AppSpacing.md),
-              Container(
-                height: 200,
+                height: 250,
                 decoration: BoxDecoration(
                   color: theme.colorScheme.surfaceContainerHighest,
                   borderRadius: AppBorders.borderRadiusXL,
                 ),
               ),
               const SizedBox(height: AppSpacing.xl),
-              Container(
-                height: 24,
-                width: 180,
-                decoration: BoxDecoration(
-                  color: theme.colorScheme.surfaceContainerHighest,
-                  borderRadius: AppBorders.borderRadiusMD,
-                ),
-              ),
-              const SizedBox(height: 8),
-              Container(
-                height: 16,
-                width: 220,
-                decoration: BoxDecoration(
-                  color: theme.colorScheme.surfaceContainerHighest,
-                  borderRadius: AppBorders.borderRadiusMD,
-                ),
-              ),
-              const SizedBox(height: AppSpacing.md),
               Container(
                 height: 250,
                 decoration: BoxDecoration(
