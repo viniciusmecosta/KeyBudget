@@ -13,6 +13,7 @@ import 'package:key_budget/core/design_system/spacing/app_spacing.dart';
 import '../widgets/dashboard_balance_card.dart';
 import '../widgets/dashboard_header.dart';
 import '../widgets/dashboard_skeleton.dart';
+import '../widgets/dashboard_weekly_chart.dart';
 import '../widgets/quick_actions_section.dart';
 import '../widgets/recent_activity_section.dart';
 
@@ -95,13 +96,18 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                               ),
                               const SizedBox(height: AppSpacing.xl),
                               AppAnimations.fadeInFromBottom(
-                                const QuickActionsSection(),
+                                const DashboardWeeklyChart(),
                                 delay: const Duration(milliseconds: 100),
                               ),
                               const SizedBox(height: AppSpacing.xl),
                               AppAnimations.fadeInFromBottom(
-                                const RecentActivitySection(),
+                                const QuickActionsSection(),
                                 delay: const Duration(milliseconds: 200),
+                              ),
+                              const SizedBox(height: AppSpacing.xl),
+                              AppAnimations.fadeInFromBottom(
+                                const RecentActivitySection(),
+                                delay: const Duration(milliseconds: 300),
                               ),
                             ],
                           ),

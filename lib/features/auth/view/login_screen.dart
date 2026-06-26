@@ -128,6 +128,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 },
               ),
               validator: (value) => (value == null || value.length < 6)
+                  ? 'A senha deve ter pelo menos 6 caracteres'
+                  : null,
+            ),
             const SizedBox(height: AppSpacing.xl),
             AppButton(
               label: 'Entrar',
