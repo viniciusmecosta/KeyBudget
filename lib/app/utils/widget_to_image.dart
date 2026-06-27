@@ -80,13 +80,18 @@ class WidgetToImage {
 
     final OverlayEntry overlayEntry = OverlayEntry(
       builder: (context) => Positioned(
-        top: -9999,
-        left: -9999,
-        child: Material(
-          type: MaterialType.transparency,
-          child: RepaintBoundary(
-            key: key,
-            child: widget,
+        top: 0,
+        left: 0,
+        child: IgnorePointer(
+          child: Opacity(
+            opacity: 0.001,
+            child: Material(
+              type: MaterialType.transparency,
+              child: RepaintBoundary(
+                key: key,
+                child: widget,
+              ),
+            ),
           ),
         ),
       ),
@@ -107,7 +112,7 @@ class WidgetToImage {
           ui.Image image = await boundary.toImage(pixelRatio: 3.0);
           ByteData? byteData =
               await image.toByteData(format: ui.ImageByteFormat.png);
-          completer.complete(byteData?.buffer.asUint8List());
+          Future.microtask(() => completer.complete(byteData?.buffer.asUint8List()));
         } else {
           debugPrint(
               'Error capturing widget: Boundary needs paint or is null.');
@@ -116,16 +121,16 @@ class WidgetToImage {
             ui.Image image = await boundary.toImage(pixelRatio: 3.0);
             ByteData? byteData =
                 await image.toByteData(format: ui.ImageByteFormat.png);
-            completer.complete(byteData?.buffer.asUint8List());
+            Future.microtask(() => completer.complete(byteData?.buffer.asUint8List()));
           } else {
             debugPrint(
                 'Error capturing widget: Boundary still needs paint or is null after retry.');
-            completer.complete(null);
+            Future.microtask(() => completer.complete(null));
           }
         }
       } catch (e) {
         debugPrint('Error capturing widget with provider: $e');
-        completer.complete(null);
+        Future.microtask(() => completer.complete(null));
       } finally {
         overlayEntry.remove();
       }
