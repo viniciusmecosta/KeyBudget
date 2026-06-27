@@ -103,7 +103,7 @@ class DashboardMonthlyChart extends ConsumerWidget {
           ),
           const SizedBox(height: AppSpacing.xl),
           SizedBox(
-            height: 80,
+            height: 70,
             child: validMonths.isEmpty
                 ? Center(
                     child: Text(
@@ -176,8 +176,8 @@ class DashboardMonthlyChart extends ConsumerWidget {
                       borderData: FlBorderData(show: false),
                       barGroups: barGroups,
                     ),
-                    swapAnimationDuration: const Duration(milliseconds: 300),
-                    swapAnimationCurve: Curves.easeInOut,
+                    duration: const Duration(milliseconds: 300),
+                    curve: Curves.easeInOut,
                   ),
           ),
         ],

@@ -27,9 +27,15 @@ class DashboardSkeleton extends ConsumerWidget {
               delegate: SliverChildListDelegate(
                 [
                   _buildBalanceCardSkeleton(context),
-                  const SizedBox(height: AppSpacing.lg),
+                  const SizedBox(height: AppSpacing.md),
+                  _buildContainer(
+                    context: context,
+                    height: 140, // Chart skeleton
+                    radius: AppBorders.borderRadiusXL,
+                  ),
+                  const SizedBox(height: AppSpacing.md),
                   _buildQuickActionsSkeleton(context),
-                  const SizedBox(height: AppSpacing.xl),
+                  const SizedBox(height: AppSpacing.md),
                   _buildRecentActivitySkeleton(context),
                 ],
               ),

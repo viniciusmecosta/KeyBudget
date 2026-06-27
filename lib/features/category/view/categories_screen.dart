@@ -76,7 +76,7 @@ class _CategoriesScreenState extends ConsumerState<CategoriesScreen> {
             itemCount: viewModel.categories.length,
             itemBuilder: (context, index) {
               final category = viewModel.categories[index];
-              return AppAnimations.listFadeIn(
+              return AppAnimations.fadeInFromBottom(
                 Container(
                   margin: const EdgeInsets.only(bottom: AppTheme.spaceS),
                   child: Material(
@@ -126,7 +126,7 @@ class _CategoriesScreenState extends ConsumerState<CategoriesScreen> {
                     ),
                   ),
                 ),
-                index: index,
+                delay: Duration(milliseconds: index * 40),
               );
             },
           );
