@@ -94,17 +94,17 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                               AppAnimations.fadeInFromBottom(
                                 const DashboardBalanceCard(),
                               ),
-                              const SizedBox(height: AppSpacing.xl),
+                              const SizedBox(height: AppSpacing.md),
                               AppAnimations.fadeInFromBottom(
                                 const DashboardMonthlyChart(),
                                 delay: const Duration(milliseconds: 100),
                               ),
-                              const SizedBox(height: AppSpacing.xl),
+                              const SizedBox(height: AppSpacing.md),
                               AppAnimations.fadeInFromBottom(
                                 const QuickActionsSection(),
                                 delay: const Duration(milliseconds: 200),
                               ),
-                              const SizedBox(height: AppSpacing.xl),
+                              const SizedBox(height: AppSpacing.md),
                               AppAnimations.fadeInFromBottom(
                                 const RecentActivitySection(),
                                 delay: const Duration(milliseconds: 300),
