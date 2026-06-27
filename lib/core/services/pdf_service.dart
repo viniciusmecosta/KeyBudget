@@ -280,6 +280,7 @@ class PdfService {
       final params = ShareParams(
         files: [XFile(filePath)],
         text: 'Relatório de Despesas e Análise',
+        sharePositionOrigin: const Rect.fromLTWH(0, 0, 100, 100),
       );
       await SharePlus.instance.share(params);
     } catch (e) {
@@ -414,6 +415,7 @@ class PdfService {
       final params = ShareParams(
         files: [XFile(filePath)],
         text: 'Relatório de Credenciais',
+        sharePositionOrigin: const Rect.fromLTWH(0, 0, 100, 100),
       );
       await SharePlus.instance.share(params);
     } catch (e) {
@@ -609,6 +611,7 @@ class PdfService {
       final params = ShareParams(
         files: [XFile(filePath)],
         text: 'Relatório de Análise',
+        sharePositionOrigin: const Rect.fromLTWH(0, 0, 100, 100),
       );
       await SharePlus.instance.share(params);
     } catch (e) {

@@ -245,9 +245,11 @@ class _CredentialDetailScreenState
         final imageFile = File(imagePath);
         await imageFile.writeAsBytes(bytes);
 
+        final RenderBox? box = mounted ? context.findRenderObject() as RenderBox? : null;
         final params = ShareParams(
           files: [XFile(imagePath)],
           text: 'Credencial: ${widget.credential.location}',
+          sharePositionOrigin: box != null ? box.localToGlobal(Offset.zero) & box.size : null,
         );
 
         await SharePlus.instance.share(params);

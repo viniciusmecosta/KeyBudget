@@ -357,6 +357,7 @@ class DocumentViewModel extends ChangeNotifier {
       final params = ShareParams(
         files: [XFile(file.path)],
         text: attachment.name,
+        sharePositionOrigin: const Rect.fromLTWH(0, 0, 100, 100),
       );
       await SharePlus.instance.share(params);
     } else {
