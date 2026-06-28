@@ -54,4 +54,6 @@ app.*.map.json
 .gradle/
 .metadata
 
+# Agents
 GEMINI.md
+agents/

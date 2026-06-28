@@ -1,12 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
-import 'package:key_budget/app/config/app_theme.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:key_budget/core/design_system/borders/app_borders.dart';
+import 'package:key_budget/core/design_system/spacing/app_spacing.dart';
 
-class DashboardSkeleton extends StatelessWidget {
+class DashboardSkeleton extends ConsumerWidget {
   const DashboardSkeleton({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
     final shimmerHighlightColor = theme.colorScheme.surface;
 
@@ -16,18 +18,24 @@ class DashboardSkeleton extends StatelessWidget {
         slivers: [
           SliverPadding(
             padding: const EdgeInsets.fromLTRB(
-              AppTheme.spaceM,
-              AppTheme.spaceS,
-              AppTheme.spaceM,
-              AppTheme.spaceL,
+              AppSpacing.md,
+              AppSpacing.sm,
+              AppSpacing.md,
+              AppSpacing.lg,
             ),
             sliver: SliverList(
               delegate: SliverChildListDelegate(
                 [
                   _buildBalanceCardSkeleton(context),
-                  const SizedBox(height: AppTheme.spaceL),
+                  const SizedBox(height: AppSpacing.md),
+                  _buildContainer(
+                    context: context,
+                    height: 140, // Chart skeleton
+                    radius: AppBorders.borderRadiusXL,
+                  ),
+                  const SizedBox(height: AppSpacing.md),
                   _buildQuickActionsSkeleton(context),
-                  const SizedBox(height: AppTheme.spaceXL),
+                  const SizedBox(height: AppSpacing.md),
                   _buildRecentActivitySkeleton(context),
                 ],
               ),
@@ -45,7 +53,7 @@ class DashboardSkeleton extends StatelessWidget {
       {required BuildContext context,
       required double height,
       double? width,
-      double radius = AppTheme.radiusM,
+      BorderRadiusGeometry? radius,
       EdgeInsets margin = EdgeInsets.zero}) {
     final theme = Theme.of(context);
     return Container(
@@ -54,7 +62,7 @@ class DashboardSkeleton extends StatelessWidget {
       margin: margin,
       decoration: BoxDecoration(
         color: theme.colorScheme.surfaceContainerHighest,
-        borderRadius: BorderRadius.circular(radius),
+        borderRadius: radius ?? AppBorders.borderRadiusM,
       ),
     );
   }
@@ -63,7 +71,7 @@ class DashboardSkeleton extends StatelessWidget {
     return _buildContainer(
       context: context,
       height: 150,
-      radius: AppTheme.radiusXL,
+      radius: AppBorders.borderRadiusXL,
     );
   }
 
@@ -72,11 +80,15 @@ class DashboardSkeleton extends StatelessWidget {
       children: [
         Expanded(
             child: _buildContainer(
-                context: context, height: 140, radius: AppTheme.radiusL)),
-        const SizedBox(width: AppTheme.spaceM),
+                context: context,
+                height: 140,
+                radius: AppBorders.borderRadiusL)),
+        const SizedBox(width: AppSpacing.md),
         Expanded(
             child: _buildContainer(
-                context: context, height: 140, radius: AppTheme.radiusL)),
+                context: context,
+                height: 140,
+                radius: AppBorders.borderRadiusL)),
       ],
     );
   }
@@ -91,14 +103,14 @@ class DashboardSkeleton extends StatelessWidget {
             _buildContainer(context: context, height: 16, width: 80),
           ],
         ),
-        const SizedBox(height: AppTheme.spaceM),
+        const SizedBox(height: AppSpacing.md),
         ...List.generate(
           3,
           (index) => _buildContainer(
             context: context,
             height: 70,
-            radius: AppTheme.radiusM,
-            margin: const EdgeInsets.only(bottom: AppTheme.spaceS),
+            radius: AppBorders.borderRadiusM,
+            margin: const EdgeInsets.only(bottom: AppSpacing.sm),
           ),
         ),
       ],

@@ -1,29 +1,31 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
-import 'package:key_budget/app/config/app_theme.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:key_budget/app/utils/app_animations.dart';
+import 'package:key_budget/core/design_system/borders/app_borders.dart';
+import 'package:key_budget/core/design_system/spacing/app_spacing.dart';
 import 'package:key_budget/core/services/csv_service.dart';
 import 'package:key_budget/core/services/pdf_service.dart';
-import 'package:provider/provider.dart';
 
 import '../viewmodel/analysis_viewmodel.dart';
 import '../widgets/analysis_stats_overview_widget.dart';
 import '../widgets/category_analysis_section_widget.dart';
 import '../widgets/monthly_trend_section_widget.dart';
 
-class AnalysisScreen extends StatefulWidget {
+class AnalysisScreen extends ConsumerStatefulWidget {
   const AnalysisScreen({super.key});
 
   @override
-  State<AnalysisScreen> createState() => _AnalysisScreenState();
+  ConsumerState<AnalysisScreen> createState() => _AnalysisScreenState();
 }
 
-class _AnalysisScreenState extends State<AnalysisScreen> {
+class _AnalysisScreenState extends ConsumerState<AnalysisScreen> {
   bool _isFirstLoad = true;
+  bool _isExporting = false;
 
   @override
   Widget build(BuildContext context) {
-    final viewModel = Provider.of<AnalysisViewModel>(context);
+    final viewModel = ref.watch(analysisViewModelProvider);
     final theme = Theme.of(context);
 
     Widget buildAnimatedWidget(Widget child, int index) {
@@ -46,52 +48,34 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
             color: theme.colorScheme.onSurface,
           ),
         ),
+        bottom: PreferredSize(
+          preferredSize: const Size.fromHeight(4),
+          child: _isExporting
+              ? const LinearProgressIndicator()
+              : const SizedBox(height: 4),
+        ),
         actions: [
           IconButton(
             icon: const Icon(Icons.picture_as_pdf),
-            onPressed: () async {
-              showDialog(
-                context: context,
-                barrierDismissible: false,
-                builder: (ctx) => const AlertDialog(
-                  content: Row(
-                    children: [
-                      CircularProgressIndicator(),
-                      SizedBox(width: 24),
-                      Text('Gerando PDF...'),
-                    ],
-                  ),
-                ),
-              );
-              final vm = Provider.of<AnalysisViewModel>(context, listen: false);
-              await PdfService().exportAnalysisPdf(context, vm);
-              if (context.mounted) {
-                Navigator.of(context).pop();
-              }
-            },
+            onPressed: _isExporting
+                ? null
+                : () async {
+                    setState(() => _isExporting = true);
+                    final vm = ref.read(analysisViewModelProvider);
+                    await PdfService().exportAnalysisPdf(context, vm);
+                    if (mounted) setState(() => _isExporting = false);
+                  },
           ),
           IconButton(
             icon: const Icon(Icons.grid_on),
-            onPressed: () async {
-              showDialog(
-                context: context,
-                barrierDismissible: false,
-                builder: (ctx) => const AlertDialog(
-                  content: Row(
-                    children: [
-                      CircularProgressIndicator(),
-                      SizedBox(width: 24),
-                      Text('Gerando CSV...'),
-                    ],
-                  ),
-                ),
-              );
-              final vm = Provider.of<AnalysisViewModel>(context, listen: false);
-              await CsvService().exportAnalysisCsv(context, vm);
-              if (context.mounted) {
-                Navigator.of(context).pop();
-              }
-            },
+            onPressed: _isExporting
+                ? null
+                : () async {
+                    setState(() => _isExporting = true);
+                    final vm = ref.read(analysisViewModelProvider);
+                    await CsvService().exportAnalysisCsv(context, vm);
+                    if (mounted) setState(() => _isExporting = false);
+                  },
           ),
         ],
         leading: IconButton(
@@ -114,29 +98,18 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
                   physics: const BouncingScrollPhysics(),
                   slivers: [
                     SliverPadding(
-                      padding: const EdgeInsets.all(AppTheme.defaultPadding),
+                      padding: const EdgeInsets.all(AppSpacing.md),
                       sliver: SliverList(
                         delegate: SliverChildListDelegate([
                           buildAnimatedWidget(
                               const AnalysisStatsOverviewWidget(), 0),
-                          const SizedBox(height: AppTheme.spaceXL),
+                          const SizedBox(height: AppSpacing.xl),
                           buildAnimatedWidget(
-                              _buildSectionHeader(context, 'Histórico Mensal',
-                                  'Acompanhe sua evolução ao longo do tempo'),
-                              1),
-                          const SizedBox(height: AppTheme.spaceM),
+                              const MonthlyTrendSectionWidget(), 1),
+                          const SizedBox(height: AppSpacing.xl),
                           buildAnimatedWidget(
-                              const MonthlyTrendSectionWidget(), 2),
-                          const SizedBox(height: AppTheme.spaceXL),
-                          buildAnimatedWidget(
-                              _buildSectionHeader(
-                                  context,
-                                  'Análise por Categoria',
-                                  'Entenda onde seu dinheiro é gasto'),
-                              3),
-                          const SizedBox(height: AppTheme.spaceM),
-                          buildAnimatedWidget(
-                              const CategoryAnalysisSectionWidget(), 4),
+                              const CategoryAnalysisSectionWidget(), 2),
+                          const SizedBox(height: AppSpacing.xxl),
                         ]),
                       ),
                     ),
@@ -155,37 +128,13 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
       ),
     );
   }
-
-  Widget _buildSectionHeader(
-      BuildContext context, String title, String subtitle) {
-    final theme = Theme.of(context);
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          title,
-          style: theme.textTheme.titleLarge?.copyWith(
-            fontWeight: FontWeight.bold,
-            color: theme.colorScheme.onSurface,
-          ),
-        ),
-        const SizedBox(height: 4),
-        Text(
-          subtitle,
-          style: theme.textTheme.bodyMedium?.copyWith(
-            color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
-          ),
-        ),
-      ],
-    );
-  }
 }
 
-class AnalysisSkeleton extends StatelessWidget {
+class AnalysisSkeleton extends ConsumerWidget {
   const AnalysisSkeleton({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
     final shimmerColor = theme.colorScheme.surface;
 
@@ -193,66 +142,30 @@ class AnalysisSkeleton extends StatelessWidget {
       physics: const NeverScrollableScrollPhysics(),
       slivers: [
         SliverPadding(
-          padding: const EdgeInsets.all(AppTheme.defaultPadding),
+          padding: const EdgeInsets.all(AppSpacing.md),
           sliver: SliverList(
             delegate: SliverChildListDelegate([
               Container(
                 height: 120,
                 decoration: BoxDecoration(
                   color: theme.colorScheme.surfaceContainerHighest,
-                  borderRadius: BorderRadius.circular(AppTheme.radiusXL),
+                  borderRadius: AppBorders.borderRadiusXL,
                 ),
               ),
-              const SizedBox(height: AppTheme.spaceXL),
-              Container(
-                height: 24,
-                width: 150,
-                decoration: BoxDecoration(
-                  color: theme.colorScheme.surfaceContainerHighest,
-                  borderRadius: BorderRadius.circular(AppTheme.radiusM),
-                ),
-              ),
-              const SizedBox(height: 8),
-              Container(
-                height: 16,
-                width: 200,
-                decoration: BoxDecoration(
-                  color: theme.colorScheme.surfaceContainerHighest,
-                  borderRadius: BorderRadius.circular(AppTheme.radiusM),
-                ),
-              ),
-              const SizedBox(height: AppTheme.spaceM),
-              Container(
-                height: 200,
-                decoration: BoxDecoration(
-                  color: theme.colorScheme.surfaceContainerHighest,
-                  borderRadius: BorderRadius.circular(AppTheme.radiusXL),
-                ),
-              ),
-              const SizedBox(height: AppTheme.spaceXL),
-              Container(
-                height: 24,
-                width: 180,
-                decoration: BoxDecoration(
-                  color: theme.colorScheme.surfaceContainerHighest,
-                  borderRadius: BorderRadius.circular(AppTheme.radiusM),
-                ),
-              ),
-              const SizedBox(height: 8),
-              Container(
-                height: 16,
-                width: 220,
-                decoration: BoxDecoration(
-                  color: theme.colorScheme.surfaceContainerHighest,
-                  borderRadius: BorderRadius.circular(AppTheme.radiusM),
-                ),
-              ),
-              const SizedBox(height: AppTheme.spaceM),
+              const SizedBox(height: AppSpacing.xl),
               Container(
                 height: 250,
                 decoration: BoxDecoration(
                   color: theme.colorScheme.surfaceContainerHighest,
-                  borderRadius: BorderRadius.circular(AppTheme.radiusXL),
+                  borderRadius: AppBorders.borderRadiusXL,
+                ),
+              ),
+              const SizedBox(height: AppSpacing.xl),
+              Container(
+                height: 250,
+                decoration: BoxDecoration(
+                  color: theme.colorScheme.surfaceContainerHighest,
+                  borderRadius: AppBorders.borderRadiusXL,
                 ),
               ),
             ]),

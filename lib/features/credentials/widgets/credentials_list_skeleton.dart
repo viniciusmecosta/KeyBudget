@@ -1,17 +1,19 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
-import 'package:key_budget/app/config/app_theme.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:key_budget/core/design_system/borders/app_borders.dart';
+import 'package:key_budget/core/design_system/spacing/app_spacing.dart';
 
-class CredentialsListSkeleton extends StatelessWidget {
+class CredentialsListSkeleton extends ConsumerWidget {
   const CredentialsListSkeleton({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
     final shimmerHighlightColor = theme.colorScheme.surface;
 
     return SliverPadding(
-      padding: const EdgeInsets.symmetric(horizontal: AppTheme.defaultPadding),
+      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
       sliver: SliverList(
         delegate: SliverChildBuilderDelegate(
           (context, index) => _buildSkeletonTile(context)
@@ -29,11 +31,11 @@ class CredentialsListSkeleton extends StatelessWidget {
   Widget _buildSkeletonTile(BuildContext context) {
     final theme = Theme.of(context);
     return Container(
-      margin: const EdgeInsets.only(bottom: AppTheme.spaceS),
-      padding: const EdgeInsets.all(16),
+      margin: const EdgeInsets.only(bottom: AppSpacing.sm),
+      padding: const EdgeInsets.all(AppSpacing.md),
       decoration: BoxDecoration(
         color: theme.colorScheme.surfaceContainerHighest,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: AppBorders.borderRadiusL,
       ),
       child: Row(
         children: [
@@ -41,7 +43,7 @@ class CredentialsListSkeleton extends StatelessWidget {
             radius: 24,
             backgroundColor: theme.colorScheme.surface,
           ),
-          const SizedBox(width: AppTheme.spaceM),
+          const SizedBox(width: AppSpacing.md),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -65,7 +67,7 @@ class CredentialsListSkeleton extends StatelessWidget {
             width: 24,
             decoration: BoxDecoration(
               color: theme.colorScheme.surface,
-              borderRadius: BorderRadius.circular(4),
+              borderRadius: AppBorders.borderRadiusS,
             ),
           ),
         ],

@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:key_budget/core/models/recurring_expense_model.dart';
 
 class RecurringExpenseRepository {
@@ -22,6 +23,17 @@ class RecurringExpenseRepository {
     await _getRecurringExpensesCollection(userId).add(expense);
   }
 
+  Future<void> restoreRecurringExpense(
+      String userId, RecurringExpense expense) async {
+    if (expense.id != null) {
+      await _getRecurringExpensesCollection(userId)
+          .doc(expense.id)
+          .set(expense);
+    } else {
+      await addRecurringExpense(userId, expense);
+    }
+  }
+
   Stream<List<RecurringExpense>> getRecurringExpensesStream(String userId) {
     return _getRecurringExpensesCollection(userId)
         .snapshots()
@@ -39,3 +51,6 @@ class RecurringExpenseRepository {
     await _getRecurringExpensesCollection(userId).doc(expenseId).delete();
   }
 }
+
+final recurringExpenseRepositoryProvider =
+    Provider<RecurringExpenseRepository>((ref) => RecurringExpenseRepository());

@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:key_budget/core/models/expense_model.dart';
 
 class ExpenseRepository {
@@ -18,6 +19,14 @@ class ExpenseRepository {
 
   Future<void> addExpense(String userId, Expense expense) async {
     await _getExpensesCollection(userId).add(expense);
+  }
+
+  Future<void> restoreExpense(String userId, Expense expense) async {
+    if (expense.id != null) {
+      await _getExpensesCollection(userId).doc(expense.id).set(expense);
+    } else {
+      await addExpense(userId, expense);
+    }
   }
 
   Future<void> addExpensesBatch(String userId, List<Expense> expenses) async {
@@ -55,3 +64,6 @@ class ExpenseRepository {
     await _getExpensesCollection(userId).doc(expenseId).delete();
   }
 }
+
+final expenseRepositoryProvider =
+    Provider<ExpenseRepository>((ref) => ExpenseRepository());

@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:key_budget/app/config/app_theme.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:key_budget/core/design_system/borders/app_borders.dart';
+import 'package:key_budget/core/design_system/spacing/app_spacing.dart';
 
-class AnimatedListItem extends StatefulWidget {
+class AnimatedListItem extends ConsumerStatefulWidget {
   final Widget child;
   final Animation<double> animation;
 
@@ -12,10 +14,10 @@ class AnimatedListItem extends StatefulWidget {
   });
 
   @override
-  State<AnimatedListItem> createState() => _AnimatedListItemState();
+  ConsumerState<AnimatedListItem> createState() => _AnimatedListItemState();
 }
 
-class _AnimatedListItemState extends State<AnimatedListItem>
+class _AnimatedListItemState extends ConsumerState<AnimatedListItem>
     with TickerProviderStateMixin {
   late AnimationController _highlightController;
   late Animation<Color?> _highlightAnimation;
@@ -150,7 +152,7 @@ class _AnimatedListItemState extends State<AnimatedListItem>
             return DecoratedBox(
               decoration: BoxDecoration(
                 color: _highlightAnimation.value,
-                borderRadius: BorderRadius.circular(12),
+                borderRadius: AppBorders.borderRadiusL,
                 boxShadow: [
                   BoxShadow(
                     color: _shadowColorAnimation.value!,
@@ -163,7 +165,7 @@ class _AnimatedListItemState extends State<AnimatedListItem>
             );
           },
           child: Padding(
-            padding: const EdgeInsets.only(bottom: AppTheme.spaceS),
+            padding: const EdgeInsets.only(bottom: AppSpacing.sm),
             child: FadeTransition(
               opacity: widget.animation,
               child: SizeTransition(

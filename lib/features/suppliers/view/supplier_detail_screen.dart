@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:key_budget/app/config/app_theme.dart';
 import 'package:key_budget/app/utils/app_animations.dart';
 import 'package:key_budget/core/models/supplier_model.dart';
@@ -7,20 +8,20 @@ import 'package:key_budget/core/services/snackbar_service.dart';
 import 'package:key_budget/features/auth/viewmodel/auth_viewmodel.dart';
 import 'package:key_budget/features/suppliers/viewmodel/supplier_viewmodel.dart';
 import 'package:mask_text_input_formatter/mask_text_input_formatter.dart';
-import 'package:provider/provider.dart';
 
 import '../widgets/supplier_form.dart';
 
-class SupplierDetailScreen extends StatefulWidget {
+class SupplierDetailScreen extends ConsumerStatefulWidget {
   final Supplier supplier;
 
   const SupplierDetailScreen({super.key, required this.supplier});
 
   @override
-  State<SupplierDetailScreen> createState() => _SupplierDetailScreenState();
+  ConsumerState<SupplierDetailScreen> createState() =>
+      _SupplierDetailScreenState();
 }
 
-class _SupplierDetailScreenState extends State<SupplierDetailScreen> {
+class _SupplierDetailScreenState extends ConsumerState<SupplierDetailScreen> {
   final _formKey = GlobalKey<FormState>();
   late TextEditingController _nameController;
   late TextEditingController _repNameController;
@@ -65,8 +66,8 @@ class _SupplierDetailScreenState extends State<SupplierDetailScreen> {
     setState(() => _isSaving = true);
     HapticFeedback.mediumImpact();
 
-    final authViewModel = Provider.of<AuthViewModel>(context, listen: false);
-    final viewModel = Provider.of<SupplierViewModel>(context, listen: false);
+    final authViewModel = ref.read(authViewModelProvider);
+    final viewModel = ref.read(supplierViewModelProvider);
     final scaffoldContext = context;
     final navigator = Navigator.of(context);
     final userId = authViewModel.currentUser!.id;
@@ -94,43 +95,30 @@ class _SupplierDetailScreenState extends State<SupplierDetailScreen> {
     navigator.pop();
   }
 
-  void _deleteSupplier() {
-    showDialog(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text('Confirmar Exclusão'),
-        content:
-            const Text('Você tem certeza que deseja excluir este fornecedor?'),
-        actions: [
-          TextButton(
-            child: const Text('Cancelar'),
-            onPressed: () => Navigator.of(ctx).pop(),
-          ),
-          TextButton(
-            child: const Text('Excluir'),
-            onPressed: () async {
-              HapticFeedback.mediumImpact();
-              final authViewModel =
-                  Provider.of<AuthViewModel>(context, listen: false);
-              final viewModel =
-                  Provider.of<SupplierViewModel>(context, listen: false);
-              final scaffoldContext = context;
-              final dialogNavigator = Navigator.of(ctx);
-              final screenNavigator = Navigator.of(context);
+  void _deleteSupplier() async {
+    HapticFeedback.mediumImpact();
+    final authViewModel = ref.read(authViewModelProvider);
+    final viewModel = ref.read(supplierViewModelProvider);
+    final currentContext = context;
+    final screenNavigator = Navigator.of(context);
+    final deletedSupplier = widget.supplier;
 
-              final userId = authViewModel.currentUser!.id;
-              await viewModel.deleteSupplier(userId, widget.supplier.id!);
+    final userId = authViewModel.currentUser!.id;
+    await viewModel.deleteSupplier(userId, deletedSupplier.id!);
 
-              if (!scaffoldContext.mounted) return;
-              SnackbarService.showSuccess(
-                  scaffoldContext, 'Fornecedor excluído com sucesso!');
-              dialogNavigator.pop();
-              screenNavigator.pop();
-            },
-          ),
-        ],
+    if (!currentContext.mounted) return;
+    SnackbarService.showSuccess(
+      currentContext,
+      'Fornecedor excluído.',
+      action: SnackBarAction(
+        label: 'Desfazer',
+        textColor: Colors.white,
+        onPressed: () async {
+          await viewModel.restoreSupplier(userId, deletedSupplier);
+        },
       ),
     );
+    screenNavigator.pop();
   }
 
   @override

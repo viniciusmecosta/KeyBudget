@@ -2,11 +2,12 @@ import 'dart:io';
 import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_mlkit_text_recognition/google_mlkit_text_recognition.dart';
 
 enum OcrTargetField { amount, date, motivation, location, none }
 
-class OcrDetailedViewerScreen extends StatefulWidget {
+class OcrDetailedViewerScreen extends ConsumerStatefulWidget {
   final String imagePath;
   final RecognizedText recognizedText;
   final Map<OcrTargetField, String> initialAssignments;
@@ -19,11 +20,12 @@ class OcrDetailedViewerScreen extends StatefulWidget {
   });
 
   @override
-  State<OcrDetailedViewerScreen> createState() =>
+  ConsumerState<OcrDetailedViewerScreen> createState() =>
       _OcrDetailedViewerScreenState();
 }
 
-class _OcrDetailedViewerScreenState extends State<OcrDetailedViewerScreen> {
+class _OcrDetailedViewerScreenState
+    extends ConsumerState<OcrDetailedViewerScreen> {
   Size? _imageSize;
   final TransformationController _transformationController =
       TransformationController();

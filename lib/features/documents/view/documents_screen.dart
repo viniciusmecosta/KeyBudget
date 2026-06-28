@@ -1,25 +1,28 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:key_budget/app/config/app_theme.dart';
 import 'package:key_budget/app/utils/app_animations.dart';
 import 'package:key_budget/app/utils/navigation_utils.dart';
 import 'package:key_budget/app/widgets/animated_list_item.dart';
 import 'package:key_budget/app/widgets/empty_state_widget.dart';
+import 'package:key_budget/app/widgets/responsive_center.dart';
+import 'package:key_budget/core/design_system/borders/app_borders.dart';
+import 'package:key_budget/core/design_system/spacing/app_spacing.dart';
 import 'package:key_budget/features/auth/viewmodel/auth_viewmodel.dart';
 import 'package:key_budget/features/documents/view/add_document_screen.dart';
 import 'package:key_budget/features/documents/viewmodel/document_viewmodel.dart';
-import 'package:provider/provider.dart';
 
 import '../widgets/document_list_tile.dart';
 
-class DocumentsScreen extends StatefulWidget {
+class DocumentsScreen extends ConsumerStatefulWidget {
   const DocumentsScreen({super.key});
 
   @override
-  State<DocumentsScreen> createState() => _DocumentsScreenState();
+  ConsumerState<DocumentsScreen> createState() => _DocumentsScreenState();
 }
 
-class _DocumentsScreenState extends State<DocumentsScreen> {
+class _DocumentsScreenState extends ConsumerState<DocumentsScreen> {
   final GlobalKey<SliverAnimatedListState> _listKey =
       GlobalKey<SliverAnimatedListState>();
   bool _isSearching = false;
@@ -29,10 +32,9 @@ class _DocumentsScreenState extends State<DocumentsScreen> {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      final authViewModel = Provider.of<AuthViewModel>(context, listen: false);
+      final authViewModel = ref.read(authViewModelProvider);
       if (authViewModel.currentUser != null) {
-        final documentViewModel =
-            Provider.of<DocumentViewModel>(context, listen: false);
+        final documentViewModel = ref.read(documentViewModelProvider);
         documentViewModel.setListKey(_listKey);
         documentViewModel.listenToDocuments(authViewModel.currentUser!.id);
       }
@@ -46,16 +48,17 @@ class _DocumentsScreenState extends State<DocumentsScreen> {
   }
 
   Future<void> _handleRefresh() async {
-    final authViewModel = Provider.of<AuthViewModel>(context, listen: false);
+    final authViewModel = ref.read(authViewModelProvider);
     if (mounted && authViewModel.currentUser != null) {
-      await Provider.of<DocumentViewModel>(context, listen: false)
+      await ref
+          .read(documentViewModelProvider)
           .forceRefresh(authViewModel.currentUser!.id);
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    final viewModel = context.watch<DocumentViewModel>();
+    final viewModel = ref.watch(documentViewModelProvider);
     final theme = Theme.of(context);
 
     return PopScope(
@@ -95,7 +98,7 @@ class _DocumentsScreenState extends State<DocumentsScreen> {
                     decoration: BoxDecoration(
                       color:
                           theme.colorScheme.onSurface.withValues(alpha: 0.08),
-                      borderRadius: BorderRadius.circular(AppTheme.radiusXXL),
+                      borderRadius: AppBorders.borderRadiusXXL,
                     ),
                     child: TextField(
                       controller: _searchController,
@@ -141,46 +144,46 @@ class _DocumentsScreenState extends State<DocumentsScreen> {
               onRefresh: _handleRefresh,
               color: theme.colorScheme.primary,
               backgroundColor: theme.colorScheme.surface,
-              child: CustomScrollView(
-                physics: const BouncingScrollPhysics(
-                    parent: AlwaysScrollableScrollPhysics()),
-                slivers: [
-                  if (viewModel.isLoading)
-                    const DocumentsListSkeleton()
-                  else if (viewModel.currentDisplayItems.isEmpty)
-                    const SliverFillRemaining(
-                      child: SingleChildScrollView(
-                        physics: AlwaysScrollableScrollPhysics(),
-                        child: EmptyStateWidget(
-                          icon: Icons.folder_off_outlined,
-                          message: 'Nenhum documento encontrado.',
+              child: ResponsiveCenter(
+                child: CustomScrollView(
+                  physics: const BouncingScrollPhysics(
+                      parent: AlwaysScrollableScrollPhysics()),
+                  slivers: [
+                    if (viewModel.isLoading)
+                      const DocumentsListSkeleton()
+                    else if (viewModel.currentDisplayItems.isEmpty)
+                      const SliverFillRemaining(
+                        child: SingleChildScrollView(
+                          physics: AlwaysScrollableScrollPhysics(),
+                          child: EmptyStateWidget(
+                            icon: Icons.folder_off_outlined,
+                            message: 'Nenhum documento encontrado.',
+                          ),
+                        ),
+                      )
+                    else
+                      SliverPadding(
+                        padding: const EdgeInsets.fromLTRB(
+                            AppSpacing.md, AppSpacing.lg, AppSpacing.md, 96.0),
+                        sliver: SliverAnimatedList(
+                          key: _listKey,
+                          initialItemCount:
+                              viewModel.currentDisplayItems.length,
+                          itemBuilder: (context, index, animation) {
+                            if (index >= viewModel.currentDisplayItems.length) {
+                              return const SizedBox.shrink();
+                            }
+                            final doc = viewModel.currentDisplayItems[index];
+                            return AnimatedListItem(
+                              animation: animation,
+                              child: DocumentListTile(
+                                  key: ValueKey(doc.id), doc: doc),
+                            );
+                          },
                         ),
                       ),
-                    )
-                  else
-                    SliverPadding(
-                      padding: const EdgeInsets.fromLTRB(
-                          AppTheme.defaultPadding,
-                          AppTheme.spaceL,
-                          AppTheme.defaultPadding,
-                          96.0),
-                      sliver: SliverAnimatedList(
-                        key: _listKey,
-                        initialItemCount: viewModel.currentDisplayItems.length,
-                        itemBuilder: (context, index, animation) {
-                          if (index >= viewModel.currentDisplayItems.length) {
-                            return const SizedBox.shrink();
-                          }
-                          final doc = viewModel.currentDisplayItems[index];
-                          return AnimatedListItem(
-                            animation: animation,
-                            child: DocumentListTile(
-                                key: ValueKey(doc.id), doc: doc),
-                          );
-                        },
-                      ),
-                    ),
-                ],
+                  ],
+                ),
               ),
             ),
           ),
@@ -192,7 +195,7 @@ class _DocumentsScreenState extends State<DocumentsScreen> {
           label: const Text('Novo Documento'),
           icon: const Icon(Icons.add),
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(AppTheme.radiusXXL),
+            borderRadius: AppBorders.borderRadiusXXL,
           ),
         )),
       ),
@@ -200,25 +203,25 @@ class _DocumentsScreenState extends State<DocumentsScreen> {
   }
 }
 
-class DocumentsListSkeleton extends StatelessWidget {
+class DocumentsListSkeleton extends ConsumerWidget {
   const DocumentsListSkeleton({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
     final shimmerHighlightColor = theme.colorScheme.surface;
 
     return SliverPadding(
-      padding: const EdgeInsets.fromLTRB(AppTheme.defaultPadding,
-          AppTheme.spaceL, AppTheme.defaultPadding, 96.0),
+      padding: const EdgeInsets.fromLTRB(
+          AppSpacing.md, AppSpacing.lg, AppSpacing.md, 96.0),
       sliver: SliverList(
         delegate: SliverChildBuilderDelegate(
           (context, index) => Container(
-            margin: const EdgeInsets.only(bottom: AppTheme.spaceS),
-            padding: const EdgeInsets.all(16),
+            margin: const EdgeInsets.only(bottom: AppSpacing.sm),
+            padding: const EdgeInsets.all(AppSpacing.md),
             decoration: BoxDecoration(
               color: theme.colorScheme.surfaceContainerHighest,
-              borderRadius: BorderRadius.circular(16),
+              borderRadius: AppBorders.borderRadiusL,
             ),
             child: Row(
               children: [
@@ -227,10 +230,10 @@ class DocumentsListSkeleton extends StatelessWidget {
                   height: 40,
                   decoration: BoxDecoration(
                     color: theme.colorScheme.surface,
-                    borderRadius: BorderRadius.circular(8),
+                    borderRadius: AppBorders.borderRadiusM,
                   ),
                 ),
-                const SizedBox(width: AppTheme.spaceM),
+                const SizedBox(width: AppSpacing.md),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -255,7 +258,7 @@ class DocumentsListSkeleton extends StatelessWidget {
                     ],
                   ),
                 ),
-                const SizedBox(width: AppTheme.spaceM),
+                const SizedBox(width: AppSpacing.md),
                 Container(
                   width: 24,
                   height: 24,

@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_masked_text2/flutter_masked_text2.dart';
-import 'package:key_budget/app/config/app_theme.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:key_budget/app/utils/app_animations.dart';
+import 'package:key_budget/core/design_system/spacing/app_spacing.dart';
+import 'package:key_budget/core/design_system/widgets/app_button.dart';
 import 'package:key_budget/core/models/expense_category_model.dart';
 import 'package:key_budget/core/models/recurring_expense_model.dart';
 import 'package:key_budget/core/services/snackbar_service.dart';
@@ -10,20 +12,19 @@ import 'package:key_budget/features/auth/viewmodel/auth_viewmodel.dart';
 import 'package:key_budget/features/category/viewmodel/category_viewmodel.dart';
 import 'package:key_budget/features/expenses/viewmodel/expense_viewmodel.dart';
 import 'package:key_budget/features/expenses/widgets/recurring_expense_form.dart';
-import 'package:provider/provider.dart';
 
-class AddEditRecurringExpenseScreen extends StatefulWidget {
+class AddEditRecurringExpenseScreen extends ConsumerStatefulWidget {
   final RecurringExpense? expense;
 
   const AddEditRecurringExpenseScreen({super.key, this.expense});
 
   @override
-  State<AddEditRecurringExpenseScreen> createState() =>
+  ConsumerState<AddEditRecurringExpenseScreen> createState() =>
       _AddEditRecurringExpenseScreenState();
 }
 
 class _AddEditRecurringExpenseScreenState
-    extends State<AddEditRecurringExpenseScreen> {
+    extends ConsumerState<AddEditRecurringExpenseScreen> {
   final _formKey = GlobalKey<FormState>();
   late MoneyMaskedTextController _amountController;
   late TextEditingController _motivationController;
@@ -38,7 +39,7 @@ class _AddEditRecurringExpenseScreenState
   @override
   void initState() {
     super.initState();
-    final categoryViewModel = context.read<CategoryViewModel>();
+    final categoryViewModel = ref.read(categoryViewModelProvider);
 
     _amountController = MoneyMaskedTextController(
       decimalSeparator: ',',
@@ -65,8 +66,8 @@ class _AddEditRecurringExpenseScreenState
     setState(() => _isSaving = true);
     HapticFeedback.mediumImpact();
 
-    final viewModel = context.read<ExpenseViewModel>();
-    final userId = context.read<AuthViewModel>().currentUser!.id;
+    final viewModel = ref.read(expenseViewModelProvider);
+    final userId = ref.read(authViewModelProvider).currentUser!.id;
     final bool isUpdating = widget.expense != null;
 
     final recurringExpense = RecurringExpense(
@@ -101,41 +102,32 @@ class _AddEditRecurringExpenseScreenState
   }
 
   void _delete() async {
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Confirmar Exclusão'),
-        content: const Text(
-            'Tem certeza que deseja excluir esta despesa recorrente?'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(false),
-            child: const Text('Cancelar'),
-          ),
-          ElevatedButton(
-            onPressed: () => Navigator.of(context).pop(true),
-            child: const Text('Excluir'),
-          ),
-        ],
-      ),
-    );
-
-    if (confirmed != true || widget.expense == null) return;
-
-    if (!mounted) return;
-
+    if (widget.expense == null) return;
     HapticFeedback.mediumImpact();
-    final viewModel = context.read<ExpenseViewModel>();
-    final userId = context.read<AuthViewModel>().currentUser!.id;
+    final viewModel = ref.read(expenseViewModelProvider);
+    final userId = ref.read(authViewModelProvider).currentUser!.id;
+    final currentContext = context;
+    final screenNavigator = Navigator.of(context);
+    final deletedExpense = widget.expense!;
 
     try {
-      await viewModel.deleteRecurringExpense(userId, widget.expense!.id!);
-      if (!mounted) return;
-      SnackbarService.showSuccess(context, 'Despesa recorrente excluída!');
-      Navigator.of(context).pop();
+      await viewModel.deleteRecurringExpense(userId, deletedExpense.id!);
+      if (!currentContext.mounted) return;
+      SnackbarService.showSuccess(
+        currentContext,
+        'Despesa recorrente excluída.',
+        action: SnackBarAction(
+          label: 'Desfazer',
+          textColor: Colors.white,
+          onPressed: () async {
+            await viewModel.restoreRecurringExpense(userId, deletedExpense);
+          },
+        ),
+      );
+      screenNavigator.pop();
     } catch (e) {
-      if (!mounted) return;
-      SnackbarService.showError(context, 'Erro ao excluir despesa.');
+      if (!currentContext.mounted) return;
+      SnackbarService.showError(currentContext, 'Erro ao excluir despesa.');
     }
   }
 
@@ -155,7 +147,7 @@ class _AddEditRecurringExpenseScreenState
         ],
       ),
       body: AppAnimations.fadeInFromBottom(Padding(
-        padding: const EdgeInsets.all(AppTheme.defaultPadding),
+        padding: const EdgeInsets.all(AppSpacing.md),
         child: Column(
           children: [
             Expanded(
@@ -171,17 +163,14 @@ class _AddEditRecurringExpenseScreenState
                 dayOfMonth: _dayOfMonth,
               ),
             ),
-            const SizedBox(height: 16),
-            ElevatedButton(
-              onPressed: _isSaving ? null : _submit,
-              child: _isSaving
-                  ? SizedBox(
-                      height: 24,
-                      width: 24,
-                      child: CircularProgressIndicator(
-                          color: Theme.of(context).colorScheme.onPrimary,
-                          strokeWidth: 2.0))
-                  : const Text('Salvar'),
+            const SizedBox(height: AppSpacing.md),
+            SizedBox(
+              width: double.infinity,
+              child: AppButton(
+                onPressed: _submit,
+                isLoading: _isSaving,
+                label: 'Salvar',
+              ),
             ),
           ],
         ),

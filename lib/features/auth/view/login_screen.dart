@@ -1,26 +1,27 @@
 import 'package:flutter/material.dart';
-import 'package:font_awesome_flutter/font_awesome_flutter.dart';
-import 'package:key_budget/app/config/app_theme.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:key_budget/app/utils/navigation_utils.dart';
-import 'package:key_budget/app/widgets/password_form_field.dart';
+import 'package:key_budget/core/design_system/spacing/app_spacing.dart';
+import 'package:key_budget/core/design_system/widgets/app_button.dart';
+import 'package:key_budget/core/design_system/widgets/app_text_field.dart';
 import 'package:key_budget/core/services/snackbar_service.dart';
 import 'package:key_budget/features/auth/view/register_screen.dart';
 import 'package:key_budget/features/auth/viewmodel/auth_viewmodel.dart';
-import 'package:provider/provider.dart';
 
 import '../widgets/auth_page_layout.dart';
 
-class LoginScreen extends StatefulWidget {
+class LoginScreen extends ConsumerStatefulWidget {
   const LoginScreen({super.key});
 
   @override
-  State<LoginScreen> createState() => _LoginScreenState();
+  ConsumerState<LoginScreen> createState() => _LoginScreenState();
 }
 
-class _LoginScreenState extends State<LoginScreen> {
+class _LoginScreenState extends ConsumerState<LoginScreen> {
   final _formKey = GlobalKey<FormState>();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
+  bool _isPasswordVisible = false;
 
   @override
   void initState() {
@@ -38,7 +39,7 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 
   Future<void> _tryBiometricAuth() async {
-    final authViewModel = Provider.of<AuthViewModel>(context, listen: false);
+    final authViewModel = ref.read(authViewModelProvider);
     if (authViewModel.currentUser == null) {
       await authViewModel.authenticateWithBiometrics();
     }
@@ -46,109 +47,161 @@ class _LoginScreenState extends State<LoginScreen> {
 
   void _submit() async {
     if (!_formKey.currentState!.validate()) return;
-    final authViewModel = Provider.of<AuthViewModel>(context, listen: false);
+    final authViewModel = ref.read(authViewModelProvider);
     final success = await authViewModel.loginUser(
       email: _emailController.text.trim(),
       password: _passwordController.text.trim(),
     );
     if (mounted && !success) {
       SnackbarService.showError(
-          context, authViewModel.errorMessage ?? 'Erro desconhecido');
+          context,
+          authViewModel.errorMessage ??
+              'Erro ao fazer login. Verifique suas credenciais.');
       _passwordController.clear();
     }
   }
 
   void _submitGoogle() async {
-    final authViewModel = Provider.of<AuthViewModel>(context, listen: false);
+    final authViewModel = ref.read(authViewModelProvider);
     final success = await authViewModel.loginWithGoogle();
     if (mounted && !success) {
-      SnackbarService.showError(
-          context, authViewModel.errorMessage ?? 'Erro desconhecido');
+      SnackbarService.showError(context,
+          authViewModel.errorMessage ?? 'Erro ao fazer login com Google.');
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
+    final viewModel = ref.watch(authViewModelProvider);
+
     return AuthPageLayout(
-      child: Column(
+      title: "Bem-vindo de volta",
+      subtitle: "Faça login para continuar",
+      footer: Column(
         children: [
-          Form(
-            key: _formKey,
-            child: Column(
-              children: [
-                TextFormField(
-                  controller: _emailController,
-                  decoration: const InputDecoration(
-                    labelText: 'Email',
-                    prefixIcon: Icon(Icons.email_outlined),
-                  ),
-                  keyboardType: TextInputType.emailAddress,
-                  validator: (value) => (value == null || !value.contains('@'))
-                      ? 'Insira um email válido'
-                      : null,
-                ),
-                const SizedBox(height: AppTheme.spaceM),
-                PasswordFormField(
-                  controller: _passwordController,
-                  labelText: 'Senha',
-                  validator: (value) => (value == null || value.length < 6)
-                      ? 'A senha deve ter pelo menos 6 caracteres'
-                      : null,
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(height: AppTheme.spaceXL),
-          Consumer<AuthViewModel>(
-            builder: (context, viewModel, child) {
-              return Column(
-                children: [
-                  SizedBox(
-                    width: double.infinity,
-                    child: ElevatedButton(
-                      onPressed: viewModel.isLoading ? null : _submit,
-                      child: viewModel.isLoading
-                          ? const SizedBox(
-                              height: AppTheme.spaceL,
-                              width: AppTheme.spaceL,
-                              child: CircularProgressIndicator(
-                                color: Colors.white,
-                                strokeWidth: 2.5,
-                              ),
-                            )
-                          : const Text('Entrar'),
-                    ),
-                  ),
-                  const SizedBox(height: AppTheme.spaceM),
-                  SizedBox(
-                    width: double.infinity,
-                    child: OutlinedButton.icon(
-                      onPressed: viewModel.isLoading ? null : _submitGoogle,
-                      icon: const FaIcon(
-                        FontAwesomeIcons.google,
-                        size: 20,
+          Row(
+            children: [
+              Expanded(
+                  child: Divider(
+                      color: Theme.of(context).colorScheme.outlineVariant)),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
+                child: Text(
+                  'ou',
+                  style: Theme.of(context).textTheme.labelMedium?.copyWith(
+                        color: Theme.of(context).colorScheme.onSurfaceVariant,
                       ),
-                      label: const Text('Entrar com Google'),
-                    ),
-                  ),
-                ],
-              );
-            },
+                ),
+              ),
+              Expanded(
+                  child: Divider(
+                      color: Theme.of(context).colorScheme.outlineVariant)),
+            ],
           ),
-          const SizedBox(height: AppTheme.spaceL),
-          TextButton(
-            onPressed: () {
-              NavigationUtils.push(context, const RegisterScreen());
-            },
-            child: Text(
-              "Não tem uma conta? Cadastre-se",
-              style: theme.textTheme.bodyMedium?.copyWith(
-                color: theme.colorScheme.primary,
+          const SizedBox(height: AppSpacing.xl),
+          AppButton(
+            label: 'Continuar com Google',
+            icon: Icons.g_mobiledata_rounded,
+            variant: AppButtonVariant.outline,
+            isFullWidth: true,
+            isLoading: viewModel.isLoading,
+            onPressed: _submitGoogle,
+          ),
+          const SizedBox(height: AppSpacing.xl),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Text(
+                'Novo por aqui?',
+                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    ),
+              ),
+              TextButton(
+                onPressed: () =>
+                    NavigationUtils.push(context, const RegisterScreen()),
+                style: TextButton.styleFrom(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: AppSpacing.sm),
+                  minimumSize: Size.zero,
+                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                ),
+                child: Text(
+                  'Cadastre-se',
+                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                        color: Theme.of(context).colorScheme.primary,
+                        fontWeight: FontWeight.bold,
+                      ),
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+      child: Form(
+        key: _formKey,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            AppTextField(
+              controller: _emailController,
+              label: 'Email',
+              prefixIcon: Icons.email_outlined,
+              keyboardType: TextInputType.emailAddress,
+              validator: (value) => (value == null || !value.contains('@'))
+                  ? 'Insira um email válido'
+                  : null,
+            ),
+            const SizedBox(height: AppSpacing.md),
+            AppTextField(
+              controller: _passwordController,
+              label: 'Senha',
+              prefixIcon: Icons.lock_outline,
+              obscureText: !_isPasswordVisible,
+              suffixIcon: IconButton(
+                icon: Icon(
+                  _isPasswordVisible ? Icons.visibility_off : Icons.visibility,
+                ),
+                onPressed: () {
+                  setState(() {
+                    _isPasswordVisible = !_isPasswordVisible;
+                  });
+                },
+              ),
+              validator: (value) => (value == null || value.length < 6)
+                  ? 'A senha deve ter pelo menos 6 caracteres'
+                  : null,
+            ),
+            Align(
+              alignment: Alignment.centerRight,
+              child: TextButton(
+                onPressed: () {
+                  // TODO: Implement forgot password
+                },
+                style: TextButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(
+                      horizontal: AppSpacing.xs, vertical: AppSpacing.sm),
+                  minimumSize: Size.zero,
+                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                ),
+                child: Text(
+                  'Esqueceu sua senha?',
+                  style: Theme.of(context).textTheme.labelMedium?.copyWith(
+                        color: Theme.of(context).colorScheme.primary,
+                        fontWeight: FontWeight.bold,
+                      ),
+                ),
               ),
             ),
-          )
-        ],
+            const SizedBox(height: AppSpacing.lg),
+            AppButton(
+              label: 'Entrar',
+              isFullWidth: true,
+              isLoading: viewModel.isLoading,
+              onPressed: _submit,
+            ),
+          ],
+        ),
       ),
     );
   }

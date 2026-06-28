@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
-import 'package:key_budget/app/config/app_theme.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:key_budget/app/widgets/activity_tile_widget.dart';
 import 'package:key_budget/app/widgets/animated_list_item.dart';
+import 'package:key_budget/core/design_system/spacing/app_spacing.dart';
 import 'package:key_budget/core/models/expense_model.dart';
 import 'package:key_budget/features/expenses/viewmodel/expense_viewmodel.dart';
-import 'package:provider/provider.dart';
 
-class ExpenseList extends StatefulWidget {
+class ExpenseList extends ConsumerStatefulWidget {
   final List<Expense> monthlyExpenses;
 
   const ExpenseList({
@@ -15,10 +15,10 @@ class ExpenseList extends StatefulWidget {
   });
 
   @override
-  State<ExpenseList> createState() => _ExpenseListState();
+  ConsumerState<ExpenseList> createState() => _ExpenseListState();
 }
 
-class _ExpenseListState extends State<ExpenseList> {
+class _ExpenseListState extends ConsumerState<ExpenseList> {
   final GlobalKey<SliverAnimatedListState> _listKey =
       GlobalKey<SliverAnimatedListState>();
 
@@ -26,16 +26,14 @@ class _ExpenseListState extends State<ExpenseList> {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      Provider.of<ExpenseViewModel>(context, listen: false)
-          .setListKey(_listKey);
+      ref.read(expenseViewModelProvider).setListKey(_listKey);
     });
   }
 
   @override
   Widget build(BuildContext context) {
     return SliverPadding(
-      padding: const EdgeInsets.fromLTRB(
-          AppTheme.defaultPadding, 0, AppTheme.defaultPadding, 96.0),
+      padding: const EdgeInsets.fromLTRB(AppSpacing.md, 0, AppSpacing.md, 96.0),
       sliver: SliverAnimatedList(
         key: _listKey,
         initialItemCount: widget.monthlyExpenses.length,
@@ -52,8 +50,7 @@ class _ExpenseListState extends State<ExpenseList> {
 
   Widget _buildExpenseTile(
       Expense expense, int index, Animation<double> animation) {
-    final isAllPeriods =
-        Provider.of<ExpenseViewModel>(context, listen: false).searchAllPeriods;
+    final isAllPeriods = ref.read(expenseViewModelProvider).searchAllPeriods;
 
     return AnimatedListItem(
       animation: animation,

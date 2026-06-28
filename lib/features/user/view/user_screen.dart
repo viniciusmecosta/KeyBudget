@@ -2,9 +2,13 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
-import 'package:key_budget/app/config/app_theme.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:key_budget/app/utils/app_animations.dart';
 import 'package:key_budget/app/utils/navigation_utils.dart';
+import 'package:key_budget/app/widgets/responsive_center.dart';
+import 'package:key_budget/core/design_system/borders/app_borders.dart';
+import 'package:key_budget/core/design_system/spacing/app_spacing.dart';
+import 'package:key_budget/core/design_system/widgets/app_button.dart';
 import 'package:key_budget/core/services/csv_service.dart';
 import 'package:key_budget/core/services/drive_service.dart';
 import 'package:key_budget/core/services/snackbar_service.dart';
@@ -15,22 +19,21 @@ import 'package:key_budget/features/credentials/viewmodel/credential_viewmodel.d
 import 'package:key_budget/features/expenses/viewmodel/expense_viewmodel.dart';
 import 'package:key_budget/features/user/view/edit_user_screen.dart';
 import 'package:path_provider/path_provider.dart';
-import 'package:provider/provider.dart';
 
 import '../widgets/settings_tile.dart';
 
-class UserScreen extends StatelessWidget {
+class UserScreen extends ConsumerWidget {
   const UserScreen({super.key});
 
-  Future<void> _performBackup(
-      BuildContext context, bool exp, bool rec, bool cred, bool cat) async {
+  Future<void> _performBackup(BuildContext context, WidgetRef ref, bool exp,
+      bool rec, bool cred, bool cat) async {
     try {
       final driveService = DriveService();
       final csvService = CsvService();
 
-      final expVm = Provider.of<ExpenseViewModel>(context, listen: false);
-      final credVm = Provider.of<CredentialViewModel>(context, listen: false);
-      final catVm = Provider.of<CategoryViewModel>(context, listen: false);
+      final expVm = ref.read(expenseViewModelProvider);
+      final credVm = ref.read(credentialViewModelProvider);
+      final catVm = ref.read(categoryViewModelProvider);
 
       final dir = await getTemporaryDirectory();
 
@@ -90,7 +93,7 @@ class UserScreen extends StatelessWidget {
     }
   }
 
-  void _showBackupDialog(BuildContext context) {
+  void _showBackupDialog(BuildContext context, WidgetRef ref) {
     bool backupExpenses = true;
     bool backupRecurring = true;
     bool backupCredentials = true;
@@ -100,8 +103,8 @@ class UserScreen extends StatelessWidget {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      shape: RoundedRectangleBorder(
+        borderRadius: AppBorders.borderRadiusVerticalXL,
       ),
       builder: (ctx) => StatefulBuilder(builder: (context, setState) {
         return SafeArea(
@@ -181,22 +184,18 @@ class UserScreen extends StatelessWidget {
                 const SizedBox(height: 24),
                 SizedBox(
                   width: double.infinity,
-                  child: ElevatedButton(
-                    style: ElevatedButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(vertical: 16),
-                      shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(16)),
-                    ),
+                  child: AppButton(
                     onPressed: isBackingUp ||
                             (!backupExpenses &&
                                 !backupRecurring &&
                                 !backupCredentials &&
                                 !backupCategories)
-                        ? null
+                        ? () {}
                         : () async {
                             setState(() => isBackingUp = true);
                             await _performBackup(
                               context,
+                              ref,
                               backupExpenses,
                               backupRecurring,
                               backupCredentials,
@@ -204,12 +203,8 @@ class UserScreen extends StatelessWidget {
                             );
                             if (context.mounted) Navigator.pop(context);
                           },
-                    child: isBackingUp
-                        ? const SizedBox(
-                            width: 24,
-                            height: 24,
-                            child: CircularProgressIndicator(strokeWidth: 2))
-                        : const Text('Iniciar Backup'),
+                    isLoading: isBackingUp,
+                    label: 'Iniciar Backup',
                   ),
                 ),
               ],
@@ -221,7 +216,7 @@ class UserScreen extends StatelessWidget {
   }
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
 
     return Scaffold(
@@ -240,8 +235,9 @@ class UserScreen extends StatelessWidget {
         ],
       ),
       body: SafeArea(
-        child: Consumer<AuthViewModel>(
-          builder: (context, authViewModel, child) {
+        child: Consumer(
+          builder: (context, ref, _) {
+            final authViewModel = ref.watch(authViewModelProvider);
             final user = authViewModel.currentUser;
             final avatarPath = user?.avatarPath;
             ImageProvider? imageProvider;
@@ -258,10 +254,11 @@ class UserScreen extends StatelessWidget {
               }
             }
 
-            return AppAnimations.fadeInFromBottom(ListView(
-              padding: const EdgeInsets.all(AppTheme.defaultPadding),
+            return AppAnimations.fadeInFromBottom(ResponsiveCenter(
+                child: ListView(
+              padding: const EdgeInsets.all(AppSpacing.md),
               children: [
-                const SizedBox(height: AppTheme.spaceL),
+                const SizedBox(height: AppSpacing.lg),
                 Center(
                   child: CircleAvatar(
                     radius: 50,
@@ -273,7 +270,7 @@ class UserScreen extends StatelessWidget {
                         : null,
                   ),
                 ),
-                const SizedBox(height: AppTheme.spaceM),
+                const SizedBox(height: AppSpacing.md),
                 Center(
                   child: Text(
                     user?.name ?? 'Usuário',
@@ -281,7 +278,7 @@ class UserScreen extends StatelessWidget {
                         ?.copyWith(fontWeight: FontWeight.bold),
                   ),
                 ),
-                const SizedBox(height: AppTheme.spaceXS),
+                const SizedBox(height: AppSpacing.xs),
                 Center(
                   child: Text(
                     user?.email ?? '',
@@ -290,7 +287,7 @@ class UserScreen extends StatelessWidget {
                 ),
                 if (user?.phoneNumber != null && user!.phoneNumber!.isNotEmpty)
                   Padding(
-                    padding: const EdgeInsets.only(top: AppTheme.spaceXS),
+                    padding: const EdgeInsets.only(top: AppSpacing.xs),
                     child: Center(
                       child: Text(
                         user.phoneNumber!,
@@ -298,7 +295,7 @@ class UserScreen extends StatelessWidget {
                       ),
                     ),
                   ),
-                const SizedBox(height: AppTheme.spaceXL),
+                const SizedBox(height: AppSpacing.xl),
                 SettingsTile(
                   icon: Icons.category_outlined,
                   title: 'Gerenciar Categorias',
@@ -306,13 +303,13 @@ class UserScreen extends StatelessWidget {
                     NavigationUtils.push(context, const CategoriesScreen());
                   },
                 ),
-                const SizedBox(height: AppTheme.spaceS),
+                const SizedBox(height: AppSpacing.sm),
                 SettingsTile(
                   icon: Icons.cloud_upload_outlined,
                   title: 'Backup no Google Drive',
-                  onTap: () => _showBackupDialog(context),
+                  onTap: () => _showBackupDialog(context, ref),
                 ),
-                const SizedBox(height: AppTheme.spaceS),
+                const SizedBox(height: AppSpacing.sm),
                 SettingsTile(
                   icon: Icons.logout,
                   title: 'Sair do Aplicativo',
@@ -335,8 +332,9 @@ class UserScreen extends StatelessWidget {
                           ElevatedButton(
                             onPressed: () {
                               Navigator.of(context).pop();
-                              Provider.of<AuthViewModel>(context, listen: false)
-                                  .logout(context);
+                              ref
+                                  .read(authViewModelProvider)
+                                  .logout(context, ref);
                             },
                             child:
                                 Text("Sair", style: theme.textTheme.labelLarge),
@@ -347,7 +345,7 @@ class UserScreen extends StatelessWidget {
                   },
                 ),
               ],
-            ));
+            )));
           },
         ),
       ),

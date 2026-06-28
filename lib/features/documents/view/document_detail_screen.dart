@@ -2,29 +2,30 @@ import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
-import 'package:key_budget/app/config/app_theme.dart';
 import 'package:key_budget/app/utils/navigation_utils.dart';
+import 'package:key_budget/core/design_system/borders/app_borders.dart';
+import 'package:key_budget/core/design_system/spacing/app_spacing.dart';
+import 'package:key_budget/core/design_system/widgets/app_card.dart';
 import 'package:key_budget/core/models/document_model.dart';
 import 'package:key_budget/core/services/snackbar_service.dart';
 import 'package:key_budget/features/auth/viewmodel/auth_viewmodel.dart';
 import 'package:key_budget/features/documents/viewmodel/document_viewmodel.dart';
-import 'package:provider/provider.dart';
 import 'package:syncfusion_flutter_pdfviewer/pdfviewer.dart';
 
 import 'add_document_screen.dart';
 import 'edit_document_screen.dart';
 
-class DocumentDetailScreen extends StatelessWidget {
+class DocumentDetailScreen extends ConsumerWidget {
   final Document document;
 
   const DocumentDetailScreen({super.key, required this.document});
 
   @override
-  Widget build(BuildContext context) {
-    final viewModel = context.watch<DocumentViewModel>();
-    final userId =
-        Provider.of<AuthViewModel>(context, listen: false).currentUser!.id;
+  Widget build(BuildContext context, WidgetRef ref) {
+    final viewModel = ref.watch(documentViewModelProvider);
+    final userId = ref.read(authViewModelProvider).currentUser!.id;
 
     return Scaffold(
       appBar: AppBar(
@@ -65,12 +66,13 @@ class DocumentDetailScreen extends StatelessWidget {
         ],
       ),
       body: ListView(
-        padding: const EdgeInsets.all(AppTheme.defaultPadding),
+        padding: const EdgeInsets.all(AppSpacing.md),
         children: [
           _buildInfoCard(context),
           if (document.additionalFields.isNotEmpty)
             _buildAdditionalFieldsCard(context),
-          if (document.attachments.isNotEmpty) _buildAttachmentsCard(context),
+          if (document.attachments.isNotEmpty)
+            _buildAttachmentsCard(context, ref),
           if (document.versions.isNotEmpty)
             _buildVersionsCard(context, viewModel, userId),
         ],
@@ -80,45 +82,38 @@ class DocumentDetailScreen extends StatelessWidget {
 
   Widget _buildInfoCard(BuildContext context) {
     final theme = Theme.of(context);
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(AppTheme.cardPadding),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text('Informações Principais', style: theme.textTheme.titleLarge),
-            const SizedBox(height: AppTheme.spaceL),
-            if (document.number != null && document.number!.isNotEmpty)
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Expanded(
-                    child:
-                        _buildDetailItem('Número', document.number!, context),
-                  ),
-                  IconButton(
-                    icon: const Icon(Icons.copy_all_outlined),
-                    tooltip: 'Copiar número',
-                    onPressed: () {
-                      Clipboard.setData(ClipboardData(text: document.number!));
-                      HapticFeedback.lightImpact();
-                      SnackbarService.showSuccess(context, 'Número copiado!');
-                    },
-                  ),
-                ],
-              ),
-            if (document.issueDate != null)
-              _buildDetailItem(
-                  'Data de Expedição',
-                  DateFormat('dd/MM/yyyy').format(document.issueDate!),
-                  context),
-            if (document.expiryDate != null)
-              _buildDetailItem(
-                  'Validade',
-                  DateFormat('dd/MM/yyyy').format(document.expiryDate!),
-                  context),
-          ],
-        ),
+    return AppCard(
+      padding: const EdgeInsets.all(AppSpacing.lg),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text('Informações Principais', style: theme.textTheme.titleLarge),
+          const SizedBox(height: AppSpacing.lg),
+          if (document.number != null && document.number!.isNotEmpty)
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Expanded(
+                  child: _buildDetailItem('Número', document.number!, context),
+                ),
+                IconButton(
+                  icon: const Icon(Icons.copy_all_outlined),
+                  tooltip: 'Copiar número',
+                  onPressed: () {
+                    Clipboard.setData(ClipboardData(text: document.number!));
+                    HapticFeedback.lightImpact();
+                    SnackbarService.showSuccess(context, 'Número copiado!');
+                  },
+                ),
+              ],
+            ),
+          if (document.issueDate != null)
+            _buildDetailItem('Data de Expedição',
+                DateFormat('dd/MM/yyyy').format(document.issueDate!), context),
+          if (document.expiryDate != null)
+            _buildDetailItem('Validade',
+                DateFormat('dd/MM/yyyy').format(document.expiryDate!), context),
+        ],
       ),
     );
   }
@@ -126,40 +121,36 @@ class DocumentDetailScreen extends StatelessWidget {
   Widget _buildAdditionalFieldsCard(BuildContext context) {
     final theme = Theme.of(context);
     return Padding(
-      padding: const EdgeInsets.only(top: AppTheme.spaceL),
-      child: Card(
-        child: Padding(
-          padding: const EdgeInsets.all(AppTheme.cardPadding),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text('Campos Adicionais', style: theme.textTheme.titleLarge),
-              const SizedBox(height: AppTheme.spaceL),
-              ...document.additionalFields.entries
-                  .map((e) => _buildDetailItem(e.key, e.value, context)),
-            ],
-          ),
+      padding: const EdgeInsets.only(top: AppSpacing.lg),
+      child: AppCard(
+        padding: const EdgeInsets.all(AppSpacing.lg),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text('Campos Adicionais', style: theme.textTheme.titleLarge),
+            const SizedBox(height: AppSpacing.lg),
+            ...document.additionalFields.entries
+                .map((e) => _buildDetailItem(e.key, e.value, context)),
+          ],
         ),
       ),
     );
   }
 
-  Widget _buildAttachmentsCard(BuildContext context) {
+  Widget _buildAttachmentsCard(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
     return Padding(
-      padding: const EdgeInsets.only(top: AppTheme.spaceL),
-      child: Card(
-        child: Padding(
-          padding: const EdgeInsets.all(AppTheme.cardPadding),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text('Anexos', style: theme.textTheme.titleLarge),
-              const SizedBox(height: AppTheme.spaceM),
-              ...document.attachments.map(
-                  (attachment) => _buildAttachmentItem(attachment, context)),
-            ],
-          ),
+      padding: const EdgeInsets.only(top: AppSpacing.lg),
+      child: AppCard(
+        padding: const EdgeInsets.all(AppSpacing.lg),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text('Anexos', style: theme.textTheme.titleLarge),
+            const SizedBox(height: AppSpacing.md),
+            ...document.attachments.map(
+                (attachment) => _buildAttachmentItem(attachment, context, ref)),
+          ],
         ),
       ),
     );
@@ -169,8 +160,15 @@ class DocumentDetailScreen extends StatelessWidget {
       BuildContext context, DocumentViewModel viewModel, String userId) {
     final theme = Theme.of(context);
     return Padding(
-      padding: const EdgeInsets.only(top: AppTheme.spaceL),
+      padding: const EdgeInsets.only(top: AppSpacing.lg),
       child: Card(
+        elevation: 0,
+        shape: RoundedRectangleBorder(
+          borderRadius: AppBorders.borderRadiusM,
+          side: BorderSide(
+            color: Theme.of(context).colorScheme.outlineVariant,
+          ),
+        ),
         child: ExpansionTile(
           title: Text('Versões Anteriores', style: theme.textTheme.titleLarge),
           children: document.versions
@@ -211,7 +209,7 @@ class DocumentDetailScreen extends StatelessWidget {
 
   Widget _buildDetailItem(String label, String value, BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.only(bottom: AppTheme.spaceM),
+      padding: const EdgeInsets.only(bottom: AppSpacing.md),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -223,7 +221,8 @@ class DocumentDetailScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildAttachmentItem(Attachment attachment, BuildContext context) {
+  Widget _buildAttachmentItem(
+      Attachment attachment, BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
     final isPdf = attachment.type.contains('pdf');
 
@@ -231,12 +230,12 @@ class DocumentDetailScreen extends StatelessWidget {
       elevation: 0,
       clipBehavior: Clip.antiAlias,
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(AppTheme.radiusM),
+        borderRadius: AppBorders.borderRadiusM,
         side: BorderSide(
-          color: theme.colorScheme.outline.withAlpha((255 * 0.2).round()),
+          color: theme.colorScheme.outlineVariant,
         ),
       ),
-      margin: const EdgeInsets.only(bottom: AppTheme.spaceM),
+      margin: const EdgeInsets.only(bottom: AppSpacing.md),
       child: Column(
         children: [
           ListTile(
@@ -245,8 +244,7 @@ class DocumentDetailScreen extends StatelessWidget {
               icon: const Icon(Icons.share_outlined),
               tooltip: 'Compartilhar',
               onPressed: () async {
-                final viewModel =
-                    Provider.of<DocumentViewModel>(context, listen: false);
+                final viewModel = ref.read(documentViewModelProvider);
                 final scaffoldContext = context;
                 await viewModel.shareAttachment(attachment);
                 if (scaffoldContext.mounted && viewModel.errorMessage != null) {
@@ -258,8 +256,7 @@ class DocumentDetailScreen extends StatelessWidget {
           ),
           GestureDetector(
             onTap: () async {
-              final viewModel =
-                  Provider.of<DocumentViewModel>(context, listen: false);
+              final viewModel = ref.read(documentViewModelProvider);
               final scaffoldContext = context;
 
               if (isPdf) {
@@ -289,7 +286,8 @@ class DocumentDetailScreen extends StatelessWidget {
               height: 200,
               color: theme.colorScheme.surfaceContainerHighest,
               child: FutureBuilder<String?>(
-                future: Provider.of<DocumentViewModel>(context, listen: false)
+                future: ref
+                    .read(documentViewModelProvider)
                     .getAttachmentAsBase64(attachment),
                 builder: (context, snapshot) {
                   if (snapshot.connectionState == ConnectionState.waiting) {

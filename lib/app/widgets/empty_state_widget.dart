@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:key_budget/core/design_system/spacing/app_spacing.dart';
+import 'package:key_budget/core/design_system/widgets/app_button.dart';
 
-class EmptyStateWidget extends StatelessWidget {
+class EmptyStateWidget extends ConsumerWidget {
   final IconData icon;
   final String message;
   final String? buttonText;
@@ -15,7 +18,7 @@ class EmptyStateWidget extends StatelessWidget {
   });
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     return Center(
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 32.0),
@@ -27,7 +30,7 @@ class EmptyStateWidget extends StatelessWidget {
               size: 80,
               color: Theme.of(context).colorScheme.primary.withAlpha(180),
             ),
-            const SizedBox(height: 24),
+            const SizedBox(height: AppSpacing.lg),
             Text(
               message,
               textAlign: TextAlign.center,
@@ -40,10 +43,10 @@ class EmptyStateWidget extends StatelessWidget {
                   ),
             ),
             if (buttonText != null && onButtonPressed != null) ...[
-              const SizedBox(height: 24),
-              ElevatedButton(
-                onPressed: onButtonPressed,
-                child: Text(buttonText!),
+              const SizedBox(height: AppSpacing.lg),
+              AppButton(
+                onPressed: onButtonPressed!,
+                label: buttonText!,
               ),
             ]
           ],

@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:key_budget/core/models/document_model.dart';
 
 class DocumentRepository {
@@ -44,3 +45,6 @@ class DocumentRepository {
     await getDocumentsCollection(userId).doc(documentId).delete();
   }
 }
+
+final documentRepositoryProvider =
+    Provider<DocumentRepository>((ref) => DocumentRepository());

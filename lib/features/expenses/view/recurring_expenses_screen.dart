@@ -1,17 +1,17 @@
 import 'package:flutter/material.dart';
-import 'package:key_budget/app/config/app_theme.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:key_budget/app/widgets/empty_state_widget.dart';
+import 'package:key_budget/core/design_system/spacing/app_spacing.dart';
 import 'package:key_budget/features/expenses/view/add_edit_recurring_expense_screen.dart';
 import 'package:key_budget/features/expenses/viewmodel/expense_viewmodel.dart';
 import 'package:key_budget/features/expenses/widgets/recurring_expense_list_tile.dart';
-import 'package:provider/provider.dart';
 
-class RecurringExpensesScreen extends StatelessWidget {
+class RecurringExpensesScreen extends ConsumerWidget {
   const RecurringExpensesScreen({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    final viewModel = context.watch<ExpenseViewModel>();
+  Widget build(BuildContext context, WidgetRef ref) {
+    final viewModel = ref.watch(expenseViewModelProvider);
     final theme = Theme.of(context);
 
     return Scaffold(
@@ -29,7 +29,7 @@ class RecurringExpensesScreen extends StatelessWidget {
                   message: 'Nenhuma despesa recorrente encontrada.',
                 )
               : ListView.builder(
-                  padding: const EdgeInsets.all(AppTheme.defaultPadding),
+                  padding: const EdgeInsets.all(AppSpacing.md),
                   itemCount: viewModel.recurringExpenses.length,
                   itemBuilder: (context, index) {
                     final recurring = viewModel.recurringExpenses[index];

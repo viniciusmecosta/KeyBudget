@@ -1,21 +1,22 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:key_budget/app/viewmodel/navigation_viewmodel.dart';
 import 'package:key_budget/app/widgets/main_bottom_navigation_bar.dart';
+import 'package:key_budget/app/widgets/responsive_center.dart';
 import 'package:key_budget/features/credentials/view/credentials_screen.dart';
 import 'package:key_budget/features/dashboard/view/dashboard_screen.dart';
 import 'package:key_budget/features/documents/view/documents_screen.dart';
 import 'package:key_budget/features/expenses/view/expenses_screen.dart';
 import 'package:key_budget/features/user/view/user_screen.dart';
-import 'package:provider/provider.dart';
 
-class MainScreen extends StatefulWidget {
+class MainScreen extends ConsumerStatefulWidget {
   const MainScreen({super.key});
 
   @override
-  State<MainScreen> createState() => _MainScreenState();
+  ConsumerState<MainScreen> createState() => _MainScreenState();
 }
 
-class _MainScreenState extends State<MainScreen> {
+class _MainScreenState extends ConsumerState<MainScreen> {
   static const List<Widget> _widgetOptions = <Widget>[
     DashboardScreen(),
     ExpensesScreen(),
@@ -26,22 +27,71 @@ class _MainScreenState extends State<MainScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final navigationViewModel = Provider.of<NavigationViewModel>(context);
+    final navigationViewModel = ref.watch(navigationViewModelProvider);
+    final isDesktop = MediaQuery.of(context).size.width >= 800;
+    final theme = Theme.of(context);
+
+    final currentWidget = AnimatedSwitcher(
+      duration: const Duration(milliseconds: 350),
+      child: KeyedSubtree(
+        key: ValueKey<int>(navigationViewModel.selectedIndex),
+        child: isDesktop
+            ? ResponsiveCenter(
+                maxWidth: 800,
+                child: _widgetOptions[navigationViewModel.selectedIndex])
+            : _widgetOptions[navigationViewModel.selectedIndex],
+      ),
+      transitionBuilder: (Widget child, Animation<double> animation) {
+        return FadeTransition(opacity: animation, child: child);
+      },
+    );
+
+    if (isDesktop) {
+      return Scaffold(
+        body: Row(
+          children: [
+            NavigationRail(
+              backgroundColor: theme.colorScheme.surface,
+              selectedIndex: navigationViewModel.selectedIndex,
+              onDestinationSelected: (int index) {
+                navigationViewModel.selectedIndex = index;
+              },
+              labelType: NavigationRailLabelType.all,
+              selectedIconTheme:
+                  IconThemeData(color: theme.colorScheme.primary),
+              selectedLabelTextStyle: TextStyle(
+                  color: theme.colorScheme.primary,
+                  fontWeight: FontWeight.w600),
+              unselectedIconTheme:
+                  IconThemeData(color: theme.colorScheme.onSurfaceVariant),
+              unselectedLabelTextStyle:
+                  TextStyle(color: theme.colorScheme.onSurfaceVariant),
+              destinations: const [
+                NavigationRailDestination(
+                    icon: Icon(Icons.home_rounded), label: Text('Painel')),
+                NavigationRailDestination(
+                    icon: Icon(Icons.monetization_on_rounded),
+                    label: Text('Despesas')),
+                NavigationRailDestination(
+                    icon: Icon(Icons.vpn_key_rounded),
+                    label: Text('Credenciais')),
+                NavigationRailDestination(
+                    icon: Icon(Icons.folder_copy_rounded),
+                    label: Text('Documentos')),
+                NavigationRailDestination(
+                    icon: Icon(Icons.person_rounded), label: Text('Perfil')),
+              ],
+            ),
+            VerticalDivider(
+                thickness: 1, width: 1, color: theme.dividerTheme.color),
+            Expanded(child: currentWidget),
+          ],
+        ),
+      );
+    }
 
     return Scaffold(
-      body: AnimatedSwitcher(
-        duration: const Duration(milliseconds: 350),
-        child: KeyedSubtree(
-          key: ValueKey<int>(navigationViewModel.selectedIndex),
-          child: _widgetOptions[navigationViewModel.selectedIndex],
-        ),
-        transitionBuilder: (Widget child, Animation<double> animation) {
-          return FadeTransition(
-            opacity: animation,
-            child: child,
-          );
-        },
-      ),
+      body: currentWidget,
       bottomNavigationBar: const MainBottomNavigationBar(),
     );
   }

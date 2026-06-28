@@ -1,49 +1,39 @@
 import 'package:flutter/material.dart';
-import 'package:key_budget/app/config/app_theme.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:key_budget/app/utils/navigation_utils.dart';
+import 'package:key_budget/core/design_system/borders/app_borders.dart';
+import 'package:key_budget/core/design_system/spacing/app_spacing.dart';
 import 'package:key_budget/core/services/snackbar_service.dart';
 import 'package:key_budget/features/auth/viewmodel/auth_viewmodel.dart';
 import 'package:key_budget/features/expenses/view/export_expenses_screen.dart';
 import 'package:key_budget/features/expenses/view/recurring_expenses_screen.dart';
 import 'package:key_budget/features/expenses/viewmodel/expense_viewmodel.dart';
-import 'package:provider/provider.dart';
 
-class ExpenseActionsPopupMenu extends StatelessWidget {
+class ExpenseActionsPopupMenu extends ConsumerWidget {
   const ExpenseActionsPopupMenu({super.key});
 
-  void _import(BuildContext context) async {
-    final viewModel = Provider.of<ExpenseViewModel>(context, listen: false);
-    final authViewModel = Provider.of<AuthViewModel>(context, listen: false);
+  void _import(BuildContext context, WidgetRef ref) async {
+    final viewModel = ref.read(expenseViewModelProvider);
+    final authViewModel = ref.read(authViewModelProvider);
     final scaffoldContext = context;
-
-    showDialog(
-      context: scaffoldContext,
-      barrierDismissible: false,
-      builder: (ctx) => const AlertDialog(
-        content: Row(
-          children: [
-            CircularProgressIndicator(),
-            SizedBox(width: 24),
-            Text('Importando despesas...'),
-          ],
-        ),
-      ),
-    );
 
     final count =
         await viewModel.importExpensesFromCsv(authViewModel.currentUser!.id);
 
     if (scaffoldContext.mounted) {
-      Navigator.of(scaffoldContext).pop();
-      SnackbarService.showSuccess(
-          scaffoldContext, '$count despesas importadas com sucesso!');
+      if (count > 0) {
+        SnackbarService.showSuccess(
+            scaffoldContext, '$count despesas importadas com sucesso!');
+      } else {
+        SnackbarService.showError(scaffoldContext, 'Nenhuma despesa importada');
+      }
     }
   }
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
-    final viewModel = context.watch<ExpenseViewModel>();
+    final viewModel = ref.watch(expenseViewModelProvider);
 
     return PopupMenuButton<String>(
       icon: Icon(
@@ -51,7 +41,7 @@ class ExpenseActionsPopupMenu extends StatelessWidget {
         color: theme.colorScheme.onSurface,
       ),
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(AppTheme.radiusM),
+        borderRadius: AppBorders.borderRadiusMD,
       ),
       itemBuilder: (context) => [
         const PopupMenuItem(
@@ -59,7 +49,7 @@ class ExpenseActionsPopupMenu extends StatelessWidget {
           child: Row(
             children: [
               Icon(Icons.replay_circle_filled_rounded),
-              SizedBox(width: AppTheme.spaceS),
+              SizedBox(width: AppSpacing.sm),
               Text('Despesas Recorrentes'),
             ],
           ),
@@ -75,7 +65,7 @@ class ExpenseActionsPopupMenu extends StatelessWidget {
                 size: 18,
                 color: theme.colorScheme.onSurface,
               ),
-              const SizedBox(width: AppTheme.spaceS),
+              const SizedBox(width: AppSpacing.sm),
               const Text('Importar de CSV'),
             ],
           ),
@@ -90,14 +80,14 @@ class ExpenseActionsPopupMenu extends StatelessWidget {
                 size: 18,
                 color: theme.colorScheme.onSurface,
               ),
-              const SizedBox(width: AppTheme.spaceS),
+              const SizedBox(width: AppSpacing.sm),
               const Text('Exportar Despesas'),
             ],
           ),
         ),
       ],
       onSelected: (value) {
-        if (value == 'import') _import(context);
+        if (value == 'import') _import(context, ref);
         if (value == 'export') {
           NavigationUtils.push(context, const ExportExpensesScreen());
         }

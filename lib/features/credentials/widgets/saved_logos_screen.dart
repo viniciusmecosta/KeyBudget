@@ -1,21 +1,20 @@
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:key_budget/app/utils/app_animations.dart';
 import 'package:key_budget/features/credentials/viewmodel/credential_viewmodel.dart';
-import 'package:provider/provider.dart';
 
-class SavedLogosScreen extends StatelessWidget {
+class SavedLogosScreen extends ConsumerWidget {
   final bool isForSuppliers;
 
   const SavedLogosScreen({super.key, this.isForSuppliers = false});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final List<String> logos;
 
-    logos = Provider.of<CredentialViewModel>(context, listen: false)
-        .userCredentialLogos;
+    logos = ref.read(credentialViewModelProvider).userCredentialLogos;
 
     final theme = Theme.of(context);
 

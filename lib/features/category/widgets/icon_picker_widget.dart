@@ -1,15 +1,16 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-class IconPickerWidget extends StatefulWidget {
+class IconPickerWidget extends ConsumerStatefulWidget {
   final Color? selectedColor;
 
   const IconPickerWidget({super.key, this.selectedColor});
 
   @override
-  State<IconPickerWidget> createState() => _IconPickerWidgetState();
+  ConsumerState<IconPickerWidget> createState() => _IconPickerWidgetState();
 }
 
-class _IconPickerWidgetState extends State<IconPickerWidget> {
+class _IconPickerWidgetState extends ConsumerState<IconPickerWidget> {
   static const List<IconData> _allIcons = [
     Icons.restaurant,
     Icons.wifi,

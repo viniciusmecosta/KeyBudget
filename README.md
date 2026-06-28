@@ -92,7 +92,8 @@ cd KeyBudget
 
 1. **Configurar o Firebase**
     * Crie um projeto no [Firebase Console](https://console.firebase.google.com/).
-    * Adicione o app Android/iOS e baixe os arquivos `google-services.json` e/ou `GoogleService-Info.plist`.
+    * Adicione o app Android/iOS e baixe os arquivos `google-services.json` e/ou
+      `GoogleService-Info.plist`.
     * Ative **Authentication** (E-mail/Senha e Google) e **Firestore Database**.
 
 2. **Criar arquivo `.env`**

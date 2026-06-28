@@ -1,16 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_colorpicker/flutter_colorpicker.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-class ColorPickerWidget extends StatefulWidget {
+class ColorPickerWidget extends ConsumerStatefulWidget {
   final Color? initialColor;
 
   const ColorPickerWidget({super.key, this.initialColor});
 
   @override
-  State<ColorPickerWidget> createState() => _ColorPickerWidgetState();
+  ConsumerState<ColorPickerWidget> createState() => _ColorPickerWidgetState();
 }
 
-class _ColorPickerWidgetState extends State<ColorPickerWidget> {
+class _ColorPickerWidgetState extends ConsumerState<ColorPickerWidget> {
   late Color _currentColor;
 
   @override

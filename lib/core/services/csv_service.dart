@@ -150,7 +150,10 @@ class CsvService {
       await file.writeAsBytes(utf8.encode(data));
       if (!context.mounted) return false;
       final params = ShareParams(
-          files: [XFile(filePath)], text: 'Exportação CSV do KeyBudget');
+        files: [XFile(filePath)],
+        text: 'Exportação CSV do KeyBudget',
+        sharePositionOrigin: const Rect.fromLTWH(0, 0, 100, 100),
+      );
       await SharePlus.instance.share(params);
       return true;
     } catch (e) {
