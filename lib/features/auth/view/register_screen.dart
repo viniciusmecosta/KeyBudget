@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:key_budget/core/design_system/spacing/app_spacing.dart';
 import 'package:key_budget/app/widgets/image_picker_widget.dart';
+import 'package:key_budget/core/design_system/spacing/app_spacing.dart';
 import 'package:key_budget/core/design_system/widgets/app_button.dart';
 import 'package:key_budget/core/design_system/widgets/app_text_field.dart';
 import 'package:key_budget/core/services/snackbar_service.dart';
@@ -82,8 +82,8 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
           Text(
             'Já tem uma conta?',
             style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-              color: Theme.of(context).colorScheme.onSurfaceVariant,
-            ),
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                ),
           ),
           TextButton(
             onPressed: () => Navigator.of(context).pop(),
@@ -95,9 +95,9 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
             child: Text(
               'Faça login',
               style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                color: Theme.of(context).colorScheme.primary,
-                fontWeight: FontWeight.bold,
-              ),
+                    color: Theme.of(context).colorScheme.primary,
+                    fontWeight: FontWeight.bold,
+                  ),
             ),
           ),
         ],
@@ -119,9 +119,8 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
               controller: _nameController,
               label: 'Nome completo *',
               prefixIcon: Icons.person_outline,
-              validator: (value) => (value == null || value.isEmpty)
-                  ? 'Insira seu nome'
-                  : null,
+              validator: (value) =>
+                  (value == null || value.isEmpty) ? 'Insira seu nome' : null,
             ),
             const SizedBox(height: AppSpacing.md),
             AppTextField(
@@ -172,7 +171,9 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
               obscureText: !_isConfirmPasswordVisible,
               suffixIcon: IconButton(
                 icon: Icon(
-                  _isConfirmPasswordVisible ? Icons.visibility_off : Icons.visibility,
+                  _isConfirmPasswordVisible
+                      ? Icons.visibility_off
+                      : Icons.visibility,
                 ),
                 onPressed: () {
                   setState(() {
@@ -197,4 +198,3 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
     );
   }
 }
-

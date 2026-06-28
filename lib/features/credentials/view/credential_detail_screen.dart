@@ -7,6 +7,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:key_budget/app/config/app_theme.dart';
 import 'package:key_budget/app/utils/app_animations.dart';
 import 'package:key_budget/app/utils/widget_to_image.dart';
+import 'package:key_budget/core/design_system/borders/app_borders.dart';
+import 'package:key_budget/core/design_system/spacing/app_spacing.dart';
+import 'package:key_budget/core/design_system/widgets/app_button.dart';
 import 'package:key_budget/core/models/credential_model.dart';
 import 'package:key_budget/core/services/snackbar_service.dart';
 import 'package:key_budget/features/auth/viewmodel/auth_viewmodel.dart';
@@ -14,9 +17,6 @@ import 'package:key_budget/features/credentials/viewmodel/credential_viewmodel.d
 import 'package:mask_text_input_formatter/mask_text_input_formatter.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
-import 'package:key_budget/core/design_system/spacing/app_spacing.dart';
-import 'package:key_budget/core/design_system/borders/app_borders.dart';
-import 'package:key_budget/core/design_system/widgets/app_button.dart';
 
 import '../widgets/credential_form.dart';
 
@@ -245,11 +245,13 @@ class _CredentialDetailScreenState
         final imageFile = File(imagePath);
         await imageFile.writeAsBytes(bytes);
 
-        final RenderBox? box = mounted ? context.findRenderObject() as RenderBox? : null;
+        final RenderBox? box =
+            mounted ? context.findRenderObject() as RenderBox? : null;
         final params = ShareParams(
           files: [XFile(imagePath)],
           text: 'Credencial: ${widget.credential.location}',
-          sharePositionOrigin: box != null ? box.localToGlobal(Offset.zero) & box.size : null,
+          sharePositionOrigin:
+              box != null ? box.localToGlobal(Offset.zero) & box.size : null,
         );
 
         await SharePlus.instance.share(params);

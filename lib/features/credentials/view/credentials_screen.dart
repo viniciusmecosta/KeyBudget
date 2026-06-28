@@ -1,18 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-
 import 'package:key_budget/app/utils/app_animations.dart';
 import 'package:key_budget/app/utils/navigation_utils.dart';
 import 'package:key_budget/app/widgets/animated_list_item.dart';
 import 'package:key_budget/app/widgets/empty_state_widget.dart';
 import 'package:key_budget/app/widgets/responsive_center.dart';
+import 'package:key_budget/core/design_system/borders/app_borders.dart';
+import 'package:key_budget/core/design_system/spacing/app_spacing.dart';
 import 'package:key_budget/core/models/credential_model.dart';
 import 'package:key_budget/core/models/folder_model.dart';
 import 'package:key_budget/features/auth/viewmodel/auth_viewmodel.dart';
 import 'package:key_budget/features/credentials/view/add_credential_screen.dart';
 import 'package:key_budget/features/credentials/viewmodel/credential_viewmodel.dart';
-import 'package:key_budget/core/design_system/spacing/app_spacing.dart';
-import 'package:key_budget/core/design_system/borders/app_borders.dart';
 import 'package:key_budget/features/credentials/widgets/folder_list_tile.dart';
 
 import '../widgets/credential_list_tile.dart';
@@ -292,10 +291,7 @@ class _CredentialsScreenState extends ConsumerState<CredentialsScreen> {
                     else
                       SliverPadding(
                         padding: const EdgeInsets.fromLTRB(
-                            AppSpacing.md,
-                            AppSpacing.lg,
-                            AppSpacing.md,
-                            96.0),
+                            AppSpacing.md, AppSpacing.lg, AppSpacing.md, 96.0),
                         sliver: SliverAnimatedList(
                           key: _listKey,
                           initialItemCount: vm.currentDisplayItems.length,

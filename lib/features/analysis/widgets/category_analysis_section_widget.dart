@@ -38,15 +38,15 @@ class _CategoryAnalysisSectionWidgetState
           Text(
             'Análise por Categoria',
             style: Theme.of(context).textTheme.titleMedium?.copyWith(
-              fontWeight: FontWeight.bold,
-            ),
+                  fontWeight: FontWeight.bold,
+                ),
           ),
           const SizedBox(height: 4),
           Text(
             'Entenda onde seu dinheiro é gasto',
             style: Theme.of(context).textTheme.bodySmall?.copyWith(
-              color: Theme.of(context).colorScheme.onSurfaceVariant,
-            ),
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                ),
           ),
           const SizedBox(height: AppSpacing.lg),
           _buildCategoryMonthSelector(context, viewModel),
@@ -217,7 +217,8 @@ class _CategoryAnalysisSectionWidgetState
                                             ? FontWeight.bold
                                             : FontWeight.w500,
                                         color: isSelected
-                                            ? theme.colorScheme.onPrimaryContainer
+                                            ? theme
+                                                .colorScheme.onPrimaryContainer
                                             : theme.colorScheme.onSurface,
                                       ),
                                     ),
@@ -229,7 +230,8 @@ class _CategoryAnalysisSectionWidgetState
                                             .format(monthTotal),
                                         style: TextStyle(
                                           fontSize: 12,
-                                          color: theme.colorScheme.onSurfaceVariant,
+                                          color: theme
+                                              .colorScheme.onSurfaceVariant,
                                         ),
                                       ),
                                     ],
@@ -500,4 +502,3 @@ class _CategoryAnalysisSectionWidgetState
     );
   }
 }
-

@@ -45,7 +45,9 @@ class DashboardHeader extends ConsumerWidget implements PreferredSizeWidget {
             CircleAvatar(
               radius: 24,
               backgroundColor: theme.colorScheme.primary.withAlpha(25),
-              backgroundImage: user?.avatarPath != null ? NetworkImage(user!.avatarPath!) : null,
+              backgroundImage: user?.avatarPath != null
+                  ? NetworkImage(user!.avatarPath!)
+                  : null,
               child: user?.avatarPath == null
                   ? Icon(Icons.person, color: theme.colorScheme.primary)
                   : null,

@@ -66,8 +66,7 @@ class _DocumentFormState extends ConsumerState<DocumentForm> {
                 _buildDatePicker(
                     context, 'Data de Expedição', widget.issueDate, true),
                 const SizedBox(height: AppSpacing.md),
-                _buildDatePicker(
-                    context, 'Validade', widget.expiryDate, true),
+                _buildDatePicker(context, 'Validade', widget.expiryDate, true),
               ],
             ),
           ),

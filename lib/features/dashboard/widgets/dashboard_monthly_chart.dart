@@ -15,19 +15,22 @@ class DashboardMonthlyChart extends ConsumerWidget {
     final theme = Theme.of(context);
     final now = DateTime.now();
     final Map<int, double> expensesByMonth = {};
-    
+
     for (int i = 0; i < 7; i++) {
       expensesByMonth[i] = 0.0;
     }
 
     for (var exp in viewModel.allExpenses) {
-      final monthsDifference = (now.year - exp.date.year) * 12 + now.month - exp.date.month;
+      final monthsDifference =
+          (now.year - exp.date.year) * 12 + now.month - exp.date.month;
       if (monthsDifference >= 0 && monthsDifference < 7) {
-        expensesByMonth[monthsDifference] = (expensesByMonth[monthsDifference] ?? 0.0) + exp.amount;
+        expensesByMonth[monthsDifference] =
+            (expensesByMonth[monthsDifference] ?? 0.0) + exp.amount;
       }
     }
 
-    final validMonths = expensesByMonth.entries.where((e) => e.value > 0).toList();
+    final validMonths =
+        expensesByMonth.entries.where((e) => e.value > 0).toList();
     validMonths.sort((a, b) => b.key.compareTo(a.key));
 
     double maxMonthlyAmount = 0.0;
@@ -54,7 +57,8 @@ class DashboardMonthlyChart extends ConsumerWidget {
             backDrawRodData: BackgroundBarChartRodData(
               show: true,
               toY: maxMonthlyAmount * 1.2,
-              color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
+              color: theme.colorScheme.surfaceContainerHighest
+                  .withValues(alpha: 0.5),
             ),
           ),
         ],
@@ -90,7 +94,8 @@ class DashboardMonthlyChart extends ConsumerWidget {
               Container(
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
-                  color: theme.colorScheme.primaryContainer.withValues(alpha: 0.5),
+                  color:
+                      theme.colorScheme.primaryContainer.withValues(alpha: 0.5),
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Icon(
@@ -121,11 +126,15 @@ class DashboardMonthlyChart extends ConsumerWidget {
                       barTouchData: BarTouchData(
                         enabled: true,
                         touchTooltipData: BarTouchTooltipData(
-                          getTooltipColor: (group) => theme.colorScheme.inverseSurface,
-                          tooltipPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                          getTooltipColor: (group) =>
+                              theme.colorScheme.inverseSurface,
+                          tooltipPadding: const EdgeInsets.symmetric(
+                              horizontal: 12, vertical: 8),
                           getTooltipItem: (group, groupIndex, rod, rodIndex) {
                             return BarTooltipItem(
-                              NumberFormat.currency(locale: 'pt_BR', symbol: 'R\$').format(rod.toY),
+                              NumberFormat.currency(
+                                      locale: 'pt_BR', symbol: 'R\$')
+                                  .format(rod.toY),
                               TextStyle(
                                 color: theme.colorScheme.onInverseSurface,
                                 fontWeight: FontWeight.bold,
@@ -141,12 +150,16 @@ class DashboardMonthlyChart extends ConsumerWidget {
                           sideTitles: SideTitles(
                             showTitles: true,
                             getTitlesWidget: (value, meta) {
-                              if (value.toInt() < 0 || value.toInt() >= validMonths.length) {
+                              if (value.toInt() < 0 ||
+                                  value.toInt() >= validMonths.length) {
                                 return const SizedBox.shrink();
                               }
                               final data = validMonths[value.toInt()];
-                              final monthDate = DateTime(now.year, now.month - data.key, 1);
-                              final monthName = DateFormat.MMM('pt_BR').format(monthDate).toUpperCase();
+                              final monthDate =
+                                  DateTime(now.year, now.month - data.key, 1);
+                              final monthName = DateFormat.MMM('pt_BR')
+                                  .format(monthDate)
+                                  .toUpperCase();
                               return Padding(
                                 padding: const EdgeInsets.only(top: 8.0),
                                 child: Text(

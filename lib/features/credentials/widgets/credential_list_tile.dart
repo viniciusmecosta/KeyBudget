@@ -97,8 +97,7 @@ class CredentialListTile extends ConsumerWidget {
             radius: 24,
             backgroundColor: logoPath != null && logoPath.isNotEmpty
                 ? Colors.transparent
-                : theme.colorScheme.secondary
-                    .withAlpha((255 * 0.1).round()),
+                : theme.colorScheme.secondary.withAlpha((255 * 0.1).round()),
             backgroundImage: logoPath != null && logoPath.isNotEmpty
                 ? MemoryImage(base64Decode(logoPath))
                 : null,

@@ -27,7 +27,8 @@ class AppButton extends StatelessWidget {
         ? const SizedBox(
             height: AppSpacing.lg,
             width: AppSpacing.lg,
-            child: CircularProgressIndicator(strokeWidth: 2.5, color: Colors.white),
+            child: CircularProgressIndicator(
+                strokeWidth: 2.5, color: Colors.white),
           )
         : Row(
             mainAxisSize: isFullWidth ? MainAxisSize.max : MainAxisSize.min,
@@ -44,7 +45,8 @@ class AppButton extends StatelessWidget {
     Widget button;
     switch (variant) {
       case AppButtonVariant.primary:
-        button = ElevatedButton(onPressed: isLoading ? null : onPressed, child: child);
+        button = ElevatedButton(
+            onPressed: isLoading ? null : onPressed, child: child);
         break;
       case AppButtonVariant.secondary:
         final theme = Theme.of(context);
@@ -58,13 +60,17 @@ class AppButton extends StatelessWidget {
         );
         break;
       case AppButtonVariant.outline:
-        button = OutlinedButton(onPressed: isLoading ? null : onPressed, child: child);
+        button = OutlinedButton(
+            onPressed: isLoading ? null : onPressed, child: child);
         break;
       case AppButtonVariant.ghost:
-        button = TextButton(onPressed: isLoading ? null : onPressed, child: child);
+        button =
+            TextButton(onPressed: isLoading ? null : onPressed, child: child);
         break;
     }
 
-    return isFullWidth ? SizedBox(width: double.infinity, child: button) : button;
+    return isFullWidth
+        ? SizedBox(width: double.infinity, child: button)
+        : button;
   }
 }

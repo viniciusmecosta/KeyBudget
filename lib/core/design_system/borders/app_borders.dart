@@ -22,10 +22,14 @@ class AppBorders {
   static final BorderRadius borderRadiusXL = BorderRadius.circular(radiusXL);
   static final BorderRadius borderRadiusXXL = BorderRadius.circular(radiusXXL);
 
-  static final BorderRadius borderRadiusMD = BorderRadius.circular(10.0); // Alias or intermediate if needed
+  static final BorderRadius borderRadiusMD =
+      BorderRadius.circular(10.0); // Alias or intermediate if needed
 
   // Vertical
-  static final BorderRadius borderRadiusVerticalM = BorderRadius.vertical(top: circularM);
-  static final BorderRadius borderRadiusVerticalL = BorderRadius.vertical(top: circularL);
-  static final BorderRadius borderRadiusVerticalXL = BorderRadius.vertical(top: circularXL);
+  static final BorderRadius borderRadiusVerticalM =
+      BorderRadius.vertical(top: circularM);
+  static final BorderRadius borderRadiusVerticalL =
+      BorderRadius.vertical(top: circularL);
+  static final BorderRadius borderRadiusVerticalXL =
+      BorderRadius.vertical(top: circularXL);
 }

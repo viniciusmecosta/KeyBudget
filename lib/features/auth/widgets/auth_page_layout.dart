@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:key_budget/core/design_system/spacing/app_spacing.dart';
-
 import 'package:key_budget/app/utils/app_animations.dart';
+import 'package:key_budget/core/design_system/spacing/app_spacing.dart';
 
 class AuthPageLayout extends StatelessWidget {
   final Widget child;
@@ -39,7 +38,8 @@ class AuthPageLayout extends StatelessWidget {
         child: AppAnimations.fadeIn(
           Center(
             child: SingleChildScrollView(
-              padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xxl, vertical: AppSpacing.xl),
+              padding: const EdgeInsets.symmetric(
+                  horizontal: AppSpacing.xxl, vertical: AppSpacing.xl),
               child: ConstrainedBox(
                 constraints: const BoxConstraints(maxWidth: 450),
                 child: Column(
@@ -59,7 +59,8 @@ class AuthPageLayout extends StatelessWidget {
                               borderRadius: BorderRadius.circular(24),
                               boxShadow: [
                                 BoxShadow(
-                                  color: theme.colorScheme.primary.withValues(alpha: 0.3),
+                                  color: theme.colorScheme.primary
+                                      .withValues(alpha: 0.3),
                                   blurRadius: 20,
                                   offset: const Offset(0, 8),
                                 ),
@@ -108,4 +109,3 @@ class AuthPageLayout extends StatelessWidget {
     );
   }
 }
-
