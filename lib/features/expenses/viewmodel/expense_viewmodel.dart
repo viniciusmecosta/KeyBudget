@@ -251,7 +251,7 @@ class ExpenseViewModel extends ChangeNotifier {
       }
     }
 
-    if (_currentDisplayItems.length != newList.length) {
+    if (hasChanges || _currentDisplayItems.length != newList.length) {
       _currentDisplayItems = List.from(newList);
       hasChanges = true;
     }
