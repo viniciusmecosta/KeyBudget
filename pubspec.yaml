@@ -17,9 +17,6 @@ dependencies:
   cloud_firestore: ^6.0.2
   firebase_auth: ^6.1.0
 
-  # State Management
-  # (Migrated to flutter_riverpod)
-
   # Core & Services
   flutter_dotenv: ^6.0.0
   encrypt: ^5.0.3

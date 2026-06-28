@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_masked_text2/flutter_masked_text2.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:key_budget/core/design_system/spacing/app_spacing.dart';
-import 'package:key_budget/core/design_system/borders/app_borders.dart';
-import 'package:key_budget/core/design_system/widgets/app_text_field.dart';
-import 'package:key_budget/core/design_system/widgets/app_card.dart';
 import 'package:key_budget/app/widgets/category_picker_field.dart';
 import 'package:key_budget/app/widgets/date_picker_field.dart';
+import 'package:key_budget/core/design_system/borders/app_borders.dart';
+import 'package:key_budget/core/design_system/spacing/app_spacing.dart';
+import 'package:key_budget/core/design_system/widgets/app_card.dart';
+import 'package:key_budget/core/design_system/widgets/app_text_field.dart';
 import 'package:key_budget/core/models/expense_category_model.dart';
 import 'package:key_budget/core/models/recurring_expense_model.dart';
 import 'package:key_budget/features/category/viewmodel/category_viewmodel.dart';
@@ -82,64 +82,64 @@ class RecurringExpenseForm extends ConsumerWidget {
           AppCard(
             padding: const EdgeInsets.all(AppSpacing.lg),
             child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text('Recorrência', style: theme.textTheme.titleLarge),
-                  const SizedBox(height: AppSpacing.lg),
-                  _buildFrequencySelector(),
-                  ValueListenableBuilder<RecurrenceFrequency>(
-                    valueListenable: frequency,
-                    builder: (context, value, child) {
-                      return AnimatedSize(
-                        duration: const Duration(milliseconds: 300),
-                        curve: Curves.easeInOut,
-                        alignment: Alignment.topCenter,
-                        child: value == RecurrenceFrequency.monthly
-                            ? Column(
-                                children: [
-                                  const SizedBox(height: AppSpacing.lg),
-                                  _buildDayOfMonthSelector(context),
-                                ],
-                              )
-                            : const SizedBox.shrink(),
-                      );
-                    },
-                  ),
-                  const SizedBox(height: AppSpacing.lg),
-                  DatePickerField(
-                    label: 'Data de Início',
-                    selectedDate: startDate.value,
-                    isEditing: true,
-                    onDateSelected: (date) => startDate.value = date,
-                  ),
-                  const SizedBox(height: AppSpacing.md),
-                  _buildEndDateToggle(context),
-                  ValueListenableBuilder<DateTime?>(
-                    valueListenable: endDate,
-                    builder: (context, date, child) {
-                      return AnimatedSize(
-                        duration: const Duration(milliseconds: 300),
-                        curve: Curves.easeInOut,
-                        alignment: Alignment.topCenter,
-                        child: date != null
-                            ? Column(
-                                children: [
-                                  const SizedBox(height: AppSpacing.md),
-                                  DatePickerField(
-                                    label: 'Data de Término',
-                                    selectedDate: date,
-                                    isEditing: true,
-                                    onDateSelected: (newDate) =>
-                                        endDate.value = newDate,
-                                  ),
-                                ],
-                              )
-                            : const SizedBox.shrink(),
-                      );
-                    },
-                  ),
-                ],
-              ),
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text('Recorrência', style: theme.textTheme.titleLarge),
+                const SizedBox(height: AppSpacing.lg),
+                _buildFrequencySelector(),
+                ValueListenableBuilder<RecurrenceFrequency>(
+                  valueListenable: frequency,
+                  builder: (context, value, child) {
+                    return AnimatedSize(
+                      duration: const Duration(milliseconds: 300),
+                      curve: Curves.easeInOut,
+                      alignment: Alignment.topCenter,
+                      child: value == RecurrenceFrequency.monthly
+                          ? Column(
+                              children: [
+                                const SizedBox(height: AppSpacing.lg),
+                                _buildDayOfMonthSelector(context),
+                              ],
+                            )
+                          : const SizedBox.shrink(),
+                    );
+                  },
+                ),
+                const SizedBox(height: AppSpacing.lg),
+                DatePickerField(
+                  label: 'Data de Início',
+                  selectedDate: startDate.value,
+                  isEditing: true,
+                  onDateSelected: (date) => startDate.value = date,
+                ),
+                const SizedBox(height: AppSpacing.md),
+                _buildEndDateToggle(context),
+                ValueListenableBuilder<DateTime?>(
+                  valueListenable: endDate,
+                  builder: (context, date, child) {
+                    return AnimatedSize(
+                      duration: const Duration(milliseconds: 300),
+                      curve: Curves.easeInOut,
+                      alignment: Alignment.topCenter,
+                      child: date != null
+                          ? Column(
+                              children: [
+                                const SizedBox(height: AppSpacing.md),
+                                DatePickerField(
+                                  label: 'Data de Término',
+                                  selectedDate: date,
+                                  isEditing: true,
+                                  onDateSelected: (newDate) =>
+                                      endDate.value = newDate,
+                                ),
+                              ],
+                            )
+                          : const SizedBox.shrink(),
+                    );
+                  },
+                ),
+              ],
+            ),
           ),
         ],
       ),

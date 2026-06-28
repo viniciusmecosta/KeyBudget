@@ -2,18 +2,17 @@ import 'package:flutter/material.dart' hide DateUtils;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:key_budget/app/utils/app_animations.dart';
 import 'package:key_budget/app/widgets/responsive_center.dart';
+import 'package:key_budget/core/design_system/spacing/app_spacing.dart';
 import 'package:key_budget/features/auth/viewmodel/auth_viewmodel.dart';
 import 'package:key_budget/features/category/viewmodel/category_viewmodel.dart';
 import 'package:key_budget/features/credentials/viewmodel/credential_viewmodel.dart';
 import 'package:key_budget/features/dashboard/viewmodel/dashboard_viewmodel.dart';
 import 'package:key_budget/features/expenses/viewmodel/expense_viewmodel.dart';
 
-import 'package:key_budget/core/design_system/spacing/app_spacing.dart';
-
 import '../widgets/dashboard_balance_card.dart';
 import '../widgets/dashboard_header.dart';
-import '../widgets/dashboard_skeleton.dart';
 import '../widgets/dashboard_monthly_chart.dart';
+import '../widgets/dashboard_skeleton.dart';
 import '../widgets/quick_actions_section.dart';
 import '../widgets/recent_activity_section.dart';
 

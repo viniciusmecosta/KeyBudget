@@ -4,15 +4,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
-
 import 'package:key_budget/app/utils/navigation_utils.dart';
+import 'package:key_budget/core/design_system/borders/app_borders.dart';
+import 'package:key_budget/core/design_system/spacing/app_spacing.dart';
+import 'package:key_budget/core/design_system/widgets/app_card.dart';
 import 'package:key_budget/core/models/document_model.dart';
 import 'package:key_budget/core/services/snackbar_service.dart';
 import 'package:key_budget/features/auth/viewmodel/auth_viewmodel.dart';
 import 'package:key_budget/features/documents/viewmodel/document_viewmodel.dart';
-import 'package:key_budget/core/design_system/spacing/app_spacing.dart';
-import 'package:key_budget/core/design_system/borders/app_borders.dart';
-import 'package:key_budget/core/design_system/widgets/app_card.dart';
 import 'package:syncfusion_flutter_pdfviewer/pdfviewer.dart';
 
 import 'add_document_screen.dart';
@@ -95,8 +94,7 @@ class DocumentDetailScreen extends ConsumerWidget {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Expanded(
-                  child:
-                      _buildDetailItem('Número', document.number!, context),
+                  child: _buildDetailItem('Número', document.number!, context),
                 ),
                 IconButton(
                   icon: const Icon(Icons.copy_all_outlined),
@@ -110,15 +108,11 @@ class DocumentDetailScreen extends ConsumerWidget {
               ],
             ),
           if (document.issueDate != null)
-            _buildDetailItem(
-                'Data de Expedição',
-                DateFormat('dd/MM/yyyy').format(document.issueDate!),
-                context),
+            _buildDetailItem('Data de Expedição',
+                DateFormat('dd/MM/yyyy').format(document.issueDate!), context),
           if (document.expiryDate != null)
-            _buildDetailItem(
-                'Validade',
-                DateFormat('dd/MM/yyyy').format(document.expiryDate!),
-                context),
+            _buildDetailItem('Validade',
+                DateFormat('dd/MM/yyyy').format(document.expiryDate!), context),
         ],
       ),
     );
@@ -154,8 +148,8 @@ class DocumentDetailScreen extends ConsumerWidget {
           children: [
             Text('Anexos', style: theme.textTheme.titleLarge),
             const SizedBox(height: AppSpacing.md),
-            ...document.attachments.map((attachment) =>
-                _buildAttachmentItem(attachment, context, ref)),
+            ...document.attachments.map(
+                (attachment) => _buildAttachmentItem(attachment, context, ref)),
           ],
         ),
       ),

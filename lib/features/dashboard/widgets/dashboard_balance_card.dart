@@ -3,8 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:key_budget/app/utils/app_animations.dart';
 import 'package:key_budget/app/viewmodel/navigation_viewmodel.dart';
 import 'package:key_budget/app/widgets/balance_card.dart';
-import 'package:key_budget/core/design_system/spacing/app_spacing.dart';
 import 'package:key_budget/core/design_system/borders/app_borders.dart';
+import 'package:key_budget/core/design_system/spacing/app_spacing.dart';
 import 'package:key_budget/features/dashboard/viewmodel/dashboard_viewmodel.dart';
 
 class DashboardBalanceCard extends ConsumerStatefulWidget {
@@ -53,8 +53,7 @@ class _DashboardBalanceCardState extends ConsumerState<DashboardBalanceCard> {
                   children: [
                     Container(
                       padding: const EdgeInsets.symmetric(
-                          horizontal: AppSpacing.sm,
-                          vertical: AppSpacing.xs),
+                          horizontal: AppSpacing.sm, vertical: AppSpacing.xs),
                       decoration: BoxDecoration(
                         color: theme.colorScheme.onPrimary
                             .withAlpha((255 * 0.1).round()),

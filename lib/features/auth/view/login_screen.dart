@@ -81,17 +81,21 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
         children: [
           Row(
             children: [
-              Expanded(child: Divider(color: Theme.of(context).colorScheme.outlineVariant)),
+              Expanded(
+                  child: Divider(
+                      color: Theme.of(context).colorScheme.outlineVariant)),
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
                 child: Text(
                   'ou',
                   style: Theme.of(context).textTheme.labelMedium?.copyWith(
-                    color: Theme.of(context).colorScheme.onSurfaceVariant,
-                  ),
+                        color: Theme.of(context).colorScheme.onSurfaceVariant,
+                      ),
                 ),
               ),
-              Expanded(child: Divider(color: Theme.of(context).colorScheme.outlineVariant)),
+              Expanded(
+                  child: Divider(
+                      color: Theme.of(context).colorScheme.outlineVariant)),
             ],
           ),
           const SizedBox(height: AppSpacing.xl),
@@ -110,22 +114,24 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
               Text(
                 'Novo por aqui?',
                 style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  color: Theme.of(context).colorScheme.onSurfaceVariant,
-                ),
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    ),
               ),
               TextButton(
-                onPressed: () => NavigationUtils.push(context, const RegisterScreen()),
+                onPressed: () =>
+                    NavigationUtils.push(context, const RegisterScreen()),
                 style: TextButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(horizontal: AppSpacing.sm),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: AppSpacing.sm),
                   minimumSize: Size.zero,
                   tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                 ),
                 child: Text(
                   'Cadastre-se',
                   style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: Theme.of(context).colorScheme.primary,
-                    fontWeight: FontWeight.bold,
-                  ),
+                        color: Theme.of(context).colorScheme.primary,
+                        fontWeight: FontWeight.bold,
+                      ),
                 ),
               ),
             ],
@@ -173,16 +179,17 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   // TODO: Implement forgot password
                 },
                 style: TextButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xs, vertical: AppSpacing.sm),
+                  padding: const EdgeInsets.symmetric(
+                      horizontal: AppSpacing.xs, vertical: AppSpacing.sm),
                   minimumSize: Size.zero,
                   tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                 ),
                 child: Text(
                   'Esqueceu sua senha?',
                   style: Theme.of(context).textTheme.labelMedium?.copyWith(
-                    color: Theme.of(context).colorScheme.primary,
-                    fontWeight: FontWeight.bold,
-                  ),
+                        color: Theme.of(context).colorScheme.primary,
+                        fontWeight: FontWeight.bold,
+                      ),
                 ),
               ),
             ),
@@ -199,4 +206,3 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     );
   }
 }
-

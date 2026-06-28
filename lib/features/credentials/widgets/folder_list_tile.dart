@@ -59,8 +59,7 @@ class FolderListTile extends ConsumerWidget {
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       ListTile(
-                        leading:
-                            const Icon(Icons.delete, color: Colors.red),
+                        leading: const Icon(Icons.delete, color: Colors.red),
                         title: const Text('Excluir Pasta'),
                         subtitle: const Text(
                             'As credenciais voltarão para a tela principal'),

@@ -2,7 +2,6 @@ import 'package:auto_size_text/auto_size_text.dart';
 import 'package:flutter/material.dart' hide DateUtils;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
-
 import 'package:key_budget/app/utils/navigation_utils.dart';
 import 'package:key_budget/core/design_system/spacing/app_spacing.dart';
 import 'package:key_budget/core/design_system/widgets/app_card.dart';
@@ -38,8 +37,8 @@ class ActivityTile extends ConsumerWidget {
 
     return AppCard(
       padding: const EdgeInsets.all(AppSpacing.md),
-      onTap: () => NavigationUtils.push(
-          context, ExpenseDetailScreen(expense: expense)),
+      onTap: () =>
+          NavigationUtils.push(context, ExpenseDetailScreen(expense: expense)),
       child: Row(
         children: [
           _buildCategoryIcon(categoryColor, category),

@@ -1,17 +1,17 @@
 import 'package:flutter/material.dart' hide DateUtils;
 import 'package:flutter/services.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:key_budget/app/utils/app_animations.dart';
 import 'package:key_budget/app/utils/navigation_utils.dart';
 import 'package:key_budget/app/widgets/balance_card.dart';
 import 'package:key_budget/app/widgets/empty_state_widget.dart';
 import 'package:key_budget/app/widgets/responsive_center.dart';
+import 'package:key_budget/core/design_system/borders/app_borders.dart';
+import 'package:key_budget/core/design_system/spacing/app_spacing.dart';
 import 'package:key_budget/features/auth/viewmodel/auth_viewmodel.dart';
 import 'package:key_budget/features/category/viewmodel/category_viewmodel.dart';
 import 'package:key_budget/features/expenses/view/add_expense_screen.dart';
 import 'package:key_budget/features/expenses/viewmodel/expense_viewmodel.dart';
-import 'package:key_budget/core/design_system/spacing/app_spacing.dart';
-import 'package:key_budget/core/design_system/borders/app_borders.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../widgets/category_filter_modal.dart';
 import '../widgets/expense_actions_popup_menu.dart';
@@ -107,8 +107,8 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen> {
                     },
                   ),
                   Padding(
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: AppSpacing.md),
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: AppSpacing.md),
                     child: AppAnimations.fadeInFromBottom(
                       TweenAnimationBuilder<double>(
                         key: ValueKey(expenseViewModel.currentMonthTotal),

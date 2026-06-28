@@ -7,12 +7,11 @@ import 'package:key_budget/app/utils/navigation_utils.dart';
 import 'package:key_budget/app/widgets/animated_list_item.dart';
 import 'package:key_budget/app/widgets/empty_state_widget.dart';
 import 'package:key_budget/app/widgets/responsive_center.dart';
+import 'package:key_budget/core/design_system/borders/app_borders.dart';
+import 'package:key_budget/core/design_system/spacing/app_spacing.dart';
 import 'package:key_budget/features/auth/viewmodel/auth_viewmodel.dart';
 import 'package:key_budget/features/documents/view/add_document_screen.dart';
 import 'package:key_budget/features/documents/viewmodel/document_viewmodel.dart';
-
-import 'package:key_budget/core/design_system/spacing/app_spacing.dart';
-import 'package:key_budget/core/design_system/borders/app_borders.dart';
 
 import '../widgets/document_list_tile.dart';
 
@@ -165,10 +164,7 @@ class _DocumentsScreenState extends ConsumerState<DocumentsScreen> {
                     else
                       SliverPadding(
                         padding: const EdgeInsets.fromLTRB(
-                            AppSpacing.md,
-                            AppSpacing.lg,
-                            AppSpacing.md,
-                            96.0),
+                            AppSpacing.md, AppSpacing.lg, AppSpacing.md, 96.0),
                         sliver: SliverAnimatedList(
                           key: _listKey,
                           initialItemCount:
@@ -216,8 +212,8 @@ class DocumentsListSkeleton extends ConsumerWidget {
     final shimmerHighlightColor = theme.colorScheme.surface;
 
     return SliverPadding(
-      padding: const EdgeInsets.fromLTRB(AppSpacing.md,
-          AppSpacing.lg, AppSpacing.md, 96.0),
+      padding: const EdgeInsets.fromLTRB(
+          AppSpacing.md, AppSpacing.lg, AppSpacing.md, 96.0),
       sliver: SliverList(
         delegate: SliverChildBuilderDelegate(
           (context, index) => Container(

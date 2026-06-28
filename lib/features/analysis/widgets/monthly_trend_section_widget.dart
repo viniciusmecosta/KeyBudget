@@ -34,15 +34,15 @@ class MonthlyTrendSectionWidget extends ConsumerWidget {
           Text(
             'Histórico Mensal',
             style: Theme.of(context).textTheme.titleMedium?.copyWith(
-              fontWeight: FontWeight.bold,
-            ),
+                  fontWeight: FontWeight.bold,
+                ),
           ),
           const SizedBox(height: 4),
           Text(
             'Acompanhe sua evolução ao longo do tempo',
             style: Theme.of(context).textTheme.bodySmall?.copyWith(
-              color: Theme.of(context).colorScheme.onSurfaceVariant,
-            ),
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                ),
           ),
           const SizedBox(height: AppSpacing.lg),
           _buildPeriodSelector(context, viewModel),
@@ -86,7 +86,8 @@ class MonthlyTrendSectionWidget extends ConsumerWidget {
                       textAlign: TextAlign.center,
                       style: TextStyle(
                         fontSize: 13,
-                        fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                        fontWeight:
+                            isSelected ? FontWeight.bold : FontWeight.normal,
                         color: isSelected
                             ? theme.colorScheme.onPrimaryContainer
                             : theme.colorScheme.onSurface,
@@ -260,18 +261,16 @@ class MonthlyTrendSectionWidget extends ConsumerWidget {
             drawVerticalLine: true,
             horizontalInterval: 500,
             getDrawingHorizontalLine: (value) => FlLine(
-                color: theme.dividerColor.withOpacity(0.1),
-                strokeWidth: 1),
+                color: theme.dividerColor.withOpacity(0.1), strokeWidth: 1),
             getDrawingVerticalLine: (value) => FlLine(
-                color: theme.dividerColor.withOpacity(0.1),
-                strokeWidth: 1),
+                color: theme.dividerColor.withOpacity(0.1), strokeWidth: 1),
           ),
           titlesData: FlTitlesData(
             show: true,
-            rightTitles: const AxisTitles(
-                sideTitles: SideTitles(showTitles: false)),
-            topTitles: const AxisTitles(
-                sideTitles: SideTitles(showTitles: false)),
+            rightTitles:
+                const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+            topTitles:
+                const AxisTitles(sideTitles: SideTitles(showTitles: false)),
             bottomTitles: AxisTitles(
               sideTitles: SideTitles(
                 showTitles: true,
@@ -282,16 +281,13 @@ class MonthlyTrendSectionWidget extends ConsumerWidget {
                   if (index < 0 || index >= chartEntries.length) {
                     return const SizedBox.shrink();
                   }
-                  final date = DateFormat('yyyy-MM')
-                      .parse(chartEntries[index].key);
+                  final date =
+                      DateFormat('yyyy-MM').parse(chartEntries[index].key);
                   return Padding(
                     padding: const EdgeInsets.only(top: 6),
                     child: Text(
-                      DateFormat('MMM', 'pt_BR')
-                          .format(date)
-                          .substring(0, 3),
-                      style: theme.textTheme.bodySmall!
-                          .copyWith(fontSize: 10),
+                      DateFormat('MMM', 'pt_BR').format(date).substring(0, 3),
+                      style: theme.textTheme.bodySmall!.copyWith(fontSize: 10),
                     ),
                   );
                 },
@@ -303,8 +299,7 @@ class MonthlyTrendSectionWidget extends ConsumerWidget {
                 interval: 500,
                 getTitlesWidget: (value, meta) {
                   final inK = value / 1000;
-                  return Text(
-                      '${inK.toStringAsFixed(1).replaceAll('.0', '')}k',
+                  return Text('${inK.toStringAsFixed(1).replaceAll('.0', '')}k',
                       style: theme.textTheme.bodySmall?.copyWith(fontSize: 10),
                       textAlign: TextAlign.left);
                 },
@@ -373,4 +368,3 @@ class MonthlyTrendSectionWidget extends ConsumerWidget {
     );
   }
 }
-

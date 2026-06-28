@@ -3,12 +3,12 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:key_budget/core/design_system/spacing/app_spacing.dart';
-import 'package:key_budget/core/design_system/borders/app_borders.dart';
-import 'package:key_budget/core/design_system/widgets/app_button.dart';
 import 'package:key_budget/app/utils/app_animations.dart';
 import 'package:key_budget/app/utils/navigation_utils.dart';
 import 'package:key_budget/app/widgets/responsive_center.dart';
+import 'package:key_budget/core/design_system/borders/app_borders.dart';
+import 'package:key_budget/core/design_system/spacing/app_spacing.dart';
+import 'package:key_budget/core/design_system/widgets/app_button.dart';
 import 'package:key_budget/core/services/csv_service.dart';
 import 'package:key_budget/core/services/drive_service.dart';
 import 'package:key_budget/core/services/snackbar_service.dart';
@@ -184,28 +184,28 @@ class UserScreen extends ConsumerWidget {
                 const SizedBox(height: 24),
                 SizedBox(
                   width: double.infinity,
-                child: AppButton(
-                  onPressed: isBackingUp ||
-                          (!backupExpenses &&
-                              !backupRecurring &&
-                              !backupCredentials &&
-                              !backupCategories)
-                      ? () {}
-                      : () async {
-                          setState(() => isBackingUp = true);
-                          await _performBackup(
-                            context,
-                            ref,
-                            backupExpenses,
-                            backupRecurring,
-                            backupCredentials,
-                            backupCategories,
-                          );
-                          if (context.mounted) Navigator.pop(context);
-                        },
-                  isLoading: isBackingUp,
-                  label: 'Iniciar Backup',
-                ),
+                  child: AppButton(
+                    onPressed: isBackingUp ||
+                            (!backupExpenses &&
+                                !backupRecurring &&
+                                !backupCredentials &&
+                                !backupCategories)
+                        ? () {}
+                        : () async {
+                            setState(() => isBackingUp = true);
+                            await _performBackup(
+                              context,
+                              ref,
+                              backupExpenses,
+                              backupRecurring,
+                              backupCredentials,
+                              backupCategories,
+                            );
+                            if (context.mounted) Navigator.pop(context);
+                          },
+                    isLoading: isBackingUp,
+                    label: 'Iniciar Backup',
+                  ),
                 ),
               ],
             ),

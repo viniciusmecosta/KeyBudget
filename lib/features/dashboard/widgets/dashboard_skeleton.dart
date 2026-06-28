@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:key_budget/core/design_system/spacing/app_spacing.dart';
 import 'package:key_budget/core/design_system/borders/app_borders.dart';
+import 'package:key_budget/core/design_system/spacing/app_spacing.dart';
 
 class DashboardSkeleton extends ConsumerWidget {
   const DashboardSkeleton({super.key});
@@ -80,11 +80,15 @@ class DashboardSkeleton extends ConsumerWidget {
       children: [
         Expanded(
             child: _buildContainer(
-                context: context, height: 140, radius: AppBorders.borderRadiusL)),
+                context: context,
+                height: 140,
+                radius: AppBorders.borderRadiusL)),
         const SizedBox(width: AppSpacing.md),
         Expanded(
             child: _buildContainer(
-                context: context, height: 140, radius: AppBorders.borderRadiusL)),
+                context: context,
+                height: 140,
+                radius: AppBorders.borderRadiusL)),
       ],
     );
   }
