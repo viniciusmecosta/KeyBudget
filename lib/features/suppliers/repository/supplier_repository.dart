@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:key_budget/core/models/supplier_model.dart';
 
 class SupplierRepository {
@@ -18,6 +19,14 @@ class SupplierRepository {
 
   Future<void> addSupplier(String userId, Supplier supplier) async {
     await _getSuppliersCollection(userId).add(supplier);
+  }
+
+  Future<void> restoreSupplier(String userId, Supplier supplier) async {
+    if (supplier.id != null) {
+      await _getSuppliersCollection(userId).doc(supplier.id).set(supplier);
+    } else {
+      await addSupplier(userId, supplier);
+    }
   }
 
   Stream<List<Supplier>> getSuppliersStreamForUser(String userId) {
@@ -48,3 +57,6 @@ class SupplierRepository {
     return photoPaths;
   }
 }
+
+final supplierRepositoryProvider =
+    Provider<SupplierRepository>((ref) => SupplierRepository());

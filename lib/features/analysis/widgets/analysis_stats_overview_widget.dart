@@ -1,16 +1,18 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'package:key_budget/app/config/app_theme.dart';
-import 'package:provider/provider.dart';
+import 'package:key_budget/core/design_system/spacing/app_spacing.dart';
+import 'package:key_budget/core/design_system/widgets/app_card.dart';
 
 import '../viewmodel/analysis_viewmodel.dart';
 
-class AnalysisStatsOverviewWidget extends StatelessWidget {
+class AnalysisStatsOverviewWidget extends ConsumerWidget {
   const AnalysisStatsOverviewWidget({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    final viewModel = Provider.of<AnalysisViewModel>(context);
+  Widget build(BuildContext context, WidgetRef ref) {
+    final viewModel = ref.watch(analysisViewModelProvider);
     return Column(
       children: [
         Row(
@@ -21,10 +23,10 @@ class AnalysisStatsOverviewWidget extends StatelessWidget {
                 'Este Mês',
                 viewModel.totalCurrentMonth,
                 Theme.of(context).colorScheme.primary,
-                icon: Icons.calendar_month,
+                icon: Icons.calendar_today_rounded,
               ),
             ),
-            const SizedBox(width: AppTheme.spaceM),
+            const SizedBox(width: AppSpacing.md),
             Expanded(
               child: _buildEnhancedStatCard(
                 context,
@@ -36,7 +38,7 @@ class AnalysisStatsOverviewWidget extends StatelessWidget {
             ),
           ],
         ),
-        const SizedBox(height: AppTheme.spaceM),
+        const SizedBox(height: AppSpacing.md),
         Row(
           children: [
             Expanded(
@@ -45,17 +47,17 @@ class AnalysisStatsOverviewWidget extends StatelessWidget {
                 'Gasto Total',
                 viewModel.totalOverall,
                 Theme.of(context).colorScheme.tertiary,
-                icon: Icons.trending_up,
+                icon: Icons.account_balance_wallet_rounded,
               ),
             ),
-            const SizedBox(width: AppTheme.spaceM),
+            const SizedBox(width: AppSpacing.md),
             Expanded(
               child: _buildEnhancedStatCard(
                 context,
                 'Média Mensal',
                 viewModel.averageMonthlyExpense,
                 AppTheme.chartColors[2],
-                icon: Icons.insights,
+                icon: Icons.insights_rounded,
               ),
             ),
           ],
@@ -89,55 +91,52 @@ class AnalysisStatsOverviewWidget extends StatelessWidget {
         ? currencyFormatterNoCents.format(value)
         : formatCurrencyFlexible(value);
 
-    return Material(
-      color: theme.colorScheme.surface,
-      borderRadius: BorderRadius.circular(16),
-      elevation: 0,
-      child: Container(
-        padding: const EdgeInsets.all(20),
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(
-            color: theme.colorScheme.outline.withAlpha((255 * 0.1).round()),
+    return AppCard(
+      padding: const EdgeInsets.all(AppSpacing.md),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(AppSpacing.sm),
+                decoration: BoxDecoration(
+                  color: color.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Icon(
+                  icon ?? Icons.analytics,
+                  color: color,
+                  size: 20,
+                ),
+              ),
+              const SizedBox(width: AppSpacing.sm),
+              Expanded(
+                child: Text(
+                  title,
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    fontWeight: FontWeight.w600,
+                    color: theme.colorScheme.onSurfaceVariant,
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+            ],
           ),
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Container(
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: color.withAlpha((255 * 0.1).round()),
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Icon(
-                icon ?? Icons.analytics,
-                color: color,
-                size: 24,
-              ),
-            ),
-            const SizedBox(height: AppTheme.spaceM),
-            Text(
-              title,
-              style: theme.textTheme.titleMedium?.copyWith(
+          const SizedBox(height: AppSpacing.md),
+          FittedBox(
+            fit: BoxFit.scaleDown,
+            alignment: Alignment.centerLeft,
+            child: Text(
+              formattedValue,
+              style: theme.textTheme.titleLarge?.copyWith(
                 fontWeight: FontWeight.bold,
                 color: theme.colorScheme.onSurface,
               ),
             ),
-            const SizedBox(height: 4),
-            FittedBox(
-              fit: BoxFit.scaleDown,
-              child: Text(
-                formattedValue,
-                style: theme.textTheme.headlineSmall?.copyWith(
-                  fontWeight: FontWeight.bold,
-                  color: color,
-                  fontSize: 20,
-                ),
-              ),
-            ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }

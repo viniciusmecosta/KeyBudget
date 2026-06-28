@@ -1,11 +1,14 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
-import 'package:key_budget/app/config/app_theme.dart';
+import 'package:key_budget/core/design_system/borders/app_borders.dart';
+import 'package:key_budget/core/design_system/spacing/app_spacing.dart';
+import 'package:key_budget/core/design_system/widgets/app_card.dart';
+import 'package:key_budget/core/design_system/widgets/app_text_field.dart';
 import 'package:key_budget/core/models/document_model.dart';
 import 'package:key_budget/features/documents/viewmodel/document_viewmodel.dart';
-import 'package:provider/provider.dart';
 
-class DocumentForm extends StatefulWidget {
+class DocumentForm extends ConsumerStatefulWidget {
   final GlobalKey<FormState> formKey;
   final TextEditingController nameController;
   final TextEditingController numberController;
@@ -26,125 +29,117 @@ class DocumentForm extends StatefulWidget {
   });
 
   @override
-  State<DocumentForm> createState() => _DocumentFormState();
+  ConsumerState<DocumentForm> createState() => _DocumentFormState();
 }
 
-class _DocumentFormState extends State<DocumentForm> {
+class _DocumentFormState extends ConsumerState<DocumentForm> {
   @override
   Widget build(BuildContext context) {
-    final viewModel = context.watch<DocumentViewModel>();
+    final viewModel = ref.watch(documentViewModelProvider);
     final theme = Theme.of(context);
 
     return Form(
       key: widget.formKey,
       child: ListView(
-        padding: const EdgeInsets.all(AppTheme.defaultPadding),
+        padding: const EdgeInsets.all(AppSpacing.md),
         children: [
-          Card(
-            child: Padding(
-              padding: const EdgeInsets.all(AppTheme.cardPadding),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text('Informações Principais',
-                      style: theme.textTheme.titleLarge),
-                  const SizedBox(height: AppTheme.spaceL),
-                  TextFormField(
-                    controller: widget.nameController,
-                    decoration:
-                        const InputDecoration(labelText: 'Nome do Documento *'),
-                    validator: (value) =>
-                        value!.isEmpty ? 'Campo obrigatório' : null,
-                  ),
-                  const SizedBox(height: AppTheme.spaceM),
-                  TextFormField(
-                    controller: widget.numberController,
-                    decoration: const InputDecoration(labelText: 'Número'),
-                  ),
-                  const SizedBox(height: AppTheme.spaceM),
-                  _buildDatePicker(
-                      context, 'Data de Expedição', widget.issueDate, true),
-                  const SizedBox(height: AppTheme.spaceM),
-                  _buildDatePicker(
-                      context, 'Validade', widget.expiryDate, true),
-                ],
-              ),
+          AppCard(
+            padding: const EdgeInsets.all(AppSpacing.lg),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text('Informações Principais',
+                    style: theme.textTheme.titleLarge),
+                const SizedBox(height: AppSpacing.lg),
+                AppTextField(
+                  controller: widget.nameController,
+                  label: 'Nome do Documento *',
+                  validator: (value) =>
+                      value!.isEmpty ? 'Campo obrigatório' : null,
+                ),
+                const SizedBox(height: AppSpacing.md),
+                AppTextField(
+                  controller: widget.numberController,
+                  label: 'Número',
+                ),
+                const SizedBox(height: AppSpacing.md),
+                _buildDatePicker(
+                    context, 'Data de Expedição', widget.issueDate, true),
+                const SizedBox(height: AppSpacing.md),
+                _buildDatePicker(context, 'Validade', widget.expiryDate, true),
+              ],
             ),
           ),
-          const SizedBox(height: AppTheme.spaceL),
-          Card(
-            child: Padding(
-              padding: const EdgeInsets.all(AppTheme.cardPadding),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text('Campos Adicionais', style: theme.textTheme.titleLarge),
-                  const SizedBox(height: AppTheme.spaceS),
-                  ..._buildAdditionalFields(),
-                  Align(
-                    alignment: Alignment.centerLeft,
-                    child: TextButton.icon(
-                      icon: const Icon(Icons.add),
-                      label: const Text('Adicionar Campo'),
-                      onPressed: () {
-                        setState(() {
-                          widget.additionalFields.value
-                              .add({'name': '', 'value': ''});
-                        });
-                      },
-                    ),
+          const SizedBox(height: AppSpacing.lg),
+          AppCard(
+            padding: const EdgeInsets.all(AppSpacing.lg),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text('Campos Adicionais', style: theme.textTheme.titleLarge),
+                const SizedBox(height: AppSpacing.sm),
+                ..._buildAdditionalFields(),
+                Align(
+                  alignment: Alignment.centerLeft,
+                  child: TextButton.icon(
+                    icon: const Icon(Icons.add),
+                    label: const Text('Adicionar Campo'),
+                    onPressed: () {
+                      setState(() {
+                        widget.additionalFields.value
+                            .add({'name': '', 'value': ''});
+                      });
+                    },
                   ),
-                ],
-              ),
+                ),
+              ],
             ),
           ),
-          const SizedBox(height: AppTheme.spaceL),
-          Card(
-            child: Padding(
-              padding: const EdgeInsets.all(AppTheme.cardPadding),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text('Anexos', style: theme.textTheme.titleLarge),
-                  const SizedBox(height: AppTheme.spaceM),
-                  ..._buildAttachments(context),
-                  if (viewModel.isUploading)
-                    Padding(
-                      padding: const EdgeInsets.only(top: AppTheme.spaceS),
-                      child: Column(
-                        children: [
-                          LinearProgressIndicator(
-                            value: viewModel.uploadProgress,
-                            minHeight: 6,
-                          ),
-                          const SizedBox(height: AppTheme.spaceXS),
-                          Text(
-                            'Enviando arquivo...',
-                            style: theme.textTheme.bodySmall,
-                          )
-                        ],
-                      ),
-                    ),
-                  Align(
-                    alignment: Alignment.centerLeft,
-                    child: TextButton.icon(
-                      icon: const Icon(Icons.attach_file),
-                      label: const Text('Adicionar Anexo'),
-                      onPressed: viewModel.isUploading
-                          ? null
-                          : () async {
-                              final attachment =
-                                  await viewModel.pickAndUploadFile();
-                              if (attachment != null) {
-                                setState(() {
-                                  widget.attachments.value.add(attachment);
-                                });
-                              }
-                            },
+          const SizedBox(height: AppSpacing.lg),
+          AppCard(
+            padding: const EdgeInsets.all(AppSpacing.lg),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text('Anexos', style: theme.textTheme.titleLarge),
+                const SizedBox(height: AppSpacing.md),
+                ..._buildAttachments(context),
+                if (viewModel.isUploading)
+                  Padding(
+                    padding: const EdgeInsets.only(top: AppSpacing.sm),
+                    child: Column(
+                      children: [
+                        LinearProgressIndicator(
+                          value: viewModel.uploadProgress,
+                          minHeight: 6,
+                        ),
+                        const SizedBox(height: AppSpacing.xs),
+                        Text(
+                          'Enviando arquivo...',
+                          style: theme.textTheme.bodySmall,
+                        )
+                      ],
                     ),
                   ),
-                ],
-              ),
+                Align(
+                  alignment: Alignment.centerLeft,
+                  child: TextButton.icon(
+                    icon: const Icon(Icons.attach_file),
+                    label: const Text('Adicionar Anexo'),
+                    onPressed: viewModel.isUploading
+                        ? null
+                        : () async {
+                            final attachment =
+                                await viewModel.pickAndUploadFile();
+                            if (attachment != null) {
+                              setState(() {
+                                widget.attachments.value.add(attachment);
+                              });
+                            }
+                          },
+                  ),
+                ),
+              ],
             ),
           ),
         ],
@@ -156,7 +151,7 @@ class _DocumentFormState extends State<DocumentForm> {
     return widget.additionalFields.value.map((field) {
       final index = widget.additionalFields.value.indexOf(field);
       return Padding(
-        padding: const EdgeInsets.only(bottom: AppTheme.spaceS),
+        padding: const EdgeInsets.only(bottom: AppSpacing.sm),
         child: Row(
           children: [
             Expanded(
@@ -168,7 +163,7 @@ class _DocumentFormState extends State<DocumentForm> {
                 },
               ),
             ),
-            const SizedBox(width: AppTheme.spaceS),
+            const SizedBox(width: AppSpacing.sm),
             Expanded(
               child: TextFormField(
                 initialValue: field['value'],
@@ -198,7 +193,7 @@ class _DocumentFormState extends State<DocumentForm> {
       return Card(
         elevation: 0,
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(AppTheme.radiusM),
+          borderRadius: AppBorders.borderRadiusM,
           side: BorderSide(
             color: Theme.of(context)
                 .colorScheme
@@ -206,7 +201,7 @@ class _DocumentFormState extends State<DocumentForm> {
                 .withAlpha((255 * 0.2).round()),
           ),
         ),
-        margin: const EdgeInsets.only(bottom: AppTheme.spaceM),
+        margin: const EdgeInsets.only(bottom: AppSpacing.md),
         child: ListTile(
           leading: const Icon(Icons.insert_drive_file),
           title: TextFormField(
@@ -251,7 +246,7 @@ class _DocumentFormState extends State<DocumentForm> {
           });
         }
       },
-      borderRadius: BorderRadius.circular(AppTheme.radiusM),
+      borderRadius: AppBorders.borderRadiusM,
       child: InputDecorator(
         decoration: InputDecoration(
           labelText: label,

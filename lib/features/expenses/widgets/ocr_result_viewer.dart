@@ -1,9 +1,10 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_mlkit_text_recognition/google_mlkit_text_recognition.dart';
 
-class OcrResultViewer extends StatefulWidget {
+class OcrResultViewer extends ConsumerStatefulWidget {
   final String imagePath;
   final RecognizedText recognizedText;
   final ValueChanged<String> onTextBlockTap;
@@ -16,10 +17,10 @@ class OcrResultViewer extends StatefulWidget {
   });
 
   @override
-  State<OcrResultViewer> createState() => _OcrResultViewerState();
+  ConsumerState<OcrResultViewer> createState() => _OcrResultViewerState();
 }
 
-class _OcrResultViewerState extends State<OcrResultViewer> {
+class _OcrResultViewerState extends ConsumerState<OcrResultViewer> {
   Size? _imageSize;
 
   @override

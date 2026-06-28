@@ -1,15 +1,16 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_nav_bar/google_nav_bar.dart';
 import 'package:key_budget/app/config/app_theme.dart';
 import 'package:key_budget/app/viewmodel/navigation_viewmodel.dart';
-import 'package:provider/provider.dart';
 
-class MainBottomNavigationBar extends StatelessWidget {
+class MainBottomNavigationBar extends ConsumerWidget {
   const MainBottomNavigationBar({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    final navigationViewModel = Provider.of<NavigationViewModel>(context);
+  Widget build(BuildContext context, WidgetRef ref) {
+    final navigationViewModel = ref.watch(navigationViewModelProvider);
     final theme = Theme.of(context);
     final isDarkMode = theme.brightness == Brightness.dark;
 
@@ -18,9 +19,10 @@ class MainBottomNavigationBar extends StatelessWidget {
         color: isDarkMode ? theme.colorScheme.surface : Colors.white,
         boxShadow: [
           BoxShadow(
-            color: theme.shadowColor,
-            blurRadius: 20,
-            offset: const Offset(0, -5),
+            color: Colors.black
+                .withAlpha((255 * (isDarkMode ? 0.15 : 0.04)).round()),
+            blurRadius: 12,
+            offset: const Offset(0, -2),
           )
         ],
       ),
@@ -51,6 +53,7 @@ class MainBottomNavigationBar extends StatelessWidget {
             ],
             selectedIndex: navigationViewModel.selectedIndex,
             onTabChange: (index) {
+              HapticFeedback.selectionClick();
               navigationViewModel.selectedIndex = index;
             },
           ),

@@ -1,35 +1,38 @@
 import 'package:flutter/material.dart';
-import 'package:key_budget/app/config/app_theme.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:key_budget/core/design_system/borders/app_borders.dart';
+import 'package:key_budget/core/design_system/spacing/app_spacing.dart';
+import 'package:key_budget/core/design_system/widgets/app_button.dart';
 import 'package:key_budget/features/category/viewmodel/category_viewmodel.dart';
 import 'package:key_budget/features/expenses/viewmodel/expense_viewmodel.dart';
-import 'package:provider/provider.dart';
 
-class CategoryFilterModal extends StatefulWidget {
+class CategoryFilterModal extends ConsumerStatefulWidget {
   const CategoryFilterModal({super.key});
 
   @override
-  State<CategoryFilterModal> createState() => _CategoryFilterModalState();
+  ConsumerState<CategoryFilterModal> createState() =>
+      _CategoryFilterModalState();
 }
 
-class _CategoryFilterModalState extends State<CategoryFilterModal> {
+class _CategoryFilterModalState extends ConsumerState<CategoryFilterModal> {
   @override
   Widget build(BuildContext context) {
-    final expenseViewModel = Provider.of<ExpenseViewModel>(context);
-    final categoryViewModel = Provider.of<CategoryViewModel>(context);
+    final expenseViewModel = ref.watch(expenseViewModelProvider);
+    final categoryViewModel = ref.watch(categoryViewModelProvider);
     final theme = Theme.of(context);
 
     return Container(
-      padding: const EdgeInsets.all(AppTheme.spaceL),
+      padding: const EdgeInsets.all(AppSpacing.lg),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
           Container(
             height: 4,
             width: 48,
-            margin: const EdgeInsets.only(bottom: AppTheme.spaceL),
+            margin: const EdgeInsets.only(bottom: AppSpacing.lg),
             decoration: BoxDecoration(
               color: theme.colorScheme.onSurface.withAlpha((255 * 0.2).round()),
-              borderRadius: BorderRadius.circular(AppTheme.radiusS),
+              borderRadius: AppBorders.borderRadiusS,
             ),
           ),
           Text(
@@ -38,7 +41,7 @@ class _CategoryFilterModalState extends State<CategoryFilterModal> {
               fontWeight: FontWeight.w700,
             ),
           ),
-          const SizedBox(height: AppTheme.spaceL),
+          const SizedBox(height: AppSpacing.lg),
           Flexible(
             child: ListView(
               shrinkWrap: true,
@@ -46,13 +49,13 @@ class _CategoryFilterModalState extends State<CategoryFilterModal> {
                 final isSelected =
                     expenseViewModel.selectedCategoryIds.contains(category.id);
                 return Container(
-                  margin: const EdgeInsets.only(bottom: AppTheme.spaceXS),
+                  margin: const EdgeInsets.only(bottom: AppSpacing.xs),
                   decoration: BoxDecoration(
                     color: isSelected
                         ? theme.colorScheme.primary
                             .withAlpha((255 * 0.08).round())
                         : Colors.transparent,
-                    borderRadius: BorderRadius.circular(AppTheme.radiusM),
+                    borderRadius: AppBorders.borderRadiusMD,
                     border: Border.all(
                       color: isSelected
                           ? theme.colorScheme.primary
@@ -89,21 +92,16 @@ class _CategoryFilterModalState extends State<CategoryFilterModal> {
               }).toList(),
             ),
           ),
-          const SizedBox(height: AppTheme.spaceL),
+          const SizedBox(height: AppSpacing.lg),
           SizedBox(
             width: double.infinity,
-            child: TextButton(
+            child: AppButton(
               onPressed: () {
                 expenseViewModel.clearFilters();
                 Navigator.of(context).pop();
               },
-              style: TextButton.styleFrom(
-                padding: const EdgeInsets.symmetric(vertical: AppTheme.spaceM),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(AppTheme.radiusM),
-                ),
-              ),
-              child: const Text('Limpar Filtros'),
+              variant: AppButtonVariant.outline,
+              label: 'Limpar Filtros',
             ),
           ),
         ],

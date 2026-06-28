@@ -1,22 +1,24 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:key_budget/app/config/app_theme.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:key_budget/app/utils/app_animations.dart';
+import 'package:key_budget/core/design_system/spacing/app_spacing.dart';
+import 'package:key_budget/core/design_system/widgets/app_button.dart';
 import 'package:key_budget/features/auth/viewmodel/auth_viewmodel.dart';
 import 'package:key_budget/features/credentials/viewmodel/credential_viewmodel.dart';
 import 'package:mask_text_input_formatter/mask_text_input_formatter.dart';
-import 'package:provider/provider.dart';
 
 import '../widgets/credential_form.dart';
 
-class AddCredentialScreen extends StatefulWidget {
+class AddCredentialScreen extends ConsumerStatefulWidget {
   const AddCredentialScreen({super.key});
 
   @override
-  State<AddCredentialScreen> createState() => _AddCredentialScreenState();
+  ConsumerState<AddCredentialScreen> createState() =>
+      _AddCredentialScreenState();
 }
 
-class _AddCredentialScreenState extends State<AddCredentialScreen> {
+class _AddCredentialScreenState extends ConsumerState<AddCredentialScreen> {
   final _formKey = GlobalKey<FormState>();
   final _locationController = TextEditingController();
   final _loginController = TextEditingController();
@@ -32,7 +34,7 @@ class _AddCredentialScreenState extends State<AddCredentialScreen> {
   void initState() {
     super.initState();
     _loginController.addListener(_updateFields);
-    final vm = Provider.of<CredentialViewModel>(context, listen: false);
+    final vm = ref.read(credentialViewModelProvider);
     _selectedFolderId = vm.currentFolderId;
   }
 
@@ -73,9 +75,8 @@ class _AddCredentialScreenState extends State<AddCredentialScreen> {
     setState(() => _isSaving = true);
     HapticFeedback.mediumImpact();
 
-    final credentialViewModel =
-        Provider.of<CredentialViewModel>(context, listen: false);
-    final authViewModel = Provider.of<AuthViewModel>(context, listen: false);
+    final credentialViewModel = ref.read(credentialViewModelProvider);
+    final authViewModel = ref.read(authViewModelProvider);
     final userId = authViewModel.currentUser!.id;
     final phoneMaskFormatter = MaskTextInputFormatter(mask: '(##) #####-####');
 
@@ -101,12 +102,12 @@ class _AddCredentialScreenState extends State<AddCredentialScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final vm = Provider.of<CredentialViewModel>(context);
+    final vm = ref.watch(credentialViewModelProvider);
 
     return Scaffold(
       appBar: AppBar(title: const Text('Adicionar Credencial')),
       body: AppAnimations.fadeInFromBottom(Padding(
-        padding: const EdgeInsets.all(AppTheme.defaultPadding),
+        padding: const EdgeInsets.all(AppSpacing.md),
         child: Column(
           children: [
             Expanded(
@@ -134,17 +135,14 @@ class _AddCredentialScreenState extends State<AddCredentialScreen> {
                 },
               ),
             ),
-            const SizedBox(height: 16),
-            ElevatedButton(
-              onPressed: _isSaving ? null : _submit,
-              child: _isSaving
-                  ? SizedBox(
-                      height: 24,
-                      width: 24,
-                      child: CircularProgressIndicator(
-                          color: Theme.of(context).colorScheme.onPrimary,
-                          strokeWidth: 2.0))
-                  : const Text('Salvar Credencial'),
+            const SizedBox(height: AppSpacing.md),
+            SizedBox(
+              width: double.infinity,
+              child: AppButton(
+                onPressed: _submit,
+                isLoading: _isSaving,
+                label: 'Salvar Credencial',
+              ),
             ),
           ],
         ),

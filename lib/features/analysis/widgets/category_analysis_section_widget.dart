@@ -1,8 +1,9 @@
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
-import 'package:key_budget/app/config/app_theme.dart';
-import 'package:provider/provider.dart';
+import 'package:key_budget/core/design_system/spacing/app_spacing.dart';
+import 'package:key_budget/core/design_system/widgets/app_card.dart';
 
 import '../viewmodel/analysis_viewmodel.dart';
 import 'empty_chart_state_widget.dart';
@@ -14,27 +15,45 @@ extension StringCapitalize on String {
   }
 }
 
-class CategoryAnalysisSectionWidget extends StatefulWidget {
+class CategoryAnalysisSectionWidget extends ConsumerStatefulWidget {
   const CategoryAnalysisSectionWidget({super.key});
 
   @override
-  State<CategoryAnalysisSectionWidget> createState() =>
+  ConsumerState<CategoryAnalysisSectionWidget> createState() =>
       _CategoryAnalysisSectionWidgetState();
 }
 
 class _CategoryAnalysisSectionWidgetState
-    extends State<CategoryAnalysisSectionWidget> {
+    extends ConsumerState<CategoryAnalysisSectionWidget> {
   int _touchedPieIndex = -1;
 
   @override
   Widget build(BuildContext context) {
-    final viewModel = Provider.of<AnalysisViewModel>(context);
-    return Column(
-      children: [
-        _buildCategoryMonthSelector(context, viewModel),
-        const SizedBox(height: AppTheme.spaceM),
-        _buildEnhancedCategoryBreakdown(context, viewModel),
-      ],
+    final viewModel = ref.watch(analysisViewModelProvider);
+    return AppCard(
+      padding: const EdgeInsets.all(AppSpacing.lg),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Análise por Categoria',
+            style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                  fontWeight: FontWeight.bold,
+                ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            'Entenda onde seu dinheiro é gasto',
+            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                ),
+          ),
+          const SizedBox(height: AppSpacing.lg),
+          _buildCategoryMonthSelector(context, viewModel),
+          const SizedBox(height: AppSpacing.lg),
+          _buildEnhancedCategoryBreakdown(context, viewModel),
+        ],
+      ),
     );
   }
 
@@ -48,55 +67,39 @@ class _CategoryAnalysisSectionWidgetState
     }
 
     return Material(
-      color: theme.colorScheme.surface,
-      borderRadius: BorderRadius.circular(16),
-      elevation: 0,
+      color: theme.colorScheme.surfaceContainerHighest,
+      borderRadius: BorderRadius.circular(12),
       child: InkWell(
         onTap: () => _showMonthPicker(context, viewModel),
-        borderRadius: BorderRadius.circular(16),
-        child: Container(
-          padding: const EdgeInsets.all(20),
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(
-              color: theme.colorScheme.outline.withAlpha((255 * 0.1).round()),
-            ),
-          ),
+        borderRadius: BorderRadius.circular(12),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
           child: Row(
             children: [
-              Container(
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color:
-                      theme.colorScheme.primary.withAlpha((255 * 0.1).round()),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Icon(
-                  Icons.calendar_today,
-                  color: theme.colorScheme.primary,
-                  size: 24,
-                ),
+              Icon(
+                Icons.calendar_month,
+                color: theme.colorScheme.primary,
+                size: 20,
               ),
-              const SizedBox(width: AppTheme.spaceM),
+              const SizedBox(width: AppSpacing.md),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Período Selecionado',
-                      style: theme.textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.bold,
-                        color: theme.colorScheme.onSurface,
+                      'Período',
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: theme.colorScheme.onSurfaceVariant,
+                        fontWeight: FontWeight.w500,
                       ),
                     ),
-                    const SizedBox(height: 4),
                     Text(
                       DateFormat.yMMMM('pt_BR')
                           .format(viewModel.selectedMonthForCategory!)
                           .capitalize(),
                       style: theme.textTheme.bodyMedium?.copyWith(
-                        color: theme.colorScheme.onSurface
-                            .withAlpha((255 * 0.6).round()),
+                        fontWeight: FontWeight.bold,
+                        color: theme.colorScheme.onSurface,
                       ),
                     ),
                   ],
@@ -104,8 +107,7 @@ class _CategoryAnalysisSectionWidgetState
               ),
               Icon(
                 Icons.arrow_forward_ios,
-                color:
-                    theme.colorScheme.onSurface.withAlpha((255 * 0.4).round()),
+                color: theme.colorScheme.primary,
                 size: 16,
               ),
             ],
@@ -139,7 +141,7 @@ class _CategoryAnalysisSectionWidgetState
               ),
             ),
             Padding(
-              padding: const EdgeInsets.all(AppTheme.spaceM),
+              padding: const EdgeInsets.all(AppSpacing.md),
               child: Text(
                 'Selecionar Período',
                 style: theme.textTheme.titleLarge?.copyWith(
@@ -168,13 +170,12 @@ class _CategoryAnalysisSectionWidgetState
 
                   return Container(
                     margin: const EdgeInsets.symmetric(
-                      horizontal: AppTheme.spaceM,
+                      horizontal: AppSpacing.md,
                       vertical: 4,
                     ),
                     child: Material(
                       color: isSelected
-                          ? theme.colorScheme.primary
-                              .withAlpha((255 * 0.1).round())
+                          ? theme.colorScheme.primaryContainer
                           : theme.colorScheme.surface,
                       borderRadius: BorderRadius.circular(12),
                       child: InkWell(
@@ -189,34 +190,20 @@ class _CategoryAnalysisSectionWidgetState
                             borderRadius: BorderRadius.circular(12),
                             border: Border.all(
                               color: isSelected
-                                  ? theme.colorScheme.primary
-                                      .withAlpha((255 * 0.3).round())
-                                  : theme.colorScheme.outline
-                                      .withAlpha((255 * 0.1).round()),
+                                  ? theme.colorScheme.primaryContainer
+                                  : theme.colorScheme.outlineVariant,
                             ),
                           ),
                           child: Row(
                             children: [
-                              Container(
-                                padding: const EdgeInsets.all(8),
-                                decoration: BoxDecoration(
-                                  color: isSelected
-                                      ? theme.colorScheme.primary
-                                          .withAlpha((255 * 0.2).round())
-                                      : theme.colorScheme.outline
-                                          .withAlpha((255 * 0.1).round()),
-                                  borderRadius: BorderRadius.circular(8),
-                                ),
-                                child: Icon(
-                                  Icons.calendar_month,
-                                  color: isSelected
-                                      ? theme.colorScheme.primary
-                                      : theme.colorScheme.onSurface
-                                          .withAlpha((255 * 0.6).round()),
-                                  size: 20,
-                                ),
+                              Icon(
+                                Icons.calendar_month,
+                                color: isSelected
+                                    ? theme.colorScheme.primary
+                                    : theme.colorScheme.onSurfaceVariant,
+                                size: 20,
                               ),
-                              const SizedBox(width: AppTheme.spaceM),
+                              const SizedBox(width: AppSpacing.md),
                               Expanded(
                                 child: Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -230,20 +217,21 @@ class _CategoryAnalysisSectionWidgetState
                                             ? FontWeight.bold
                                             : FontWeight.w500,
                                         color: isSelected
-                                            ? theme.colorScheme.primary
+                                            ? theme
+                                                .colorScheme.onPrimaryContainer
                                             : theme.colorScheme.onSurface,
                                       ),
                                     ),
                                     if (monthTotal > 0) ...[
-                                      const SizedBox(height: 4),
+                                      const SizedBox(height: 2),
                                       Text(
                                         NumberFormat.currency(
                                                 locale: 'pt_BR', symbol: 'R\$')
                                             .format(monthTotal),
                                         style: TextStyle(
                                           fontSize: 12,
-                                          color: theme.colorScheme.onSurface
-                                              .withAlpha((255 * 0.6).round()),
+                                          color: theme
+                                              .colorScheme.onSurfaceVariant,
                                         ),
                                       ),
                                     ],
@@ -287,115 +275,105 @@ class _CategoryAnalysisSectionWidgetState
       ..sort((a, b) => b.value.compareTo(a.value));
     final showPercentageInChart = chartData.length <= 5;
 
-    return Container(
-      padding: const EdgeInsets.all(AppTheme.spaceM),
-      decoration: BoxDecoration(
-        color: theme.colorScheme.surface,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: theme.colorScheme.outline.withAlpha((255 * 0.1).round()),
-        ),
-      ),
-      child: Column(
-        children: [
-          SizedBox(
-            height: 240,
-            child: Stack(
-              alignment: Alignment.center,
-              children: [
-                PieChart(
-                  PieChartData(
-                    pieTouchData: PieTouchData(
-                      touchCallback: (event, pieTouchResponse) {
-                        setState(() {
-                          if (!event.isInterestedForInteractions ||
-                              pieTouchResponse?.touchedSection == null) {
-                            _touchedPieIndex = -1;
-                            return;
-                          }
-                          _touchedPieIndex = pieTouchResponse!
-                              .touchedSection!.touchedSectionIndex;
-                        });
-                      },
-                    ),
-                    sectionsSpace: showPercentageInChart ? 2 : 1,
-                    centerSpaceRadius: 50,
-                    sections: List.generate(chartData.length, (i) {
-                      final isTouched = i == _touchedPieIndex;
-                      final entry = chartData[i];
-                      final percentage = (entry.value / total) * 100;
-
-                      return PieChartSectionData(
-                        color: entry.key.color,
-                        value: entry.value,
-                        title: showPercentageInChart
-                            ? '${percentage.toStringAsFixed(0)}%'
-                            : '',
-                        radius: isTouched ? 75 : 65,
-                        titleStyle: TextStyle(
-                          fontSize: showPercentageInChart ? 14 : 0,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.white,
-                          shadows: showPercentageInChart
-                              ? [
-                                  const Shadow(
-                                    color: Colors.black26,
-                                    offset: Offset(1, 1),
-                                    blurRadius: 2,
-                                  ),
-                                ]
-                              : [],
-                        ),
-                        badgeWidget: isTouched && !showPercentageInChart
-                            ? _buildTouchBadge(entry.key.name, percentage)
-                            : null,
-                        badgePositionPercentageOffset: 1.3,
-                      );
-                    }),
+    return Column(
+      children: [
+        SizedBox(
+          height: 200,
+          child: Stack(
+            alignment: Alignment.center,
+            children: [
+              PieChart(
+                PieChartData(
+                  pieTouchData: PieTouchData(
+                    touchCallback: (event, pieTouchResponse) {
+                      setState(() {
+                        if (!event.isInterestedForInteractions ||
+                            pieTouchResponse?.touchedSection == null) {
+                          _touchedPieIndex = -1;
+                          return;
+                        }
+                        _touchedPieIndex = pieTouchResponse!
+                            .touchedSection!.touchedSectionIndex;
+                      });
+                    },
                   ),
-                ),
-                Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Text(
-                      'Total',
-                      style: theme.textTheme.bodySmall?.copyWith(
-                        color: theme.textTheme.bodySmall?.color?.withAlpha(178),
-                      ),
-                    ),
-                    Text(
-                      NumberFormat.currency(
-                              locale: 'pt_BR', symbol: 'R\$', decimalDigits: 0)
-                          .format(total),
-                      style: theme.textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.bold,
-                        color: theme.colorScheme.primary,
-                      ),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(height: AppTheme.spaceL),
-          ...chartData.asMap().entries.map((entry) {
-            final index = entry.key;
-            final category = entry.value;
-            final percentage = (category.value / total) * 100;
-            final isHighlighted = index == _touchedPieIndex;
+                  sectionsSpace: showPercentageInChart ? 2 : 1,
+                  centerSpaceRadius: 50,
+                  sections: List.generate(chartData.length, (i) {
+                    final isTouched = i == _touchedPieIndex;
+                    final entry = chartData[i];
+                    final percentage = (entry.value / total) * 100;
 
-            return _buildImprovedLegendItem(
-              context: context,
-              color: category.key.color,
-              name: category.key.name,
-              value: category.value,
-              percentage: percentage,
-              isHighlighted: isHighlighted,
-              showDivider: index < chartData.length - 1,
-            );
-          }),
-        ],
-      ),
+                    return PieChartSectionData(
+                      color: entry.key.color,
+                      value: entry.value,
+                      title: showPercentageInChart
+                          ? '${percentage.toStringAsFixed(0)}%'
+                          : '',
+                      radius: isTouched ? 65 : 55,
+                      titleStyle: TextStyle(
+                        fontSize: showPercentageInChart ? 12 : 0,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                        shadows: showPercentageInChart
+                            ? [
+                                const Shadow(
+                                  color: Colors.black26,
+                                  offset: Offset(1, 1),
+                                  blurRadius: 2,
+                                ),
+                              ]
+                            : [],
+                      ),
+                      badgeWidget: isTouched && !showPercentageInChart
+                          ? _buildTouchBadge(entry.key.name, percentage)
+                          : null,
+                      badgePositionPercentageOffset: 1.3,
+                    );
+                  }),
+                ),
+              ),
+              Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(
+                    'Total',
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: theme.textTheme.bodySmall?.color?.withAlpha(178),
+                    ),
+                  ),
+                  Text(
+                    NumberFormat.currency(
+                            locale: 'pt_BR', symbol: 'R\$', decimalDigits: 0)
+                        .format(total),
+                    style: theme.textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.bold,
+                      color: theme.colorScheme.primary,
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: AppSpacing.xl),
+        ...chartData.asMap().entries.map((entry) {
+          final index = entry.key;
+          final category = entry.value;
+          final percentage = (category.value / total) * 100;
+          final isHighlighted = index == _touchedPieIndex;
+
+          return _buildImprovedLegendItem(
+            context: context,
+            color: category.key.color,
+            name: category.key.name,
+            value: category.value,
+            percentage: percentage,
+            isHighlighted: isHighlighted,
+            showDivider: index < chartData.length - 1,
+          );
+        }),
+      ],
     );
   }
 
@@ -448,7 +426,7 @@ class _CategoryAnalysisSectionWidgetState
       children: [
         AnimatedContainer(
           duration: const Duration(milliseconds: 200),
-          padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 8),
+          padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 8),
           decoration: BoxDecoration(
             color: isHighlighted
                 ? color.withAlpha((255 * 0.08).round())
@@ -500,22 +478,12 @@ class _CategoryAnalysisSectionWidgetState
                       ),
                     ),
                     const SizedBox(height: 2),
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 8,
-                        vertical: 2,
-                      ),
-                      decoration: BoxDecoration(
-                        color: color.withAlpha((255 * 0.15).round()),
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                      child: Text(
-                        '${percentage.toStringAsFixed(1)}%',
-                        style: TextStyle(
-                          fontSize: 11,
-                          fontWeight: FontWeight.bold,
-                          color: color,
-                        ),
+                    Text(
+                      '${percentage.toStringAsFixed(1)}%',
+                      style: TextStyle(
+                        fontSize: 11,
+                        fontWeight: FontWeight.bold,
+                        color: color,
                       ),
                     ),
                   ],
@@ -528,7 +496,7 @@ class _CategoryAnalysisSectionWidgetState
           Divider(
             height: 1,
             thickness: 0.5,
-            color: theme.colorScheme.outline.withAlpha((255 * 0.1).round()),
+            color: theme.colorScheme.outlineVariant,
           ),
       ],
     );

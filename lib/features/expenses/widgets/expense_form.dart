@@ -1,17 +1,18 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_masked_text2/flutter_masked_text2.dart';
-import 'package:key_budget/app/config/app_theme.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:key_budget/app/widgets/category_autocomplete_field.dart';
 import 'package:key_budget/app/widgets/category_picker_field.dart';
 import 'package:key_budget/app/widgets/date_picker_field.dart';
+import 'package:key_budget/core/design_system/spacing/app_spacing.dart';
+import 'package:key_budget/core/design_system/widgets/app_text_field.dart';
 import 'package:key_budget/core/models/expense_category_model.dart';
 import 'package:key_budget/features/auth/viewmodel/auth_viewmodel.dart';
 import 'package:key_budget/features/category/view/categories_screen.dart';
 import 'package:key_budget/features/category/viewmodel/category_viewmodel.dart';
 import 'package:key_budget/features/expenses/viewmodel/expense_viewmodel.dart';
-import 'package:provider/provider.dart';
 
-class ExpenseForm extends StatelessWidget {
+class ExpenseForm extends ConsumerWidget {
   final GlobalKey<FormState> formKey;
   final MoneyMaskedTextController amountController;
   final TextEditingController motivationController;
@@ -53,21 +54,20 @@ class ExpenseForm extends StatelessWidget {
   });
 
   @override
-  Widget build(BuildContext context) {
-    final expenseViewModel =
-        Provider.of<ExpenseViewModel>(context, listen: false);
-    final categoryViewModel = Provider.of<CategoryViewModel>(context);
+  Widget build(BuildContext context, WidgetRef ref) {
+    final expenseViewModel = ref.read(expenseViewModelProvider);
+    final categoryViewModel = ref.watch(categoryViewModelProvider);
     final theme = Theme.of(context);
 
     return Form(
       key: formKey,
       child: ListView(
         children: [
-          const SizedBox(height: 12),
-          TextFormField(
+          const SizedBox(height: AppSpacing.sm),
+          AppTextField(
             controller: amountController,
+            label: 'Valor *',
             readOnly: !isEditing,
-            decoration: const InputDecoration(labelText: 'Valor *'),
             keyboardType: const TextInputType.numberWithOptions(decimal: true),
             validator: (value) {
               if (value == null || value.isEmpty) {
@@ -79,7 +79,7 @@ class ExpenseForm extends StatelessWidget {
               return null;
             },
           ),
-          const SizedBox(height: AppTheme.spaceM),
+          const SizedBox(height: AppSpacing.md),
           CategoryPickerField(
             label: 'Categoria',
             value: selectedCategory,
@@ -87,20 +87,19 @@ class ExpenseForm extends StatelessWidget {
             isEnabled: isEditing,
             onChanged: onCategoryChanged,
             onManageCategories: () async {
-              final userId = Provider.of<AuthViewModel>(context, listen: false)
-                  .currentUser
-                  ?.id;
+              final userId = ref.read(authViewModelProvider).currentUser?.id;
               await Navigator.of(context).push(
                   MaterialPageRoute(builder: (_) => const CategoriesScreen()));
               if (userId != null && context.mounted) {
-                await Provider.of<CategoryViewModel>(context, listen: false)
+                await ref
+                    .read(categoryViewModelProvider)
                     .fetchCategories(userId);
               }
             },
             validator: (value) =>
                 value == null ? 'Selecione uma categoria' : null,
           ),
-          const SizedBox(height: AppTheme.spaceM),
+          const SizedBox(height: AppSpacing.md),
           AbsorbPointer(
             absorbing: !isEditing,
             child: CategoryAutocompleteField(
@@ -120,7 +119,7 @@ class ExpenseForm extends StatelessWidget {
               },
             ),
           ),
-          const SizedBox(height: AppTheme.spaceM),
+          const SizedBox(height: AppSpacing.md),
           AbsorbPointer(
             absorbing: !isEditing,
             child: CategoryAutocompleteField(
@@ -140,7 +139,7 @@ class ExpenseForm extends StatelessWidget {
               },
             ),
           ),
-          const SizedBox(height: AppTheme.spaceM),
+          const SizedBox(height: AppSpacing.md),
           DatePickerField(
             label: 'Data',
             selectedDate: selectedDate,
@@ -148,7 +147,7 @@ class ExpenseForm extends StatelessWidget {
             onDateSelected: onDateChanged,
           ),
           if (onInstallmentChanged != null) ...[
-            const SizedBox(height: AppTheme.spaceM),
+            const SizedBox(height: AppSpacing.md),
             AbsorbPointer(
               absorbing: !isEditing,
               child: SwitchListTile(
@@ -192,7 +191,7 @@ class ExpenseForm extends StatelessWidget {
                   ],
                 ),
               ),
-              const SizedBox(height: AppTheme.spaceS),
+              const SizedBox(height: AppSpacing.sm),
               AbsorbPointer(
                 absorbing: !isEditing,
                 child: SwitchListTile(

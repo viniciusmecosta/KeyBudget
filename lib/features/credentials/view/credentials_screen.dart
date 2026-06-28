@@ -1,41 +1,43 @@
 import 'package:flutter/material.dart';
-import 'package:key_budget/app/config/app_theme.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:key_budget/app/utils/app_animations.dart';
 import 'package:key_budget/app/utils/navigation_utils.dart';
 import 'package:key_budget/app/widgets/animated_list_item.dart';
 import 'package:key_budget/app/widgets/empty_state_widget.dart';
+import 'package:key_budget/app/widgets/responsive_center.dart';
+import 'package:key_budget/core/design_system/borders/app_borders.dart';
+import 'package:key_budget/core/design_system/spacing/app_spacing.dart';
 import 'package:key_budget/core/models/credential_model.dart';
 import 'package:key_budget/core/models/folder_model.dart';
 import 'package:key_budget/features/auth/viewmodel/auth_viewmodel.dart';
 import 'package:key_budget/features/credentials/view/add_credential_screen.dart';
 import 'package:key_budget/features/credentials/viewmodel/credential_viewmodel.dart';
 import 'package:key_budget/features/credentials/widgets/folder_list_tile.dart';
-import 'package:provider/provider.dart';
 
 import '../widgets/credential_list_tile.dart';
 import '../widgets/credentials_list_skeleton.dart';
 
-class CredentialsScreen extends StatefulWidget {
+class CredentialsScreen extends ConsumerStatefulWidget {
   const CredentialsScreen({super.key});
 
   @override
-  State<CredentialsScreen> createState() => _CredentialsScreenState();
+  ConsumerState<CredentialsScreen> createState() => _CredentialsScreenState();
 }
 
-class _CredentialsScreenState extends State<CredentialsScreen> {
+class _CredentialsScreenState extends ConsumerState<CredentialsScreen> {
   final GlobalKey<SliverAnimatedListState> _listKey =
       GlobalKey<SliverAnimatedListState>();
   bool _isSearching = false;
+  bool _isProcessing = false;
   final TextEditingController _searchController = TextEditingController();
 
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      final authViewModel = Provider.of<AuthViewModel>(context, listen: false);
+      final authViewModel = ref.read(authViewModelProvider);
       if (authViewModel.currentUser != null) {
-        final credentialViewModel =
-            Provider.of<CredentialViewModel>(context, listen: false);
+        final credentialViewModel = ref.read(credentialViewModelProvider);
         credentialViewModel.setListKey(_listKey);
         credentialViewModel.listenToCredentials(authViewModel.currentUser!.id);
       }
@@ -49,54 +51,29 @@ class _CredentialsScreenState extends State<CredentialsScreen> {
   }
 
   Future<void> _handleRefresh() async {
-    final authViewModel = Provider.of<AuthViewModel>(context, listen: false);
+    final authViewModel = ref.read(authViewModelProvider);
     if (mounted && authViewModel.currentUser != null) {
-      Provider.of<CredentialViewModel>(context, listen: false)
+      ref
+          .read(credentialViewModelProvider)
           .listenToCredentials(authViewModel.currentUser!.id);
     }
   }
 
   void _import(BuildContext context) async {
-    showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (ctx) => const AlertDialog(
-        content: Row(
-          children: [
-            CircularProgressIndicator(),
-            SizedBox(width: 24),
-            Text('Importando credenciais...'),
-          ],
-        ),
-      ),
-    );
+    setState(() => _isProcessing = true);
 
-    final viewModel = Provider.of<CredentialViewModel>(context, listen: false);
-    final authViewModel = Provider.of<AuthViewModel>(context, listen: false);
+    final viewModel = ref.read(credentialViewModelProvider);
+    final authViewModel = ref.read(authViewModelProvider);
 
     await viewModel.importCredentialsFromCsv(authViewModel.currentUser!.id);
 
-    if (context.mounted) {
-      Navigator.of(context).pop();
-    }
+    if (mounted) setState(() => _isProcessing = false);
   }
 
   void _export(BuildContext context, {String type = 'csv'}) async {
-    showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (ctx) => AlertDialog(
-        content: Row(
-          children: [
-            const CircularProgressIndicator(),
-            const SizedBox(width: 24),
-            Text(type == 'csv' ? 'Gerando CSV...' : 'Gerando PDF...'),
-          ],
-        ),
-      ),
-    );
+    setState(() => _isProcessing = true);
 
-    final viewModel = Provider.of<CredentialViewModel>(context, listen: false);
+    final viewModel = ref.read(credentialViewModelProvider);
 
     if (type == 'csv') {
       await viewModel.exportCredentialsToCsv(context);
@@ -104,9 +81,7 @@ class _CredentialsScreenState extends State<CredentialsScreen> {
       await viewModel.exportCredentialsToPdf(context);
     }
 
-    if (context.mounted) {
-      Navigator.of(context).pop();
-    }
+    if (mounted) setState(() => _isProcessing = false);
   }
 
   void _showCreateFolderDialog(BuildContext context, String userId) {
@@ -132,7 +107,8 @@ class _CredentialsScreenState extends State<CredentialsScreen> {
           TextButton(
             onPressed: () {
               if (controller.text.isNotEmpty) {
-                Provider.of<CredentialViewModel>(context, listen: false)
+                ref
+                    .read(credentialViewModelProvider)
                     .createFolder(userId, controller.text.trim());
                 Navigator.pop(ctx);
               }
@@ -146,9 +122,9 @@ class _CredentialsScreenState extends State<CredentialsScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final vm = context.watch<CredentialViewModel>();
+    final vm = ref.watch(credentialViewModelProvider);
     final theme = Theme.of(context);
-    final authVm = context.read<AuthViewModel>();
+    final authVm = ref.read(authViewModelProvider);
 
     return PopScope(
       canPop: vm.currentFolderId == null && !_isSearching,
@@ -195,7 +171,7 @@ class _CredentialsScreenState extends State<CredentialsScreen> {
                     decoration: BoxDecoration(
                       color:
                           theme.colorScheme.onSurface.withValues(alpha: 0.08),
-                      borderRadius: BorderRadius.circular(AppTheme.radiusXXL),
+                      borderRadius: AppBorders.borderRadiusXXL,
                     ),
                     child: TextField(
                       controller: _searchController,
@@ -224,6 +200,12 @@ class _CredentialsScreenState extends State<CredentialsScreen> {
                 : Text(vm.currentFolder?.name ?? 'Credenciais',
                     key: const ValueKey('titleText')),
           ),
+          bottom: PreferredSize(
+            preferredSize: const Size.fromHeight(4),
+            child: _isProcessing
+                ? const LinearProgressIndicator()
+                : const SizedBox(height: 4),
+          ),
           actions: [
             if (!_isSearching)
               IconButton(
@@ -243,7 +225,7 @@ class _CredentialsScreenState extends State<CredentialsScreen> {
                       children: [
                         Icon(Icons.upload_file_rounded,
                             size: 18, color: theme.colorScheme.onSurface),
-                        const SizedBox(width: AppTheme.spaceS),
+                        const SizedBox(width: AppSpacing.sm),
                         const Text('Importar de CSV'),
                       ],
                     ),
@@ -254,7 +236,7 @@ class _CredentialsScreenState extends State<CredentialsScreen> {
                       children: [
                         Icon(Icons.grid_on,
                             size: 18, color: theme.colorScheme.onSurface),
-                        const SizedBox(width: AppTheme.spaceS),
+                        const SizedBox(width: AppSpacing.sm),
                         const Text('Exportar para CSV'),
                       ],
                     ),
@@ -265,7 +247,7 @@ class _CredentialsScreenState extends State<CredentialsScreen> {
                       children: [
                         Icon(Icons.picture_as_pdf,
                             size: 18, color: theme.colorScheme.onSurface),
-                        const SizedBox(width: AppTheme.spaceS),
+                        const SizedBox(width: AppSpacing.sm),
                         const Text('Exportar para PDF'),
                       ],
                     ),
@@ -285,67 +267,66 @@ class _CredentialsScreenState extends State<CredentialsScreen> {
               onRefresh: _handleRefresh,
               color: theme.colorScheme.primary,
               backgroundColor: theme.colorScheme.surface,
-              child: CustomScrollView(
-                physics: const BouncingScrollPhysics(
-                    parent: AlwaysScrollableScrollPhysics()),
-                slivers: [
-                  if (vm.isLoading)
-                    const CredentialsListSkeleton()
-                  else if (vm.currentDisplayItems.isEmpty)
-                    SliverFillRemaining(
-                      child: SingleChildScrollView(
-                        physics: const AlwaysScrollableScrollPhysics(),
-                        child: EmptyStateWidget(
-                          icon: vm.currentFolderId != null
-                              ? Icons.folder_open
-                              : Icons.key_off,
-                          message: vm.currentFolderId != null
-                              ? 'Esta pasta está vazia.'
-                              : 'Nenhuma credencial ou pasta encontrada.',
+              child: ResponsiveCenter(
+                child: CustomScrollView(
+                  physics: const BouncingScrollPhysics(
+                      parent: AlwaysScrollableScrollPhysics()),
+                  slivers: [
+                    if (vm.isLoading)
+                      const CredentialsListSkeleton()
+                    else if (vm.currentDisplayItems.isEmpty)
+                      SliverFillRemaining(
+                        child: SingleChildScrollView(
+                          physics: const AlwaysScrollableScrollPhysics(),
+                          child: EmptyStateWidget(
+                            icon: vm.currentFolderId != null
+                                ? Icons.folder_open
+                                : Icons.key_off_outlined,
+                            message: vm.currentFolderId != null
+                                ? 'Pasta vazia'
+                                : 'Nenhuma credencial encontrada',
+                          ),
+                        ),
+                      )
+                    else
+                      SliverPadding(
+                        padding: const EdgeInsets.fromLTRB(
+                            AppSpacing.md, AppSpacing.lg, AppSpacing.md, 96.0),
+                        sliver: SliverAnimatedList(
+                          key: _listKey,
+                          initialItemCount: vm.currentDisplayItems.length,
+                          itemBuilder: (context, index, animation) {
+                            if (index >= vm.currentDisplayItems.length) {
+                              return const SizedBox.shrink();
+                            }
+
+                            final item = vm.currentDisplayItems[index];
+
+                            if (item is Folder) {
+                              return AnimatedListItem(
+                                animation: animation,
+                                child: FolderListTile(
+                                  key: ValueKey('folder_${item.id}'),
+                                  folder: item,
+                                  onTap: () => vm.enterFolder(item.id!),
+                                  onDelete: () => vm.deleteFolder(
+                                      authVm.currentUser!.id, item.id!),
+                                ),
+                              );
+                            } else if (item is Credential) {
+                              return AnimatedListItem(
+                                animation: animation,
+                                child: CredentialListTile(
+                                    key: ValueKey('cred_${item.id}'),
+                                    credential: item),
+                              );
+                            }
+                            return const SizedBox.shrink();
+                          },
                         ),
                       ),
-                    )
-                  else
-                    SliverPadding(
-                      padding: const EdgeInsets.fromLTRB(
-                          AppTheme.defaultPadding,
-                          AppTheme.spaceL,
-                          AppTheme.defaultPadding,
-                          96.0),
-                      sliver: SliverAnimatedList(
-                        key: _listKey,
-                        initialItemCount: vm.currentDisplayItems.length,
-                        itemBuilder: (context, index, animation) {
-                          if (index >= vm.currentDisplayItems.length) {
-                            return const SizedBox.shrink();
-                          }
-
-                          final item = vm.currentDisplayItems[index];
-
-                          if (item is Folder) {
-                            return AnimatedListItem(
-                              animation: animation,
-                              child: FolderListTile(
-                                key: ValueKey('folder_${item.id}'),
-                                folder: item,
-                                onTap: () => vm.enterFolder(item.id!),
-                                onDelete: () => vm.deleteFolder(
-                                    authVm.currentUser!.id, item.id!),
-                              ),
-                            );
-                          } else if (item is Credential) {
-                            return AnimatedListItem(
-                              animation: animation,
-                              child: CredentialListTile(
-                                  key: ValueKey('cred_${item.id}'),
-                                  credential: item),
-                            );
-                          }
-                          return const SizedBox.shrink();
-                        },
-                      ),
-                    ),
-                ],
+                  ],
+                ),
               ),
             ),
           ),
@@ -387,7 +368,7 @@ class _CredentialsScreenState extends State<CredentialsScreen> {
           icon: const Icon(Icons.add),
           label: const Text("Novo"),
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(AppTheme.radiusXXL),
+            borderRadius: AppBorders.borderRadiusXXL,
           ),
         )),
       ),

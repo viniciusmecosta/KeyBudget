@@ -3,30 +3,35 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:key_budget/app/config/app_theme.dart';
 import 'package:key_budget/app/utils/app_animations.dart';
 import 'package:key_budget/app/utils/widget_to_image.dart';
+import 'package:key_budget/core/design_system/borders/app_borders.dart';
+import 'package:key_budget/core/design_system/spacing/app_spacing.dart';
+import 'package:key_budget/core/design_system/widgets/app_button.dart';
 import 'package:key_budget/core/models/credential_model.dart';
 import 'package:key_budget/core/services/snackbar_service.dart';
 import 'package:key_budget/features/auth/viewmodel/auth_viewmodel.dart';
 import 'package:key_budget/features/credentials/viewmodel/credential_viewmodel.dart';
 import 'package:mask_text_input_formatter/mask_text_input_formatter.dart';
 import 'package:path_provider/path_provider.dart';
-import 'package:provider/provider.dart';
 import 'package:share_plus/share_plus.dart';
 
 import '../widgets/credential_form.dart';
 
-class CredentialDetailScreen extends StatefulWidget {
+class CredentialDetailScreen extends ConsumerStatefulWidget {
   final Credential credential;
 
   const CredentialDetailScreen({super.key, required this.credential});
 
   @override
-  State<CredentialDetailScreen> createState() => _CredentialDetailScreenState();
+  ConsumerState<CredentialDetailScreen> createState() =>
+      _CredentialDetailScreenState();
 }
 
-class _CredentialDetailScreenState extends State<CredentialDetailScreen> {
+class _CredentialDetailScreenState
+    extends ConsumerState<CredentialDetailScreen> {
   final _formKey = GlobalKey<FormState>();
   late TextEditingController _locationController;
   late TextEditingController _loginController;
@@ -49,9 +54,9 @@ class _CredentialDetailScreenState extends State<CredentialDetailScreen> {
   @override
   void initState() {
     super.initState();
-    final decryptedPassword =
-        Provider.of<CredentialViewModel>(context, listen: false)
-            .decryptPassword(widget.credential.encryptedPassword);
+    final decryptedPassword = ref
+        .read(credentialViewModelProvider)
+        .decryptPassword(widget.credential.encryptedPassword);
 
     _decryptionError = decryptedPassword == 'ERRO_DECRIPT';
 
@@ -86,8 +91,8 @@ class _CredentialDetailScreenState extends State<CredentialDetailScreen> {
     setState(() => _isSaving = true);
     HapticFeedback.mediumImpact();
 
-    final authViewModel = Provider.of<AuthViewModel>(context, listen: false);
-    final viewModel = Provider.of<CredentialViewModel>(context, listen: false);
+    final authViewModel = ref.read(authViewModelProvider);
+    final viewModel = ref.read(credentialViewModelProvider);
     final scaffoldContext = context;
     final navigator = Navigator.of(context);
     final userId = authViewModel.currentUser!.id;
@@ -115,50 +120,37 @@ class _CredentialDetailScreenState extends State<CredentialDetailScreen> {
     navigator.pop();
   }
 
-  void _deleteCredential() {
-    showDialog(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text('Confirmar Exclusão'),
-        content:
-            const Text('Você tem certeza que deseja excluir esta credencial?'),
-        actions: [
-          TextButton(
-            child: const Text('Cancelar'),
-            onPressed: () => Navigator.of(ctx).pop(),
-          ),
-          TextButton(
-            child: const Text('Excluir'),
-            onPressed: () async {
-              HapticFeedback.mediumImpact();
-              final authViewModel =
-                  Provider.of<AuthViewModel>(context, listen: false);
-              final viewModel =
-                  Provider.of<CredentialViewModel>(context, listen: false);
-              final scaffoldContext = context;
-              final dialogNavigator = Navigator.of(ctx);
-              final screenNavigator = Navigator.of(context);
+  void _deleteCredential() async {
+    HapticFeedback.mediumImpact();
+    final authViewModel = ref.read(authViewModelProvider);
+    final viewModel = ref.read(credentialViewModelProvider);
+    final currentContext = context;
+    final screenNavigator = Navigator.of(context);
+    final deletedCredential = widget.credential;
 
-              final userId = authViewModel.currentUser!.id;
-              await viewModel.deleteCredential(userId, widget.credential.id!);
+    final userId = authViewModel.currentUser!.id;
+    await viewModel.deleteCredential(userId, deletedCredential.id!);
 
-              if (!scaffoldContext.mounted) return;
-              SnackbarService.showSuccess(
-                  scaffoldContext, 'Credencial excluída com sucesso!');
-              dialogNavigator.pop();
-              screenNavigator.pop();
-            },
-          ),
-        ],
+    if (!currentContext.mounted) return;
+    SnackbarService.showSuccess(
+      currentContext,
+      'Credencial excluída.',
+      action: SnackBarAction(
+        label: 'Desfazer',
+        textColor: Colors.white,
+        onPressed: () async {
+          await viewModel.restoreCredential(userId, deletedCredential);
+        },
       ),
     );
+    screenNavigator.pop();
   }
 
   void _showExportOptions() {
     showModalBottomSheet(
       context: context,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      shape: RoundedRectangleBorder(
+        borderRadius: AppBorders.borderRadiusVerticalXL,
       ),
       builder: (ctx) => SafeArea(
         child: Padding(
@@ -253,9 +245,13 @@ class _CredentialDetailScreenState extends State<CredentialDetailScreen> {
         final imageFile = File(imagePath);
         await imageFile.writeAsBytes(bytes);
 
+        final RenderBox? box =
+            mounted ? context.findRenderObject() as RenderBox? : null;
         final params = ShareParams(
           files: [XFile(imagePath)],
           text: 'Credencial: ${widget.credential.location}',
+          sharePositionOrigin:
+              box != null ? box.localToGlobal(Offset.zero) & box.size : null,
         );
 
         await SharePlus.instance.share(params);
@@ -280,7 +276,7 @@ class _CredentialDetailScreenState extends State<CredentialDetailScreen> {
       height: 56,
       decoration: BoxDecoration(
         color: theme.colorScheme.primary.withValues(alpha: 0.1),
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: AppBorders.borderRadiusL,
       ),
       child: Icon(
         Icons.lock_outline,
@@ -329,10 +325,10 @@ class _CredentialDetailScreenState extends State<CredentialDetailScreen> {
           type: MaterialType.transparency,
           child: Container(
             width: 400,
-            padding: const EdgeInsets.all(32),
+            padding: const EdgeInsets.all(AppSpacing.xxl),
             decoration: BoxDecoration(
               color: theme.colorScheme.surface,
-              borderRadius: BorderRadius.circular(24),
+              borderRadius: AppBorders.borderRadiusXL,
               boxShadow: [
                 BoxShadow(
                   color: Colors.black.withValues(alpha: 0.1),
@@ -353,7 +349,7 @@ class _CredentialDetailScreenState extends State<CredentialDetailScreen> {
                   children: [
                     if (_logoPath != null && _logoPath!.trim().isNotEmpty)
                       ClipRRect(
-                        borderRadius: BorderRadius.circular(16),
+                        borderRadius: AppBorders.borderRadiusL,
                         child: _buildLogoWidget(_logoPath!, theme),
                       )
                     else
@@ -455,7 +451,7 @@ class _CredentialDetailScreenState extends State<CredentialDetailScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final vm = Provider.of<CredentialViewModel>(context);
+    final vm = ref.watch(credentialViewModelProvider);
 
     return Scaffold(
       appBar: AppBar(
@@ -496,7 +492,7 @@ class _CredentialDetailScreenState extends State<CredentialDetailScreen> {
         ],
       ),
       body: AppAnimations.fadeInFromBottom(Padding(
-        padding: const EdgeInsets.all(AppTheme.defaultPadding),
+        padding: const EdgeInsets.all(AppSpacing.md),
         child: Column(
           children: [
             Expanded(
@@ -525,15 +521,14 @@ class _CredentialDetailScreenState extends State<CredentialDetailScreen> {
               ),
             ),
             if (_isEditing) ...[
-              const SizedBox(height: 16),
-              ElevatedButton(
-                onPressed: _isSaving ? null : _saveChanges,
-                child: _isSaving
-                    ? const SizedBox(
-                        height: 24,
-                        width: 24,
-                        child: CircularProgressIndicator(strokeWidth: 2.0))
-                    : const Text('Salvar Alterações'),
+              const SizedBox(height: AppSpacing.md),
+              SizedBox(
+                width: double.infinity,
+                child: AppButton(
+                  onPressed: _saveChanges,
+                  isLoading: _isSaving,
+                  label: 'Salvar Alterações',
+                ),
               )
             ]
           ],

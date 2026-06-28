@@ -1,24 +1,25 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:key_budget/app/utils/app_animations.dart';
 import 'package:key_budget/core/models/expense_category_model.dart';
 import 'package:key_budget/core/services/snackbar_service.dart';
 import 'package:key_budget/features/auth/viewmodel/auth_viewmodel.dart';
 import 'package:key_budget/features/category/viewmodel/category_viewmodel.dart';
-import 'package:provider/provider.dart';
 
 import '../widgets/category_form.dart';
 
-class AddEditCategoryScreen extends StatefulWidget {
+class AddEditCategoryScreen extends ConsumerStatefulWidget {
   final ExpenseCategory? category;
 
   const AddEditCategoryScreen({super.key, this.category});
 
   @override
-  State<AddEditCategoryScreen> createState() => _AddEditCategoryScreenState();
+  ConsumerState<AddEditCategoryScreen> createState() =>
+      _AddEditCategoryScreenState();
 }
 
-class _AddEditCategoryScreenState extends State<AddEditCategoryScreen> {
+class _AddEditCategoryScreenState extends ConsumerState<AddEditCategoryScreen> {
   final _formKey = GlobalKey<FormState>();
   late TextEditingController _nameController;
   IconData? _selectedIcon;
@@ -44,9 +45,8 @@ class _AddEditCategoryScreenState extends State<AddEditCategoryScreen> {
     setState(() => _isSaving = true);
     HapticFeedback.mediumImpact();
 
-    final viewModel = Provider.of<CategoryViewModel>(context, listen: false);
-    final userId =
-        Provider.of<AuthViewModel>(context, listen: false).currentUser!.id;
+    final viewModel = ref.read(categoryViewModelProvider);
+    final userId = ref.read(authViewModelProvider).currentUser!.id;
     final navigator = Navigator.of(context);
 
     final category = ExpenseCategory(

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-class SettingsTile extends StatelessWidget {
+class SettingsTile extends ConsumerWidget {
   final IconData icon;
   final String title;
   final Color? iconColor;
@@ -17,7 +18,7 @@ class SettingsTile extends StatelessWidget {
   });
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
 
     return Card(

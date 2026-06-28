@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:key_budget/core/models/expense_category_model.dart';
 import 'package:key_budget/features/category/repository/category_repository.dart';
 
@@ -39,6 +40,11 @@ class CategoryViewModel extends ChangeNotifier {
     await fetchCategories(userId);
   }
 
+  Future<void> restoreCategory(String userId, ExpenseCategory category) async {
+    await _repository.restoreCategory(userId, category);
+    await fetchCategories(userId);
+  }
+
   ExpenseCategory? getCategoryById(String? id) {
     if (id == null) return null;
     try {
@@ -53,3 +59,6 @@ class CategoryViewModel extends ChangeNotifier {
     notifyListeners();
   }
 }
+
+final categoryViewModelProvider =
+    ChangeNotifierProvider<CategoryViewModel>((ref) => CategoryViewModel());

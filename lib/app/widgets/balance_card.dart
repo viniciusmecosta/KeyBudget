@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
-import 'package:key_budget/app/config/app_theme.dart';
+import 'package:key_budget/core/design_system/borders/app_borders.dart';
+import 'package:key_budget/core/design_system/shadows/app_shadows.dart';
+import 'package:key_budget/core/design_system/spacing/app_spacing.dart';
 
-class BalanceCard extends StatelessWidget {
+class BalanceCard extends ConsumerWidget {
   final String title;
   final double totalValue;
   final Widget? subtitle;
@@ -21,37 +24,42 @@ class BalanceCard extends StatelessWidget {
   });
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
     final currencyFormatter =
         NumberFormat.currency(locale: 'pt_BR', symbol: 'R\$');
 
+    final bgColor = backgroundColor ??
+        (gradient == null ? theme.colorScheme.surface : null);
+    final textColor =
+        (gradient != null || backgroundColor == theme.colorScheme.primary)
+            ? theme.colorScheme.onPrimary
+            : theme.colorScheme.onSurface;
+
     return Container(
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(AppTheme.radiusXL),
+        borderRadius: AppBorders.borderRadiusL,
         gradient: gradient,
-        color: backgroundColor,
-        boxShadow: [
-          BoxShadow(
-            color: theme.shadowColor,
-            blurRadius: 24,
-            offset: const Offset(0, 8),
-          ),
-        ],
+        color: bgColor,
+        boxShadow: gradient != null ? AppShadows.soft : null,
+        border: bgColor == theme.colorScheme.surface
+            ? Border.all(color: theme.colorScheme.outlineVariant)
+            : null,
       ),
       child: Material(
         color: Colors.transparent,
-        borderRadius: BorderRadius.circular(AppTheme.radiusXL),
+        borderRadius: AppBorders.borderRadiusL,
         child: InkWell(
           onTap: onTap,
-          borderRadius: BorderRadius.circular(AppTheme.radiusXL),
+          borderRadius: AppBorders.borderRadiusL,
           child: Padding(
-            padding: const EdgeInsets.all(AppTheme.spaceL),
+            padding: const EdgeInsets.all(AppSpacing.xl),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Expanded(
                       child: Column(
@@ -60,40 +68,40 @@ class BalanceCard extends StatelessWidget {
                           Text(
                             title,
                             style: theme.textTheme.titleMedium?.copyWith(
-                              color: theme.colorScheme.onPrimary
-                                  .withAlpha((255 * 0.9).round()),
-                              fontWeight: FontWeight.w500,
+                              color: textColor.withAlpha((255 * 0.8).round()),
+                              fontWeight: FontWeight.w600,
+                              letterSpacing: 0.5,
                             ),
                           ),
-                          const SizedBox(height: AppTheme.spaceS),
+                          const SizedBox(height: AppSpacing.sm),
                           Text(
                             currencyFormatter.format(totalValue),
                             style: theme.textTheme.headlineMedium?.copyWith(
-                              fontWeight: FontWeight.bold,
-                              color: theme.colorScheme.onPrimary,
-                              height: 1.1,
+                              fontWeight: FontWeight.w800,
+                              color: textColor,
+                              letterSpacing: -1,
                             ),
                           ),
                         ],
                       ),
                     ),
-                    Container(
-                      padding: const EdgeInsets.all(AppTheme.spaceM - 2),
-                      decoration: BoxDecoration(
-                        color: theme.colorScheme.onPrimary
-                            .withAlpha((255 * 0.15).round()),
-                        borderRadius: BorderRadius.circular(AppTheme.radiusL),
+                    if (gradient != null || backgroundColor != null)
+                      Container(
+                        padding: const EdgeInsets.all(AppSpacing.sm),
+                        decoration: BoxDecoration(
+                          color: textColor.withAlpha((255 * 0.15).round()),
+                          borderRadius: AppBorders.borderRadiusM,
+                        ),
+                        child: Icon(
+                          Icons.account_balance_wallet_rounded,
+                          color: textColor,
+                          size: 28,
+                        ),
                       ),
-                      child: Icon(
-                        Icons.account_balance_wallet_rounded,
-                        color: theme.colorScheme.onPrimary,
-                        size: 28,
-                      ),
-                    ),
                   ],
                 ),
                 if (subtitle != null) ...[
-                  const SizedBox(height: AppTheme.spaceL),
+                  const SizedBox(height: AppSpacing.lg),
                   subtitle!,
                 ],
               ],

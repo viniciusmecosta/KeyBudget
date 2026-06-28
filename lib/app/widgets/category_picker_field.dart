@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:key_budget/core/models/expense_category_model.dart';
 
-class CategoryPickerField extends StatelessWidget {
+class CategoryPickerField extends ConsumerWidget {
   final String label;
   final ExpenseCategory? value;
   final List<ExpenseCategory> categories;
@@ -22,7 +23,7 @@ class CategoryPickerField extends StatelessWidget {
   });
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
     return FormField<ExpenseCategory>(
       validator: validator,

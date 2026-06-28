@@ -2,6 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart' as firebase;
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:key_budget/app/config/app_theme.dart';
 import 'package:key_budget/core/models/expense_category_model.dart';
@@ -195,3 +196,6 @@ class AuthRepository {
     return _firebaseAuth.currentUser;
   }
 }
+
+final authRepositoryProvider =
+    Provider<AuthRepository>((ref) => AuthRepository());

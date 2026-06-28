@@ -1,49 +1,89 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:home_widget/home_widget.dart';
 import 'package:key_budget/app/config/app_config.dart';
-import 'package:key_budget/app/config/app_providers.dart';
 import 'package:key_budget/app/config/app_theme.dart';
+import 'package:key_budget/app/utils/app_scroll_behavior.dart';
 import 'package:key_budget/app/view/auth_gate.dart';
 import 'package:key_budget/app/view/lock_screen.dart';
 import 'package:key_budget/core/services/app_lock_service.dart';
 import 'package:key_budget/core/services/home_widget_service.dart';
 import 'package:key_budget/core/services/notification_service.dart';
 import 'package:key_budget/features/auth/viewmodel/auth_viewmodel.dart';
+import 'package:key_budget/features/dashboard/widgets/dashboard_skeleton.dart';
 import 'package:key_budget/features/expenses/view/add_expense_screen.dart';
-import 'package:provider/provider.dart';
 
 final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 
 Future<void> main() async {
-  try {
-    WidgetsFlutterBinding.ensureInitialized();
+  WidgetsFlutterBinding.ensureInitialized();
+  runApp(
+    const ProviderScope(child: AppInitializer()),
+  );
+}
 
-    await Future.wait([
-      AppConfig.initialize(),
-      HomeWidgetService.initialize(),
-      NotificationService.initialize(),
-    ]);
+class AppInitializer extends ConsumerStatefulWidget {
+  const AppInitializer({super.key});
 
-    runApp(
-      MultiProvider(
-        providers: appProviders,
-        child: const MyApp(),
-      ),
+  @override
+  ConsumerState<AppInitializer> createState() => _AppInitializerState();
+}
+
+class _AppInitializerState extends ConsumerState<AppInitializer> {
+  Future<void>? _initFuture;
+
+  @override
+  void initState() {
+    super.initState();
+    _initFuture = _initServices();
+  }
+
+  Future<void> _initServices() async {
+    await AppConfig.initialize();
+    ref.read(authViewModelProvider);
+    HomeWidgetService.initialize();
+    NotificationService.initialize();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return FutureBuilder(
+      future: _initFuture,
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.done) {
+          if (snapshot.hasError) {
+            return ErrorScreen(error: snapshot.error.toString());
+          }
+          return const MyApp();
+        }
+
+        return MaterialApp(
+          title: 'KeyBudget',
+          theme: AppTheme.lightTheme,
+          darkTheme: AppTheme.darkTheme,
+          themeMode: ThemeMode.system,
+          debugShowCheckedModeBanner: false,
+          scrollBehavior: const AppScrollBehavior(),
+          home: const Scaffold(
+            body: SafeArea(
+              child: DashboardSkeleton(),
+            ),
+          ),
+        );
+      },
     );
-  } catch (e) {
-    runApp(ErrorScreen(error: e.toString()));
   }
 }
 
-class MyApp extends StatefulWidget {
+class MyApp extends ConsumerStatefulWidget {
   const MyApp({super.key});
 
   @override
-  State<MyApp> createState() => _MyAppState();
+  ConsumerState<MyApp> createState() => _MyAppState();
 }
 
-class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
+class _MyAppState extends ConsumerState<MyApp> with WidgetsBindingObserver {
   Uri? _pendingWidgetUri;
 
   @override
@@ -79,8 +119,8 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
       return;
     }
 
-    final authViewModel = Provider.of<AuthViewModel>(context, listen: false);
-    final appLockService = Provider.of<AppLockService>(context, listen: false);
+    final authViewModel = ref.read(authViewModelProvider);
+    final appLockService = ref.read(appLockServiceProvider);
 
     void navigateAndClear() {
       _pendingWidgetUri = null;
@@ -116,8 +156,8 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     super.didChangeAppLifecycleState(state);
-    final appLockService = Provider.of<AppLockService>(context, listen: false);
-    final authViewModel = Provider.of<AuthViewModel>(context, listen: false);
+    final appLockService = ref.read(appLockServiceProvider);
+    final authViewModel = ref.read(authViewModelProvider);
 
     if (state == AppLifecycleState.paused &&
         authViewModel.currentUser != null) {
@@ -134,6 +174,7 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
       darkTheme: AppTheme.darkTheme,
       themeMode: ThemeMode.system,
       debugShowCheckedModeBanner: false,
+      scrollBehavior: const AppScrollBehavior(),
       localizationsDelegates: const [
         GlobalMaterialLocalizations.delegate,
         GlobalWidgetsLocalizations.delegate,
@@ -145,8 +186,9 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
       locale: const Locale('pt', 'BR'),
       home: const AuthGate(),
       builder: (context, navigator) {
-        return Consumer<AppLockService>(
-          builder: (context, appLock, _) {
+        return Consumer(
+          builder: (context, ref, _) {
+            final appLock = ref.watch(appLockServiceProvider);
             return Stack(
               children: [
                 if (navigator != null) navigator,
@@ -160,13 +202,13 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
   }
 }
 
-class ErrorScreen extends StatelessWidget {
+class ErrorScreen extends ConsumerWidget {
   final String error;
 
   const ErrorScreen({super.key, required this.error});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       theme: AppTheme.lightTheme,
