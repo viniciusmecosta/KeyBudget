@@ -76,11 +76,31 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
       title: "Criar Conta",
       subtitle: "Preencha seus dados para começar",
       showBackButton: true,
-      footer: AppButton(
-        label: 'Já tem uma conta? Faça login',
-        variant: AppButtonVariant.ghost,
-        isFullWidth: true,
-        onPressed: () => Navigator.of(context).pop(),
+      footer: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Text(
+            'Já tem uma conta?',
+            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
+            ),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            style: TextButton.styleFrom(
+              padding: const EdgeInsets.symmetric(horizontal: AppSpacing.sm),
+              minimumSize: Size.zero,
+              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+            ),
+            child: Text(
+              'Faça login',
+              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                color: Theme.of(context).colorScheme.primary,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ),
+        ],
       ),
       child: Form(
         key: _formKey,

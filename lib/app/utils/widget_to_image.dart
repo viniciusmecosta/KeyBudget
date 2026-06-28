@@ -4,6 +4,7 @@ import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 class WidgetToImage {
   static Future<Uint8List?> captureWidget(
@@ -75,67 +76,24 @@ class WidgetToImage {
   static Future<Uint8List?> captureWidgetFromProvider(
       BuildContext context, Widget widget,
       {Duration? wait}) async {
-    final GlobalKey key = GlobalKey();
-    final completer = Completer<Uint8List?>();
-
-    final OverlayEntry overlayEntry = OverlayEntry(
-      builder: (context) => Positioned(
-        top: 0,
-        left: 0,
-        child: IgnorePointer(
-          child: Opacity(
-            opacity: 0.001,
+    // We use the offline renderer but wrap it in the required context providers
+    // to avoid Impeller culling the widget on the live overlay.
+    return captureWidget(
+      context,
+      UncontrolledProviderScope(
+        container: ProviderScope.containerOf(context),
+        child: Theme(
+          data: Theme.of(context),
+          child: MediaQuery(
+            data: MediaQuery.of(context),
             child: Material(
               type: MaterialType.transparency,
-              child: RepaintBoundary(
-                key: key,
-                child: widget,
-              ),
+              child: widget,
             ),
           ),
         ),
       ),
+      wait: wait,
     );
-
-    Overlay.of(context).insert(overlayEntry);
-
-    WidgetsBinding.instance.addPostFrameCallback((_) async {
-      if (wait != null) {
-        await Future.delayed(wait);
-      }
-      await Future.delayed(const Duration(milliseconds: 100));
-
-      try {
-        RenderRepaintBoundary? boundary =
-            key.currentContext?.findRenderObject() as RenderRepaintBoundary?;
-        if (boundary != null && !boundary.debugNeedsPaint) {
-          ui.Image image = await boundary.toImage(pixelRatio: 3.0);
-          ByteData? byteData =
-              await image.toByteData(format: ui.ImageByteFormat.png);
-          Future.microtask(() => completer.complete(byteData?.buffer.asUint8List()));
-        } else {
-          debugPrint(
-              'Error capturing widget: Boundary needs paint or is null.');
-          await Future.delayed(const Duration(milliseconds: 500));
-          if (boundary != null && !boundary.debugNeedsPaint) {
-            ui.Image image = await boundary.toImage(pixelRatio: 3.0);
-            ByteData? byteData =
-                await image.toByteData(format: ui.ImageByteFormat.png);
-            Future.microtask(() => completer.complete(byteData?.buffer.asUint8List()));
-          } else {
-            debugPrint(
-                'Error capturing widget: Boundary still needs paint or is null after retry.');
-            Future.microtask(() => completer.complete(null));
-          }
-        }
-      } catch (e) {
-        debugPrint('Error capturing widget with provider: $e');
-        Future.microtask(() => completer.complete(null));
-      } finally {
-        overlayEntry.remove();
-      }
-    });
-
-    return completer.future;
   }
 }

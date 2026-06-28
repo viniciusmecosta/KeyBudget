@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:key_budget/core/design_system/spacing/app_spacing.dart';
-import 'package:key_budget/core/design_system/widgets/app_card.dart';
+
 import 'package:key_budget/app/utils/app_animations.dart';
 
 class AuthPageLayout extends StatelessWidget {
@@ -39,60 +39,63 @@ class AuthPageLayout extends StatelessWidget {
         child: AppAnimations.fadeIn(
           Center(
             child: SingleChildScrollView(
-              padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xl, vertical: AppSpacing.md),
+              padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xxl, vertical: AppSpacing.xl),
               child: ConstrainedBox(
                 constraints: const BoxConstraints(maxWidth: 450),
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    if (!showBackButton)
-                      Hero(
-                        tag: 'auth_logo',
-                        child: Container(
-                          padding: const EdgeInsets.all(AppSpacing.xl),
-                          decoration: BoxDecoration(
-                            color: theme.colorScheme.primaryContainer.withOpacity(0.5),
-                            shape: BoxShape.circle,
-                          ),
+                    if (!showBackButton) ...[
+                      Center(
+                        child: Hero(
+                          tag: 'auth_logo',
                           child: Container(
-                            padding: const EdgeInsets.all(AppSpacing.md),
+                            width: 80,
+                            height: 80,
                             decoration: BoxDecoration(
-                              color: theme.colorScheme.primaryContainer,
-                              shape: BoxShape.circle,
-                            ),
-                            child: Icon(
-                              Icons.account_balance_wallet_rounded,
-                              size: 48,
                               color: theme.colorScheme.primary,
+                              shape: BoxShape.rectangle,
+                              borderRadius: BorderRadius.circular(24),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: theme.colorScheme.primary.withValues(alpha: 0.3),
+                                  blurRadius: 20,
+                                  offset: const Offset(0, 8),
+                                ),
+                              ],
+                            ),
+                            child: const Icon(
+                              Icons.account_balance_wallet_rounded,
+                              size: 40,
+                              color: Colors.white,
                             ),
                           ),
                         ),
                       ),
-                    if (!showBackButton) const SizedBox(height: AppSpacing.xl),
+                      const SizedBox(height: AppSpacing.xxxl),
+                    ],
                     Text(
                       title,
-                      textAlign: TextAlign.center,
+                      textAlign: TextAlign.start,
                       style: theme.textTheme.headlineMedium?.copyWith(
-                        color: theme.colorScheme.primary,
-                        fontWeight: FontWeight.bold,
+                        color: theme.colorScheme.onSurface,
+                        fontWeight: FontWeight.w800,
+                        letterSpacing: -0.5,
                       ),
                     ),
                     const SizedBox(height: AppSpacing.xs),
                     Text(
                       subtitle,
-                      textAlign: TextAlign.center,
+                      textAlign: TextAlign.start,
                       style: theme.textTheme.titleMedium?.copyWith(
                         color: theme.colorScheme.onSurfaceVariant,
                       ),
                     ),
-                    const SizedBox(height: AppSpacing.xxl),
-                    AppCard(
-                      padding: const EdgeInsets.all(AppSpacing.xl),
-                      child: child,
-                    ),
+                    const SizedBox(height: 32),
+                    child,
                     if (footer != null) ...[
-                      const SizedBox(height: AppSpacing.xl),
+                      const SizedBox(height: 32),
                       footer!,
                     ],
                   ],

@@ -79,21 +79,56 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       subtitle: "Faça login para continuar",
       footer: Column(
         children: [
+          Row(
+            children: [
+              Expanded(child: Divider(color: Theme.of(context).colorScheme.outlineVariant)),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
+                child: Text(
+                  'ou',
+                  style: Theme.of(context).textTheme.labelMedium?.copyWith(
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  ),
+                ),
+              ),
+              Expanded(child: Divider(color: Theme.of(context).colorScheme.outlineVariant)),
+            ],
+          ),
+          const SizedBox(height: AppSpacing.xl),
           AppButton(
-            label: 'Entrar com Google',
-            icon: Icons.account_circle_outlined,
+            label: 'Continuar com Google',
+            icon: Icons.g_mobiledata_rounded,
             variant: AppButtonVariant.outline,
             isFullWidth: true,
             isLoading: viewModel.isLoading,
             onPressed: _submitGoogle,
           ),
-          const SizedBox(height: AppSpacing.lg),
-          AppButton(
-            label: 'Não tem uma conta? Cadastre-se',
-            variant: AppButtonVariant.ghost,
-            onPressed: () {
-              NavigationUtils.push(context, const RegisterScreen());
-            },
+          const SizedBox(height: AppSpacing.xl),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Text(
+                'Novo por aqui?',
+                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                ),
+              ),
+              TextButton(
+                onPressed: () => NavigationUtils.push(context, const RegisterScreen()),
+                style: TextButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(horizontal: AppSpacing.sm),
+                  minimumSize: Size.zero,
+                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                ),
+                child: Text(
+                  'Cadastre-se',
+                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                    color: Theme.of(context).colorScheme.primary,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+            ],
           ),
         ],
       ),
@@ -131,7 +166,27 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   ? 'A senha deve ter pelo menos 6 caracteres'
                   : null,
             ),
-            const SizedBox(height: AppSpacing.xl),
+            Align(
+              alignment: Alignment.centerRight,
+              child: TextButton(
+                onPressed: () {
+                  // TODO: Implement forgot password
+                },
+                style: TextButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xs, vertical: AppSpacing.sm),
+                  minimumSize: Size.zero,
+                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                ),
+                child: Text(
+                  'Esqueceu sua senha?',
+                  style: Theme.of(context).textTheme.labelMedium?.copyWith(
+                    color: Theme.of(context).colorScheme.primary,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+            ),
+            const SizedBox(height: AppSpacing.lg),
             AppButton(
               label: 'Entrar',
               isFullWidth: true,
