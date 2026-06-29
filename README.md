@@ -1,162 +1,141 @@
+<div align="center">
+
 # KeyBudget
 
 [![Flutter](https://img.shields.io/badge/Flutter-02569B?style=for-the-badge&logo=flutter&logoColor=white)](https://flutter.dev/)
 [![Dart](https://img.shields.io/badge/Dart-0175C2?style=for-the-badge&logo=dart&logoColor=white)](https://dart.dev/)
 [![Firebase](https://img.shields.io/badge/Firebase-FFCA28?style=for-the-badge&logo=firebase&logoColor=black)](https://firebase.google.com/)
+[![Riverpod](https://img.shields.io/badge/Riverpod-1A73E8?style=for-the-badge&logo=dart&logoColor=white)](https://riverpod.dev/)
 
-O **KeyBudget** é um aplicativo desenvolvido em **Flutter** que une praticidade e segurança para o
-gerenciamento de finanças pessoais e de credenciais.
-Com um design moderno e responsivo, o projeto oferece controle detalhado de gastos, relatórios
-visuais e armazenamento seguro de senhas com criptografia local.
+</div>
 
----
+O **KeyBudget** é um aplicativo financeiro e gerenciador de credenciais construído em Flutter. Ele fornece um ambiente unificado e seguro para o controle detalhado de despesas, categorização de gastos, relatórios analíticos e armazenamento de dados sensíveis (senhas e documentos) utilizando criptografia AES executada diretamente no dispositivo (on-device) antes de qualquer sincronização com a nuvem.
 
-## Principais Recursos
+## Funcionalidades Principais
 
-* **Controle Financeiro Completo:** Registre despesas, crie categorias e acompanhe seu fluxo de
-  caixa.
-* **Gerenciamento de Credenciais:** Armazene logins e senhas com criptografia AES local antes do
-  envio ao banco de dados.
-* **Análises e Relatórios:** Visualize tendências e comparativos mensais por meio de gráficos
-  interativos.
-* **Autenticação Segura:** Suporte a login com e-mail/senha, Google e autenticação biométrica.
-* **Privacidade Reforçada:** Bloqueio automático e proteção contra captura de tela.
-* **Importação e Exportação:** Transfira dados em formato CSV de forma simples e rápida.
+* **Controle Financeiro**: Gestão completa de despesas mensais e recorrentes, criação de categorias personalizadas e visão geral do fluxo de caixa.
+* **Cofre de Credenciais e Documentos**: Armazenamento seguro e criptografado de credenciais de login e documentos importantes, utilizando o algoritmo AES (pacote `encrypt`).
+* **Análises Gráficas**: Interface visual rica com gráficos de tendência e distribuição por categoria, operada nativamente pelo pacote `fl_chart`.
+* **Segurança e Biometria**: Integração com autenticação biométrica nativa (`local_auth`) e regras rígidas de expiração de sessão em segundo plano.
+* **Autenticação Flexível**: Gerenciamento de usuários através do Firebase Auth com suporte a e-mail/senha e Google Sign-In.
+* **Portabilidade de Dados e OCR**: Exportação nativa de relatórios (CSV/PDF) e leitura inteligente de recibos via `google_mlkit_text_recognition`.
 
----
+## Telas do Aplicativo
 
-## Autenticação e Segurança
+<div align="center">
+  <h4>Dashboard Inicial & Registro de Despesas</h4>
+  <img src="docs/images/home-light.jpg" width="24.5%" alt="Dashboard Claro" />
+  <img src="docs/images/home-dark.jpg" width="24.5%" alt="Dashboard Escuro" />
+  <img src="docs/images/expense-light.jpg" width="24.5%" alt="Despesas Claro" />
+  <img src="docs/images/expense-dark.jpg" width="24.5%" alt="Despesas Escuro" />
+  
+  <h4>Gerenciador de Credenciais & Documentos Armazenados</h4>
+  <img src="docs/images/credentials-light.jpg" width="24.5%" alt="Credenciais Claro" />
+  <img src="docs/images/credentials-dark.jpg" width="24.5%" alt="Credenciais Escuro" />
+  <img src="docs/images/documents-light.jpg" width="24.5%" alt="Documentos Claro" />
+  <img src="docs/images/documents-dark.jpg" width="24.5%" alt="Documentos Escuro" />
 
-* **Login Flexível:** Autenticação via e-mail/senha e integração com o Google.
-* **Biometria:** Desbloqueio rápido por impressão digital ou reconhecimento facial.
-* **Bloqueio Automático:** Requer nova autenticação ao retornar do segundo plano.
-* **Proteção Visual:** Impede capturas e gravações de tela no Android.
+  <h4>Análise Gráfica Mensal & Distribuição</h4>
+  <img src="docs/images/analysis1-light.jpg" width="24.5%" alt="Análise Claro 1" />
+  <img src="docs/images/analysis1-dark.jpg" width="24.5%" alt="Análise Escuro 1" />
+  <img src="docs/images/analysis2-light.jpg" width="24.5%" alt="Análise Claro 2" />
+  <img src="docs/images/analysis2-dark.jpg" width="24.5%" alt="Análise Escuro 2" />
 
----
+  <h4>Perfil e Configurações</h4>
+  <img src="docs/images/user-light.jpg" width="24.5%" alt="Perfil Claro" />
+  <img src="docs/images/user-dark.jpg" width="24.5%" alt="Perfil Escuro" />
+</div>
 
-## Gerenciamento de Despesas
+## Estrutura do Código e Arquitetura
 
-* **CRUD Completo:** Adicione, edite e remova despesas com facilidade.
-* **Categorias Personalizadas:** Crie e edite categorias com ícones e cores próprias.
-* **Filtros Avançados:** Analise gastos por categoria ou período.
-* **Navegação Temporal:** Acesse totais mensais e alterne entre diferentes períodos.
-* **Exportação e Importação CSV:** Mantenha seus dados portáteis e seguros.
+O projeto adota uma arquitetura modular baseada em *Feature-First*, combinada com a injeção de dependências do Riverpod. Isso garante um isolamento rigoroso entre as camadas de visualização (UI), regras de negócio (ViewModels) e acesso a dados (Repositories).
 
----
+```text
+lib/
+├── app/                  # Configurações globais, widgets base da interface raiz
+├── core/                 # Componentes compartilhados através de todo o aplicativo
+│   ├── design_system/    # Tokens de UI: Cores, tipografia, espaçamentos e componentes base
+│   ├── models/           # Classes de modelo (Entity)
+│   ├── services/         # Serviços de infraestrutura (Criptografia, Biometria, OCR, PDF)
+│   └── utils/            # Funções utilitárias e formatadores estáticos
+├── features/             # Módulos de negócio independentes (Feature-First)
+│   ├── analysis/         # Gráficos e inteligência de dados
+│   ├── auth/             # Autenticação e registro
+│   ├── category/         # Gestão de categorias de despesas
+│   ├── credentials/      # Cofre de senhas criptografadas
+│   ├── dashboard/        # Tela inicial (Overview)
+│   ├── documents/        # Gerenciamento de documentos armazenados
+│   ├── expenses/         # Fluxo de registro e acompanhamento de gastos
+│   ├── suppliers/        # Relacionamento de fornecedores
+│   └── user/             # Configurações de perfil
+└── main.dart             # Ponto de entrada (Entrypoint)
+```
 
-## Gerenciamento de Credenciais
+## Pré-requisitos do Ambiente
 
-* **Sincronização com Firestore:** Armazena dados criptografados em nuvem.
-* **Criptografia AES Local:** As senhas são criptografadas no dispositivo antes do envio.
-* **Cópia Rápida:** Copie informações como usuário e senha com um toque.
-* **Identificação Visual:** Associe logos personalizados a cada credencial.
+Para compilar e executar o projeto nativamente, certifique-se de configurar o seu ambiente adequadamente:
 
----
+* [Flutter SDK](https://docs.flutter.dev/get-started/install) nas versões `>=3.4.3 <4.0.0`.
+* Acesso ativo ao console do Firebase com as configurações (`google-services.json` e `GoogleService-Info.plist`) prontas para Android e iOS.
+* Criação de uma chave AES estática (32 bytes) para garantir a consistência dos testes e uso local.
 
-## Dashboard e Relatórios
+## Guia de Instalação e Execução
 
-* **Resumo Mensal:** Exibe gastos, credenciais e comparativo com meses anteriores.
-* **Tendência de Gastos:** Gráfico de linha com o histórico dos últimos seis meses.
-* **Distribuição por Categoria:** Gráfico de pizza com análise de gastos detalhada.
-* **Atividades Recentes:** Lista das últimas movimentações registradas.
-
----
-
-## Perfil do Usuário
-
-* **Gerenciamento de Perfil:** Atualize informações como nome, telefone e foto.
-* **Alteração de Senha:** Modifique sua senha de forma segura.
-
----
-
-## Tecnologias Utilizadas
-
-[![Provider](https://img.shields.io/badge/Provider-4285F4?style=for-the-badge&logo=flutter&logoColor=white)](https://pub.dev/packages/provider) [![Flutter Secure Storage](https://img.shields.io/badge/Secure%20Storage-007ACC?style=for-the-badge&logo=flutter&logoColor=white)](https://pub.dev/packages/flutter_secure_storage) [![Encrypt](https://img.shields.io/badge/Encrypt-6200EE?style=for-the-badge&logo=dart&logoColor=white)](https://pub.dev/packages/encrypt) [![FL Chart](https://img.shields.io/badge/FL%20Chart-00C853?style=for-the-badge&logo=flutter&logoColor=white)](https://pub.dev/packages/fl_chart) [![Local Auth](https://img.shields.io/badge/Local%20Auth-00BCD4?style=for-the-badge&logo=flutter&logoColor=white)](https://pub.dev/packages/local_auth) [![Google Sign In](https://img.shields.io/badge/Google%20Sign%20In-DB4437?style=for-the-badge&logo=google&logoColor=white)](https://pub.dev/packages/google_sign_in) [![Syncfusion PDF Viewer](https://img.shields.io/badge/Syncfusion%20PDF-673AB7?style=for-the-badge&logo=flutter&logoColor=white)](https://pub.dev/packages/syncfusion_flutter_pdfviewer) [![Google ML Kit Text Recognition](https://img.shields.io/badge/ML%20Kit%20Text%20Recognition-4285F4?style=for-the-badge&logo=google&logoColor=white)](https://pub.dev/packages/google_mlkit_text_recognition)
-
----
-
-## Instalação e Configuração
-
-### Pré-requisitos
-
-* Flutter SDK instalado e configurado
-* Conta no Firebase
-* Chave AES de 32 caracteres para criptografia local
-
-### Passos
+1. **Clone o Repositório**
 
 ```bash
 git clone https://github.com/viniciusmecosta/KeyBudget.git
 cd KeyBudget
 ```
 
-1. **Configurar o Firebase**
-    * Crie um projeto no [Firebase Console](https://console.firebase.google.com/).
-    * Adicione o app Android/iOS e baixe os arquivos `google-services.json` e/ou
-      `GoogleService-Info.plist`.
-    * Ative **Authentication** (E-mail/Senha e Google) e **Firestore Database**.
+2. **Configuração Firebase e Nativa**
 
-2. **Criar arquivo `.env`**
-   Na pasta `assets/`, adicione:
+Acesse o Firebase, crie o projeto e adicione os descritores correspondentes em:
+- `android/app/google-services.json`
+- `ios/Runner/GoogleService-Info.plist`
 
-   ```
-   ENCRYPTION_KEY=sua_chave_de_criptografia_de_32_caracteres
-   ```
+No Firebase Console, não esqueça de ativar os métodos do **Authentication** (E-mail/Senha e Google) e inicializar seu banco de dados no **Firestore**.
 
-3. **Instalar dependências**
+3. **Injeção de Variáveis de Ambiente**
 
-   ```bash
-   flutter pub get
-   ```
+Dentro do diretório raiz ou em `assets/` (conforme especificado na configuração do `flutter_dotenv`), crie o arquivo `.env` contendo a chave para a camada de criptografia. 
 
-4. **Executar o aplicativo**
+```env
+ENCRYPTION_KEY=SuaChaveDeSegurancaExata32Bytes!
+```
 
-   ```bash
-   flutter run
-   ```
+4. **Instalação das Dependências**
 
----
+```bash
+flutter pub get
+```
+
+5. **Compilação e Execução**
+
+Para executar o projeto em modo de desenvolvimento com hot-reload ativo:
+
+```bash
+flutter run
+```
 
 ## Regras de Segurança do Firestore
 
-```
+A arquitetura de dados no Firestore foi modelada visando o isolamento rigoroso por usuário. Insira e publique estas diretrizes na aba *Rules* do seu painel do Firestore antes de lançar o app.
+
+```javascript
 rules_version = '2';
 
 service cloud.firestore {
   match /databases/{database}/documents {
-
+    // Isolamento de perfil por Usuário Autenticado
     match /users/{userId} {
       allow read, update: if request.auth != null && request.auth.uid == userId;
       allow create: if request.auth != null;
     }
-
+    // Isolamento de Subcoleções (Despesas, Credenciais, etc)
     match /users/{userId}/{collection}/{docId} {
       allow read, write, create, delete: if request.auth != null && request.auth.uid == userId;
     }
   }
 }
 ```
-
----
-
-## Estrutura do Projeto
-
-```
-lib/
-├── main.dart
-├── app/
-│   ├── config/
-│   ├── view/
-│   ├── viewmodel/
-│   └── widgets/
-├── core/
-│   ├── models/
-│   └── services/
-└── features/
-    ├── auth/
-    ├── credentials/
-    ├── dashboard/
-    ├── expenses/
-    ├── analysis/
-    ├── category/
-    └── user/
