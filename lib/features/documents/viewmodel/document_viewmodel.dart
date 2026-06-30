@@ -4,7 +4,7 @@ import 'dart:io';
 
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_riverpod/legacy.dart';
 import 'package:key_budget/app/widgets/animated_list_item.dart';
 import 'package:key_budget/core/models/document_model.dart';
 import 'package:key_budget/core/services/drive_service.dart';
@@ -268,7 +268,7 @@ class DocumentViewModel extends ChangeNotifier {
     notifyListeners();
 
     try {
-      FilePickerResult? result = await FilePicker.platform.pickFiles(
+      FilePickerResult? result = await FilePicker.pickFiles(
         type: FileType.custom,
         allowedExtensions: ['jpg', 'png', 'webp', 'pdf'],
       );

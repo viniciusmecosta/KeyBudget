@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_riverpod/legacy.dart';
 import 'package:key_budget/core/models/expense_model.dart';
 import 'package:key_budget/core/services/home_widget_service.dart';
 import 'package:key_budget/features/category/viewmodel/category_viewmodel.dart';
