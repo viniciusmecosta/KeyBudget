@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import 'package:key_budget/core/constants/app_icons.dart';
+
 class ExpenseCategory {
   final String? id;
   final String name;
@@ -13,7 +15,12 @@ class ExpenseCategory {
     required this.colorValue,
   });
 
-  IconData get icon => IconData(iconCodePoint, fontFamily: 'MaterialIcons');
+  IconData get icon {
+    return AppIcons.all.firstWhere(
+      (icon) => icon.codePoint == iconCodePoint,
+      orElse: () => Icons.category,
+    );
+  }
 
   Color get color => Color(colorValue);
 

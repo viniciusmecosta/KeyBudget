@@ -24,8 +24,8 @@ class DashboardMonthlyChart extends ConsumerWidget {
       final monthsDifference =
           (now.year - exp.date.year) * 12 + now.month - exp.date.month;
       if (monthsDifference >= 0 && monthsDifference < 7) {
-        expensesByMonth[monthsDifference] =
-            (expensesByMonth[monthsDifference] ?? 0.0) + exp.amount;
+        expensesByMonth[monthsDifference.toInt()] =
+            (expensesByMonth[monthsDifference.toInt()] ?? 0.0) + exp.amount;
       }
     }
 

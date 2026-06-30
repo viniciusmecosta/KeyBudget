@@ -261,9 +261,9 @@ class MonthlyTrendSectionWidget extends ConsumerWidget {
             drawVerticalLine: true,
             horizontalInterval: 500,
             getDrawingHorizontalLine: (value) => FlLine(
-                color: theme.dividerColor.withOpacity(0.1), strokeWidth: 1),
+                color: theme.dividerColor.withValues(alpha: 0.1), strokeWidth: 1),
             getDrawingVerticalLine: (value) => FlLine(
-                color: theme.dividerColor.withOpacity(0.1), strokeWidth: 1),
+                color: theme.dividerColor.withValues(alpha: 0.1), strokeWidth: 1),
           ),
           titlesData: FlTitlesData(
             show: true,
@@ -356,8 +356,8 @@ class MonthlyTrendSectionWidget extends ConsumerWidget {
                   begin: Alignment.topCenter,
                   end: Alignment.bottomCenter,
                   colors: [
-                    theme.colorScheme.primary.withOpacity(0.2),
-                    theme.colorScheme.primary.withOpacity(0.0),
+                    theme.colorScheme.primary.withValues(alpha: 0.2),
+                    theme.colorScheme.primary.withValues(alpha: 0.0),
                   ],
                 ),
               ),

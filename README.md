@@ -24,26 +24,26 @@ O **KeyBudget** é um aplicativo financeiro e gerenciador de credenciais constru
 
 <div align="center">
   <h4>Dashboard Inicial & Registro de Despesas</h4>
-  <img src="docs/images/home-light.jpg" width="24.5%" alt="Dashboard Claro" />
-  <img src="docs/images/home-dark.jpg" width="24.5%" alt="Dashboard Escuro" />
-  <img src="docs/images/expense-light.jpg" width="24.5%" alt="Despesas Claro" />
-  <img src="docs/images/expense-dark.jpg" width="24.5%" alt="Despesas Escuro" />
+  <img src="docs/images/home-light.jpg" width="23%" alt="Dashboard Claro" />
+  <img src="docs/images/home-dark.jpg" width="23%" alt="Dashboard Escuro" />
+  <img src="docs/images/expense-light.jpg" width="23%" alt="Despesas Claro" />
+  <img src="docs/images/expense-dark.jpg" width="23%" alt="Despesas Escuro" />
   
   <h4>Gerenciador de Credenciais & Documentos Armazenados</h4>
-  <img src="docs/images/credentials-light.jpg" width="24.5%" alt="Credenciais Claro" />
-  <img src="docs/images/credentials-dark.jpg" width="24.5%" alt="Credenciais Escuro" />
-  <img src="docs/images/documents-light.jpg" width="24.5%" alt="Documentos Claro" />
-  <img src="docs/images/documents-dark.jpg" width="24.5%" alt="Documentos Escuro" />
+  <img src="docs/images/credentials-light.jpg" width="23%" alt="Credenciais Claro" />
+  <img src="docs/images/credentials-dark.jpg" width="23%" alt="Credenciais Escuro" />
+  <img src="docs/images/documents-light.jpg" width="23%" alt="Documentos Claro" />
+  <img src="docs/images/documents-dark.jpg" width="23%" alt="Documentos Escuro" />
 
   <h4>Análise Gráfica Mensal & Distribuição</h4>
-  <img src="docs/images/analysis1-light.jpg" width="24.5%" alt="Análise Claro 1" />
-  <img src="docs/images/analysis1-dark.jpg" width="24.5%" alt="Análise Escuro 1" />
-  <img src="docs/images/analysis2-light.jpg" width="24.5%" alt="Análise Claro 2" />
-  <img src="docs/images/analysis2-dark.jpg" width="24.5%" alt="Análise Escuro 2" />
+  <img src="docs/images/analysis1-light.jpg" width="23%" alt="Análise Claro 1" />
+  <img src="docs/images/analysis1-dark.jpg" width="23%" alt="Análise Escuro 1" />
+  <img src="docs/images/analysis2-light.jpg" width="23%" alt="Análise Claro 2" />
+  <img src="docs/images/analysis2-dark.jpg" width="23%" alt="Análise Escuro 2" />
 
   <h4>Perfil e Configurações</h4>
-  <img src="docs/images/user-light.jpg" width="24.5%" alt="Perfil Claro" />
-  <img src="docs/images/user-dark.jpg" width="24.5%" alt="Perfil Escuro" />
+  <img src="docs/images/user-light.jpg" width="23%" alt="Perfil Claro" />
+  <img src="docs/images/user-dark.jpg" width="23%" alt="Perfil Escuro" />
 </div>
 
 ## Estrutura do Código e Arquitetura

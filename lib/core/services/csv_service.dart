@@ -111,8 +111,7 @@ class CsvService {
   }
 
   Future<File?> _pickCsvFile() async {
-    FilePickerResult? result = await FilePicker.platform
-        .pickFiles(type: FileType.custom, allowedExtensions: ['csv']);
+    FilePickerResult? result = await FilePicker.pickFiles(type: FileType.custom, allowedExtensions: ['csv']);
     if (result != null && result.files.single.path != null) {
       return File(result.files.single.path!);
     }
