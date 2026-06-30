@@ -1,7 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_riverpod/legacy.dart';
 import 'package:key_budget/core/models/supplier_model.dart';
 import 'package:key_budget/features/suppliers/repository/supplier_repository.dart';
 
