@@ -132,16 +132,12 @@ class _CredentialDetailScreenState
     await viewModel.deleteCredential(userId, deletedCredential.id!);
 
     if (!currentContext.mounted) return;
-    SnackbarService.showSuccess(
+    SnackbarService.showUndoSnackbar(
       currentContext,
-      'Credencial excluída.',
-      action: SnackBarAction(
-        label: 'Desfazer',
-        textColor: Colors.white,
-        onPressed: () async {
-          await viewModel.restoreCredential(userId, deletedCredential);
-        },
-      ),
+      message: 'Credencial excluída.',
+      onUndo: () async {
+        await viewModel.restoreCredential(userId, deletedCredential);
+      },
     );
     screenNavigator.pop();
   }
