@@ -164,16 +164,12 @@ class _ExpenseDetailScreenState extends ConsumerState<ExpenseDetailScreen> {
     } else {
       await expenseViewModel.deleteExpense(userId, deletedExpense.id!);
       if (currentContext.mounted) {
-        SnackbarService.showSuccess(
+        SnackbarService.showUndoSnackbar(
           currentContext,
-          'Despesa excluída.',
-          action: SnackBarAction(
-            label: 'Desfazer',
-            textColor: Colors.white,
-            onPressed: () async {
-              await expenseViewModel.restoreExpense(userId, deletedExpense);
-            },
-          ),
+          message: 'Despesa excluída.',
+          onUndo: () async {
+            await expenseViewModel.restoreExpense(userId, deletedExpense);
+          },
         );
         Navigator.of(currentContext).pop();
       }

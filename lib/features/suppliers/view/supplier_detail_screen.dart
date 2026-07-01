@@ -107,16 +107,12 @@ class _SupplierDetailScreenState extends ConsumerState<SupplierDetailScreen> {
     await viewModel.deleteSupplier(userId, deletedSupplier.id!);
 
     if (!currentContext.mounted) return;
-    SnackbarService.showSuccess(
+    SnackbarService.showUndoSnackbar(
       currentContext,
-      'Fornecedor excluído.',
-      action: SnackBarAction(
-        label: 'Desfazer',
-        textColor: Colors.white,
-        onPressed: () async {
-          await viewModel.restoreSupplier(userId, deletedSupplier);
-        },
-      ),
+      message: 'Fornecedor excluído.',
+      onUndo: () async {
+        await viewModel.restoreSupplier(userId, deletedSupplier);
+      },
     );
     screenNavigator.pop();
   }

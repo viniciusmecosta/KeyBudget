@@ -42,16 +42,12 @@ class _CategoriesScreenState extends ConsumerState<CategoriesScreen> {
     await viewModel.deleteCategory(userId, category.id!);
 
     if (!scaffoldContext.mounted) return;
-    SnackbarService.showSuccess(
+    SnackbarService.showUndoSnackbar(
       scaffoldContext,
-      'Categoria excluída.',
-      action: SnackBarAction(
-        label: 'Desfazer',
-        textColor: Colors.white,
-        onPressed: () async {
-          await viewModel.restoreCategory(userId, category);
-        },
-      ),
+      message: 'Categoria excluída.',
+      onUndo: () async {
+        await viewModel.restoreCategory(userId, category);
+      },
     );
   }
 
