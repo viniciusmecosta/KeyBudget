@@ -6,6 +6,7 @@ import 'package:key_budget/core/design_system/spacing/app_spacing.dart';
 import 'package:key_budget/core/design_system/widgets/app_card.dart';
 
 import '../viewmodel/analysis_viewmodel.dart';
+import 'package:key_budget/features/auth/viewmodel/auth_viewmodel.dart';
 import 'empty_chart_state_widget.dart';
 
 extension StringCapitalize on String {
@@ -30,27 +31,33 @@ class _CategoryAnalysisSectionWidgetState
   @override
   Widget build(BuildContext context) {
     final viewModel = ref.watch(analysisViewModelProvider);
+    final enableIncomes = ref.watch(authViewModelProvider).currentUser?.enableIncomes ?? false;
+
     return AppCard(
       padding: const EdgeInsets.all(AppSpacing.lg),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'Análise por Categoria',
+            'Composição de Gastos',
             style: Theme.of(context).textTheme.titleMedium?.copyWith(
                   fontWeight: FontWeight.bold,
                 ),
           ),
           const SizedBox(height: 4),
           Text(
-            'Entenda onde seu dinheiro é gasto',
+            enableIncomes && viewModel.selectedMonthForCategory != null
+                ? 'Referente a ${DateFormat.yMMMM('pt_BR').format(viewModel.selectedMonthForCategory!).capitalize()}'
+                : 'Entenda onde seu dinheiro é gasto',
             style: Theme.of(context).textTheme.bodySmall?.copyWith(
                   color: Theme.of(context).colorScheme.onSurfaceVariant,
                 ),
           ),
           const SizedBox(height: AppSpacing.lg),
-          _buildCategoryMonthSelector(context, viewModel),
-          const SizedBox(height: AppSpacing.lg),
+          if (!enableIncomes) ...[
+            _buildCategoryMonthSelector(context, viewModel),
+            const SizedBox(height: AppSpacing.lg),
+          ],
           _buildEnhancedCategoryBreakdown(context, viewModel),
         ],
       ),
@@ -159,6 +166,7 @@ class _CategoryAnalysisSectionWidgetState
 
                   final monthExpenses = viewModel.allExpenses.where(
                     (exp) =>
+                        exp.isIncome != true &&
                         exp.date.year == month.year &&
                         exp.date.month == month.month,
                   );
