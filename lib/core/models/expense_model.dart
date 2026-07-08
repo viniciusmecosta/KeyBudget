@@ -8,6 +8,7 @@ class Expense {
   final String? installmentGroupId;
   final int? currentInstallment;
   final int? totalInstallments;
+  final bool? isIncome;
 
   Expense({
     this.id,
@@ -19,6 +20,7 @@ class Expense {
     this.installmentGroupId,
     this.currentInstallment,
     this.totalInstallments,
+    this.isIncome,
   });
 
   Map<String, dynamic> toMap() {
@@ -31,6 +33,7 @@ class Expense {
       'installmentGroupId': installmentGroupId,
       'currentInstallment': currentInstallment,
       'totalInstallments': totalInstallments,
+      'isIncome': isIncome,
     };
   }
 
@@ -45,6 +48,7 @@ class Expense {
       installmentGroupId: map['installmentGroupId'],
       currentInstallment: map['currentInstallment'],
       totalInstallments: map['totalInstallments'],
+      isIncome: map['isIncome'],
     );
   }
 
@@ -61,7 +65,8 @@ class Expense {
           location == other.location &&
           installmentGroupId == other.installmentGroupId &&
           currentInstallment == other.currentInstallment &&
-          totalInstallments == other.totalInstallments;
+          totalInstallments == other.totalInstallments &&
+          isIncome == other.isIncome;
 
   @override
   int get hashCode =>
@@ -73,5 +78,6 @@ class Expense {
       location.hashCode ^
       installmentGroupId.hashCode ^
       currentInstallment.hashCode ^
-      totalInstallments.hashCode;
+      totalInstallments.hashCode ^
+      isIncome.hashCode;
 }

@@ -28,6 +28,7 @@ class RecurringExpense {
   final int? dayOfMonth;
   final int? monthOfYear;
   final DateTime? lastInstanceDate;
+  final bool? isIncome;
 
   RecurringExpense({
     this.id,
@@ -42,6 +43,7 @@ class RecurringExpense {
     this.dayOfMonth,
     this.monthOfYear,
     this.lastInstanceDate,
+    this.isIncome,
   });
 
   Map<String, dynamic> toMap() {
@@ -59,6 +61,7 @@ class RecurringExpense {
       'lastInstanceDate': lastInstanceDate != null
           ? Timestamp.fromDate(lastInstanceDate!)
           : null,
+      'isIncome': isIncome,
     };
   }
 
@@ -77,6 +80,7 @@ class RecurringExpense {
       dayOfMonth: map['dayOfMonth'],
       monthOfYear: map['monthOfYear'],
       lastInstanceDate: (map['lastInstanceDate'] as Timestamp?)?.toDate(),
+      isIncome: map['isIncome'],
     );
   }
 }
