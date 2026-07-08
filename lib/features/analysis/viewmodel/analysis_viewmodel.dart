@@ -12,6 +12,7 @@ class AnalysisViewModel extends ChangeNotifier {
   DateTime? _selectedMonthForCategory;
   int _periodOffset = 0;
   int _selectedMonthsCount = 6;
+  int _trendMonthsCount = 3;
   DateTime? _customStartDate;
   DateTime? _customEndDate;
   bool _useCustomRange = false;
@@ -59,6 +60,8 @@ class AnalysisViewModel extends ChangeNotifier {
 
   int get selectedMonthsCount => _selectedMonthsCount;
 
+  int get trendMonthsCount => _trendMonthsCount;
+
   bool get useCustomRange => _useCustomRange;
 
   DateTime? get customStartDate => _customStartDate;
@@ -96,6 +99,11 @@ class AnalysisViewModel extends ChangeNotifier {
     notifyListeners();
   }
 
+  void setTrendMonthsCount(int count) {
+    _trendMonthsCount = count;
+    notifyListeners();
+  }
+
   void setCustomDateRange(DateTime? startDate, DateTime? endDate) {
     _customStartDate = startDate;
     _customEndDate = endDate;
@@ -125,20 +133,31 @@ class AnalysisViewModel extends ChangeNotifier {
   }
 
   double get totalOverall {
-    return allExpenses.fold(0.0, (sum, item) => sum + item.amount);
+    return allExpenses.where((exp) => exp.isIncome != true).fold(0.0, (sum, item) => sum + item.amount);
   }
 
   double get totalCurrentMonth {
-    final now = DateTime.now();
+    final targetMonth = _selectedMonthForCategory ?? DateTime.now();
     return allExpenses
         .where(
-            (exp) => exp.date.year == now.year && exp.date.month == now.month)
+            (exp) => exp.date.year == targetMonth.year && exp.date.month == targetMonth.month && exp.isIncome != true)
         .fold(0.0, (sum, item) => sum + item.amount);
   }
+
+  double get incomesCurrentMonth {
+    final targetMonth = _selectedMonthForCategory ?? DateTime.now();
+    return allExpenses
+        .where(
+            (exp) => exp.date.year == targetMonth.year && exp.date.month == targetMonth.month && exp.isIncome == true)
+        .fold(0.0, (sum, item) => sum + item.amount);
+  }
+
+  double get balanceCurrentMonth => incomesCurrentMonth - totalCurrentMonth;
 
   Map<String, double> get monthlyTotals {
     final Map<String, double> data = {};
     for (var expense in allExpenses) {
+      if (expense.isIncome == true) continue;
       final monthKey = DateFormat('yyyy-MM').format(expense.date);
       data.update(monthKey, (value) => value + expense.amount,
           ifAbsent: () => expense.amount);
@@ -153,11 +172,24 @@ class AnalysisViewModel extends ChangeNotifier {
   }
 
   double get lastMonthExpense {
-    final now = DateTime.now();
-    final lastMonth = DateTime(now.year, now.month - 1);
-    final lastMonthKey = DateFormat('yyyy-MM').format(lastMonth);
-    return monthlyTotals[lastMonthKey] ?? 0.0;
+    final targetMonth = _selectedMonthForCategory ?? DateTime.now();
+    final lastMonth = DateTime(targetMonth.year, targetMonth.month - 1);
+    return allExpenses
+        .where(
+            (exp) => exp.date.year == lastMonth.year && exp.date.month == lastMonth.month && exp.isIncome != true)
+        .fold(0.0, (sum, item) => sum + item.amount);
   }
+
+  double get lastMonthIncome {
+    final targetMonth = _selectedMonthForCategory ?? DateTime.now();
+    final lastMonth = DateTime(targetMonth.year, targetMonth.month - 1);
+    return allExpenses
+        .where(
+            (exp) => exp.date.year == lastMonth.year && exp.date.month == lastMonth.month && exp.isIncome == true)
+        .fold(0.0, (sum, item) => sum + item.amount);
+  }
+
+  double get lastMonthBalance => lastMonthIncome - lastMonthExpense;
 
   double get percentageChangeFromLastMonth {
     final lastMonth = lastMonthExpense;
@@ -166,20 +198,29 @@ class AnalysisViewModel extends ChangeNotifier {
     return ((currentMonth - lastMonth) / lastMonth) * 100;
   }
 
+  double get incomesPercentageChangeFromLastMonth {
+    final lastMonth = lastMonthIncome;
+    final currentMonth = incomesCurrentMonth;
+    if (lastMonth == 0) return 0.0;
+    return ((currentMonth - lastMonth) / lastMonth) * 100;
+  }
+
+  double get balancePercentageChangeFromLastMonth {
+    final lastMonth = lastMonthBalance;
+    final currentMonth = balanceCurrentMonth;
+    if (lastMonth == 0) return 0.0;
+    return ((currentMonth - lastMonth) / lastMonth.abs()) * 100;
+  }
+
   Map<String, double> get lastNMonthsData {
     final Map<String, double> data = {};
 
-    if (_useCustomRange && _customStartDate != null && _customEndDate != null) {
-      return _getCustomRangeData();
-    }
-
     final now = DateTime.now();
-    final currentPeriodEndDate = DateTime(
-        now.year, now.month - (_periodOffset * _selectedMonthsCount) + 1, 0);
+    final currentPeriodEndDate = DateTime(now.year, now.month + 1, 0);
     final currentPeriodStartDate = DateTime(currentPeriodEndDate.year,
-        currentPeriodEndDate.month - _selectedMonthsCount + 1, 1);
+        currentPeriodEndDate.month - _trendMonthsCount + 1, 1);
 
-    for (int i = 0; i < _selectedMonthsCount; i++) {
+    for (int i = 0; i < _trendMonthsCount; i++) {
       final date = DateTime(
           currentPeriodStartDate.year, currentPeriodStartDate.month + i, 1);
       final monthKey = DateFormat('yyyy-MM').format(date);
@@ -187,7 +228,8 @@ class AnalysisViewModel extends ChangeNotifier {
     }
 
     final expensesInPeriod = allExpenses.where((exp) {
-      return !exp.date.isBefore(currentPeriodStartDate) &&
+      return exp.isIncome != true &&
+          !exp.date.isBefore(currentPeriodStartDate) &&
           !exp.date.isAfter(currentPeriodEndDate);
     });
 
@@ -200,38 +242,41 @@ class AnalysisViewModel extends ChangeNotifier {
     return data;
   }
 
-  Map<String, double> _getCustomRangeData() {
-    final Map<String, double> data = {};
+  Map<String, ({double incomes, double expenses})> get lastNMonthsTrendData {
+    final Map<String, ({double incomes, double expenses})> data = {};
 
-    if (_customStartDate == null || _customEndDate == null) return data;
+    final now = DateTime.now();
+    final currentPeriodEndDate = DateTime(now.year, now.month + 1, 0);
+    final currentPeriodStartDate = DateTime(currentPeriodEndDate.year,
+        currentPeriodEndDate.month - _trendMonthsCount + 1, 1);
 
-    DateTime current =
-        DateTime(_customStartDate!.year, _customStartDate!.month, 1);
-    final end = DateTime(_customEndDate!.year, _customEndDate!.month, 1);
-
-    while (!current.isAfter(end)) {
-      final monthKey = DateFormat('yyyy-MM').format(current);
-      data[monthKey] = 0.0;
-      current = DateTime(current.year, current.month + 1, 1);
+    for (int i = 0; i < _trendMonthsCount; i++) {
+      final date = DateTime(
+          currentPeriodStartDate.year, currentPeriodStartDate.month + i, 1);
+      final monthKey = DateFormat('yyyy-MM').format(date);
+      data[monthKey] = (incomes: 0.0, expenses: 0.0);
     }
 
-    final expensesInRange = allExpenses.where((exp) {
-      final expenseMonth = DateTime(exp.date.year, exp.date.month, 1);
-      return !expenseMonth.isBefore(
-              DateTime(_customStartDate!.year, _customStartDate!.month, 1)) &&
-          !expenseMonth.isAfter(
-              DateTime(_customEndDate!.year, _customEndDate!.month, 1));
+    final inPeriod = allExpenses.where((exp) {
+      return !exp.date.isBefore(currentPeriodStartDate) &&
+          !exp.date.isAfter(currentPeriodEndDate);
     });
 
-    for (var expense in expensesInRange) {
-      final monthKey = DateFormat('yyyy-MM').format(expense.date);
+    for (var item in inPeriod) {
+      final monthKey = DateFormat('yyyy-MM').format(item.date);
       if (data.containsKey(monthKey)) {
-        data.update(monthKey, (value) => value + expense.amount);
+        final existing = data[monthKey]!;
+        if (item.isIncome == true) {
+          data[monthKey] = (incomes: existing.incomes + item.amount, expenses: existing.expenses);
+        } else {
+          data[monthKey] = (incomes: existing.incomes, expenses: existing.expenses + item.amount);
+        }
       }
     }
-
     return data;
   }
+
+
 
   Map<String, double> get last6MonthsData => lastNMonthsData;
 
@@ -273,21 +318,23 @@ class AnalysisViewModel extends ChangeNotifier {
   }
 
   Map<ExpenseCategory, double> get expensesByCategoryForSelectedMonth {
-    final Map<ExpenseCategory, double> totals = {};
-    if (_selectedMonthForCategory == null) return totals;
+    final Map<ExpenseCategory, double> data = {};
+    final targetMonth = _selectedMonthForCategory ?? DateTime.now();
 
-    final monthExpenses = allExpenses.where((exp) =>
-        exp.date.year == _selectedMonthForCategory!.year &&
-        exp.date.month == _selectedMonthForCategory!.month);
+    final expensesInMonth = allExpenses.where((exp) {
+      return exp.isIncome != true &&
+          exp.date.year == targetMonth.year &&
+          exp.date.month == targetMonth.month;
+    });
 
-    for (var expense in monthExpenses) {
+    for (var expense in expensesInMonth) {
       final category = categoryViewModel.getCategoryById(expense.categoryId);
       if (category != null) {
-        totals.update(category, (value) => value + expense.amount,
+        data.update(category, (value) => value + expense.amount,
             ifAbsent: () => expense.amount);
       }
     }
-    return totals;
+    return data;
   }
 
   Map<String, double> get currentPeriodStats {
