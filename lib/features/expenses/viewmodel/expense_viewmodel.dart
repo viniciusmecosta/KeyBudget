@@ -31,12 +31,14 @@ class ExpenseViewModel extends ChangeNotifier {
   bool _isExportingPdf = false;
   bool _isImportingCsv = false;
   List<String> _selectedCategoryIds = [];
+  bool? _filterIsIncome;
   DateTime _selectedMonth = DateTime(DateTime.now().year, DateTime.now().month);
   String _searchQuery = '';
   bool _searchAllPeriods = false;
   StreamSubscription? _expensesSubscription;
   StreamSubscription? _recurringExpensesSubscription;
   bool _isListening = false;
+  bool _enableIncomes = false;
 
   GlobalKey<SliverAnimatedListState>? _listKey;
 
@@ -60,6 +62,8 @@ class ExpenseViewModel extends ChangeNotifier {
 
   List<String> get selectedCategoryIds => _selectedCategoryIds;
 
+  bool? get filterIsIncome => _filterIsIncome;
+
   DateTime get selectedMonth => _selectedMonth;
 
   String get searchQuery => _searchQuery;
@@ -68,6 +72,9 @@ class ExpenseViewModel extends ChangeNotifier {
 
   List<Expense> get filteredExpenses {
     List<Expense> filtered = List.from(_allExpenses);
+    if (_filterIsIncome != null) {
+      filtered = filtered.where((exp) => (exp.isIncome ?? false) == _filterIsIncome).toList();
+    }
     if (_selectedCategoryIds.isNotEmpty) {
       filtered = filtered
           .where((exp) =>
@@ -88,8 +95,17 @@ class ExpenseViewModel extends ChangeNotifier {
   }
 
   double get currentMonthTotal {
-    return _currentDisplayItems.fold<double>(
+    return _currentDisplayItems.where((e) => e.isIncome != true).fold<double>(
         0.0, (sum, exp) => sum + exp.amount);
+  }
+
+  double get currentMonthIncomeTotal {
+    return _currentDisplayItems.where((e) => e.isIncome == true).fold<double>(
+        0.0, (sum, exp) => sum + exp.amount);
+  }
+
+  double get currentMonthBalance {
+    return currentMonthIncomeTotal - currentMonthTotal;
   }
 
   String _sanitize(String input) {
@@ -121,12 +137,26 @@ class ExpenseViewModel extends ChangeNotifier {
 
   void setCategoryFilter(List<String> categoryIds) {
     _selectedCategoryIds = categoryIds;
-    _updateDisplayList(animate: false);
+    _updateDisplayList(animate: true);
+  }
+
+  void setTypeFilter(bool? isIncome) {
+    _filterIsIncome = isIncome;
+    _updateDisplayList(animate: true);
   }
 
   void clearFilters() {
     _selectedCategoryIds = [];
-    _updateDisplayList(animate: false);
+    _filterIsIncome = null;
+    _updateDisplayList(animate: true);
+  }
+
+  void setEnableIncomes(bool value) {
+    if (_enableIncomes != value) {
+      _enableIncomes = value;
+      // use Future.microtask to avoid modifying state during build
+      Future.microtask(() => _updateDisplayList(animate: false));
+    }
   }
 
   void _setLoading(bool value) {
@@ -193,6 +223,10 @@ class ExpenseViewModel extends ChangeNotifier {
         final mot = exp.motivation != null ? _sanitize(exp.motivation!) : '';
         return loc.contains(_searchQuery) || mot.contains(_searchQuery);
       });
+    }
+
+    if (!_enableIncomes) {
+      newList.retainWhere((exp) => exp.isIncome != true);
     }
 
     if (!animate || _listKey?.currentState == null) {
@@ -497,6 +531,7 @@ class ExpenseViewModel extends ChangeNotifier {
           categoryId: null,
           motivation: row['motivation']?.toString(),
           location: row['location']?.toString(),
+          isIncome: row['isIncome']?.toString().toLowerCase() == 'true',
         );
         await _repository.addExpense(userId, newExpense);
         count++;

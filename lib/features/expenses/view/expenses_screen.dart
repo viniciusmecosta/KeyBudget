@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart' hide DateUtils;
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:intl/intl.dart';
 import 'package:key_budget/app/utils/app_animations.dart';
 import 'package:key_budget/app/utils/navigation_utils.dart';
 import 'package:key_budget/app/widgets/balance_card.dart';
@@ -36,6 +37,9 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final authViewModel = ref.read(authViewModelProvider);
       if (authViewModel.currentUser != null) {
+        ref
+            .read(expenseViewModelProvider)
+            .setEnableIncomes(authViewModel.currentUser!.enableIncomes ?? false);
         ref
             .read(categoryViewModelProvider)
             .fetchCategories(authViewModel.currentUser!.id);
@@ -80,8 +84,15 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen> {
     final expenseViewModel = ref.watch(expenseViewModelProvider);
     final categoryViewModel = ref.watch(categoryViewModelProvider);
 
+    final authViewModel = ref.watch(authViewModelProvider);
+    final enableIncomes = authViewModel.currentUser?.enableIncomes ?? false;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      ref.read(expenseViewModelProvider).setEnableIncomes(enableIncomes);
+    });
+
     final bool isLoading =
         (expenseViewModel.isLoading || categoryViewModel.isLoading);
+    final currencyFormatter = NumberFormat.currency(locale: 'pt_BR', symbol: 'R\$');
 
     Widget body = RefreshIndicator(
       onRefresh: _handleRefresh,
@@ -111,18 +122,47 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen> {
                         const EdgeInsets.symmetric(horizontal: AppSpacing.md),
                     child: AppAnimations.fadeInFromBottom(
                       TweenAnimationBuilder<double>(
-                        key: ValueKey(expenseViewModel.currentMonthTotal),
+                        key: ValueKey(enableIncomes ? expenseViewModel.currentMonthBalance : expenseViewModel.currentMonthTotal),
                         tween: Tween<double>(
-                            begin: 0, end: expenseViewModel.currentMonthTotal),
+                            begin: 0, end: enableIncomes ? expenseViewModel.currentMonthBalance : expenseViewModel.currentMonthTotal),
                         duration: AppAnimations.durationSlow,
                         curve: AppAnimations.curve,
                         builder: (context, value, child) {
                           return BalanceCard(
                             title: expenseViewModel.searchAllPeriods
-                                ? 'Total filtrado'
-                                : 'Total do mês',
+                                ? (enableIncomes ? 'Saldo filtrado' : 'Total filtrado')
+                                : (enableIncomes ? 'Saldo do mês' : 'Total do mês'),
                             totalValue: value,
                             backgroundColor: theme.colorScheme.primary,
+                            isCompact: enableIncomes,
+                            subtitle: enableIncomes
+                                ? Padding(
+                                    padding: const EdgeInsets.only(top: AppSpacing.xs),
+                                    child: Row(
+                                      children: [
+                                        Icon(Icons.arrow_circle_up_rounded, color: Colors.greenAccent[400], size: 18),
+                                        const SizedBox(width: 6),
+                                        Text(
+                                          currencyFormatter.format(expenseViewModel.currentMonthIncomeTotal),
+                                          style: theme.textTheme.bodyMedium?.copyWith(
+                                            color: theme.colorScheme.onPrimary,
+                                            fontWeight: FontWeight.w600,
+                                          ),
+                                        ),
+                                        const SizedBox(width: AppSpacing.lg),
+                                        Icon(Icons.arrow_circle_down_rounded, color: theme.colorScheme.error, size: 18),
+                                        const SizedBox(width: 6),
+                                        Text(
+                                          currencyFormatter.format(expenseViewModel.currentMonthTotal),
+                                          style: theme.textTheme.bodyMedium?.copyWith(
+                                            color: theme.colorScheme.onPrimary,
+                                            fontWeight: FontWeight.w600,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  )
+                                : null,
                           );
                         },
                       ),
@@ -220,7 +260,7 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen> {
                     ),
                   )
                 : Text(
-                    'Despesas',
+                    enableIncomes ? 'Lançamentos' : 'Despesas',
                     key: const ValueKey('titleText'),
                     style: theme.textTheme.titleLarge?.copyWith(
                       fontWeight: FontWeight.w700,
@@ -349,7 +389,7 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen> {
             NavigationUtils.push(context, const AddExpenseScreen());
           },
           icon: const Icon(Icons.add_rounded),
-          label: const Text("Nova Despesa"),
+          label: Text(enableIncomes ? "Novo Lançamento" : "Nova Despesa"),
           shape: RoundedRectangleBorder(
             borderRadius: AppBorders.borderRadiusXXL,
           ),
