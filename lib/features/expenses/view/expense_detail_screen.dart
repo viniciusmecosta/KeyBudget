@@ -35,6 +35,7 @@ class _ExpenseDetailScreenState extends ConsumerState<ExpenseDetailScreen> {
   ExpenseCategory? _selectedCategory;
   bool _isEditing = false;
   bool _isSaving = false;
+  late bool _isIncome;
 
   @override
   void initState() {
@@ -51,6 +52,7 @@ class _ExpenseDetailScreenState extends ConsumerState<ExpenseDetailScreen> {
     _selectedCategory = ref
         .read(categoryViewModelProvider)
         .getCategoryById(widget.expense.categoryId);
+    _isIncome = widget.expense.isIncome ?? false;
   }
 
   @override
@@ -88,6 +90,7 @@ class _ExpenseDetailScreenState extends ConsumerState<ExpenseDetailScreen> {
       installmentGroupId: widget.expense.installmentGroupId,
       currentInstallment: widget.expense.currentInstallment,
       totalInstallments: widget.expense.totalInstallments,
+      isIncome: _isIncome,
     );
 
     await ref
@@ -166,7 +169,7 @@ class _ExpenseDetailScreenState extends ConsumerState<ExpenseDetailScreen> {
       if (currentContext.mounted) {
         SnackbarService.showUndoSnackbar(
           currentContext,
-          message: 'Despesa excluída.',
+          message: _isIncome ? 'Receita excluída.' : 'Despesa excluída.',
           onUndo: () async {
             await expenseViewModel.restoreExpense(userId, deletedExpense);
           },
@@ -183,14 +186,17 @@ class _ExpenseDetailScreenState extends ConsumerState<ExpenseDetailScreen> {
             .watch(expenseViewModelProvider)
             .getRelatedInstallments(widget.expense.installmentGroupId!)
         : <Expense>[];
+    
+    final authViewModel = ref.watch(authViewModelProvider);
+    final enableIncomes = authViewModel.currentUser?.enableIncomes ?? false;
 
     return Scaffold(
       appBar: AppBar(
         title: Text(_isEditing
-            ? 'Editar Despesa'
+            ? (_isIncome ? 'Editar Receita' : 'Editar Despesa')
             : (_locationController.text.isNotEmpty
                 ? _locationController.text
-                : 'Detalhes da Despesa')),
+                : (_isIncome ? 'Detalhes da Receita' : 'Detalhes da Despesa'))),
         actions: [
           if (!_isEditing)
             IconButton(
@@ -213,6 +219,40 @@ class _ExpenseDetailScreenState extends ConsumerState<ExpenseDetailScreen> {
         padding: const EdgeInsets.all(AppSpacing.md),
         child: Column(
           children: [
+            if (_isEditing && enableIncomes)
+              Padding(
+                padding: const EdgeInsets.only(bottom: AppSpacing.md),
+                child: SizedBox(
+                  width: double.infinity,
+                  child: SegmentedButton<bool>(
+                    style: SegmentedButton.styleFrom(
+                      selectedBackgroundColor: _isIncome ? Colors.greenAccent[400] : Theme.of(context).colorScheme.error,
+                      selectedForegroundColor: Colors.white,
+                    ),
+                    segments: const [
+                      ButtonSegment<bool>(
+                        value: false,
+                        label: Text('Despesa'),
+                        icon: Icon(Icons.arrow_circle_down_rounded),
+                      ),
+                      ButtonSegment<bool>(
+                        value: true,
+                        label: Text('Receita'),
+                        icon: Icon(Icons.monetization_on_rounded),
+                      ),
+                    ],
+                    selected: {_isIncome},
+                    onSelectionChanged: (Set<bool> newSelection) {
+                      setState(() {
+                        _isIncome = newSelection.first;
+                        if (_isIncome) {
+                          _selectedCategory = null;
+                        }
+                      });
+                    },
+                  ),
+                ),
+              ),
             Expanded(
               child: ExpenseForm(
                 formKey: _formKey,
@@ -232,6 +272,7 @@ class _ExpenseDetailScreenState extends ConsumerState<ExpenseDetailScreen> {
                   });
                 },
                 isEditing: _isEditing,
+                isIncome: _isIncome,
                 bottomWidgets: related.isEmpty
                     ? null
                     : [

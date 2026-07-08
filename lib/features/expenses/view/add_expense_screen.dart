@@ -41,6 +41,7 @@ class _AddExpenseScreenState extends ConsumerState<AddExpenseScreen> {
   bool _isInstallment = false;
   int _installmentsValue = 2;
   bool _startNextMonth = false;
+  bool _isIncome = false;
 
   String? _processedImagePath;
   RecognizedText? _recognizedText;
@@ -303,6 +304,7 @@ class _AddExpenseScreenState extends ConsumerState<AddExpenseScreen> {
           : null,
       location:
           _locationController.text.isNotEmpty ? _locationController.text : null,
+      isIncome: _isIncome,
     );
 
     if (_isInstallment) {
@@ -320,9 +322,12 @@ class _AddExpenseScreenState extends ConsumerState<AddExpenseScreen> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final authViewModel = ref.watch(authViewModelProvider);
+    final enableIncomes = authViewModel.currentUser?.enableIncomes ?? false;
+
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Adicionar Despesa'),
+        title: Text(_isIncome ? 'Adicionar Receita' : 'Adicionar Despesa'),
         actions: [
           IconButton(
             icon: Icon(Icons.document_scanner_outlined,
@@ -355,6 +360,40 @@ class _AddExpenseScreenState extends ConsumerState<AddExpenseScreen> {
                   ],
                 ),
               ),
+            if (enableIncomes)
+              Padding(
+                padding: const EdgeInsets.only(bottom: AppSpacing.md),
+                child: SizedBox(
+                  width: double.infinity,
+                  child: SegmentedButton<bool>(
+                    style: SegmentedButton.styleFrom(
+                      selectedBackgroundColor: _isIncome ? Colors.greenAccent[400] : Theme.of(context).colorScheme.error,
+                      selectedForegroundColor: Colors.white,
+                    ),
+                    segments: const [
+                      ButtonSegment<bool>(
+                        value: false,
+                        label: Text('Despesa'),
+                        icon: Icon(Icons.arrow_circle_down_rounded),
+                      ),
+                      ButtonSegment<bool>(
+                        value: true,
+                        label: Text('Receita'),
+                        icon: Icon(Icons.monetization_on_rounded),
+                      ),
+                    ],
+                    selected: {_isIncome},
+                    onSelectionChanged: (Set<bool> newSelection) {
+                      setState(() {
+                        _isIncome = newSelection.first;
+                        if (_isIncome) {
+                          _selectedCategory = null;
+                        }
+                      });
+                    },
+                  ),
+                ),
+              ),
             Expanded(
               child: ExpenseForm(
                 formKey: _formKey,
@@ -374,14 +413,15 @@ class _AddExpenseScreenState extends ConsumerState<AddExpenseScreen> {
                   });
                 },
                 isEditing: true,
-                isInstallment: _isInstallment,
-                onInstallmentChanged: (val) =>
+                isIncome: _isIncome,
+                isInstallment: _isIncome ? false : _isInstallment,
+                onInstallmentChanged: _isIncome ? null : (val) =>
                     setState(() => _isInstallment = val),
                 installmentsValue: _installmentsValue,
-                onInstallmentsValueChanged: (val) =>
+                onInstallmentsValueChanged: _isIncome ? null : (val) =>
                     setState(() => _installmentsValue = val),
                 startNextMonth: _startNextMonth,
-                onStartNextMonthChanged: (val) =>
+                onStartNextMonthChanged: _isIncome ? null : (val) =>
                     setState(() => _startNextMonth = val),
                 imagePreviewWidget: _processedImagePath != null
                     ? GestureDetector(
@@ -416,7 +456,7 @@ class _AddExpenseScreenState extends ConsumerState<AddExpenseScreen> {
             SizedBox(
               width: double.infinity,
               child: AppButton(
-                label: 'Salvar Despesa',
+                label: _isIncome ? 'Salvar Receita' : 'Salvar Despesa',
                 onPressed: _submit,
                 isLoading: _isSaving,
               ),
