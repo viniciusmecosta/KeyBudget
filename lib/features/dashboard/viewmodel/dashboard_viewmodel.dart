@@ -77,37 +77,65 @@ class DashboardViewModel extends ChangeNotifier {
   double get totalAmountForMonth {
     final now = DateTime.now();
     final filteredExpenses = allExpenses.where((exp) {
-      return exp.date.year == now.year && exp.date.month == now.month;
+      return exp.date.year == now.year && exp.date.month == now.month && exp.isIncome != true;
     }).toList();
     return filteredExpenses.fold(0.0, (sum, item) => sum + item.amount);
   }
 
-  double get averageOfPreviousMonths {
+  double get totalIncomeForMonth {
+    final now = DateTime.now();
+    final filteredIncomes = allExpenses.where((exp) {
+      return exp.date.year == now.year && exp.date.month == now.month && exp.isIncome == true;
+    }).toList();
+    return filteredIncomes.fold(0.0, (sum, item) => sum + item.amount);
+  }
+
+  double get balanceForMonth {
+    return totalIncomeForMonth - totalAmountForMonth;
+  }
+
+  double averageOfPreviousMonths(bool enableIncomes) {
     final now = DateTime.now();
     final firstDayOfCurrentMonth = DateTime(now.year, now.month, 1);
     final Map<String, double> monthlyTotals = {};
     for (var expense in allExpenses) {
       if (expense.date.isBefore(firstDayOfCurrentMonth)) {
+        if (!enableIncomes && expense.isIncome == true) continue;
+        
         final monthKey = '${expense.date.year}-${expense.date.month}';
-        monthlyTotals.update(monthKey, (value) => value + expense.amount,
-            ifAbsent: () => expense.amount);
+        
+        double amount = expense.amount;
+        if (enableIncomes) {
+            amount = expense.isIncome == true ? expense.amount : -expense.amount;
+        } else {
+            amount = expense.amount;
+        }
+
+        monthlyTotals.update(monthKey, (value) => value + amount,
+            ifAbsent: () => amount);
       }
     }
     if (monthlyTotals.isEmpty) return 0.0;
     return monthlyTotals.values.reduce((a, b) => a + b) / monthlyTotals.length;
   }
 
-  double get percentageChangeFromAverage {
-    final average = averageOfPreviousMonths;
+  double percentageChangeFromAverage(bool enableIncomes) {
+    final average = averageOfPreviousMonths(enableIncomes);
     if (average == 0) return 0.0;
-    return ((totalAmountForMonth - average) / average) * 100;
+    
+    if (enableIncomes) {
+        return ((balanceForMonth - average) / average.abs()) * 100;
+    } else {
+        return ((totalAmountForMonth - average) / average.abs()) * 100;
+    }
   }
 
-  List<Expense> get recentExpenses {
+  List<Expense> getRecentExpenses(bool enableIncomes) {
     final now = DateTime.now();
     final endOfToday = DateTime(now.year, now.month, now.day, 23, 59, 59);
 
     List<Expense> sortedExpenses = allExpenses.where((exp) {
+      if (!enableIncomes && exp.isIncome == true) return false;
       return exp.date.isBefore(endOfToday) ||
           exp.date.isAtSameMomentAs(endOfToday);
     }).toList();

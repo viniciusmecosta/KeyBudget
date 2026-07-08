@@ -5,6 +5,7 @@ import 'package:key_budget/app/viewmodel/navigation_viewmodel.dart';
 import 'package:key_budget/app/widgets/activity_tile_widget.dart';
 import 'package:key_budget/core/design_system/spacing/app_spacing.dart';
 import 'package:key_budget/core/design_system/widgets/app_card.dart';
+import 'package:key_budget/features/auth/viewmodel/auth_viewmodel.dart';
 import 'package:key_budget/features/dashboard/viewmodel/dashboard_viewmodel.dart';
 
 class RecentActivitySection extends ConsumerWidget {
@@ -13,7 +14,9 @@ class RecentActivitySection extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final viewModel = ref.watch(dashboardViewModelProvider);
-    final recentExpenses = viewModel.recentExpenses;
+    final authViewModel = ref.watch(authViewModelProvider);
+    final enableIncomes = authViewModel.currentUser?.enableIncomes ?? false;
+    final recentExpenses = viewModel.getRecentExpenses(enableIncomes);
 
     if (viewModel.isLoading) {
       return const SizedBox.shrink();
@@ -100,7 +103,7 @@ class RecentActivitySection extends ConsumerWidget {
           Container(
             padding: const EdgeInsets.all(AppSpacing.lg),
             decoration: BoxDecoration(
-              color: theme.colorScheme.primary.withAlpha((255 * 0.1).round()),
+              color: theme.colorScheme.primary.withAlpha((255 * 0.15).round()),
               shape: BoxShape.circle,
             ),
             child: Icon(

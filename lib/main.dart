@@ -67,7 +67,7 @@ class _AppInitializerState extends ConsumerState<AppInitializer> {
           scrollBehavior: const AppScrollBehavior(),
           home: const Scaffold(
             body: SafeArea(
-              child: DashboardSkeleton(),
+              child: DashboardSkeleton(enableIncomesOverride: false),
             ),
           ),
         );
@@ -191,7 +191,7 @@ class _MyAppState extends ConsumerState<MyApp> with WidgetsBindingObserver {
             final appLock = ref.watch(appLockServiceProvider);
             return Stack(
               children: [
-                if (navigator != null) navigator,
+                ?navigator,
                 if (appLock.isLocked) const LockScreen(),
               ],
             );

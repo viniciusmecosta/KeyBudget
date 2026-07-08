@@ -4,13 +4,23 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:key_budget/core/design_system/borders/app_borders.dart';
 import 'package:key_budget/core/design_system/spacing/app_spacing.dart';
 
+import 'package:key_budget/features/auth/viewmodel/auth_viewmodel.dart';
+
 class DashboardSkeleton extends ConsumerWidget {
-  const DashboardSkeleton({super.key});
+  final bool? enableIncomesOverride;
+
+  const DashboardSkeleton({super.key, this.enableIncomesOverride});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
     final shimmerHighlightColor = theme.colorScheme.surface;
+    final bool enableIncomes;
+    if (enableIncomesOverride != null) {
+      enableIncomes = enableIncomesOverride!;
+    } else {
+      enableIncomes = ref.watch(authViewModelProvider).currentUser?.enableIncomes ?? false;
+    }
 
     return AbsorbPointer(
       child: CustomScrollView(
@@ -26,12 +36,12 @@ class DashboardSkeleton extends ConsumerWidget {
             sliver: SliverList(
               delegate: SliverChildListDelegate(
                 [
-                  _buildBalanceCardSkeleton(context),
+                  _buildBalanceCardSkeleton(context, enableIncomes),
                   const SizedBox(height: AppSpacing.md),
                   _buildContainer(
                     context: context,
-                    height: 140, // Chart skeleton
-                    radius: AppBorders.borderRadiusXL,
+                    height: enableIncomes ? 260 : 230, // Chart skeleton
+                    radius: AppBorders.borderRadiusL,
                   ),
                   const SizedBox(height: AppSpacing.md),
                   _buildQuickActionsSkeleton(context),
@@ -67,10 +77,10 @@ class DashboardSkeleton extends ConsumerWidget {
     );
   }
 
-  Widget _buildBalanceCardSkeleton(BuildContext context) {
+  Widget _buildBalanceCardSkeleton(BuildContext context, bool enableIncomes) {
     return _buildContainer(
       context: context,
-      height: 150,
+      height: enableIncomes ? 180 : 150,
       radius: AppBorders.borderRadiusXL,
     );
   }
