@@ -6,7 +6,9 @@ class SettingsTile extends ConsumerWidget {
   final String title;
   final Color? iconColor;
   final Color? textColor;
-  final VoidCallback onTap;
+  final VoidCallback? onTap;
+  final String? subtitle;
+  final Widget? trailing;
 
   const SettingsTile({
     super.key,
@@ -14,7 +16,9 @@ class SettingsTile extends ConsumerWidget {
     required this.title,
     this.iconColor,
     this.textColor,
-    required this.onTap,
+    this.onTap,
+    this.subtitle,
+    this.trailing,
   });
 
   @override
@@ -28,7 +32,8 @@ class SettingsTile extends ConsumerWidget {
           title,
           style: textColor != null ? TextStyle(color: textColor) : null,
         ),
-        trailing: const Icon(Icons.chevron_right),
+        subtitle: subtitle != null ? Text(subtitle!) : null,
+        trailing: trailing ?? const Icon(Icons.chevron_right),
         onTap: onTap,
       ),
     );

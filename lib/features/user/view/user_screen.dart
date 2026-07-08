@@ -297,6 +297,33 @@ class UserScreen extends ConsumerWidget {
                   ),
                 const SizedBox(height: AppSpacing.xl),
                 SettingsTile(
+                  icon: Icons.account_balance_wallet_outlined,
+                  title: 'Habilitar Receitas',
+                  subtitle: 'Exibe entradas e saldo no painel principal',
+                  trailing: Switch(
+                    value: user?.enableIncomes ?? false,
+                    activeTrackColor: theme.colorScheme.primary,
+                    activeThumbColor: theme.colorScheme.onPrimary,
+                    onChanged: (value) async {
+                      if (user != null) {
+                        await authViewModel.updateUser(
+                          name: user.name,
+                          enableIncomes: value,
+                        );
+                      }
+                    },
+                  ),
+                  onTap: () async {
+                    if (user != null) {
+                      await authViewModel.updateUser(
+                        name: user.name,
+                        enableIncomes: !(user.enableIncomes ?? false),
+                      );
+                    }
+                  },
+                ),
+                const SizedBox(height: AppSpacing.sm),
+                SettingsTile(
                   icon: Icons.category_outlined,
                   title: 'Gerenciar Categorias',
                   onTap: () {
