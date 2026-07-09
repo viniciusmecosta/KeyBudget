@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_nav_bar/google_nav_bar.dart';
 import 'package:key_budget/app/config/app_theme.dart';
 import 'package:key_budget/app/viewmodel/navigation_viewmodel.dart';
+import 'package:key_budget/features/auth/viewmodel/auth_viewmodel.dart';
 
 class MainBottomNavigationBar extends ConsumerWidget {
   const MainBottomNavigationBar({super.key});
@@ -11,6 +12,8 @@ class MainBottomNavigationBar extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final navigationViewModel = ref.watch(navigationViewModelProvider);
+    final authViewModel = ref.watch(authViewModelProvider);
+    final enableIncomes = authViewModel.currentUser?.enableIncomes ?? false;
     final theme = Theme.of(context);
     final isDarkMode = theme.brightness == Brightness.dark;
 
@@ -44,12 +47,12 @@ class MainBottomNavigationBar extends ConsumerWidget {
             tabBackgroundColor:
                 theme.colorScheme.primary.withAlpha((255 * 0.1).round()),
             color: theme.colorScheme.onSurfaceVariant,
-            tabs: const [
-              GButton(icon: Icons.home_rounded, text: 'Painel'),
-              GButton(icon: Icons.monetization_on_rounded, text: 'Despesas'),
-              GButton(icon: Icons.vpn_key_rounded, text: 'Credenciais'),
-              GButton(icon: Icons.folder_copy_rounded, text: 'Documentos'),
-              GButton(icon: Icons.person_rounded, text: 'Perfil'),
+            tabs: [
+              const GButton(icon: Icons.home_rounded, text: 'Painel'),
+              GButton(icon: Icons.monetization_on_rounded, text: enableIncomes ? 'Lançamentos' : 'Despesas'),
+              const GButton(icon: Icons.vpn_key_rounded, text: 'Credenciais'),
+              const GButton(icon: Icons.folder_copy_rounded, text: 'Documentos'),
+              const GButton(icon: Icons.person_rounded, text: 'Perfil'),
             ],
             selectedIndex: navigationViewModel.selectedIndex,
             onTabChange: (index) {

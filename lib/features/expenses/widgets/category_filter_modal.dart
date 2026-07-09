@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:key_budget/core/design_system/borders/app_borders.dart';
 import 'package:key_budget/core/design_system/spacing/app_spacing.dart';
 import 'package:key_budget/core/design_system/widgets/app_button.dart';
+import 'package:key_budget/features/auth/viewmodel/auth_viewmodel.dart';
 import 'package:key_budget/features/category/viewmodel/category_viewmodel.dart';
 import 'package:key_budget/features/expenses/viewmodel/expense_viewmodel.dart';
 
@@ -36,12 +37,39 @@ class _CategoryFilterModalState extends ConsumerState<CategoryFilterModal> {
             ),
           ),
           Text(
-            'Filtrar por Categoria',
+            'Filtros',
             style: theme.textTheme.titleLarge?.copyWith(
               fontWeight: FontWeight.w700,
             ),
           ),
           const SizedBox(height: AppSpacing.lg),
+          if (ref.watch(authViewModelProvider).currentUser?.enableIncomes ?? false) ...[
+            SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              child: Row(
+                children: [
+                  _buildTypeFilterChip(context, 'Todos', null, expenseViewModel.filterIsIncome),
+                  const SizedBox(width: AppSpacing.sm),
+                  _buildTypeFilterChip(context, 'Receitas', true, expenseViewModel.filterIsIncome),
+                  const SizedBox(width: AppSpacing.sm),
+                  _buildTypeFilterChip(context, 'Despesas', false, expenseViewModel.filterIsIncome),
+                ],
+              ),
+            ),
+            const SizedBox(height: AppSpacing.lg),
+            const Divider(),
+            const SizedBox(height: AppSpacing.lg),
+          ],
+          Align(
+            alignment: Alignment.centerLeft,
+            child: Text(
+              'Categorias',
+              style: theme.textTheme.titleMedium?.copyWith(
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ),
+          const SizedBox(height: AppSpacing.md),
           Flexible(
             child: ListView(
               shrinkWrap: true,
@@ -105,6 +133,32 @@ class _CategoryFilterModalState extends ConsumerState<CategoryFilterModal> {
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildTypeFilterChip(BuildContext context, String label, bool? typeValue, bool? currentValue) {
+    final theme = Theme.of(context);
+    final expenseViewModel = ref.read(expenseViewModelProvider);
+    final isSelected = typeValue == currentValue;
+
+    return FilterChip(
+      label: Text(label),
+      selected: isSelected,
+      onSelected: (_) {
+        expenseViewModel.setTypeFilter(typeValue);
+      },
+      backgroundColor: theme.colorScheme.surface,
+      selectedColor: theme.colorScheme.primaryContainer,
+      labelStyle: TextStyle(
+        color: isSelected ? theme.colorScheme.onPrimaryContainer : theme.colorScheme.onSurface,
+        fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+      ),
+      shape: RoundedRectangleBorder(
+        borderRadius: AppBorders.borderRadiusL,
+        side: BorderSide(
+          color: isSelected ? Colors.transparent : theme.colorScheme.outline.withAlpha((255 * 0.5).round()),
+        ),
       ),
     );
   }

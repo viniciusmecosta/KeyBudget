@@ -7,10 +7,13 @@ import 'package:key_budget/core/design_system/spacing/app_spacing.dart';
 import 'package:key_budget/core/services/csv_service.dart';
 import 'package:key_budget/core/services/pdf_service.dart';
 
+import 'package:key_budget/features/auth/viewmodel/auth_viewmodel.dart';
+
 import '../viewmodel/analysis_viewmodel.dart';
 import '../widgets/analysis_stats_overview_widget.dart';
 import '../widgets/category_analysis_section_widget.dart';
 import '../widgets/monthly_trend_section_widget.dart';
+import '../widgets/global_month_selector_widget.dart';
 
 class AnalysisScreen extends ConsumerStatefulWidget {
   const AnalysisScreen({super.key});
@@ -23,18 +26,19 @@ class _AnalysisScreenState extends ConsumerState<AnalysisScreen> {
   bool _isFirstLoad = true;
   bool _isExporting = false;
 
+  Widget _buildAnimatedWidget(Widget child, int index) {
+    if (_isFirstLoad) {
+      return AppAnimations.fadeInFromBottom(child,
+          delay: Duration(milliseconds: 100 * (index + 1)));
+    }
+    return child;
+  }
+
   @override
   Widget build(BuildContext context) {
     final viewModel = ref.watch(analysisViewModelProvider);
+    final enableIncomes = ref.watch(authViewModelProvider).currentUser?.enableIncomes ?? false;
     final theme = Theme.of(context);
-
-    Widget buildAnimatedWidget(Widget child, int index) {
-      if (_isFirstLoad) {
-        return AppAnimations.fadeInFromBottom(child,
-            delay: Duration(milliseconds: 100 * (index + 1)));
-      }
-      return child;
-    }
 
     return Scaffold(
       appBar: AppBar(
@@ -55,28 +59,30 @@ class _AnalysisScreenState extends ConsumerState<AnalysisScreen> {
               : const SizedBox(height: 4),
         ),
         actions: [
-          IconButton(
-            icon: const Icon(Icons.picture_as_pdf),
-            onPressed: _isExporting
-                ? null
-                : () async {
-                    setState(() => _isExporting = true);
-                    final vm = ref.read(analysisViewModelProvider);
-                    await PdfService().exportAnalysisPdf(context, vm);
-                    if (mounted) setState(() => _isExporting = false);
-                  },
-          ),
-          IconButton(
-            icon: const Icon(Icons.grid_on),
-            onPressed: _isExporting
-                ? null
-                : () async {
-                    setState(() => _isExporting = true);
-                    final vm = ref.read(analysisViewModelProvider);
-                    await CsvService().exportAnalysisCsv(context, vm);
-                    if (mounted) setState(() => _isExporting = false);
-                  },
-          ),
+          if (!enableIncomes) ...[
+            IconButton(
+              icon: const Icon(Icons.picture_as_pdf),
+              onPressed: _isExporting
+                  ? null
+                  : () async {
+                      setState(() => _isExporting = true);
+                      final vm = ref.read(analysisViewModelProvider);
+                      await PdfService().exportAnalysisPdf(context, vm);
+                      if (mounted) setState(() => _isExporting = false);
+                    },
+            ),
+            IconButton(
+              icon: const Icon(Icons.grid_on),
+              onPressed: _isExporting
+                  ? null
+                  : () async {
+                      setState(() => _isExporting = true);
+                      final vm = ref.read(analysisViewModelProvider);
+                      await CsvService().exportAnalysisCsv(context, vm);
+                      if (mounted) setState(() => _isExporting = false);
+                    },
+            ),
+          ],
         ],
         leading: IconButton(
           icon: Icon(
@@ -89,7 +95,7 @@ class _AnalysisScreenState extends ConsumerState<AnalysisScreen> {
       ),
       body: SafeArea(
         child: viewModel.isLoading
-            ? const AnalysisSkeleton()
+            ? AnalysisSkeleton(enableIncomes: enableIncomes)
             : RefreshIndicator(
                 onRefresh: () async {},
                 color: theme.colorScheme.primary,
@@ -101,14 +107,19 @@ class _AnalysisScreenState extends ConsumerState<AnalysisScreen> {
                       padding: const EdgeInsets.all(AppSpacing.md),
                       sliver: SliverList(
                         delegate: SliverChildListDelegate([
-                          buildAnimatedWidget(
+                          if (enableIncomes) ...[
+                            _buildAnimatedWidget(
+                                const GlobalMonthSelectorWidget(), 0),
+                            const SizedBox(height: AppSpacing.xl),
+                          ],
+                          _buildAnimatedWidget(
                               const AnalysisStatsOverviewWidget(), 0),
                           const SizedBox(height: AppSpacing.xl),
-                          buildAnimatedWidget(
-                              const MonthlyTrendSectionWidget(), 1),
+                          _buildAnimatedWidget(
+                              const CategoryAnalysisSectionWidget(), 1),
                           const SizedBox(height: AppSpacing.xl),
-                          buildAnimatedWidget(
-                              const CategoryAnalysisSectionWidget(), 2),
+                          _buildAnimatedWidget(
+                              const MonthlyTrendSectionWidget(), 2),
                           const SizedBox(height: AppSpacing.xxl),
                         ]),
                       ),
@@ -131,7 +142,8 @@ class _AnalysisScreenState extends ConsumerState<AnalysisScreen> {
 }
 
 class AnalysisSkeleton extends ConsumerWidget {
-  const AnalysisSkeleton({super.key});
+  final bool enableIncomes;
+  const AnalysisSkeleton({super.key, required this.enableIncomes});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -145,6 +157,16 @@ class AnalysisSkeleton extends ConsumerWidget {
           padding: const EdgeInsets.all(AppSpacing.md),
           sliver: SliverList(
             delegate: SliverChildListDelegate([
+              if (enableIncomes) ...[
+                Container(
+                  height: 48,
+                  decoration: BoxDecoration(
+                    color: theme.colorScheme.surfaceContainerHighest,
+                    borderRadius: AppBorders.borderRadiusXL,
+                  ),
+                ),
+                const SizedBox(height: AppSpacing.xl),
+              ],
               Container(
                 height: 120,
                 decoration: BoxDecoration(

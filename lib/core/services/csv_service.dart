@@ -45,7 +45,7 @@ class CsvService {
 
   String generateExpensesCsvString(List<Expense> expenses) {
     List<List<dynamic>> rows = [
-      ['id', 'date', 'amount', 'categoryId', 'motivation', 'location']
+      ['id', 'date', 'amount', 'categoryId', 'motivation', 'location', 'isIncome']
     ];
     for (var exp in expenses) {
       rows.add([
@@ -54,7 +54,8 @@ class CsvService {
         exp.amount,
         exp.categoryId ?? '',
         exp.motivation ?? '',
-        exp.location ?? ''
+        exp.location ?? '',
+        exp.isIncome ?? false,
       ]);
     }
     return '\uFEFF${csv.encode(rows)}';

@@ -43,49 +43,56 @@ class ExpenseActionsPopupMenu extends ConsumerWidget {
       shape: RoundedRectangleBorder(
         borderRadius: AppBorders.borderRadiusMD,
       ),
-      itemBuilder: (context) => [
-        const PopupMenuItem(
-          value: 'recurring',
-          child: Row(
-            children: [
-              Icon(Icons.replay_circle_filled_rounded),
-              SizedBox(width: AppSpacing.sm),
-              Text('Despesas Recorrentes'),
-            ],
+      itemBuilder: (context) {
+        final authViewModel = ref.read(authViewModelProvider);
+        final enableIncomes = authViewModel.currentUser?.enableIncomes ?? false;
+        
+        return [
+          const PopupMenuItem(
+            value: 'recurring',
+            child: Row(
+              children: [
+                Icon(Icons.replay_circle_filled_rounded),
+                SizedBox(width: AppSpacing.sm),
+                Text('Despesas Recorrentes'),
+              ],
+            ),
           ),
-        ),
-        const PopupMenuDivider(),
-        PopupMenuItem(
-          value: 'import',
-          enabled: !viewModel.isExportingCsv && !viewModel.isExportingPdf,
-          child: Row(
-            children: [
-              Icon(
-                Icons.upload_file_rounded,
-                size: 18,
-                color: theme.colorScheme.onSurface,
+          if (!enableIncomes) ...[
+            const PopupMenuDivider(),
+            PopupMenuItem(
+              value: 'import',
+              enabled: !viewModel.isExportingCsv && !viewModel.isExportingPdf,
+              child: Row(
+                children: [
+                  Icon(
+                    Icons.upload_file_rounded,
+                    size: 18,
+                    color: theme.colorScheme.onSurface,
+                  ),
+                  const SizedBox(width: AppSpacing.sm),
+                  const Text('Importar de CSV'),
+                ],
               ),
-              const SizedBox(width: AppSpacing.sm),
-              const Text('Importar de CSV'),
-            ],
-          ),
-        ),
-        PopupMenuItem(
-          value: 'export',
-          enabled: !viewModel.isExportingCsv && !viewModel.isExportingPdf,
-          child: Row(
-            children: [
-              Icon(
-                Icons.download_rounded,
-                size: 18,
-                color: theme.colorScheme.onSurface,
+            ),
+            PopupMenuItem(
+              value: 'export',
+              enabled: !viewModel.isExportingCsv && !viewModel.isExportingPdf,
+              child: Row(
+                children: [
+                  Icon(
+                    Icons.download_rounded,
+                    size: 18,
+                    color: theme.colorScheme.onSurface,
+                  ),
+                  const SizedBox(width: AppSpacing.sm),
+                  const Text('Exportar Despesas'),
+                ],
               ),
-              const SizedBox(width: AppSpacing.sm),
-              const Text('Exportar Despesas'),
-            ],
-          ),
-        ),
-      ],
+            ),
+          ],
+        ];
+      },
       onSelected: (value) {
         if (value == 'import') _import(context, ref);
         if (value == 'export') {

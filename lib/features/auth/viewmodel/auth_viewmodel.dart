@@ -165,6 +165,7 @@ class AuthViewModel extends ChangeNotifier {
     String? phoneNumber,
     String? avatarPath,
     String? newPassword,
+    bool? enableIncomes,
   }) async {
     if (_currentUser == null) return false;
     _setLoading(true);
@@ -174,6 +175,7 @@ class AuthViewModel extends ChangeNotifier {
         name: name,
         phoneNumber: phoneNumber,
         avatarPath: avatarPath,
+        enableIncomes: enableIncomes,
       );
       await _authRepository.updateUserProfile(updatedUser);
       _currentUser = updatedUser;
