@@ -329,20 +329,22 @@ class _AddExpenseScreenState extends ConsumerState<AddExpenseScreen> {
       appBar: AppBar(
         title: Text(_isIncome ? 'Adicionar Receita' : 'Adicionar Despesa'),
         actions: [
-          IconButton(
-            icon: Icon(Icons.document_scanner_outlined,
-                color: _processedImagePath != null
-                    ? theme.colorScheme.primary
-                    : null),
-            onPressed: _isScanning ? null : _showImageSourceDialog,
-            tooltip: 'Escanear Recibo',
-          ),
-          if (_processedImagePath != null && _recognizedText != null)
+          if (!_isIncome) ...[
             IconButton(
-              icon: const Icon(Icons.edit_note),
-              onPressed: _openDetailedViewer,
-              tooltip: 'Corrigir Dados da Imagem',
+              icon: Icon(Icons.document_scanner_outlined,
+                  color: _processedImagePath != null
+                      ? theme.colorScheme.primary
+                      : null),
+              onPressed: _isScanning ? null : _showImageSourceDialog,
+              tooltip: 'Escanear Recibo',
             ),
+            if (_processedImagePath != null && _recognizedText != null)
+              IconButton(
+                icon: const Icon(Icons.edit_note),
+                onPressed: _openDetailedViewer,
+                tooltip: 'Corrigir Dados da Imagem',
+              ),
+          ],
         ],
       ),
       body: AppAnimations.fadeInFromBottom(Padding(
@@ -363,34 +365,108 @@ class _AddExpenseScreenState extends ConsumerState<AddExpenseScreen> {
             if (enableIncomes)
               Padding(
                 padding: const EdgeInsets.only(bottom: AppSpacing.md),
-                child: SizedBox(
-                  width: double.infinity,
-                  child: SegmentedButton<bool>(
-                    style: SegmentedButton.styleFrom(
-                      selectedBackgroundColor: _isIncome ? Colors.greenAccent[400] : Theme.of(context).colorScheme.error,
-                      selectedForegroundColor: Colors.white,
-                    ),
-                    segments: const [
-                      ButtonSegment<bool>(
-                        value: false,
-                        label: Text('Despesa'),
-                        icon: Icon(Icons.arrow_circle_down_rounded),
+                child: Container(
+                  height: 50,
+                  padding: const EdgeInsets.all(4),
+                  decoration: BoxDecoration(
+                    color: theme.brightness == Brightness.dark
+                        ? Colors.white.withValues(alpha: 0.05)
+                        : Colors.black.withValues(alpha: 0.05),
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      Expanded(
+                        child: GestureDetector(
+                          onTap: () {
+                            if (_isIncome) {
+                              setState(() {
+                                _isIncome = false;
+                              });
+                            }
+                          },
+                          child: AnimatedContainer(
+                            duration: const Duration(milliseconds: 200),
+                            curve: Curves.easeInOut,
+                            alignment: Alignment.center,
+                            decoration: BoxDecoration(
+                              color: !_isIncome
+                                  ? theme.colorScheme.error
+                                  : Colors.transparent,
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Icon(Icons.arrow_circle_down_rounded,
+                                    color: !_isIncome
+                                        ? theme.colorScheme.onError
+                                        : theme.colorScheme.onSurface
+                                            .withValues(alpha: 0.6),
+                                    size: 20),
+                                const SizedBox(width: 8),
+                                Text('Despesa',
+                                    style: theme.textTheme.titleSmall?.copyWith(
+                                      color: !_isIncome
+                                          ? theme.colorScheme.onError
+                                          : theme.colorScheme.onSurface
+                                              .withValues(alpha: 0.6),
+                                      fontWeight: !_isIncome
+                                          ? FontWeight.bold
+                                          : FontWeight.w500,
+                                    )),
+                              ],
+                            ),
+                          ),
+                        ),
                       ),
-                      ButtonSegment<bool>(
-                        value: true,
-                        label: Text('Receita'),
-                        icon: Icon(Icons.monetization_on_rounded),
+                      Expanded(
+                        child: GestureDetector(
+                          onTap: () {
+                            if (!_isIncome) {
+                              setState(() {
+                                _isIncome = true;
+                                _selectedCategory = null;
+                              });
+                            }
+                          },
+                          child: AnimatedContainer(
+                            duration: const Duration(milliseconds: 200),
+                            curve: Curves.easeInOut,
+                            alignment: Alignment.center,
+                            decoration: BoxDecoration(
+                              color: _isIncome
+                                  ? const Color(0xFF388E3C) // Green 700 (Lighter than 800 but still good contrast)
+                                  : Colors.transparent,
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Icon(Icons.arrow_circle_up_rounded,
+                                    color: _isIncome
+                                        ? Colors.white
+                                        : theme.colorScheme.onSurface
+                                            .withValues(alpha: 0.6),
+                                    size: 20),
+                                const SizedBox(width: 8),
+                                Text('Receita',
+                                    style: theme.textTheme.titleSmall?.copyWith(
+                                      color: _isIncome
+                                          ? Colors.white
+                                          : theme.colorScheme.onSurface
+                                              .withValues(alpha: 0.6),
+                                      fontWeight: _isIncome
+                                          ? FontWeight.bold
+                                          : FontWeight.w500,
+                                    )),
+                              ],
+                            ),
+                          ),
+                        ),
                       ),
                     ],
-                    selected: {_isIncome},
-                    onSelectionChanged: (Set<bool> newSelection) {
-                      setState(() {
-                        _isIncome = newSelection.first;
-                        if (_isIncome) {
-                          _selectedCategory = null;
-                        }
-                      });
-                    },
                   ),
                 ),
               ),
