@@ -2,19 +2,25 @@ import 'package:flutter/material.dart';
 import 'package:key_budget/app/config/app_theme.dart';
 
 class SnackbarService {
-  static void showSnackbar(
-    BuildContext context,
-    String message, {
-    String? title,
-    Color? backgroundColor,
-    Color? textColor,
-    SnackBarAction? action,
-  }) {
-    ScaffoldMessenger.of(context)
+  static const Duration _defaultDuration = Duration(seconds: 3);
+
+  static void showSnackbar(BuildContext context,
+      String message, {
+        String? title,
+        Color? backgroundColor,
+        Color? textColor,
+        SnackBarAction? action,
+        Duration? duration,
+      }) {
+    final messenger = ScaffoldMessenger.of(context);
+    final displayDuration = duration ?? _defaultDuration;
+
+    messenger
       ..clearSnackBars()
       ..showSnackBar(
         SnackBar(
           action: action,
+          duration: displayDuration,
           content: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
@@ -38,7 +44,10 @@ class SnackbarService {
             ],
           ),
           backgroundColor:
-              backgroundColor ?? Theme.of(context).colorScheme.primary,
+          backgroundColor ?? Theme
+              .of(context)
+              .colorScheme
+              .primary,
           behavior: SnackBarBehavior.floating,
           dismissDirection: DismissDirection.down,
           shape: RoundedRectangleBorder(
@@ -52,6 +61,12 @@ class SnackbarService {
           ),
         ),
       );
+
+    Future.delayed(displayDuration, () {
+      try {
+        messenger.hideCurrentSnackBar();
+      } catch (_) {}
+    });
   }
 
   static void showError(BuildContext context, String message, {String? title}) {
@@ -64,12 +79,12 @@ class SnackbarService {
     );
   }
 
-  static void showSuccess(
-    BuildContext context,
-    String message, {
-    String? title,
-    SnackBarAction? action,
-  }) {
+  static void showSuccess(BuildContext context,
+      String message, {
+        String? title,
+        SnackBarAction? action,
+        Duration? duration,
+      }) {
     showSnackbar(
       context,
       message,
@@ -77,6 +92,23 @@ class SnackbarService {
       backgroundColor: Colors.green.shade600,
       textColor: Colors.white,
       action: action,
+      duration: duration,
+    );
+  }
+
+  static void showUndoSnackbar(BuildContext context, {
+    required String message,
+    required VoidCallback onUndo,
+  }) {
+    showSuccess(
+      context,
+      message,
+      duration: const Duration(seconds: 3),
+      action: SnackBarAction(
+        label: 'Desfazer',
+        textColor: Colors.white,
+        onPressed: onUndo,
+      ),
     );
   }
 

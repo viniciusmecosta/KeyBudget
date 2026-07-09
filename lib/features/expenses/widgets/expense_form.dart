@@ -22,6 +22,7 @@ class ExpenseForm extends ConsumerWidget {
   final Function(DateTime) onDateChanged;
   final Function(ExpenseCategory?) onCategoryChanged;
   final bool isEditing;
+  final bool isIncome;
   final Widget? imagePreviewWidget;
 
   final bool isInstallment;
@@ -43,6 +44,7 @@ class ExpenseForm extends ConsumerWidget {
     required this.onDateChanged,
     required this.onCategoryChanged,
     this.isEditing = false,
+    this.isIncome = false,
     this.imagePreviewWidget,
     this.isInstallment = false,
     this.onInstallmentChanged,
@@ -79,32 +81,48 @@ class ExpenseForm extends ConsumerWidget {
               return null;
             },
           ),
+          if (!isIncome) ...[
+            const SizedBox(height: AppSpacing.md),
+            CategoryPickerField(
+              label: 'Categoria',
+              value: selectedCategory,
+              categories: categoryViewModel.categories,
+              isEnabled: isEditing,
+              onChanged: onCategoryChanged,
+              onManageCategories: () async {
+                final userId = ref.read(authViewModelProvider).currentUser?.id;
+                await Navigator.of(context).push(
+                    MaterialPageRoute(builder: (_) => const CategoriesScreen()));
+                if (userId != null && context.mounted) {
+                  await ref
+                      .read(categoryViewModelProvider)
+                      .fetchCategories(userId);
+                }
+              },
+              validator: (value) =>
+                  value == null ? 'Selecione uma categoria' : null,
+            ),
+          ],
           const SizedBox(height: AppSpacing.md),
-          CategoryPickerField(
-            label: 'Categoria',
-            value: selectedCategory,
-            categories: categoryViewModel.categories,
-            isEnabled: isEditing,
-            onChanged: onCategoryChanged,
-            onManageCategories: () async {
-              final userId = ref.read(authViewModelProvider).currentUser?.id;
-              await Navigator.of(context).push(
-                  MaterialPageRoute(builder: (_) => const CategoriesScreen()));
-              if (userId != null && context.mounted) {
-                await ref
-                    .read(categoryViewModelProvider)
-                    .fetchCategories(userId);
+          AppTextField(
+            key: const ValueKey('location_field'),
+            label: 'Título *',
+            controller: locationController,
+            readOnly: !isEditing,
+            textCapitalization: TextCapitalization.sentences,
+            validator: (value) {
+              if (value == null || value.isEmpty) {
+                return 'Campo obrigatório';
               }
+              return null;
             },
-            validator: (value) =>
-                value == null ? 'Selecione uma categoria' : null,
           ),
           const SizedBox(height: AppSpacing.md),
           AbsorbPointer(
             absorbing: !isEditing,
             child: CategoryAutocompleteField(
               key: ValueKey('motivation_${selectedCategory?.id}'),
-              label: 'Motivação',
+              label: 'Descrição',
               controller: motivationController,
               textCapitalization: TextCapitalization.sentences,
               optionsBuilder: (TextEditingValue textEditingValue) {
@@ -116,26 +134,6 @@ class ExpenseForm extends ConsumerWidget {
               },
               onSelected: (selection) {
                 motivationController.text = selection;
-              },
-            ),
-          ),
-          const SizedBox(height: AppSpacing.md),
-          AbsorbPointer(
-            absorbing: !isEditing,
-            child: CategoryAutocompleteField(
-              key: ValueKey('location_${selectedCategory?.id}'),
-              label: 'Local',
-              controller: locationController,
-              textCapitalization: TextCapitalization.sentences,
-              optionsBuilder: (TextEditingValue textEditingValue) {
-                if (textEditingValue.text == '') {
-                  return const Iterable<String>.empty();
-                }
-                return expenseViewModel.getUniqueLocationsForCategory(
-                    selectedCategory?.id, textEditingValue.text);
-              },
-              onSelected: (selection) {
-                locationController.text = selection;
               },
             ),
           ),
@@ -203,8 +201,8 @@ class ExpenseForm extends ConsumerWidget {
               ),
             ]
           ],
-          if (imagePreviewWidget != null) imagePreviewWidget!,
-          if (bottomWidgets != null) ...bottomWidgets!,
+          ?imagePreviewWidget,
+          ...?bottomWidgets,
         ],
       ),
     );

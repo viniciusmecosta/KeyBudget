@@ -9,18 +9,22 @@ class BalanceCard extends ConsumerWidget {
   final String title;
   final double totalValue;
   final Widget? subtitle;
+  final Widget? valueSubtitle;
   final VoidCallback? onTap;
   final Gradient? gradient;
   final Color? backgroundColor;
+  final bool isCompact;
 
   const BalanceCard({
     super.key,
     required this.title,
     required this.totalValue,
     this.subtitle,
+    this.valueSubtitle,
     this.onTap,
     this.gradient,
     this.backgroundColor,
+    this.isCompact = false,
   });
 
   @override
@@ -53,7 +57,10 @@ class BalanceCard extends ConsumerWidget {
           onTap: onTap,
           borderRadius: AppBorders.borderRadiusL,
           child: Padding(
-            padding: const EdgeInsets.all(AppSpacing.xl),
+            padding: EdgeInsets.symmetric(
+              horizontal: AppSpacing.xl,
+              vertical: isCompact ? AppSpacing.md : AppSpacing.xl,
+            ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -71,17 +78,25 @@ class BalanceCard extends ConsumerWidget {
                               color: textColor.withAlpha((255 * 0.8).round()),
                               fontWeight: FontWeight.w600,
                               letterSpacing: 0.5,
+                              fontSize: isCompact ? 14 : null,
                             ),
                           ),
-                          const SizedBox(height: AppSpacing.sm),
+                          SizedBox(height: isCompact ? AppSpacing.xs : AppSpacing.sm),
                           Text(
-                            currencyFormatter.format(totalValue),
+                            totalValue < 0 
+                              ? '- ${currencyFormatter.format(totalValue.abs())}'
+                              : currencyFormatter.format(totalValue),
                             style: theme.textTheme.headlineMedium?.copyWith(
                               fontWeight: FontWeight.w800,
                               color: textColor,
                               letterSpacing: -1,
+                              fontSize: isCompact ? 24 : null,
                             ),
                           ),
+                          if (valueSubtitle != null) ...[
+                            const SizedBox(height: AppSpacing.xs),
+                            valueSubtitle!,
+                          ],
                         ],
                       ),
                     ),
@@ -101,7 +116,7 @@ class BalanceCard extends ConsumerWidget {
                   ],
                 ),
                 if (subtitle != null) ...[
-                  const SizedBox(height: AppSpacing.lg),
+                  SizedBox(height: isCompact ? AppSpacing.sm : AppSpacing.lg),
                   subtitle!,
                 ],
               ],

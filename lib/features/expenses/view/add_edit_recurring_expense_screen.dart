@@ -113,16 +113,12 @@ class _AddEditRecurringExpenseScreenState
     try {
       await viewModel.deleteRecurringExpense(userId, deletedExpense.id!);
       if (!currentContext.mounted) return;
-      SnackbarService.showSuccess(
+      SnackbarService.showUndoSnackbar(
         currentContext,
-        'Despesa recorrente excluída.',
-        action: SnackBarAction(
-          label: 'Desfazer',
-          textColor: Colors.white,
-          onPressed: () async {
-            await viewModel.restoreRecurringExpense(userId, deletedExpense);
-          },
-        ),
+        message: 'Despesa recorrente excluída.',
+        onUndo: () async {
+          await viewModel.restoreRecurringExpense(userId, deletedExpense);
+        },
       );
       screenNavigator.pop();
     } catch (e) {

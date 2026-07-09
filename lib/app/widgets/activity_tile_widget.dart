@@ -52,6 +52,20 @@ class ActivityTile extends ConsumerWidget {
   }
 
   Widget _buildCategoryIcon(Color categoryColor, dynamic category) {
+    if (expense.isIncome == true) {
+      return Container(
+        padding: const EdgeInsets.all(AppSpacing.sm),
+        decoration: BoxDecoration(
+          color: Colors.greenAccent[400]!.withAlpha(40),
+          shape: BoxShape.circle,
+        ),
+        child: Icon(
+          Icons.monetization_on_rounded,
+          color: Colors.greenAccent[400]!,
+          size: 24,
+        ),
+      );
+    }
     return Container(
       padding: const EdgeInsets.all(AppSpacing.sm),
       decoration: BoxDecoration(
@@ -80,7 +94,7 @@ class ActivityTile extends ConsumerWidget {
           AutoSizeText(
             expense.location?.isNotEmpty == true
                 ? expense.location!
-                : (category?.name ?? 'Gasto Geral'),
+                : (expense.isIncome == true ? 'Receita' : (category?.name ?? 'Despesa Geral')),
             style: textTheme.bodyLarge?.copyWith(
               fontWeight: FontWeight.w600,
               color: colorScheme.onSurface,
@@ -108,11 +122,14 @@ class ActivityTile extends ConsumerWidget {
 
   Widget _buildAmountInfo(TextTheme textTheme, NumberFormat currencyFormatter,
       ColorScheme colorScheme) {
+    final isIncome = expense.isIncome == true;
+    final amountText = currencyFormatter.format(expense.amount);
+    final text = isIncome ? '+ $amountText' : '- $amountText';
     return Text(
-      currencyFormatter.format(expense.amount),
+      text,
       style: textTheme.titleSmall?.copyWith(
         fontWeight: FontWeight.w700,
-        color: colorScheme.error,
+        color: isIncome ? Colors.greenAccent[400] : colorScheme.error,
         fontSize: 15,
       ),
     );
