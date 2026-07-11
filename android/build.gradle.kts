@@ -12,7 +12,13 @@ subprojects {
 subprojects {
     project.evaluationDependsOn(":app")
     tasks.withType<JavaCompile>().configureEach {
-        options.compilerArgs.addAll(listOf("-Xlint:-deprecation", "-Xlint:-unchecked", "-Xlint:-options"))
+        options.compilerArgs.addAll(
+            listOf(
+                "-Xlint:-deprecation",
+                "-Xlint:-unchecked",
+                "-Xlint:-options"
+            )
+        )
     }
 }
 
