@@ -8,10 +8,7 @@ import 'package:key_budget/core/models/document_model.dart';
 import 'package:key_budget/features/documents/view/document_detail_screen.dart';
 
 class DocumentListTile extends ConsumerWidget {
-  const DocumentListTile({
-    super.key,
-    required this.doc,
-  });
+  const DocumentListTile({super.key, required this.doc});
 
   final Document doc;
 
@@ -27,10 +24,14 @@ class DocumentListTile extends ConsumerWidget {
         children: [
           CircleAvatar(
             radius: 24,
-            backgroundColor:
-                theme.colorScheme.primary.withAlpha((255 * 0.1).round()),
-            child: Icon(Icons.folder_zip_rounded,
-                color: theme.colorScheme.primary, size: 24),
+            backgroundColor: theme.colorScheme.primary.withAlpha(
+              (255 * 0.1).round(),
+            ),
+            child: Icon(
+              Icons.folder_zip_rounded,
+              color: theme.colorScheme.primary,
+              size: 24,
+            ),
           ),
           const SizedBox(width: AppSpacing.md),
           Expanded(

@@ -30,15 +30,16 @@ class DocumentRepository {
   }
 
   Future<List<Document>> getDocumentsForUser(String userId) async {
-    final querySnapshot =
-        await getDocumentsCollection(userId).orderBy('documentName').get();
+    final querySnapshot = await getDocumentsCollection(
+      userId,
+    ).orderBy('documentName').get();
     return querySnapshot.docs.map((doc) => doc.data()).toList();
   }
 
   Future<void> updateDocument(String userId, Document document) async {
-    await getDocumentsCollection(userId)
-        .doc(document.id)
-        .update(document.toMap());
+    await getDocumentsCollection(
+      userId,
+    ).doc(document.id).update(document.toMap());
   }
 
   Future<void> deleteDocument(String userId, String documentId) async {
@@ -46,5 +47,6 @@ class DocumentRepository {
   }
 }
 
-final documentRepositoryProvider =
-    Provider<DocumentRepository>((ref) => DocumentRepository());
+final documentRepositoryProvider = Provider<DocumentRepository>(
+  (ref) => DocumentRepository(),
+);

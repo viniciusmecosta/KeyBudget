@@ -60,5 +60,6 @@ class CategoryViewModel extends ChangeNotifier {
   }
 }
 
-final categoryViewModelProvider =
-    ChangeNotifierProvider<CategoryViewModel>((ref) => CategoryViewModel());
+final categoryViewModelProvider = ChangeNotifierProvider<CategoryViewModel>(
+  (ref) => CategoryViewModel(),
+);

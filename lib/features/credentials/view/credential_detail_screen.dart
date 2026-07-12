@@ -60,15 +60,17 @@ class _CredentialDetailScreenState
 
     _decryptionError = decryptedPassword == 'ERRO_DECRIPT';
 
-    _locationController =
-        TextEditingController(text: widget.credential.location);
+    _locationController = TextEditingController(
+      text: widget.credential.location,
+    );
     _loginController = TextEditingController(text: widget.credential.login);
     _passwordController = TextEditingController(
-        text: _decryptionError ? 'Falha ao decifrar' : decryptedPassword);
+      text: _decryptionError ? 'Falha ao decifrar' : decryptedPassword,
+    );
     _emailController = TextEditingController(text: widget.credential.email);
     _phoneController = TextEditingController(
-        text:
-            _phoneMaskFormatter.maskText(widget.credential.phoneNumber ?? ''));
+      text: _phoneMaskFormatter.maskText(widget.credential.phoneNumber ?? ''),
+    );
     _notesController = TextEditingController(text: widget.credential.notes);
     _logoPath = widget.credential.logoPath;
     _selectedFolderId = widget.credential.folderId;
@@ -116,7 +118,9 @@ class _CredentialDetailScreenState
       _isEditing = false;
     });
     SnackbarService.showSuccess(
-        scaffoldContext, 'Credencial atualizada com sucesso!');
+      scaffoldContext,
+      'Credencial atualizada com sucesso!',
+    );
     navigator.pop();
   }
 
@@ -159,52 +163,61 @@ class _CredentialDetailScreenState
                 height: 4,
                 margin: const EdgeInsets.only(bottom: 16),
                 decoration: BoxDecoration(
-                  color: Theme.of(context)
-                      .colorScheme
-                      .onSurface
-                      .withValues(alpha: 0.2),
+                  color: Theme.of(
+                    context,
+                  ).colorScheme.onSurface.withValues(alpha: 0.2),
                   borderRadius: BorderRadius.circular(2),
                 ),
               ),
               ListTile(
-                contentPadding:
-                    const EdgeInsets.symmetric(horizontal: 24, vertical: 4),
+                contentPadding: const EdgeInsets.symmetric(
+                  horizontal: 24,
+                  vertical: 4,
+                ),
                 leading: Container(
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
-                    color: Theme.of(context)
-                        .colorScheme
-                        .primary
-                        .withValues(alpha: 0.1),
+                    color: Theme.of(
+                      context,
+                    ).colorScheme.primary.withValues(alpha: 0.1),
                     shape: BoxShape.circle,
                   ),
-                  child: Icon(Icons.light_mode,
-                      color: Theme.of(context).colorScheme.primary),
+                  child: Icon(
+                    Icons.light_mode,
+                    color: Theme.of(context).colorScheme.primary,
+                  ),
                 ),
-                title: const Text('Exportar com fundo claro',
-                    style: TextStyle(fontWeight: FontWeight.w600)),
+                title: const Text(
+                  'Exportar com fundo claro',
+                  style: TextStyle(fontWeight: FontWeight.w600),
+                ),
                 onTap: () {
                   Navigator.pop(ctx);
                   _exportCredential(false);
                 },
               ),
               ListTile(
-                contentPadding:
-                    const EdgeInsets.symmetric(horizontal: 24, vertical: 4),
+                contentPadding: const EdgeInsets.symmetric(
+                  horizontal: 24,
+                  vertical: 4,
+                ),
                 leading: Container(
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
-                    color: Theme.of(context)
-                        .colorScheme
-                        .primary
-                        .withValues(alpha: 0.1),
+                    color: Theme.of(
+                      context,
+                    ).colorScheme.primary.withValues(alpha: 0.1),
                     shape: BoxShape.circle,
                   ),
-                  child: Icon(Icons.dark_mode,
-                      color: Theme.of(context).colorScheme.primary),
+                  child: Icon(
+                    Icons.dark_mode,
+                    color: Theme.of(context).colorScheme.primary,
+                  ),
                 ),
-                title: const Text('Exportar com fundo escuro',
-                    style: TextStyle(fontWeight: FontWeight.w600)),
+                title: const Text(
+                  'Exportar com fundo escuro',
+                  style: TextStyle(fontWeight: FontWeight.w600),
+                ),
                 onTap: () {
                   Navigator.pop(ctx);
                   _exportCredential(true);
@@ -235,26 +248,32 @@ class _CredentialDetailScreenState
     if (bytes != null) {
       try {
         final directory = await getTemporaryDirectory();
-        final sanitizedName =
-            widget.credential.location.replaceAll(RegExp(r'\W+'), '_');
+        final sanitizedName = widget.credential.location.replaceAll(
+          RegExp(r'\W+'),
+          '_',
+        );
         final imagePath = '${directory.path}/credencial_$sanitizedName.png';
         final imageFile = File(imagePath);
         await imageFile.writeAsBytes(bytes);
 
-        final RenderBox? box =
-            mounted ? context.findRenderObject() as RenderBox? : null;
+        final RenderBox? box = mounted
+            ? context.findRenderObject() as RenderBox?
+            : null;
         final params = ShareParams(
           files: [XFile(imagePath)],
           text: 'Credencial: ${widget.credential.location}',
-          sharePositionOrigin:
-              box != null ? box.localToGlobal(Offset.zero) & box.size : null,
+          sharePositionOrigin: box != null
+              ? box.localToGlobal(Offset.zero) & box.size
+              : null,
         );
 
         await SharePlus.instance.share(params);
       } catch (e) {
         if (mounted) {
           SnackbarService.showError(
-              context, 'Erro ao compartilhar a credencial.');
+            context,
+            'Erro ao compartilhar a credencial.',
+          );
         }
       }
     } else {
@@ -330,7 +349,7 @@ class _CredentialDetailScreenState
                   color: Colors.black.withValues(alpha: 0.1),
                   blurRadius: 15,
                   offset: const Offset(0, 8),
-                )
+                ),
               ],
               border: Border.all(
                 color: theme.colorScheme.primary.withValues(alpha: 0.2),
@@ -366,22 +385,42 @@ class _CredentialDetailScreenState
                 Divider(height: 1, color: theme.colorScheme.outlineVariant),
                 const SizedBox(height: 24),
                 if (_loginController.text.trim().isNotEmpty)
-                  _buildTicketRow(Icons.person, 'Login',
-                      _loginController.text.trim(), theme),
+                  _buildTicketRow(
+                    Icons.person,
+                    'Login',
+                    _loginController.text.trim(),
+                    theme,
+                  ),
                 if (_passwordController.text.trim().isNotEmpty)
-                  _buildTicketRow(Icons.vpn_key, 'Senha',
-                      _passwordController.text.trim(), theme),
+                  _buildTicketRow(
+                    Icons.vpn_key,
+                    'Senha',
+                    _passwordController.text.trim(),
+                    theme,
+                  ),
                 if (_emailController.text.trim().isNotEmpty)
-                  _buildTicketRow(Icons.email, 'E-mail',
-                      _emailController.text.trim(), theme),
+                  _buildTicketRow(
+                    Icons.email,
+                    'E-mail',
+                    _emailController.text.trim(),
+                    theme,
+                  ),
                 if (_phoneController.text
                     .replaceAll(RegExp(r'[^0-9]'), '')
                     .isNotEmpty)
-                  _buildTicketRow(Icons.phone, 'Telefone',
-                      _phoneController.text.trim(), theme),
+                  _buildTicketRow(
+                    Icons.phone,
+                    'Telefone',
+                    _phoneController.text.trim(),
+                    theme,
+                  ),
                 if (_notesController.text.trim().isNotEmpty)
-                  _buildTicketRow(Icons.notes, 'Observações',
-                      _notesController.text.trim(), theme),
+                  _buildTicketRow(
+                    Icons.notes,
+                    'Observações',
+                    _notesController.text.trim(),
+                    theme,
+                  ),
                 const SizedBox(height: 16),
                 Center(
                   child: Text(
@@ -402,7 +441,11 @@ class _CredentialDetailScreenState
   }
 
   Widget _buildTicketRow(
-      IconData icon, String label, String value, ThemeData theme) {
+    IconData icon,
+    String label,
+    String value,
+    ThemeData theme,
+  ) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 20),
       child: Row(
@@ -471,65 +514,69 @@ class _CredentialDetailScreenState
                     onPressed: _showExportOptions,
                   ),
             IconButton(
-              icon: const Icon(Icons.delete),
+              icon: const Icon(Icons.edit_outlined),
+              tooltip: 'Editar',
+              onPressed: () => setState(() => _isEditing = true),
+            ),
+            IconButton(
+              icon: Icon(Icons.delete_outline, color: theme.colorScheme.error),
+              tooltip: 'Excluir',
               onPressed: _deleteCredential,
             ),
-          ],
-          IconButton(
-            icon: Icon(_isEditing ? Icons.check : Icons.edit),
-            onPressed: () {
-              if (_isEditing) {
-                _saveChanges();
-              } else {
-                setState(() => _isEditing = true);
-              }
-            },
-          ),
+          ] else ...[
+            IconButton(
+              icon: const Icon(Icons.check),
+              tooltip: 'Salvar',
+              onPressed: _saveChanges,
+            ),
+          ]
         ],
       ),
-      body: AppAnimations.fadeInFromBottom(Padding(
-        padding: const EdgeInsets.all(AppSpacing.md),
-        child: Column(
-          children: [
-            Expanded(
-              child: CredentialForm(
-                formKey: _formKey,
-                locationController: _locationController,
-                loginController: _loginController,
-                passwordController: _passwordController,
-                emailController: _emailController,
-                phoneController: _phoneController,
-                notesController: _notesController,
-                logoPath: _logoPath,
-                onLogoChanged: (path) {
-                  setState(() {
-                    _logoPath = path;
-                  });
-                },
-                isEditing: _isEditing,
-                availableFolders: vm.allFolders,
-                selectedFolderId: _selectedFolderId,
-                onFolderChanged: (folderId) {
-                  setState(() {
-                    _selectedFolderId = folderId;
-                  });
-                },
-              ),
-            ),
-            if (_isEditing) ...[
-              const SizedBox(height: AppSpacing.md),
-              SizedBox(
-                width: double.infinity,
-                child: AppButton(
-                  onPressed: _saveChanges,
-                  isLoading: _isSaving,
-                  label: 'Salvar Alterações',
+      body: AppAnimations.fadeInFromBottom(
+        Padding(
+          padding: const EdgeInsets.all(AppSpacing.md),
+          child: Column(
+            children: [
+              Expanded(
+                child: CredentialForm(
+                  formKey: _formKey,
+                  locationController: _locationController,
+                  loginController: _loginController,
+                  passwordController: _passwordController,
+                  emailController: _emailController,
+                  phoneController: _phoneController,
+                  notesController: _notesController,
+                  logoPath: _logoPath,
+                  onLogoChanged: (path) {
+                    setState(() {
+                      _logoPath = path;
+                    });
+                  },
+                  isEditing: _isEditing,
+                  availableFolders: vm.allFolders,
+                  selectedFolderId: _selectedFolderId,
+                  onFolderChanged: (folderId) {
+                    setState(() {
+                      _selectedFolderId = folderId;
+                    });
+                  },
                 ),
-              )
-            ]
-          ],
+              ),
+              if (_isEditing) ...[
+                const SizedBox(height: AppSpacing.md),
+                SizedBox(
+                  width: double.infinity,
+                  child: AppButton(
+                    onPressed: _saveChanges,
+                    isLoading: _isSaving,
+                    label: 'Salvar Alterações',
+                  ),
+                ),
+              ],
+            ],
+          ),
         ),
-      )),
+      ),
     );
   }
 }

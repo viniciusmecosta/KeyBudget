@@ -18,10 +18,7 @@ class CredentialsListSkeleton extends ConsumerWidget {
         delegate: SliverChildBuilderDelegate(
           (context, index) => _buildSkeletonTile(context)
               .animate(onPlay: (controller) => controller.repeat())
-              .shimmer(
-                duration: 1500.ms,
-                color: shimmerHighlightColor,
-              ),
+              .shimmer(duration: 1500.ms, color: shimmerHighlightColor),
           childCount: 7,
         ),
       ),
@@ -39,10 +36,7 @@ class CredentialsListSkeleton extends ConsumerWidget {
       ),
       child: Row(
         children: [
-          CircleAvatar(
-            radius: 24,
-            backgroundColor: theme.colorScheme.surface,
-          ),
+          CircleAvatar(radius: 24, backgroundColor: theme.colorScheme.surface),
           const SizedBox(width: AppSpacing.md),
           Expanded(
             child: Column(
