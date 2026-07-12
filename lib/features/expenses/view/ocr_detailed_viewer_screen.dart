@@ -53,8 +53,10 @@ class _OcrDetailedViewerScreenState
     final frameInfo = await codec.getNextFrame();
     if (mounted) {
       setState(() {
-        _imageSize = Size(frameInfo.image.width.toDouble(),
-            frameInfo.image.height.toDouble());
+        _imageSize = Size(
+          frameInfo.image.width.toDouble(),
+          frameInfo.image.height.toDouble(),
+        );
       });
     }
   }
@@ -65,8 +67,9 @@ class _OcrDetailedViewerScreenState
         _paintKey.currentContext?.findRenderObject() as RenderBox?;
     if (paintBox == null) return;
 
-    final Offset localTouchPosition =
-        paintBox.globalToLocal(details.globalPosition);
+    final Offset localTouchPosition = paintBox.globalToLocal(
+      details.globalPosition,
+    );
 
     final Size paintCanvasSize = paintBox.size;
 
@@ -88,8 +91,10 @@ class _OcrDetailedViewerScreenState
 
     final Matrix4 matrix = _transformationController.value;
     final Matrix4 inverseMatrix = Matrix4.inverted(matrix);
-    final Offset transformedTouchPosition =
-        MatrixUtils.transformPoint(inverseMatrix, localTouchPosition);
+    final Offset transformedTouchPosition = MatrixUtils.transformPoint(
+      inverseMatrix,
+      localTouchPosition,
+    );
 
     final Offset tapPositionOnOriginalImage = Offset(
       (transformedTouchPosition.dx - originOffset.dx) / baseScale,
@@ -130,35 +135,57 @@ class _OcrDetailedViewerScreenState
     List<PopupMenuEntry<OcrTargetField>> menuItems = [];
 
     if (currentlyAssignedTo != OcrTargetField.amount) {
-      menuItems.add(const PopupMenuItem(
-          value: OcrTargetField.amount, child: Text('Usar como Valor')));
+      menuItems.add(
+        const PopupMenuItem(
+          value: OcrTargetField.amount,
+          child: Text('Usar como Valor'),
+        ),
+      );
     }
     if (currentlyAssignedTo != OcrTargetField.date) {
-      menuItems.add(const PopupMenuItem(
-          value: OcrTargetField.date, child: Text('Usar como Data')));
+      menuItems.add(
+        const PopupMenuItem(
+          value: OcrTargetField.date,
+          child: Text('Usar como Data'),
+        ),
+      );
     }
     if (currentlyAssignedTo != OcrTargetField.motivation) {
-      menuItems.add(const PopupMenuItem(
+      menuItems.add(
+        const PopupMenuItem(
           value: OcrTargetField.motivation,
-          child: Text('Usar como Motivação')));
+          child: Text('Usar como Motivação'),
+        ),
+      );
     }
     if (currentlyAssignedTo != OcrTargetField.location) {
-      menuItems.add(const PopupMenuItem(
-          value: OcrTargetField.location, child: Text('Usar como Local')));
+      menuItems.add(
+        const PopupMenuItem(
+          value: OcrTargetField.location,
+          child: Text('Usar como Local'),
+        ),
+      );
     }
 
     if (currentlyAssignedTo != null) {
       menuItems.add(const PopupMenuDivider());
-      menuItems.add(PopupMenuItem(
+      menuItems.add(
+        PopupMenuItem(
           value: OcrTargetField.none,
-          child: Text('Desmarcar',
-              style: TextStyle(color: Theme.of(context).colorScheme.error))));
+          child: Text(
+            'Desmarcar',
+            style: TextStyle(color: Theme.of(context).colorScheme.error),
+          ),
+        ),
+      );
     }
 
     showMenu<OcrTargetField>(
       context: context,
       position: RelativeRect.fromRect(
-          _tapPosition! & const Size(40, 40), Offset.zero & overlay.size),
+        _tapPosition! & const Size(40, 40),
+        Offset.zero & overlay.size,
+      ),
       items: menuItems,
     ).then((OcrTargetField? selectedField) {
       if (selectedField != null) {
@@ -202,7 +229,7 @@ class _OcrDetailedViewerScreenState
               });
               Navigator.of(context).pop(finalAssignments);
             },
-          )
+          ),
         ],
       ),
       backgroundColor: Colors.black,

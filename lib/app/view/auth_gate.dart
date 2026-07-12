@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:key_budget/app/view/main_screen.dart';
 import 'package:key_budget/core/services/app_lock_service.dart';
-import 'package:key_budget/core/services/local_auth_service.dart';
 import 'package:key_budget/features/auth/view/login_screen.dart';
 import 'package:key_budget/features/auth/viewmodel/auth_viewmodel.dart';
 import 'package:key_budget/features/dashboard/widgets/dashboard_skeleton.dart';
@@ -40,6 +39,8 @@ class _AuthGateState extends ConsumerState<AuthGate> {
 
     if (authViewModel.currentUser != null &&
         !_isAuthenticating &&
+        !appLockService.isLocked &&
+        !appLockService.justUnlocked &&
         _status == AuthStatus.pending) {
       _authenticateOrBypass();
     }
@@ -70,9 +71,6 @@ class _AuthGateState extends ConsumerState<AuthGate> {
       case AuthStatus.success:
         return MainScreen(key: ValueKey(authViewModel.currentUser!.id));
       case AuthStatus.failed:
-        WidgetsBinding.instance.addPostFrameCallback((_) {
-          ref.read(appLockServiceProvider).lockApp();
-        });
         return const Scaffold(
           body: Center(child: Text("Falha na autenticação")),
         );
@@ -87,13 +85,11 @@ class _AuthGateState extends ConsumerState<AuthGate> {
 
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       final appLockService = ref.read(appLockServiceProvider);
-      appLockService.isAuthenticating = true;
       final authViewModel = ref.read(authViewModelProvider);
 
       final appLocked = authViewModel.currentUser?.appLocked ?? true;
       if (!appLocked) {
         if (mounted) setState(() => _status = AuthStatus.success);
-        appLockService.isAuthenticating = false;
         if (mounted) _isAuthenticating = false;
         return;
       }
@@ -102,30 +98,13 @@ class _AuthGateState extends ConsumerState<AuthGate> {
         authViewModel.consumeJustAuthenticated();
         if (mounted) setState(() => _status = AuthStatus.success);
       } else {
-        await _authenticate();
+        appLockService.lockApp();
+        if (mounted) setState(() => _status = AuthStatus.pending);
       }
-      appLockService.isAuthenticating = false;
+      
       if (mounted) {
         _isAuthenticating = false;
       }
     });
-  }
-
-  Future<void> _authenticate() async {
-    final localAuthService = LocalAuthService();
-    final canAuth = await localAuthService.canAuthenticate();
-
-    if (!canAuth) {
-      if (mounted) setState(() => _status = AuthStatus.success);
-      return;
-    }
-
-    final isAuthenticated = await localAuthService.authenticate();
-
-    if (mounted) {
-      setState(() {
-        _status = isAuthenticated ? AuthStatus.success : AuthStatus.failed;
-      });
-    }
   }
 }

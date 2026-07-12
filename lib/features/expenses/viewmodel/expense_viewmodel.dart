@@ -73,13 +73,17 @@ class ExpenseViewModel extends ChangeNotifier {
   List<Expense> get filteredExpenses {
     List<Expense> filtered = List.from(_allExpenses);
     if (_filterIsIncome != null) {
-      filtered = filtered.where((exp) => (exp.isIncome ?? false) == _filterIsIncome).toList();
+      filtered = filtered
+          .where((exp) => (exp.isIncome ?? false) == _filterIsIncome)
+          .toList();
     }
     if (_selectedCategoryIds.isNotEmpty) {
       filtered = filtered
-          .where((exp) =>
-              exp.categoryId != null &&
-              _selectedCategoryIds.contains(exp.categoryId))
+          .where(
+            (exp) =>
+                exp.categoryId != null &&
+                _selectedCategoryIds.contains(exp.categoryId),
+          )
           .toList();
     }
     return filtered;
@@ -87,21 +91,45 @@ class ExpenseViewModel extends ChangeNotifier {
 
   List<Expense> get monthlyFilteredExpenses {
     return filteredExpenses
-        .where((exp) =>
-            exp.date.year == _selectedMonth.year &&
-            exp.date.month == _selectedMonth.month)
+        .where(
+          (exp) =>
+              exp.date.year == _selectedMonth.year &&
+              exp.date.month == _selectedMonth.month,
+        )
         .toList()
       ..sort((a, b) => b.date.compareTo(a.date));
   }
 
   double get currentMonthTotal {
-    return _currentDisplayItems.where((e) => e.isIncome != true).fold<double>(
-        0.0, (sum, exp) => sum + exp.amount);
+    List<Expense> baseList = _searchAllPeriods
+        ? filteredExpenses
+        : monthlyFilteredExpenses;
+    if (_searchQuery.isNotEmpty) {
+      baseList = baseList.where((exp) {
+        final loc = exp.location != null ? _sanitize(exp.location!) : '';
+        final mot = exp.motivation != null ? _sanitize(exp.motivation!) : '';
+        return loc.contains(_searchQuery) || mot.contains(_searchQuery);
+      }).toList();
+    }
+    return baseList
+        .where((e) => e.isIncome != true)
+        .fold<double>(0.0, (sum, exp) => sum + exp.amount);
   }
 
   double get currentMonthIncomeTotal {
-    return _currentDisplayItems.where((e) => e.isIncome == true).fold<double>(
-        0.0, (sum, exp) => sum + exp.amount);
+    List<Expense> baseList = _searchAllPeriods
+        ? filteredExpenses
+        : monthlyFilteredExpenses;
+    if (_searchQuery.isNotEmpty) {
+      baseList = baseList.where((exp) {
+        final loc = exp.location != null ? _sanitize(exp.location!) : '';
+        final mot = exp.motivation != null ? _sanitize(exp.motivation!) : '';
+        return loc.contains(_searchQuery) || mot.contains(_searchQuery);
+      }).toList();
+    }
+    return baseList
+        .where((e) => e.isIncome == true)
+        .fold<double>(0.0, (sum, exp) => sum + exp.amount);
   }
 
   double get currentMonthBalance {
@@ -192,21 +220,22 @@ class ExpenseViewModel extends ChangeNotifier {
     if (!_isLoading) _setLoading(true);
 
     _expensesSubscription?.cancel();
-    _expensesSubscription =
-        _repository.getExpensesStreamForUser(userId).listen((newExpenses) {
-      _allExpenses = newExpenses;
-      _updateDisplayList(animate: true);
-      if (_isLoading) _setLoading(false);
-    });
+    _expensesSubscription = _repository.getExpensesStreamForUser(userId).listen(
+      (newExpenses) {
+        _allExpenses = newExpenses;
+        _updateDisplayList(animate: true);
+        if (_isLoading) _setLoading(false);
+      },
+    );
 
     _recurringExpensesSubscription?.cancel();
     _recurringExpensesSubscription = _recurringRepository
         .getRecurringExpensesStream(userId)
         .listen((recurring) {
-      _recurringExpenses = recurring;
-      checkAndCreateRecurringInstances(userId);
-      notifyListeners();
-    });
+          _recurringExpenses = recurring;
+          checkAndCreateRecurringInstances(userId);
+          notifyListeners();
+        });
 
     _isListening = true;
   }
@@ -214,7 +243,7 @@ class ExpenseViewModel extends ChangeNotifier {
   void _updateDisplayList({bool animate = true}) {
     List<Expense> newList = _searchAllPeriods
         ? (List.from(filteredExpenses)
-          ..sort((a, b) => b.date.compareTo(a.date)))
+            ..sort((a, b) => b.date.compareTo(a.date)))
         : List.from(monthlyFilteredExpenses);
 
     if (_searchQuery.isNotEmpty) {
@@ -241,8 +270,9 @@ class ExpenseViewModel extends ChangeNotifier {
     for (var i = oldList.length - 1; i >= 0; i--) {
       final oldItem = oldList[i];
       if (!newList.any((newItem) => newItem.id == oldItem.id)) {
-        final indexToRemove =
-            _currentDisplayItems.indexWhere((item) => item.id == oldItem.id);
+        final indexToRemove = _currentDisplayItems.indexWhere(
+          (item) => item.id == oldItem.id,
+        );
         if (indexToRemove != -1) {
           final removedItem = _currentDisplayItems.removeAt(indexToRemove);
           _listKey?.currentState?.removeItem(
@@ -264,13 +294,16 @@ class ExpenseViewModel extends ChangeNotifier {
 
     for (var i = 0; i < newList.length; i++) {
       final newItem = newList[i];
-      final oldIndex =
-          _currentDisplayItems.indexWhere((item) => item.id == newItem.id);
+      final oldIndex = _currentDisplayItems.indexWhere(
+        (item) => item.id == newItem.id,
+      );
 
       if (oldIndex == -1) {
         _currentDisplayItems.insert(i, newItem);
-        _listKey?.currentState
-            ?.insertItem(i, duration: const Duration(milliseconds: 300));
+        _listKey?.currentState?.insertItem(
+          i,
+          duration: const Duration(milliseconds: 300),
+        );
         hasChanges = true;
       } else {
         if (_currentDisplayItems[oldIndex] != newItem) {
@@ -303,8 +336,12 @@ class ExpenseViewModel extends ChangeNotifier {
     await _repository.restoreExpense(userId, expense);
   }
 
-  Future<void> addInstallmentExpenses(String userId, Expense baseExpense,
-      int installments, bool startNextMonth) async {
+  Future<void> addInstallmentExpenses(
+    String userId,
+    Expense baseExpense,
+    int installments,
+    bool startNextMonth,
+  ) async {
     final String groupId = DateTime.now().millisecondsSinceEpoch.toString();
     final double installmentAmount = baseExpense.amount / installments;
     final List<Expense> toAdd = [];
@@ -332,24 +369,27 @@ class ExpenseViewModel extends ChangeNotifier {
           ? '$baseMotivation ($i/$installments)'
           : 'Parcela $i/$installments';
 
-      toAdd.add(Expense(
-        amount: installmentAmount,
-        date: date,
-        categoryId: baseExpense.categoryId,
-        motivation: motivation,
-        location: baseExpense.location,
-        installmentGroupId: groupId,
-        currentInstallment: i,
-        totalInstallments: installments,
-      ));
+      toAdd.add(
+        Expense(
+          amount: installmentAmount,
+          date: date,
+          categoryId: baseExpense.categoryId,
+          motivation: motivation,
+          location: baseExpense.location,
+          installmentGroupId: groupId,
+          currentInstallment: i,
+          totalInstallments: installments,
+        ),
+      );
     }
 
     await _repository.addExpensesBatch(userId, toAdd);
   }
 
   List<Expense> getRelatedInstallments(String groupId) {
-    final list =
-        _allExpenses.where((e) => e.installmentGroupId == groupId).toList();
+    final list = _allExpenses
+        .where((e) => e.installmentGroupId == groupId)
+        .toList();
     list.sort((a, b) => a.date.compareTo(b.date));
     return list;
   }
@@ -363,8 +403,9 @@ class ExpenseViewModel extends ChangeNotifier {
   }
 
   Future<void> deleteInstallmentGroup(String userId, String groupId) async {
-    final related =
-        _allExpenses.where((e) => e.installmentGroupId == groupId).toList();
+    final related = _allExpenses
+        .where((e) => e.installmentGroupId == groupId)
+        .toList();
     final futures = related.map((exp) {
       if (exp.id != null) {
         return _repository.deleteExpense(userId, exp.id!);
@@ -375,76 +416,167 @@ class ExpenseViewModel extends ChangeNotifier {
   }
 
   Future<void> addRecurringExpense(
-      String userId, RecurringExpense expense) async {
+    String userId,
+    RecurringExpense expense,
+  ) async {
     await _recurringRepository.addRecurringExpense(userId, expense);
   }
 
   Future<void> updateRecurringExpense(
-      String userId, RecurringExpense expense) async {
+    String userId,
+    RecurringExpense expense,
+  ) async {
     await _recurringRepository.updateRecurringExpense(userId, expense);
   }
 
-  Future<void> deleteRecurringExpense(String userId, String expenseId) async {
+  Future<void> deleteRecurringExpense(
+    String userId,
+    String expenseId, {
+    int deleteMode = 0,
+  }) async {
     await _recurringRepository.deleteRecurringExpense(userId, expenseId);
+
+    if (deleteMode == 1 || deleteMode == 2) {
+      final allExpenses = await _repository.getExpensesForUser(userId);
+      final now = DateTime.now();
+
+      final toDelete = allExpenses.where((e) {
+        if (e.recurringExpenseId != expenseId) return false;
+        if (deleteMode == 1) {
+          return e.date.isAfter(now);
+        }
+
+        return true;
+      }).toList();
+
+      for (var e in toDelete) {
+        if (e.id != null) {
+          await _repository.deleteExpense(userId, e.id!);
+        }
+      }
+    }
   }
 
   Future<void> restoreRecurringExpense(
-      String userId, RecurringExpense expense) async {
+    String userId,
+    RecurringExpense expense,
+  ) async {
     await _recurringRepository.restoreRecurringExpense(userId, expense);
   }
 
+  DateTime _getTargetLimitDate(DateTime now, RecurringExpense recurring) {
+    int count = recurring.advanceGenerationCount;
+    if (count <= 0) return now;
+
+    switch (recurring.frequency) {
+      case RecurrenceFrequency.daily:
+        return now.add(Duration(days: count));
+      case RecurrenceFrequency.weekly:
+        return now.add(Duration(days: 7 * count));
+      case RecurrenceFrequency.monthly:
+        int y = now.year;
+        int m = now.month + count;
+        while (m > 12) {
+          m -= 12;
+          y++;
+        }
+        return DateTime(y, m, 31, 23, 59, 59);
+    }
+  }
+
+  bool _isGeneratingRecurring = false;
+
   Future<void> checkAndCreateRecurringInstances(String userId) async {
-    final now = DateTime.now();
-    for (final recurring in _recurringExpenses) {
-      var currentRecurring = recurring;
-      while (true) {
-        DateTime nextInstanceDate =
-            _calculateNextInstanceDate(currentRecurring);
+    if (_isGeneratingRecurring) return;
+    _isGeneratingRecurring = true;
 
-        if (nextInstanceDate.isAfter(now)) {
-          final int notificationId = currentRecurring.id?.hashCode ??
-              nextInstanceDate.millisecondsSinceEpoch;
-          await NotificationService.scheduleExpenseNotification(
-            notificationId,
-            'Despesa Recorrente Automática',
-            'Lembrete: "${currentRecurring.motivation ?? "Sua despesa"}" já foi registrada para hoje.',
-            nextInstanceDate,
+    try {
+      final now = DateTime.now();
+
+      for (var recurring in _recurringExpenses) {
+        RecurringExpense currentRecurring = recurring;
+        bool notificationScheduled = false;
+
+        List<Expense> toAdd = [];
+
+        while (true) {
+          DateTime nextInstanceDate = _calculateNextInstanceDate(
+            currentRecurring,
           );
-          break;
+
+          DateTime targetLimit = currentRecurring.advanceGenerationCount > 0
+              ? _getTargetLimitDate(now, currentRecurring)
+              : now;
+
+          if (nextInstanceDate.isAfter(targetLimit)) {
+            break;
+          }
+
+          if (currentRecurring.endDate != null &&
+              nextInstanceDate.isAfter(currentRecurring.endDate!)) {
+            break;
+          }
+
+          if (nextInstanceDate.isAfter(now) && !notificationScheduled) {
+            final int notificationId =
+                currentRecurring.id?.hashCode ??
+                nextInstanceDate.millisecondsSinceEpoch;
+            await NotificationService.scheduleExpenseNotification(
+              notificationId,
+              'Despesa Recorrente Automática',
+              'Lembrete: "${currentRecurring.motivation ?? "Sua despesa"}" já foi registrada.',
+              nextInstanceDate,
+            );
+            notificationScheduled = true;
+          }
+
+          bool alreadyExists = _allExpenses.any(
+            (e) =>
+                e.recurringExpenseId == currentRecurring.id &&
+                e.date.year == nextInstanceDate.year &&
+                e.date.month == nextInstanceDate.month &&
+                e.date.day == nextInstanceDate.day,
+          );
+
+          if (!alreadyExists) {
+            toAdd.add(
+              Expense(
+                amount: currentRecurring.amount,
+                date: nextInstanceDate,
+                categoryId: currentRecurring.categoryId,
+                motivation: currentRecurring.motivation,
+                location: currentRecurring.location,
+                isIncome: currentRecurring.isIncome,
+                recurringExpenseId: currentRecurring.id,
+              ),
+            );
+          }
+
+          currentRecurring = RecurringExpense(
+            id: currentRecurring.id,
+            amount: currentRecurring.amount,
+            categoryId: currentRecurring.categoryId,
+            motivation: currentRecurring.motivation,
+            location: currentRecurring.location,
+            isIncome: currentRecurring.isIncome,
+            frequency: currentRecurring.frequency,
+            startDate: currentRecurring.startDate,
+            endDate: currentRecurring.endDate,
+            dayOfWeek: currentRecurring.dayOfWeek,
+            dayOfMonth: currentRecurring.dayOfMonth,
+            monthOfYear: currentRecurring.monthOfYear,
+            lastInstanceDate: nextInstanceDate,
+            advanceGenerationCount: currentRecurring.advanceGenerationCount,
+          );
         }
 
-        if (currentRecurring.endDate != null &&
-            nextInstanceDate.isAfter(currentRecurring.endDate!)) {
-          break;
+        if (toAdd.isNotEmpty) {
+          await _repository.addExpensesBatch(userId, toAdd);
+          await updateRecurringExpense(userId, currentRecurring);
         }
-
-        final newExpense = Expense(
-          amount: currentRecurring.amount,
-          date: nextInstanceDate,
-          categoryId: currentRecurring.categoryId,
-          motivation: currentRecurring.motivation,
-          location: currentRecurring.location,
-        );
-
-        await addExpense(userId, newExpense);
-
-        final updatedRecurring = RecurringExpense(
-          id: currentRecurring.id,
-          amount: currentRecurring.amount,
-          categoryId: currentRecurring.categoryId,
-          motivation: currentRecurring.motivation,
-          location: currentRecurring.location,
-          frequency: currentRecurring.frequency,
-          startDate: currentRecurring.startDate,
-          endDate: currentRecurring.endDate,
-          dayOfWeek: currentRecurring.dayOfWeek,
-          dayOfMonth: currentRecurring.dayOfMonth,
-          monthOfYear: currentRecurring.monthOfYear,
-          lastInstanceDate: nextInstanceDate,
-        );
-        await updateRecurringExpense(userId, updatedRecurring);
-        currentRecurring = updatedRecurring;
       }
+    } finally {
+      _isGeneratingRecurring = false;
     }
   }
 
@@ -475,15 +607,20 @@ class ExpenseViewModel extends ChangeNotifier {
   }
 
   Future<bool> exportExpensesToCsv(
-      BuildContext context, DateTime? start, DateTime? end) async {
+    BuildContext context,
+    DateTime? start,
+    DateTime? end,
+  ) async {
     _setExportingCsv(true);
     try {
       List<Expense> expensesToExport = _allExpenses;
       if (start != null && end != null) {
         expensesToExport = _allExpenses
-            .where((exp) =>
-                exp.date.isAfter(start.subtract(const Duration(days: 1))) &&
-                exp.date.isBefore(end.add(const Duration(days: 1))))
+            .where(
+              (exp) =>
+                  exp.date.isAfter(start.subtract(const Duration(days: 1))) &&
+                  exp.date.isBefore(end.add(const Duration(days: 1))),
+            )
             .toList();
       }
       return await _csvService.exportExpenses(context, expensesToExport);
@@ -493,24 +630,31 @@ class ExpenseViewModel extends ChangeNotifier {
   }
 
   Future<void> exportExpensesToPdf(
-      BuildContext context,
-      DateTime? start,
-      DateTime? end,
-      AnalysisViewModel analysisViewModel,
-      CategoryViewModel categoryViewModel) async {
+    BuildContext context,
+    DateTime? start,
+    DateTime? end,
+    AnalysisViewModel analysisViewModel,
+    CategoryViewModel categoryViewModel,
+  ) async {
     _setExportingPdf(true);
     try {
       List<Expense> expensesToExport = _allExpenses;
       if (start != null && end != null) {
         expensesToExport = _allExpenses
-            .where((exp) =>
-                exp.date.isAfter(start.subtract(const Duration(days: 1))) &&
-                exp.date.isBefore(end.add(const Duration(days: 1))))
+            .where(
+              (exp) =>
+                  exp.date.isAfter(start.subtract(const Duration(days: 1))) &&
+                  exp.date.isBefore(end.add(const Duration(days: 1))),
+            )
             .toList();
       }
       expensesToExport.sort((a, b) => a.date.compareTo(b.date));
       await _pdfService.exportExpensesPdf(
-          context, expensesToExport, analysisViewModel, categoryViewModel);
+        context,
+        expensesToExport,
+        analysisViewModel,
+        categoryViewModel,
+      );
     } finally {
       _setExportingPdf(false);
     }
@@ -525,7 +669,8 @@ class ExpenseViewModel extends ChangeNotifier {
       int count = 0;
       for (var row in data) {
         final newExpense = Expense(
-          date: DateTime.tryParse(row['date']?.toString() ?? '') ??
+          date:
+              DateTime.tryParse(row['date']?.toString() ?? '') ??
               DateTime.now(),
           amount: double.tryParse(row['amount']?.toString() ?? '0.0') ?? 0.0,
           categoryId: null,
@@ -552,10 +697,43 @@ class ExpenseViewModel extends ChangeNotifier {
   List<String> getUniqueLocationsForCategory(String? categoryId, String query) {
     if (categoryId == null || query.isEmpty) return [];
 
-    final locations = _allExpenses.where((exp) =>
-        exp.categoryId == categoryId &&
-        exp.location != null &&
-        exp.location!.isNotEmpty);
+    final locations = _allExpenses.where(
+      (exp) =>
+          exp.categoryId == categoryId &&
+          exp.location != null &&
+          exp.location!.isNotEmpty,
+    );
+
+    if (locations.isEmpty) return [];
+
+    final frequencyMap = <String, int>{};
+    for (var exp in locations) {
+      frequencyMap[exp.location!] = (frequencyMap[exp.location!] ?? 0) + 1;
+    }
+
+    final queryLower = query.toLowerCase();
+    final filteredLocations = frequencyMap.entries.where((entry) {
+      return entry.key
+          .toLowerCase()
+          .split(' ')
+          .any((word) => word.startsWith(queryLower));
+    });
+
+    final sortedLocations = filteredLocations.toList()
+      ..sort((a, b) => b.value.compareTo(a.value));
+
+    return sortedLocations.map((e) => e.key).take(3).toList();
+  }
+
+  List<String> getUniqueLocationsForIncome(String query) {
+    if (query.isEmpty) return [];
+
+    final locations = _allExpenses.where(
+      (exp) =>
+          exp.isIncome == true &&
+          exp.location != null &&
+          exp.location!.isNotEmpty,
+    );
 
     if (locations.isEmpty) return [];
 
@@ -579,13 +757,48 @@ class ExpenseViewModel extends ChangeNotifier {
   }
 
   List<String> getUniqueMotivationsForCategory(
-      String? categoryId, String query) {
+    String? categoryId,
+    String query,
+  ) {
     if (categoryId == null || query.isEmpty) return [];
 
-    final motivations = _allExpenses.where((exp) =>
-        exp.categoryId == categoryId &&
-        exp.motivation != null &&
-        exp.motivation!.isNotEmpty);
+    final motivations = _allExpenses.where(
+      (exp) =>
+          exp.categoryId == categoryId &&
+          exp.motivation != null &&
+          exp.motivation!.isNotEmpty,
+    );
+
+    if (motivations.isEmpty) return [];
+
+    final frequencyMap = <String, int>{};
+    for (var exp in motivations) {
+      frequencyMap[exp.motivation!] = (frequencyMap[exp.motivation!] ?? 0) + 1;
+    }
+
+    final queryLower = query.toLowerCase();
+    final filteredMotivations = frequencyMap.entries.where((entry) {
+      return entry.key
+          .toLowerCase()
+          .split(' ')
+          .any((word) => word.startsWith(queryLower));
+    });
+
+    final sortedMotivations = filteredMotivations.toList()
+      ..sort((a, b) => b.value.compareTo(a.value));
+
+    return sortedMotivations.map((e) => e.key).take(3).toList();
+  }
+
+  List<String> getUniqueMotivationsForIncome(String query) {
+    if (query.isEmpty) return [];
+
+    final motivations = _allExpenses.where(
+      (exp) =>
+          exp.isIncome == true &&
+          exp.motivation != null &&
+          exp.motivation!.isNotEmpty,
+    );
 
     if (motivations.isEmpty) return [];
 
@@ -627,5 +840,6 @@ class ExpenseViewModel extends ChangeNotifier {
   }
 }
 
-final expenseViewModelProvider =
-    ChangeNotifierProvider<ExpenseViewModel>((ref) => ExpenseViewModel());
+final expenseViewModelProvider = ChangeNotifierProvider<ExpenseViewModel>(
+  (ref) => ExpenseViewModel(),
+);

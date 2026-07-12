@@ -31,7 +31,10 @@ class AddExpenseScreen extends ConsumerStatefulWidget {
 class _AddExpenseScreenState extends ConsumerState<AddExpenseScreen> {
   final _formKey = GlobalKey<FormState>();
   final _amountController = MoneyMaskedTextController(
-      decimalSeparator: ',', thousandSeparator: '.', leftSymbol: 'R\$ ');
+    decimalSeparator: ',',
+    thousandSeparator: '.',
+    leftSymbol: 'R\$ ',
+  );
   final _motivationController = TextEditingController();
   final _locationController = TextEditingController();
   DateTime _selectedDate = DateTime.now();
@@ -42,6 +45,7 @@ class _AddExpenseScreenState extends ConsumerState<AddExpenseScreen> {
   int _installmentsValue = 2;
   bool _startNextMonth = false;
   bool _isIncome = false;
+  bool _hasUnsavedChanges = false;
 
   String? _processedImagePath;
   RecognizedText? _recognizedText;
@@ -109,13 +113,13 @@ class _AddExpenseScreenState extends ConsumerState<AddExpenseScreen> {
           _amountController.updateValue(amount);
           _currentOcrAssignments[OcrTargetField.amount] =
               _findOriginalTextForAmount(recognizedText, amount) ??
-                  amount.toStringAsFixed(2).replaceAll('.', ',');
+              amount.toStringAsFixed(2).replaceAll('.', ',');
         }
         if (date != null) {
           _selectedDate = date;
           _currentOcrAssignments[OcrTargetField.date] =
               _findOriginalTextForDate(recognizedText, date) ??
-                  DateFormat('dd/MM/yyyy').format(date);
+              DateFormat('dd/MM/yyyy').format(date);
         }
         if (description != null) {
           _locationController.text = description;
@@ -126,19 +130,25 @@ class _AddExpenseScreenState extends ConsumerState<AddExpenseScreen> {
       final foundParts = [
         if (amount != null) 'valor',
         if (date != null) 'data',
-        if (description != null) 'descrição'
+        if (description != null) 'descrição',
       ];
       if (foundParts.isNotEmpty) {
         SnackbarService.showInfo(
-            context, '${foundParts.join(', ')} preenchido(s)! Verifique.');
+          context,
+          '${foundParts.join(', ')} preenchido(s)! Verifique.',
+        );
       } else {
         SnackbarService.showInfo(
-            context, 'Nenhum dado preenchido automaticamente.');
+          context,
+          'Nenhum dado preenchido automaticamente.',
+        );
       }
     } catch (e) {
       if (!mounted) return;
       SnackbarService.showError(
-          context, 'Falha ao processar a imagem. Tente novamente.');
+        context,
+        'Falha ao processar a imagem. Tente novamente.',
+      );
     } finally {
       if (mounted) {
         setState(() => _isScanning = false);
@@ -150,8 +160,9 @@ class _AddExpenseScreenState extends ConsumerState<AddExpenseScreen> {
     String amountStr = amount.toStringAsFixed(2).replaceAll('.', ',');
     String amountStrNoComma = amount.toStringAsFixed(0);
     for (var block in rText.blocks) {
-      var cleanBlock =
-          block.text.replaceAll(RegExp(r'[^0-9,]'), '').replaceAll(',', '.');
+      var cleanBlock = block.text
+          .replaceAll(RegExp(r'[^0-9,]'), '')
+          .replaceAll(',', '.');
       if (block.text.contains(amountStr) ||
           cleanBlock.contains(amount.toStringAsFixed(2)) ||
           block.text.contains(amountStrNoComma)) {
@@ -204,21 +215,22 @@ class _AddExpenseScreenState extends ConsumerState<AddExpenseScreen> {
     if (_processedImagePath == null || _recognizedText == null) return;
 
     final initialAssignmentsForViewer = Map<OcrTargetField, String>.fromEntries(
-        _currentOcrAssignments.entries
-            .where((e) => e.value.isNotEmpty)
-            .cast<MapEntry<OcrTargetField, String>>());
+      _currentOcrAssignments.entries
+          .where((e) => e.value.isNotEmpty)
+          .cast<MapEntry<OcrTargetField, String>>(),
+    );
 
     final Map<OcrTargetField, String>? corrections =
         await Navigator.push<Map<OcrTargetField, String>>(
-      context,
-      MaterialPageRoute(
-        builder: (_) => OcrDetailedViewerScreen(
-          imagePath: _processedImagePath!,
-          recognizedText: _recognizedText!,
-          initialAssignments: initialAssignmentsForViewer,
-        ),
-      ),
-    );
+          context,
+          MaterialPageRoute(
+            builder: (_) => OcrDetailedViewerScreen(
+              imagePath: _processedImagePath!,
+              recognizedText: _recognizedText!,
+              initialAssignments: initialAssignmentsForViewer,
+            ),
+          ),
+        );
 
     if (corrections != null && mounted) {
       _applyOcrCorrections(corrections, context);
@@ -229,7 +241,9 @@ class _AddExpenseScreenState extends ConsumerState<AddExpenseScreen> {
   }
 
   void _applyOcrCorrections(
-      Map<OcrTargetField, String> corrections, BuildContext currentContext) {
+    Map<OcrTargetField, String> corrections,
+    BuildContext currentContext,
+  ) {
     setState(() {
       _amountController.updateValue(0);
       _selectedDate = DateTime.now();
@@ -240,8 +254,9 @@ class _AddExpenseScreenState extends ConsumerState<AddExpenseScreen> {
         switch (field) {
           case OcrTargetField.amount:
             try {
-              final cleanValue =
-                  text.replaceAll(RegExp(r'[^\d,]'), '').replaceAll(',', '.');
+              final cleanValue = text
+                  .replaceAll(RegExp(r'[^\d,]'), '')
+                  .replaceAll(',', '.');
               final doubleValue = double.parse(cleanValue);
               _amountController.updateValue(doubleValue);
             } catch (e) {
@@ -278,7 +293,9 @@ class _AddExpenseScreenState extends ConsumerState<AddExpenseScreen> {
         }
       });
       SnackbarService.showSuccess(
-          currentContext, 'Campos atualizados com as seleções!');
+        currentContext,
+        'Campos atualizados com as seleções!',
+      );
     });
   }
 
@@ -302,14 +319,19 @@ class _AddExpenseScreenState extends ConsumerState<AddExpenseScreen> {
       motivation: _motivationController.text.isNotEmpty
           ? _motivationController.text
           : null,
-      location:
-          _locationController.text.isNotEmpty ? _locationController.text : null,
+      location: _locationController.text.isNotEmpty
+          ? _locationController.text
+          : null,
       isIncome: _isIncome,
     );
 
     if (_isInstallment) {
       await expenseViewModel.addInstallmentExpenses(
-          userId, newExpense, _installmentsValue, _startNextMonth);
+        userId,
+        newExpense,
+        _installmentsValue,
+        _startNextMonth,
+      );
     } else {
       await expenseViewModel.addExpense(userId, newExpense);
     }
@@ -325,16 +347,46 @@ class _AddExpenseScreenState extends ConsumerState<AddExpenseScreen> {
     final authViewModel = ref.watch(authViewModelProvider);
     final enableIncomes = authViewModel.currentUser?.enableIncomes ?? false;
 
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(_isIncome ? 'Adicionar Receita' : 'Adicionar Despesa'),
-        actions: [
-          if (!_isIncome) ...[
+    return PopScope(
+      canPop: !_hasUnsavedChanges,
+      onPopInvokedWithResult: (didPop, result) async {
+        if (didPop) return;
+        final shouldPop = await showDialog<bool>(
+          context: context,
+          builder: (context) => AlertDialog(
+            title: const Text('Descartar alterações?'),
+            content: const Text('Você tem alterações não salvas. Deseja sair sem salvar?'),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(context).pop(false),
+                child: const Text('Cancelar'),
+              ),
+              TextButton(
+                onPressed: () => Navigator.of(context).pop(true),
+                style: TextButton.styleFrom(foregroundColor: theme.colorScheme.error),
+                child: const Text('Sair'),
+              ),
+            ],
+          ),
+        );
+        if (shouldPop ?? false) {
+          if (context.mounted) {
+            Navigator.of(context).pop(result);
+          }
+        }
+      },
+      child: Scaffold(
+        appBar: AppBar(
+          title: Text(_isIncome ? 'Adicionar Receita' : 'Adicionar Despesa'),
+          actions: [
+            if (!_isIncome) ...[
             IconButton(
-              icon: Icon(Icons.document_scanner_outlined,
-                  color: _processedImagePath != null
-                      ? theme.colorScheme.primary
-                      : null),
+              icon: Icon(
+                Icons.document_scanner_outlined,
+                color: _processedImagePath != null
+                    ? theme.colorScheme.primary
+                    : null,
+              ),
               onPressed: _isScanning ? null : _showImageSourceDialog,
               tooltip: 'Escanear Recibo',
             ),
@@ -347,199 +399,228 @@ class _AddExpenseScreenState extends ConsumerState<AddExpenseScreen> {
           ],
         ],
       ),
-      body: AppAnimations.fadeInFromBottom(Padding(
-        padding: const EdgeInsets.all(AppSpacing.md),
-        child: Column(
-          children: [
-            if (_isScanning)
-              const Padding(
-                padding: EdgeInsets.symmetric(vertical: 8.0),
-                child: Column(
-                  children: [
-                    LinearProgressIndicator(),
-                    SizedBox(height: 4),
-                    Text('Analisando imagem...')
-                  ],
-                ),
-              ),
-            if (enableIncomes)
-              Padding(
-                padding: const EdgeInsets.only(bottom: AppSpacing.md),
-                child: Container(
-                  height: 50,
-                  padding: const EdgeInsets.all(4),
-                  decoration: BoxDecoration(
-                    color: theme.brightness == Brightness.dark
-                        ? Colors.white.withValues(alpha: 0.05)
-                        : Colors.black.withValues(alpha: 0.05),
-                    borderRadius: BorderRadius.circular(16),
-                  ),
-                  child: Row(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
+      body: AppAnimations.fadeInFromBottom(
+        Padding(
+          padding: const EdgeInsets.all(AppSpacing.md),
+          child: Column(
+            children: [
+              if (_isScanning)
+                const Padding(
+                  padding: EdgeInsets.symmetric(vertical: 8.0),
+                  child: Column(
                     children: [
-                      Expanded(
-                        child: GestureDetector(
-                          onTap: () {
-                            if (_isIncome) {
-                              setState(() {
-                                _isIncome = false;
-                              });
-                            }
-                          },
-                          child: AnimatedContainer(
-                            duration: const Duration(milliseconds: 200),
-                            curve: Curves.easeInOut,
-                            alignment: Alignment.center,
-                            decoration: BoxDecoration(
-                              color: !_isIncome
-                                  ? theme.colorScheme.error
-                                  : Colors.transparent,
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            child: Row(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                Icon(Icons.arrow_circle_down_rounded,
+                      LinearProgressIndicator(),
+                      SizedBox(height: 4),
+                      Text('Analisando imagem...'),
+                    ],
+                  ),
+                ),
+              if (enableIncomes)
+                Padding(
+                  padding: const EdgeInsets.only(bottom: AppSpacing.md),
+                  child: Container(
+                    height: 50,
+                    padding: const EdgeInsets.all(4),
+                    decoration: BoxDecoration(
+                      color: theme.brightness == Brightness.dark
+                          ? Colors.white.withValues(alpha: 0.05)
+                          : Colors.black.withValues(alpha: 0.05),
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        Expanded(
+                          child: GestureDetector(
+                            onTap: () {
+                              if (_isIncome) {
+                                setState(() {
+                                  _isIncome = false;
+                                });
+                              }
+                            },
+                            child: AnimatedContainer(
+                              duration: const Duration(milliseconds: 200),
+                              curve: Curves.easeInOut,
+                              alignment: Alignment.center,
+                              decoration: BoxDecoration(
+                                color: !_isIncome
+                                    ? theme.colorScheme.error
+                                    : Colors.transparent,
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Icon(
+                                    Icons.arrow_circle_down_rounded,
                                     color: !_isIncome
                                         ? theme.colorScheme.onError
                                         : theme.colorScheme.onSurface
-                                            .withValues(alpha: 0.6),
-                                    size: 20),
-                                const SizedBox(width: 8),
-                                Text('Despesa',
+                                              .withValues(alpha: 0.6),
+                                    size: 20,
+                                  ),
+                                  const SizedBox(width: 8),
+                                  Text(
+                                    'Despesa',
                                     style: theme.textTheme.titleSmall?.copyWith(
                                       color: !_isIncome
                                           ? theme.colorScheme.onError
                                           : theme.colorScheme.onSurface
-                                              .withValues(alpha: 0.6),
+                                                .withValues(alpha: 0.6),
                                       fontWeight: !_isIncome
                                           ? FontWeight.bold
                                           : FontWeight.w500,
-                                    )),
-                              ],
+                                    ),
+                                  ),
+                                ],
+                              ),
                             ),
                           ),
                         ),
-                      ),
-                      Expanded(
-                        child: GestureDetector(
-                          onTap: () {
-                            if (!_isIncome) {
-                              setState(() {
-                                _isIncome = true;
-                                _selectedCategory = null;
-                              });
-                            }
-                          },
-                          child: AnimatedContainer(
-                            duration: const Duration(milliseconds: 200),
-                            curve: Curves.easeInOut,
-                            alignment: Alignment.center,
-                            decoration: BoxDecoration(
-                              color: _isIncome
-                                  ? const Color(0xFF388E3C) // Green 700 (Lighter than 800 but still good contrast)
-                                  : Colors.transparent,
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            child: Row(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                Icon(Icons.arrow_circle_up_rounded,
+                        Expanded(
+                          child: GestureDetector(
+                            onTap: () {
+                              if (!_isIncome) {
+                                setState(() {
+                                  _isIncome = true;
+                                  _selectedCategory = null;
+                                });
+                              }
+                            },
+                            child: AnimatedContainer(
+                              duration: const Duration(milliseconds: 200),
+                              curve: Curves.easeInOut,
+                              alignment: Alignment.center,
+                              decoration: BoxDecoration(
+                                color: _isIncome
+                                    ? Colors.green[700]!
+                                    : Colors.transparent,
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Icon(
+                                    Icons.arrow_circle_up_rounded,
                                     color: _isIncome
                                         ? Colors.white
                                         : theme.colorScheme.onSurface
-                                            .withValues(alpha: 0.6),
-                                    size: 20),
-                                const SizedBox(width: 8),
-                                Text('Receita',
+                                              .withValues(alpha: 0.6),
+                                    size: 20,
+                                  ),
+                                  const SizedBox(width: 8),
+                                  Text(
+                                    'Receita',
                                     style: theme.textTheme.titleSmall?.copyWith(
                                       color: _isIncome
                                           ? Colors.white
                                           : theme.colorScheme.onSurface
-                                              .withValues(alpha: 0.6),
+                                                .withValues(alpha: 0.6),
                                       fontWeight: _isIncome
                                           ? FontWeight.bold
                                           : FontWeight.w500,
-                                    )),
-                              ],
+                                    ),
+                                  ),
+                                ],
+                              ),
                             ),
                           ),
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
                 ),
-              ),
-            Expanded(
-              child: ExpenseForm(
-                formKey: _formKey,
-                amountController: _amountController,
-                motivationController: _motivationController,
-                locationController: _locationController,
-                selectedDate: _selectedDate,
-                selectedCategory: _selectedCategory,
-                onDateChanged: (date) {
-                  setState(() {
-                    _selectedDate = date;
-                  });
-                },
-                onCategoryChanged: (category) {
-                  setState(() {
-                    _selectedCategory = category;
-                  });
-                },
-                isEditing: true,
-                isIncome: _isIncome,
-                isInstallment: _isIncome ? false : _isInstallment,
-                onInstallmentChanged: _isIncome ? null : (val) =>
-                    setState(() => _isInstallment = val),
-                installmentsValue: _installmentsValue,
-                onInstallmentsValueChanged: _isIncome ? null : (val) =>
-                    setState(() => _installmentsValue = val),
-                startNextMonth: _startNextMonth,
-                onStartNextMonthChanged: _isIncome ? null : (val) =>
-                    setState(() => _startNextMonth = val),
-                imagePreviewWidget: _processedImagePath != null
-                    ? GestureDetector(
-                        onTap: _openDetailedViewer,
-                        child: Container(
-                          height: 100,
-                          margin: const EdgeInsets.only(
-                              top: AppSpacing.md, bottom: AppSpacing.sm),
-                          decoration: BoxDecoration(
-                            borderRadius: AppBorders.borderRadiusMD,
-                            border: Border.all(
-                                color: Theme.of(context).dividerColor),
-                            image: DecorationImage(
-                              image: FileImage(File(_processedImagePath!)),
-                              fit: BoxFit.cover,
-                              colorFilter: ColorFilter.mode(
+              Expanded(
+                child: ExpenseForm(
+                  formKey: _formKey,
+                  amountController: _amountController,
+                  motivationController: _motivationController,
+                  locationController: _locationController,
+                  selectedDate: _selectedDate,
+                  selectedCategory: _selectedCategory,
+                  onChanged: () {
+                    if (!_hasUnsavedChanges) {
+                      setState(() => _hasUnsavedChanges = true);
+                    }
+                  },
+                  onDateChanged: (date) {
+                    setState(() {
+                      _selectedDate = date;
+                    });
+                  },
+                  onCategoryChanged: (category) {
+                    setState(() {
+                      _selectedCategory = category;
+                    });
+                  },
+                  isEditing: true,
+                  isIncome: _isIncome,
+                  isInstallment: _isIncome ? false : _isInstallment,
+                  onInstallmentChanged: _isIncome
+                      ? null
+                      : (val) => setState(() => _isInstallment = val),
+                  installmentsValue: _installmentsValue,
+                  onInstallmentsValueChanged: _isIncome
+                      ? null
+                      : (val) => setState(() => _installmentsValue = val),
+                  startNextMonth: _startNextMonth,
+                  onStartNextMonthChanged: _isIncome
+                      ? null
+                      : (val) => setState(() => _startNextMonth = val),
+                  imagePreviewWidget: _processedImagePath != null
+                      ? GestureDetector(
+                          onTap: _openDetailedViewer,
+                          child: Container(
+                            height: 100,
+                            margin: const EdgeInsets.only(
+                              top: AppSpacing.md,
+                              bottom: AppSpacing.sm,
+                            ),
+                            decoration: BoxDecoration(
+                              borderRadius: AppBorders.borderRadiusMD,
+                              border: Border.all(
+                                color: Theme.of(context).dividerColor,
+                              ),
+                              image: DecorationImage(
+                                image: FileImage(File(_processedImagePath!)),
+                                fit: BoxFit.cover,
+                                colorFilter: ColorFilter.mode(
                                   Colors.black.withAlpha((255 * 0.3).round()),
-                                  BlendMode.darken),
+                                  BlendMode.darken,
+                                ),
+                              ),
+                            ),
+                            child: Center(
+                              child: Icon(
+                                Icons.touch_app_outlined,
+                                color: Colors.white.withAlpha(
+                                  (255 * 0.8).round(),
+                                ),
+                                size: 40,
+                              ),
                             ),
                           ),
-                          child: Center(
-                              child: Icon(Icons.touch_app_outlined,
-                                  color: Colors.white
-                                      .withAlpha((255 * 0.8).round()),
-                                  size: 40)),
-                        ),
-                      )
-                    : null,
+                        )
+                      : null,
+                ),
               ),
-            ),
-            const SizedBox(height: AppSpacing.md),
-            SizedBox(
-              width: double.infinity,
-              child: AppButton(
-                label: _isIncome ? 'Salvar Receita' : 'Salvar Despesa',
-                onPressed: _submit,
-                isLoading: _isSaving,
+              const SizedBox(height: AppSpacing.md),
+              SizedBox(
+                width: double.infinity,
+                child: AppButton(
+                  label: _isIncome ? 'Salvar Receita' : 'Salvar Despesa',
+                  onPressed: _submit,
+                  isLoading: _isSaving,
+                  backgroundColor: _isIncome ? Colors.green[700] : null,
+                  foregroundColor: _isIncome ? Colors.white : null,
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
-      )),
+      ),
+    ),
     );
   }
 }
