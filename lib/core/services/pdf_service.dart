@@ -20,10 +20,11 @@ import 'package:syncfusion_flutter_pdf/pdf.dart';
 
 class PdfService {
   Future<void> exportExpensesPdf(
-      BuildContext context,
-      List<Expense> expenses,
-      AnalysisViewModel analysisViewModel,
-      CategoryViewModel categoryViewModel) async {
+    BuildContext context,
+    List<Expense> expenses,
+    AnalysisViewModel analysisViewModel,
+    CategoryViewModel categoryViewModel,
+  ) async {
     try {
       final PdfDocument document = PdfDocument();
       PdfPage page = document.pages.add();
@@ -33,48 +34,64 @@ class PdfService {
       final ByteData logoData = await rootBundle.load('assets/icon/logov2.png');
       final PdfBitmap logo = PdfBitmap(logoData.buffer.asUint8List());
 
-      final ByteData fontData =
-          await rootBundle.load('assets/fonts/Roboto-Regular.ttf');
+      final ByteData fontData = await rootBundle.load(
+        'assets/fonts/Roboto-Regular.ttf',
+      );
       final PdfFont font = PdfTrueTypeFont(fontData.buffer.asUint8List(), 10);
       final PdfFont headerFont = PdfTrueTypeFont(
-          fontData.buffer.asUint8List(), 12,
-          style: PdfFontStyle.bold);
+        fontData.buffer.asUint8List(),
+        12,
+        style: PdfFontStyle.bold,
+      );
       final PdfFont titleFont = PdfTrueTypeFont(
-          fontData.buffer.asUint8List(), 18,
-          style: PdfFontStyle.bold);
+        fontData.buffer.asUint8List(),
+        18,
+        style: PdfFontStyle.bold,
+      );
 
       final PdfColor primaryColor = PdfColor(
-          (AppTheme.primary.r * 255.0).round() & 0xff,
-          (AppTheme.primary.g * 255.0).round() & 0xff,
-          (AppTheme.primary.b * 255.0).round() & 0xff);
+        (AppTheme.primary.r * 255.0).round() & 0xff,
+        (AppTheme.primary.g * 255.0).round() & 0xff,
+        (AppTheme.primary.b * 255.0).round() & 0xff,
+      );
       final PdfColor onSurfaceColor = PdfColor(
-          (AppTheme.onSurface.r * 255.0).round() & 0xff,
-          (AppTheme.onSurface.g * 255.0).round() & 0xff,
-          (AppTheme.onSurface.b * 255.0).round() & 0xff);
+        (AppTheme.onSurface.r * 255.0).round() & 0xff,
+        (AppTheme.onSurface.g * 255.0).round() & 0xff,
+        (AppTheme.onSurface.b * 255.0).round() & 0xff,
+      );
       final PdfColor surfaceColor = PdfColor(
-          (AppTheme.surface.r * 255.0).round() & 0xff,
-          (AppTheme.surface.g * 255.0).round() & 0xff,
-          (AppTheme.surface.b * 255.0).round() & 0xff);
+        (AppTheme.surface.r * 255.0).round() & 0xff,
+        (AppTheme.surface.g * 255.0).round() & 0xff,
+        (AppTheme.surface.b * 255.0).round() & 0xff,
+      );
       final PdfColor lightGreyColor = PdfColor(
-          (AppTheme.surfaceContainerHighest.r * 255.0).round() & 0xff,
-          (AppTheme.surfaceContainerHighest.g * 255.0).round() & 0xff,
-          (AppTheme.surfaceContainerHighest.b * 255.0).round() & 0xff);
+        (AppTheme.surfaceContainerHighest.r * 255.0).round() & 0xff,
+        (AppTheme.surfaceContainerHighest.g * 255.0).round() & 0xff,
+        (AppTheme.surfaceContainerHighest.b * 255.0).round() & 0xff,
+      );
 
       page.graphics.drawImage(logo, const Rect.fromLTWH(0, 0, 40, 40));
-      page.graphics.drawString('Relatório de Despesas', titleFont,
-          brush: PdfSolidBrush(primaryColor),
-          bounds: Rect.fromLTWH(50, 5, pageSize.width - 50, 30));
       page.graphics.drawString(
-          'Gerado em: ${DateFormat('dd/MM/yyyy HH:mm').format(DateTime.now())}',
-          font,
-          brush: PdfSolidBrush(onSurfaceColor),
-          bounds: Rect.fromLTWH(50, 30, pageSize.width - 50, 20));
+        'Relatório de Despesas',
+        titleFont,
+        brush: PdfSolidBrush(primaryColor),
+        bounds: Rect.fromLTWH(50, 5, pageSize.width - 50, 30),
+      );
+      page.graphics.drawString(
+        'Gerado em: ${DateFormat('dd/MM/yyyy HH:mm').format(DateTime.now())}',
+        font,
+        brush: PdfSolidBrush(onSurfaceColor),
+        bounds: Rect.fromLTWH(50, 30, pageSize.width - 50, 20),
+      );
       currentY += 60;
 
       if (expenses.isNotEmpty) {
-        page.graphics.drawString('Tabela de Despesas', headerFont,
-            brush: PdfSolidBrush(onSurfaceColor),
-            bounds: Rect.fromLTWH(0, currentY, pageSize.width, 20));
+        page.graphics.drawString(
+          'Tabela de Despesas',
+          headerFont,
+          brush: PdfSolidBrush(onSurfaceColor),
+          bounds: Rect.fromLTWH(0, currentY, pageSize.width, 20),
+        );
         currentY += 25;
 
         final PdfGrid grid = PdfGrid();
@@ -94,20 +111,24 @@ class PdfService {
             font: headerFont,
             cellPadding: PdfPaddings(left: 5, right: 5, top: 5, bottom: 5),
             format: PdfStringFormat(
-                alignment: PdfTextAlignment.center,
-                lineAlignment: PdfVerticalAlignment.middle),
+              alignment: PdfTextAlignment.center,
+              lineAlignment: PdfVerticalAlignment.middle,
+            ),
           );
         }
 
         double totalAmount = 0;
-        final currencyFormat =
-            NumberFormat.currency(locale: 'pt_BR', symbol: '');
+        final currencyFormat = NumberFormat.currency(
+          locale: 'pt_BR',
+          symbol: '',
+        );
         for (var expense in expenses) {
           final PdfGridRow row = grid.rows.add();
           row.cells[0].value = DateFormat('dd/MM/yyyy').format(expense.date);
           row.cells[1].value = currencyFormat.format(expense.amount);
-          final category =
-              categoryViewModel.getCategoryById(expense.categoryId);
+          final category = categoryViewModel.getCategoryById(
+            expense.categoryId,
+          );
           row.cells[2].value = category?.name ?? 'N/A';
           row.cells[3].value = expense.motivation ?? '';
           row.cells[4].value = expense.location ?? '';
@@ -117,14 +138,18 @@ class PdfService {
             row.cells[i].style = PdfGridCellStyle(
               font: font,
               textBrush: PdfSolidBrush(onSurfaceColor),
-              backgroundBrush: PdfSolidBrush(expenses.indexOf(expense) % 2 == 0
-                  ? surfaceColor
-                  : lightGreyColor),
+              backgroundBrush: PdfSolidBrush(
+                expenses.indexOf(expense) % 2 == 0
+                    ? surfaceColor
+                    : lightGreyColor,
+              ),
               cellPadding: PdfPaddings(left: 5, right: 5, top: 5, bottom: 5),
               format: PdfStringFormat(
-                  alignment:
-                      i == 1 ? PdfTextAlignment.right : PdfTextAlignment.left,
-                  lineAlignment: PdfVerticalAlignment.middle),
+                alignment: i == 1
+                    ? PdfTextAlignment.right
+                    : PdfTextAlignment.left,
+                lineAlignment: PdfVerticalAlignment.middle,
+              ),
             );
           }
         }
@@ -142,16 +167,23 @@ class PdfService {
             font: headerFont,
             cellPadding: PdfPaddings(left: 5, right: 5, top: 5, bottom: 5),
             format: PdfStringFormat(
-                alignment:
-                    i == 1 ? PdfTextAlignment.right : PdfTextAlignment.left,
-                lineAlignment: PdfVerticalAlignment.middle),
+              alignment: i == 1
+                  ? PdfTextAlignment.right
+                  : PdfTextAlignment.left,
+              lineAlignment: PdfVerticalAlignment.middle,
+            ),
           );
         }
 
         final PdfLayoutResult? gridResult = grid.draw(
-            page: page,
-            bounds: Rect.fromLTWH(
-                0, currentY, pageSize.width, pageSize.height - currentY));
+          page: page,
+          bounds: Rect.fromLTWH(
+            0,
+            currentY,
+            pageSize.width,
+            pageSize.height - currentY,
+          ),
+        );
 
         if (gridResult != null) {
           currentY = gridResult.bounds.bottom + 20;
@@ -161,9 +193,11 @@ class PdfService {
         }
       } else {
         page.graphics.drawString(
-            'Nenhuma despesa no período selecionado.', font,
-            brush: PdfSolidBrush(onSurfaceColor),
-            bounds: Rect.fromLTWH(0, currentY, pageSize.width, 20));
+          'Nenhuma despesa no período selecionado.',
+          font,
+          brush: PdfSolidBrush(onSurfaceColor),
+          bounds: Rect.fromLTWH(0, currentY, pageSize.width, 20),
+        );
         currentY += 30;
       }
 
@@ -171,75 +205,90 @@ class PdfService {
       final categoryAnalysisKey = GlobalKey();
 
       final monthlyTrendChart = Material(
-          color: Colors.white,
-          child: SingleChildScrollView(
-            child: Container(
-              width: 800,
-              padding: const EdgeInsets.all(24),
-              child: const MonthlyTrendSectionWidget(),
-            ),
-          ));
+        color: Colors.white,
+        child: SingleChildScrollView(
+          child: Container(
+            width: 800,
+            padding: const EdgeInsets.all(24),
+            child: const MonthlyTrendSectionWidget(),
+          ),
+        ),
+      );
 
       final categoryAnalysisChart = Material(
-          color: Colors.white,
-          child: SingleChildScrollView(
-            child: Container(
-              width: 800,
-              padding: const EdgeInsets.all(24),
-              child: const CategoryAnalysisSectionWidget(),
-            ),
-          ));
+        color: Colors.white,
+        child: SingleChildScrollView(
+          child: Container(
+            width: 800,
+            padding: const EdgeInsets.all(24),
+            child: const CategoryAnalysisSectionWidget(),
+          ),
+        ),
+      );
 
       if (!context.mounted) return;
 
       final monthlyTrendImageBytes =
           await WidgetToImage.captureWidgetFromProvider(
-        context,
-        ProviderScope(
-          child: Builder(
-            key: monthlyTrendKey,
-            builder: (ctx) =>
-                Theme(data: AppTheme.lightTheme, child: monthlyTrendChart),
-          ),
-        ),
-        wait: const Duration(milliseconds: 1500),
-      );
+            context,
+            ProviderScope(
+              child: Builder(
+                key: monthlyTrendKey,
+                builder: (ctx) =>
+                    Theme(data: AppTheme.lightTheme, child: monthlyTrendChart),
+              ),
+            ),
+            wait: const Duration(milliseconds: 1500),
+          );
 
       if (!context.mounted) return;
 
       final categoryAnalysisImageBytes =
           await WidgetToImage.captureWidgetFromProvider(
-        context,
-        ProviderScope(
-          child: Builder(
-            key: categoryAnalysisKey,
-            builder: (ctx) =>
-                Theme(data: AppTheme.lightTheme, child: categoryAnalysisChart),
-          ),
-        ),
-        wait: const Duration(milliseconds: 1500),
-      );
+            context,
+            ProviderScope(
+              child: Builder(
+                key: categoryAnalysisKey,
+                builder: (ctx) => Theme(
+                  data: AppTheme.lightTheme,
+                  child: categoryAnalysisChart,
+                ),
+              ),
+            ),
+            wait: const Duration(milliseconds: 1500),
+          );
 
       if (monthlyTrendImageBytes != null) {
         page = document.pages.add();
         currentY = 0;
 
         page.graphics.drawString(
-            'Gráficos de Análise - Evolução Mensal', headerFont,
-            brush: PdfSolidBrush(onSurfaceColor),
-            bounds: Rect.fromLTWH(0, currentY, pageSize.width, 20));
+          'Gráficos de Análise - Evolução Mensal',
+          headerFont,
+          brush: PdfSolidBrush(onSurfaceColor),
+          bounds: Rect.fromLTWH(0, currentY, pageSize.width, 20),
+        );
         currentY += 30;
 
         final PdfBitmap monthlyTrendImage = PdfBitmap(monthlyTrendImageBytes);
-        final imageSize = Size(monthlyTrendImage.width.toDouble(),
-            monthlyTrendImage.height.toDouble());
-        final drawSize = _calculatePdfImageSize(imageSize,
-            Size(pageSize.width * 0.9, pageSize.height - currentY - 20));
+        final imageSize = Size(
+          monthlyTrendImage.width.toDouble(),
+          monthlyTrendImage.height.toDouble(),
+        );
+        final drawSize = _calculatePdfImageSize(
+          imageSize,
+          Size(pageSize.width * 0.9, pageSize.height - currentY - 20),
+        );
 
         page.graphics.drawImage(
-            monthlyTrendImage,
-            Rect.fromLTWH((pageSize.width - drawSize.width) / 2, currentY,
-                drawSize.width, drawSize.height));
+          monthlyTrendImage,
+          Rect.fromLTWH(
+            (pageSize.width - drawSize.width) / 2,
+            currentY,
+            drawSize.width,
+            drawSize.height,
+          ),
+        );
       }
 
       if (categoryAnalysisImageBytes != null) {
@@ -247,22 +296,34 @@ class PdfService {
         currentY = 0;
 
         page.graphics.drawString(
-            'Gráficos de Análise - Por Categoria', headerFont,
-            brush: PdfSolidBrush(onSurfaceColor),
-            bounds: Rect.fromLTWH(0, currentY, pageSize.width, 20));
+          'Gráficos de Análise - Por Categoria',
+          headerFont,
+          brush: PdfSolidBrush(onSurfaceColor),
+          bounds: Rect.fromLTWH(0, currentY, pageSize.width, 20),
+        );
         currentY += 30;
 
-        final PdfBitmap categoryAnalysisImage =
-            PdfBitmap(categoryAnalysisImageBytes);
-        final imageSize = Size(categoryAnalysisImage.width.toDouble(),
-            categoryAnalysisImage.height.toDouble());
-        final drawSize = _calculatePdfImageSize(imageSize,
-            Size(pageSize.width * 0.9, pageSize.height - currentY - 20));
+        final PdfBitmap categoryAnalysisImage = PdfBitmap(
+          categoryAnalysisImageBytes,
+        );
+        final imageSize = Size(
+          categoryAnalysisImage.width.toDouble(),
+          categoryAnalysisImage.height.toDouble(),
+        );
+        final drawSize = _calculatePdfImageSize(
+          imageSize,
+          Size(pageSize.width * 0.9, pageSize.height - currentY - 20),
+        );
 
         page.graphics.drawImage(
-            categoryAnalysisImage,
-            Rect.fromLTWH((pageSize.width - drawSize.width) / 2, currentY,
-                drawSize.width, drawSize.height));
+          categoryAnalysisImage,
+          Rect.fromLTWH(
+            (pageSize.width - drawSize.width) / 2,
+            currentY,
+            drawSize.width,
+            drawSize.height,
+          ),
+        );
       }
 
       final List<int> bytes = await document.save();
@@ -286,13 +347,17 @@ class PdfService {
     } catch (e) {
       if (!context.mounted) return;
       SnackbarService.showError(
-          context, 'Falha ao gerar relatório de despesas: $e',
-          title: 'Erro Exportação PDF');
+        context,
+        'Falha ao gerar relatório de despesas: $e',
+        title: 'Erro Exportação PDF',
+      );
     }
   }
 
   Future<void> exportCredentialsPdf(
-      BuildContext context, CredentialViewModel credentialViewModel) async {
+    BuildContext context,
+    CredentialViewModel credentialViewModel,
+  ) async {
     try {
       final credentials = credentialViewModel.allCredentials;
       final PdfDocument document = PdfDocument();
@@ -303,42 +368,55 @@ class PdfService {
       final ByteData logoData = await rootBundle.load('assets/icon/logov2.png');
       final PdfBitmap logo = PdfBitmap(logoData.buffer.asUint8List());
 
-      final ByteData fontData =
-          await rootBundle.load('assets/fonts/Roboto-Regular.ttf');
+      final ByteData fontData = await rootBundle.load(
+        'assets/fonts/Roboto-Regular.ttf',
+      );
       final PdfFont font = PdfTrueTypeFont(fontData.buffer.asUint8List(), 8);
       final PdfFont headerFont = PdfTrueTypeFont(
-          fontData.buffer.asUint8List(), 9,
-          style: PdfFontStyle.bold);
+        fontData.buffer.asUint8List(),
+        9,
+        style: PdfFontStyle.bold,
+      );
       final PdfFont titleFont = PdfTrueTypeFont(
-          fontData.buffer.asUint8List(), 18,
-          style: PdfFontStyle.bold);
+        fontData.buffer.asUint8List(),
+        18,
+        style: PdfFontStyle.bold,
+      );
 
       final PdfColor primaryColor = PdfColor(
-          (AppTheme.primary.r * 255.0).round() & 0xff,
-          (AppTheme.primary.g * 255.0).round() & 0xff,
-          (AppTheme.primary.b * 255.0).round() & 0xff);
+        (AppTheme.primary.r * 255.0).round() & 0xff,
+        (AppTheme.primary.g * 255.0).round() & 0xff,
+        (AppTheme.primary.b * 255.0).round() & 0xff,
+      );
       final PdfColor onSurfaceColor = PdfColor(
-          (AppTheme.onSurface.r * 255.0).round() & 0xff,
-          (AppTheme.onSurface.g * 255.0).round() & 0xff,
-          (AppTheme.onSurface.b * 255.0).round() & 0xff);
+        (AppTheme.onSurface.r * 255.0).round() & 0xff,
+        (AppTheme.onSurface.g * 255.0).round() & 0xff,
+        (AppTheme.onSurface.b * 255.0).round() & 0xff,
+      );
       final PdfColor surfaceColor = PdfColor(
-          (AppTheme.surface.r * 255.0).round() & 0xff,
-          (AppTheme.surface.g * 255.0).round() & 0xff,
-          (AppTheme.surface.b * 255.0).round() & 0xff);
+        (AppTheme.surface.r * 255.0).round() & 0xff,
+        (AppTheme.surface.g * 255.0).round() & 0xff,
+        (AppTheme.surface.b * 255.0).round() & 0xff,
+      );
       final PdfColor lightGreyColor = PdfColor(
-          (AppTheme.surfaceContainerHighest.r * 255.0).round() & 0xff,
-          (AppTheme.surfaceContainerHighest.g * 255.0).round() & 0xff,
-          (AppTheme.surfaceContainerHighest.b * 255.0).round() & 0xff);
+        (AppTheme.surfaceContainerHighest.r * 255.0).round() & 0xff,
+        (AppTheme.surfaceContainerHighest.g * 255.0).round() & 0xff,
+        (AppTheme.surfaceContainerHighest.b * 255.0).round() & 0xff,
+      );
 
       page.graphics.drawImage(logo, const Rect.fromLTWH(0, 0, 40, 40));
-      page.graphics.drawString('Relatório de Credenciais', titleFont,
-          brush: PdfSolidBrush(primaryColor),
-          bounds: Rect.fromLTWH(50, 5, pageSize.width - 50, 30));
       page.graphics.drawString(
-          'Gerado em: ${DateFormat('dd/MM/yyyy HH:mm').format(DateTime.now())}',
-          font,
-          brush: PdfSolidBrush(onSurfaceColor),
-          bounds: Rect.fromLTWH(50, 30, pageSize.width - 50, 20));
+        'Relatório de Credenciais',
+        titleFont,
+        brush: PdfSolidBrush(primaryColor),
+        bounds: Rect.fromLTWH(50, 5, pageSize.width - 50, 30),
+      );
+      page.graphics.drawString(
+        'Gerado em: ${DateFormat('dd/MM/yyyy HH:mm').format(DateTime.now())}',
+        font,
+        brush: PdfSolidBrush(onSurfaceColor),
+        bounds: Rect.fromLTWH(50, 30, pageSize.width - 50, 20),
+      );
       currentY = 60;
 
       final PdfGrid grid = PdfGrid();
@@ -366,24 +444,28 @@ class PdfService {
         final PdfGridRow row = grid.rows.add();
         row.cells[0].value = credential.location;
         row.cells[1].value = credential.login;
-        row.cells[2].value =
-            credentialViewModel.decryptPassword(credential.encryptedPassword);
+        row.cells[2].value = credentialViewModel.decryptPassword(
+          credential.encryptedPassword,
+        );
         row.cells[3].value = credential.email ?? '';
         row.cells[4].value = credential.phoneNumber ?? '';
         row.cells[5].value = credential.notes ?? '';
 
         for (int i = 0; i < row.cells.count; i++) {
           row.cells[i].style = PdfGridCellStyle(
-              font: font,
-              textBrush: PdfSolidBrush(onSurfaceColor),
-              backgroundBrush: PdfSolidBrush(
-                  credentials.indexOf(credential) % 2 == 0
-                      ? surfaceColor
-                      : lightGreyColor),
-              cellPadding: PdfPaddings(left: 3, right: 3, top: 4, bottom: 4),
-              format: PdfStringFormat(wordWrap: PdfWordWrapType.word));
-          row.cells[i].stringFormat =
-              PdfStringFormat(wordWrap: PdfWordWrapType.word);
+            font: font,
+            textBrush: PdfSolidBrush(onSurfaceColor),
+            backgroundBrush: PdfSolidBrush(
+              credentials.indexOf(credential) % 2 == 0
+                  ? surfaceColor
+                  : lightGreyColor,
+            ),
+            cellPadding: PdfPaddings(left: 3, right: 3, top: 4, bottom: 4),
+            format: PdfStringFormat(wordWrap: PdfWordWrapType.word),
+          );
+          row.cells[i].stringFormat = PdfStringFormat(
+            wordWrap: PdfWordWrapType.word,
+          );
         }
       }
 
@@ -392,13 +474,18 @@ class PdfService {
       );
 
       grid.draw(
-          page: page,
-          bounds: Rect.fromLTWH(
-              0, currentY, pageSize.width, pageSize.height - currentY),
-          format: PdfLayoutFormat(
-            layoutType: PdfLayoutType.paginate,
-            breakType: PdfLayoutBreakType.fitPage,
-          ));
+        page: page,
+        bounds: Rect.fromLTWH(
+          0,
+          currentY,
+          pageSize.width,
+          pageSize.height - currentY,
+        ),
+        format: PdfLayoutFormat(
+          layoutType: PdfLayoutType.paginate,
+          breakType: PdfLayoutBreakType.fitPage,
+        ),
+      );
 
       final List<int> bytes = await document.save();
       document.dispose();
@@ -421,108 +508,124 @@ class PdfService {
     } catch (e) {
       if (!context.mounted) return;
       SnackbarService.showError(
-          context, 'Falha ao gerar relatório de credenciais: $e',
-          title: 'Erro Exportação PDF');
+        context,
+        'Falha ao gerar relatório de credenciais: $e',
+        title: 'Erro Exportação PDF',
+      );
     }
   }
 
   Future<void> exportAnalysisPdf(
-      BuildContext context, AnalysisViewModel analysisViewModel) async {
+    BuildContext context,
+    AnalysisViewModel analysisViewModel,
+  ) async {
     try {
       final statsChart = Material(
-          color: Colors.white,
-          child: SingleChildScrollView(
-            child: Container(
-              width: 800,
-              padding: const EdgeInsets.all(24),
-              child: const AnalysisStatsOverviewWidget(),
-            ),
-          ));
+        color: Colors.white,
+        child: SingleChildScrollView(
+          child: Container(
+            width: 800,
+            padding: const EdgeInsets.all(24),
+            child: const AnalysisStatsOverviewWidget(),
+          ),
+        ),
+      );
 
       final monthlyTrendChart = Material(
-          color: Colors.white,
-          child: SingleChildScrollView(
-            child: Container(
-              width: 800,
-              padding: const EdgeInsets.all(24),
-              child: const MonthlyTrendSectionWidget(),
-            ),
-          ));
+        color: Colors.white,
+        child: SingleChildScrollView(
+          child: Container(
+            width: 800,
+            padding: const EdgeInsets.all(24),
+            child: const MonthlyTrendSectionWidget(),
+          ),
+        ),
+      );
 
       final categoryAnalysisChart = Material(
-          color: Colors.white,
-          child: SingleChildScrollView(
-            child: Container(
-              width: 800,
-              padding: const EdgeInsets.all(24),
-              child: const CategoryAnalysisSectionWidget(),
-            ),
-          ));
+        color: Colors.white,
+        child: SingleChildScrollView(
+          child: Container(
+            width: 800,
+            padding: const EdgeInsets.all(24),
+            child: const CategoryAnalysisSectionWidget(),
+          ),
+        ),
+      );
 
       if (!context.mounted) return;
 
       final Uint8List? statsImageBytes =
           await WidgetToImage.captureWidgetFromProvider(
-        context,
-        ProviderScope(
-          child: Builder(
-            builder: (ctx) =>
-                Theme(data: AppTheme.lightTheme, child: statsChart),
-          ),
-        ),
-        wait: const Duration(milliseconds: 1500),
-      );
+            context,
+            ProviderScope(
+              child: Builder(
+                builder: (ctx) =>
+                    Theme(data: AppTheme.lightTheme, child: statsChart),
+              ),
+            ),
+            wait: const Duration(milliseconds: 1500),
+          );
 
       if (!context.mounted) return;
 
       final Uint8List? trendImageBytes =
           await WidgetToImage.captureWidgetFromProvider(
-        context,
-        ProviderScope(
-          child: Builder(
-            builder: (ctx) =>
-                Theme(data: AppTheme.lightTheme, child: monthlyTrendChart),
-          ),
-        ),
-        wait: const Duration(milliseconds: 1500),
-      );
+            context,
+            ProviderScope(
+              child: Builder(
+                builder: (ctx) =>
+                    Theme(data: AppTheme.lightTheme, child: monthlyTrendChart),
+              ),
+            ),
+            wait: const Duration(milliseconds: 1500),
+          );
 
       if (!context.mounted) return;
 
       final Uint8List? categoryImageBytes =
           await WidgetToImage.captureWidgetFromProvider(
-        context,
-        ProviderScope(
-          child: Builder(
-            builder: (ctx) =>
-                Theme(data: AppTheme.lightTheme, child: categoryAnalysisChart),
-          ),
-        ),
-        wait: const Duration(milliseconds: 1500),
-      );
+            context,
+            ProviderScope(
+              child: Builder(
+                builder: (ctx) => Theme(
+                  data: AppTheme.lightTheme,
+                  child: categoryAnalysisChart,
+                ),
+              ),
+            ),
+            wait: const Duration(milliseconds: 1500),
+          );
 
       final PdfDocument document = PdfDocument();
 
       final ByteData logoData = await rootBundle.load('assets/icon/logov2.png');
       final PdfBitmap logo = PdfBitmap(logoData.buffer.asUint8List());
-      final ByteData fontData =
-          await rootBundle.load('assets/fonts/Roboto-Regular.ttf');
+      final ByteData fontData = await rootBundle.load(
+        'assets/fonts/Roboto-Regular.ttf',
+      );
       final PdfFont font = PdfTrueTypeFont(fontData.buffer.asUint8List(), 10);
       final PdfFont headerFont = PdfTrueTypeFont(
-          fontData.buffer.asUint8List(), 16,
-          style: PdfFontStyle.bold);
+        fontData.buffer.asUint8List(),
+        16,
+        style: PdfFontStyle.bold,
+      );
       final PdfFont titleFont = PdfTrueTypeFont(
-          fontData.buffer.asUint8List(), 22,
-          style: PdfFontStyle.bold);
+        fontData.buffer.asUint8List(),
+        22,
+        style: PdfFontStyle.bold,
+      );
 
       final PdfColor primaryColor = PdfColor(
-          (AppTheme.primary.r * 255.0).round() & 0xff,
-          (AppTheme.primary.g * 255.0).round() & 0xff,
-          (AppTheme.primary.b * 255.0).round() & 0xff);
+        (AppTheme.primary.r * 255.0).round() & 0xff,
+        (AppTheme.primary.g * 255.0).round() & 0xff,
+        (AppTheme.primary.b * 255.0).round() & 0xff,
+      );
       final PdfColor onSurfaceColor = PdfColor(
-          (AppTheme.onSurface.r * 255.0).round() & 0xff,
-          (AppTheme.onSurface.g * 255.0).round() & 0xff,
-          (AppTheme.onSurface.b * 255.0).round() & 0xff);
+        (AppTheme.onSurface.r * 255.0).round() & 0xff,
+        (AppTheme.onSurface.g * 255.0).round() & 0xff,
+        (AppTheme.onSurface.b * 255.0).round() & 0xff,
+      );
 
       if (statsImageBytes != null) {
         PdfPage page = document.pages.add();
@@ -530,70 +633,110 @@ class PdfService {
         double currentY = 0;
 
         page.graphics.drawImage(logo, const Rect.fromLTWH(0, 0, 50, 50));
-        page.graphics.drawString('Relatório de Análise Financeira', titleFont,
-            brush: PdfSolidBrush(primaryColor),
-            bounds: Rect.fromLTWH(60, 10, pageSize.width - 60, 30));
         page.graphics.drawString(
-            'Gerado em: ${DateFormat('dd/MM/yyyy HH:mm').format(DateTime.now())}',
-            font,
-            brush: PdfSolidBrush(onSurfaceColor),
-            bounds: Rect.fromLTWH(60, 40, pageSize.width - 60, 20));
+          'Relatório de Análise Financeira',
+          titleFont,
+          brush: PdfSolidBrush(primaryColor),
+          bounds: Rect.fromLTWH(60, 10, pageSize.width - 60, 30),
+        );
+        page.graphics.drawString(
+          'Gerado em: ${DateFormat('dd/MM/yyyy HH:mm').format(DateTime.now())}',
+          font,
+          brush: PdfSolidBrush(onSurfaceColor),
+          bounds: Rect.fromLTWH(60, 40, pageSize.width - 60, 20),
+        );
         currentY += 80;
 
-        page.graphics.drawString('Visão Geral', headerFont,
-            brush: PdfSolidBrush(onSurfaceColor),
-            bounds: Rect.fromLTWH(0, currentY, pageSize.width, 25));
+        page.graphics.drawString(
+          'Visão Geral',
+          headerFont,
+          brush: PdfSolidBrush(onSurfaceColor),
+          bounds: Rect.fromLTWH(0, currentY, pageSize.width, 25),
+        );
         currentY += 35;
 
         final PdfBitmap statsImage = PdfBitmap(statsImageBytes);
-        final imageSize =
-            Size(statsImage.width.toDouble(), statsImage.height.toDouble());
+        final imageSize = Size(
+          statsImage.width.toDouble(),
+          statsImage.height.toDouble(),
+        );
         final drawSize = _calculatePdfImageSize(
-            imageSize, Size(pageSize.width, pageSize.height - currentY));
+          imageSize,
+          Size(pageSize.width, pageSize.height - currentY),
+        );
         page.graphics.drawImage(
-            statsImage,
-            Rect.fromLTWH((pageSize.width - drawSize.width) / 2, currentY,
-                drawSize.width, drawSize.height));
+          statsImage,
+          Rect.fromLTWH(
+            (pageSize.width - drawSize.width) / 2,
+            currentY,
+            drawSize.width,
+            drawSize.height,
+          ),
+        );
       }
 
       if (trendImageBytes != null) {
         PdfPage page = document.pages.add();
         final Size pageSize = page.getClientSize();
 
-        page.graphics.drawString('Histórico Mensal', headerFont,
-            brush: PdfSolidBrush(onSurfaceColor),
-            bounds: Rect.fromLTWH(0, 0, pageSize.width, 25));
+        page.graphics.drawString(
+          'Histórico Mensal',
+          headerFont,
+          brush: PdfSolidBrush(onSurfaceColor),
+          bounds: Rect.fromLTWH(0, 0, pageSize.width, 25),
+        );
 
         final PdfBitmap trendImage = PdfBitmap(trendImageBytes);
-        final imageSize =
-            Size(trendImage.width.toDouble(), trendImage.height.toDouble());
+        final imageSize = Size(
+          trendImage.width.toDouble(),
+          trendImage.height.toDouble(),
+        );
         final drawSize = _calculatePdfImageSize(
-            imageSize, Size(pageSize.width, pageSize.height - 40));
+          imageSize,
+          Size(pageSize.width, pageSize.height - 40),
+        );
 
         page.graphics.drawImage(
-            trendImage,
-            Rect.fromLTWH((pageSize.width - drawSize.width) / 2, 40,
-                drawSize.width, drawSize.height));
+          trendImage,
+          Rect.fromLTWH(
+            (pageSize.width - drawSize.width) / 2,
+            40,
+            drawSize.width,
+            drawSize.height,
+          ),
+        );
       }
 
       if (categoryImageBytes != null) {
         PdfPage page = document.pages.add();
         final Size pageSize = page.getClientSize();
 
-        page.graphics.drawString('Análise por Categoria', headerFont,
-            brush: PdfSolidBrush(onSurfaceColor),
-            bounds: Rect.fromLTWH(0, 0, pageSize.width, 25));
+        page.graphics.drawString(
+          'Análise por Categoria',
+          headerFont,
+          brush: PdfSolidBrush(onSurfaceColor),
+          bounds: Rect.fromLTWH(0, 0, pageSize.width, 25),
+        );
 
         final PdfBitmap categoryImage = PdfBitmap(categoryImageBytes);
         final imageSize = Size(
-            categoryImage.width.toDouble(), categoryImage.height.toDouble());
+          categoryImage.width.toDouble(),
+          categoryImage.height.toDouble(),
+        );
         final drawSize = _calculatePdfImageSize(
-            imageSize, Size(pageSize.width, pageSize.height - 40));
+          imageSize,
+          Size(pageSize.width, pageSize.height - 40),
+        );
 
         page.graphics.drawImage(
-            categoryImage,
-            Rect.fromLTWH((pageSize.width - drawSize.width) / 2, 40,
-                drawSize.width, drawSize.height));
+          categoryImage,
+          Rect.fromLTWH(
+            (pageSize.width - drawSize.width) / 2,
+            40,
+            drawSize.width,
+            drawSize.height,
+          ),
+        );
       }
 
       final List<int> bytes = await document.save();
@@ -617,8 +760,10 @@ class PdfService {
     } catch (e) {
       if (!context.mounted) return;
       SnackbarService.showError(
-          context, 'Falha ao gerar relatório de análise: $e',
-          title: 'Erro Exportação PDF');
+        context,
+        'Falha ao gerar relatório de análise: $e',
+        title: 'Erro Exportação PDF',
+      );
     }
   }
 

@@ -39,12 +39,12 @@ class WidgetToImage {
 
     final RenderObjectToWidgetElement<RenderBox> rootElement =
         RenderObjectToWidgetAdapter<RenderBox>(
-      container: repaintBoundary,
-      child: Directionality(
-        textDirection: TextDirection.ltr,
-        child: widget,
-      ),
-    ).attachToRenderTree(buildOwner);
+          container: repaintBoundary,
+          child: Directionality(
+            textDirection: TextDirection.ltr,
+            child: widget,
+          ),
+        ).attachToRenderTree(buildOwner);
 
     buildOwner.buildScope(rootElement);
 
@@ -62,8 +62,9 @@ class WidgetToImage {
     ui.Image? image;
     try {
       image = await repaintBoundary.toImage(pixelRatio: pixelRatio);
-      ByteData? byteData =
-          await image.toByteData(format: ui.ImageByteFormat.png);
+      ByteData? byteData = await image.toByteData(
+        format: ui.ImageByteFormat.png,
+      );
       return byteData?.buffer.asUint8List();
     } catch (e) {
       debugPrint('Error capturing widget to image: $e');
@@ -74,8 +75,10 @@ class WidgetToImage {
   }
 
   static Future<Uint8List?> captureWidgetFromProvider(
-      BuildContext context, Widget widget,
-      {Duration? wait}) async {
+    BuildContext context,
+    Widget widget, {
+    Duration? wait,
+  }) async {
     // We use the offline renderer but wrap it in the required context providers
     // to avoid Impeller culling the widget on the live overlay.
     return captureWidget(
@@ -86,10 +89,7 @@ class WidgetToImage {
           data: Theme.of(context),
           child: MediaQuery(
             data: MediaQuery.of(context),
-            child: Material(
-              type: MaterialType.transparency,
-              child: widget,
-            ),
+            child: Material(type: MaterialType.transparency, child: widget),
           ),
         ),
       ),

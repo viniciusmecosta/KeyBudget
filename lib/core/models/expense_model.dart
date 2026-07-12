@@ -9,6 +9,7 @@ class Expense {
   final int? currentInstallment;
   final int? totalInstallments;
   final bool? isIncome;
+  final String? recurringExpenseId;
 
   Expense({
     this.id,
@@ -21,6 +22,7 @@ class Expense {
     this.currentInstallment,
     this.totalInstallments,
     this.isIncome,
+    this.recurringExpenseId,
   });
 
   Map<String, dynamic> toMap() {
@@ -34,6 +36,7 @@ class Expense {
       'currentInstallment': currentInstallment,
       'totalInstallments': totalInstallments,
       'isIncome': isIncome,
+      'recurringExpenseId': recurringExpenseId,
     };
   }
 
@@ -49,6 +52,7 @@ class Expense {
       currentInstallment: map['currentInstallment'],
       totalInstallments: map['totalInstallments'],
       isIncome: map['isIncome'],
+      recurringExpenseId: map['recurringExpenseId'],
     );
   }
 

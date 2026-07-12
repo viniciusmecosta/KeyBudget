@@ -16,10 +16,7 @@ class AppCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final card = Card(
-      child: Padding(
-        padding: padding,
-        child: child,
-      ),
+      child: Padding(padding: padding, child: child),
     );
 
     if (onTap != null) {

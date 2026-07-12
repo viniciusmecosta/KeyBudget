@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-
 import 'package:key_budget/core/constants/app_icons.dart';
 
 class ExpenseCategory {

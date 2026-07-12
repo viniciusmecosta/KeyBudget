@@ -48,19 +48,30 @@ class AppTheme {
 
   static final List<Color> chartColors = AppColors.chartColors;
 
-  static final ThemeData lightTheme = _buildTheme(isDark: false);
-  static final ThemeData darkTheme = _buildTheme(isDark: true);
+  static ThemeData getTheme({required bool isDark, int? colorValue}) {
+    return _buildTheme(isDark: isDark, colorValue: colorValue);
+  }
 
-  static ThemeData _buildTheme({required bool isDark}) {
+  static ThemeData get lightTheme => _buildTheme(isDark: false);
+
+  static ThemeData get darkTheme => _buildTheme(isDark: true);
+
+  static ThemeData _buildTheme({required bool isDark, int? colorValue}) {
     final textTheme = AppTypography.getTextTheme(isDark: isDark);
 
-    final primaryColor = isDark ? AppColors.primaryDark : AppColors.primary;
-    final backgroundColor =
-        isDark ? AppColors.backgroundDark : AppColors.backgroundLight;
-    final surfaceColor =
-        isDark ? AppColors.surfaceDark : AppColors.surfaceLight;
-    final onSurfaceColor =
-        isDark ? AppColors.onSurfaceDark : AppColors.onSurfaceLight;
+    final basePrimary = colorValue != null
+        ? Color(colorValue)
+        : (isDark ? AppColors.primaryDark : AppColors.primary);
+    final primaryColor = basePrimary;
+    final backgroundColor = isDark
+        ? AppColors.backgroundDark
+        : AppColors.backgroundLight;
+    final surfaceColor = isDark
+        ? AppColors.surfaceDark
+        : AppColors.surfaceLight;
+    final onSurfaceColor = isDark
+        ? AppColors.onSurfaceDark
+        : AppColors.onSurfaceLight;
     final onSurfaceVariantColor = isDark
         ? AppColors.onSurfaceVariantDark
         : AppColors.onSurfaceVariantLight;
@@ -89,8 +100,9 @@ class AppTheme {
         onSurfaceVariant: onSurfaceVariantColor,
         outline: onSurfaceVariantColor.withAlpha((255 * 0.15).round()),
         outlineVariant: onSurfaceVariantColor.withAlpha((255 * 0.05).round()),
-        shadow: (isDark ? Colors.black : onSurfaceColor)
-            .withAlpha((255 * (isDark ? 0.2 : 0.03)).round()),
+        shadow: (isDark ? Colors.black : onSurfaceColor).withAlpha(
+          (255 * (isDark ? 0.2 : 0.03)).round(),
+        ),
       ),
       textTheme: textTheme,
       appBarTheme: AppBarTheme(
@@ -100,15 +112,18 @@ class AppTheme {
         centerTitle: true,
         iconTheme: IconThemeData(color: onSurfaceColor),
         titleTextStyle: textTheme.titleLarge,
-        systemOverlayStyle:
-            isDark ? SystemUiOverlayStyle.light : SystemUiOverlayStyle.dark,
+        systemOverlayStyle: isDark
+            ? SystemUiOverlayStyle.light
+            : SystemUiOverlayStyle.dark,
       ),
       elevatedButtonTheme: ElevatedButtonThemeData(
         style: ElevatedButton.styleFrom(
           backgroundColor: primaryColor,
           foregroundColor: Colors.white,
           padding: const EdgeInsets.symmetric(
-              horizontal: AppSpacing.lg, vertical: AppSpacing.md),
+            horizontal: AppSpacing.lg,
+            vertical: AppSpacing.md,
+          ),
           shape: RoundedRectangleBorder(borderRadius: AppBorders.borderRadiusM),
           textStyle: textTheme.titleMedium,
           elevation: 0,
@@ -118,9 +133,12 @@ class AppTheme {
         style: OutlinedButton.styleFrom(
           foregroundColor: onSurfaceColor,
           side: BorderSide(
-              color: onSurfaceVariantColor.withAlpha((255 * 0.2).round())),
+            color: onSurfaceVariantColor.withAlpha((255 * 0.2).round()),
+          ),
           padding: const EdgeInsets.symmetric(
-              horizontal: AppSpacing.lg, vertical: AppSpacing.md),
+            horizontal: AppSpacing.lg,
+            vertical: AppSpacing.md,
+          ),
           shape: RoundedRectangleBorder(borderRadius: AppBorders.borderRadiusM),
           textStyle: textTheme.titleMedium,
         ),
@@ -129,7 +147,9 @@ class AppTheme {
         style: TextButton.styleFrom(
           foregroundColor: primaryColor,
           padding: const EdgeInsets.symmetric(
-              horizontal: AppSpacing.md, vertical: AppSpacing.xs),
+            horizontal: AppSpacing.md,
+            vertical: AppSpacing.xs,
+          ),
           shape: RoundedRectangleBorder(borderRadius: AppBorders.borderRadiusM),
           textStyle: textTheme.titleMedium,
         ),
@@ -140,12 +160,14 @@ class AppTheme {
         border: OutlineInputBorder(
           borderRadius: AppBorders.borderRadiusM,
           borderSide: BorderSide(
-              color: onSurfaceVariantColor.withAlpha((255 * 0.15).round())),
+            color: onSurfaceVariantColor.withAlpha((255 * 0.15).round()),
+          ),
         ),
         enabledBorder: OutlineInputBorder(
           borderRadius: AppBorders.borderRadiusM,
           borderSide: BorderSide(
-              color: onSurfaceVariantColor.withAlpha((255 * 0.15).round())),
+            color: onSurfaceVariantColor.withAlpha((255 * 0.15).round()),
+          ),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: AppBorders.borderRadiusM,
@@ -160,19 +182,25 @@ class AppTheme {
           borderSide: const BorderSide(color: AppColors.error, width: 2),
         ),
         contentPadding: const EdgeInsets.symmetric(
-            horizontal: AppSpacing.md, vertical: AppSpacing.md),
-        labelStyle:
-            textTheme.bodyMedium?.copyWith(color: onSurfaceVariantColor),
+          horizontal: AppSpacing.md,
+          vertical: AppSpacing.md,
+        ),
+        labelStyle: textTheme.bodyMedium?.copyWith(
+          color: onSurfaceVariantColor,
+        ),
         floatingLabelStyle: textTheme.bodyMedium?.copyWith(color: primaryColor),
         hintStyle: textTheme.bodyMedium?.copyWith(
-            color: onSurfaceVariantColor.withAlpha((255 * 0.6).round())),
+          color: onSurfaceVariantColor.withAlpha((255 * 0.6).round()),
+        ),
       ),
       cardTheme: CardThemeData(
         elevation: 0,
         shape: RoundedRectangleBorder(
           borderRadius: AppBorders.borderRadiusL,
           side: BorderSide(
-              color: onSurfaceColor.withAlpha((255 * 0.1).round()), width: 1),
+            color: onSurfaceColor.withAlpha((255 * 0.1).round()),
+            width: 1,
+          ),
         ),
         color: surfaceColor,
         margin: EdgeInsets.zero,

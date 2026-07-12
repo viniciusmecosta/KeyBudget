@@ -15,7 +15,9 @@ import 'package:share_plus/share_plus.dart';
 
 class CsvService {
   String generateCredentialsCsvString(
-      List<Credential> credentials, String Function(String) decrypt) {
+    List<Credential> credentials,
+    String Function(String) decrypt,
+  ) {
     List<List<dynamic>> rows = [
       [
         'id',
@@ -25,8 +27,8 @@ class CsvService {
         'phone_number',
         'notes',
         'password',
-        'folderId'
-      ]
+        'folderId',
+      ],
     ];
     for (var cred in credentials) {
       rows.add([
@@ -37,7 +39,7 @@ class CsvService {
         cred.phoneNumber ?? '',
         cred.notes ?? '',
         decrypt(cred.encryptedPassword),
-        cred.folderId ?? ''
+        cred.folderId ?? '',
       ]);
     }
     return '\uFEFF${csv.encode(rows)}';
@@ -45,7 +47,15 @@ class CsvService {
 
   String generateExpensesCsvString(List<Expense> expenses) {
     List<List<dynamic>> rows = [
-      ['id', 'date', 'amount', 'categoryId', 'motivation', 'location', 'isIncome']
+      [
+        'id',
+        'date',
+        'amount',
+        'categoryId',
+        'motivation',
+        'location',
+        'isIncome',
+      ],
     ];
     for (var exp in expenses) {
       rows.add([
@@ -63,7 +73,7 @@ class CsvService {
 
   String generateCategoriesCsvString(List<ExpenseCategory> categories) {
     List<List<dynamic>> rows = [
-      ['id', 'name', 'color', 'icon']
+      ['id', 'name', 'color', 'icon'],
     ];
     for (var cat in categories) {
       rows.add([cat.id ?? '', cat.name, cat.colorValue, cat.iconCodePoint]);
@@ -81,8 +91,8 @@ class CsvService {
         'location',
         'frequency',
         'startDate',
-        'endDate'
-      ]
+        'endDate',
+      ],
     ];
     for (var exp in expenses) {
       rows.add([
@@ -93,26 +103,34 @@ class CsvService {
         exp.location ?? '',
         exp.frequency.toString(),
         exp.startDate.toIso8601String(),
-        exp.endDate?.toIso8601String() ?? ''
+        exp.endDate?.toIso8601String() ?? '',
       ]);
     }
     return '\uFEFF${csv.encode(rows)}';
   }
 
-  Future<bool> exportCredentials(BuildContext context,
-      List<Credential> credentials, String Function(String) decrypt) async {
+  Future<bool> exportCredentials(
+    BuildContext context,
+    List<Credential> credentials,
+    String Function(String) decrypt,
+  ) async {
     String csvStr = generateCredentialsCsvString(credentials, decrypt);
     return _saveCsvFile(context, 'keybudget_credentials', csvStr);
   }
 
   Future<bool> exportExpenses(
-      BuildContext context, List<Expense> expenses) async {
+    BuildContext context,
+    List<Expense> expenses,
+  ) async {
     String csvStr = generateExpensesCsvString(expenses);
     return _saveCsvFile(context, 'keybudget_expenses', csvStr);
   }
 
   Future<File?> _pickCsvFile() async {
-    FilePickerResult? result = await FilePicker.pickFiles(type: FileType.custom, allowedExtensions: ['csv']);
+    FilePickerResult? result = await FilePicker.pickFiles(
+      type: FileType.custom,
+      allowedExtensions: ['csv'],
+    );
     if (result != null && result.files.single.path != null) {
       return File(result.files.single.path!);
     }
@@ -123,8 +141,10 @@ class CsvService {
     final file = await _pickCsvFile();
     if (file == null) return null;
     final input = file.openRead();
-    final fields =
-        await input.transform(utf8.decoder).transform(csv.decoder).toList();
+    final fields = await input
+        .transform(utf8.decoder)
+        .transform(csv.decoder)
+        .toList();
     if (fields.length < 2) return [];
     final headers = fields.first.map((e) => e.toString()).toList();
     List<Map<String, dynamic>> result = [];
@@ -140,7 +160,10 @@ class CsvService {
   }
 
   Future<bool> _saveCsvFile(
-      BuildContext context, String baseName, String data) async {
+    BuildContext context,
+    String baseName,
+    String data,
+  ) async {
     try {
       final fileName =
           '${baseName}_${DateTime.now().toIso8601String().replaceAll(':', '-')}.csv';
@@ -158,16 +181,21 @@ class CsvService {
       return true;
     } catch (e) {
       if (!context.mounted) return false;
-      SnackbarService.showError(context, 'Failed to save file: $e',
-          title: 'Error Exporting CSV');
+      SnackbarService.showError(
+        context,
+        'Failed to save file: $e',
+        title: 'Error Exporting CSV',
+      );
       return false;
     }
   }
 
   Future<bool> exportAnalysisCsv(
-      BuildContext context, AnalysisViewModel viewModel) async {
+    BuildContext context,
+    AnalysisViewModel viewModel,
+  ) async {
     List<List<dynamic>> rows = [
-      ['Month', 'Total Expenses']
+      ['Month', 'Total Expenses'],
     ];
     final data = viewModel.lastNMonthsData;
     for (var entry in data.entries) {

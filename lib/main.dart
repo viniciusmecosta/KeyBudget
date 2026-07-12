@@ -18,9 +18,7 @@ final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  runApp(
-    const ProviderScope(child: AppInitializer()),
-  );
+  runApp(const ProviderScope(child: AppInitializer()));
 }
 
 class AppInitializer extends ConsumerStatefulWidget {
@@ -161,17 +159,22 @@ class _MyAppState extends ConsumerState<MyApp> with WidgetsBindingObserver {
 
     if (state == AppLifecycleState.paused &&
         authViewModel.currentUser != null) {
-      appLockService.lockApp();
+      if (authViewModel.currentUser!.appLocked ?? true) {
+        appLockService.lockApp();
+      }
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    final user = ref.watch(authViewModelProvider).currentUser;
+    final themeColor = user?.themeColor;
+
     return MaterialApp(
       navigatorKey: navigatorKey,
       title: 'KeyBudget',
-      theme: AppTheme.lightTheme,
-      darkTheme: AppTheme.darkTheme,
+      theme: AppTheme.getTheme(isDark: false, colorValue: themeColor),
+      darkTheme: AppTheme.getTheme(isDark: true, colorValue: themeColor),
       themeMode: ThemeMode.system,
       debugShowCheckedModeBanner: false,
       scrollBehavior: const AppScrollBehavior(),
@@ -180,9 +183,7 @@ class _MyAppState extends ConsumerState<MyApp> with WidgetsBindingObserver {
         GlobalWidgetsLocalizations.delegate,
         GlobalCupertinoLocalizations.delegate,
       ],
-      supportedLocales: const [
-        Locale('pt', 'BR'),
-      ],
+      supportedLocales: const [Locale('pt', 'BR')],
       locale: const Locale('pt', 'BR'),
       home: const AuthGate(),
       builder: (context, navigator) {
@@ -190,10 +191,7 @@ class _MyAppState extends ConsumerState<MyApp> with WidgetsBindingObserver {
           builder: (context, ref, _) {
             final appLock = ref.watch(appLockServiceProvider);
             return Stack(
-              children: [
-                ?navigator,
-                if (appLock.isLocked) const LockScreen(),
-              ],
+              children: [?navigator, if (appLock.isLocked) const LockScreen()],
             );
           },
         );
@@ -220,10 +218,9 @@ class ErrorScreen extends ConsumerWidget {
             child: Text(
               'Ocorreu um erro crítico na inicialização:\n\n$error',
               textAlign: TextAlign.center,
-              style: Theme.of(context)
-                  .textTheme
-                  .bodyLarge
-                  ?.copyWith(color: Theme.of(context).colorScheme.error),
+              style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                color: Theme.of(context).colorScheme.error,
+              ),
             ),
           ),
         ),
