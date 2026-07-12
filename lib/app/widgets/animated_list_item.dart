@@ -46,52 +46,66 @@ class _AnimatedListItemState extends ConsumerState<AnimatedListItem>
       vsync: this,
     );
 
-    _shakeAnimation = TweenSequence<double>([
-      TweenSequenceItem(tween: Tween(begin: 0.0, end: 10.0), weight: 1),
-      TweenSequenceItem(tween: Tween(begin: 10.0, end: -10.0), weight: 2),
-      TweenSequenceItem(tween: Tween(begin: -10.0, end: 10.0), weight: 2),
-      TweenSequenceItem(tween: Tween(begin: 10.0, end: 0.0), weight: 1),
-    ]).animate(CurvedAnimation(
-      parent: _shakeController,
-      curve: Curves.easeInOut,
-    ));
+    _shakeAnimation =
+        TweenSequence<double>([
+          TweenSequenceItem(tween: Tween(begin: 0.0, end: 10.0), weight: 1),
+          TweenSequenceItem(tween: Tween(begin: 10.0, end: -10.0), weight: 2),
+          TweenSequenceItem(tween: Tween(begin: -10.0, end: 10.0), weight: 2),
+          TweenSequenceItem(tween: Tween(begin: 10.0, end: 0.0), weight: 1),
+        ]).animate(
+          CurvedAnimation(parent: _shakeController, curve: Curves.easeInOut),
+        );
 
-    _shadowColorAnimation = TweenSequence<Color?>([
-      TweenSequenceItem(
+    _shadowColorAnimation = TweenSequence<Color?>(
+      [
+        TweenSequenceItem(
           tween: ColorTween(
-              begin: Colors.black.withAlpha(0),
-              end: Colors.black.withAlpha((255 * 0.15).round())),
-          weight: 1),
-      TweenSequenceItem(
+            begin: Colors.black.withAlpha(0),
+            end: Colors.black.withAlpha((255 * 0.15).round()),
+          ),
+          weight: 1,
+        ),
+        TweenSequenceItem(
           tween: ColorTween(
-              begin: Colors.black.withAlpha((255 * 0.15).round()),
-              end: Colors.black.withAlpha((255 * 0.15).round())),
-          weight: 2),
-      TweenSequenceItem(
+            begin: Colors.black.withAlpha((255 * 0.15).round()),
+            end: Colors.black.withAlpha((255 * 0.15).round()),
+          ),
+          weight: 2,
+        ),
+        TweenSequenceItem(
           tween: ColorTween(
-              begin: Colors.black.withAlpha((255 * 0.15).round()),
-              end: Colors.black.withAlpha(0)),
-          weight: 1),
-    ]).animate(
-        CurvedAnimation(parent: _shakeController, curve: Curves.easeOut));
+            begin: Colors.black.withAlpha((255 * 0.15).round()),
+            end: Colors.black.withAlpha(0),
+          ),
+          weight: 1,
+        ),
+      ],
+    ).animate(CurvedAnimation(parent: _shakeController, curve: Curves.easeOut));
 
-    _shadowBlurAnimation = TweenSequence<double>([
-      TweenSequenceItem(tween: Tween(begin: 0.0, end: 15.0), weight: 1),
-      TweenSequenceItem(tween: Tween(begin: 15.0, end: 15.0), weight: 2),
-      TweenSequenceItem(tween: Tween(begin: 15.0, end: 0.0), weight: 1),
-    ]).animate(
-        CurvedAnimation(parent: _shakeController, curve: Curves.easeOut));
+    _shadowBlurAnimation = TweenSequence<double>(
+      [
+        TweenSequenceItem(tween: Tween(begin: 0.0, end: 15.0), weight: 1),
+        TweenSequenceItem(tween: Tween(begin: 15.0, end: 15.0), weight: 2),
+        TweenSequenceItem(tween: Tween(begin: 15.0, end: 0.0), weight: 1),
+      ],
+    ).animate(CurvedAnimation(parent: _shakeController, curve: Curves.easeOut));
 
-    _shadowOffsetAnimation = TweenSequence<Offset>([
-      TweenSequenceItem(
-          tween: Tween(begin: Offset.zero, end: const Offset(0, 8)), weight: 1),
-      TweenSequenceItem(
+    _shadowOffsetAnimation = TweenSequence<Offset>(
+      [
+        TweenSequenceItem(
+          tween: Tween(begin: Offset.zero, end: const Offset(0, 8)),
+          weight: 1,
+        ),
+        TweenSequenceItem(
           tween: Tween(begin: const Offset(0, 8), end: const Offset(0, 8)),
-          weight: 2),
-      TweenSequenceItem(
-          tween: Tween(begin: const Offset(0, 8), end: Offset.zero), weight: 1),
-    ]).animate(
-        CurvedAnimation(parent: _shakeController, curve: Curves.easeOut));
+          weight: 2,
+        ),
+        TweenSequenceItem(
+          tween: Tween(begin: const Offset(0, 8), end: Offset.zero),
+          weight: 1,
+        ),
+      ],
+    ).animate(CurvedAnimation(parent: _shakeController, curve: Curves.easeOut));
 
     _highlightController.forward();
     _shakeController.forward();
@@ -121,15 +135,13 @@ class _AnimatedListItemState extends ConsumerState<AnimatedListItem>
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    _highlightAnimation = ColorTween(
-      begin: theme.colorScheme.primary.withAlpha((255 * 0.2).round()),
-      end: theme.colorScheme.surface.withAlpha(0),
-    ).animate(
-      CurvedAnimation(
-        parent: _highlightController,
-        curve: Curves.easeOut,
-      ),
-    );
+    _highlightAnimation =
+        ColorTween(
+          begin: theme.colorScheme.primary.withAlpha((255 * 0.2).round()),
+          end: theme.colorScheme.surface.withAlpha(0),
+        ).animate(
+          CurvedAnimation(parent: _highlightController, curve: Curves.easeOut),
+        );
 
     return AnimatedBuilder(
       animation: _shakeController,
@@ -141,10 +153,7 @@ class _AnimatedListItemState extends ConsumerState<AnimatedListItem>
       },
       child: ScaleTransition(
         scale: Tween<double>(begin: 0.98, end: 1.0).animate(
-          CurvedAnimation(
-            parent: _editController,
-            curve: Curves.easeOut,
-          ),
+          CurvedAnimation(parent: _editController, curve: Curves.easeOut),
         ),
         child: AnimatedBuilder(
           animation: Listenable.merge([_highlightAnimation, _shakeController]),

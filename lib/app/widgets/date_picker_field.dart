@@ -53,14 +53,14 @@ class DatePickerField extends ConsumerWidget {
       child: InputDecorator(
         decoration: InputDecoration(
           labelText: label,
-          suffixIcon: isEditing ? const Icon(Icons.calendar_today) : null,
+          prefixIcon: const Icon(Icons.calendar_today_outlined),
+          suffixIcon: isEditing ? const Icon(Icons.edit_calendar_outlined, size: 20) : null,
         ),
         child: Text(
           _formatDate(selectedDate),
-          style: Theme.of(context)
-              .textTheme
-              .titleMedium
-              ?.copyWith(color: Theme.of(context).colorScheme.onSurface),
+          style: Theme.of(context).textTheme.titleMedium?.copyWith(
+            color: Theme.of(context).colorScheme.onSurface,
+          ),
         ),
       ),
     );

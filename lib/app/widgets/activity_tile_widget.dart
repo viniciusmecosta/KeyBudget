@@ -27,11 +27,14 @@ class ActivityTile extends ConsumerWidget {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
     final textTheme = theme.textTheme;
-    final currencyFormatter =
-        NumberFormat.currency(locale: 'pt_BR', symbol: 'R\$');
+    final currencyFormatter = NumberFormat.currency(
+      locale: 'pt_BR',
+      symbol: 'R\$',
+    );
 
-    final category =
-        ref.read(categoryViewModelProvider).getCategoryById(expense.categoryId);
+    final category = ref
+        .read(categoryViewModelProvider)
+        .getCategoryById(expense.categoryId);
 
     final categoryColor = category?.color ?? colorScheme.primary;
 
@@ -80,8 +83,12 @@ class ActivityTile extends ConsumerWidget {
     );
   }
 
-  Widget _buildExpenseInfo(BuildContext context, TextTheme textTheme,
-      ColorScheme colorScheme, dynamic category) {
+  Widget _buildExpenseInfo(
+    BuildContext context,
+    TextTheme textTheme,
+    ColorScheme colorScheme,
+    dynamic category,
+  ) {
     final String dateText = showFullDate
         ? DateFormat('dd/MM/yyyy').format(expense.date)
         : DateUtils.getRelativeDate(expense.date);
@@ -94,7 +101,9 @@ class ActivityTile extends ConsumerWidget {
           AutoSizeText(
             expense.location?.isNotEmpty == true
                 ? expense.location!
-                : (expense.isIncome == true ? 'Receita' : (category?.name ?? 'Despesa Geral')),
+                : (expense.isIncome == true
+                      ? 'Receita'
+                      : (category?.name ?? 'Despesa Geral')),
             style: textTheme.bodyLarge?.copyWith(
               fontWeight: FontWeight.w600,
               color: colorScheme.onSurface,
@@ -120,8 +129,11 @@ class ActivityTile extends ConsumerWidget {
     );
   }
 
-  Widget _buildAmountInfo(TextTheme textTheme, NumberFormat currencyFormatter,
-      ColorScheme colorScheme) {
+  Widget _buildAmountInfo(
+    TextTheme textTheme,
+    NumberFormat currencyFormatter,
+    ColorScheme colorScheme,
+  ) {
     final isIncome = expense.isIncome == true;
     final amountText = currencyFormatter.format(expense.amount);
     final text = isIncome ? '+ $amountText' : '- $amountText';

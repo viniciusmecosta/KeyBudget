@@ -10,6 +10,7 @@ class CategoryPickerField extends ConsumerWidget {
   final VoidCallback onManageCategories;
   final FormFieldValidator<ExpenseCategory>? validator;
   final bool isEnabled;
+  final IconData? prefixIcon;
 
   const CategoryPickerField({
     super.key,
@@ -20,6 +21,7 @@ class CategoryPickerField extends ConsumerWidget {
     required this.onManageCategories,
     this.validator,
     this.isEnabled = true,
+    this.prefixIcon,
   });
 
   @override
@@ -43,6 +45,7 @@ class CategoryPickerField extends ConsumerWidget {
             decoration: InputDecoration(
               labelText: label,
               errorText: state.errorText,
+              prefixIcon: prefixIcon != null ? Icon(prefixIcon) : null,
             ),
             isEmpty: value == null,
             child: value == null
@@ -52,11 +55,12 @@ class CategoryPickerField extends ConsumerWidget {
                       Icon(value!.icon, size: 24, color: value!.color),
                       const SizedBox(width: 12),
                       Expanded(
-                          child: Text(
-                        value!.name,
-                        style: theme.textTheme.titleMedium,
-                        overflow: TextOverflow.ellipsis,
-                      )),
+                        child: Text(
+                          value!.name,
+                          style: theme.textTheme.titleMedium,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
                     ],
                   ),
           ),
@@ -81,8 +85,9 @@ class CategoryPickerField extends ConsumerWidget {
             return Container(
               decoration: BoxDecoration(
                 color: theme.cardColor,
-                borderRadius:
-                    const BorderRadius.vertical(top: Radius.circular(24)),
+                borderRadius: const BorderRadius.vertical(
+                  top: Radius.circular(24),
+                ),
               ),
               child: Column(
                 mainAxisSize: MainAxisSize.min,
@@ -109,13 +114,16 @@ class CategoryPickerField extends ConsumerWidget {
                       itemBuilder: (context, index) {
                         if (index == categories.length) {
                           return ListTile(
-                            leading: Icon(Icons.settings_outlined,
-                                color: theme.colorScheme.primary),
+                            leading: Icon(
+                              Icons.settings_outlined,
+                              color: theme.colorScheme.primary,
+                            ),
                             title: Text(
                               'Gerenciar Categorias',
                               style: TextStyle(
-                                  color: theme.colorScheme.primary,
-                                  fontWeight: FontWeight.bold),
+                                color: theme.colorScheme.primary,
+                                fontWeight: FontWeight.bold,
+                              ),
                             ),
                             onTap: () {
                               Navigator.of(context).pop();
