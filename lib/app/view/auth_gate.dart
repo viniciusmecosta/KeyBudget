@@ -74,7 +74,8 @@ class _AuthGateState extends ConsumerState<AuthGate> {
           ref.read(appLockServiceProvider).lockApp();
         });
         return const Scaffold(
-            body: Center(child: Text("Falha na autenticação")));
+          body: Center(child: Text("Falha na autenticação")),
+        );
       case AuthStatus.pending:
         return const Scaffold(body: SafeArea(child: DashboardSkeleton()));
     }
@@ -88,6 +89,15 @@ class _AuthGateState extends ConsumerState<AuthGate> {
       final appLockService = ref.read(appLockServiceProvider);
       appLockService.isAuthenticating = true;
       final authViewModel = ref.read(authViewModelProvider);
+
+      final appLocked = authViewModel.currentUser?.appLocked ?? true;
+      if (!appLocked) {
+        if (mounted) setState(() => _status = AuthStatus.success);
+        appLockService.isAuthenticating = false;
+        if (mounted) _isAuthenticating = false;
+        return;
+      }
+
       if (authViewModel.justAuthenticated) {
         authViewModel.consumeJustAuthenticated();
         if (mounted) setState(() => _status = AuthStatus.success);
