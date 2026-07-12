@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:key_budget/app/utils/navigation_utils.dart';
 import 'package:key_budget/core/design_system/spacing/app_spacing.dart';
 import 'package:key_budget/core/design_system/widgets/app_button.dart';
@@ -54,9 +55,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     );
     if (mounted && !success) {
       SnackbarService.showError(
-          context,
-          authViewModel.errorMessage ??
-              'Erro ao fazer login. Verifique suas credenciais.');
+        context,
+        authViewModel.errorMessage ?? 'Erro ao fazer login. Verifique suas credenciais.',
+      );
       _passwordController.clear();
     }
   }
@@ -65,8 +66,10 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     final authViewModel = ref.read(authViewModelProvider);
     final success = await authViewModel.loginWithGoogle();
     if (mounted && !success) {
-      SnackbarService.showError(context,
-          authViewModel.errorMessage ?? 'Erro ao fazer login com Google.');
+      SnackbarService.showError(
+        context,
+        authViewModel.errorMessage ?? 'Erro ao fazer login com Google.',
+      );
     }
   }
 
@@ -82,28 +85,24 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
           Row(
             children: [
               Expanded(
-                  child: Divider(
-                      color: Theme.of(context).colorScheme.outlineVariant)),
+                child: Divider(color: Theme.of(context).colorScheme.outlineVariant),
+              ),
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
                 child: Text(
                   'ou',
                   style: Theme.of(context).textTheme.labelMedium?.copyWith(
-                        color: Theme.of(context).colorScheme.onSurfaceVariant,
-                      ),
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  ),
                 ),
               ),
               Expanded(
-                  child: Divider(
-                      color: Theme.of(context).colorScheme.outlineVariant)),
+                child: Divider(color: Theme.of(context).colorScheme.outlineVariant),
+              ),
             ],
           ),
           const SizedBox(height: AppSpacing.xl),
-          AppButton(
-            label: 'Continuar com Google',
-            icon: Icons.g_mobiledata_rounded,
-            variant: AppButtonVariant.outline,
-            isFullWidth: true,
+          _GoogleSignInButton(
             isLoading: viewModel.isLoading,
             onPressed: _submitGoogle,
           ),
@@ -114,24 +113,22 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
               Text(
                 'Novo por aqui?',
                 style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      color: Theme.of(context).colorScheme.onSurfaceVariant,
-                    ),
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                ),
               ),
               TextButton(
-                onPressed: () =>
-                    NavigationUtils.push(context, const RegisterScreen()),
+                onPressed: () => NavigationUtils.push(context, const RegisterScreen()),
                 style: TextButton.styleFrom(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: AppSpacing.sm),
+                  padding: const EdgeInsets.symmetric(horizontal: AppSpacing.sm),
                   minimumSize: Size.zero,
                   tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                 ),
                 child: Text(
                   'Cadastre-se',
                   style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                        color: Theme.of(context).colorScheme.primary,
-                        fontWeight: FontWeight.bold,
-                      ),
+                    color: Theme.of(context).colorScheme.primary,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
               ),
             ],
@@ -148,9 +145,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
               label: 'Email',
               prefixIcon: Icons.email_outlined,
               keyboardType: TextInputType.emailAddress,
-              validator: (value) => (value == null || !value.contains('@'))
-                  ? 'Insira um email válido'
-                  : null,
+              validator: (value) =>
+                  (value == null || !value.contains('@')) ? 'Insira um email válido' : null,
             ),
             const SizedBox(height: AppSpacing.md),
             AppTextField(
@@ -175,21 +171,21 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
             Align(
               alignment: Alignment.centerRight,
               child: TextButton(
-                onPressed: () {
-                  // TODO: Implement forgot password
-                },
+                onPressed: () {},
                 style: TextButton.styleFrom(
                   padding: const EdgeInsets.symmetric(
-                      horizontal: AppSpacing.xs, vertical: AppSpacing.sm),
+                    horizontal: AppSpacing.xs,
+                    vertical: AppSpacing.sm,
+                  ),
                   minimumSize: Size.zero,
                   tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                 ),
                 child: Text(
                   'Esqueceu sua senha?',
                   style: Theme.of(context).textTheme.labelMedium?.copyWith(
-                        color: Theme.of(context).colorScheme.primary,
-                        fontWeight: FontWeight.bold,
-                      ),
+                    color: Theme.of(context).colorScheme.primary,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
               ),
             ),
@@ -202,6 +198,68 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
             ),
           ],
         ),
+      ),
+    );
+  }
+}
+
+class _GoogleSignInButton extends StatelessWidget {
+  final bool isLoading;
+  final VoidCallback? onPressed;
+
+  const _GoogleSignInButton({required this.isLoading, required this.onPressed});
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+
+    return SizedBox(
+      width: double.infinity,
+      child: OutlinedButton(
+        onPressed: isLoading ? null : onPressed,
+        style: OutlinedButton.styleFrom(
+          padding: const EdgeInsets.symmetric(
+            horizontal: AppSpacing.lg,
+            vertical: AppSpacing.md,
+          ),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          side: BorderSide(
+            color: isDark
+                ? Colors.white.withValues(alpha: 0.15)
+                : Colors.black.withValues(alpha: 0.08),
+            width: 1.5,
+          ),
+          backgroundColor: isDark 
+              ? theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.3) 
+              : Colors.white,
+          elevation: isDark ? 0 : 1,
+          shadowColor: Colors.black.withValues(alpha: 0.05),
+        ),
+        child: isLoading
+            ? SizedBox(
+                height: 20,
+                width: 20,
+                child: CircularProgressIndicator(
+                  strokeWidth: 2.5,
+                  color: theme.colorScheme.primary,
+                ),
+              )
+            : Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  FaIcon(FontAwesomeIcons.google, size: 18, color: const Color(0xFF4285F4)),
+                  const SizedBox(width: AppSpacing.sm),
+                  Text(
+                    'Continuar com Google',
+                    style: theme.textTheme.titleMedium?.copyWith(
+                      color: isDark ? Colors.white : Colors.black87,
+                      fontWeight: FontWeight.w600,
+                      letterSpacing: 0.3,
+                    ),
+                  ),
+                ],
+              ),
       ),
     );
   }

@@ -77,7 +77,9 @@ class DashboardViewModel extends ChangeNotifier {
   double get totalAmountForMonth {
     final now = DateTime.now();
     final filteredExpenses = allExpenses.where((exp) {
-      return exp.date.year == now.year && exp.date.month == now.month && exp.isIncome != true;
+      return exp.date.year == now.year &&
+          exp.date.month == now.month &&
+          exp.isIncome != true;
     }).toList();
     return filteredExpenses.fold(0.0, (sum, item) => sum + item.amount);
   }
@@ -85,7 +87,9 @@ class DashboardViewModel extends ChangeNotifier {
   double get totalIncomeForMonth {
     final now = DateTime.now();
     final filteredIncomes = allExpenses.where((exp) {
-      return exp.date.year == now.year && exp.date.month == now.month && exp.isIncome == true;
+      return exp.date.year == now.year &&
+          exp.date.month == now.month &&
+          exp.isIncome == true;
     }).toList();
     return filteredIncomes.fold(0.0, (sum, item) => sum + item.amount);
   }
@@ -101,18 +105,21 @@ class DashboardViewModel extends ChangeNotifier {
     for (var expense in allExpenses) {
       if (expense.date.isBefore(firstDayOfCurrentMonth)) {
         if (!enableIncomes && expense.isIncome == true) continue;
-        
+
         final monthKey = '${expense.date.year}-${expense.date.month}';
-        
+
         double amount = expense.amount;
         if (enableIncomes) {
-            amount = expense.isIncome == true ? expense.amount : -expense.amount;
+          amount = expense.isIncome == true ? expense.amount : -expense.amount;
         } else {
-            amount = expense.amount;
+          amount = expense.amount;
         }
 
-        monthlyTotals.update(monthKey, (value) => value + amount,
-            ifAbsent: () => amount);
+        monthlyTotals.update(
+          monthKey,
+          (value) => value + amount,
+          ifAbsent: () => amount,
+        );
       }
     }
     if (monthlyTotals.isEmpty) return 0.0;
@@ -122,11 +129,11 @@ class DashboardViewModel extends ChangeNotifier {
   double percentageChangeFromAverage(bool enableIncomes) {
     final average = averageOfPreviousMonths(enableIncomes);
     if (average == 0) return 0.0;
-    
+
     if (enableIncomes) {
-        return ((balanceForMonth - average) / average.abs()) * 100;
+      return ((balanceForMonth - average) / average.abs()) * 100;
     } else {
-        return ((totalAmountForMonth - average) / average.abs()) * 100;
+      return ((totalAmountForMonth - average) / average.abs()) * 100;
     }
   }
 
@@ -149,9 +156,10 @@ class DashboardViewModel extends ChangeNotifier {
   }
 }
 
-final dashboardViewModelProvider =
-    ChangeNotifierProvider<DashboardViewModel>((ref) => DashboardViewModel(
-          categoryViewModel: ref.read(categoryViewModelProvider),
-          expenseViewModel: ref.read(expenseViewModelProvider),
-          credentialViewModel: ref.read(credentialViewModelProvider),
-        ));
+final dashboardViewModelProvider = ChangeNotifierProvider<DashboardViewModel>(
+  (ref) => DashboardViewModel(
+    categoryViewModel: ref.read(categoryViewModelProvider),
+    expenseViewModel: ref.read(expenseViewModelProvider),
+    credentialViewModel: ref.read(credentialViewModelProvider),
+  ),
+);

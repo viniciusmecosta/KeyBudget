@@ -1,8 +1,10 @@
+import 'dart:async';
 import 'package:firebase_auth/firebase_auth.dart' as firebase;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/legacy.dart';
 import 'package:key_budget/app/viewmodel/navigation_viewmodel.dart';
 import 'package:key_budget/core/models/user_model.dart';
+import 'package:key_budget/core/services/app_security_service.dart';
 import 'package:key_budget/core/services/local_auth_service.dart';
 import 'package:key_budget/features/auth/repository/auth_repository.dart';
 import 'package:key_budget/features/category/viewmodel/category_viewmodel.dart';
@@ -31,16 +33,35 @@ class AuthViewModel extends ChangeNotifier {
 
   bool get justAuthenticated => _justAuthenticated;
 
+  StreamSubscription? _userProfileSub;
+  StreamSubscription? _authStateSub;
+
   AuthViewModel() {
-    _authRepository.onAuthStateChanged.listen((user) {
+    _authStateSub = _authRepository.firebaseAuthStateChanges.listen((firebaseUser) {
       if (_isSigningInWithGoogle) {
         return;
       }
-      _currentUser = user;
-      if (!_isInitialized) {
-        _isInitialized = true;
+      
+      _userProfileSub?.cancel();
+
+      if (firebaseUser == null) {
+        _currentUser = null;
+        if (!_isInitialized) {
+          _isInitialized = true;
+        }
+        notifyListeners();
+      } else {
+        _userProfileSub = _authRepository.getUserProfileStream(firebaseUser.uid).listen((user) {
+          _currentUser = user;
+          if (user != null) {
+            AppSecurityService.setSecure(user.appLocked ?? true);
+          }
+          if (!_isInitialized) {
+            _isInitialized = true;
+          }
+          notifyListeners();
+        });
       }
-      notifyListeners();
     });
   }
 
@@ -125,7 +146,9 @@ class AuthViewModel extends ChangeNotifier {
       if (userProfile != null) {
         _currentUser = userProfile;
         await _localAuthService.saveCredentials(
-            userProfile.email, userProfile.id);
+          userProfile.email,
+          userProfile.id,
+        );
         _justAuthenticated = true;
         return true;
       } else {
@@ -166,6 +189,9 @@ class AuthViewModel extends ChangeNotifier {
     String? avatarPath,
     String? newPassword,
     bool? enableIncomes,
+    bool? appLocked,
+    bool? enableSuppliers,
+    int? themeColor,
   }) async {
     if (_currentUser == null) return false;
     _setLoading(true);
@@ -176,16 +202,24 @@ class AuthViewModel extends ChangeNotifier {
         phoneNumber: phoneNumber,
         avatarPath: avatarPath,
         enableIncomes: enableIncomes,
+        appLocked: appLocked,
+        enableSuppliers: enableSuppliers,
+        themeColor: themeColor,
       );
+      if (appLocked != null) {
+        AppSecurityService.setSecure(appLocked);
+      }
       await _authRepository.updateUserProfile(updatedUser);
       _currentUser = updatedUser;
 
       if (newPassword != null && newPassword.isNotEmpty) {
-        await _authRepository
-            .getCurrentFirebaseUser()
-            ?.updatePassword(newPassword);
+        await _authRepository.getCurrentFirebaseUser()?.updatePassword(
+          newPassword,
+        );
         await _localAuthService.saveCredentials(
-            _currentUser!.email, newPassword);
+          _currentUser!.email,
+          newPassword,
+        );
       }
       notifyListeners();
       return true;
@@ -212,6 +246,13 @@ class AuthViewModel extends ChangeNotifier {
     notifyListeners();
   }
 
+  @override
+  void dispose() {
+    _authStateSub?.cancel();
+    _userProfileSub?.cancel();
+    super.dispose();
+  }
+
   String _mapAuthError(String code) {
     switch (code) {
       case 'weak-password':
@@ -230,5 +271,6 @@ class AuthViewModel extends ChangeNotifier {
   }
 }
 
-final authViewModelProvider =
-    ChangeNotifierProvider<AuthViewModel>((ref) => AuthViewModel());
+final authViewModelProvider = ChangeNotifierProvider<AuthViewModel>(
+  (ref) => AuthViewModel(),
+);

@@ -39,4 +39,22 @@ class AppColors {
     Color(0xFF8B5CF6),
     Color(0xFF84CC16),
   ];
+
+  static Color getGradientSecondaryColor(Color primaryColor) {
+    if (primaryColor.toARGB32() == 0xFF1E40AF) return const Color(0xFF3B82F6);
+    if (primaryColor.toARGB32() == 0xFF2563EB) return const Color(0xFF60A5FA);
+    if (primaryColor.toARGB32() == 0xFF15803D) return const Color(0xFF34D399);
+    if (primaryColor.toARGB32() == 0xFFB91C1C) return const Color(0xFFF87171);
+    if (primaryColor.toARGB32() == 0xFFC2410C) return const Color(0xFFFB923C);
+    if (primaryColor.toARGB32() == 0xFF0E7490) return const Color(0xFF22D3EE);
+    if (primaryColor.toARGB32() == 0xFF4338CA) return const Color(0xFF818CF8);
+    if (primaryColor.toARGB32() == 0xFF0F766E) return const Color(0xFF2DD4BF);
+    if (primaryColor.toARGB32() == 0xFF9F1239) return const Color(0xFFFB7185);
+
+    return HSLColor.fromColor(primaryColor)
+        .withLightness(
+          (HSLColor.fromColor(primaryColor).lightness + 0.15).clamp(0.0, 1.0),
+        )
+        .toColor();
+  }
 }

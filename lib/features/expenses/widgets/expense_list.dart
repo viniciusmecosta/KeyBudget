@@ -9,10 +9,7 @@ import 'package:key_budget/features/expenses/viewmodel/expense_viewmodel.dart';
 class ExpenseList extends ConsumerStatefulWidget {
   final List<Expense> monthlyExpenses;
 
-  const ExpenseList({
-    super.key,
-    required this.monthlyExpenses,
-  });
+  const ExpenseList({super.key, required this.monthlyExpenses});
 
   @override
   ConsumerState<ExpenseList> createState() => _ExpenseListState();
@@ -49,7 +46,10 @@ class _ExpenseListState extends ConsumerState<ExpenseList> {
   }
 
   Widget _buildExpenseTile(
-      Expense expense, int index, Animation<double> animation) {
+    Expense expense,
+    int index,
+    Animation<double> animation,
+  ) {
     final isAllPeriods = ref.read(expenseViewModelProvider).searchAllPeriods;
 
     return AnimatedListItem(

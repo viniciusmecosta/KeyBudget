@@ -29,6 +29,7 @@ class _AddCredentialScreenState extends ConsumerState<AddCredentialScreen> {
   String? _logoPath;
   String? _selectedFolderId;
   bool _isSaving = false;
+  bool _hasUnsavedChanges = false;
 
   @override
   void initState() {
@@ -103,50 +104,88 @@ class _AddCredentialScreenState extends ConsumerState<AddCredentialScreen> {
   @override
   Widget build(BuildContext context) {
     final vm = ref.watch(credentialViewModelProvider);
+    final theme = Theme.of(context);
 
-    return Scaffold(
-      appBar: AppBar(title: const Text('Adicionar Credencial')),
-      body: AppAnimations.fadeInFromBottom(Padding(
-        padding: const EdgeInsets.all(AppSpacing.md),
-        child: Column(
-          children: [
-            Expanded(
-              child: CredentialForm(
-                formKey: _formKey,
-                locationController: _locationController,
-                loginController: _loginController,
-                passwordController: _passwordController,
-                emailController: _emailController,
-                phoneController: _phoneController,
-                notesController: _notesController,
-                logoPath: _logoPath,
-                onLogoChanged: (path) {
-                  setState(() {
-                    _logoPath = path;
-                  });
-                },
-                isEditing: true,
-                availableFolders: vm.allFolders,
-                selectedFolderId: _selectedFolderId,
-                onFolderChanged: (folderId) {
-                  setState(() {
-                    _selectedFolderId = folderId;
-                  });
-                },
+    return PopScope(
+      canPop: !_hasUnsavedChanges,
+      onPopInvokedWithResult: (didPop, result) async {
+        if (didPop) return;
+        final shouldPop = await showDialog<bool>(
+          context: context,
+          builder: (context) => AlertDialog(
+            title: const Text('Descartar alterações?'),
+            content: const Text('Você tem alterações não salvas. Deseja sair sem salvar?'),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(context).pop(false),
+                child: const Text('Cancelar'),
               ),
-            ),
-            const SizedBox(height: AppSpacing.md),
-            SizedBox(
-              width: double.infinity,
-              child: AppButton(
-                onPressed: _submit,
-                isLoading: _isSaving,
-                label: 'Salvar Credencial',
+              TextButton(
+                onPressed: () => Navigator.of(context).pop(true),
+                style: TextButton.styleFrom(foregroundColor: theme.colorScheme.error),
+                child: const Text('Sair'),
               ),
-            ),
-          ],
+            ],
+          ),
+        );
+        if (shouldPop ?? false) {
+          if (context.mounted) {
+            Navigator.of(context).pop(result);
+          }
+        }
+      },
+      child: Scaffold(
+        appBar: AppBar(title: const Text('Adicionar Credencial')),
+        body: AppAnimations.fadeInFromBottom(
+        Padding(
+          padding: const EdgeInsets.all(AppSpacing.md),
+          child: Column(
+            children: [
+              Expanded(
+                child: CredentialForm(
+                  formKey: _formKey,
+                  locationController: _locationController,
+                  loginController: _loginController,
+                  passwordController: _passwordController,
+                  emailController: _emailController,
+                  phoneController: _phoneController,
+                  notesController: _notesController,
+                  logoPath: _logoPath,
+                  onLogoChanged: (path) {
+                    setState(() {
+                      _logoPath = path;
+                    });
+                  },
+                  isEditing: true,
+                  availableFolders: vm.allFolders,
+                  selectedFolderId: _selectedFolderId,
+                  onFolderChanged: (folderId) {
+                    setState(() {
+                      _selectedFolderId = folderId;
+                      _hasUnsavedChanges = true;
+                    });
+                  },
+                  onChanged: () {
+                    if (!_hasUnsavedChanges) {
+                      setState(() => _hasUnsavedChanges = true);
+                    }
+                  },
+                ),
+              ),
+              const SizedBox(height: AppSpacing.md),
+              SizedBox(
+                width: double.infinity,
+                child: AppButton(
+                  onPressed: _submit,
+                  isLoading: _isSaving,
+                  label: 'Salvar Credencial',
+                ),
+              ),
+            ],
+          ),
         ),
-      )),
+      ),
+    ),
     );
   }
 }

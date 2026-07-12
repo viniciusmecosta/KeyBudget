@@ -33,8 +33,10 @@ class _OcrResultViewerState extends ConsumerState<OcrResultViewer> {
     final image = File(widget.imagePath);
     final decodedImage = await decodeImageFromList(image.readAsBytesSync());
     setState(() {
-      _imageSize =
-          Size(decodedImage.width.toDouble(), decodedImage.height.toDouble());
+      _imageSize = Size(
+        decodedImage.width.toDouble(),
+        decodedImage.height.toDouble(),
+      );
     });
   }
 
@@ -68,10 +70,7 @@ class _OcrResultViewerState extends ConsumerState<OcrResultViewer> {
                 imageSize: _imageSize!,
                 recognizedText: widget.recognizedText,
               ),
-              child: Image.file(
-                File(widget.imagePath),
-                fit: BoxFit.contain,
-              ),
+              child: Image.file(File(widget.imagePath), fit: BoxFit.contain),
             ),
           );
   }

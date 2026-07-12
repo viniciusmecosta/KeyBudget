@@ -78,7 +78,8 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                 child: ResponsiveCenter(
                   child: CustomScrollView(
                     physics: const BouncingScrollPhysics(
-                        parent: AlwaysScrollableScrollPhysics()),
+                      parent: AlwaysScrollableScrollPhysics(),
+                    ),
                     slivers: [
                       SliverPadding(
                         padding: const EdgeInsets.fromLTRB(
@@ -88,28 +89,26 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                           AppSpacing.xl,
                         ),
                         sliver: SliverList(
-                          delegate: SliverChildListDelegate(
-                            [
-                              AppAnimations.fadeInFromBottom(
-                                const DashboardBalanceCard(),
-                              ),
-                              const SizedBox(height: AppSpacing.md),
-                              AppAnimations.fadeInFromBottom(
-                                const DashboardMonthlyChart(),
-                                delay: const Duration(milliseconds: 100),
-                              ),
-                              const SizedBox(height: AppSpacing.md),
-                              AppAnimations.fadeInFromBottom(
-                                const QuickActionsSection(),
-                                delay: const Duration(milliseconds: 200),
-                              ),
-                              const SizedBox(height: AppSpacing.md),
-                              AppAnimations.fadeInFromBottom(
-                                const RecentActivitySection(),
-                                delay: const Duration(milliseconds: 300),
-                              ),
-                            ],
-                          ),
+                          delegate: SliverChildListDelegate([
+                            AppAnimations.fadeInFromBottom(
+                              const DashboardBalanceCard(),
+                            ),
+                            const SizedBox(height: AppSpacing.md),
+                            AppAnimations.fadeInFromBottom(
+                              const DashboardMonthlyChart(),
+                              delay: const Duration(milliseconds: 100),
+                            ),
+                            const SizedBox(height: AppSpacing.md),
+                            AppAnimations.fadeInFromBottom(
+                              const QuickActionsSection(),
+                              delay: const Duration(milliseconds: 200),
+                            ),
+                            const SizedBox(height: AppSpacing.md),
+                            AppAnimations.fadeInFromBottom(
+                              const RecentActivitySection(),
+                              delay: const Duration(milliseconds: 300),
+                            ),
+                          ]),
                         ),
                       ),
                     ],

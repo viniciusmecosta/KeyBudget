@@ -67,11 +67,7 @@ class QuickActionsSection extends ConsumerWidget {
               color: color.withAlpha((255 * 0.12).round()),
               borderRadius: AppBorders.borderRadiusM,
             ),
-            child: Icon(
-              icon,
-              color: color,
-              size: 22,
-            ),
+            child: Icon(icon, color: color, size: 22),
           ),
           const SizedBox(height: AppSpacing.md),
           Text(

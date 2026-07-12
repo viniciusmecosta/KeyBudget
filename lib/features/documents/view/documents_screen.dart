@@ -96,8 +96,9 @@ class _DocumentsScreenState extends ConsumerState<DocumentsScreen> {
                     key: const ValueKey('searchBox'),
                     height: 40,
                     decoration: BoxDecoration(
-                      color:
-                          theme.colorScheme.onSurface.withValues(alpha: 0.08),
+                      color: theme.colorScheme.onSurface.withValues(
+                        alpha: 0.08,
+                      ),
                       borderRadius: AppBorders.borderRadiusXXL,
                     ),
                     child: TextField(
@@ -110,7 +111,9 @@ class _DocumentsScreenState extends ConsumerState<DocumentsScreen> {
                         border: InputBorder.none,
                         isDense: true,
                         contentPadding: const EdgeInsets.symmetric(
-                            horizontal: 16, vertical: 10),
+                          horizontal: 16,
+                          vertical: 10,
+                        ),
                         suffixIcon: _searchController.text.isNotEmpty
                             ? IconButton(
                                 icon: const Icon(Icons.clear, size: 20),
@@ -147,7 +150,8 @@ class _DocumentsScreenState extends ConsumerState<DocumentsScreen> {
               child: ResponsiveCenter(
                 child: CustomScrollView(
                   physics: const BouncingScrollPhysics(
-                      parent: AlwaysScrollableScrollPhysics()),
+                    parent: AlwaysScrollableScrollPhysics(),
+                  ),
                   slivers: [
                     if (viewModel.isLoading)
                       const DocumentsListSkeleton()
@@ -164,7 +168,11 @@ class _DocumentsScreenState extends ConsumerState<DocumentsScreen> {
                     else
                       SliverPadding(
                         padding: const EdgeInsets.fromLTRB(
-                            AppSpacing.md, AppSpacing.lg, AppSpacing.md, 96.0),
+                          AppSpacing.md,
+                          AppSpacing.lg,
+                          AppSpacing.md,
+                          96.0,
+                        ),
                         sliver: SliverAnimatedList(
                           key: _listKey,
                           initialItemCount:
@@ -177,7 +185,9 @@ class _DocumentsScreenState extends ConsumerState<DocumentsScreen> {
                             return AnimatedListItem(
                               animation: animation,
                               child: DocumentListTile(
-                                  key: ValueKey(doc.id), doc: doc),
+                                key: ValueKey(doc.id),
+                                doc: doc,
+                              ),
                             );
                           },
                         ),
@@ -188,16 +198,17 @@ class _DocumentsScreenState extends ConsumerState<DocumentsScreen> {
             ),
           ),
         ),
-        floatingActionButton:
-            AppAnimations.scaleIn(FloatingActionButton.extended(
-          onPressed: () =>
-              NavigationUtils.push(context, const AddDocumentScreen()),
-          label: const Text('Novo Documento'),
-          icon: const Icon(Icons.add),
-          shape: RoundedRectangleBorder(
-            borderRadius: AppBorders.borderRadiusXXL,
+        floatingActionButton: AppAnimations.scaleIn(
+          FloatingActionButton.extended(
+            onPressed: () =>
+                NavigationUtils.push(context, const AddDocumentScreen()),
+            label: const Text('Novo Documento'),
+            icon: const Icon(Icons.add),
+            shape: RoundedRectangleBorder(
+              borderRadius: AppBorders.borderRadiusXXL,
+            ),
           ),
-        )),
+        ),
       ),
     );
   }
@@ -213,66 +224,74 @@ class DocumentsListSkeleton extends ConsumerWidget {
 
     return SliverPadding(
       padding: const EdgeInsets.fromLTRB(
-          AppSpacing.md, AppSpacing.lg, AppSpacing.md, 96.0),
+        AppSpacing.md,
+        AppSpacing.lg,
+        AppSpacing.md,
+        96.0,
+      ),
       sliver: SliverList(
         delegate: SliverChildBuilderDelegate(
-          (context, index) => Container(
-            margin: const EdgeInsets.only(bottom: AppSpacing.sm),
-            padding: const EdgeInsets.all(AppSpacing.md),
-            decoration: BoxDecoration(
-              color: theme.colorScheme.surfaceContainerHighest,
-              borderRadius: AppBorders.borderRadiusL,
-            ),
-            child: Row(
-              children: [
-                Container(
-                  width: 40,
-                  height: 40,
-                  decoration: BoxDecoration(
-                    color: theme.colorScheme.surface,
-                    borderRadius: AppBorders.borderRadiusM,
-                  ),
-                ),
-                const SizedBox(width: AppSpacing.md),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Container(
-                        height: 16,
-                        width: double.infinity,
-                        decoration: BoxDecoration(
-                          color: theme.colorScheme.surface,
-                          borderRadius: BorderRadius.circular(AppTheme.radiusS),
+          (context, index) =>
+              Container(
+                    margin: const EdgeInsets.only(bottom: AppSpacing.sm),
+                    padding: const EdgeInsets.all(AppSpacing.md),
+                    decoration: BoxDecoration(
+                      color: theme.colorScheme.surfaceContainerHighest,
+                      borderRadius: AppBorders.borderRadiusL,
+                    ),
+                    child: Row(
+                      children: [
+                        Container(
+                          width: 40,
+                          height: 40,
+                          decoration: BoxDecoration(
+                            color: theme.colorScheme.surface,
+                            borderRadius: AppBorders.borderRadiusM,
+                          ),
                         ),
-                      ),
-                      const SizedBox(height: 8),
-                      Container(
-                        height: 12,
-                        width: 100,
-                        decoration: BoxDecoration(
-                          color: theme.colorScheme.surface,
-                          borderRadius: BorderRadius.circular(AppTheme.radiusS),
+                        const SizedBox(width: AppSpacing.md),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Container(
+                                height: 16,
+                                width: double.infinity,
+                                decoration: BoxDecoration(
+                                  color: theme.colorScheme.surface,
+                                  borderRadius: BorderRadius.circular(
+                                    AppTheme.radiusS,
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(height: 8),
+                              Container(
+                                height: 12,
+                                width: 100,
+                                decoration: BoxDecoration(
+                                  color: theme.colorScheme.surface,
+                                  borderRadius: BorderRadius.circular(
+                                    AppTheme.radiusS,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(width: AppSpacing.md),
-                Container(
-                  width: 24,
-                  height: 24,
-                  decoration: BoxDecoration(
-                    color: theme.colorScheme.surface,
-                    shape: BoxShape.circle,
-                  ),
-                ),
-              ],
-            ),
-          ).animate(onPlay: (controller) => controller.repeat()).shimmer(
-                duration: 1500.ms,
-                color: shimmerHighlightColor,
-              ),
+                        const SizedBox(width: AppSpacing.md),
+                        Container(
+                          width: 24,
+                          height: 24,
+                          decoration: BoxDecoration(
+                            color: theme.colorScheme.surface,
+                            shape: BoxShape.circle,
+                          ),
+                        ),
+                      ],
+                    ),
+                  )
+                  .animate(onPlay: (controller) => controller.repeat())
+                  .shimmer(duration: 1500.ms, color: shimmerHighlightColor),
           childCount: 8,
         ),
       ),

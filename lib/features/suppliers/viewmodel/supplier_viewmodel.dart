@@ -36,13 +36,15 @@ class SupplierViewModel extends ChangeNotifier {
 
     _setLoading(true);
     _suppliersSubscription?.cancel();
-    _suppliersSubscription =
-        _repository.getSuppliersStreamForUser(userId).listen((suppliers) {
-      _allSuppliers = suppliers;
-      _allSuppliers
-          .sort((a, b) => a.name.toLowerCase().compareTo(b.name.toLowerCase()));
-      _setLoading(false);
-    });
+    _suppliersSubscription = _repository
+        .getSuppliersStreamForUser(userId)
+        .listen((suppliers) {
+          _allSuppliers = suppliers;
+          _allSuppliers.sort(
+            (a, b) => a.name.toLowerCase().compareTo(b.name.toLowerCase()),
+          );
+          _setLoading(false);
+        });
     _isListening = true;
   }
 
@@ -110,5 +112,6 @@ class SupplierViewModel extends ChangeNotifier {
   }
 }
 
-final supplierViewModelProvider =
-    ChangeNotifierProvider<SupplierViewModel>((ref) => SupplierViewModel());
+final supplierViewModelProvider = ChangeNotifierProvider<SupplierViewModel>(
+  (ref) => SupplierViewModel(),
+);

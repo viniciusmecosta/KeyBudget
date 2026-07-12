@@ -6,7 +6,8 @@ class RecurringExpenseRepository {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
   CollectionReference<RecurringExpense> _getRecurringExpensesCollection(
-      String userId) {
+    String userId,
+  ) {
     return _firestore
         .collection('users')
         .doc(userId)
@@ -19,32 +20,38 @@ class RecurringExpenseRepository {
   }
 
   Future<void> addRecurringExpense(
-      String userId, RecurringExpense expense) async {
+    String userId,
+    RecurringExpense expense,
+  ) async {
     await _getRecurringExpensesCollection(userId).add(expense);
   }
 
   Future<void> restoreRecurringExpense(
-      String userId, RecurringExpense expense) async {
+    String userId,
+    RecurringExpense expense,
+  ) async {
     if (expense.id != null) {
-      await _getRecurringExpensesCollection(userId)
-          .doc(expense.id)
-          .set(expense);
+      await _getRecurringExpensesCollection(
+        userId,
+      ).doc(expense.id).set(expense);
     } else {
       await addRecurringExpense(userId, expense);
     }
   }
 
   Stream<List<RecurringExpense>> getRecurringExpensesStream(String userId) {
-    return _getRecurringExpensesCollection(userId)
-        .snapshots()
-        .map((snapshot) => snapshot.docs.map((doc) => doc.data()).toList());
+    return _getRecurringExpensesCollection(userId).snapshots().map(
+      (snapshot) => snapshot.docs.map((doc) => doc.data()).toList(),
+    );
   }
 
   Future<void> updateRecurringExpense(
-      String userId, RecurringExpense expense) async {
-    await _getRecurringExpensesCollection(userId)
-        .doc(expense.id)
-        .update(expense.toMap());
+    String userId,
+    RecurringExpense expense,
+  ) async {
+    await _getRecurringExpensesCollection(
+      userId,
+    ).doc(expense.id).update(expense.toMap());
   }
 
   Future<void> deleteRecurringExpense(String userId, String expenseId) async {
@@ -52,5 +59,6 @@ class RecurringExpenseRepository {
   }
 }
 
-final recurringExpenseRepositoryProvider =
-    Provider<RecurringExpenseRepository>((ref) => RecurringExpenseRepository());
+final recurringExpenseRepositoryProvider = Provider<RecurringExpenseRepository>(
+  (ref) => RecurringExpenseRepository(),
+);

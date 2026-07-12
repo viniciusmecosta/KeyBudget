@@ -12,8 +12,8 @@ class LocalAuthService {
   Future<bool> canAuthenticate() async {
     try {
       final bool canAuthenticateWithBiometrics = await _auth.canCheckBiometrics;
-      final List<BiometricType> availableBiometrics =
-          await _auth.getAvailableBiometrics();
+      final List<BiometricType> availableBiometrics = await _auth
+          .getAvailableBiometrics();
       return canAuthenticateWithBiometrics && availableBiometrics.isNotEmpty;
     } catch (e) {
       return false;

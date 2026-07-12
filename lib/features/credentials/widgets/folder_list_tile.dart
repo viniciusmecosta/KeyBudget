@@ -44,9 +44,9 @@ class FolderListTile extends ConsumerWidget {
           Expanded(
             child: Text(
               folder.name,
-              style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.bold,
-                  ),
+              style: Theme.of(
+                context,
+              ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
             ),
           ),
           IconButton(
@@ -62,7 +62,8 @@ class FolderListTile extends ConsumerWidget {
                         leading: const Icon(Icons.delete, color: Colors.red),
                         title: const Text('Excluir Pasta'),
                         subtitle: const Text(
-                            'As credenciais voltarão para a tela principal'),
+                          'As credenciais voltarão para a tela principal',
+                        ),
                         onTap: () {
                           Navigator.pop(context);
                           onDelete();

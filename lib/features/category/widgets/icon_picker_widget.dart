@@ -56,11 +56,7 @@ class _IconPickerWidgetState extends ConsumerState<IconPickerWidget> {
                   itemBuilder: (context, index) {
                     final icon = allIcons[index];
                     return IconButton(
-                      icon: Icon(
-                        icon,
-                        size: 32,
-                        color: baseColor,
-                      ),
+                      icon: Icon(icon, size: 32, color: baseColor),
                       onPressed: () => Navigator.of(context).pop(icon),
                       style: IconButton.styleFrom(
                         backgroundColor: baseColor.withAlpha(50),

@@ -5,6 +5,9 @@ class User {
   final String? avatarPath;
   final String? phoneNumber;
   final bool? enableIncomes;
+  final bool? appLocked;
+  final bool? enableSuppliers;
+  final int? themeColor;
 
   User({
     required this.id,
@@ -13,6 +16,9 @@ class User {
     this.avatarPath,
     this.phoneNumber,
     this.enableIncomes,
+    this.appLocked,
+    this.enableSuppliers,
+    this.themeColor,
   });
 
   User copyWith({
@@ -22,6 +28,9 @@ class User {
     String? avatarPath,
     String? phoneNumber,
     bool? enableIncomes,
+    bool? appLocked,
+    bool? enableSuppliers,
+    int? themeColor,
   }) {
     return User(
       id: id ?? this.id,
@@ -30,6 +39,9 @@ class User {
       avatarPath: avatarPath ?? this.avatarPath,
       phoneNumber: phoneNumber ?? this.phoneNumber,
       enableIncomes: enableIncomes ?? this.enableIncomes,
+      appLocked: appLocked ?? this.appLocked,
+      enableSuppliers: enableSuppliers ?? this.enableSuppliers,
+      themeColor: themeColor ?? this.themeColor,
     );
   }
 
@@ -41,6 +53,9 @@ class User {
       'avatar_path': avatarPath,
       'phone_number': phoneNumber,
       'enable_incomes': enableIncomes,
+      'app_locked': appLocked ?? true,
+      'enable_suppliers': enableSuppliers ?? false,
+      'theme_color': themeColor,
     };
   }
 
@@ -52,6 +67,9 @@ class User {
       avatarPath: map['avatar_path'],
       phoneNumber: map['phone_number'],
       enableIncomes: map['enable_incomes'],
+      appLocked: map['app_locked'] ?? true,
+      enableSuppliers: map['enable_suppliers'] ?? false,
+      themeColor: map['theme_color'],
     );
   }
 }

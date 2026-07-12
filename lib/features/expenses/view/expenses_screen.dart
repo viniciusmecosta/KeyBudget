@@ -39,7 +39,9 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen> {
       if (authViewModel.currentUser != null) {
         ref
             .read(expenseViewModelProvider)
-            .setEnableIncomes(authViewModel.currentUser!.enableIncomes ?? false);
+            .setEnableIncomes(
+              authViewModel.currentUser!.enableIncomes ?? false,
+            );
         ref
             .read(categoryViewModelProvider)
             .fetchCategories(authViewModel.currentUser!.id);
@@ -92,7 +94,10 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen> {
 
     final bool isLoading =
         (expenseViewModel.isLoading || categoryViewModel.isLoading);
-    final currencyFormatter = NumberFormat.currency(locale: 'pt_BR', symbol: 'R\$');
+    final currencyFormatter = NumberFormat.currency(
+      locale: 'pt_BR',
+      symbol: 'R\$',
+    );
 
     Widget body = RefreshIndicator(
       onRefresh: _handleRefresh,
@@ -102,75 +107,119 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen> {
       child: ResponsiveCenter(
         child: CustomScrollView(
           physics: const BouncingScrollPhysics(
-              parent: AlwaysScrollableScrollPhysics()),
+            parent: AlwaysScrollableScrollPhysics(),
+          ),
           slivers: [
             SliverList(
-              delegate: SliverChildListDelegate(
-                [
-                  MonthSelector(
-                    selectedMonth: expenseViewModel.selectedMonth,
-                    isAllPeriods: expenseViewModel.searchAllPeriods,
-                    onMonthChanged: (newMonth) {
-                      expenseViewModel.setSelectedMonth(newMonth);
-                    },
-                    onAllPeriodsChanged: (isAll) {
-                      expenseViewModel.setSearchAllPeriods(isAll);
-                    },
+              delegate: SliverChildListDelegate([
+                MonthSelector(
+                  selectedMonth: expenseViewModel.selectedMonth,
+                  isAllPeriods: expenseViewModel.searchAllPeriods,
+                  onMonthChanged: (newMonth) {
+                    expenseViewModel.setSelectedMonth(newMonth);
+                  },
+                  onAllPeriodsChanged: (isAll) {
+                    expenseViewModel.setSearchAllPeriods(isAll);
+                  },
+                ),
+                Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: AppSpacing.md,
                   ),
-                  Padding(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: AppSpacing.md),
-                    child: AppAnimations.fadeInFromBottom(
-                      TweenAnimationBuilder<double>(
-                        key: ValueKey(enableIncomes ? expenseViewModel.currentMonthBalance : expenseViewModel.currentMonthTotal),
-                        tween: Tween<double>(
-                            begin: 0, end: enableIncomes ? expenseViewModel.currentMonthBalance : expenseViewModel.currentMonthTotal),
-                        duration: AppAnimations.durationSlow,
-                        curve: AppAnimations.curve,
-                        builder: (context, value, child) {
-                          return BalanceCard(
-                            title: expenseViewModel.searchAllPeriods
-                                ? (enableIncomes ? 'Saldo filtrado' : 'Total filtrado')
-                                : (enableIncomes ? 'Saldo do mês' : 'Total do mês'),
-                            totalValue: value,
-                            backgroundColor: theme.colorScheme.primary,
-                            isCompact: enableIncomes,
-                            subtitle: enableIncomes
-                                ? Padding(
-                                    padding: const EdgeInsets.only(top: AppSpacing.xs),
-                                    child: Row(
-                                      children: [
-                                        Icon(Icons.arrow_circle_up_rounded, color: Colors.greenAccent[400], size: 18),
-                                        const SizedBox(width: 6),
-                                        Text(
-                                          currencyFormatter.format(expenseViewModel.currentMonthIncomeTotal),
-                                          style: theme.textTheme.bodyMedium?.copyWith(
-                                            color: theme.colorScheme.onPrimary,
-                                            fontWeight: FontWeight.w600,
-                                          ),
-                                        ),
-                                        const SizedBox(width: AppSpacing.lg),
-                                        Icon(Icons.arrow_circle_down_rounded, color: theme.colorScheme.error, size: 18),
-                                        const SizedBox(width: 6),
-                                        Text(
-                                          currencyFormatter.format(expenseViewModel.currentMonthTotal),
-                                          style: theme.textTheme.bodyMedium?.copyWith(
-                                            color: theme.colorScheme.onPrimary,
-                                            fontWeight: FontWeight.w600,
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  )
-                                : null,
-                          );
-                        },
+                  child: AppAnimations.fadeInFromBottom(
+                    TweenAnimationBuilder<double>(
+                      key: ValueKey(
+                        enableIncomes
+                            ? expenseViewModel.currentMonthBalance
+                            : expenseViewModel.currentMonthTotal,
                       ),
+                      tween: Tween<double>(
+                        begin: 0,
+                        end: enableIncomes
+                            ? expenseViewModel.currentMonthBalance
+                            : expenseViewModel.currentMonthTotal,
+                      ),
+                      duration: AppAnimations.durationSlow,
+                      curve: AppAnimations.curve,
+                      builder: (context, value, child) {
+                        final primaryHue = HSLColor.fromColor(
+                          theme.colorScheme.primary,
+                        ).hue;
+                        final isGreenish =
+                            primaryHue >= 70 && primaryHue <= 160;
+                        final isReddish = primaryHue >= 330 || primaryHue <= 20;
+                        final incomeIconColor = isGreenish
+                            ? theme.colorScheme.onPrimary
+                            : Colors.greenAccent[400]!;
+                        final expenseIconColor = isReddish
+                            ? theme.colorScheme.onPrimary
+                            : theme.colorScheme.error;
+
+                        return BalanceCard(
+                          title: expenseViewModel.searchAllPeriods
+                              ? (enableIncomes
+                                    ? 'Saldo filtrado'
+                                    : 'Total filtrado')
+                              : (enableIncomes
+                                    ? 'Saldo do mês'
+                                    : 'Total do mês'),
+                          totalValue: value,
+                          backgroundColor: theme.colorScheme.primary,
+                          isCompact: enableIncomes,
+                          subtitle: enableIncomes
+                              ? Padding(
+                                  padding: const EdgeInsets.only(
+                                    top: AppSpacing.xs,
+                                  ),
+                                  child: Row(
+                                    children: [
+                                      Icon(
+                                        Icons.arrow_circle_up_rounded,
+                                        color: incomeIconColor,
+                                        size: 18,
+                                      ),
+                                      const SizedBox(width: 6),
+                                      Text(
+                                        currencyFormatter.format(
+                                          expenseViewModel
+                                              .currentMonthIncomeTotal,
+                                        ),
+                                        style: theme.textTheme.bodyMedium
+                                            ?.copyWith(
+                                              color:
+                                                  theme.colorScheme.onPrimary,
+                                              fontWeight: FontWeight.w600,
+                                            ),
+                                      ),
+                                      const SizedBox(width: AppSpacing.lg),
+                                      Icon(
+                                        Icons.arrow_circle_down_rounded,
+                                        color: expenseIconColor,
+                                        size: 18,
+                                      ),
+                                      const SizedBox(width: 6),
+                                      Text(
+                                        currencyFormatter.format(
+                                          expenseViewModel.currentMonthTotal,
+                                        ),
+                                        style: theme.textTheme.bodyMedium
+                                            ?.copyWith(
+                                              color:
+                                                  theme.colorScheme.onPrimary,
+                                              fontWeight: FontWeight.w600,
+                                            ),
+                                      ),
+                                    ],
+                                  ),
+                                )
+                              : null,
+                        );
+                      },
                     ),
                   ),
-                  const SizedBox(height: AppSpacing.lg),
-                ],
-              ),
+                ),
+                const SizedBox(height: AppSpacing.lg),
+              ]),
             ),
             if (isLoading)
               const ExpensesListSkeleton()
@@ -185,7 +234,8 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen> {
             else
               ExpenseList(
                 key: ValueKey(
-                    '${expenseViewModel.selectedMonth}_${expenseViewModel.searchAllPeriods}'),
+                  '${expenseViewModel.selectedMonth}_${expenseViewModel.searchAllPeriods}',
+                ),
                 monthlyExpenses: expenseViewModel.currentDisplayItems,
               ),
           ],
@@ -229,8 +279,9 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen> {
                     key: const ValueKey('searchBox'),
                     height: 40,
                     decoration: BoxDecoration(
-                      color: theme.colorScheme.onSurface
-                          .withAlpha((255 * 0.08).round()),
+                      color: theme.colorScheme.onSurface.withAlpha(
+                        (255 * 0.08).round(),
+                      ),
                       borderRadius: AppBorders.borderRadiusXXL,
                     ),
                     child: TextField(
@@ -245,7 +296,9 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen> {
                         focusedBorder: InputBorder.none,
                         isDense: true,
                         contentPadding: const EdgeInsets.symmetric(
-                            horizontal: 16, vertical: 10),
+                          horizontal: 16,
+                          vertical: 10,
+                        ),
                         suffixIcon: _searchController.text.isNotEmpty
                             ? IconButton(
                                 icon: const Icon(Icons.clear, size: 20),
@@ -291,12 +344,14 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen> {
             if (!_isSearching) const ExpenseActionsPopupMenu(),
           ],
           bottom: PreferredSize(
-            preferredSize: Size.fromHeight((_isSearching ? 56.0 : 0.0) +
-                (expenseViewModel.isImportingCsv ||
-                        expenseViewModel.isExportingCsv ||
-                        expenseViewModel.isExportingPdf
-                    ? 4.0
-                    : 0.0)),
+            preferredSize: Size.fromHeight(
+              (_isSearching ? 56.0 : 0.0) +
+                  (expenseViewModel.isImportingCsv ||
+                          expenseViewModel.isExportingCsv ||
+                          expenseViewModel.isExportingPdf
+                      ? 4.0
+                      : 0.0),
+            ),
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
@@ -305,7 +360,9 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen> {
                   child: _isSearching
                       ? Container(
                           padding: const EdgeInsets.symmetric(
-                              horizontal: AppSpacing.md, vertical: 8),
+                            horizontal: AppSpacing.md,
+                            vertical: 8,
+                          ),
                           alignment: Alignment.centerLeft,
                           child: SingleChildScrollView(
                             scrollDirection: Axis.horizontal,
@@ -325,12 +382,14 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen> {
                                   selectedColor: theme.colorScheme.primary,
                                   backgroundColor: theme.colorScheme.surface,
                                   side: BorderSide(
-                                      color: theme.colorScheme.primary),
+                                    color: theme.colorScheme.primary,
+                                  ),
                                   showCheckmark: false,
                                   onSelected: (val) {
                                     if (val) {
-                                      expenseViewModel
-                                          .setSearchAllPeriods(false);
+                                      expenseViewModel.setSearchAllPeriods(
+                                        false,
+                                      );
                                     }
                                   },
                                   shape: RoundedRectangleBorder(
@@ -352,12 +411,14 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen> {
                                   selectedColor: theme.colorScheme.primary,
                                   backgroundColor: theme.colorScheme.surface,
                                   side: BorderSide(
-                                      color: theme.colorScheme.primary),
+                                    color: theme.colorScheme.primary,
+                                  ),
                                   showCheckmark: false,
                                   onSelected: (val) {
                                     if (val) {
-                                      expenseViewModel
-                                          .setSearchAllPeriods(true);
+                                      expenseViewModel.setSearchAllPeriods(
+                                        true,
+                                      );
                                     }
                                   },
                                   shape: RoundedRectangleBorder(
@@ -378,25 +439,24 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen> {
             ),
           ),
         ),
-        body: SafeArea(
-          child: AppAnimations.fadeInFromBottom(body),
-        ),
-        floatingActionButton:
-            AppAnimations.scaleIn(FloatingActionButton.extended(
-          heroTag: 'fab_expenses',
-          onPressed: () {
-            HapticFeedback.lightImpact();
-            NavigationUtils.push(context, const AddExpenseScreen());
-          },
-          icon: const Icon(Icons.add_rounded),
-          label: Text(enableIncomes ? "Novo Lançamento" : "Nova Despesa"),
-          shape: RoundedRectangleBorder(
-            borderRadius: AppBorders.borderRadiusXXL,
+        body: SafeArea(child: AppAnimations.fadeInFromBottom(body)),
+        floatingActionButton: AppAnimations.scaleIn(
+          FloatingActionButton.extended(
+            heroTag: 'fab_expenses',
+            onPressed: () {
+              HapticFeedback.lightImpact();
+              NavigationUtils.push(context, const AddExpenseScreen());
+            },
+            icon: const Icon(Icons.add_rounded),
+            label: Text(enableIncomes ? "Novo Lançamento" : "Nova Despesa"),
+            shape: RoundedRectangleBorder(
+              borderRadius: AppBorders.borderRadiusXXL,
+            ),
+            backgroundColor: theme.colorScheme.primary,
+            foregroundColor: theme.colorScheme.onPrimary,
+            elevation: 0,
           ),
-          backgroundColor: theme.colorScheme.primary,
-          foregroundColor: theme.colorScheme.onPrimary,
-          elevation: 0,
-        )),
+        ),
       ),
     );
   }

@@ -65,16 +65,20 @@ class DocumentViewModel extends ChangeNotifier {
     if (_isListening) return;
     _setLoading(true);
     _documentsSubscription?.cancel();
-    _documentsSubscription =
-        _repository.getDocumentsStream(userId).listen((newDocs) async {
-      final processedNewDocs = await _processDocuments(newDocs, userId);
-      _documents = processedNewDocs;
-      _updateDisplayList(animate: true);
-      _setLoading(false);
-    }, onError: (error) {
-      _setErrorMessage('Erro ao carregar os documentos.');
-      _setLoading(false);
-    });
+    _documentsSubscription = _repository
+        .getDocumentsStream(userId)
+        .listen(
+          (newDocs) async {
+            final processedNewDocs = await _processDocuments(newDocs, userId);
+            _documents = processedNewDocs;
+            _updateDisplayList(animate: true);
+            _setLoading(false);
+          },
+          onError: (error) {
+            _setErrorMessage('Erro ao carregar os documentos.');
+            _setLoading(false);
+          },
+        );
     _isListening = true;
   }
 
@@ -84,11 +88,14 @@ class DocumentViewModel extends ChangeNotifier {
 
     if (_searchQuery.isNotEmpty) {
       newList.retainWhere(
-          (doc) => _sanitize(doc.documentName).contains(_searchQuery));
+        (doc) => _sanitize(doc.documentName).contains(_searchQuery),
+      );
     }
 
-    newList.sort((a, b) =>
-        a.documentName.toLowerCase().compareTo(b.documentName.toLowerCase()));
+    newList.sort(
+      (a, b) =>
+          a.documentName.toLowerCase().compareTo(b.documentName.toLowerCase()),
+    );
 
     if (!animate || _listKey?.currentState == null) {
       _currentDisplayItems = List.from(newList);
@@ -99,8 +106,9 @@ class DocumentViewModel extends ChangeNotifier {
     for (var i = oldList.length - 1; i >= 0; i--) {
       final oldItem = oldList[i];
       if (!newList.any((newItem) => newItem.id == oldItem.id)) {
-        final indexToRemove =
-            _currentDisplayItems.indexWhere((item) => item.id == oldItem.id);
+        final indexToRemove = _currentDisplayItems.indexWhere(
+          (item) => item.id == oldItem.id,
+        );
         if (indexToRemove != -1) {
           final removedDoc = _currentDisplayItems.removeAt(indexToRemove);
           _listKey?.currentState?.removeItem(
@@ -108,7 +116,9 @@ class DocumentViewModel extends ChangeNotifier {
             (context, animation) => AnimatedListItem(
               animation: animation,
               child: DocumentListTile(
-                  key: ValueKey(removedDoc.id), doc: removedDoc),
+                key: ValueKey(removedDoc.id),
+                doc: removedDoc,
+              ),
             ),
             duration: const Duration(milliseconds: 300),
           );
@@ -118,13 +128,16 @@ class DocumentViewModel extends ChangeNotifier {
 
     for (var i = 0; i < newList.length; i++) {
       final newItem = newList[i];
-      final oldIndex =
-          _currentDisplayItems.indexWhere((item) => item.id == newItem.id);
+      final oldIndex = _currentDisplayItems.indexWhere(
+        (item) => item.id == newItem.id,
+      );
 
       if (oldIndex == -1) {
         _currentDisplayItems.insert(i, newItem);
-        _listKey?.currentState
-            ?.insertItem(i, duration: const Duration(milliseconds: 300));
+        _listKey?.currentState?.insertItem(
+          i,
+          duration: const Duration(milliseconds: 300),
+        );
       } else {
         if (_currentDisplayItems[oldIndex] != newItem) {
           _currentDisplayItems[oldIndex] = newItem;
@@ -154,7 +167,9 @@ class DocumentViewModel extends ChangeNotifier {
   }
 
   Future<List<Document>> _processDocuments(
-      List<Document> docs, String userId) async {
+    List<Document> docs,
+    String userId,
+  ) async {
     final Map<String, List<Document>> versionsMap = {};
     for (var doc in docs) {
       final key = doc.originalDocumentId ?? doc.id!;
@@ -170,15 +185,20 @@ class DocumentViewModel extends ChangeNotifier {
         return b.issueDate!.compareTo(a.issueDate!);
       });
 
-      final mainVersion = versions.firstWhere((v) => v.isPrincipal,
-          orElse: () => versions.first);
-      final otherVersions =
-          versions.where((v) => v.id != mainVersion.id).toList();
+      final mainVersion = versions.firstWhere(
+        (v) => v.isPrincipal,
+        orElse: () => versions.first,
+      );
+      final otherVersions = versions
+          .where((v) => v.id != mainVersion.id)
+          .toList();
       result.add(mainVersion.copyWith(versions: otherVersions));
     });
 
-    result.sort((a, b) =>
-        a.documentName.toLowerCase().compareTo(b.documentName.toLowerCase()));
+    result.sort(
+      (a, b) =>
+          a.documentName.toLowerCase().compareTo(b.documentName.toLowerCase()),
+    );
     return result;
   }
 
@@ -196,14 +216,19 @@ class DocumentViewModel extends ChangeNotifier {
   }
 
   Future<bool> updateDocument(
-      String userId, Document document, Document originalDocument) async {
+    String userId,
+    Document document,
+    Document originalDocument,
+  ) async {
     _setLoading(true);
     try {
       final originalAttachments = originalDocument.attachments;
       final currentAttachments = document.attachments;
       final attachmentsToDelete = originalAttachments
-          .where((att) =>
-              !currentAttachments.any((cAtt) => cAtt.driveId == att.driveId))
+          .where(
+            (att) =>
+                !currentAttachments.any((cAtt) => cAtt.driveId == att.driveId),
+          )
           .toList();
 
       for (final attachment in attachmentsToDelete) {
@@ -243,7 +268,10 @@ class DocumentViewModel extends ChangeNotifier {
   }
 
   Future<bool> setAsPrincipal(
-      String userId, Document newPrincipal, List<Document> allVersions) async {
+    String userId,
+    Document newPrincipal,
+    List<Document> allVersions,
+  ) async {
     _setLoading(true);
     try {
       final batch = _repository.firestore.batch();
@@ -284,7 +312,8 @@ class DocumentViewModel extends ChangeNotifier {
 
         if (driveFile == null || driveFile.id == null) {
           _setErrorMessage(
-              'Falha ao fazer upload do arquivo para o Google Drive.');
+            'Falha ao fazer upload do arquivo para o Google Drive.',
+          );
           return null;
         }
 
@@ -307,8 +336,10 @@ class DocumentViewModel extends ChangeNotifier {
 
   Future<File> _getLocalFile(Attachment attachment) async {
     final dir = await getApplicationDocumentsDirectory();
-    final filePath =
-        p.join(dir.path, '${attachment.driveId}-${attachment.name}');
+    final filePath = p.join(
+      dir.path,
+      '${attachment.driveId}-${attachment.name}',
+    );
     return File(filePath);
   }
 
@@ -397,5 +428,6 @@ class DocumentViewModel extends ChangeNotifier {
   }
 }
 
-final documentViewModelProvider =
-    ChangeNotifierProvider<DocumentViewModel>((ref) => DocumentViewModel());
+final documentViewModelProvider = ChangeNotifierProvider<DocumentViewModel>(
+  (ref) => DocumentViewModel(),
+);

@@ -19,11 +19,14 @@ class RecurringExpenseListTile extends ConsumerWidget {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
     final textTheme = theme.textTheme;
-    final currencyFormatter =
-        NumberFormat.currency(locale: 'pt_BR', symbol: 'R\$');
+    final currencyFormatter = NumberFormat.currency(
+      locale: 'pt_BR',
+      symbol: 'R\$',
+    );
 
-    final category =
-        ref.read(categoryViewModelProvider).getCategoryById(expense.categoryId);
+    final category = ref
+        .read(categoryViewModelProvider)
+        .getCategoryById(expense.categoryId);
     final categoryColor = category?.color ?? colorScheme.primary;
 
     String recurrenceInfo;
@@ -48,7 +51,9 @@ class RecurringExpenseListTile extends ConsumerWidget {
         child: InkWell(
           onTap: () {
             NavigationUtils.push(
-                context, AddEditRecurringExpenseScreen(expense: expense));
+              context,
+              AddEditRecurringExpenseScreen(expense: expense),
+            );
           },
           borderRadius: AppBorders.borderRadiusL,
           child: Container(
@@ -63,10 +68,14 @@ class RecurringExpenseListTile extends ConsumerWidget {
               children: [
                 CircleAvatar(
                   radius: 24,
-                  backgroundColor:
-                      categoryColor.withAlpha((255 * 0.15).round()),
-                  child: Icon(category?.icon ?? Icons.category,
-                      color: categoryColor, size: 24),
+                  backgroundColor: categoryColor.withAlpha(
+                    (255 * 0.15).round(),
+                  ),
+                  child: Icon(
+                    category?.icon ?? Icons.category,
+                    color: categoryColor,
+                    size: 24,
+                  ),
                 ),
                 const SizedBox(width: AppSpacing.md),
                 Expanded(
@@ -89,16 +98,20 @@ class RecurringExpenseListTile extends ConsumerWidget {
                       const SizedBox(height: 4),
                       Row(
                         children: [
-                          Icon(Icons.replay_rounded,
-                              size: 14,
-                              color: colorScheme.onSurfaceVariant
-                                  .withAlpha((255 * 0.7).round())),
+                          Icon(
+                            Icons.replay_rounded,
+                            size: 14,
+                            color: colorScheme.onSurfaceVariant.withAlpha(
+                              (255 * 0.7).round(),
+                            ),
+                          ),
                           const SizedBox(width: 4),
                           Text(
                             recurrenceInfo,
                             style: textTheme.bodySmall?.copyWith(
-                              color: colorScheme.onSurfaceVariant
-                                  .withAlpha((255 * 0.8).round()),
+                              color: colorScheme.onSurfaceVariant.withAlpha(
+                                (255 * 0.8).round(),
+                              ),
                             ),
                           ),
                         ],
