@@ -17,13 +17,16 @@ class ExpenseActionsPopupMenu extends ConsumerWidget {
     final authViewModel = ref.read(authViewModelProvider);
     final scaffoldContext = context;
 
-    final count =
-        await viewModel.importExpensesFromCsv(authViewModel.currentUser!.id);
+    final count = await viewModel.importExpensesFromCsv(
+      authViewModel.currentUser!.id,
+    );
 
     if (scaffoldContext.mounted) {
       if (count > 0) {
         SnackbarService.showSuccess(
-            scaffoldContext, '$count despesas importadas com sucesso!');
+          scaffoldContext,
+          '$count despesas importadas com sucesso!',
+        );
       } else {
         SnackbarService.showError(scaffoldContext, 'Nenhuma despesa importada');
       }
@@ -36,17 +39,12 @@ class ExpenseActionsPopupMenu extends ConsumerWidget {
     final viewModel = ref.watch(expenseViewModelProvider);
 
     return PopupMenuButton<String>(
-      icon: Icon(
-        Icons.more_vert_rounded,
-        color: theme.colorScheme.onSurface,
-      ),
-      shape: RoundedRectangleBorder(
-        borderRadius: AppBorders.borderRadiusMD,
-      ),
+      icon: Icon(Icons.more_vert_rounded, color: theme.colorScheme.onSurface),
+      shape: RoundedRectangleBorder(borderRadius: AppBorders.borderRadiusMD),
       itemBuilder: (context) {
         final authViewModel = ref.read(authViewModelProvider);
         final enableIncomes = authViewModel.currentUser?.enableIncomes ?? false;
-        
+
         return [
           const PopupMenuItem(
             value: 'recurring',

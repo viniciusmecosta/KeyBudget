@@ -491,6 +491,7 @@ class _CredentialDetailScreenState
   @override
   Widget build(BuildContext context) {
     final vm = ref.watch(credentialViewModelProvider);
+    final theme = Theme.of(context);
 
     return Scaffold(
       appBar: AppBar(

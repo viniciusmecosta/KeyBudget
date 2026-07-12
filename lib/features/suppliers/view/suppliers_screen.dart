@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:key_budget/app/config/app_theme.dart';
 import 'package:key_budget/app/utils/app_animations.dart';
 import 'package:key_budget/app/utils/navigation_utils.dart';
 import 'package:key_budget/app/widgets/empty_state_widget.dart';
+import 'package:key_budget/app/widgets/responsive_center.dart';
 import 'package:key_budget/features/auth/viewmodel/auth_viewmodel.dart';
 import 'package:key_budget/features/suppliers/view/add_supplier_screen.dart';
 import 'package:key_budget/features/suppliers/viewmodel/supplier_viewmodel.dart';
@@ -43,57 +45,82 @@ class _SuppliersScreenState extends ConsumerState<SuppliersScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Fornecedores'),
-      ),
+      appBar: AppBar(title: const Text('Fornecedores')),
       body: SafeArea(
-        child: AppAnimations.fadeIn(RefreshIndicator(
-          onRefresh: _handleRefresh,
-          child: Consumer(
+        child: AppAnimations.fadeInFromBottom(
+          Consumer(
             builder: (context, ref, _) {
-              final vm = ref.watch(supplierViewModelProvider);
-              if (vm.isLoading) {
-                return const SuppliersSkeleton();
-              }
-              if (vm.allSuppliers.isEmpty) {
-                return LayoutBuilder(builder: (context, constraints) {
-                  return SingleChildScrollView(
-                    physics: const AlwaysScrollableScrollPhysics(),
-                    child: ConstrainedBox(
-                      constraints:
-                          BoxConstraints(minHeight: constraints.maxHeight),
-                      child: EmptyStateWidget(
-                        icon: Icons.store_mall_directory_outlined,
-                        message: 'Nenhum fornecedor encontrado.',
-                        buttonText: 'Adicionar Fornecedor',
-                        onButtonPressed: () => NavigationUtils.push(
-                            context, const AddSupplierScreen()),
-                      ),
+              final viewModel = ref.watch(supplierViewModelProvider);
+
+              return RefreshIndicator(
+                onRefresh: _handleRefresh,
+                color: theme.colorScheme.primary,
+                backgroundColor: theme.colorScheme.surface,
+                strokeWidth: 2.5,
+                child: ResponsiveCenter(
+                  child: CustomScrollView(
+                    physics: const BouncingScrollPhysics(
+                      parent: AlwaysScrollableScrollPhysics(),
                     ),
-                  );
-                });
-              }
-              return ListView.builder(
-                padding: const EdgeInsets.fromLTRB(AppTheme.defaultPadding,
-                    AppTheme.defaultPadding, AppTheme.defaultPadding, 80),
-                itemCount: vm.allSuppliers.length,
-                itemBuilder: (context, index) {
-                  final supplier = vm.allSuppliers[index];
-                  return SupplierListTile(supplier: supplier);
-                },
+                    slivers: [
+                      if (viewModel.isLoading)
+                        const SuppliersSkeleton()
+                      else if (viewModel.allSuppliers.isEmpty)
+                        SliverFillRemaining(
+                          hasScrollBody: false,
+                          child: EmptyStateWidget(
+                            icon: Icons.storefront_outlined,
+                            message: 'Nenhum fornecedor encontrado.',
+                            buttonText: 'Adicionar Fornecedor',
+                            onButtonPressed: () => NavigationUtils.push(
+                              context,
+                              const AddSupplierScreen(),
+                            ),
+                          ),
+                        )
+                      else
+                        SliverPadding(
+                          padding: const EdgeInsets.all(
+                            AppTheme.defaultPadding,
+                          ),
+                          sliver: SliverList(
+                            delegate: SliverChildBuilderDelegate((
+                              context,
+                              index,
+                            ) {
+                              final supplier = viewModel.allSuppliers[index];
+                              return SupplierListTile(supplier: supplier);
+                            }, childCount: viewModel.allSuppliers.length),
+                          ),
+                        ),
+                      const SliverPadding(padding: EdgeInsets.only(bottom: 80)),
+                    ],
+                  ),
+                ),
               );
             },
           ),
-        )),
+        ),
       ),
-      floatingActionButton: AppAnimations.scaleIn(FloatingActionButton.extended(
-        heroTag: 'fab_suppliers',
-        onPressed: () =>
-            NavigationUtils.push(context, const AddSupplierScreen()),
-        icon: const Icon(Icons.add),
-        label: const Text("Novo Fornecedor"),
-      )),
+      floatingActionButton: AppAnimations.scaleIn(
+        FloatingActionButton.extended(
+          heroTag: 'fab_suppliers',
+          onPressed: () {
+            HapticFeedback.lightImpact();
+            NavigationUtils.push(context, const AddSupplierScreen());
+          },
+          icon: const Icon(Icons.add_rounded),
+          label: const Text("Novo Fornecedor"),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+          backgroundColor: theme.colorScheme.primary,
+          foregroundColor: theme.colorScheme.onPrimary,
+          elevation: 0,
+        ),
+      ),
     );
   }
 }
@@ -106,60 +133,59 @@ class SuppliersSkeleton extends ConsumerWidget {
     final theme = Theme.of(context);
     final shimmerColor = theme.colorScheme.surface;
 
-    return ListView.builder(
-      padding: const EdgeInsets.fromLTRB(AppTheme.defaultPadding,
-          AppTheme.defaultPadding, AppTheme.defaultPadding, 80),
-      itemCount: 8,
-      itemBuilder: (context, index) {
-        return Container(
-          margin: const EdgeInsets.only(bottom: AppTheme.spaceS),
-          padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(
-            color: theme.colorScheme.surfaceContainerHighest,
-            borderRadius: BorderRadius.circular(16),
-          ),
-          child: Row(
-            children: [
-              Container(
-                width: 48,
-                height: 48,
+    return SliverPadding(
+      padding: const EdgeInsets.all(AppTheme.defaultPadding),
+      sliver: SliverList(
+        delegate: SliverChildBuilderDelegate((context, index) {
+          return Container(
+                margin: const EdgeInsets.only(bottom: AppTheme.spaceS),
+                padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  color: theme.colorScheme.surface,
-                  shape: BoxShape.circle,
+                  color: theme.colorScheme.surfaceContainerHighest,
+                  borderRadius: BorderRadius.circular(16),
                 ),
-              ),
-              const SizedBox(width: AppTheme.spaceM),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+                child: Row(
                   children: [
                     Container(
-                      height: 16,
-                      width: double.infinity,
+                      width: 48,
+                      height: 48,
                       decoration: BoxDecoration(
                         color: theme.colorScheme.surface,
-                        borderRadius: BorderRadius.circular(AppTheme.radiusS),
+                        shape: BoxShape.circle,
                       ),
                     ),
-                    const SizedBox(height: 8),
-                    Container(
-                      height: 12,
-                      width: 120,
-                      decoration: BoxDecoration(
-                        color: theme.colorScheme.surface,
-                        borderRadius: BorderRadius.circular(AppTheme.radiusS),
+                    const SizedBox(width: AppTheme.spaceM),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Container(
+                            height: 16,
+                            width: double.infinity,
+                            decoration: BoxDecoration(
+                              color: theme.colorScheme.surface,
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          Container(
+                            height: 12,
+                            width: 120,
+                            decoration: BoxDecoration(
+                              color: theme.colorScheme.surface,
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                          ),
+                        ],
                       ),
                     ),
                   ],
                 ),
-              ),
-            ],
-          ),
-        ).animate(onPlay: (controller) => controller.repeat()).shimmer(
-              duration: 1500.ms,
-              color: shimmerColor,
-            );
-      },
+              )
+              .animate(onPlay: (controller) => controller.repeat())
+              .shimmer(duration: 1500.ms, color: shimmerColor);
+        }, childCount: 8),
+      ),
     );
   }
 }

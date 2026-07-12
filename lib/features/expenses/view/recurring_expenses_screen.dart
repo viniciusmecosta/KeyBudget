@@ -15,27 +15,26 @@ class RecurringExpensesScreen extends ConsumerWidget {
     final theme = Theme.of(context);
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Despesas Recorrentes'),
-      ),
+      appBar: AppBar(title: const Text('Despesas Recorrentes')),
       body: viewModel.isLoading
           ? Center(
               child: CircularProgressIndicator(
-              color: theme.colorScheme.primary,
-            ))
+                color: theme.colorScheme.primary,
+              ),
+            )
           : viewModel.recurringExpenses.isEmpty
-              ? const EmptyStateWidget(
-                  icon: Icons.replay_circle_filled_outlined,
-                  message: 'Nenhuma despesa recorrente encontrada.',
-                )
-              : ListView.builder(
-                  padding: const EdgeInsets.all(AppSpacing.md),
-                  itemCount: viewModel.recurringExpenses.length,
-                  itemBuilder: (context, index) {
-                    final recurring = viewModel.recurringExpenses[index];
-                    return RecurringExpenseListTile(expense: recurring);
-                  },
-                ),
+          ? const EmptyStateWidget(
+              icon: Icons.replay_circle_filled_outlined,
+              message: 'Nenhuma despesa recorrente encontrada.',
+            )
+          : ListView.builder(
+              padding: const EdgeInsets.all(AppSpacing.md),
+              itemCount: viewModel.recurringExpenses.length,
+              itemBuilder: (context, index) {
+                final recurring = viewModel.recurringExpenses[index];
+                return RecurringExpenseListTile(expense: recurring);
+              },
+            ),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () => Navigator.of(context).push(
           MaterialPageRoute(

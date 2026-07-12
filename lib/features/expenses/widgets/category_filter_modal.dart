@@ -43,16 +43,32 @@ class _CategoryFilterModalState extends ConsumerState<CategoryFilterModal> {
             ),
           ),
           const SizedBox(height: AppSpacing.lg),
-          if (ref.watch(authViewModelProvider).currentUser?.enableIncomes ?? false) ...[
+          if (ref.watch(authViewModelProvider).currentUser?.enableIncomes ??
+              false) ...[
             SingleChildScrollView(
               scrollDirection: Axis.horizontal,
               child: Row(
                 children: [
-                  _buildTypeFilterChip(context, 'Todos', null, expenseViewModel.filterIsIncome),
+                  _buildTypeFilterChip(
+                    context,
+                    'Todos',
+                    null,
+                    expenseViewModel.filterIsIncome,
+                  ),
                   const SizedBox(width: AppSpacing.sm),
-                  _buildTypeFilterChip(context, 'Receitas', true, expenseViewModel.filterIsIncome),
+                  _buildTypeFilterChip(
+                    context,
+                    'Receitas',
+                    true,
+                    expenseViewModel.filterIsIncome,
+                  ),
                   const SizedBox(width: AppSpacing.sm),
-                  _buildTypeFilterChip(context, 'Despesas', false, expenseViewModel.filterIsIncome),
+                  _buildTypeFilterChip(
+                    context,
+                    'Despesas',
+                    false,
+                    expenseViewModel.filterIsIncome,
+                  ),
                 ],
               ),
             ),
@@ -74,22 +90,25 @@ class _CategoryFilterModalState extends ConsumerState<CategoryFilterModal> {
             child: ListView(
               shrinkWrap: true,
               children: categoryViewModel.categories.map((category) {
-                final isSelected =
-                    expenseViewModel.selectedCategoryIds.contains(category.id);
+                final isSelected = expenseViewModel.selectedCategoryIds
+                    .contains(category.id);
                 return Container(
                   margin: const EdgeInsets.only(bottom: AppSpacing.xs),
                   decoration: BoxDecoration(
                     color: isSelected
-                        ? theme.colorScheme.primary
-                            .withAlpha((255 * 0.08).round())
+                        ? theme.colorScheme.primary.withAlpha(
+                            (255 * 0.08).round(),
+                          )
                         : Colors.transparent,
                     borderRadius: AppBorders.borderRadiusMD,
                     border: Border.all(
                       color: isSelected
-                          ? theme.colorScheme.primary
-                              .withAlpha((255 * 0.2).round())
-                          : theme.colorScheme.outline
-                              .withAlpha((255 * 0.1).round()),
+                          ? theme.colorScheme.primary.withAlpha(
+                              (255 * 0.2).round(),
+                            )
+                          : theme.colorScheme.outline.withAlpha(
+                              (255 * 0.1).round(),
+                            ),
                     ),
                   ),
                   child: CheckboxListTile(
@@ -106,7 +125,8 @@ class _CategoryFilterModalState extends ConsumerState<CategoryFilterModal> {
                     activeColor: theme.colorScheme.primary,
                     onChanged: (value) {
                       final currentSelection = List<String>.from(
-                          expenseViewModel.selectedCategoryIds);
+                        expenseViewModel.selectedCategoryIds,
+                      );
                       if (value == true) {
                         currentSelection.add(category.id!);
                       } else {
@@ -137,7 +157,12 @@ class _CategoryFilterModalState extends ConsumerState<CategoryFilterModal> {
     );
   }
 
-  Widget _buildTypeFilterChip(BuildContext context, String label, bool? typeValue, bool? currentValue) {
+  Widget _buildTypeFilterChip(
+    BuildContext context,
+    String label,
+    bool? typeValue,
+    bool? currentValue,
+  ) {
     final theme = Theme.of(context);
     final expenseViewModel = ref.read(expenseViewModelProvider);
     final isSelected = typeValue == currentValue;
@@ -151,13 +176,17 @@ class _CategoryFilterModalState extends ConsumerState<CategoryFilterModal> {
       backgroundColor: theme.colorScheme.surface,
       selectedColor: theme.colorScheme.primaryContainer,
       labelStyle: TextStyle(
-        color: isSelected ? theme.colorScheme.onPrimaryContainer : theme.colorScheme.onSurface,
+        color: isSelected
+            ? theme.colorScheme.onPrimaryContainer
+            : theme.colorScheme.onSurface,
         fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
       ),
       shape: RoundedRectangleBorder(
         borderRadius: AppBorders.borderRadiusL,
         side: BorderSide(
-          color: isSelected ? Colors.transparent : theme.colorScheme.outline.withAlpha((255 * 0.5).round()),
+          color: isSelected
+              ? Colors.transparent
+              : theme.colorScheme.outline.withAlpha((255 * 0.5).round()),
         ),
       ),
     );

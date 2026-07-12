@@ -30,16 +30,18 @@ class SupplierRepository {
   }
 
   Stream<List<Supplier>> getSuppliersStreamForUser(String userId) {
-    final querySnapshot =
-        _getSuppliersCollection(userId).orderBy('name').snapshots();
-    return querySnapshot
-        .map((snapshot) => snapshot.docs.map((doc) => doc.data()).toList());
+    final querySnapshot = _getSuppliersCollection(
+      userId,
+    ).orderBy('name').snapshots();
+    return querySnapshot.map(
+      (snapshot) => snapshot.docs.map((doc) => doc.data()).toList(),
+    );
   }
 
   Future<void> updateSupplier(String userId, Supplier supplier) async {
-    await _getSuppliersCollection(userId)
-        .doc(supplier.id)
-        .update(supplier.toMap());
+    await _getSuppliersCollection(
+      userId,
+    ).doc(supplier.id).update(supplier.toMap());
   }
 
   Future<void> deleteSupplier(String userId, String supplierId) async {
@@ -58,5 +60,6 @@ class SupplierRepository {
   }
 }
 
-final supplierRepositoryProvider =
-    Provider<SupplierRepository>((ref) => SupplierRepository());
+final supplierRepositoryProvider = Provider<SupplierRepository>(
+  (ref) => SupplierRepository(),
+);

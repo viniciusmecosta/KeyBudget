@@ -45,10 +45,7 @@ class _LockScreenState extends ConsumerState<LockScreen>
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     super.didChangeAppLifecycleState(state);
-    if (state == AppLifecycleState.resumed) {
-      _authenticate();
-    } else if (state == AppLifecycleState.paused) {
-      LocalAuthService().stopAuthentication();
+    if (state == AppLifecycleState.paused) {
       if (mounted) {
         setState(() {
           _isAuthenticating = false;

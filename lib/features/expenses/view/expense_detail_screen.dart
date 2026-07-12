@@ -35,18 +35,21 @@ class _ExpenseDetailScreenState extends ConsumerState<ExpenseDetailScreen> {
   ExpenseCategory? _selectedCategory;
   bool _isEditing = false;
   bool _isSaving = false;
+  bool _isDeleting = false;
   late bool _isIncome;
 
   @override
   void initState() {
     super.initState();
     _amountController = MoneyMaskedTextController(
-        decimalSeparator: ',',
-        thousandSeparator: '.',
-        leftSymbol: 'R\$ ',
-        initialValue: widget.expense.amount);
-    _motivationController =
-        TextEditingController(text: widget.expense.motivation);
+      decimalSeparator: ',',
+      thousandSeparator: '.',
+      leftSymbol: 'R\$ ',
+      initialValue: widget.expense.amount,
+    );
+    _motivationController = TextEditingController(
+      text: widget.expense.motivation,
+    );
     _locationController = TextEditingController(text: widget.expense.location);
     _selectedDate = widget.expense.date;
     _selectedCategory = ref
@@ -85,8 +88,9 @@ class _ExpenseDetailScreenState extends ConsumerState<ExpenseDetailScreen> {
       motivation: _motivationController.text.isNotEmpty
           ? _motivationController.text
           : null,
-      location:
-          _locationController.text.isNotEmpty ? _locationController.text : null,
+      location: _locationController.text.isNotEmpty
+          ? _locationController.text
+          : null,
       installmentGroupId: widget.expense.installmentGroupId,
       currentInstallment: widget.expense.currentInstallment,
       totalInstallments: widget.expense.totalInstallments,
@@ -117,8 +121,10 @@ class _ExpenseDetailScreenState extends ConsumerState<ExpenseDetailScreen> {
             mainAxisSize: MainAxisSize.min,
             children: [
               const ListTile(
-                title: Text('Opções de Exclusão',
-                    style: TextStyle(fontWeight: FontWeight.bold)),
+                title: Text(
+                  'Opções de Exclusão',
+                  style: TextStyle(fontWeight: FontWeight.bold),
+                ),
                 subtitle: Text('Esta despesa faz parte de um parcelamento.'),
               ),
               ListTile(
@@ -148,6 +154,7 @@ class _ExpenseDetailScreenState extends ConsumerState<ExpenseDetailScreen> {
 
   void _executeDelete({required bool deleteGroup}) async {
     HapticFeedback.mediumImpact();
+    setState(() => _isDeleting = true);
 
     final authViewModel = ref.read(authViewModelProvider);
     final userId = authViewModel.currentUser!.id;
@@ -158,10 +165,14 @@ class _ExpenseDetailScreenState extends ConsumerState<ExpenseDetailScreen> {
 
     if (deleteGroup && deletedExpense.installmentGroupId != null) {
       await expenseViewModel.deleteInstallmentGroup(
-          userId, deletedExpense.installmentGroupId!);
+        userId,
+        deletedExpense.installmentGroupId!,
+      );
       if (currentContext.mounted) {
         SnackbarService.showSuccess(
-            currentContext, 'Parcelamento excluído com sucesso!');
+          currentContext,
+          'Parcelamento excluído com sucesso!',
+        );
         Navigator.of(currentContext).pop();
       }
     } else {
@@ -177,167 +188,203 @@ class _ExpenseDetailScreenState extends ConsumerState<ExpenseDetailScreen> {
         Navigator.of(currentContext).pop();
       }
     }
+
+    if (mounted) {
+      setState(() => _isDeleting = false);
+    }
   }
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     final related = widget.expense.installmentGroupId != null
         ? ref
-            .watch(expenseViewModelProvider)
-            .getRelatedInstallments(widget.expense.installmentGroupId!)
+              .watch(expenseViewModelProvider)
+              .getRelatedInstallments(widget.expense.installmentGroupId!)
         : <Expense>[];
-    
+
     final authViewModel = ref.watch(authViewModelProvider);
     final enableIncomes = authViewModel.currentUser?.enableIncomes ?? false;
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(_isEditing
-            ? (_isIncome ? 'Editar Receita' : 'Editar Despesa')
-            : (_locationController.text.isNotEmpty
-                ? _locationController.text
-                : (_isIncome ? 'Detalhes da Receita' : 'Detalhes da Despesa'))),
+        title: Text(
+          _isEditing
+              ? (_isIncome ? 'Editar Receita' : 'Editar Despesa')
+              : (_locationController.text.isNotEmpty
+                    ? _locationController.text
+                    : (_isIncome
+                          ? 'Detalhes da Receita'
+                          : 'Detalhes da Despesa')),
+        ),
         actions: [
           if (!_isEditing)
             IconButton(
-              icon: const Icon(Icons.delete),
-              onPressed: _deleteExpense,
+              icon: const Icon(Icons.edit_outlined),
+              tooltip: 'Editar',
+              onPressed: () => setState(() => _isEditing = true),
             ),
-          IconButton(
-            icon: Icon(_isEditing ? Icons.check : Icons.edit),
-            onPressed: () {
-              if (_isEditing) {
-                _saveChanges();
-              } else {
-                setState(() => _isEditing = true);
-              }
-            },
-          ),
+          if (!_isEditing)
+            _isDeleting
+                ? const Padding(
+                    padding: EdgeInsets.symmetric(horizontal: 16.0),
+                    child: Center(
+                      child: SizedBox(
+                        width: 24,
+                        height: 24,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      ),
+                    ),
+                  )
+                : IconButton(
+                    icon: Icon(Icons.delete_outline, color: theme.colorScheme.error),
+                    tooltip: 'Excluir',
+                    onPressed: _deleteExpense,
+                  ),
+          if (_isEditing)
+            IconButton(
+              icon: const Icon(Icons.check),
+              tooltip: 'Salvar',
+              onPressed: _saveChanges,
+            ),
         ],
       ),
-      body: AppAnimations.fadeInFromBottom(Padding(
-        padding: const EdgeInsets.all(AppSpacing.md),
-        child: Column(
-          children: [
-            if (_isEditing && enableIncomes)
-              Padding(
-                padding: const EdgeInsets.only(bottom: AppSpacing.md),
-                child: SizedBox(
-                  width: double.infinity,
-                  child: SegmentedButton<bool>(
-                    style: SegmentedButton.styleFrom(
-                      selectedBackgroundColor: _isIncome ? Colors.greenAccent[400] : Theme.of(context).colorScheme.error,
-                      selectedForegroundColor: Colors.white,
+      body: AppAnimations.fadeInFromBottom(
+        Padding(
+          padding: const EdgeInsets.all(AppSpacing.md),
+          child: Column(
+            children: [
+              if (_isEditing && enableIncomes)
+                Padding(
+                  padding: const EdgeInsets.only(bottom: AppSpacing.md),
+                  child: SizedBox(
+                    width: double.infinity,
+                    child: SegmentedButton<bool>(
+                      style: SegmentedButton.styleFrom(
+                        selectedBackgroundColor: _isIncome
+                            ? Colors.greenAccent[400]
+                            : Theme.of(context).colorScheme.error,
+                        selectedForegroundColor: Colors.white,
+                      ),
+                      segments: const [
+                        ButtonSegment<bool>(
+                          value: false,
+                          label: Text('Despesa'),
+                          icon: Icon(Icons.arrow_circle_down_rounded),
+                        ),
+                        ButtonSegment<bool>(
+                          value: true,
+                          label: Text('Receita'),
+                          icon: Icon(Icons.monetization_on_rounded),
+                        ),
+                      ],
+                      selected: {_isIncome},
+                      onSelectionChanged: (Set<bool> newSelection) {
+                        setState(() {
+                          _isIncome = newSelection.first;
+                          if (_isIncome) {
+                            _selectedCategory = null;
+                          }
+                        });
+                      },
                     ),
-                    segments: const [
-                      ButtonSegment<bool>(
-                        value: false,
-                        label: Text('Despesa'),
-                        icon: Icon(Icons.arrow_circle_down_rounded),
-                      ),
-                      ButtonSegment<bool>(
-                        value: true,
-                        label: Text('Receita'),
-                        icon: Icon(Icons.monetization_on_rounded),
-                      ),
-                    ],
-                    selected: {_isIncome},
-                    onSelectionChanged: (Set<bool> newSelection) {
-                      setState(() {
-                        _isIncome = newSelection.first;
-                        if (_isIncome) {
-                          _selectedCategory = null;
-                        }
-                      });
-                    },
                   ),
                 ),
-              ),
-            Expanded(
-              child: ExpenseForm(
-                formKey: _formKey,
-                amountController: _amountController,
-                motivationController: _motivationController,
-                locationController: _locationController,
-                selectedDate: _selectedDate,
-                selectedCategory: _selectedCategory,
-                onDateChanged: (date) {
-                  setState(() {
-                    _selectedDate = date;
-                  });
-                },
-                onCategoryChanged: (category) {
-                  setState(() {
-                    _selectedCategory = category;
-                  });
-                },
-                isEditing: _isEditing,
-                isIncome: _isIncome,
-                bottomWidgets: related.isEmpty
-                    ? null
-                    : [
-                        const SizedBox(height: AppSpacing.lg),
-                        Text('Parcelas Relacionadas',
-                            style: Theme.of(context).textTheme.titleMedium),
-                        const SizedBox(height: AppSpacing.sm),
-                        ...related.map((e) {
-                          final isCurrent = e.id == widget.expense.id;
-                          return Padding(
-                            padding:
-                                const EdgeInsets.only(bottom: AppSpacing.sm),
-                            child: InkWell(
-                              borderRadius: BorderRadius.circular(8),
-                              onTap: () {
-                                if (!isCurrent) {
-                                  Navigator.of(context).pushReplacement(
-                                    MaterialPageRoute(
-                                      builder: (_) =>
-                                          ExpenseDetailScreen(expense: e),
+              Expanded(
+                child: ExpenseForm(
+                  formKey: _formKey,
+                  amountController: _amountController,
+                  motivationController: _motivationController,
+                  locationController: _locationController,
+                  selectedDate: _selectedDate,
+                  selectedCategory: _selectedCategory,
+                  onDateChanged: (date) {
+                    setState(() {
+                      _selectedDate = date;
+                    });
+                  },
+                  onCategoryChanged: (category) {
+                    setState(() {
+                      _selectedCategory = category;
+                    });
+                  },
+                  isEditing: _isEditing,
+                  isIncome: _isIncome,
+                  bottomWidgets: related.isEmpty
+                      ? null
+                      : [
+                          const SizedBox(height: AppSpacing.lg),
+                          Text(
+                            'Parcelas Relacionadas',
+                            style: Theme.of(context).textTheme.titleMedium,
+                          ),
+                          const SizedBox(height: AppSpacing.sm),
+                          ...related.map((e) {
+                            final isCurrent = e.id == widget.expense.id;
+                            return Padding(
+                              padding: const EdgeInsets.only(
+                                bottom: AppSpacing.sm,
+                              ),
+                              child: InkWell(
+                                borderRadius: BorderRadius.circular(8),
+                                onTap: () {
+                                  if (!isCurrent) {
+                                    Navigator.of(context).pushReplacement(
+                                      MaterialPageRoute(
+                                        builder: (_) =>
+                                            ExpenseDetailScreen(expense: e),
+                                      ),
+                                    );
+                                  }
+                                },
+                                child: Card(
+                                  margin: EdgeInsets.zero,
+                                  elevation: isCurrent ? 2 : 0,
+                                  shape: RoundedRectangleBorder(
+                                    side: BorderSide(
+                                      color: isCurrent
+                                          ? Theme.of(
+                                              context,
+                                            ).colorScheme.primary
+                                          : Theme.of(context).dividerColor,
+                                      width: isCurrent ? 2 : 1,
                                     ),
-                                  );
-                                }
-                              },
-                              child: Card(
-                                margin: EdgeInsets.zero,
-                                elevation: isCurrent ? 2 : 0,
-                                shape: RoundedRectangleBorder(
-                                  side: BorderSide(
-                                    color: isCurrent
-                                        ? Theme.of(context).colorScheme.primary
-                                        : Theme.of(context).dividerColor,
-                                    width: isCurrent ? 2 : 1,
+                                    borderRadius: BorderRadius.circular(8),
                                   ),
-                                  borderRadius: BorderRadius.circular(8),
-                                ),
-                                child: ListTile(
-                                  title: Text(e.motivation ??
-                                      'Parcela ${e.currentInstallment}/${e.totalInstallments}'),
-                                  subtitle: Text(
-                                      DateFormat('dd/MM/yyyy').format(e.date)),
-                                  trailing: Text(
-                                      'R\$ ${e.amount.toStringAsFixed(2).replaceAll('.', ',')}'),
+                                  child: ListTile(
+                                    title: Text(
+                                      e.motivation ??
+                                          'Parcela ${e.currentInstallment}/${e.totalInstallments}',
+                                    ),
+                                    subtitle: Text(
+                                      DateFormat('dd/MM/yyyy').format(e.date),
+                                    ),
+                                    trailing: Text(
+                                      'R\$ ${e.amount.toStringAsFixed(2).replaceAll('.', ',')}',
+                                    ),
+                                  ),
                                 ),
                               ),
-                            ),
-                          );
-                        }),
-                      ],
-              ),
-            ),
-            if (_isEditing) ...[
-              const SizedBox(height: AppSpacing.md),
-              SizedBox(
-                width: double.infinity,
-                child: AppButton(
-                  onPressed: _saveChanges,
-                  isLoading: _isSaving,
-                  label: 'Salvar Alterações',
+                            );
+                          }),
+                        ],
                 ),
-              )
-            ]
-          ],
+              ),
+              if (_isEditing) ...[
+                const SizedBox(height: AppSpacing.md),
+                SizedBox(
+                  width: double.infinity,
+                  child: AppButton(
+                    onPressed: _saveChanges,
+                    isLoading: _isSaving,
+                    label: 'Salvar Alterações',
+                  ),
+                ),
+              ],
+            ],
+          ),
         ),
-      )),
+      ),
     );
   }
 }

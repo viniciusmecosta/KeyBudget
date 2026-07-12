@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:key_budget/app/config/app_theme.dart';
 import 'package:key_budget/app/utils/app_animations.dart';
+import 'package:key_budget/core/design_system/widgets/app_button.dart';
 import 'package:key_budget/core/services/snackbar_service.dart';
 import 'package:key_budget/features/auth/viewmodel/auth_viewmodel.dart';
 import 'package:key_budget/features/suppliers/viewmodel/supplier_viewmodel.dart';
@@ -51,8 +52,9 @@ class _AddSupplierScreenState extends ConsumerState<AddSupplierScreen> {
     await viewModel.addSupplier(
       userId: userId,
       name: _nameController.text,
-      representativeName:
-          _repNameController.text.isNotEmpty ? _repNameController.text : null,
+      representativeName: _repNameController.text.isNotEmpty
+          ? _repNameController.text
+          : null,
       email: _emailController.text.isNotEmpty ? _emailController.text : null,
       phoneNumber: phoneMaskFormatter.unmaskText(_phoneController.text),
       photoPath: _photoPath,
@@ -70,41 +72,39 @@ class _AddSupplierScreenState extends ConsumerState<AddSupplierScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: const Text('Adicionar Fornecedor')),
-      body: AppAnimations.fadeInFromBottom(Padding(
-        padding: const EdgeInsets.all(AppTheme.defaultPadding),
-        child: Column(
-          children: [
-            Expanded(
-              child: SupplierForm(
-                formKey: _formKey,
-                nameController: _nameController,
-                repNameController: _repNameController,
-                emailController: _emailController,
-                phoneController: _phoneController,
-                notesController: _notesController,
-                photoPath: _photoPath,
-                onPhotoChanged: (path) {
-                  setState(() {
-                    _photoPath = path;
-                  });
-                },
+      body: AppAnimations.fadeInFromBottom(
+        Padding(
+          padding: const EdgeInsets.all(AppTheme.defaultPadding),
+          child: Column(
+            children: [
+              Expanded(
+                child: SupplierForm(
+                  formKey: _formKey,
+                  nameController: _nameController,
+                  repNameController: _repNameController,
+                  emailController: _emailController,
+                  phoneController: _phoneController,
+                  notesController: _notesController,
+                  photoPath: _photoPath,
+                  onPhotoChanged: (path) {
+                    setState(() {
+                      _photoPath = path;
+                    });
+                  },
+                ),
               ),
-            ),
-            const SizedBox(height: 16),
-            ElevatedButton(
-              onPressed: _isSaving ? null : _submit,
-              child: _isSaving
-                  ? SizedBox(
-                      height: 24,
-                      width: 24,
-                      child: CircularProgressIndicator(
-                          color: Theme.of(context).colorScheme.onPrimary,
-                          strokeWidth: 2.0))
-                  : const Text('Salvar Fornecedor'),
-            ),
-          ],
+              SizedBox(
+                width: double.infinity,
+                child: AppButton(
+                  label: 'Salvar Fornecedor',
+                  onPressed: _submit,
+                  isLoading: _isSaving,
+                ),
+              ),
+            ],
+          ),
         ),
-      )),
+      ),
     );
   }
 }

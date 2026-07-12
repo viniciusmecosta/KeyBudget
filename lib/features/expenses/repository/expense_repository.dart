@@ -39,25 +39,26 @@ class ExpenseRepository {
   }
 
   Stream<List<Expense>> getExpensesStreamForUser(String userId) {
-    final querySnapshot = _getExpensesCollection(userId)
-        .orderBy('date', descending: true)
-        .snapshots();
+    final querySnapshot = _getExpensesCollection(
+      userId,
+    ).orderBy('date', descending: true).snapshots();
 
-    return querySnapshot
-        .map((snapshot) => snapshot.docs.map((doc) => doc.data()).toList());
+    return querySnapshot.map(
+      (snapshot) => snapshot.docs.map((doc) => doc.data()).toList(),
+    );
   }
 
   Future<List<Expense>> getExpensesForUser(String userId) async {
-    final querySnapshot = await _getExpensesCollection(userId)
-        .orderBy('date', descending: true)
-        .get();
+    final querySnapshot = await _getExpensesCollection(
+      userId,
+    ).orderBy('date', descending: true).get();
     return querySnapshot.docs.map((doc) => doc.data()).toList();
   }
 
   Future<void> updateExpense(String userId, Expense expense) async {
-    await _getExpensesCollection(userId)
-        .doc(expense.id)
-        .update(expense.toMap());
+    await _getExpensesCollection(
+      userId,
+    ).doc(expense.id).update(expense.toMap());
   }
 
   Future<void> deleteExpense(String userId, String expenseId) async {
@@ -65,5 +66,6 @@ class ExpenseRepository {
   }
 }
 
-final expenseRepositoryProvider =
-    Provider<ExpenseRepository>((ref) => ExpenseRepository());
+final expenseRepositoryProvider = Provider<ExpenseRepository>(
+  (ref) => ExpenseRepository(),
+);
