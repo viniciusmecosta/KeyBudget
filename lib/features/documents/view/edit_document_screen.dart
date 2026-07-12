@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:key_budget/app/utils/app_animations.dart';
 import 'package:key_budget/core/design_system/spacing/app_spacing.dart';
 import 'package:key_budget/core/design_system/widgets/app_button.dart';
 import 'package:key_budget/core/models/document_model.dart';
@@ -35,11 +36,14 @@ class _EditDocumentScreenState extends ConsumerState<EditDocumentScreen> {
     _numberController = TextEditingController(text: widget.document.number);
     _issueDate = ValueNotifier(widget.document.issueDate);
     _expiryDate = ValueNotifier(widget.document.expiryDate);
-    _additionalFields = ValueNotifier(widget.document.additionalFields.entries
-        .map((e) => {'name': e.key, 'value': e.value})
-        .toList());
-    _attachments =
-        ValueNotifier(List<Attachment>.from(widget.document.attachments));
+    _additionalFields = ValueNotifier(
+      widget.document.additionalFields.entries
+          .map((e) => {'name': e.key, 'value': e.value})
+          .toList(),
+    );
+    _attachments = ValueNotifier(
+      List<Attachment>.from(widget.document.attachments),
+    );
   }
 
   void _submit() async {
@@ -56,22 +60,29 @@ class _EditDocumentScreenState extends ConsumerState<EditDocumentScreen> {
       expiryDate: _expiryDate.value,
       additionalFields: {
         for (var field in _additionalFields.value)
-          if (field['name']!.isNotEmpty) field['name']!: field['value']!
+          if (field['name']!.isNotEmpty) field['name']!: field['value']!,
       },
       attachments: _attachments.value,
     );
 
     final success = await viewModel.updateDocument(
-        userId, updatedDocument, widget.document);
+      userId,
+      updatedDocument,
+      widget.document,
+    );
 
     if (mounted) {
       if (success) {
         SnackbarService.showSuccess(
-            context, 'Documento atualizado com sucesso!');
+          context,
+          'Documento atualizado com sucesso!',
+        );
         Navigator.of(context).pop();
       } else {
         SnackbarService.showError(
-            context, viewModel.errorMessage ?? 'Ocorreu um erro.');
+          context,
+          viewModel.errorMessage ?? 'Ocorreu um erro.',
+        );
       }
     }
   }
@@ -80,24 +91,34 @@ class _EditDocumentScreenState extends ConsumerState<EditDocumentScreen> {
   Widget build(BuildContext context) {
     final viewModel = ref.watch(documentViewModelProvider);
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Editar Documento'),
-      ),
-      body: DocumentForm(
-        formKey: _formKey,
-        nameController: _nameController,
-        numberController: _numberController,
-        issueDate: _issueDate,
-        expiryDate: _expiryDate,
-        additionalFields: _additionalFields,
-        attachments: _attachments,
-      ),
-      bottomNavigationBar: Padding(
-        padding: const EdgeInsets.all(AppSpacing.md),
-        child: AppButton(
-          onPressed: _submit,
-          isLoading: viewModel.isLoading,
-          label: 'Salvar Alterações',
+      appBar: AppBar(title: const Text('Editar Documento')),
+      body: AppAnimations.fadeInFromBottom(
+        Padding(
+          padding: const EdgeInsets.all(AppSpacing.md),
+          child: Column(
+            children: [
+              Expanded(
+                child: DocumentForm(
+                  formKey: _formKey,
+                  nameController: _nameController,
+                  numberController: _numberController,
+                  issueDate: _issueDate,
+                  expiryDate: _expiryDate,
+                  additionalFields: _additionalFields,
+                  attachments: _attachments,
+                ),
+              ),
+              const SizedBox(height: AppSpacing.md),
+              SizedBox(
+                width: double.infinity,
+                child: AppButton(
+                  onPressed: _submit,
+                  isLoading: viewModel.isLoading,
+                  label: 'Salvar Alterações',
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );

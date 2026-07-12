@@ -116,8 +116,9 @@ class CredentialViewModel extends ChangeNotifier {
     _credentialsSubscription?.cancel();
     _foldersSubscription?.cancel();
 
-    _foldersSubscription =
-        _repository.getFoldersStreamForUser(userId).listen((folders) {
+    _foldersSubscription = _repository.getFoldersStreamForUser(userId).listen((
+      folders,
+    ) {
       _allFolders = folders;
       _updateDisplayList(animate: true);
     });
@@ -125,10 +126,10 @@ class CredentialViewModel extends ChangeNotifier {
     _credentialsSubscription = _repository
         .getCredentialsStreamForUser(userId)
         .listen((newCredentials) {
-      _allCredentials = newCredentials;
-      _updateDisplayList(animate: true);
-      if (_isLoading) _setLoading(false);
-    });
+          _allCredentials = newCredentials;
+          _updateDisplayList(animate: true);
+          if (_isLoading) _setLoading(false);
+        });
 
     _isListening = true;
   }
@@ -141,8 +142,9 @@ class CredentialViewModel extends ChangeNotifier {
       newList.addAll(_allFolders);
       newList.addAll(_allCredentials.where((c) => c.folderId == null));
     } else {
-      newList
-          .addAll(_allCredentials.where((c) => c.folderId == _currentFolderId));
+      newList.addAll(
+        _allCredentials.where((c) => c.folderId == _currentFolderId),
+      );
     }
 
     if (_searchQuery.isNotEmpty) {
@@ -182,11 +184,13 @@ class CredentialViewModel extends ChangeNotifier {
       bool existsInNew = false;
 
       if (oldItem is Folder) {
-        existsInNew = newList
-            .any((newItem) => newItem is Folder && newItem.id == oldItem.id);
+        existsInNew = newList.any(
+          (newItem) => newItem is Folder && newItem.id == oldItem.id,
+        );
       } else if (oldItem is Credential) {
         existsInNew = newList.any(
-            (newItem) => newItem is Credential && newItem.id == oldItem.id);
+          (newItem) => newItem is Credential && newItem.id == oldItem.id,
+        );
       }
 
       if (!existsInNew) {
@@ -199,7 +203,10 @@ class CredentialViewModel extends ChangeNotifier {
               animation: animation,
               child: removedItem is Folder
                   ? FolderListTile(
-                      folder: removedItem, onTap: () {}, onDelete: () {})
+                      folder: removedItem,
+                      onTap: () {},
+                      onDelete: () {},
+                    )
                   : CredentialListTile(credential: removedItem as Credential),
             ),
             duration: const Duration(milliseconds: 300),
@@ -213,17 +220,21 @@ class CredentialViewModel extends ChangeNotifier {
       int oldIndex = -1;
 
       if (newItem is Folder) {
-        oldIndex = _currentDisplayItems
-            .indexWhere((item) => item is Folder && item.id == newItem.id);
+        oldIndex = _currentDisplayItems.indexWhere(
+          (item) => item is Folder && item.id == newItem.id,
+        );
       } else if (newItem is Credential) {
-        oldIndex = _currentDisplayItems
-            .indexWhere((item) => item is Credential && item.id == newItem.id);
+        oldIndex = _currentDisplayItems.indexWhere(
+          (item) => item is Credential && item.id == newItem.id,
+        );
       }
 
       if (oldIndex == -1) {
         _currentDisplayItems.insert(i, newItem);
-        _listKey?.currentState
-            ?.insertItem(i, duration: const Duration(milliseconds: 300));
+        _listKey?.currentState?.insertItem(
+          i,
+          duration: const Duration(milliseconds: 300),
+        );
       } else {
         if (_currentDisplayItems[oldIndex] != newItem) {
           _currentDisplayItems[oldIndex] = newItem;
@@ -246,19 +257,18 @@ class CredentialViewModel extends ChangeNotifier {
 
   void enterFolder(String folderId) {
     _currentFolderId = folderId;
-    _updateDisplayList(animate: false);
+    notifyListeners();
+    _updateDisplayList(animate: true);
   }
 
   void exitFolder() {
     _currentFolderId = null;
-    _updateDisplayList(animate: false);
+    notifyListeners();
+    _updateDisplayList(animate: true);
   }
 
-  Future<void> createFolder(String userId, String name) async {
-    final folder = Folder(
-      name: name,
-      createdAt: DateTime.now(),
-    );
+  Future<void> createFolder(String userId, String name, {String? color}) async {
+    final folder = Folder(name: name, color: color, createdAt: DateTime.now());
     await _repository.addFolder(userId, folder);
   }
 
@@ -306,8 +316,9 @@ class CredentialViewModel extends ChangeNotifier {
   }) async {
     String passwordToSave = originalCredential.encryptedPassword;
     if (newPlainPassword != null && newPlainPassword.isNotEmpty) {
-      final decryptedOriginal =
-          decryptPassword(originalCredential.encryptedPassword);
+      final decryptedOriginal = decryptPassword(
+        originalCredential.encryptedPassword,
+      );
       if (newPlainPassword != decryptedOriginal) {
         passwordToSave = _encryptionService.encryptData(newPlainPassword);
       }
@@ -339,7 +350,10 @@ class CredentialViewModel extends ChangeNotifier {
     _setExportingCsv(true);
     try {
       return await _csvService.exportCredentials(
-          context, _allCredentials, decryptPassword);
+        context,
+        _allCredentials,
+        decryptPassword,
+      );
     } finally {
       _setExportingCsv(false);
     }
@@ -406,5 +420,6 @@ class CredentialViewModel extends ChangeNotifier {
   }
 }
 
-final credentialViewModelProvider =
-    ChangeNotifierProvider<CredentialViewModel>((ref) => CredentialViewModel());
+final credentialViewModelProvider = ChangeNotifierProvider<CredentialViewModel>(
+  (ref) => CredentialViewModel(),
+);

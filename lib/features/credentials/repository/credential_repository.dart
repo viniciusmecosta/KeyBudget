@@ -36,31 +36,34 @@ class CredentialRepository {
 
   Future<void> restoreCredential(String userId, Credential credential) async {
     if (credential.id != null) {
-      await _getCredentialsCollection(userId)
-          .doc(credential.id)
-          .set(credential);
+      await _getCredentialsCollection(
+        userId,
+      ).doc(credential.id).set(credential);
     } else {
       await addCredential(userId, credential);
     }
   }
 
   Stream<List<Credential>> getCredentialsStreamForUser(String userId) {
-    final querySnapshot =
-        _getCredentialsCollection(userId).orderBy('location').snapshots();
-    return querySnapshot
-        .map((snapshot) => snapshot.docs.map((doc) => doc.data()).toList());
+    final querySnapshot = _getCredentialsCollection(
+      userId,
+    ).orderBy('location').snapshots();
+    return querySnapshot.map(
+      (snapshot) => snapshot.docs.map((doc) => doc.data()).toList(),
+    );
   }
 
   Future<List<Credential>> getCredentialsForUser(String userId) async {
-    final querySnapshot =
-        await _getCredentialsCollection(userId).orderBy('location').get();
+    final querySnapshot = await _getCredentialsCollection(
+      userId,
+    ).orderBy('location').get();
     return querySnapshot.docs.map((doc) => doc.data()).toList();
   }
 
   Future<void> updateCredential(String userId, Credential credential) async {
-    await _getCredentialsCollection(userId)
-        .doc(credential.id)
-        .update(credential.toMap());
+    await _getCredentialsCollection(
+      userId,
+    ).doc(credential.id).update(credential.toMap());
   }
 
   Future<void> deleteCredential(String userId, String credentialId) async {
@@ -79,10 +82,12 @@ class CredentialRepository {
   }
 
   Stream<List<Folder>> getFoldersStreamForUser(String userId) {
-    final querySnapshot =
-        _getFoldersCollection(userId).orderBy('name').snapshots();
-    return querySnapshot
-        .map((snapshot) => snapshot.docs.map((doc) => doc.data()).toList());
+    final querySnapshot = _getFoldersCollection(
+      userId,
+    ).orderBy('name').snapshots();
+    return querySnapshot.map(
+      (snapshot) => snapshot.docs.map((doc) => doc.data()).toList(),
+    );
   }
 
   Future<void> addFolder(String userId, Folder folder) async {
@@ -93,9 +98,9 @@ class CredentialRepository {
     await _getFoldersCollection(userId).doc(folderId).delete();
 
     final batch = _firestore.batch();
-    final credentials = await _getCredentialsCollection(userId)
-        .where('folder_id', isEqualTo: folderId)
-        .get();
+    final credentials = await _getCredentialsCollection(
+      userId,
+    ).where('folder_id', isEqualTo: folderId).get();
 
     for (var doc in credentials.docs) {
       batch.update(doc.reference, {'folder_id': null});
@@ -104,5 +109,6 @@ class CredentialRepository {
   }
 }
 
-final credentialRepositoryProvider =
-    Provider<CredentialRepository>((ref) => CredentialRepository());
+final credentialRepositoryProvider = Provider<CredentialRepository>(
+  (ref) => CredentialRepository(),
+);
