@@ -76,12 +76,13 @@ class AnalysisViewModel extends ChangeNotifier {
     final now = DateTime.now();
     final nextPeriodOffset = _periodOffset + 1;
     final nextStartDate = DateTime(
-        now.year,
-        now.month -
-            _selectedMonthsCount +
-            1 -
-            (nextPeriodOffset * _selectedMonthsCount),
-        1);
+      now.year,
+      now.month -
+          _selectedMonthsCount +
+          1 -
+          (nextPeriodOffset * _selectedMonthsCount),
+      1,
+    );
     return !nextStartDate.isBefore(firstExpenseDate);
   }
 
@@ -133,14 +134,20 @@ class AnalysisViewModel extends ChangeNotifier {
   }
 
   double get totalOverall {
-    return allExpenses.where((exp) => exp.isIncome != true).fold(0.0, (sum, item) => sum + item.amount);
+    return allExpenses
+        .where((exp) => exp.isIncome != true)
+        .fold(0.0, (sum, item) => sum + item.amount);
   }
 
   double get totalCurrentMonth {
     final targetMonth = _selectedMonthForCategory ?? DateTime.now();
     return allExpenses
         .where(
-            (exp) => exp.date.year == targetMonth.year && exp.date.month == targetMonth.month && exp.isIncome != true)
+          (exp) =>
+              exp.date.year == targetMonth.year &&
+              exp.date.month == targetMonth.month &&
+              exp.isIncome != true,
+        )
         .fold(0.0, (sum, item) => sum + item.amount);
   }
 
@@ -148,7 +155,11 @@ class AnalysisViewModel extends ChangeNotifier {
     final targetMonth = _selectedMonthForCategory ?? DateTime.now();
     return allExpenses
         .where(
-            (exp) => exp.date.year == targetMonth.year && exp.date.month == targetMonth.month && exp.isIncome == true)
+          (exp) =>
+              exp.date.year == targetMonth.year &&
+              exp.date.month == targetMonth.month &&
+              exp.isIncome == true,
+        )
         .fold(0.0, (sum, item) => sum + item.amount);
   }
 
@@ -159,8 +170,11 @@ class AnalysisViewModel extends ChangeNotifier {
     for (var expense in allExpenses) {
       if (expense.isIncome == true) continue;
       final monthKey = DateFormat('yyyy-MM').format(expense.date);
-      data.update(monthKey, (value) => value + expense.amount,
-          ifAbsent: () => expense.amount);
+      data.update(
+        monthKey,
+        (value) => value + expense.amount,
+        ifAbsent: () => expense.amount,
+      );
     }
     return data;
   }
@@ -176,7 +190,11 @@ class AnalysisViewModel extends ChangeNotifier {
     final lastMonth = DateTime(targetMonth.year, targetMonth.month - 1);
     return allExpenses
         .where(
-            (exp) => exp.date.year == lastMonth.year && exp.date.month == lastMonth.month && exp.isIncome != true)
+          (exp) =>
+              exp.date.year == lastMonth.year &&
+              exp.date.month == lastMonth.month &&
+              exp.isIncome != true,
+        )
         .fold(0.0, (sum, item) => sum + item.amount);
   }
 
@@ -185,7 +203,11 @@ class AnalysisViewModel extends ChangeNotifier {
     final lastMonth = DateTime(targetMonth.year, targetMonth.month - 1);
     return allExpenses
         .where(
-            (exp) => exp.date.year == lastMonth.year && exp.date.month == lastMonth.month && exp.isIncome == true)
+          (exp) =>
+              exp.date.year == lastMonth.year &&
+              exp.date.month == lastMonth.month &&
+              exp.isIncome == true,
+        )
         .fold(0.0, (sum, item) => sum + item.amount);
   }
 
@@ -217,12 +239,18 @@ class AnalysisViewModel extends ChangeNotifier {
 
     final now = DateTime.now();
     final currentPeriodEndDate = DateTime(now.year, now.month + 1, 0);
-    final currentPeriodStartDate = DateTime(currentPeriodEndDate.year,
-        currentPeriodEndDate.month - _trendMonthsCount + 1, 1);
+    final currentPeriodStartDate = DateTime(
+      currentPeriodEndDate.year,
+      currentPeriodEndDate.month - _trendMonthsCount + 1,
+      1,
+    );
 
     for (int i = 0; i < _trendMonthsCount; i++) {
       final date = DateTime(
-          currentPeriodStartDate.year, currentPeriodStartDate.month + i, 1);
+        currentPeriodStartDate.year,
+        currentPeriodStartDate.month + i,
+        1,
+      );
       final monthKey = DateFormat('yyyy-MM').format(date);
       data[monthKey] = 0.0;
     }
@@ -247,12 +275,18 @@ class AnalysisViewModel extends ChangeNotifier {
 
     final now = DateTime.now();
     final currentPeriodEndDate = DateTime(now.year, now.month + 1, 0);
-    final currentPeriodStartDate = DateTime(currentPeriodEndDate.year,
-        currentPeriodEndDate.month - _trendMonthsCount + 1, 1);
+    final currentPeriodStartDate = DateTime(
+      currentPeriodEndDate.year,
+      currentPeriodEndDate.month - _trendMonthsCount + 1,
+      1,
+    );
 
     for (int i = 0; i < _trendMonthsCount; i++) {
       final date = DateTime(
-          currentPeriodStartDate.year, currentPeriodStartDate.month + i, 1);
+        currentPeriodStartDate.year,
+        currentPeriodStartDate.month + i,
+        1,
+      );
       final monthKey = DateFormat('yyyy-MM').format(date);
       data[monthKey] = (incomes: 0.0, expenses: 0.0);
     }
@@ -267,16 +301,20 @@ class AnalysisViewModel extends ChangeNotifier {
       if (data.containsKey(monthKey)) {
         final existing = data[monthKey]!;
         if (item.isIncome == true) {
-          data[monthKey] = (incomes: existing.incomes + item.amount, expenses: existing.expenses);
+          data[monthKey] = (
+            incomes: existing.incomes + item.amount,
+            expenses: existing.expenses,
+          );
         } else {
-          data[monthKey] = (incomes: existing.incomes, expenses: existing.expenses + item.amount);
+          data[monthKey] = (
+            incomes: existing.incomes,
+            expenses: existing.expenses + item.amount,
+          );
         }
       }
     }
     return data;
   }
-
-
 
   Map<String, double> get last6MonthsData => lastNMonthsData;
 
@@ -311,9 +349,15 @@ class AnalysisViewModel extends ChangeNotifier {
       ..sort((a, b) => a.date.compareTo(b.date));
     return DateTimeRange(
       start: DateTime(
-          sortedExpenses.first.date.year, sortedExpenses.first.date.month, 1),
+        sortedExpenses.first.date.year,
+        sortedExpenses.first.date.month,
+        1,
+      ),
       end: DateTime(
-          sortedExpenses.last.date.year, sortedExpenses.last.date.month + 1, 0),
+        sortedExpenses.last.date.year,
+        sortedExpenses.last.date.month + 1,
+        0,
+      ),
     );
   }
 
@@ -330,8 +374,11 @@ class AnalysisViewModel extends ChangeNotifier {
     for (var expense in expensesInMonth) {
       final category = categoryViewModel.getCategoryById(expense.categoryId);
       if (category != null) {
-        data.update(category, (value) => value + expense.amount,
-            ifAbsent: () => expense.amount);
+        data.update(
+          category,
+          (value) => value + expense.amount,
+          ifAbsent: () => expense.amount,
+        );
       }
     }
     return data;
@@ -342,12 +389,7 @@ class AnalysisViewModel extends ChangeNotifier {
     final values = data.values.where((v) => v > 0).toList();
 
     if (values.isEmpty) {
-      return {
-        'total': 0.0,
-        'average': 0.0,
-        'highest': 0.0,
-        'lowest': 0.0,
-      };
+      return {'total': 0.0, 'average': 0.0, 'highest': 0.0, 'lowest': 0.0};
     }
 
     return {
@@ -359,8 +401,9 @@ class AnalysisViewModel extends ChangeNotifier {
   }
 }
 
-final analysisViewModelProvider =
-    ChangeNotifierProvider<AnalysisViewModel>((ref) => AnalysisViewModel(
-          categoryViewModel: ref.read(categoryViewModelProvider),
-          expenseViewModel: ref.read(expenseViewModelProvider),
-        ));
+final analysisViewModelProvider = ChangeNotifierProvider<AnalysisViewModel>(
+  (ref) => AnalysisViewModel(
+    categoryViewModel: ref.read(categoryViewModelProvider),
+    expenseViewModel: ref.read(expenseViewModelProvider),
+  ),
+);

@@ -6,9 +6,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'package:key_budget/core/design_system/spacing/app_spacing.dart';
 import 'package:key_budget/core/design_system/widgets/app_card.dart';
+import 'package:key_budget/features/auth/viewmodel/auth_viewmodel.dart';
 
 import '../viewmodel/analysis_viewmodel.dart';
-import 'package:key_budget/features/auth/viewmodel/auth_viewmodel.dart';
 import 'empty_chart_state_widget.dart';
 
 class MonthlyTrendSectionWidget extends ConsumerWidget {
@@ -17,8 +17,9 @@ class MonthlyTrendSectionWidget extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final viewModel = ref.watch(analysisViewModelProvider);
-    final enableIncomes = ref.watch(authViewModelProvider).currentUser?.enableIncomes ?? false;
-    
+    final enableIncomes =
+        ref.watch(authViewModelProvider).currentUser?.enableIncomes ?? false;
+
     if (enableIncomes) {
       return _buildIncomesLayout(context, viewModel);
     }
@@ -28,8 +29,9 @@ class MonthlyTrendSectionWidget extends ConsumerWidget {
 
     if (chartEntries.isEmpty || chartEntries.every((e) => e.value == 0)) {
       return const EmptyChartStateWidget(
-          message: 'Nenhum dado para exibir no gráfico',
-          icon: Icons.show_chart);
+        message: 'Nenhum dado para exibir no gráfico',
+        icon: Icons.show_chart,
+      );
     }
 
     return AppCard(
@@ -47,15 +49,15 @@ class MonthlyTrendSectionWidget extends ConsumerWidget {
                     Text(
                       'Histórico Mensal',
                       style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                            fontWeight: FontWeight.bold,
-                          ),
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
                     const SizedBox(height: 4),
                     Text(
                       'Evolução ao longo do tempo',
                       style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                            color: Theme.of(context).colorScheme.onSurfaceVariant,
-                          ),
+                        color: Theme.of(context).colorScheme.onSurfaceVariant,
+                      ),
                     ),
                   ],
                 ),
@@ -66,7 +68,10 @@ class MonthlyTrendSectionWidget extends ConsumerWidget {
                   items: const [
                     DropdownMenuItem(value: 3, child: Text('Últimos 3 meses')),
                     DropdownMenuItem(value: 6, child: Text('Últimos 6 meses')),
-                    DropdownMenuItem(value: 12, child: Text('Últimos 12 meses')),
+                    DropdownMenuItem(
+                      value: 12,
+                      child: Text('Últimos 12 meses'),
+                    ),
                     DropdownMenuItem(value: 24, child: Text('Últimos 2 anos')),
                   ],
                   onChanged: (value) {
@@ -83,14 +88,21 @@ class MonthlyTrendSectionWidget extends ConsumerWidget {
     );
   }
 
-  Widget _buildIncomesLayout(BuildContext context, AnalysisViewModel viewModel) {
+  Widget _buildIncomesLayout(
+    BuildContext context,
+    AnalysisViewModel viewModel,
+  ) {
     final data = viewModel.lastNMonthsTrendData;
     final chartEntries = data.entries.toList();
 
-    if (chartEntries.isEmpty || chartEntries.every((e) => e.value.incomes == 0 && e.value.expenses == 0)) {
+    if (chartEntries.isEmpty ||
+        chartEntries.every(
+          (e) => e.value.incomes == 0 && e.value.expenses == 0,
+        )) {
       return const EmptyChartStateWidget(
-          message: 'Nenhum dado para exibir no gráfico',
-          icon: Icons.show_chart);
+        message: 'Nenhum dado para exibir no gráfico',
+        icon: Icons.show_chart,
+      );
     }
 
     return AppCard(
@@ -108,15 +120,15 @@ class MonthlyTrendSectionWidget extends ConsumerWidget {
                     Text(
                       'Tendência Histórica',
                       style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                            fontWeight: FontWeight.bold,
-                          ),
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
                     const SizedBox(height: 4),
                     Text(
                       'Entradas vs Saídas',
                       style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                            color: Theme.of(context).colorScheme.onSurfaceVariant,
-                          ),
+                        color: Theme.of(context).colorScheme.onSurfaceVariant,
+                      ),
                     ),
                   ],
                 ),
@@ -127,7 +139,10 @@ class MonthlyTrendSectionWidget extends ConsumerWidget {
                   items: const [
                     DropdownMenuItem(value: 3, child: Text('Últimos 3 meses')),
                     DropdownMenuItem(value: 6, child: Text('Últimos 6 meses')),
-                    DropdownMenuItem(value: 12, child: Text('Últimos 12 meses')),
+                    DropdownMenuItem(
+                      value: 12,
+                      child: Text('Últimos 12 meses'),
+                    ),
                     DropdownMenuItem(value: 24, child: Text('Últimos 2 anos')),
                   ],
                   onChanged: (value) {
@@ -144,8 +159,6 @@ class MonthlyTrendSectionWidget extends ConsumerWidget {
     );
   }
 
-
-
   double _getRoundedMaxValue(double maxValue) {
     if (maxValue <= 0) return 500;
     const step = 500.0;
@@ -160,16 +173,15 @@ class MonthlyTrendSectionWidget extends ConsumerWidget {
 
     if (chartEntries.isEmpty || chartEntries.every((e) => e.value == 0)) {
       return const EmptyChartStateWidget(
-          message: 'Nenhum dado para exibir', icon: Icons.show_chart);
+        message: 'Nenhum dado para exibir',
+        icon: Icons.show_chart,
+      );
     }
 
     final spots = chartEntries
         .asMap()
         .entries
-        .map((entry) => FlSpot(
-              entry.key.toDouble(),
-              entry.value.value,
-            ))
+        .map((entry) => FlSpot(entry.key.toDouble(), entry.value.value))
         .toList();
     final maxValue = spots.map((spot) => spot.y).reduce(max);
     final roundedMaxValue = _getRoundedMaxValue(maxValue);
@@ -183,16 +195,22 @@ class MonthlyTrendSectionWidget extends ConsumerWidget {
             drawVerticalLine: true,
             horizontalInterval: 500,
             getDrawingHorizontalLine: (value) => FlLine(
-                color: theme.dividerColor.withValues(alpha: 0.1), strokeWidth: 1),
+              color: theme.dividerColor.withValues(alpha: 0.1),
+              strokeWidth: 1,
+            ),
             getDrawingVerticalLine: (value) => FlLine(
-                color: theme.dividerColor.withValues(alpha: 0.1), strokeWidth: 1),
+              color: theme.dividerColor.withValues(alpha: 0.1),
+              strokeWidth: 1,
+            ),
           ),
           titlesData: FlTitlesData(
             show: true,
-            rightTitles:
-                const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-            topTitles:
-                const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+            rightTitles: const AxisTitles(
+              sideTitles: SideTitles(showTitles: false),
+            ),
+            topTitles: const AxisTitles(
+              sideTitles: SideTitles(showTitles: false),
+            ),
             bottomTitles: AxisTitles(
               sideTitles: SideTitles(
                 showTitles: true,
@@ -203,8 +221,9 @@ class MonthlyTrendSectionWidget extends ConsumerWidget {
                   if (index < 0 || index >= chartEntries.length) {
                     return const SizedBox.shrink();
                   }
-                  final date =
-                      DateFormat('yyyy-MM').parse(chartEntries[index].key);
+                  final date = DateFormat(
+                    'yyyy-MM',
+                  ).parse(chartEntries[index].key);
                   return Padding(
                     padding: const EdgeInsets.only(top: 6),
                     child: Text(
@@ -221,9 +240,11 @@ class MonthlyTrendSectionWidget extends ConsumerWidget {
                 interval: 500,
                 getTitlesWidget: (value, meta) {
                   final inK = value / 1000;
-                  return Text('${inK.toStringAsFixed(1).replaceAll('.0', '')}k',
-                      style: theme.textTheme.bodySmall?.copyWith(fontSize: 10),
-                      textAlign: TextAlign.left);
+                  return Text(
+                    '${inK.toStringAsFixed(1).replaceAll('.0', '')}k',
+                    style: theme.textTheme.bodySmall?.copyWith(fontSize: 10),
+                    textAlign: TextAlign.left,
+                  );
                 },
                 reservedSize: 28,
               ),
@@ -298,25 +319,26 @@ class MonthlyTrendSectionWidget extends ConsumerWidget {
     }
     return value.toStringAsFixed(0);
   }
-  Widget _buildDualLineChart(BuildContext context, AnalysisViewModel viewModel, List<MapEntry<String, ({double incomes, double expenses})>> chartEntries) {
+
+  Widget _buildDualLineChart(
+    BuildContext context,
+    AnalysisViewModel viewModel,
+    List<MapEntry<String, ({double incomes, double expenses})>> chartEntries,
+  ) {
     final theme = Theme.of(context);
 
     final incomesSpots = chartEntries
         .asMap()
         .entries
-        .map((entry) => FlSpot(
-              entry.key.toDouble(),
-              entry.value.value.incomes,
-            ))
+        .map((entry) => FlSpot(entry.key.toDouble(), entry.value.value.incomes))
         .toList();
 
     final expensesSpots = chartEntries
         .asMap()
         .entries
-        .map((entry) => FlSpot(
-              entry.key.toDouble(),
-              entry.value.value.expenses,
-            ))
+        .map(
+          (entry) => FlSpot(entry.key.toDouble(), entry.value.value.expenses),
+        )
         .toList();
 
     double maxValue = 0;
@@ -348,7 +370,9 @@ class MonthlyTrendSectionWidget extends ConsumerWidget {
                     fontSize: 12,
                   );
                   final currencyFormatter = NumberFormat.currency(
-                      locale: 'pt_BR', symbol: 'R\$');
+                    locale: 'pt_BR',
+                    symbol: 'R\$',
+                  );
                   return LineTooltipItem(
                     currencyFormatter.format(touchedSpot.y),
                     textStyle,
@@ -369,8 +393,12 @@ class MonthlyTrendSectionWidget extends ConsumerWidget {
           ),
           titlesData: FlTitlesData(
             show: true,
-            rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-            topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+            rightTitles: const AxisTitles(
+              sideTitles: SideTitles(showTitles: false),
+            ),
+            topTitles: const AxisTitles(
+              sideTitles: SideTitles(showTitles: false),
+            ),
             leftTitles: AxisTitles(
               sideTitles: SideTitles(
                 showTitles: true,
@@ -434,12 +462,13 @@ class MonthlyTrendSectionWidget extends ConsumerWidget {
               isStrokeCapRound: true,
               dotData: FlDotData(
                 show: true,
-                getDotPainter: (spot, percent, barData, index) => FlDotCirclePainter(
-                  radius: 3,
-                  color: Colors.greenAccent[400]!,
-                  strokeWidth: 2,
-                  strokeColor: theme.colorScheme.surface,
-                ),
+                getDotPainter: (spot, percent, barData, index) =>
+                    FlDotCirclePainter(
+                      radius: 3,
+                      color: Colors.greenAccent[400]!,
+                      strokeWidth: 2,
+                      strokeColor: theme.colorScheme.surface,
+                    ),
               ),
               belowBarData: BarAreaData(
                 show: true,
@@ -454,12 +483,13 @@ class MonthlyTrendSectionWidget extends ConsumerWidget {
               isStrokeCapRound: true,
               dotData: FlDotData(
                 show: true,
-                getDotPainter: (spot, percent, barData, index) => FlDotCirclePainter(
-                  radius: 3,
-                  color: theme.colorScheme.error,
-                  strokeWidth: 2,
-                  strokeColor: theme.colorScheme.surface,
-                ),
+                getDotPainter: (spot, percent, barData, index) =>
+                    FlDotCirclePainter(
+                      radius: 3,
+                      color: theme.colorScheme.error,
+                      strokeWidth: 2,
+                      strokeColor: theme.colorScheme.surface,
+                    ),
               ),
               belowBarData: BarAreaData(
                 show: true,

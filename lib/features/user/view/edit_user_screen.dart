@@ -27,7 +27,7 @@ class _EditUserScreenState extends ConsumerState<EditUserScreen> {
   bool _isSaving = false;
 
   final _phoneMaskFormatter = MaskTextInputFormatter(
-    mask: '(##) #####-####',
+    mask: '(##) #.####.####',
     filter: {"#": RegExp(r'[0-9]')},
   );
 
@@ -37,7 +37,8 @@ class _EditUserScreenState extends ConsumerState<EditUserScreen> {
     final user = ref.read(authViewModelProvider).currentUser;
     _nameController = TextEditingController(text: user?.name);
     _phoneController = TextEditingController(
-        text: _phoneMaskFormatter.maskText(user?.phoneNumber ?? ''));
+      text: _phoneMaskFormatter.maskText(user?.phoneNumber ?? ''),
+    );
     _passwordController = TextEditingController();
     _confirmPasswordController = TextEditingController();
     _avatarPath = user?.avatarPath;
@@ -66,8 +67,9 @@ class _EditUserScreenState extends ConsumerState<EditUserScreen> {
           ? _phoneMaskFormatter.unmaskText(_phoneController.text)
           : null,
       avatarPath: _avatarPath,
-      newPassword:
-          _passwordController.text.isNotEmpty ? _passwordController.text : null,
+      newPassword: _passwordController.text.isNotEmpty
+          ? _passwordController.text
+          : null,
     );
 
     if (mounted) {
@@ -78,7 +80,9 @@ class _EditUserScreenState extends ConsumerState<EditUserScreen> {
         Navigator.of(context).pop();
       } else {
         SnackbarService.showError(
-            context, viewModel.errorMessage ?? 'Erro desconhecido');
+          context,
+          viewModel.errorMessage ?? 'Erro desconhecido',
+        );
       }
     }
   }
@@ -87,37 +91,39 @@ class _EditUserScreenState extends ConsumerState<EditUserScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: const Text('Editar Perfil')),
-      body: AppAnimations.fadeInFromBottom(Padding(
-        padding: const EdgeInsets.all(AppSpacing.md),
-        child: Column(
-          children: [
-            Expanded(
-              child: UserForm(
-                formKey: _formKey,
-                nameController: _nameController,
-                phoneController: _phoneController,
-                passwordController: _passwordController,
-                confirmPasswordController: _confirmPasswordController,
-                avatarPath: _avatarPath,
-                onAvatarChanged: (path) {
-                  setState(() {
-                    _avatarPath = path;
-                  });
-                },
+      body: AppAnimations.fadeInFromBottom(
+        Padding(
+          padding: const EdgeInsets.all(AppSpacing.md),
+          child: Column(
+            children: [
+              Expanded(
+                child: UserForm(
+                  formKey: _formKey,
+                  nameController: _nameController,
+                  phoneController: _phoneController,
+                  passwordController: _passwordController,
+                  confirmPasswordController: _confirmPasswordController,
+                  avatarPath: _avatarPath,
+                  onAvatarChanged: (path) {
+                    setState(() {
+                      _avatarPath = path;
+                    });
+                  },
+                ),
               ),
-            ),
-            const SizedBox(height: AppSpacing.xl),
-            SizedBox(
-              width: double.infinity,
-              child: AppButton(
-                onPressed: _submit,
-                isLoading: _isSaving,
-                label: 'Salvar Alterações',
+              const SizedBox(height: AppSpacing.xl),
+              SizedBox(
+                width: double.infinity,
+                child: AppButton(
+                  onPressed: _submit,
+                  isLoading: _isSaving,
+                  label: 'Salvar Alterações',
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
-      )),
+      ),
     );
   }
 }

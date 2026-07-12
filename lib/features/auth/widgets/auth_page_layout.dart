@@ -39,7 +39,9 @@ class AuthPageLayout extends StatelessWidget {
           Center(
             child: SingleChildScrollView(
               padding: const EdgeInsets.symmetric(
-                  horizontal: AppSpacing.xxl, vertical: AppSpacing.xl),
+                horizontal: AppSpacing.xxl,
+                vertical: AppSpacing.xl,
+              ),
               child: ConstrainedBox(
                 constraints: const BoxConstraints(maxWidth: 450),
                 child: Column(
@@ -59,8 +61,9 @@ class AuthPageLayout extends StatelessWidget {
                               borderRadius: BorderRadius.circular(24),
                               boxShadow: [
                                 BoxShadow(
-                                  color: theme.colorScheme.primary
-                                      .withValues(alpha: 0.3),
+                                  color: theme.colorScheme.primary.withValues(
+                                    alpha: 0.3,
+                                  ),
                                   blurRadius: 20,
                                   offset: const Offset(0, 8),
                                 ),
