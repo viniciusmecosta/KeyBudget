@@ -14,10 +14,10 @@ class NotificationService {
 
     const DarwinInitializationSettings iosSettings =
         DarwinInitializationSettings(
-      requestAlertPermission: true,
-      requestBadgePermission: true,
-      requestSoundPermission: true,
-    );
+          requestAlertPermission: true,
+          requestBadgePermission: true,
+          requestSoundPermission: true,
+        );
 
     const InitializationSettings initSettings = InitializationSettings(
       android: androidSettings,
@@ -28,7 +28,8 @@ class NotificationService {
 
     await _notificationsPlugin
         .resolvePlatformSpecificImplementation<
-            AndroidFlutterLocalNotificationsPlugin>()
+          AndroidFlutterLocalNotificationsPlugin
+        >()
         ?.requestNotificationsPermission();
   }
 
@@ -53,14 +54,15 @@ class NotificationService {
 
     const AndroidNotificationDetails androidDetails =
         AndroidNotificationDetails(
-      'recorrentes_channel',
-      'Despesas Recorrentes',
-      importance: Importance.max,
-      priority: Priority.high,
-    );
+          'recorrentes_channel',
+          'Despesas Recorrentes',
+          importance: Importance.max,
+          priority: Priority.high,
+        );
 
-    const NotificationDetails details =
-        NotificationDetails(android: androidDetails);
+    const NotificationDetails details = NotificationDetails(
+      android: androidDetails,
+    );
 
     await _notificationsPlugin.zonedSchedule(
       id: id,

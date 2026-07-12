@@ -4,14 +4,15 @@ import 'package:key_budget/app/config/app_theme.dart';
 class SnackbarService {
   static const Duration _defaultDuration = Duration(seconds: 3);
 
-  static void showSnackbar(BuildContext context,
-      String message, {
-        String? title,
-        Color? backgroundColor,
-        Color? textColor,
-        SnackBarAction? action,
-        Duration? duration,
-      }) {
+  static void showSnackbar(
+    BuildContext context,
+    String message, {
+    String? title,
+    Color? backgroundColor,
+    Color? textColor,
+    SnackBarAction? action,
+    Duration? duration,
+  }) {
     final messenger = ScaffoldMessenger.of(context);
     final displayDuration = duration ?? _defaultDuration;
 
@@ -44,20 +45,17 @@ class SnackbarService {
             ],
           ),
           backgroundColor:
-          backgroundColor ?? Theme
-              .of(context)
-              .colorScheme
-              .primary,
+              backgroundColor ?? Theme.of(context).colorScheme.primary,
           behavior: SnackBarBehavior.floating,
           dismissDirection: DismissDirection.down,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(AppTheme.radiusL),
           ),
-          margin: const EdgeInsets.fromLTRB(
+          margin: EdgeInsets.fromLTRB(
             AppTheme.spaceM,
             0,
             AppTheme.spaceM,
-            95.0,
+            MediaQuery.of(context).viewInsets.bottom + 95.0,
           ),
         ),
       );
@@ -79,12 +77,13 @@ class SnackbarService {
     );
   }
 
-  static void showSuccess(BuildContext context,
-      String message, {
-        String? title,
-        SnackBarAction? action,
-        Duration? duration,
-      }) {
+  static void showSuccess(
+    BuildContext context,
+    String message, {
+    String? title,
+    SnackBarAction? action,
+    Duration? duration,
+  }) {
     showSnackbar(
       context,
       message,
@@ -96,7 +95,8 @@ class SnackbarService {
     );
   }
 
-  static void showUndoSnackbar(BuildContext context, {
+  static void showUndoSnackbar(
+    BuildContext context, {
     required String message,
     required VoidCallback onUndo,
   }) {
@@ -122,8 +122,11 @@ class SnackbarService {
     );
   }
 
-  static void showWarning(BuildContext context, String message,
-      {String? title}) {
+  static void showWarning(
+    BuildContext context,
+    String message, {
+    String? title,
+  }) {
     showSnackbar(
       context,
       message,

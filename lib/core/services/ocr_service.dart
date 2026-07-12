@@ -2,8 +2,9 @@ import 'package:google_mlkit_text_recognition/google_mlkit_text_recognition.dart
 import 'package:image_picker/image_picker.dart';
 
 class OcrService {
-  final TextRecognizer _textRecognizer =
-      TextRecognizer(script: TextRecognitionScript.latin);
+  final TextRecognizer _textRecognizer = TextRecognizer(
+    script: TextRecognitionScript.latin,
+  );
 
   Future<RecognizedText> processImage(XFile image) async {
     final inputImage = InputImage.fromFilePath(image.path);
@@ -33,8 +34,10 @@ class OcrService {
       final matches = pattern.allMatches(text);
       if (matches.isNotEmpty) {
         for (final match in matches) {
-          final valueString =
-              match.group(1)!.replaceAll('.', '').replaceAll(',', '.');
+          final valueString = match
+              .group(1)!
+              .replaceAll('.', '')
+              .replaceAll(',', '.');
           final value = double.tryParse(valueString);
           if (value != null) {
             if (maxAmount == null || value > maxAmount) {
@@ -80,7 +83,7 @@ class OcrService {
       'documento auxiliar',
       'venda ao consumidor',
       'endereço',
-      'telefone'
+      'telefone',
     ];
 
     final lines = text

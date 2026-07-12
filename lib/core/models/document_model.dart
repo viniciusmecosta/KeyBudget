@@ -26,8 +26,9 @@ class Document {
   });
 
   Map<String, dynamic> toMap() {
-    final List<Map<String, dynamic>> attachmentsData =
-        attachments.map((attachment) => attachment.toMap()).toList();
+    final List<Map<String, dynamic>> attachmentsData = attachments
+        .map((attachment) => attachment.toMap())
+        .toList();
 
     return {
       'documentName': documentName,
@@ -49,9 +50,12 @@ class Document {
       issueDate: (map['issueDate'] as Timestamp?)?.toDate(),
       expiryDate: (map['expiryDate'] as Timestamp?)?.toDate(),
       additionalFields: Map<String, String>.from(map['additionalFields'] ?? {}),
-      attachments: (map['attachments'] as List<dynamic>?)
-              ?.map((attachmentMap) =>
-                  Attachment.fromMap(attachmentMap as Map<String, dynamic>))
+      attachments:
+          (map['attachments'] as List<dynamic>?)
+              ?.map(
+                (attachmentMap) =>
+                    Attachment.fromMap(attachmentMap as Map<String, dynamic>),
+              )
               .toList() ??
           [],
       isPrincipal: map['isPrincipal'] ?? true,
@@ -91,18 +95,10 @@ class Attachment {
   final String type;
   final String driveId;
 
-  Attachment({
-    required this.name,
-    required this.type,
-    required this.driveId,
-  });
+  Attachment({required this.name, required this.type, required this.driveId});
 
   Map<String, dynamic> toMap() {
-    return {
-      'name': name,
-      'type': type,
-      'driveId': driveId,
-    };
+    return {'name': name, 'type': type, 'driveId': driveId};
   }
 
   factory Attachment.fromMap(Map<String, dynamic> map) {

@@ -34,5 +34,6 @@ class AppLockService extends ChangeNotifier {
   }
 }
 
-final appLockServiceProvider =
-    ChangeNotifierProvider<AppLockService>((ref) => AppLockService());
+final appLockServiceProvider = ChangeNotifierProvider<AppLockService>(
+  (ref) => AppLockService(),
+);

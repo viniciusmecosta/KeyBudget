@@ -10,6 +10,8 @@ class AppButton extends StatelessWidget {
   final IconData? icon;
   final bool isLoading;
   final bool isFullWidth;
+  final Color? backgroundColor;
+  final Color? foregroundColor;
 
   const AppButton({
     super.key,
@@ -19,16 +21,20 @@ class AppButton extends StatelessWidget {
     this.icon,
     this.isLoading = false,
     this.isFullWidth = false,
+    this.backgroundColor,
+    this.foregroundColor,
   });
 
   @override
   Widget build(BuildContext context) {
     Widget child = isLoading
-        ? const SizedBox(
+        ? SizedBox(
             height: AppSpacing.lg,
             width: AppSpacing.lg,
             child: CircularProgressIndicator(
-                strokeWidth: 2.5, color: Colors.white),
+              strokeWidth: 2.5,
+              color: foregroundColor ?? Colors.white,
+            ),
           )
         : Row(
             mainAxisSize: isFullWidth ? MainAxisSize.max : MainAxisSize.min,
@@ -46,26 +52,39 @@ class AppButton extends StatelessWidget {
     switch (variant) {
       case AppButtonVariant.primary:
         button = ElevatedButton(
-            onPressed: isLoading ? null : onPressed, child: child);
+          onPressed: isLoading ? null : onPressed,
+          style: backgroundColor != null || foregroundColor != null
+              ? ElevatedButton.styleFrom(
+                  backgroundColor: backgroundColor,
+                  foregroundColor: foregroundColor,
+                )
+              : null,
+          child: child,
+        );
         break;
       case AppButtonVariant.secondary:
         final theme = Theme.of(context);
         button = ElevatedButton(
           onPressed: isLoading ? null : onPressed,
           style: ElevatedButton.styleFrom(
-            backgroundColor: theme.colorScheme.secondary,
-            foregroundColor: theme.colorScheme.onSecondary,
+            backgroundColor: backgroundColor ?? theme.colorScheme.secondary,
+            foregroundColor: foregroundColor ?? theme.colorScheme.onSecondary,
           ),
           child: child,
         );
         break;
+
       case AppButtonVariant.outline:
         button = OutlinedButton(
-            onPressed: isLoading ? null : onPressed, child: child);
+          onPressed: isLoading ? null : onPressed,
+          child: child,
+        );
         break;
       case AppButtonVariant.ghost:
-        button =
-            TextButton(onPressed: isLoading ? null : onPressed, child: child);
+        button = TextButton(
+          onPressed: isLoading ? null : onPressed,
+          child: child,
+        );
         break;
     }
 
