@@ -63,29 +63,25 @@ class DriveService {
 
       const scopes = [drive.DriveApi.driveFileScope];
 
-      final authorization =
-          await googleUser.authorizationClient.authorizationForScopes(scopes);
+      final authorization = await googleUser.authorizationClient
+          .authorizationForScopes(scopes);
 
       if (authorization == null) {
         await googleUser.authorizationClient.authorizeScopes(scopes);
 
-        final newAuth =
-            await googleUser.authorizationClient.authorizationForScopes(scopes);
+        final newAuth = await googleUser.authorizationClient
+            .authorizationForScopes(scopes);
 
         if (newAuth == null) {
           throw Exception('Failed to get authorization for Drive API');
         }
 
-        final headers = {
-          'Authorization': 'Bearer ${newAuth.accessToken}',
-        };
+        final headers = {'Authorization': 'Bearer ${newAuth.accessToken}'};
         final client = GoogleAuthClient(headers);
         return drive.DriveApi(client);
       }
 
-      final headers = {
-        'Authorization': 'Bearer ${authorization.accessToken}',
-      };
+      final headers = {'Authorization': 'Bearer ${authorization.accessToken}'};
 
       final client = GoogleAuthClient(headers);
       return drive.DriveApi(client);
@@ -95,7 +91,10 @@ class DriveService {
   }
 
   Stream<List<int>> _createProgressStream(
-      Stream<List<int>> source, int total, void Function(int, int) onProgress) {
+    Stream<List<int>> source,
+    int total,
+    void Function(int, int) onProgress,
+  ) {
     int uploaded = 0;
     return source.transform(
       StreamTransformer.fromHandlers(
@@ -108,8 +107,12 @@ class DriveService {
     );
   }
 
-  Future<drive.File?> uploadFile(File file, void Function(int, int) onProgress,
-      {String? serverClientId, bool isBackup = false}) async {
+  Future<drive.File?> uploadFile(
+    File file,
+    void Function(int, int) onProgress, {
+    String? serverClientId,
+    bool isBackup = false,
+  }) async {
     final driveApi = await _getDriveApi(serverClientId: serverClientId);
     if (driveApi == null) return null;
 
@@ -158,7 +161,10 @@ class DriveService {
   }
 
   Future<String?> _getSubFolderId(
-      drive.DriveApi driveApi, String parentId, String folderName) async {
+    drive.DriveApi driveApi,
+    String parentId,
+    String folderName,
+  ) async {
     final query =
         "mimeType='application/vnd.google-apps.folder' and name='$folderName' and '$parentId' in parents and trashed=false";
 
@@ -175,13 +181,19 @@ class DriveService {
     }
   }
 
-  Future<List<int>?> downloadFile(String fileId,
-      {String? serverClientId}) async {
+  Future<List<int>?> downloadFile(
+    String fileId, {
+    String? serverClientId,
+  }) async {
     final driveApi = await _getDriveApi(serverClientId: serverClientId);
     if (driveApi == null) return null;
 
-    final response = (await driveApi.files.get(fileId,
-        downloadOptions: drive.DownloadOptions.fullMedia)) as drive.Media;
+    final response =
+        (await driveApi.files.get(
+              fileId,
+              downloadOptions: drive.DownloadOptions.fullMedia,
+            ))
+            as drive.Media;
 
     final bytes = <int>[];
     await response.stream.forEach((element) {

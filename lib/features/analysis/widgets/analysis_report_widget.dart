@@ -7,10 +7,7 @@ import 'package:key_budget/features/analysis/widgets/monthly_trend_section_widge
 class AnalysisReportWidget extends ConsumerWidget {
   final AnalysisViewModel analysisViewModel;
 
-  const AnalysisReportWidget({
-    super.key,
-    required this.analysisViewModel,
-  });
+  const AnalysisReportWidget({super.key, required this.analysisViewModel});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {

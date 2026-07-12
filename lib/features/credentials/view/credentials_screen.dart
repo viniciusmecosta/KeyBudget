@@ -86,37 +86,136 @@ class _CredentialsScreenState extends ConsumerState<CredentialsScreen> {
 
   void _showCreateFolderDialog(BuildContext context, String userId) {
     final controller = TextEditingController();
+    int selectedColorValue = 0xFF3B82F6; // default color
+    final theme = Theme.of(context);
+
     showDialog(
       context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text('Nova Pasta'),
-        content: TextField(
-          controller: controller,
-          decoration: const InputDecoration(
-            labelText: 'Nome da Pasta',
-            hintText: 'Ex: Bancos, Social',
-          ),
-          textCapitalization: TextCapitalization.sentences,
-          autofocus: true,
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx),
-            child: const Text('Cancelar'),
-          ),
-          TextButton(
-            onPressed: () {
-              if (controller.text.isNotEmpty) {
-                ref
-                    .read(credentialViewModelProvider)
-                    .createFolder(userId, controller.text.trim());
-                Navigator.pop(ctx);
-              }
-            },
-            child: const Text('Criar'),
-          ),
-        ],
-      ),
+      builder: (ctx) {
+        return StatefulBuilder(
+          builder: (context, setState) {
+            return AlertDialog(
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(20),
+              ),
+              title: Row(
+                children: [
+                  Icon(Icons.create_new_folder_outlined, color: theme.colorScheme.primary),
+                  const SizedBox(width: AppSpacing.sm),
+                  const Text('Nova Pasta', style: TextStyle(fontWeight: FontWeight.bold)),
+                ],
+              ),
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  TextField(
+                    controller: controller,
+                    decoration: InputDecoration(
+                      labelText: 'Nome da Pasta',
+                      hintText: 'Ex: Bancos, Social',
+                      prefixIcon: const Icon(Icons.folder_outlined),
+                      filled: true,
+                      fillColor: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: BorderSide.none,
+                      ),
+                    ),
+                    textCapitalization: TextCapitalization.sentences,
+                    autofocus: true,
+                  ),
+                  const SizedBox(height: AppSpacing.lg),
+                  Text(
+                    'Cor de Destaque',
+                    style: theme.textTheme.labelMedium?.copyWith(
+                      color: theme.colorScheme.onSurfaceVariant,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  const SizedBox(height: AppSpacing.sm),
+                  Wrap(
+                    spacing: 12,
+                    runSpacing: 12,
+                    alignment: WrapAlignment.center,
+                    children:
+                        [
+                          0xFF3B82F6, // Blue
+                          0xFF10B981, // Emerald
+                          0xFFF59E0B, // Amber
+                          0xFFEF4444, // Red
+                          0xFF8B5CF6, // Violet
+                          0xFFEC4899, // Pink
+                          0xFF14B8A6, // Teal
+                          0xFF64748B, // Slate
+                        ].map((colorValue) {
+                          final isSelected = selectedColorValue == colorValue;
+                          return GestureDetector(
+                            onTap: () {
+                              setState(() {
+                                selectedColorValue = colorValue;
+                              });
+                            },
+                            child: AnimatedContainer(
+                              duration: const Duration(milliseconds: 200),
+                              width: isSelected ? 36 : 32,
+                              height: isSelected ? 36 : 32,
+                              decoration: BoxDecoration(
+                                color: Color(colorValue),
+                                shape: BoxShape.circle,
+                                boxShadow: isSelected
+                                    ? [
+                                        BoxShadow(
+                                          color: Color(colorValue).withValues(alpha: 0.4),
+                                          blurRadius: 8,
+                                          offset: const Offset(0, 2),
+                                        )
+                                      ]
+                                    : null,
+                                border: isSelected
+                                    ? Border.all(color: theme.colorScheme.surface, width: 2)
+                                    : null,
+                              ),
+                              child: isSelected
+                                  ? const Icon(Icons.check, size: 18, color: Colors.white)
+                                  : null,
+                            ),
+                          );
+                        }).toList(),
+                  ),
+                ],
+              ),
+              actionsPadding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg, vertical: AppSpacing.md),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.of(context).pop(),
+                  style: TextButton.styleFrom(
+                    foregroundColor: theme.colorScheme.onSurfaceVariant,
+                  ),
+                  child: const Text('Cancelar', style: TextStyle(fontWeight: FontWeight.w600)),
+                ),
+                FilledButton(
+                  onPressed: () {
+                    final name = controller.text.trim();
+                    if (name.isNotEmpty) {
+                      ref
+                          .read(credentialViewModelProvider)
+                          .createFolder(userId, name, color: selectedColorValue.toString())
+                          .then((_) {
+                        if (context.mounted) Navigator.of(context).pop();
+                      });
+                    }
+                  },
+                  style: FilledButton.styleFrom(
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  ),
+                  child: const Text('Criar Pasta', style: TextStyle(fontWeight: FontWeight.bold)),
+                ),
+              ],
+            );
+          },
+        );
+      },
     );
   }
 
@@ -169,8 +268,9 @@ class _CredentialsScreenState extends ConsumerState<CredentialsScreen> {
                     key: const ValueKey('searchBox'),
                     height: 40,
                     decoration: BoxDecoration(
-                      color:
-                          theme.colorScheme.onSurface.withValues(alpha: 0.08),
+                      color: theme.colorScheme.onSurface.withValues(
+                        alpha: 0.08,
+                      ),
                       borderRadius: AppBorders.borderRadiusXXL,
                     ),
                     child: TextField(
@@ -183,7 +283,9 @@ class _CredentialsScreenState extends ConsumerState<CredentialsScreen> {
                         border: InputBorder.none,
                         isDense: true,
                         contentPadding: const EdgeInsets.symmetric(
-                            horizontal: 16, vertical: 10),
+                          horizontal: 16,
+                          vertical: 10,
+                        ),
                         suffixIcon: _searchController.text.isNotEmpty
                             ? IconButton(
                                 icon: const Icon(Icons.clear, size: 20),
@@ -197,8 +299,10 @@ class _CredentialsScreenState extends ConsumerState<CredentialsScreen> {
                       onChanged: (val) => vm.setSearchQuery(val),
                     ),
                   )
-                : Text(vm.currentFolder?.name ?? 'Credenciais',
-                    key: const ValueKey('titleText')),
+                : Text(
+                    vm.currentFolder?.name ?? 'Credenciais',
+                    key: const ValueKey('titleText'),
+                  ),
           ),
           bottom: PreferredSize(
             preferredSize: const Size.fromHeight(4),
@@ -223,8 +327,11 @@ class _CredentialsScreenState extends ConsumerState<CredentialsScreen> {
                     value: 'import',
                     child: Row(
                       children: [
-                        Icon(Icons.upload_file_rounded,
-                            size: 18, color: theme.colorScheme.onSurface),
+                        Icon(
+                          Icons.upload_file_rounded,
+                          size: 18,
+                          color: theme.colorScheme.onSurface,
+                        ),
                         const SizedBox(width: AppSpacing.sm),
                         const Text('Importar de CSV'),
                       ],
@@ -234,8 +341,11 @@ class _CredentialsScreenState extends ConsumerState<CredentialsScreen> {
                     value: 'export_csv',
                     child: Row(
                       children: [
-                        Icon(Icons.grid_on,
-                            size: 18, color: theme.colorScheme.onSurface),
+                        Icon(
+                          Icons.grid_on,
+                          size: 18,
+                          color: theme.colorScheme.onSurface,
+                        ),
                         const SizedBox(width: AppSpacing.sm),
                         const Text('Exportar para CSV'),
                       ],
@@ -245,8 +355,11 @@ class _CredentialsScreenState extends ConsumerState<CredentialsScreen> {
                     value: 'export_pdf',
                     child: Row(
                       children: [
-                        Icon(Icons.picture_as_pdf,
-                            size: 18, color: theme.colorScheme.onSurface),
+                        Icon(
+                          Icons.picture_as_pdf,
+                          size: 18,
+                          color: theme.colorScheme.onSurface,
+                        ),
                         const SizedBox(width: AppSpacing.sm),
                         const Text('Exportar para PDF'),
                       ],
@@ -270,7 +383,8 @@ class _CredentialsScreenState extends ConsumerState<CredentialsScreen> {
               child: ResponsiveCenter(
                 child: CustomScrollView(
                   physics: const BouncingScrollPhysics(
-                      parent: AlwaysScrollableScrollPhysics()),
+                    parent: AlwaysScrollableScrollPhysics(),
+                  ),
                   slivers: [
                     if (vm.isLoading)
                       const CredentialsListSkeleton()
@@ -291,7 +405,11 @@ class _CredentialsScreenState extends ConsumerState<CredentialsScreen> {
                     else
                       SliverPadding(
                         padding: const EdgeInsets.fromLTRB(
-                            AppSpacing.md, AppSpacing.lg, AppSpacing.md, 96.0),
+                          AppSpacing.md,
+                          AppSpacing.lg,
+                          AppSpacing.md,
+                          96.0,
+                        ),
                         sliver: SliverAnimatedList(
                           key: _listKey,
                           initialItemCount: vm.currentDisplayItems.length,
@@ -310,15 +428,18 @@ class _CredentialsScreenState extends ConsumerState<CredentialsScreen> {
                                   folder: item,
                                   onTap: () => vm.enterFolder(item.id!),
                                   onDelete: () => vm.deleteFolder(
-                                      authVm.currentUser!.id, item.id!),
+                                    authVm.currentUser!.id,
+                                    item.id!,
+                                  ),
                                 ),
                               );
                             } else if (item is Credential) {
                               return AnimatedListItem(
                                 animation: animation,
                                 child: CredentialListTile(
-                                    key: ValueKey('cred_${item.id}'),
-                                    credential: item),
+                                  key: ValueKey('cred_${item.id}'),
+                                  credential: item,
+                                ),
                               );
                             }
                             return const SizedBox.shrink();
@@ -331,46 +452,57 @@ class _CredentialsScreenState extends ConsumerState<CredentialsScreen> {
             ),
           ),
         ),
-        floatingActionButton:
-            AppAnimations.scaleIn(FloatingActionButton.extended(
-          heroTag: 'fab_credentials',
-          onPressed: () {
-            showModalBottomSheet(
-              context: context,
-              builder: (ctx) => SafeArea(
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    ListTile(
-                      leading: const Icon(Icons.key),
-                      title: const Text('Nova Credencial'),
-                      onTap: () {
-                        Navigator.pop(ctx);
-                        NavigationUtils.push(
-                            context, const AddCredentialScreen());
-                      },
+        floatingActionButton: AppAnimations.scaleIn(
+          FloatingActionButton.extended(
+            heroTag: 'fab_credentials',
+            onPressed: () {
+              if (vm.currentFolderId != null) {
+                NavigationUtils.push(
+                  context,
+                  const AddCredentialScreen(),
+                );
+              } else {
+                showModalBottomSheet(
+                  context: context,
+                  builder: (ctx) => SafeArea(
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        ListTile(
+                          leading: const Icon(Icons.key),
+                          title: const Text('Nova Credencial'),
+                          onTap: () {
+                            Navigator.pop(ctx);
+                            NavigationUtils.push(
+                              context,
+                              const AddCredentialScreen(),
+                            );
+                          },
+                        ),
+                        ListTile(
+                          leading: const Icon(Icons.create_new_folder),
+                          title: const Text('Nova Pasta'),
+                          onTap: () {
+                            Navigator.pop(ctx);
+                            _showCreateFolderDialog(
+                              context,
+                              authVm.currentUser!.id,
+                            );
+                          },
+                        ),
+                      ],
                     ),
-                    if (vm.currentFolderId == null)
-                      ListTile(
-                        leading: const Icon(Icons.create_new_folder),
-                        title: const Text('Nova Pasta'),
-                        onTap: () {
-                          Navigator.pop(ctx);
-                          _showCreateFolderDialog(
-                              context, authVm.currentUser!.id);
-                        },
-                      ),
-                  ],
-                ),
-              ),
-            );
-          },
-          icon: const Icon(Icons.add),
-          label: const Text("Novo"),
-          shape: RoundedRectangleBorder(
-            borderRadius: AppBorders.borderRadiusXXL,
+                  ),
+                );
+              }
+            },
+            icon: const Icon(Icons.add),
+            label: const Text("Novo"),
+            shape: RoundedRectangleBorder(
+              borderRadius: AppBorders.borderRadiusXXL,
+            ),
           ),
-        )),
+        ),
       ),
     );
   }

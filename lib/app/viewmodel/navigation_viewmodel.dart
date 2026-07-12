@@ -26,5 +26,6 @@ class NavigationViewModel extends ChangeNotifier {
   }
 }
 
-final navigationViewModelProvider =
-    ChangeNotifierProvider<NavigationViewModel>((ref) => NavigationViewModel());
+final navigationViewModelProvider = ChangeNotifierProvider<NavigationViewModel>(
+  (ref) => NavigationViewModel(),
+);

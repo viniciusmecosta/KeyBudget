@@ -27,6 +27,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
   String? _avatarPath;
   bool _isPasswordVisible = false;
   bool _isConfirmPasswordVisible = false;
+  double _passwordStrength = 0;
 
   final _phoneMaskFormatter = MaskTextInputFormatter(
     mask: '(##) #####-####',
@@ -41,6 +42,31 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
     _passwordController.dispose();
     _confirmPasswordController.dispose();
     super.dispose();
+  }
+
+  double _calcPasswordStrength(String password) {
+    if (password.isEmpty) return 0;
+    double strength = 0;
+    if (password.length >= 6) strength += 0.25;
+    if (password.length >= 10) strength += 0.15;
+    if (RegExp(r'[A-Z]').hasMatch(password)) strength += 0.2;
+    if (RegExp(r'[0-9]').hasMatch(password)) strength += 0.2;
+    if (RegExp(r'[!@#\$%^&*(),.?":{}|<>]').hasMatch(password)) strength += 0.2;
+    return strength.clamp(0.0, 1.0);
+  }
+
+  Color _strengthColor(double strength) {
+    if (strength <= 0.25) return Colors.red;
+    if (strength <= 0.5) return Colors.orange;
+    if (strength <= 0.75) return Colors.amber;
+    return Colors.greenAccent[400]!;
+  }
+
+  String _strengthLabel(double strength) {
+    if (strength <= 0.25) return 'Fraca';
+    if (strength <= 0.5) return 'Razoável';
+    if (strength <= 0.75) return 'Boa';
+    return 'Forte';
   }
 
   void _submit() async {
@@ -63,7 +89,9 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
         Navigator.of(context).pop();
       } else {
         SnackbarService.showError(
-            context, authViewModel.errorMessage ?? 'Erro ao cadastrar.');
+          context,
+          authViewModel.errorMessage ?? 'Erro ao cadastrar.',
+        );
       }
     }
   }
@@ -71,6 +99,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
   @override
   Widget build(BuildContext context) {
     final viewModel = ref.watch(authViewModelProvider);
+    final theme = Theme.of(context);
 
     return AuthPageLayout(
       title: "Criar Conta",
@@ -81,9 +110,9 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
         children: [
           Text(
             'Já tem uma conta?',
-            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  color: Theme.of(context).colorScheme.onSurfaceVariant,
-                ),
+            style: theme.textTheme.bodyMedium?.copyWith(
+              color: theme.colorScheme.onSurfaceVariant,
+            ),
           ),
           TextButton(
             onPressed: () => Navigator.of(context).pop(),
@@ -94,10 +123,10 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
             ),
             child: Text(
               'Faça login',
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: Theme.of(context).colorScheme.primary,
-                    fontWeight: FontWeight.bold,
-                  ),
+              style: theme.textTheme.bodyMedium?.copyWith(
+                color: theme.colorScheme.primary,
+                fontWeight: FontWeight.bold,
+              ),
             ),
           ),
         ],
@@ -110,7 +139,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
             Center(
               child: ImagePickerWidget(
                 onImageSelected: (path) {
-                  _avatarPath = path;
+                  setState(() => _avatarPath = path);
                 },
               ),
             ),
@@ -119,6 +148,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
               controller: _nameController,
               label: 'Nome completo *',
               prefixIcon: Icons.person_outline,
+              textCapitalization: TextCapitalization.words,
               validator: (value) =>
                   (value == null || value.isEmpty) ? 'Insira seu nome' : null,
             ),
@@ -149,20 +179,29 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
               label: 'Senha *',
               prefixIcon: Icons.lock_outline,
               obscureText: !_isPasswordVisible,
+              onChanged: (value) {
+                setState(() => _passwordStrength = _calcPasswordStrength(value));
+              },
               suffixIcon: IconButton(
                 icon: Icon(
                   _isPasswordVisible ? Icons.visibility_off : Icons.visibility,
                 ),
                 onPressed: () {
-                  setState(() {
-                    _isPasswordVisible = !_isPasswordVisible;
-                  });
+                  setState(() => _isPasswordVisible = !_isPasswordVisible);
                 },
               ),
               validator: (value) => (value == null || value.length < 6)
                   ? 'A senha deve ter pelo menos 6 caracteres'
                   : null,
             ),
+            if (_passwordController.text.isNotEmpty) ...[
+              const SizedBox(height: AppSpacing.xs),
+              _PasswordStrengthBar(
+                strength: _passwordStrength,
+                color: _strengthColor(_passwordStrength),
+                label: _strengthLabel(_passwordStrength),
+              ),
+            ],
             const SizedBox(height: AppSpacing.md),
             AppTextField(
               controller: _confirmPasswordController,
@@ -176,9 +215,8 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                       : Icons.visibility,
                 ),
                 onPressed: () {
-                  setState(() {
-                    _isConfirmPasswordVisible = !_isConfirmPasswordVisible;
-                  });
+                  setState(() =>
+                      _isConfirmPasswordVisible = !_isConfirmPasswordVisible);
                 },
               ),
               validator: (value) => value != _passwordController.text
@@ -195,6 +233,46 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
           ],
         ),
       ),
+    );
+  }
+}
+
+class _PasswordStrengthBar extends StatelessWidget {
+  final double strength;
+  final Color color;
+  final String label;
+
+  const _PasswordStrengthBar({
+    required this.strength,
+    required this.color,
+    required this.label,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Row(
+      children: [
+        Expanded(
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(4),
+            child: LinearProgressIndicator(
+              value: strength,
+              minHeight: 5,
+              backgroundColor: theme.colorScheme.surfaceContainerHighest,
+              color: color,
+            ),
+          ),
+        ),
+        const SizedBox(width: AppSpacing.sm),
+        Text(
+          label,
+          style: theme.textTheme.labelSmall?.copyWith(
+            color: color,
+            fontWeight: FontWeight.w700,
+          ),
+        ),
+      ],
     );
   }
 }

@@ -22,6 +22,7 @@ class CredentialForm extends ConsumerWidget {
   final List<Folder> availableFolders;
   final String? selectedFolderId;
   final Function(String?) onFolderChanged;
+  final VoidCallback? onChanged;
 
   const CredentialForm({
     super.key,
@@ -38,7 +39,26 @@ class CredentialForm extends ConsumerWidget {
     this.availableFolders = const [],
     this.selectedFolderId,
     required this.onFolderChanged,
+    this.onChanged,
   });
+
+  Widget _sectionHeader(BuildContext context, String title, IconData icon) {
+    final theme = Theme.of(context);
+    final color = theme.brightness == Brightness.dark ? Colors.white : Colors.black87;
+    return Row(
+      children: [
+        Icon(icon, color: color, size: 20),
+        const SizedBox(width: AppSpacing.sm),
+        Text(
+          title,
+          style: theme.textTheme.titleSmall?.copyWith(
+            fontWeight: FontWeight.bold,
+            color: color,
+          ),
+        ),
+      ],
+    );
+  }
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -59,8 +79,10 @@ class CredentialForm extends ConsumerWidget {
 
     return Form(
       key: formKey,
+      onChanged: onChanged,
       child: ListView(
         children: [
+          const SizedBox(height: AppSpacing.md),
           Center(
             child: AbsorbPointer(
               absorbing: !isEditing,
@@ -72,15 +94,13 @@ class CredentialForm extends ConsumerWidget {
               ),
             ),
           ),
-          const SizedBox(height: AppSpacing.sm),
           if (isEditing)
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 TextButton.icon(
                   onPressed: selectSavedLogo,
-                  icon:
-                      const Icon(Icons.collections_bookmark_outlined, size: 18),
+                  icon: const Icon(Icons.collections_bookmark_outlined, size: 18),
                   label: const Text('Escolher Salva'),
                 ),
                 if (logoPath != null) ...[
@@ -89,13 +109,14 @@ class CredentialForm extends ConsumerWidget {
                     onPressed: () => onLogoChanged(null),
                     icon: const Icon(Icons.no_photography_outlined, size: 18),
                     label: const Text('Remover'),
-                    style: TextButton.styleFrom(
-                        foregroundColor: theme.colorScheme.error),
+                    style: TextButton.styleFrom(foregroundColor: theme.colorScheme.error),
                   ),
-                ]
+                ],
               ],
             ),
-          const SizedBox(height: AppSpacing.xl),
+          const SizedBox(height: AppSpacing.md),
+          _sectionHeader(context, 'IDENTIFICAÇÃO', Icons.label_outline),
+          const SizedBox(height: AppSpacing.sm),
           if (availableFolders.isNotEmpty) ...[
             DropdownButtonFormField<String?>(
               key: ValueKey(selectedFolderId),
@@ -109,10 +130,9 @@ class CredentialForm extends ConsumerWidget {
                   value: null,
                   child: Text('Nenhuma (Principal)'),
                 ),
-                ...availableFolders.map((folder) => DropdownMenuItem(
-                      value: folder.id,
-                      child: Text(folder.name),
-                    )),
+                ...availableFolders.map(
+                  (folder) => DropdownMenuItem(value: folder.id, child: Text(folder.name)),
+                ),
               ],
               onChanged: isEditing ? onFolderChanged : null,
             ),
@@ -120,17 +140,23 @@ class CredentialForm extends ConsumerWidget {
           ],
           AppTextField(
             controller: locationController,
-            label: 'Local/Serviço *',
+            label: 'Local / Serviço *',
+            prefixIcon: Icons.language_outlined,
             readOnly: !isEditing,
             textCapitalization: TextCapitalization.sentences,
-            validator: (value) => value!.isEmpty ? 'Campo obrigatório' : null,
+            textInputAction: TextInputAction.next,
+            validator: (value) => value!.isEmpty ? 'Informe o local ou serviço' : null,
           ),
           const SizedBox(height: AppSpacing.md),
+          _sectionHeader(context, 'ACESSO', Icons.key_outlined),
+          const SizedBox(height: AppSpacing.sm),
           AppTextField(
             controller: loginController,
-            label: 'Login/Usuário *',
+            label: 'Login / Usuário *',
+            prefixIcon: Icons.person_outline,
             readOnly: !isEditing,
-            validator: (value) => value!.isEmpty ? 'Campo obrigatório' : null,
+            textInputAction: TextInputAction.next,
+            validator: (value) => value!.isEmpty ? 'Informe o login ou usuário' : null,
           ),
           const SizedBox(height: AppSpacing.md),
           PasswordFormField(
@@ -138,31 +164,42 @@ class CredentialForm extends ConsumerWidget {
             labelText: 'Senha *',
             readOnly: !isEditing,
             forceVisible: isEditing,
-            validator: (value) => value!.isEmpty ? 'Campo obrigatório' : null,
+            textInputAction: TextInputAction.next,
+            validator: (value) => value!.isEmpty ? 'Informe a senha' : null,
           ),
           const SizedBox(height: AppSpacing.md),
+          _sectionHeader(context, 'CONTATO', Icons.contacts_outlined),
+          const SizedBox(height: AppSpacing.sm),
           AppTextField(
             controller: emailController,
             label: 'Email',
+            prefixIcon: Icons.email_outlined,
             readOnly: !isEditing,
             keyboardType: TextInputType.emailAddress,
+            textInputAction: TextInputAction.next,
           ),
           const SizedBox(height: AppSpacing.md),
           AppTextField(
             controller: phoneController,
-            label: 'Número',
+            label: 'Telefone',
+            prefixIcon: Icons.phone_outlined,
             readOnly: !isEditing,
             inputFormatters: [phoneMaskFormatter],
             keyboardType: TextInputType.phone,
+            textInputAction: TextInputAction.next,
           ),
           const SizedBox(height: AppSpacing.md),
+          _sectionHeader(context, 'EXTRAS', Icons.notes_outlined),
+          const SizedBox(height: AppSpacing.sm),
           AppTextField(
             controller: notesController,
             label: 'Observações',
+            prefixIcon: Icons.edit_note_outlined,
             readOnly: !isEditing,
             maxLines: 3,
             textCapitalization: TextCapitalization.sentences,
           ),
+          const SizedBox(height: AppSpacing.md),
         ],
       ),
     );

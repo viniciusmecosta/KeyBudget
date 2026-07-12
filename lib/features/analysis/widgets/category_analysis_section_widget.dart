@@ -4,9 +4,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'package:key_budget/core/design_system/spacing/app_spacing.dart';
 import 'package:key_budget/core/design_system/widgets/app_card.dart';
+import 'package:key_budget/features/auth/viewmodel/auth_viewmodel.dart';
 
 import '../viewmodel/analysis_viewmodel.dart';
-import 'package:key_budget/features/auth/viewmodel/auth_viewmodel.dart';
 import 'empty_chart_state_widget.dart';
 
 extension StringCapitalize on String {
@@ -31,7 +31,8 @@ class _CategoryAnalysisSectionWidgetState
   @override
   Widget build(BuildContext context) {
     final viewModel = ref.watch(analysisViewModelProvider);
-    final enableIncomes = ref.watch(authViewModelProvider).currentUser?.enableIncomes ?? false;
+    final enableIncomes =
+        ref.watch(authViewModelProvider).currentUser?.enableIncomes ?? false;
 
     return AppCard(
       padding: const EdgeInsets.all(AppSpacing.lg),
@@ -40,9 +41,9 @@ class _CategoryAnalysisSectionWidgetState
         children: [
           Text(
             'Composição de Gastos',
-            style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                  fontWeight: FontWeight.bold,
-                ),
+            style: Theme.of(
+              context,
+            ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: 4),
           Text(
@@ -50,8 +51,8 @@ class _CategoryAnalysisSectionWidgetState
                 ? 'Referente a ${DateFormat.yMMMM('pt_BR').format(viewModel.selectedMonthForCategory!).capitalize()}'
                 : 'Entenda onde seu dinheiro é gasto',
             style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  color: Theme.of(context).colorScheme.onSurfaceVariant,
-                ),
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
+            ),
           ),
           const SizedBox(height: AppSpacing.lg),
           if (!enableIncomes) ...[
@@ -65,7 +66,9 @@ class _CategoryAnalysisSectionWidgetState
   }
 
   Widget _buildCategoryMonthSelector(
-      BuildContext context, AnalysisViewModel viewModel) {
+    BuildContext context,
+    AnalysisViewModel viewModel,
+  ) {
     final theme = Theme.of(context);
 
     if (viewModel.availableMonthsForFilter.isEmpty ||
@@ -142,8 +145,9 @@ class _CategoryAnalysisSectionWidgetState
               width: 40,
               height: 4,
               decoration: BoxDecoration(
-                color:
-                    theme.colorScheme.onSurface.withAlpha((255 * 0.3).round()),
+                color: theme.colorScheme.onSurface.withAlpha(
+                  (255 * 0.3).round(),
+                ),
                 borderRadius: BorderRadius.circular(2),
               ),
             ),
@@ -217,16 +221,17 @@ class _CategoryAnalysisSectionWidgetState
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
                                     Text(
-                                      DateFormat.yMMMM('pt_BR')
-                                          .format(month)
-                                          .capitalize(),
+                                      DateFormat.yMMMM(
+                                        'pt_BR',
+                                      ).format(month).capitalize(),
                                       style: TextStyle(
                                         fontWeight: isSelected
                                             ? FontWeight.bold
                                             : FontWeight.w500,
                                         color: isSelected
                                             ? theme
-                                                .colorScheme.onPrimaryContainer
+                                                  .colorScheme
+                                                  .onPrimaryContainer
                                             : theme.colorScheme.onSurface,
                                       ),
                                     ),
@@ -234,12 +239,14 @@ class _CategoryAnalysisSectionWidgetState
                                       const SizedBox(height: 2),
                                       Text(
                                         NumberFormat.currency(
-                                                locale: 'pt_BR', symbol: 'R\$')
-                                            .format(monthTotal),
+                                          locale: 'pt_BR',
+                                          symbol: 'R\$',
+                                        ).format(monthTotal),
                                         style: TextStyle(
                                           fontSize: 12,
                                           color: theme
-                                              .colorScheme.onSurfaceVariant,
+                                              .colorScheme
+                                              .onSurfaceVariant,
                                         ),
                                       ),
                                     ],
@@ -268,14 +275,17 @@ class _CategoryAnalysisSectionWidgetState
   }
 
   Widget _buildEnhancedCategoryBreakdown(
-      BuildContext context, AnalysisViewModel viewModel) {
+    BuildContext context,
+    AnalysisViewModel viewModel,
+  ) {
     final theme = Theme.of(context);
     final data = viewModel.expensesByCategoryForSelectedMonth;
 
     if (data.isEmpty) {
       return const EmptyChartStateWidget(
-          message: 'Nenhuma despesa para exibir no período',
-          icon: Icons.pie_chart_outline);
+        message: 'Nenhuma despesa para exibir no período',
+        icon: Icons.pie_chart_outline,
+      );
     }
 
     final total = data.values.fold(0.0, (sum, item) => sum + item);
@@ -301,7 +311,8 @@ class _CategoryAnalysisSectionWidgetState
                           return;
                         }
                         _touchedPieIndex = pieTouchResponse!
-                            .touchedSection!.touchedSectionIndex;
+                            .touchedSection!
+                            .touchedSectionIndex;
                       });
                     },
                   ),
@@ -352,8 +363,10 @@ class _CategoryAnalysisSectionWidgetState
                   ),
                   Text(
                     NumberFormat.currency(
-                            locale: 'pt_BR', symbol: 'R\$', decimalDigits: 0)
-                        .format(total),
+                      locale: 'pt_BR',
+                      symbol: 'R\$',
+                      decimalDigits: 0,
+                    ).format(total),
                     style: theme.textTheme.titleMedium?.copyWith(
                       fontWeight: FontWeight.bold,
                       color: theme.colorScheme.primary,
@@ -407,8 +420,9 @@ class _CategoryAnalysisSectionWidgetState
           Text(
             '${percentage.toStringAsFixed(1)}%',
             style: TextStyle(
-              color: theme.colorScheme.onInverseSurface
-                  .withAlpha((255 * 0.7).round()),
+              color: theme.colorScheme.onInverseSurface.withAlpha(
+                (255 * 0.7).round(),
+              ),
               fontSize: 9,
             ),
           ),
@@ -427,8 +441,10 @@ class _CategoryAnalysisSectionWidgetState
     bool showDivider = true,
   }) {
     final theme = Theme.of(context);
-    final formattedValue =
-        NumberFormat.currency(locale: 'pt_BR', symbol: 'R\$').format(value);
+    final formattedValue = NumberFormat.currency(
+      locale: 'pt_BR',
+      symbol: 'R\$',
+    ).format(value);
 
     return Column(
       children: [
@@ -466,8 +482,9 @@ class _CategoryAnalysisSectionWidgetState
                 child: Text(
                   name,
                   style: theme.textTheme.bodyMedium?.copyWith(
-                    fontWeight:
-                        isHighlighted ? FontWeight.bold : FontWeight.w500,
+                    fontWeight: isHighlighted
+                        ? FontWeight.bold
+                        : FontWeight.w500,
                     color: isHighlighted ? color : theme.colorScheme.onSurface,
                   ),
                   overflow: TextOverflow.ellipsis,

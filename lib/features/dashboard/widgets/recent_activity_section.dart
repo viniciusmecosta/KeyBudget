@@ -51,23 +51,25 @@ class RecentActivitySection extends ConsumerWidget {
   }
 
   Widget _buildSectionHeader(
-      BuildContext context, WidgetRef ref, String title) {
+    BuildContext context,
+    WidgetRef ref,
+    String title,
+  ) {
     final theme = Theme.of(context);
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       crossAxisAlignment: CrossAxisAlignment.center,
       children: [
-        Text(
-          title,
-          style: theme.textTheme.titleLarge,
-        ),
+        Text(title, style: theme.textTheme.titleLarge),
         TextButton(
           onPressed: () {
             ref.read(navigationViewModelProvider).selectedIndex = 1;
           },
           style: TextButton.styleFrom(
             padding: const EdgeInsets.symmetric(
-                horizontal: AppSpacing.md, vertical: AppSpacing.sm),
+              horizontal: AppSpacing.md,
+              vertical: AppSpacing.sm,
+            ),
           ),
           child: Row(
             mainAxisSize: MainAxisSize.min,
@@ -113,10 +115,7 @@ class RecentActivitySection extends ConsumerWidget {
             ),
           ),
           const SizedBox(height: AppSpacing.lg),
-          Text(
-            'Nenhuma atividade recente',
-            style: theme.textTheme.titleMedium,
-          ),
+          Text('Nenhuma atividade recente', style: theme.textTheme.titleMedium),
           const SizedBox(height: AppSpacing.sm),
           Text(
             'Suas transações aparecerão aqui assim que forem registradas',

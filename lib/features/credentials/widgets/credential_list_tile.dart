@@ -18,7 +18,10 @@ class CredentialListTile extends ConsumerWidget {
   const CredentialListTile({super.key, required this.credential});
 
   void _showDecryptedPassword(
-      BuildContext context, WidgetRef ref, String encryptedPassword) {
+    BuildContext context,
+    WidgetRef ref,
+    String encryptedPassword,
+  ) {
     final viewModel = ref.read(credentialViewModelProvider);
     final decryptedPassword = viewModel.decryptPassword(encryptedPassword);
     final theme = Theme.of(context);
@@ -38,23 +41,22 @@ class CredentialListTile extends ConsumerWidget {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
-              'A senha é:',
-              style: theme.textTheme.bodySmall,
-            ),
+            Text('A senha é:', style: theme.textTheme.bodySmall),
             const SizedBox(height: 8),
             Container(
               width: double.infinity,
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
               decoration: BoxDecoration(
-                color:
-                    theme.colorScheme.onSurface.withAlpha((255 * 0.05).round()),
+                color: theme.colorScheme.onSurface.withAlpha(
+                  (255 * 0.05).round(),
+                ),
                 borderRadius: BorderRadius.circular(8),
               ),
               child: Text(
                 decryptedPassword,
-                style: theme.textTheme.titleMedium
-                    ?.copyWith(fontWeight: FontWeight.bold),
+                style: theme.textTheme.titleMedium?.copyWith(
+                  fontWeight: FontWeight.bold,
+                ),
               ),
             ),
           ],
@@ -71,7 +73,9 @@ class CredentialListTile extends ConsumerWidget {
               Clipboard.setData(ClipboardData(text: decryptedPassword));
               HapticFeedback.lightImpact();
               SnackbarService.showSuccess(
-                  context, 'Senha copiada para a área de transferência');
+                context,
+                'Senha copiada para a área de transferência',
+              );
               Navigator.of(context).pop();
             },
           ),
@@ -89,7 +93,9 @@ class CredentialListTile extends ConsumerWidget {
       padding: const EdgeInsets.all(AppSpacing.md),
       onTap: () {
         NavigationUtils.push(
-            context, CredentialDetailScreen(credential: credential));
+          context,
+          CredentialDetailScreen(credential: credential),
+        );
       },
       child: Row(
         children: [
@@ -102,8 +108,11 @@ class CredentialListTile extends ConsumerWidget {
                 ? MemoryImage(base64Decode(logoPath))
                 : null,
             child: logoPath == null || logoPath.isEmpty
-                ? Icon(Icons.vpn_key_outlined,
-                    color: theme.colorScheme.secondary, size: 24)
+                ? Icon(
+                    Icons.vpn_key_outlined,
+                    color: theme.colorScheme.secondary,
+                    size: 24,
+                  )
                 : null,
           ),
           const SizedBox(width: AppSpacing.md),
@@ -130,14 +139,17 @@ class CredentialListTile extends ConsumerWidget {
                   maxLines: 1,
                   minFontSize: 10,
                   overflow: TextOverflow.ellipsis,
-                )
+                ),
               ],
             ),
           ),
           IconButton(
             icon: const Icon(Icons.visibility_outlined),
             onPressed: () => _showDecryptedPassword(
-                context, ref, credential.encryptedPassword),
+              context,
+              ref,
+              credential.encryptedPassword,
+            ),
           ),
         ],
       ),

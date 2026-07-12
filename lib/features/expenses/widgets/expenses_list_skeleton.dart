@@ -18,10 +18,7 @@ class ExpensesListSkeleton extends ConsumerWidget {
         delegate: SliverChildBuilderDelegate(
           (context, index) => _buildSkeletonTile(context)
               .animate(onPlay: (controller) => controller.repeat())
-              .shimmer(
-                duration: 1500.ms,
-                color: shimmerHighlightColor,
-              ),
+              .shimmer(duration: 1500.ms, color: shimmerHighlightColor),
           childCount: 5,
         ),
       ),
@@ -66,11 +63,7 @@ class ExpensesListSkeleton extends ConsumerWidget {
               ],
             ),
           ),
-          Container(
-            height: 16,
-            width: 60,
-            color: theme.colorScheme.surface,
-          ),
+          Container(height: 16, width: 60, color: theme.colorScheme.surface),
         ],
       ),
     );

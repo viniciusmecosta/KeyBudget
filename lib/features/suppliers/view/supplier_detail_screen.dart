@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:key_budget/app/config/app_theme.dart';
 import 'package:key_budget/app/utils/app_animations.dart';
+import 'package:key_budget/core/design_system/widgets/app_button.dart';
 import 'package:key_budget/core/models/supplier_model.dart';
 import 'package:key_budget/core/services/snackbar_service.dart';
 import 'package:key_budget/features/auth/viewmodel/auth_viewmodel.dart';
@@ -41,11 +42,13 @@ class _SupplierDetailScreenState extends ConsumerState<SupplierDetailScreen> {
   void initState() {
     super.initState();
     _nameController = TextEditingController(text: widget.supplier.name);
-    _repNameController =
-        TextEditingController(text: widget.supplier.representativeName);
+    _repNameController = TextEditingController(
+      text: widget.supplier.representativeName,
+    );
     _emailController = TextEditingController(text: widget.supplier.email);
     _phoneController = TextEditingController(
-        text: _phoneMaskFormatter.maskText(widget.supplier.phoneNumber ?? ''));
+      text: _phoneMaskFormatter.maskText(widget.supplier.phoneNumber ?? ''),
+    );
     _notesController = TextEditingController(text: widget.supplier.notes);
     _photoPath = widget.supplier.photoPath;
   }
@@ -76,8 +79,9 @@ class _SupplierDetailScreenState extends ConsumerState<SupplierDetailScreen> {
       userId: userId,
       originalSupplier: widget.supplier,
       name: _nameController.text,
-      representativeName:
-          _repNameController.text.isNotEmpty ? _repNameController.text : null,
+      representativeName: _repNameController.text.isNotEmpty
+          ? _repNameController.text
+          : null,
       email: _emailController.text.isNotEmpty ? _emailController.text : null,
       phoneNumber: _phoneMaskFormatter.unmaskText(_phoneController.text),
       photoPath: _photoPath,
@@ -91,7 +95,9 @@ class _SupplierDetailScreenState extends ConsumerState<SupplierDetailScreen> {
       _isEditing = false;
     });
     SnackbarService.showSuccess(
-        scaffoldContext, 'Fornecedor atualizado com sucesso!');
+      scaffoldContext,
+      'Fornecedor atualizado com sucesso!',
+    );
     navigator.pop();
   }
 
@@ -119,66 +125,71 @@ class _SupplierDetailScreenState extends ConsumerState<SupplierDetailScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     return Scaffold(
       appBar: AppBar(
         title: Text(_isEditing ? 'Editar Fornecedor' : 'Detalhes'),
         actions: [
           if (!_isEditing)
             IconButton(
-              icon: const Icon(Icons.delete),
+              icon: const Icon(Icons.edit_outlined),
+              tooltip: 'Editar',
+              onPressed: () => setState(() => _isEditing = true),
+            ),
+          if (!_isEditing)
+            IconButton(
+              icon: Icon(Icons.delete_outline, color: theme.colorScheme.error),
+              tooltip: 'Excluir',
               onPressed: _deleteSupplier,
             ),
-          IconButton(
-            icon: Icon(_isEditing ? Icons.check : Icons.edit),
-            onPressed: () {
-              if (_isEditing) {
-                _saveChanges();
-              } else {
-                setState(() => _isEditing = true);
-              }
-            },
-          ),
+          if (_isEditing)
+            IconButton(
+              icon: const Icon(Icons.check),
+              tooltip: 'Salvar',
+              onPressed: _saveChanges,
+            ),
         ],
       ),
-      body: AppAnimations.fadeInFromBottom(Padding(
-        padding: const EdgeInsets.all(AppTheme.defaultPadding),
-        child: Column(
-          children: [
-            Expanded(
-              child: AbsorbPointer(
-                absorbing: !_isEditing,
-                child: SupplierForm(
-                  formKey: _formKey,
-                  nameController: _nameController,
-                  repNameController: _repNameController,
-                  emailController: _emailController,
-                  phoneController: _phoneController,
-                  notesController: _notesController,
-                  photoPath: _photoPath,
-                  onPhotoChanged: (path) {
-                    setState(() {
-                      _photoPath = path;
-                    });
-                  },
-                  isEditing: _isEditing,
+      body: AppAnimations.fadeInFromBottom(
+        Padding(
+          padding: const EdgeInsets.all(AppTheme.defaultPadding),
+          child: Column(
+            children: [
+              Expanded(
+                child: AbsorbPointer(
+                  absorbing: !_isEditing,
+                  child: SupplierForm(
+                    formKey: _formKey,
+                    nameController: _nameController,
+                    repNameController: _repNameController,
+                    emailController: _emailController,
+                    phoneController: _phoneController,
+                    notesController: _notesController,
+                    photoPath: _photoPath,
+                    onPhotoChanged: (path) {
+                      setState(() {
+                        _photoPath = path;
+                      });
+                    },
+                    isEditing: _isEditing,
+                  ),
                 ),
               ),
-            ),
-            if (_isEditing) ...[
-              const SizedBox(height: 16),
-              ElevatedButton(
-                onPressed: _isSaving ? null : _saveChanges,
-                child: _isSaving
-                    ? const SizedBox(
-                        height: 24,
-                        width: 24,
-                        child: CircularProgressIndicator(strokeWidth: 2.0))
-                    : const Text('Salvar Alterações'),
-              )
-            ]
-          ],
+              if (_isEditing) ...[
+                const SizedBox(height: 16),
+                SizedBox(
+                  width: double.infinity,
+                  child: AppButton(
+                    label: 'Salvar Alterações',
+                    onPressed: _saveChanges,
+                    isLoading: _isSaving,
+                  ),
+                ),
+              ],
+            ],
+          ),
         ),
-      )),
+      ),
     );
   }
 }

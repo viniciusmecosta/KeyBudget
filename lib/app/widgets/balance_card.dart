@@ -30,15 +30,18 @@ class BalanceCard extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
-    final currencyFormatter =
-        NumberFormat.currency(locale: 'pt_BR', symbol: 'R\$');
+    final currencyFormatter = NumberFormat.currency(
+      locale: 'pt_BR',
+      symbol: 'R\$',
+    );
 
-    final bgColor = backgroundColor ??
+    final bgColor =
+        backgroundColor ??
         (gradient == null ? theme.colorScheme.surface : null);
     final textColor =
         (gradient != null || backgroundColor == theme.colorScheme.primary)
-            ? theme.colorScheme.onPrimary
-            : theme.colorScheme.onSurface;
+        ? theme.colorScheme.onPrimary
+        : theme.colorScheme.onSurface;
 
     return Container(
       decoration: BoxDecoration(
@@ -81,11 +84,13 @@ class BalanceCard extends ConsumerWidget {
                               fontSize: isCompact ? 14 : null,
                             ),
                           ),
-                          SizedBox(height: isCompact ? AppSpacing.xs : AppSpacing.sm),
+                          SizedBox(
+                            height: isCompact ? AppSpacing.xs : AppSpacing.sm,
+                          ),
                           Text(
-                            totalValue < 0 
-                              ? '- ${currencyFormatter.format(totalValue.abs())}'
-                              : currencyFormatter.format(totalValue),
+                            totalValue < 0
+                                ? '- ${currencyFormatter.format(totalValue.abs())}'
+                                : currencyFormatter.format(totalValue),
                             style: theme.textTheme.headlineMedium?.copyWith(
                               fontWeight: FontWeight.w800,
                               color: textColor,

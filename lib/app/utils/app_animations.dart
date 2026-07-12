@@ -14,22 +14,18 @@ class AppAnimations {
     return child
         .animate(delay: delay)
         .fadeIn(duration: duration, curve: curve)
-        .slideY(
-          begin: 0.1,
-          end: 0,
-          duration: duration,
-          curve: curve,
-        );
+        .slideY(begin: 0.1, end: 0, duration: duration, curve: curve);
   }
 
   static Animate scaleIn(Widget child, {Duration? delay}) {
     return child
         .animate(delay: delay)
         .scale(
-            begin: const Offset(0.9, 0.9),
-            end: const Offset(1.0, 1.0),
-            duration: duration,
-            curve: curve)
+          begin: const Offset(0.9, 0.9),
+          end: const Offset(1.0, 1.0),
+          duration: duration,
+          curve: curve,
+        )
         .fadeIn(duration: duration, curve: curve);
   }
 
@@ -37,19 +33,14 @@ class AppAnimations {
     return child.animate(delay: delay).fadeIn(duration: duration, curve: curve);
   }
 
-  static Animate listFadeIn(Widget child,
-      {required int index, int delayStep = 40}) {
+  static Animate listFadeIn(
+    Widget child, {
+    required int index,
+    int delayStep = 40,
+  }) {
     return child
         .animate(delay: Duration(milliseconds: index * delayStep))
-        .fadeIn(
-          duration: duration,
-          curve: curve,
-        )
-        .slideY(
-          begin: 0.05,
-          end: 0,
-          duration: duration,
-          curve: curve,
-        );
+        .fadeIn(duration: duration, curve: curve)
+        .slideY(begin: 0.05, end: 0, duration: duration, curve: curve);
   }
 }

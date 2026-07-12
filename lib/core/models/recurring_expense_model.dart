@@ -29,6 +29,7 @@ class RecurringExpense {
   final int? monthOfYear;
   final DateTime? lastInstanceDate;
   final bool? isIncome;
+  final int advanceGenerationCount;
 
   RecurringExpense({
     this.id,
@@ -44,6 +45,7 @@ class RecurringExpense {
     this.monthOfYear,
     this.lastInstanceDate,
     this.isIncome,
+    this.advanceGenerationCount = 0,
   });
 
   Map<String, dynamic> toMap() {
@@ -62,6 +64,7 @@ class RecurringExpense {
           ? Timestamp.fromDate(lastInstanceDate!)
           : null,
       'isIncome': isIncome,
+      'advanceGenerationCount': advanceGenerationCount,
     };
   }
 
@@ -72,8 +75,9 @@ class RecurringExpense {
       categoryId: map['categoryId'],
       motivation: map['motivation'],
       location: map['location'],
-      frequency: RecurrenceFrequency.values
-          .firstWhere((e) => e.name == map['frequency']),
+      frequency: RecurrenceFrequency.values.firstWhere(
+        (e) => e.name == map['frequency'],
+      ),
       startDate: (map['startDate'] as Timestamp).toDate(),
       endDate: (map['endDate'] as Timestamp?)?.toDate(),
       dayOfWeek: map['dayOfWeek'],
@@ -81,6 +85,7 @@ class RecurringExpense {
       monthOfYear: map['monthOfYear'],
       lastInstanceDate: (map['lastInstanceDate'] as Timestamp?)?.toDate(),
       isIncome: map['isIncome'],
+      advanceGenerationCount: map['advanceGenerationCount'] ?? 0,
     );
   }
 }

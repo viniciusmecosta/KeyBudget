@@ -7,6 +7,9 @@ class PasswordFormField extends ConsumerStatefulWidget {
   final String? Function(String?)? validator;
   final bool readOnly;
   final bool forceVisible;
+  final FocusNode? focusNode;
+  final TextInputAction? textInputAction;
+  final void Function(String)? onFieldSubmitted;
 
   const PasswordFormField({
     super.key,
@@ -15,6 +18,9 @@ class PasswordFormField extends ConsumerStatefulWidget {
     this.validator,
     this.readOnly = false,
     this.forceVisible = false,
+    this.focusNode,
+    this.textInputAction,
+    this.onFieldSubmitted,
   });
 
   @override
@@ -46,11 +52,15 @@ class _PasswordFormFieldState extends ConsumerState<PasswordFormField> {
       controller: widget.controller,
       obscureText: !_isPasswordVisible,
       readOnly: widget.readOnly,
+      focusNode: widget.focusNode,
+      textInputAction: widget.textInputAction,
+      onFieldSubmitted: widget.onFieldSubmitted,
       decoration: InputDecoration(
         labelText: widget.labelText,
         suffixIcon: IconButton(
           icon: Icon(
-              _isPasswordVisible ? Icons.visibility_off : Icons.visibility),
+            _isPasswordVisible ? Icons.visibility_off : Icons.visibility,
+          ),
           onPressed: () {
             setState(() {
               _isPasswordVisible = !_isPasswordVisible;

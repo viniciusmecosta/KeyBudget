@@ -4,12 +4,7 @@ class Folder {
   final String? color;
   final DateTime createdAt;
 
-  Folder({
-    this.id,
-    required this.name,
-    this.color,
-    required this.createdAt,
-  });
+  Folder({this.id, required this.name, this.color, required this.createdAt});
 
   Map<String, dynamic> toMap() {
     return {

@@ -35,20 +35,15 @@ class EmptyStateWidget extends ConsumerWidget {
               message,
               textAlign: TextAlign.center,
               style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                    color: Theme.of(context)
-                        .textTheme
-                        .bodyMedium
-                        ?.color
-                        ?.withAlpha(200),
-                  ),
+                color: Theme.of(
+                  context,
+                ).textTheme.bodyMedium?.color?.withAlpha(200),
+              ),
             ),
             if (buttonText != null && onButtonPressed != null) ...[
               const SizedBox(height: AppSpacing.lg),
-              AppButton(
-                onPressed: onButtonPressed!,
-                label: buttonText!,
-              ),
-            ]
+              AppButton(onPressed: onButtonPressed!, label: buttonText!),
+            ],
           ],
         ),
       ),

@@ -45,9 +45,13 @@ class MonthSelector extends ConsumerWidget {
 
     return Container(
       margin: const EdgeInsets.symmetric(
-          horizontal: AppSpacing.md, vertical: AppSpacing.sm),
+        horizontal: AppSpacing.md,
+        vertical: AppSpacing.sm,
+      ),
       padding: const EdgeInsets.symmetric(
-          horizontal: AppSpacing.sm, vertical: AppSpacing.xs),
+        horizontal: AppSpacing.sm,
+        vertical: AppSpacing.xs,
+      ),
       decoration: BoxDecoration(
         color: theme.colorScheme.surface,
         borderRadius: AppBorders.borderRadiusL,
@@ -72,8 +76,10 @@ class MonthSelector extends ConsumerWidget {
                       ),
                     ),
                     const SizedBox(width: 8),
-                    Icon(Icons.arrow_drop_down_rounded,
-                        color: theme.colorScheme.primary),
+                    Icon(
+                      Icons.arrow_drop_down_rounded,
+                      color: theme.colorScheme.primary,
+                    ),
                   ],
                 ),
               ),
@@ -85,7 +91,8 @@ class MonthSelector extends ConsumerWidget {
                   icon: const Icon(Icons.chevron_left_rounded),
                   onPressed: () {
                     onMonthChanged(
-                        DateTime(selectedMonth.year, selectedMonth.month - 1));
+                      DateTime(selectedMonth.year, selectedMonth.month - 1),
+                    );
                   },
                   style: IconButton.styleFrom(
                     foregroundColor: theme.colorScheme.onSurface,
@@ -102,7 +109,8 @@ class MonthSelector extends ConsumerWidget {
                         children: [
                           Text(
                             app_date_utils.DateUtils.formatMonthYear(
-                                selectedMonth),
+                              selectedMonth,
+                            ),
                             style: theme.textTheme.titleLarge?.copyWith(
                               fontWeight: FontWeight.w700,
                               color: theme.colorScheme.onSurface,
@@ -111,8 +119,9 @@ class MonthSelector extends ConsumerWidget {
                           const SizedBox(width: 4),
                           Icon(
                             Icons.arrow_drop_down_rounded,
-                            color: theme.colorScheme.onSurface
-                                .withAlpha((255 * 0.6).round()),
+                            color: theme.colorScheme.onSurface.withAlpha(
+                              (255 * 0.6).round(),
+                            ),
                           ),
                         ],
                       ),
@@ -123,7 +132,8 @@ class MonthSelector extends ConsumerWidget {
                   icon: const Icon(Icons.chevron_right_rounded),
                   onPressed: () {
                     onMonthChanged(
-                        DateTime(selectedMonth.year, selectedMonth.month + 1));
+                      DateTime(selectedMonth.year, selectedMonth.month + 1),
+                    );
                   },
                   style: IconButton.styleFrom(
                     foregroundColor: theme.colorScheme.onSurface,
@@ -168,7 +178,7 @@ class _MonthPickerModalState extends ConsumerState<_MonthPickerModal> {
     'Set',
     'Out',
     'Nov',
-    'Dez'
+    'Dez',
   ];
 
   @override
@@ -202,8 +212,9 @@ class _MonthPickerModalState extends ConsumerState<_MonthPickerModal> {
           ),
           Text(
             'Selecione o Período',
-            style: theme.textTheme.titleLarge
-                ?.copyWith(fontWeight: FontWeight.bold),
+            style: theme.textTheme.titleLarge?.copyWith(
+              fontWeight: FontWeight.bold,
+            ),
           ),
           const SizedBox(height: AppSpacing.lg),
           InkWell(
@@ -223,8 +234,9 @@ class _MonthPickerModalState extends ConsumerState<_MonthPickerModal> {
                 border: Border.all(
                   color: _isAllPeriods
                       ? theme.colorScheme.primary
-                      : theme.colorScheme.outline
-                          .withAlpha((255 * 0.2).round()),
+                      : theme.colorScheme.outline.withAlpha(
+                          (255 * 0.2).round(),
+                        ),
                 ),
               ),
               alignment: Alignment.center,
@@ -254,8 +266,9 @@ class _MonthPickerModalState extends ConsumerState<_MonthPickerModal> {
               ),
               Text(
                 '$_selectedYear',
-                style: theme.textTheme.titleLarge
-                    ?.copyWith(fontWeight: FontWeight.bold),
+                style: theme.textTheme.titleLarge?.copyWith(
+                  fontWeight: FontWeight.bold,
+                ),
               ),
               IconButton(
                 icon: const Icon(Icons.chevron_right_rounded),
@@ -278,7 +291,8 @@ class _MonthPickerModalState extends ConsumerState<_MonthPickerModal> {
             ),
             itemCount: 12,
             itemBuilder: (context, index) {
-              final isSelected = !_isAllPeriods &&
+              final isSelected =
+                  !_isAllPeriods &&
                   _selectedYear == widget.initialMonth.year &&
                   index + 1 == widget.initialMonth.month;
 
@@ -298,8 +312,9 @@ class _MonthPickerModalState extends ConsumerState<_MonthPickerModal> {
                     border: Border.all(
                       color: isSelected
                           ? theme.colorScheme.primary
-                          : theme.colorScheme.outline
-                              .withAlpha((255 * 0.2).round()),
+                          : theme.colorScheme.outline.withAlpha(
+                              (255 * 0.2).round(),
+                            ),
                     ),
                   ),
                   child: Text(
@@ -308,8 +323,9 @@ class _MonthPickerModalState extends ConsumerState<_MonthPickerModal> {
                       color: isSelected
                           ? theme.colorScheme.onPrimary
                           : theme.colorScheme.onSurface,
-                      fontWeight:
-                          isSelected ? FontWeight.bold : FontWeight.normal,
+                      fontWeight: isSelected
+                          ? FontWeight.bold
+                          : FontWeight.normal,
                     ),
                   ),
                 ),

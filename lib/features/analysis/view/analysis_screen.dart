@@ -6,14 +6,13 @@ import 'package:key_budget/core/design_system/borders/app_borders.dart';
 import 'package:key_budget/core/design_system/spacing/app_spacing.dart';
 import 'package:key_budget/core/services/csv_service.dart';
 import 'package:key_budget/core/services/pdf_service.dart';
-
 import 'package:key_budget/features/auth/viewmodel/auth_viewmodel.dart';
 
 import '../viewmodel/analysis_viewmodel.dart';
 import '../widgets/analysis_stats_overview_widget.dart';
 import '../widgets/category_analysis_section_widget.dart';
-import '../widgets/monthly_trend_section_widget.dart';
 import '../widgets/global_month_selector_widget.dart';
+import '../widgets/monthly_trend_section_widget.dart';
 
 class AnalysisScreen extends ConsumerStatefulWidget {
   const AnalysisScreen({super.key});
@@ -28,8 +27,10 @@ class _AnalysisScreenState extends ConsumerState<AnalysisScreen> {
 
   Widget _buildAnimatedWidget(Widget child, int index) {
     if (_isFirstLoad) {
-      return AppAnimations.fadeInFromBottom(child,
-          delay: Duration(milliseconds: 100 * (index + 1)));
+      return AppAnimations.fadeInFromBottom(
+        child,
+        delay: Duration(milliseconds: 100 * (index + 1)),
+      );
     }
     return child;
   }
@@ -37,7 +38,8 @@ class _AnalysisScreenState extends ConsumerState<AnalysisScreen> {
   @override
   Widget build(BuildContext context) {
     final viewModel = ref.watch(analysisViewModelProvider);
-    final enableIncomes = ref.watch(authViewModelProvider).currentUser?.enableIncomes ?? false;
+    final enableIncomes =
+        ref.watch(authViewModelProvider).currentUser?.enableIncomes ?? false;
     final theme = Theme.of(context);
 
     return Scaffold(
@@ -109,17 +111,25 @@ class _AnalysisScreenState extends ConsumerState<AnalysisScreen> {
                         delegate: SliverChildListDelegate([
                           if (enableIncomes) ...[
                             _buildAnimatedWidget(
-                                const GlobalMonthSelectorWidget(), 0),
+                              const GlobalMonthSelectorWidget(),
+                              0,
+                            ),
                             const SizedBox(height: AppSpacing.xl),
                           ],
                           _buildAnimatedWidget(
-                              const AnalysisStatsOverviewWidget(), 0),
+                            const AnalysisStatsOverviewWidget(),
+                            0,
+                          ),
                           const SizedBox(height: AppSpacing.xl),
                           _buildAnimatedWidget(
-                              const CategoryAnalysisSectionWidget(), 1),
+                            const CategoryAnalysisSectionWidget(),
+                            1,
+                          ),
                           const SizedBox(height: AppSpacing.xl),
                           _buildAnimatedWidget(
-                              const MonthlyTrendSectionWidget(), 2),
+                            const MonthlyTrendSectionWidget(),
+                            2,
+                          ),
                           const SizedBox(height: AppSpacing.xxl),
                         ]),
                       ),
@@ -143,6 +153,7 @@ class _AnalysisScreenState extends ConsumerState<AnalysisScreen> {
 
 class AnalysisSkeleton extends ConsumerWidget {
   final bool enableIncomes;
+
   const AnalysisSkeleton({super.key, required this.enableIncomes});
 
   @override
@@ -151,52 +162,51 @@ class AnalysisSkeleton extends ConsumerWidget {
     final shimmerColor = theme.colorScheme.surface;
 
     return CustomScrollView(
-      physics: const NeverScrollableScrollPhysics(),
-      slivers: [
-        SliverPadding(
-          padding: const EdgeInsets.all(AppSpacing.md),
-          sliver: SliverList(
-            delegate: SliverChildListDelegate([
-              if (enableIncomes) ...[
-                Container(
-                  height: 48,
-                  decoration: BoxDecoration(
-                    color: theme.colorScheme.surfaceContainerHighest,
-                    borderRadius: AppBorders.borderRadiusXL,
+          physics: const NeverScrollableScrollPhysics(),
+          slivers: [
+            SliverPadding(
+              padding: const EdgeInsets.all(AppSpacing.md),
+              sliver: SliverList(
+                delegate: SliverChildListDelegate([
+                  if (enableIncomes) ...[
+                    Container(
+                      height: 48,
+                      decoration: BoxDecoration(
+                        color: theme.colorScheme.surfaceContainerHighest,
+                        borderRadius: AppBorders.borderRadiusXL,
+                      ),
+                    ),
+                    const SizedBox(height: AppSpacing.xl),
+                  ],
+                  Container(
+                    height: 120,
+                    decoration: BoxDecoration(
+                      color: theme.colorScheme.surfaceContainerHighest,
+                      borderRadius: AppBorders.borderRadiusXL,
+                    ),
                   ),
-                ),
-                const SizedBox(height: AppSpacing.xl),
-              ],
-              Container(
-                height: 120,
-                decoration: BoxDecoration(
-                  color: theme.colorScheme.surfaceContainerHighest,
-                  borderRadius: AppBorders.borderRadiusXL,
-                ),
+                  const SizedBox(height: AppSpacing.xl),
+                  Container(
+                    height: 250,
+                    decoration: BoxDecoration(
+                      color: theme.colorScheme.surfaceContainerHighest,
+                      borderRadius: AppBorders.borderRadiusXL,
+                    ),
+                  ),
+                  const SizedBox(height: AppSpacing.xl),
+                  Container(
+                    height: 250,
+                    decoration: BoxDecoration(
+                      color: theme.colorScheme.surfaceContainerHighest,
+                      borderRadius: AppBorders.borderRadiusXL,
+                    ),
+                  ),
+                ]),
               ),
-              const SizedBox(height: AppSpacing.xl),
-              Container(
-                height: 250,
-                decoration: BoxDecoration(
-                  color: theme.colorScheme.surfaceContainerHighest,
-                  borderRadius: AppBorders.borderRadiusXL,
-                ),
-              ),
-              const SizedBox(height: AppSpacing.xl),
-              Container(
-                height: 250,
-                decoration: BoxDecoration(
-                  color: theme.colorScheme.surfaceContainerHighest,
-                  borderRadius: AppBorders.borderRadiusXL,
-                ),
-              ),
-            ]),
-          ),
-        ),
-      ],
-    ).animate(onPlay: (controller) => controller.repeat()).shimmer(
-          duration: 1500.ms,
-          color: shimmerColor,
-        );
+            ),
+          ],
+        )
+        .animate(onPlay: (controller) => controller.repeat())
+        .shimmer(duration: 1500.ms, color: shimmerColor);
   }
 }
