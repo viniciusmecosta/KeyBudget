@@ -19,9 +19,7 @@ class AuthRepository {
     if (_isInitialized) return;
 
     try {
-      await _googleSignIn.initialize(
-        serverClientId: serverClientId,
-      );
+      await _googleSignIn.initialize(serverClientId: serverClientId);
       _isInitialized = true;
     } catch (e) {
       if (kDebugMode) {
@@ -31,12 +29,16 @@ class AuthRepository {
     }
   }
 
-  Stream<User?> get onAuthStateChanged {
-    return _firebaseAuth.authStateChanges().asyncMap((firebaseUser) async {
-      if (firebaseUser == null) {
-        return null;
+  Stream<firebase.User?> get firebaseAuthStateChanges {
+    return _firebaseAuth.authStateChanges();
+  }
+
+  Stream<User?> getUserProfileStream(String uid) {
+    return _firestore.collection('users').doc(uid).snapshots().map((doc) {
+      if (doc.exists) {
+        return User.fromMap(doc.data()!);
       }
-      return await getUserProfile(firebaseUser.uid);
+      return null;
     });
   }
 
@@ -56,7 +58,9 @@ class AuthRepository {
   }
 
   Future<firebase.UserCredential> signInWithEmail(
-      String email, String password) async {
+    String email,
+    String password,
+  ) async {
     return await _firebaseAuth.signInWithEmailAndPassword(
       email: email,
       password: password,
@@ -65,8 +69,10 @@ class AuthRepository {
 
   Future<void> ensureCategoriesExist(String userId) async {
     try {
-      final categoriesCollection =
-          _firestore.collection('users').doc(userId).collection('categories');
+      final categoriesCollection = _firestore
+          .collection('users')
+          .doc(userId)
+          .collection('categories');
       final existingCategories = await categoriesCollection.limit(1).get();
 
       if (existingCategories.docs.isNotEmpty) {
@@ -75,29 +81,35 @@ class AuthRepository {
 
       final List<ExpenseCategory> defaultCategories = [
         ExpenseCategory(
-            name: 'Alimentação',
-            iconCodePoint: Icons.restaurant.codePoint,
-            colorValue: AppTheme.chartColors[0].toARGB32()),
+          name: 'Alimentação',
+          iconCodePoint: Icons.restaurant.codePoint,
+          colorValue: AppTheme.chartColors[0].toARGB32(),
+        ),
         ExpenseCategory(
-            name: 'Lazer',
-            iconCodePoint: Icons.shopping_bag.codePoint,
-            colorValue: AppTheme.chartColors[1].toARGB32()),
+          name: 'Lazer',
+          iconCodePoint: Icons.shopping_bag.codePoint,
+          colorValue: AppTheme.chartColors[1].toARGB32(),
+        ),
         ExpenseCategory(
-            name: 'Roupa',
-            iconCodePoint: Icons.checkroom.codePoint,
-            colorValue: AppTheme.chartColors[2].toARGB32()),
+          name: 'Roupa',
+          iconCodePoint: Icons.checkroom.codePoint,
+          colorValue: AppTheme.chartColors[2].toARGB32(),
+        ),
         ExpenseCategory(
-            name: 'Farmácia',
-            iconCodePoint: Icons.medication_rounded.codePoint,
-            colorValue: AppTheme.chartColors[3].toARGB32()),
+          name: 'Farmácia',
+          iconCodePoint: Icons.medication_rounded.codePoint,
+          colorValue: AppTheme.chartColors[3].toARGB32(),
+        ),
         ExpenseCategory(
-            name: 'Transporte',
-            iconCodePoint: Icons.directions_bus.codePoint,
-            colorValue: AppTheme.chartColors[4].toARGB32()),
+          name: 'Transporte',
+          iconCodePoint: Icons.directions_bus.codePoint,
+          colorValue: AppTheme.chartColors[4].toARGB32(),
+        ),
         ExpenseCategory(
-            name: 'Outros',
-            iconCodePoint: Icons.category_rounded.codePoint,
-            colorValue: AppTheme.chartColors[5].toARGB32()),
+          name: 'Outros',
+          iconCodePoint: Icons.category_rounded.codePoint,
+          colorValue: AppTheme.chartColors[5].toARGB32(),
+        ),
       ];
 
       final batch = _firestore.batch();
@@ -149,12 +161,11 @@ class AuthRepository {
       final GoogleSignInAuthentication googleAuth = googleUser.authentication;
 
       final firebase.AuthCredential credential =
-          firebase.GoogleAuthProvider.credential(
-        idToken: googleAuth.idToken,
-      );
+          firebase.GoogleAuthProvider.credential(idToken: googleAuth.idToken);
 
-      final userCredential =
-          await _firebaseAuth.signInWithCredential(credential);
+      final userCredential = await _firebaseAuth.signInWithCredential(
+        credential,
+      );
       final userId = userCredential.user!.uid;
       User? userProfile = await getUserProfile(userId);
 
@@ -197,5 +208,6 @@ class AuthRepository {
   }
 }
 
-final authRepositoryProvider =
-    Provider<AuthRepository>((ref) => AuthRepository());
+final authRepositoryProvider = Provider<AuthRepository>(
+  (ref) => AuthRepository(),
+);

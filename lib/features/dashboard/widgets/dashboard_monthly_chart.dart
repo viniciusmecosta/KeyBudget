@@ -34,7 +34,9 @@ class DashboardMonthlyChart extends ConsumerWidget {
       }
     }
 
-    final int monthsToShow = maxMonthIndexWithData >= 0 ? maxMonthIndexWithData + 1 : 0;
+    final int monthsToShow = maxMonthIndexWithData >= 0
+        ? maxMonthIndexWithData + 1
+        : 0;
 
     for (int i = 0; i < monthsToShow; i++) {
       expensesByMonth[i] = 0.0;
@@ -77,7 +79,7 @@ class DashboardMonthlyChart extends ConsumerWidget {
       final monthKey = validMonths[index];
       final expVal = expensesByMonth[monthKey]!;
       final incVal = incomesByMonth[monthKey]!;
-      
+
       final expenseRod = BarChartRodData(
         toY: expVal,
         color: theme.colorScheme.error,
@@ -86,8 +88,9 @@ class DashboardMonthlyChart extends ConsumerWidget {
         backDrawRodData: BackgroundBarChartRodData(
           show: !enableIncomes,
           toY: maxAmount * 1.2,
-          color: theme.colorScheme.surfaceContainerHighest
-              .withAlpha((255 * 0.5).round()),
+          color: theme.colorScheme.surfaceContainerHighest.withAlpha(
+            (255 * 0.5).round(),
+          ),
         ),
       );
 
@@ -101,7 +104,9 @@ class DashboardMonthlyChart extends ConsumerWidget {
       return BarChartGroupData(
         x: index,
         barsSpace: 2,
-        barRods: enableIncomes ? [incomeRod, expenseRod] : [expenseRod.copyWith(color: theme.colorScheme.primary)],
+        barRods: enableIncomes
+            ? [incomeRod, expenseRod]
+            : [expenseRod.copyWith(color: theme.colorScheme.primary)],
       );
     });
 
@@ -124,7 +129,9 @@ class DashboardMonthlyChart extends ConsumerWidget {
                   ),
                   const SizedBox(height: 2),
                   Text(
-                    monthsToShow <= 1 ? 'Último mês' : 'Últimos $monthsToShow meses',
+                    monthsToShow <= 1
+                        ? 'Último mês'
+                        : 'Últimos $monthsToShow meses',
                     style: theme.textTheme.labelSmall?.copyWith(
                       color: theme.colorScheme.onSurfaceVariant,
                     ),
@@ -134,7 +141,9 @@ class DashboardMonthlyChart extends ConsumerWidget {
               Container(
                 padding: const EdgeInsets.all(AppSpacing.sm),
                 decoration: BoxDecoration(
-                  color: theme.colorScheme.primary.withAlpha((255 * 0.15).round()),
+                  color: theme.colorScheme.primary.withAlpha(
+                    (255 * 0.15).round(),
+                  ),
                   borderRadius: AppBorders.borderRadiusM,
                 ),
                 child: Icon(
@@ -179,7 +188,9 @@ class DashboardMonthlyChart extends ConsumerWidget {
             child: validMonths.isEmpty
                 ? Center(
                     child: Text(
-                      enableIncomes ? 'Nenhum lançamento nos últimos 4 meses' : 'Nenhum gasto nos últimos 4 meses',
+                      enableIncomes
+                          ? 'Nenhum lançamento nos últimos 4 meses'
+                          : 'Nenhum gasto nos últimos 4 meses',
                       style: theme.textTheme.bodyMedium?.copyWith(
                         color: theme.colorScheme.onSurfaceVariant,
                       ),
@@ -193,22 +204,28 @@ class DashboardMonthlyChart extends ConsumerWidget {
                       barTouchData: BarTouchData(
                         enabled: true,
                         touchTooltipData: BarTouchTooltipData(
-                          getTooltipColor: (group) =>
-                              theme.colorScheme.surface,
+                          getTooltipColor: (group) => theme.colorScheme.surface,
                           tooltipBorder: BorderSide(
                             color: theme.colorScheme.outlineVariant,
                             width: 1.5,
                           ),
                           tooltipPadding: const EdgeInsets.symmetric(
-                              horizontal: 12, vertical: 8),
+                            horizontal: 12,
+                            vertical: 8,
+                          ),
                           getTooltipItem: (group, groupIndex, rod, rodIndex) {
                             final isIncomeRod = enableIncomes && rodIndex == 0;
                             return BarTooltipItem(
                               NumberFormat.currency(
-                                      locale: 'pt_BR', symbol: 'R\$')
-                                  .format(rod.toY),
+                                locale: 'pt_BR',
+                                symbol: 'R\$',
+                              ).format(rod.toY),
                               TextStyle(
-                                color: isIncomeRod ? Colors.greenAccent[400] : (enableIncomes ? theme.colorScheme.error : theme.colorScheme.primary),
+                                color: isIncomeRod
+                                    ? Colors.greenAccent[400]
+                                    : (enableIncomes
+                                          ? theme.colorScheme.error
+                                          : theme.colorScheme.primary),
                                 fontWeight: FontWeight.bold,
                                 fontSize: 13,
                               ),
@@ -227,11 +244,14 @@ class DashboardMonthlyChart extends ConsumerWidget {
                                 return const SizedBox.shrink();
                               }
                               final monthKey = validMonths[value.toInt()];
-                              final monthDate =
-                                  DateTime(now.year, now.month - monthKey, 1);
-                              final monthName = DateFormat.MMM('pt_BR')
-                                  .format(monthDate)
-                                  .toUpperCase();
+                              final monthDate = DateTime(
+                                now.year,
+                                now.month - monthKey,
+                                1,
+                              );
+                              final monthName = DateFormat.MMM(
+                                'pt_BR',
+                              ).format(monthDate).toUpperCase();
                               return Padding(
                                 padding: const EdgeInsets.only(top: 8.0),
                                 child: Text(
@@ -270,4 +290,3 @@ class DashboardMonthlyChart extends ConsumerWidget {
     );
   }
 }
-

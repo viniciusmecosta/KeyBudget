@@ -88,8 +88,9 @@ class GlobalMonthSelectorWidget extends ConsumerWidget {
               width: 40,
               height: 4,
               decoration: BoxDecoration(
-                color:
-                    theme.colorScheme.onSurface.withAlpha((255 * 0.3).round()),
+                color: theme.colorScheme.onSurface.withAlpha(
+                  (255 * 0.3).round(),
+                ),
                 borderRadius: BorderRadius.circular(2),
               ),
             ),
@@ -163,16 +164,17 @@ class GlobalMonthSelectorWidget extends ConsumerWidget {
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
                                     Text(
-                                      DateFormat.yMMMM('pt_BR')
-                                          .format(month)
-                                          .capitalize(),
+                                      DateFormat.yMMMM(
+                                        'pt_BR',
+                                      ).format(month).capitalize(),
                                       style: TextStyle(
                                         fontWeight: isSelected
                                             ? FontWeight.bold
                                             : FontWeight.w500,
                                         color: isSelected
                                             ? theme
-                                                .colorScheme.onPrimaryContainer
+                                                  .colorScheme
+                                                  .onPrimaryContainer
                                             : theme.colorScheme.onSurface,
                                       ),
                                     ),
@@ -180,12 +182,14 @@ class GlobalMonthSelectorWidget extends ConsumerWidget {
                                       const SizedBox(height: 2),
                                       Text(
                                         NumberFormat.currency(
-                                                locale: 'pt_BR', symbol: 'R\$')
-                                            .format(monthTotal),
+                                          locale: 'pt_BR',
+                                          symbol: 'R\$',
+                                        ).format(monthTotal),
                                         style: TextStyle(
                                           fontSize: 12,
                                           color: theme
-                                              .colorScheme.onSurfaceVariant,
+                                              .colorScheme
+                                              .onSurfaceVariant,
                                         ),
                                       ),
                                     ],

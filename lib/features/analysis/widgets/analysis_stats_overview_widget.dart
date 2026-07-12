@@ -4,9 +4,9 @@ import 'package:intl/intl.dart';
 import 'package:key_budget/app/config/app_theme.dart';
 import 'package:key_budget/core/design_system/spacing/app_spacing.dart';
 import 'package:key_budget/core/design_system/widgets/app_card.dart';
+import 'package:key_budget/features/auth/viewmodel/auth_viewmodel.dart';
 
 import '../viewmodel/analysis_viewmodel.dart';
-import 'package:key_budget/features/auth/viewmodel/auth_viewmodel.dart';
 
 class AnalysisStatsOverviewWidget extends ConsumerWidget {
   const AnalysisStatsOverviewWidget({super.key});
@@ -14,7 +14,8 @@ class AnalysisStatsOverviewWidget extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final viewModel = ref.watch(analysisViewModelProvider);
-    final enableIncomes = ref.watch(authViewModelProvider).currentUser?.enableIncomes ?? false;
+    final enableIncomes =
+        ref.watch(authViewModelProvider).currentUser?.enableIncomes ?? false;
 
     if (enableIncomes) {
       return _buildIncomesLayout(context, viewModel);
@@ -72,10 +73,14 @@ class AnalysisStatsOverviewWidget extends ConsumerWidget {
     );
   }
 
-  Widget _buildIncomesLayout(BuildContext context, AnalysisViewModel viewModel) {
+  Widget _buildIncomesLayout(
+    BuildContext context,
+    AnalysisViewModel viewModel,
+  ) {
     final theme = Theme.of(context);
     final balanceChange = viewModel.balancePercentageChangeFromLastMonth;
-    final balanceDiff = viewModel.balanceCurrentMonth - viewModel.lastMonthBalance;
+    final balanceDiff =
+        viewModel.balanceCurrentMonth - viewModel.lastMonthBalance;
 
     return Column(
       children: [
@@ -99,8 +104,10 @@ class AnalysisStatsOverviewWidget extends ConsumerWidget {
                 viewModel.incomesCurrentMonth,
                 Colors.greenAccent[400]!,
                 icon: Icons.arrow_circle_up_rounded,
-                percentageChange: viewModel.incomesPercentageChangeFromLastMonth,
-                absoluteChange: viewModel.incomesCurrentMonth - viewModel.lastMonthIncome,
+                percentageChange:
+                    viewModel.incomesPercentageChangeFromLastMonth,
+                absoluteChange:
+                    viewModel.incomesCurrentMonth - viewModel.lastMonthIncome,
                 invertColors: true,
               ),
             ),
@@ -113,7 +120,8 @@ class AnalysisStatsOverviewWidget extends ConsumerWidget {
                 theme.colorScheme.error,
                 icon: Icons.arrow_circle_down_rounded,
                 percentageChange: viewModel.percentageChangeFromLastMonth,
-                absoluteChange: viewModel.totalCurrentMonth - viewModel.lastMonthExpense,
+                absoluteChange:
+                    viewModel.totalCurrentMonth - viewModel.lastMonthExpense,
               ),
             ),
           ],
@@ -134,10 +142,15 @@ class AnalysisStatsOverviewWidget extends ConsumerWidget {
     bool invertColors = false,
   }) {
     final theme = Theme.of(context);
-    final currencyFormatter =
-        NumberFormat.currency(locale: 'pt_BR', symbol: 'R\$');
-    final currencyFormatterNoCents =
-        NumberFormat.currency(locale: 'pt_BR', symbol: 'R\$', decimalDigits: 0);
+    final currencyFormatter = NumberFormat.currency(
+      locale: 'pt_BR',
+      symbol: 'R\$',
+    );
+    final currencyFormatterNoCents = NumberFormat.currency(
+      locale: 'pt_BR',
+      symbol: 'R\$',
+      decimalDigits: 0,
+    );
 
     String formatCurrencyFlexible(double val) {
       if ((val * 100).truncate() % 100 != 0) {
@@ -147,7 +160,8 @@ class AnalysisStatsOverviewWidget extends ConsumerWidget {
       }
     }
 
-    final String formattedValue = (title == 'Gasto Total' || title == 'Saldo Líquido')
+    final String formattedValue =
+        (title == 'Gasto Total' || title == 'Saldo Líquido')
         ? formatCurrencyFlexible(value)
         : formatCurrencyFlexible(value);
 
@@ -156,14 +170,16 @@ class AnalysisStatsOverviewWidget extends ConsumerWidget {
       final isIncrease = percentageChange > 0;
       final isZero = percentageChange == 0.0;
       final bool isGood = invertColors ? isIncrease : !isIncrease;
-      
-      final badgeColor = isZero 
-          ? theme.colorScheme.onSurfaceVariant 
+
+      final badgeColor = isZero
+          ? theme.colorScheme.onSurfaceVariant
           : (isGood ? Colors.greenAccent[400]! : Colors.redAccent[400]!);
-          
-      final arrowIcon = isZero 
-          ? Icons.remove_rounded 
-          : (isIncrease ? Icons.arrow_upward_rounded : Icons.arrow_downward_rounded);
+
+      final arrowIcon = isZero
+          ? Icons.remove_rounded
+          : (isIncrease
+                ? Icons.arrow_upward_rounded
+                : Icons.arrow_downward_rounded);
 
       badgeWidget = Container(
         margin: const EdgeInsets.only(top: AppSpacing.sm),
@@ -202,11 +218,7 @@ class AnalysisStatsOverviewWidget extends ConsumerWidget {
                   color: color.withAlpha((255 * 0.15).round()),
                   borderRadius: BorderRadius.circular(8),
                 ),
-                child: Icon(
-                  icon ?? Icons.analytics,
-                  color: color,
-                  size: 20,
-                ),
+                child: Icon(icon ?? Icons.analytics, color: color, size: 20),
               ),
               const SizedBox(width: AppSpacing.sm),
               Expanded(
