@@ -18,14 +18,99 @@ class DashboardBalanceCard extends ConsumerStatefulWidget {
       _DashboardBalanceCardState();
 }
 
-class _DashboardBalanceCardState extends ConsumerState<DashboardBalanceCard> {
+class _DashboardBalanceCardState extends ConsumerState<DashboardBalanceCard>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _controller;
+  late Animation<double> _animation;
+
+  int _lastSeenRefreshCount = -1;
+  double _scheduledTargetTotal = double.nan;
+  double _scheduledTargetBalance = double.nan;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      duration: AppAnimations.durationSlow,
+      vsync: this,
+    );
+    _animation = Tween<double>(begin: 0, end: 0).animate(
+      CurvedAnimation(parent: _controller, curve: AppAnimations.curve),
+    );
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  void _animateTo({
+    required double from,
+    required double to,
+    required bool enableIncomes,
+    required DashboardViewModel viewModel,
+  }) {
+    viewModel.onAnimationStartedTo(
+      total: enableIncomes ? viewModel.lastAnimatedTotalForMonth : to,
+      balance: enableIncomes ? to : viewModel.lastAnimatedBalanceForMonth,
+    );
+
+    _animation = Tween<double>(begin: from, end: to).animate(
+      CurvedAnimation(parent: _controller, curve: AppAnimations.curve),
+    );
+    _controller
+      ..reset()
+      ..forward();
+  }
+
   @override
   Widget build(BuildContext context) {
     final viewModel = ref.watch(dashboardViewModelProvider);
     final theme = Theme.of(context);
-
     final authViewModel = ref.watch(authViewModelProvider);
     final enableIncomes = authViewModel.currentUser?.enableIncomes ?? false;
+
+    final currentValue = enableIncomes
+        ? viewModel.balanceForMonth
+        : viewModel.totalAmountForMonth;
+
+    final fromValue = enableIncomes
+        ? viewModel.lastAnimatedBalanceForMonth
+        : viewModel.lastAnimatedTotalForMonth;
+
+    final isNewRefresh = _lastSeenRefreshCount != viewModel.refreshCount;
+
+    if (isNewRefresh) {
+      _lastSeenRefreshCount = viewModel.refreshCount;
+      _scheduledTargetTotal = viewModel.totalAmountForMonth;
+      _scheduledTargetBalance = viewModel.balanceForMonth;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) return;
+        _animateTo(
+          from: 0,
+          to: currentValue,
+          enableIncomes: enableIncomes,
+          viewModel: viewModel,
+        );
+      });
+    } else {
+      final scheduledTarget =
+          enableIncomes ? _scheduledTargetBalance : _scheduledTargetTotal;
+      if (currentValue != scheduledTarget) {
+        _scheduledTargetTotal = viewModel.totalAmountForMonth;
+        _scheduledTargetBalance = viewModel.balanceForMonth;
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (!mounted) return;
+          _animateTo(
+            from: fromValue,
+            to: currentValue,
+            enableIncomes: enableIncomes,
+            viewModel: viewModel,
+          );
+        });
+      }
+    }
 
     final percentageChange = viewModel.percentageChangeFromAverage(
       enableIncomes,
@@ -94,21 +179,9 @@ class _DashboardBalanceCardState extends ConsumerState<DashboardBalanceCard> {
       symbol: 'R\$',
     );
 
-    return TweenAnimationBuilder<double>(
-      key: ValueKey(
-        enableIncomes
-            ? viewModel.balanceForMonth
-            : viewModel.totalAmountForMonth,
-      ),
-      tween: Tween<double>(
-        begin: 0,
-        end: enableIncomes
-            ? viewModel.balanceForMonth
-            : viewModel.totalAmountForMonth,
-      ),
-      duration: AppAnimations.durationSlow,
-      curve: AppAnimations.curve,
-      builder: (context, value, child) {
+    return AnimatedBuilder(
+      animation: _animation,
+      builder: (context, _) {
         final primaryHue = HSLColor.fromColor(theme.colorScheme.primary).hue;
         final isGreenish = primaryHue >= 70 && primaryHue <= 160;
         final isReddish = primaryHue >= 330 || primaryHue <= 20;
@@ -121,7 +194,7 @@ class _DashboardBalanceCardState extends ConsumerState<DashboardBalanceCard> {
 
         return BalanceCard(
           title: enableIncomes ? 'Saldo do Mês' : 'Gasto Total do Mês',
-          totalValue: value,
+          totalValue: _animation.value,
           gradient: LinearGradient(
             colors: [
               theme.colorScheme.primary,

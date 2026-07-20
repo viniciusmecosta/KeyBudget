@@ -35,17 +35,21 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
   }
 
   Future<void> _fetchInitialData({bool isRefresh = true}) async {
-    if (_isRefreshing) return;
+    final authViewModel = ref.read(authViewModelProvider);
+    final userId = authViewModel.currentUser?.id;
+    if (userId == null) return;
 
-    if (isRefresh) {
+    if (!mounted) return;
+    if (!isRefresh) {
+      if (_isRefreshing) return;
+      setState(() => _isRefreshing = true);
+    } else {
+      ref.read(dashboardViewModelProvider).triggerRefresh();
       setState(() => _isRefreshing = true);
     }
 
     try {
-      final authViewModel = ref.read(authViewModelProvider);
       if (authViewModel.currentUser != null && mounted) {
-        final userId = authViewModel.currentUser!.id;
-
         await ref.read(categoryViewModelProvider).fetchCategories(userId);
         if (!mounted) return;
         ref.read(expenseViewModelProvider).listenToExpenses(userId);
@@ -53,7 +57,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
         ref.read(credentialViewModelProvider).listenToCredentials(userId);
       }
     } finally {
-      if (mounted && isRefresh) {
+      if (mounted) {
         setState(() => _isRefreshing = false);
       }
     }
@@ -92,20 +96,24 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                           delegate: SliverChildListDelegate([
                             AppAnimations.fadeInFromBottom(
                               const DashboardBalanceCard(),
+                              key: const Key('dashboard_balance'),
                             ),
                             const SizedBox(height: AppSpacing.md),
                             AppAnimations.fadeInFromBottom(
                               const DashboardMonthlyChart(),
+                              key: const Key('dashboard_chart'),
                               delay: const Duration(milliseconds: 100),
                             ),
                             const SizedBox(height: AppSpacing.md),
                             AppAnimations.fadeInFromBottom(
                               const QuickActionsSection(),
+                              key: const Key('dashboard_quick_actions'),
                               delay: const Duration(milliseconds: 200),
                             ),
                             const SizedBox(height: AppSpacing.md),
                             AppAnimations.fadeInFromBottom(
                               const RecentActivitySection(),
+                              key: const Key('dashboard_recent_activity'),
                               delay: const Duration(milliseconds: 300),
                             ),
                           ]),
