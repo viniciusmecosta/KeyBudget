@@ -45,11 +45,10 @@ class _LockScreenState extends ConsumerState<LockScreen>
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     super.didChangeAppLifecycleState(state);
-    if (state == AppLifecycleState.paused) {
-      if (mounted) {
-        setState(() {
-          _isAuthenticating = false;
-        });
+    if (state == AppLifecycleState.resumed) {
+      if (_isAuthenticating && mounted) {
+        setState(() => _isAuthenticating = false);
+        ref.read(appLockServiceProvider).isAuthenticating = false;
       }
     }
   }
@@ -62,17 +61,21 @@ class _LockScreenState extends ConsumerState<LockScreen>
     final appLockService = ref.read(appLockServiceProvider);
     appLockService.isAuthenticating = true;
 
-    final localAuthService = LocalAuthService();
-    final isAuthenticated = await localAuthService.authenticate();
+    try {
+      final localAuthService = LocalAuthService();
+      final isAuthenticated = await localAuthService.authenticate();
 
-    appLockService.isAuthenticating = false;
+      if (!mounted) return;
 
-    if (!mounted) return;
-
-    if (isAuthenticated) {
-      ref.read(appLockServiceProvider).unlockApp();
-    } else {
-      setState(() => _isAuthenticating = false);
+      if (isAuthenticated) {
+        ref.read(appLockServiceProvider).unlockApp();
+      } else {
+        setState(() => _isAuthenticating = false);
+      }
+    } catch (_) {
+      if (mounted) setState(() => _isAuthenticating = false);
+    } finally {
+      appLockService.isAuthenticating = false;
     }
   }
 

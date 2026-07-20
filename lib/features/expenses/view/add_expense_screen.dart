@@ -8,6 +8,7 @@ import 'package:google_mlkit_text_recognition/google_mlkit_text_recognition.dart
 import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
 import 'package:key_budget/app/utils/app_animations.dart';
+import 'package:key_budget/core/services/app_lock_service.dart';
 import 'package:key_budget/core/design_system/borders/app_borders.dart';
 import 'package:key_budget/core/design_system/spacing/app_spacing.dart';
 import 'package:key_budget/core/design_system/widgets/app_button.dart';
@@ -77,11 +78,13 @@ class _AddExpenseScreenState extends ConsumerState<AddExpenseScreen> {
 
   Future<void> _scanReceipt(ImageSource source) async {
     try {
+      ref.read(appLockServiceProvider).beginExternalPick();
       final pickedFile = await _imagePicker.pickImage(
         source: source,
         maxWidth: 1024,
         imageQuality: 85,
       );
+      ref.read(appLockServiceProvider).endExternalPick();
       if (pickedFile == null) return;
 
       setState(() {
