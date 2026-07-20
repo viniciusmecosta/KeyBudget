@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:key_budget/app/utils/navigation_utils.dart';
 import 'package:key_budget/core/design_system/borders/app_borders.dart';
 import 'package:key_budget/core/design_system/spacing/app_spacing.dart';
+import 'package:key_budget/core/services/app_lock_service.dart';
 import 'package:key_budget/core/services/snackbar_service.dart';
 import 'package:key_budget/features/auth/viewmodel/auth_viewmodel.dart';
 import 'package:key_budget/features/expenses/view/export_expenses_screen.dart';
@@ -15,21 +16,30 @@ class ExpenseActionsPopupMenu extends ConsumerWidget {
   void _import(BuildContext context, WidgetRef ref) async {
     final viewModel = ref.read(expenseViewModelProvider);
     final authViewModel = ref.read(authViewModelProvider);
+    final appLock = ref.read(appLockServiceProvider);
     final scaffoldContext = context;
 
-    final count = await viewModel.importExpensesFromCsv(
-      authViewModel.currentUser!.id,
-    );
+    appLock.beginExternalPick();
+    try {
+      final count = await viewModel.importExpensesFromCsv(
+        authViewModel.currentUser!.id,
+      );
 
-    if (scaffoldContext.mounted) {
-      if (count > 0) {
-        SnackbarService.showSuccess(
-          scaffoldContext,
-          '$count despesas importadas com sucesso!',
-        );
-      } else {
-        SnackbarService.showError(scaffoldContext, 'Nenhuma despesa importada');
+      if (scaffoldContext.mounted) {
+        if (count > 0) {
+          SnackbarService.showSuccess(
+            scaffoldContext,
+            '$count despesas importadas com sucesso!',
+          );
+        } else {
+          SnackbarService.showError(
+            scaffoldContext,
+            'Nenhuma despesa importada',
+          );
+        }
       }
+    } finally {
+      appLock.endExternalPick();
     }
   }
 

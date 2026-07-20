@@ -9,6 +9,7 @@ import 'package:key_budget/core/design_system/borders/app_borders.dart';
 import 'package:key_budget/core/design_system/spacing/app_spacing.dart';
 import 'package:key_budget/core/models/credential_model.dart';
 import 'package:key_budget/core/models/folder_model.dart';
+import 'package:key_budget/core/services/app_lock_service.dart';
 import 'package:key_budget/features/auth/viewmodel/auth_viewmodel.dart';
 import 'package:key_budget/features/credentials/view/add_credential_screen.dart';
 import 'package:key_budget/features/credentials/viewmodel/credential_viewmodel.dart';
@@ -64,8 +65,14 @@ class _CredentialsScreenState extends ConsumerState<CredentialsScreen> {
 
     final viewModel = ref.read(credentialViewModelProvider);
     final authViewModel = ref.read(authViewModelProvider);
+    final appLock = ref.read(appLockServiceProvider);
 
-    await viewModel.importCredentialsFromCsv(authViewModel.currentUser!.id);
+    appLock.beginExternalPick();
+    try {
+      await viewModel.importCredentialsFromCsv(authViewModel.currentUser!.id);
+    } finally {
+      appLock.endExternalPick();
+    }
 
     if (mounted) setState(() => _isProcessing = false);
   }
