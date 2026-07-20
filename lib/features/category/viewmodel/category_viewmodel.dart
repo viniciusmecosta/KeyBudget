@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/legacy.dart';
 import 'package:key_budget/core/models/expense_category_model.dart';
+import 'package:key_budget/core/utils/string_extensions.dart';
 import 'package:key_budget/features/category/repository/category_repository.dart';
 
 class CategoryViewModel extends ChangeNotifier {
@@ -21,7 +22,7 @@ class CategoryViewModel extends ChangeNotifier {
   Future<void> fetchCategories(String userId) async {
     _setLoading(true);
     _categories = await _repository.getCategoriesForUser(userId);
-    _categories.sort((a, b) => a.name.compareTo(b.name));
+    _categories.sort((a, b) => a.name.withoutDiacritics.toLowerCase().compareTo(b.name.withoutDiacritics.toLowerCase()));
     _setLoading(false);
   }
 
