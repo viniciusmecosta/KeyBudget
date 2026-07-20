@@ -30,7 +30,9 @@ class _LockScreenState extends ConsumerState<LockScreen>
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) {
-        _authenticate();
+        if (WidgetsBinding.instance.lifecycleState == AppLifecycleState.resumed) {
+          _authenticate();
+        }
       }
     });
   }
@@ -45,8 +47,14 @@ class _LockScreenState extends ConsumerState<LockScreen>
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     super.didChangeAppLifecycleState(state);
+    
     if (state == AppLifecycleState.resumed) {
+      if (!_isAuthenticating && mounted) {
+        _authenticate();
+      }
+    } else if (state == AppLifecycleState.paused) {
       if (_isAuthenticating && mounted) {
+        LocalAuthService().stopAuthentication();
         setState(() => _isAuthenticating = false);
         ref.read(appLockServiceProvider).isAuthenticating = false;
       }
