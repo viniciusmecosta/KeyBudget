@@ -10,6 +10,10 @@ class DashboardViewModel extends ChangeNotifier {
   CategoryViewModel categoryViewModel;
   ExpenseViewModel expenseViewModel;
   CredentialViewModel credentialViewModel;
+  int _refreshCount = 0;
+
+  double _lastAnimatedTotalForMonth = 0;
+  double _lastAnimatedBalanceForMonth = 0;
 
   DashboardViewModel({
     required this.categoryViewModel,
@@ -36,6 +40,23 @@ class DashboardViewModel extends ChangeNotifier {
     notifyListeners();
     _updateWidget();
   }
+
+  void onAnimationStartedTo({required double total, required double balance}) {
+    _lastAnimatedTotalForMonth = total;
+    _lastAnimatedBalanceForMonth = balance;
+  }
+
+  void triggerRefresh() {
+    _lastAnimatedTotalForMonth = 0;
+    _lastAnimatedBalanceForMonth = 0;
+    _refreshCount++;
+    notifyListeners();
+  }
+
+  int get refreshCount => _refreshCount;
+
+  double get lastAnimatedTotalForMonth => _lastAnimatedTotalForMonth;
+  double get lastAnimatedBalanceForMonth => _lastAnimatedBalanceForMonth;
 
   Future<void> _updateWidget() async {
     await HomeWidgetService.updateWidgetData(totalAmountForMonth);
