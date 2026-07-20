@@ -25,7 +25,6 @@ class ExpenseForm extends ConsumerWidget {
   final bool isEditing;
   final bool isIncome;
   final VoidCallback? onChanged;
-  final Widget? imagePreviewWidget;
   final bool isInstallment;
   final Function(bool)? onInstallmentChanged;
   final int installmentsValue;
@@ -47,7 +46,6 @@ class ExpenseForm extends ConsumerWidget {
     this.isEditing = false,
     this.isIncome = false,
     this.onChanged,
-    this.imagePreviewWidget,
     this.isInstallment = false,
     this.onInstallmentChanged,
     this.installmentsValue = 2,
@@ -315,7 +313,6 @@ class ExpenseForm extends ConsumerWidget {
               ),
             ],
           ],
-          ?imagePreviewWidget,
           ...?bottomWidgets,
         ],
       ),
