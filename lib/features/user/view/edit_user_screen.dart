@@ -61,7 +61,7 @@ class _EditUserScreenState extends ConsumerState<EditUserScreen> {
 
     final viewModel = ref.read(authViewModelProvider);
 
-    final success = await viewModel.updateUser(
+    final result = await viewModel.updateUser(
       name: _nameController.text,
       phoneNumber: _phoneController.text.isNotEmpty
           ? _phoneMaskFormatter.unmaskText(_phoneController.text)
@@ -75,13 +75,25 @@ class _EditUserScreenState extends ConsumerState<EditUserScreen> {
     if (mounted) {
       setState(() => _isSaving = false);
 
-      if (success) {
+      if (result.isSuccess) {
         SnackbarService.showSuccess(context, 'Perfil atualizado com sucesso!');
         Navigator.of(context).pop();
+      } else if (result.profileUpdated && result.passwordUpdated == false) {
+        if (result.requiresRecentLogin) {
+          SnackbarService.showError(
+            context,
+            'Perfil atualizado. Para alterar a senha, faça login novamente por motivos de segurança.',
+          );
+        } else {
+          SnackbarService.showError(
+            context,
+            'Perfil atualizado, mas ocorreu um erro na senha: ${result.errorMessage ?? "erro desconhecido"}',
+          );
+        }
       } else {
         SnackbarService.showError(
           context,
-          viewModel.errorMessage ?? 'Erro desconhecido',
+          result.errorMessage ?? 'Erro ao atualizar perfil.',
         );
       }
     }
