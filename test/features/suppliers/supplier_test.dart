@@ -1,0 +1,123 @@
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_test/flutter_test.dart';
+import 'package:key_budget/core/design_system/widgets/app_text_field.dart';
+import 'package:key_budget/core/models/supplier_model.dart';
+import 'package:key_budget/core/models/user_model.dart';
+import 'package:key_budget/features/auth/repository/auth_repository.dart';
+import 'package:key_budget/features/auth/viewmodel/auth_viewmodel.dart';
+import 'package:key_budget/features/credentials/repository/credential_repository.dart';
+import 'package:key_budget/features/credentials/viewmodel/credential_viewmodel.dart';
+import 'package:key_budget/features/credentials/widgets/saved_logos_screen.dart';
+import 'package:key_budget/features/suppliers/repository/supplier_repository.dart';
+import 'package:key_budget/features/suppliers/view/add_supplier_screen.dart';
+import 'package:key_budget/features/suppliers/viewmodel/supplier_viewmodel.dart';
+import 'package:key_budget/features/suppliers/widgets/supplier_form.dart';
+
+class FakeSupplierRepository extends Fake implements SupplierRepository {}
+
+class FakeCredentialRepository extends Fake implements CredentialRepository {}
+
+class FakeAuthRepository extends Fake implements AuthRepository {}
+
+class FakeSupplierViewModel extends SupplierViewModel {
+  FakeSupplierViewModel() : super(repository: FakeSupplierRepository());
+
+  final List<Supplier> _fakeSuppliers = [
+    Supplier(
+      id: 's1',
+      name: 'Fornecedor A',
+      photoPath: 'photo_supplier_a',
+    ),
+  ];
+
+  @override
+  List<Supplier> get allSuppliers => _fakeSuppliers;
+
+  @override
+  List<String> get userSupplierPhotos =>
+      ['photo_supplier_a', 'photo_supplier_a', ''];
+}
+
+class FakeCredentialViewModel extends CredentialViewModel {
+  FakeCredentialViewModel() : super(repository: FakeCredentialRepository());
+
+  @override
+  List<String> get userCredentialLogos => ['logo_credential_1'];
+}
+
+class FakeAuthViewModel extends AuthViewModel {
+  FakeAuthViewModel()
+      : super(
+          authRepository: FakeAuthRepository(),
+          listenToAuthChanges: false,
+        );
+
+  @override
+  User? get currentUser => User(
+        id: 'test_uid',
+        name: 'Tester',
+        email: 'tester@test.com',
+      );
+}
+
+void main() {
+  testWidgets('AddSupplierScreen renders SupplierForm with isEditing true', (tester) async {
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          authViewModelProvider.overrideWith((ref) => FakeAuthViewModel()),
+          supplierViewModelProvider.overrideWith((ref) => FakeSupplierViewModel()),
+        ],
+        child: const MaterialApp(
+          home: AddSupplierScreen(),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    final formFinder = find.byType(SupplierForm);
+    expect(formFinder, findsOneWidget);
+    final formWidget = tester.widget<SupplierForm>(formFinder);
+    expect(formWidget.isEditing, isTrue);
+
+    final nameField =
+        find.widgetWithText(AppTextField, 'Nome do Fornecedor / Loja *');
+    expect(nameField, findsOneWidget);
+    await tester.enterText(nameField, 'Distribuidora Silva');
+    expect(find.text('Distribuidora Silva'), findsOneWidget);
+  });
+
+  testWidgets('SavedLogosScreen filters photos by module and deduplicates', (tester) async {
+
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          supplierViewModelProvider.overrideWith((ref) => FakeSupplierViewModel()),
+          credentialViewModelProvider.overrideWith((ref) => FakeCredentialViewModel()),
+        ],
+        child: const MaterialApp(
+          home: SavedLogosScreen(isForSuppliers: true),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.byType(Card), findsOneWidget);
+
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          supplierViewModelProvider.overrideWith((ref) => FakeSupplierViewModel()),
+          credentialViewModelProvider.overrideWith((ref) => FakeCredentialViewModel()),
+        ],
+        child: const MaterialApp(
+          home: SavedLogosScreen(isForSuppliers: false),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.byType(Card), findsOneWidget);
+  });
+}
