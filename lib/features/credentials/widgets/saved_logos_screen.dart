@@ -5,16 +5,50 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:key_budget/app/utils/app_animations.dart';
 import 'package:key_budget/features/credentials/viewmodel/credential_viewmodel.dart';
 
+import 'package:key_budget/features/suppliers/viewmodel/supplier_viewmodel.dart';
+
 class SavedLogosScreen extends ConsumerWidget {
   final bool isForSuppliers;
 
   const SavedLogosScreen({super.key, this.isForSuppliers = false});
 
+  Widget _buildImageWidget(String imagePath, ThemeData theme) {
+    try {
+      if (imagePath.startsWith('http://') || imagePath.startsWith('https://')) {
+        return Image.network(
+          imagePath,
+          fit: BoxFit.cover,
+          errorBuilder: (context, error, stackTrace) => Icon(
+            Icons.broken_image_outlined,
+            color: theme.colorScheme.error,
+          ),
+        );
+      }
+      final bytes = base64Decode(imagePath);
+      return Image.memory(
+        bytes,
+        fit: BoxFit.cover,
+        errorBuilder: (context, error, stackTrace) => Icon(
+          Icons.broken_image_outlined,
+          color: theme.colorScheme.error,
+        ),
+      );
+    } catch (_) {
+      return Icon(
+        Icons.image_not_supported_outlined,
+        color: theme.colorScheme.onSurfaceVariant,
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final List<String> logos;
+    final List<String> rawLogos = isForSuppliers
+        ? ref.watch(supplierViewModelProvider).userSupplierPhotos
+        : ref.watch(credentialViewModelProvider).userCredentialLogos;
 
-    logos = ref.read(credentialViewModelProvider).userCredentialLogos;
+    final List<String> logos =
+        rawLogos.where((p) => p.trim().isNotEmpty).toSet().toList();
 
     final theme = Theme.of(context);
 
@@ -64,10 +98,10 @@ class SavedLogosScreen extends ConsumerWidget {
                 ),
                 itemCount: logos.length,
                 itemBuilder: (context, index) {
-                  final logoBase64 = logos[index];
+                  final logoPath = logos[index];
                   return GestureDetector(
                     onTap: () {
-                      Navigator.of(context).pop(logoBase64);
+                      Navigator.of(context).pop(logoPath);
                     },
                     child: Card(
                       elevation: 4,
@@ -76,12 +110,11 @@ class SavedLogosScreen extends ConsumerWidget {
                       ),
                       shape: const CircleBorder(),
                       clipBehavior: Clip.antiAlias,
-                      child: CircleAvatar(
-                        backgroundColor: theme
-                            .colorScheme
-                            .surfaceContainerHighest
+                      child: Container(
+                        color: theme.colorScheme.surfaceContainerHighest
                             .withAlpha((255 * 0.3).round()),
-                        backgroundImage: MemoryImage(base64Decode(logoBase64)),
+                        alignment: Alignment.center,
+                        child: _buildImageWidget(logoPath, theme),
                       ),
                     ),
                   );

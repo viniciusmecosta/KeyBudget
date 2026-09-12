@@ -6,7 +6,10 @@ import 'package:key_budget/core/models/supplier_model.dart';
 import 'package:key_budget/features/suppliers/repository/supplier_repository.dart';
 
 class SupplierViewModel extends ChangeNotifier {
-  final SupplierRepository _repository = SupplierRepository();
+  final SupplierRepository _repository;
+
+  SupplierViewModel({SupplierRepository? repository})
+      : _repository = repository ?? SupplierRepository();
 
   List<Supplier> _allSuppliers = [];
   bool _isLoading = false;
@@ -113,5 +116,7 @@ class SupplierViewModel extends ChangeNotifier {
 }
 
 final supplierViewModelProvider = ChangeNotifierProvider<SupplierViewModel>(
-  (ref) => SupplierViewModel(),
+  (ref) => SupplierViewModel(
+    repository: ref.read(supplierRepositoryProvider),
+  ),
 );
