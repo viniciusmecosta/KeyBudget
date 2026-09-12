@@ -77,7 +77,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
     final success = await authViewModel.registerUser(
       name: _nameController.text.trim(),
       email: _emailController.text.trim(),
-      password: _passwordController.text.trim(),
+      password: _passwordController.text,
       phoneNumber: _phoneController.text.isNotEmpty
           ? _phoneMaskFormatter.unmaskText(_phoneController.text)
           : null,
@@ -201,6 +201,16 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                 color: _strengthColor(_passwordStrength),
                 label: _strengthLabel(_passwordStrength),
               ),
+              if (_passwordController.text.startsWith(' ') ||
+                  _passwordController.text.endsWith(' ')) ...[
+                const SizedBox(height: AppSpacing.xs),
+                Text(
+                  'Atenção: sua senha contém espaços no início ou fim.',
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: theme.colorScheme.error,
+                  ),
+                ),
+              ],
             ],
             const SizedBox(height: AppSpacing.md),
             AppTextField(
@@ -227,8 +237,8 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
             AppButton(
               label: 'Cadastrar',
               isFullWidth: true,
-              isLoading: viewModel.isLoading,
-              onPressed: _submit,
+              isLoading: viewModel.isOperating(AuthOperation.register),
+              onPressed: viewModel.isLoading ? null : _submit,
             ),
           ],
         ),
