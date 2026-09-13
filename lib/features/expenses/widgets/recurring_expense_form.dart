@@ -8,6 +8,8 @@ import 'package:key_budget/core/design_system/borders/app_borders.dart';
 import 'package:key_budget/core/design_system/spacing/app_spacing.dart';
 import 'package:key_budget/core/models/expense_category_model.dart';
 import 'package:key_budget/core/models/recurring_expense_model.dart';
+import 'package:key_budget/features/auth/viewmodel/auth_viewmodel.dart';
+import 'package:key_budget/features/category/view/categories_screen.dart';
 import 'package:key_budget/features/category/viewmodel/category_viewmodel.dart';
 import 'package:key_budget/features/expenses/viewmodel/expense_viewmodel.dart';
 
@@ -145,7 +147,25 @@ class RecurringExpenseForm extends ConsumerWidget {
                 value: currentCategory,
                 categories: ref.watch(categoryViewModelProvider).categories,
                 onChanged: (category) => selectedCategory.value = category,
-                onManageCategories: () {},
+                onManageCategories: () async {
+                  final userId =
+                      ref.read(authViewModelProvider).currentUser?.id;
+                  await Navigator.of(context).push(
+                    MaterialPageRoute(builder: (_) => const CategoriesScreen()),
+                  );
+                  if (userId != null && context.mounted) {
+                    await ref
+                        .read(categoryViewModelProvider)
+                        .fetchCategories(userId);
+                    final categories =
+                        ref.read(categoryViewModelProvider).categories;
+                    if (selectedCategory.value != null &&
+                        !categories
+                            .any((c) => c.id == selectedCategory.value!.id)) {
+                      selectedCategory.value = null;
+                    }
+                  }
+                },
                 validator: (v) => v == null ? 'Campo obrigatório' : null,
               );
             },
