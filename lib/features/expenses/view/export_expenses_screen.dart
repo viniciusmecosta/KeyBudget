@@ -24,7 +24,7 @@ class _ExportExpensesScreenState extends ConsumerState<ExportExpensesScreen> {
     final picked = await showDateRangePicker(
       context: context,
       firstDate: DateTime(2000),
-      lastDate: DateTime.now(),
+      lastDate: DateTime(2100),
       locale: const Locale('pt', 'BR'),
     );
     if (picked != null) {
