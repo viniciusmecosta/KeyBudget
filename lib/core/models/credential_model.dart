@@ -47,4 +47,28 @@ class Credential {
       folderId: map['folder_id'],
     );
   }
+
+  Credential copyWith({
+    String? id,
+    String? location,
+    String? login,
+    String? encryptedPassword,
+    String? email,
+    String? phoneNumber,
+    String? notes,
+    String? logoPath,
+    String? folderId,
+  }) {
+    return Credential(
+      id: id ?? this.id,
+      location: location ?? this.location,
+      login: login ?? this.login,
+      encryptedPassword: encryptedPassword ?? this.encryptedPassword,
+      email: email ?? this.email,
+      phoneNumber: phoneNumber ?? this.phoneNumber,
+      notes: notes ?? this.notes,
+      logoPath: logoPath ?? this.logoPath,
+      folderId: folderId ?? this.folderId,
+    );
+  }
 }

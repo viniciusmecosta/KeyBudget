@@ -17,6 +17,7 @@ import 'package:key_budget/features/category/view/categories_screen.dart';
 import 'package:key_budget/features/category/viewmodel/category_viewmodel.dart';
 import 'package:key_budget/features/credentials/viewmodel/credential_viewmodel.dart';
 import 'package:key_budget/features/expenses/viewmodel/expense_viewmodel.dart';
+import 'package:key_budget/features/user/view/backup_restore_screen.dart';
 import 'package:key_budget/features/user/view/edit_user_screen.dart';
 import 'package:path_provider/path_provider.dart';
 
@@ -612,9 +613,21 @@ class UserScreen extends ConsumerWidget {
                       ),
                       Divider(height: 1, indent: 56, endIndent: 16),
                       SettingsTile(
+                        icon: Icons.shield_outlined,
+                        title: 'Backup e Restauração (.kbudget)',
+                        subtitle: 'Cópia criptografada, completa e verificável',
+                        onTap: () {
+                          NavigationUtils.push(
+                            context,
+                            const BackupRestoreScreen(),
+                          );
+                        },
+                      ),
+                      Divider(height: 1, indent: 56, endIndent: 16),
+                      SettingsTile(
                         icon: Icons.cloud_upload_outlined,
-                        title: 'Backup no Google Drive',
-                        subtitle: 'Exportar dados para CSV',
+                        title: 'Exportação CSV (Legado)',
+                        subtitle: 'Exportar dados para planilhas CSV',
                         onTap: () => _showBackupDialog(context, ref),
                       ),
                     ]),

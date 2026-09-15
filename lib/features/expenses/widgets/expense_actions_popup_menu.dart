@@ -4,7 +4,6 @@ import 'package:key_budget/app/utils/navigation_utils.dart';
 import 'package:key_budget/core/design_system/borders/app_borders.dart';
 import 'package:key_budget/core/design_system/spacing/app_spacing.dart';
 import 'package:key_budget/core/services/app_lock_service.dart';
-import 'package:key_budget/core/services/snackbar_service.dart';
 import 'package:key_budget/features/auth/viewmodel/auth_viewmodel.dart';
 import 'package:key_budget/features/expenses/view/export_expenses_screen.dart';
 import 'package:key_budget/features/expenses/view/recurring_expenses_screen.dart';
@@ -21,23 +20,10 @@ class ExpenseActionsPopupMenu extends ConsumerWidget {
 
     appLock.beginExternalPick();
     try {
-      final count = await viewModel.importExpensesFromCsv(
+      await viewModel.importExpensesFromCsv(
         authViewModel.currentUser!.id,
+        context: scaffoldContext,
       );
-
-      if (scaffoldContext.mounted) {
-        if (count > 0) {
-          SnackbarService.showSuccess(
-            scaffoldContext,
-            '$count despesas importadas com sucesso!',
-          );
-        } else {
-          SnackbarService.showError(
-            scaffoldContext,
-            'Nenhuma despesa importada',
-          );
-        }
-      }
     } finally {
       appLock.endExternalPick();
     }

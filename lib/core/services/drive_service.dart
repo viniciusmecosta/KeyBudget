@@ -203,9 +203,80 @@ class DriveService {
     return bytes;
   }
 
+  Future<List<DriveBackupFile>> listBackupFiles({
+    String? serverClientId,
+  }) async {
+    final driveApi = await _getDriveApi(serverClientId: serverClientId);
+    if (driveApi == null) return [];
+
+    final rootFolderId = await _getFolderId(driveApi);
+    if (rootFolderId == null) return [];
+
+    final backupFolderId =
+        await _getSubFolderId(driveApi, rootFolderId, 'Backup');
+    if (backupFolderId == null) return [];
+
+    final query =
+        "'$backupFolderId' in parents and trashed=false and (name contains '.kbudget' or name contains '.csv')";
+    final response = await driveApi.files.list(
+      q: query,
+      $fields: 'files(id, name, size, modifiedTime, createdTime)',
+      orderBy: 'modifiedTime desc',
+    );
+
+    final files = response.files ?? [];
+    return files.map((f) {
+      final size = int.tryParse(f.size ?? '0') ?? 0;
+      return DriveBackupFile(
+        id: f.id ?? '',
+        name: f.name ?? '',
+        sizeBytes: size,
+        modifiedTime: f.modifiedTime,
+      );
+    }).toList();
+  }
+
+  Future<List<int>?> downloadFileLimited(
+    String fileId, {
+    int maxBytes = 100 * 1024 * 1024,
+    String? serverClientId,
+  }) async {
+    final driveApi = await _getDriveApi(serverClientId: serverClientId);
+    if (driveApi == null) return null;
+
+    final response = (await driveApi.files.get(
+      fileId,
+      downloadOptions: drive.DownloadOptions.fullMedia,
+    )) as drive.Media;
+
+    final bytes = <int>[];
+    await for (final chunk in response.stream) {
+      bytes.addAll(chunk);
+      if (bytes.length > maxBytes) {
+        throw Exception('Arquivo excede o limite máximo permitido para download ($maxBytes bytes).');
+      }
+    }
+
+    return bytes;
+  }
+
   Future<void> deleteFile(String fileId, {String? serverClientId}) async {
     final driveApi = await _getDriveApi(serverClientId: serverClientId);
     if (driveApi == null) return;
     await driveApi.files.delete(fileId);
   }
+}
+
+class DriveBackupFile {
+  final String id;
+  final String name;
+  final int sizeBytes;
+  final DateTime? modifiedTime;
+
+  const DriveBackupFile({
+    required this.id,
+    required this.name,
+    required this.sizeBytes,
+    this.modifiedTime,
+  });
 }
