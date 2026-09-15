@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -40,8 +42,8 @@ class _AppInitializerState extends ConsumerState<AppInitializer> {
   Future<void> _initServices() async {
     await AppConfig.initialize();
     ref.read(authViewModelProvider);
-    HomeWidgetService.initialize();
-    NotificationService.initialize();
+    await HomeWidgetService.initialize();
+    await NotificationService.initialize();
   }
 
   @override
@@ -83,12 +85,13 @@ class MyApp extends ConsumerStatefulWidget {
 
 class _MyAppState extends ConsumerState<MyApp> with WidgetsBindingObserver {
   Uri? _pendingWidgetUri;
+  StreamSubscription<Uri?>? _widgetClickedSubscription;
 
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
-    HomeWidget.widgetClicked.listen(_launchedFromWidget);
+    _widgetClickedSubscription = HomeWidget.widgetClicked.listen(_launchedFromWidget);
     _checkInitialWidgetLaunch();
   }
 
@@ -148,6 +151,7 @@ class _MyAppState extends ConsumerState<MyApp> with WidgetsBindingObserver {
   @override
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
+    _widgetClickedSubscription?.cancel();
     super.dispose();
   }
 
