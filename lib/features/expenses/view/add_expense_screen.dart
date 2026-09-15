@@ -8,6 +8,8 @@ import 'package:key_budget/core/design_system/spacing/app_spacing.dart';
 import 'package:key_budget/core/design_system/widgets/app_button.dart';
 import 'package:key_budget/core/models/expense_category_model.dart';
 import 'package:key_budget/core/models/expense_model.dart';
+import 'package:key_budget/core/money/money_parser.dart';
+import 'package:key_budget/core/operations/operation_result.dart';
 import 'package:key_budget/core/services/snackbar_service.dart';
 import 'package:key_budget/features/auth/viewmodel/auth_viewmodel.dart';
 import 'package:key_budget/features/expenses/viewmodel/expense_viewmodel.dart';
@@ -58,10 +60,10 @@ class _AddExpenseScreenState extends ConsumerState<AddExpenseScreen> {
     super.dispose();
   }
 
-
   void _submit() async {
     if (!_formKey.currentState!.validate()) return;
-    if (_amountController.numberValue == 0) {
+    final money = MoneyParser.fromMaskedText(_amountController.text);
+    if (money.isZero) {
       SnackbarService.showError(context, 'O valor não pode ser zero.');
       return;
     }
@@ -72,8 +74,8 @@ class _AddExpenseScreenState extends ConsumerState<AddExpenseScreen> {
     final navigator = Navigator.of(context);
     final scaffoldContext = context;
     final userId = authViewModel.currentUser!.id;
-    final newExpense = Expense(
-      amount: _amountController.numberValue,
+    final newExpense = Expense.withMoney(
+      money: money,
       date: _selectedDate,
       categoryId: _selectedCategory?.id,
       motivation: _motivationController.text.isNotEmpty
@@ -85,13 +87,22 @@ class _AddExpenseScreenState extends ConsumerState<AddExpenseScreen> {
       isIncome: _isIncome,
     );
 
-    if (_isInstallment) {
-      await expenseViewModel.addInstallmentExpenses(
+    if (!_isIncome && _isInstallment) {
+      final result = await expenseViewModel.addInstallmentExpenses(
         userId,
         newExpense,
         _installmentsValue,
         _startNextMonth,
       );
+      if (result.status == OperationStatus.failed) {
+        if (!scaffoldContext.mounted) return;
+        setState(() => _isSaving = false);
+        SnackbarService.showError(
+          scaffoldContext,
+          result.safeError ?? 'Erro ao gerar parcelas.',
+        );
+        return;
+      }
     } else {
       await expenseViewModel.addExpense(userId, newExpense);
     }
@@ -214,6 +225,9 @@ class _AddExpenseScreenState extends ConsumerState<AddExpenseScreen> {
                                 setState(() {
                                   _isIncome = true;
                                   _selectedCategory = null;
+                                  _isInstallment = false;
+                                  _installmentsValue = 2;
+                                  _startNextMonth = false;
                                 });
                               }
                             },

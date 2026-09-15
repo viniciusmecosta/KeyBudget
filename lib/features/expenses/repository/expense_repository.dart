@@ -3,7 +3,13 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:key_budget/core/models/expense_model.dart';
 
 class ExpenseRepository {
-  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  final FirebaseFirestore? _customFirestore;
+
+  ExpenseRepository({FirebaseFirestore? firestore})
+      : _customFirestore = firestore;
+
+  FirebaseFirestore get _firestore =>
+      _customFirestore ?? FirebaseFirestore.instance;
 
   CollectionReference<Expense> _getExpensesCollection(String userId) {
     return _firestore
@@ -18,7 +24,11 @@ class ExpenseRepository {
   }
 
   Future<void> addExpense(String userId, Expense expense) async {
-    await _getExpensesCollection(userId).add(expense);
+    if (expense.id != null && expense.id!.isNotEmpty) {
+      await _getExpensesCollection(userId).doc(expense.id).set(expense);
+    } else {
+      await _getExpensesCollection(userId).add(expense);
+    }
   }
 
   Future<void> restoreExpense(String userId, Expense expense) async {
@@ -33,7 +43,11 @@ class ExpenseRepository {
     final batch = _firestore.batch();
     final collection = _getExpensesCollection(userId);
     for (var expense in expenses) {
-      batch.set(collection.doc(), expense);
+      if (expense.id != null && expense.id!.isNotEmpty) {
+        batch.set(collection.doc(expense.id), expense);
+      } else {
+        batch.set(collection.doc(), expense);
+      }
     }
     await batch.commit();
   }

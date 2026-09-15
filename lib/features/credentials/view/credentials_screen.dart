@@ -69,7 +69,10 @@ class _CredentialsScreenState extends ConsumerState<CredentialsScreen> {
 
     appLock.beginExternalPick();
     try {
-      await viewModel.importCredentialsFromCsv(authViewModel.currentUser!.id);
+      await viewModel.importCredentialsFromCsv(
+        authViewModel.currentUser!.id,
+        context: context,
+      );
     } finally {
       appLock.endExternalPick();
     }
@@ -93,7 +96,7 @@ class _CredentialsScreenState extends ConsumerState<CredentialsScreen> {
 
   void _showCreateFolderDialog(BuildContext context, String userId) {
     final controller = TextEditingController();
-    int selectedColorValue = 0xFF3B82F6; // default color
+    int selectedColorValue = 0xFF3B82F6;
     final theme = Theme.of(context);
 
     showDialog(
@@ -147,14 +150,14 @@ class _CredentialsScreenState extends ConsumerState<CredentialsScreen> {
                     alignment: WrapAlignment.center,
                     children:
                         [
-                          0xFF3B82F6, // Blue
-                          0xFF10B981, // Emerald
-                          0xFFF59E0B, // Amber
-                          0xFFEF4444, // Red
-                          0xFF8B5CF6, // Violet
-                          0xFFEC4899, // Pink
-                          0xFF14B8A6, // Teal
-                          0xFF64748B, // Slate
+                          0xFF3B82F6,
+                          0xFF10B981,
+                          0xFFF59E0B,
+                          0xFFEF4444,
+                          0xFF8B5CF6,
+                          0xFFEC4899,
+                          0xFF14B8A6,
+                          0xFF64748B,
                         ].map((colorValue) {
                           final isSelected = selectedColorValue == colorValue;
                           return GestureDetector(

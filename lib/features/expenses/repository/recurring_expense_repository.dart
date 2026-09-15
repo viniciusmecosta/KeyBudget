@@ -3,7 +3,13 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:key_budget/core/models/recurring_expense_model.dart';
 
 class RecurringExpenseRepository {
-  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  final FirebaseFirestore? _customFirestore;
+
+  RecurringExpenseRepository({FirebaseFirestore? firestore})
+      : _customFirestore = firestore;
+
+  FirebaseFirestore get _firestore =>
+      _customFirestore ?? FirebaseFirestore.instance;
 
   CollectionReference<RecurringExpense> _getRecurringExpensesCollection(
     String userId,
