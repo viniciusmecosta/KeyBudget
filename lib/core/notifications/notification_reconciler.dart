@@ -1,4 +1,3 @@
-
 import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:intl/intl.dart';
@@ -89,7 +88,8 @@ class NotificationReconciler {
     for (final rule in activeRules) {
       if (rule.id == null || rule.id!.isEmpty) continue;
 
-      if (rule.generationState == 'paused' || rule.generationState == 'completed') {
+      if (rule.generationState == 'paused' ||
+          rule.generationState == 'completed') {
         continue;
       }
 
@@ -98,31 +98,31 @@ class NotificationReconciler {
 
       final dateKey = dateFormat.format(scheduledAt);
       final logicalKey = '${uid}__${rule.id}__${dateKey}__expense_reminder';
-      final motivation = (rule.motivation != null && rule.motivation!.trim().isNotEmpty)
-          ? rule.motivation!.trim()
-          : 'Despesa fixa';
-
       final title = 'Lembrete de Despesa';
-      final body = 'Vencimento programado para hoje: $motivation';
+      // Notifications can be displayed on a locked device. Do not expose a
+      // merchant, description, or financial amount outside the application.
+      const body = 'Você tem uma despesa programada para hoje.';
       final payload = json.encode({
         'ruleId': rule.id,
         'version': 1,
         'action': 'open_recurring',
       });
 
-      final fingerprint = '$motivation||${scheduledAt.toIso8601String()}';
+      final fingerprint = '${rule.id}||${scheduledAt.toIso8601String()}';
 
-      desired.add(DesiredNotification(
-        logicalKey: logicalKey,
-        uid: uid,
-        ruleId: rule.id!,
-        scheduledDateKey: dateKey,
-        scheduledAt: scheduledAt,
-        title: title,
-        body: body,
-        payload: payload,
-        fingerprint: fingerprint,
-      ));
+      desired.add(
+        DesiredNotification(
+          logicalKey: logicalKey,
+          uid: uid,
+          ruleId: rule.id!,
+          scheduledDateKey: dateKey,
+          scheduledAt: scheduledAt,
+          title: title,
+          body: body,
+          payload: payload,
+          fingerprint: fingerprint,
+        ),
+      );
     }
 
     return desired;
@@ -136,7 +136,6 @@ class NotificationReconciler {
     _activeSessionUid = uid;
 
     try {
-
       final desiredList = computeDesiredNotifications(
         uid: uid,
         activeRules: activeRules,
@@ -162,18 +161,21 @@ class NotificationReconciler {
       final pendingNativeIds = pendingNative.map((p) => p.id).toSet();
 
       for (final desired in desiredList) {
-        if (generation != _reconciliationGeneration || _activeSessionUid != uid) {
+        if (generation != _reconciliationGeneration ||
+            _activeSessionUid != uid) {
           return;
         }
 
         final existing = _registry.getEntry(desired.logicalKey);
 
         if (existing != null) {
-          final bool fingerprintChanged = existing.fingerprint != desired.fingerprint;
-          final bool missingFromNative = !pendingNativeIds.contains(existing.nativeId);
+          final bool fingerprintChanged =
+              existing.fingerprint != desired.fingerprint;
+          final bool missingFromNative = !pendingNativeIds.contains(
+            existing.nativeId,
+          );
 
           if (fingerprintChanged || missingFromNative) {
-
             await _gateway.scheduleNotification(
               id: existing.nativeId,
               title: desired.title,
@@ -191,7 +193,6 @@ class NotificationReconciler {
             );
           }
         } else {
-
           final newEntry = await _registry.getOrAllocate(
             logicalKey: desired.logicalKey,
             uid: uid,

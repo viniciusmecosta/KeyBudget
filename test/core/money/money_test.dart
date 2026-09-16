@@ -57,7 +57,10 @@ void main() {
 
     test('Formatação pt-BR com e sem símbolo, positivos e negativos', () {
       expect(Money.fromCents(123456).formatBrl(), 'R\$ 1.234,56');
-      expect(Money.fromCents(123456).formatBrl(includeSymbol: false), '1.234,56');
+      expect(
+        Money.fromCents(123456).formatBrl(includeSymbol: false),
+        '1.234,56',
+      );
       expect(Money.fromCents(5).formatBrl(), 'R\$ 0,05');
       expect(Money.fromCents(0).formatBrl(), 'R\$ 0,00');
       expect(Money.fromCents(-123456).formatBrl(), '-R\$ 1.234,56');
@@ -65,14 +68,17 @@ void main() {
       expect(Money.fromCents(100000000).formatBrl(), 'R\$ 1.000.000,00');
     });
 
-    test('Limite conservador de 53 bits (abs <= 9007199254740991) e erro em overflow', () {
-      const safeMax = 9007199254740991;
-      final safeMoney = Money.fromCents(safeMax);
-      expect(safeMoney.amountMinor, safeMax);
+    test(
+      'Limite conservador de 53 bits (abs <= 9007199254740991) e erro em overflow',
+      () {
+        const safeMax = 9007199254740991;
+        final safeMoney = Money.fromCents(safeMax);
+        expect(safeMoney.amountMinor, safeMax);
 
-      expect(() => Money.fromCents(safeMax + 1), throwsArgumentError);
-      expect(() => Money.fromCents(-safeMax - 1), throwsArgumentError);
-    });
+        expect(() => Money.fromCents(safeMax + 1), throwsArgumentError);
+        expect(() => Money.fromCents(-safeMax - 1), throwsArgumentError);
+      },
+    );
 
     test('Valor enorme/NaN/infinito lança erro explícito sem truncamento', () {
       expect(
@@ -104,41 +110,78 @@ void main() {
       expect(MoneyParser.parse('(10,00)').amountMinor, -1000);
     });
 
-    test('fromMaskedText aceita formato típico de MoneyMaskedTextController', () {
-      expect(MoneyParser.fromMaskedText('R\$ 1.234,56').amountMinor, 123456);
-      expect(MoneyParser.fromMaskedText('R\$ 0,00').amountMinor, 0);
-      expect(MoneyParser.fromMaskedText('R\$ 33,33').amountMinor, 3333);
-    });
+    test(
+      'fromMaskedText aceita formato típico de MoneyMaskedTextController',
+      () {
+        expect(MoneyParser.fromMaskedText('R\$ 1.234,56').amountMinor, 123456);
+        expect(MoneyParser.fromMaskedText('R\$ 0,00').amountMinor, 0);
+        expect(MoneyParser.fromMaskedText('R\$ 33,33').amountMinor, 3333);
+      },
+    );
 
-    test('Casas decimais extras disparam ExtraDecimalsException quando não autorizadas', () {
-      expect(
-        () => MoneyParser.parse('12,345', allowExtraDecimals: false),
-        throwsA(isA<ExtraDecimalsException>()),
-      );
-      expect(
-        () => MoneyParser.parse('100.555', allowExtraDecimals: false),
-        throwsA(isA<ExtraDecimalsException>()),
-      );
-    });
+    test(
+      'Casas decimais extras disparam ExtraDecimalsException quando não autorizadas',
+      () {
+        expect(
+          () => MoneyParser.parse('12,345', allowExtraDecimals: false),
+          throwsA(isA<ExtraDecimalsException>()),
+        );
+        expect(
+          () => MoneyParser.parse('100.555', allowExtraDecimals: false),
+          throwsA(isA<ExtraDecimalsException>()),
+        );
+      },
+    );
 
-    test('Casas decimais extras com allowExtraDecimals aplica half-away-from-zero', () {
-      final m1 = MoneyParser.parse('1.005', allowExtraDecimals: true);
-      expect(m1.amountMinor, 101);
+    test(
+      'Casas decimais extras com allowExtraDecimals aplica half-away-from-zero',
+      () {
+        final m1 = MoneyParser.parse('1.005', allowExtraDecimals: true);
+        expect(m1.amountMinor, 101);
 
-      final m2 = MoneyParser.parse('1.004', allowExtraDecimals: true);
-      expect(m2.amountMinor, 100);
+        final m2 = MoneyParser.parse('1.004', allowExtraDecimals: true);
+        expect(m2.amountMinor, 100);
 
-      final m3 = MoneyParser.parse('33.3333333333', allowExtraDecimals: true);
-      expect(m3.amountMinor, 3333);
-    });
+        final m3 = MoneyParser.parse('33.3333333333', allowExtraDecimals: true);
+        expect(m3.amountMinor, 3333);
+      },
+    );
   });
 
   group('Leitura Compatível de Legado (Expense & RecurringExpense)', () {
+    test(
+      'Registro financeiro sem data válida falha em vez de receber a data atual',
+      () {
+        expect(
+          () => Expense.fromMap({'amount': 10}, 'exp_without_date'),
+          throwsA(isA<FormatException>()),
+        );
+      },
+    );
+
+    test(
+      'Regra sem início ou frequência conhecida falha em vez de virar mensal',
+      () {
+        expect(
+          () => RecurringExpense.fromMap({
+            'amount': 10,
+            'frequency': 'monthly',
+          }, 'rec_without_start'),
+          throwsA(isA<FormatException>()),
+        );
+        expect(
+          () => RecurringExpense.fromMap({
+            'amount': 10,
+            'frequency': 'fortnightly',
+            'startDate': '2026-03-01T00:00:00.000',
+          }, 'rec_unknown_frequency'),
+          throwsA(isA<FormatException>()),
+        );
+      },
+    );
+
     test('Integer Firestore amount: 10 é lido como 1000 centavos', () {
-      final map = {
-        'amount': 10,
-        'date': '2026-03-01T10:00:00.000',
-      };
+      final map = {'amount': 10, 'date': '2026-03-01T10:00:00.000'};
       final exp = Expense.fromMap(map, 'exp_int');
       expect(exp.amount, 10.0);
       expect(exp.amountMinor, 1000);
@@ -147,30 +190,30 @@ void main() {
       expect(exp.hasMoneyInconsistency, isFalse);
     });
 
-    test('Legado amount: 33.3333333333 preserva bruto, indica aproximado e gera zero writes no toMap', () {
-      const legacyAmount = 33.333333333333336;
-      final map = {
-        'amount': legacyAmount,
-        'date': '2026-03-01T10:00:00.000',
-        'motivation': 'Parcela antiga',
-      };
-      final exp = Expense.fromMap(map, 'exp_float');
-      expect(exp.amount, legacyAmount);
-      expect(exp.rawAmount, legacyAmount);
-      expect(exp.amountMinor, 3333);
-      expect(exp.isLegacyApproximate, isTrue);
-      expect(exp.hasMoneyInconsistency, isFalse);
+    test(
+      'Legado amount: 33.3333333333 preserva bruto, indica aproximado e gera zero writes no toMap',
+      () {
+        const legacyAmount = 33.333333333333336;
+        final map = {
+          'amount': legacyAmount,
+          'date': '2026-03-01T10:00:00.000',
+          'motivation': 'Parcela antiga',
+        };
+        final exp = Expense.fromMap(map, 'exp_float');
+        expect(exp.amount, legacyAmount);
+        expect(exp.rawAmount, legacyAmount);
+        expect(exp.amountMinor, 3333);
+        expect(exp.isLegacyApproximate, isTrue);
+        expect(exp.hasMoneyInconsistency, isFalse);
 
-      final exported = exp.toMap();
-      expect(exported['amount'], legacyAmount);
-      expect(exported.containsKey('amountMinor'), isFalse);
-    });
+        final exported = exp.toMap();
+        expect(exported['amount'], legacyAmount);
+        expect(exported.containsKey('amountMinor'), isFalse);
+      },
+    );
 
     test('Legado 1.005 resulta em 101 centavos com bruto preservado', () {
-      final map = {
-        'amount': 1.005,
-        'date': '2026-03-01T10:00:00.000',
-      };
+      final map = {'amount': 1.005, 'date': '2026-03-01T10:00:00.000'};
       final exp = Expense.fromMap(map, 'exp_half');
       expect(exp.amountMinor, 101);
       expect(exp.rawAmount, 1.005);
@@ -181,43 +224,48 @@ void main() {
       expect(exported.containsKey('amountMinor'), isFalse);
     });
 
-    test('amountMinor diverge de amount: inconsistência detectada e política aplicada', () {
+    test(
+      'amountMinor diverge de amount: inconsistência detectada e política aplicada',
+      () {
+        final map = {
+          'amount': 150.0,
+          'amountMinor': 10000,
+          'moneyVersion': 1,
+          'currency': 'BRL',
+          'date': '2026-03-01T10:00:00.000',
+        };
+        final exp = Expense.fromMap(map, 'exp_divergent');
+        expect(exp.hasMoneyInconsistency, isTrue);
 
-      final map = {
-        'amount': 150.0,
-        'amountMinor': 10000,
-        'moneyVersion': 1,
-        'currency': 'BRL',
-        'date': '2026-03-01T10:00:00.000',
-      };
-      final exp = Expense.fromMap(map, 'exp_divergent');
-      expect(exp.hasMoneyInconsistency, isTrue);
+        expect(exp.amountMinor, 15000);
+        expect(exp.amount, 150.0);
+      },
+    );
 
-      expect(exp.amountMinor, 15000);
-      expect(exp.amount, 150.0);
-    });
+    test(
+      'Editar somente descrição mantém mapa monetário e vínculo idênticos',
+      () {
+        const legacyAmount = 33.333333333333336;
+        final original = Expense.fromMap({
+          'amount': legacyAmount,
+          'date': '2026-03-01T10:00:00.000',
+          'motivation': 'Descrição original',
+          'recurringExpenseId': 'rec_123',
+        }, 'exp_edit_desc');
 
-    test('Editar somente descrição mantém mapa monetário e vínculo idênticos', () {
-      const legacyAmount = 33.333333333333336;
-      final original = Expense.fromMap({
-        'amount': legacyAmount,
-        'date': '2026-03-01T10:00:00.000',
-        'motivation': 'Descrição original',
-        'recurringExpenseId': 'rec_123',
-      }, 'exp_edit_desc');
+        final edited = original.copyWith(motivation: 'Descrição editada');
 
-      final edited = original.copyWith(motivation: 'Descrição editada');
+        expect(edited.motivation, 'Descrição editada');
+        expect(edited.rawAmount, legacyAmount);
+        expect(edited.amount, legacyAmount);
+        expect(edited.recurringExpenseId, 'rec_123');
 
-      expect(edited.motivation, 'Descrição editada');
-      expect(edited.rawAmount, legacyAmount);
-      expect(edited.amount, legacyAmount);
-      expect(edited.recurringExpenseId, 'rec_123');
-
-      final exported = edited.toMap();
-      expect(exported['amount'], legacyAmount);
-      expect(exported.containsKey('amountMinor'), isFalse);
-      expect(exported['recurringExpenseId'], 'rec_123');
-    });
+        final exported = edited.toMap();
+        expect(exported['amount'], legacyAmount);
+        expect(exported.containsKey('amountMinor'), isFalse);
+        expect(exported['recurringExpenseId'], 'rec_123');
+      },
+    );
 
     test('Editar valor explicitamente converte para amountMinor novo', () {
       final original = Expense.fromMap({
@@ -237,20 +285,23 @@ void main() {
       expect(exported['amount'], 75.50);
     });
 
-    test('RecurringExpense lê inteiros, lida com divergências e preserva campos desconhecidos', () {
-      final map = {
-        'amount': 250,
-        'frequency': 'monthly',
-        'startDate': '2026-01-01T00:00:00.000',
-        'customLegacyField': 'preserved_value',
-      };
-      final rec = RecurringExpense.fromMap(map, 'rec_int');
-      expect(rec.amountMinor, 25000);
-      expect(rec.rawAmount, 250);
-      expect(rec.unmappedData['customLegacyField'], 'preserved_value');
+    test(
+      'RecurringExpense lê inteiros, lida com divergências e preserva campos desconhecidos',
+      () {
+        final map = {
+          'amount': 250,
+          'frequency': 'monthly',
+          'startDate': '2026-01-01T00:00:00.000',
+          'customLegacyField': 'preserved_value',
+        };
+        final rec = RecurringExpense.fromMap(map, 'rec_int');
+        expect(rec.amountMinor, 25000);
+        expect(rec.rawAmount, 250);
+        expect(rec.unmappedData['customLegacyField'], 'preserved_value');
 
-      final exported = rec.toMap();
-      expect(exported['customLegacyField'], 'preserved_value');
-    });
+        final exported = rec.toMap();
+        expect(exported['customLegacyField'], 'preserved_value');
+      },
+    );
   });
 }

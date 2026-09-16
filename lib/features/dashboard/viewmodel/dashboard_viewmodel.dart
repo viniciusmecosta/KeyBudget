@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/legacy.dart';
 import 'package:key_budget/core/models/expense_model.dart';
+import 'package:key_budget/core/money/money.dart';
 import 'package:key_budget/core/services/home_widget_service.dart';
 import 'package:key_budget/features/category/viewmodel/category_viewmodel.dart';
 import 'package:key_budget/features/credentials/viewmodel/credential_viewmodel.dart';
@@ -102,7 +103,11 @@ class DashboardViewModel extends ChangeNotifier {
           exp.date.month == now.month &&
           exp.isIncome != true;
     }).toList();
-    return filteredExpenses.fold(0.0, (sum, item) => sum + item.amount);
+    final totalMinor = filteredExpenses.fold<int>(
+      0,
+      (sum, item) => sum + item.money.amountMinor,
+    );
+    return Money.fromCents(totalMinor).toDouble();
   }
 
   double get totalIncomeForMonth {
@@ -112,7 +117,11 @@ class DashboardViewModel extends ChangeNotifier {
           exp.date.month == now.month &&
           exp.isIncome == true;
     }).toList();
-    return filteredIncomes.fold(0.0, (sum, item) => sum + item.amount);
+    final totalMinor = filteredIncomes.fold<int>(
+      0,
+      (sum, item) => sum + item.money.amountMinor,
+    );
+    return Money.fromCents(totalMinor).toDouble();
   }
 
   double get balanceForMonth {

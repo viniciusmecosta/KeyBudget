@@ -45,8 +45,8 @@ class Expense {
     this.scheduledDateKey,
     Map<String, dynamic>? unmappedData,
   }) : unmappedData = unmappedData != null
-            ? Map.unmodifiable(unmappedData)
-            : const {};
+           ? Map.unmodifiable(unmappedData)
+           : const {};
 
   factory Expense.withMoney({
     String? id,
@@ -118,7 +118,6 @@ class Expense {
       map['moneyVersion'] = moneyVersion;
       map['amount'] = amountMinor! / 100.0;
     } else {
-
       map['amount'] = rawAmount ?? amount;
       if (currency != null) map['currency'] = currency;
       if (moneyVersion != null) map['moneyVersion'] = moneyVersion;
@@ -133,10 +132,14 @@ class Expense {
       throw FormatException('O campo amount é obrigatório para Expense $id');
     }
     if (rawAmountVal is! num) {
-      throw FormatException('O campo amount deve ser numérico para Expense $id');
+      throw FormatException(
+        'O campo amount deve ser numérico para Expense $id',
+      );
     }
     if (rawAmountVal.isNaN || rawAmountVal.isInfinite) {
-      throw FormatException('O campo amount não pode ser NaN ou infinito para Expense $id');
+      throw FormatException(
+        'O campo amount não pode ser NaN ou infinito para Expense $id',
+      );
     }
 
     final rawAmount = rawAmountVal;
@@ -149,19 +152,20 @@ class Expense {
     bool hasInconsistency = false;
 
     if (storedAmountMinor != null) {
-      final legacyEquivalent =
-          Money.fromNumWithHalfAwayFromZero(rawAmount).amountMinor;
+      final legacyEquivalent = Money.fromNumWithHalfAwayFromZero(
+        rawAmount,
+      ).amountMinor;
       if (storedAmountMinor == legacyEquivalent) {
         effectiveAmountMinor = storedAmountMinor;
       } else {
-
         hasInconsistency = true;
         effectiveAmountMinor = legacyEquivalent;
       }
     } else {
       isApprox = Money.hasMoreThanTwoDecimals(rawAmount);
-      effectiveAmountMinor =
-          Money.fromNumWithHalfAwayFromZero(rawAmount).amountMinor;
+      effectiveAmountMinor = Money.fromNumWithHalfAwayFromZero(
+        rawAmount,
+      ).amountMinor;
     }
 
     final knownKeys = {
@@ -196,8 +200,24 @@ class Expense {
       parsedDate = dateVal;
     } else if (dateVal is Timestamp) {
       parsedDate = dateVal.toDate();
+    } else if (dateVal is Map) {
+      final seconds = dateVal['_seconds'];
+      final nanoseconds = dateVal['_nanoseconds'];
+      if (seconds is! int ||
+          nanoseconds is! int ||
+          nanoseconds < 0 ||
+          nanoseconds >= 1000000000) {
+        throw FormatException(
+          'O campo date deve conter segundos e nanossegundos válidos para Expense $id',
+        );
+      }
+      final microseconds =
+          seconds * Duration.microsecondsPerSecond + nanoseconds ~/ 1000;
+      parsedDate = DateTime.fromMicrosecondsSinceEpoch(microseconds);
     } else {
-      parsedDate = DateTime.now();
+      throw FormatException(
+        'O campo date é obrigatório e deve ser uma data válida para Expense $id',
+      );
     }
 
     return Expense(
@@ -264,14 +284,15 @@ class Expense {
 
     return Expense(
       id: id ?? this.id,
-      amount: amount ??
-          (amountMinor != null ? amountMinor / 100.0 : this.amount),
+      amount:
+          amount ?? (amountMinor != null ? amountMinor / 100.0 : this.amount),
       amountMinor: nextAmountMinor,
       currency: currency ?? this.currency,
       moneyVersion: nextMoneyVersion,
       rawAmount: nextRawAmount,
       isLegacyApproximate: isLegacyApproximate ?? this.isLegacyApproximate,
-      hasMoneyInconsistency: hasMoneyInconsistency ?? this.hasMoneyInconsistency,
+      hasMoneyInconsistency:
+          hasMoneyInconsistency ?? this.hasMoneyInconsistency,
       date: date ?? this.date,
       categoryId: categoryId ?? this.categoryId,
       motivation: motivation ?? this.motivation,

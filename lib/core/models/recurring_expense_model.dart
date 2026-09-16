@@ -70,8 +70,8 @@ class RecurringExpense {
     this.generationRevision,
     Map<String, dynamic>? unmappedData,
   }) : unmappedData = unmappedData != null
-            ? Map.unmodifiable(unmappedData)
-            : const {};
+           ? Map.unmodifiable(unmappedData)
+           : const {};
 
   factory RecurringExpense.withMoney({
     String? id,
@@ -171,10 +171,14 @@ class RecurringExpense {
   factory RecurringExpense.fromMap(Map<String, dynamic> map, String id) {
     final rawAmountVal = map['amount'];
     if (rawAmountVal == null) {
-      throw FormatException('O campo amount é obrigatório para RecurringExpense $id');
+      throw FormatException(
+        'O campo amount é obrigatório para RecurringExpense $id',
+      );
     }
     if (rawAmountVal is! num) {
-      throw FormatException('O campo amount deve ser numérico para RecurringExpense $id');
+      throw FormatException(
+        'O campo amount deve ser numérico para RecurringExpense $id',
+      );
     }
     if (rawAmountVal.isNaN || rawAmountVal.isInfinite) {
       throw FormatException(
@@ -192,8 +196,9 @@ class RecurringExpense {
     bool hasInconsistency = false;
 
     if (storedAmountMinor != null) {
-      final legacyEquivalent =
-          Money.fromNumWithHalfAwayFromZero(rawAmount).amountMinor;
+      final legacyEquivalent = Money.fromNumWithHalfAwayFromZero(
+        rawAmount,
+      ).amountMinor;
       if (storedAmountMinor == legacyEquivalent) {
         effectiveAmountMinor = storedAmountMinor;
       } else {
@@ -202,8 +207,9 @@ class RecurringExpense {
       }
     } else {
       isApprox = Money.hasMoreThanTwoDecimals(rawAmount);
-      effectiveAmountMinor =
-          Money.fromNumWithHalfAwayFromZero(rawAmount).amountMinor;
+      effectiveAmountMinor = Money.fromNumWithHalfAwayFromZero(
+        rawAmount,
+      ).amountMinor;
     }
 
     final knownKeys = {
@@ -235,11 +241,13 @@ class RecurringExpense {
       }
     });
 
-    DateTime parseDate(dynamic val, DateTime defaultDate) {
+    DateTime parseDate(dynamic val) {
       if (val is Timestamp) return val.toDate();
       if (val is DateTime) return val;
       if (val is String) return DateTime.parse(val);
-      return defaultDate;
+      throw FormatException(
+        'O campo startDate é obrigatório e deve ser uma data válida para RecurringExpense $id',
+      );
     }
 
     DateTime? parseNullableDate(dynamic val) {
@@ -248,6 +256,24 @@ class RecurringExpense {
       if (val is DateTime) return val;
       if (val is String) return DateTime.parse(val);
       return null;
+    }
+
+    final frequencyValue = map['frequency'];
+    if (frequencyValue is! String) {
+      throw FormatException(
+        'O campo frequency é obrigatório e deve ser válido para RecurringExpense $id',
+      );
+    }
+    final frequency = RecurrenceFrequency.values
+        .cast<RecurrenceFrequency?>()
+        .firstWhere(
+          (value) => value?.name == frequencyValue,
+          orElse: () => null,
+        );
+    if (frequency == null) {
+      throw FormatException(
+        'Frequência recorrente desconhecida para RecurringExpense $id: $frequencyValue',
+      );
     }
 
     return RecurringExpense(
@@ -262,11 +288,8 @@ class RecurringExpense {
       categoryId: map['categoryId'],
       motivation: map['motivation'],
       location: map['location'],
-      frequency: RecurrenceFrequency.values.firstWhere(
-        (e) => e.name == map['frequency'],
-        orElse: () => RecurrenceFrequency.monthly,
-      ),
-      startDate: parseDate(map['startDate'], DateTime.now()),
+      frequency: frequency,
+      startDate: parseDate(map['startDate']),
       endDate: parseNullableDate(map['endDate']),
       dayOfWeek: map['dayOfWeek'] as int?,
       dayOfMonth: map['dayOfMonth'] as int?,
@@ -327,14 +350,15 @@ class RecurringExpense {
 
     return RecurringExpense(
       id: id ?? this.id,
-      amount: amount ??
-          (amountMinor != null ? amountMinor / 100.0 : this.amount),
+      amount:
+          amount ?? (amountMinor != null ? amountMinor / 100.0 : this.amount),
       amountMinor: nextAmountMinor,
       currency: currency ?? this.currency,
       moneyVersion: nextMoneyVersion,
       rawAmount: nextRawAmount,
       isLegacyApproximate: isLegacyApproximate ?? this.isLegacyApproximate,
-      hasMoneyInconsistency: hasMoneyInconsistency ?? this.hasMoneyInconsistency,
+      hasMoneyInconsistency:
+          hasMoneyInconsistency ?? this.hasMoneyInconsistency,
       categoryId: categoryId ?? this.categoryId,
       motivation: motivation ?? this.motivation,
       location: location ?? this.location,
