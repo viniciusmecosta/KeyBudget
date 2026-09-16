@@ -18,9 +18,7 @@ class HomeWidgetService {
   static Future<void> initialize() async {
     try {
       await HomeWidget.setAppGroupId(appGroupId);
-    } catch (_) {
-
-    }
+    } catch (_) {}
   }
 
   static bool? _cachedShowValues;
@@ -43,6 +41,20 @@ class HomeWidgetService {
     } catch (_) {}
   }
 
+  /// Marks the widget as belonging to the authenticated session without
+  /// replacing its last calculated financial value.
+  static Future<void> setWidgetSession(String uid) async {
+    if (uid.isEmpty) return;
+    try {
+      await HomeWidget.saveWidgetData<String>(keyUserId, uid);
+      await HomeWidget.saveWidgetData<String>(keyStatus, 'active');
+      await HomeWidget.updateWidget(
+        name: androidWidgetName,
+        iOSName: iOSWidgetName,
+      );
+    } catch (_) {}
+  }
+
   static Future<void> updateWidgetData(
     double monthlySpent, {
     String? uid,
@@ -53,7 +65,6 @@ class HomeWidgetService {
       final refDate = referenceMonth ?? DateTime.now();
       final monthStr = DateFormat('yyyy-MM').format(refDate);
 
-      final showValues = showValuesOverride ?? await getShowValues();
       final cents = (monthlySpent * 100).round();
 
       final currencyFormatter = NumberFormat.currency(
@@ -62,35 +73,47 @@ class HomeWidgetService {
         decimalDigits: 2,
       );
 
-      final formattedAmount = showValues
-          ? currencyFormatter.format(monthlySpent)
-          : 'R\$ •••••';
+      // Android applies the temporary five-second reveal locally. Persist the
+      // real, formatted value so a refresh never replaces it with a mask.
+      final formattedAmount = currencyFormatter.format(monthlySpent);
 
       await HomeWidget.saveWidgetData<int>(keyWidgetVersion, 1);
-      await HomeWidget.saveWidgetData<String>(keyUserId, uid ?? '');
-      await HomeWidget.saveWidgetData<String>(keyStatus, uid != null && uid.isNotEmpty ? 'active' : 'logged_out');
+      if (uid != null && uid.isNotEmpty) {
+        await HomeWidget.saveWidgetData<String>(keyUserId, uid);
+        await HomeWidget.saveWidgetData<String>(keyStatus, 'active');
+      }
       await HomeWidget.saveWidgetData<String>(keyReferenceMonth, monthStr);
-      await HomeWidget.saveWidgetData<bool>(keyShowValues, showValues);
+      await HomeWidget.saveWidgetData<bool>(
+        keyShowValues,
+        showValuesOverride ?? false,
+      );
       await HomeWidget.saveWidgetData<String>(keyMonthlySpent, formattedAmount);
       await HomeWidget.saveWidgetData<int>(keyMonthlySpentCents, cents);
-      await HomeWidget.saveWidgetData<String>(keyUpdatedAt, DateTime.now().toIso8601String());
+      await HomeWidget.saveWidgetData<String>(
+        keyUpdatedAt,
+        DateTime.now().toIso8601String(),
+      );
 
       await HomeWidget.updateWidget(
         name: androidWidgetName,
         iOSName: iOSWidgetName,
       );
-    } catch (_) {
-
-    }
+    } catch (_) {}
   }
 
   static Future<void> clearWidgetData() async {
     try {
       await HomeWidget.saveWidgetData<String>(keyUserId, '');
       await HomeWidget.saveWidgetData<String>(keyStatus, 'logged_out');
-      await HomeWidget.saveWidgetData<String>(keyMonthlySpent, 'Abra o KeyBudget');
+      await HomeWidget.saveWidgetData<String>(
+        keyMonthlySpent,
+        'Abra o KeyBudget',
+      );
       await HomeWidget.saveWidgetData<int>(keyMonthlySpentCents, 0);
-      await HomeWidget.saveWidgetData<String>(keyUpdatedAt, DateTime.now().toIso8601String());
+      await HomeWidget.saveWidgetData<String>(
+        keyUpdatedAt,
+        DateTime.now().toIso8601String(),
+      );
 
       await HomeWidget.updateWidget(
         name: androidWidgetName,
