@@ -55,7 +55,7 @@
                 android:layout_width="40dp"
                 android:layout_height="40dp"
                 android:background="?android:attr/selectableItemBackgroundBorderless"
-                android:contentDescription="Mostrar gasto do mês por cinco segundos"
+                android:contentDescription="Mostrar ou ocultar gasto do mês"
                 android:padding="8dp"
                 android:src="@drawable/ic_visibility"
                 android:tint="@color/widget_text_secondary" />

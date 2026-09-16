@@ -43,6 +43,7 @@ class KeyBudgetWidgetReceiver : HomeWidgetProvider() {
                 if (widgetId != AppWidgetManager.INVALID_APPWIDGET_ID) {
                     val widgetData = HomeWidgetPlugin.getData(context)
                     widgetData.edit().remove(revealUntilKey(widgetId)).apply()
+                    cancelScheduledMask(context, widgetId)
                     updateWidget(context, widgetId, widgetData)
                 }
                 return
@@ -101,7 +102,16 @@ class KeyBudgetWidgetReceiver : HomeWidgetProvider() {
         views.setTextViewText(R.id.tv_monthly_spent, displayText)
         views.setOnClickPendingIntent(
             R.id.btn_toggle_visibility,
-            visibilityPendingIntent(context, widgetId, ACTION_REVEAL_VALUE),
+            visibilityPendingIntent(
+                context,
+                widgetId,
+                if (isTemporarilyVisible) ACTION_MASK_VALUE else ACTION_REVEAL_VALUE,
+            ),
+        )
+        views.setImageViewResource(
+            R.id.btn_toggle_visibility,
+            if (isTemporarilyVisible) R.drawable.ic_visibility_off
+            else R.drawable.ic_visibility,
         )
 
         val addExpenseIntent = HomeWidgetLaunchIntent.getActivity(
@@ -127,6 +137,11 @@ class KeyBudgetWidgetReceiver : HomeWidgetProvider() {
         }
     }
 
+    private fun cancelScheduledMask(context: Context, widgetId: Int) {
+        val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
+        alarmManager.cancel(visibilityPendingIntent(context, widgetId, ACTION_MASK_VALUE))
+    }
+
     private fun visibilityPendingIntent(
         context: Context,
         widgetId: Int,
@@ -150,7 +165,7 @@ class KeyBudgetWidgetReceiver : HomeWidgetProvider() {
             "com.vinicius.key_budget.action.REVEAL_WIDGET_VALUE"
         private const val ACTION_MASK_VALUE =
             "com.vinicius.key_budget.action.MASK_WIDGET_VALUE"
-        private const val revealDurationMillis = 5_000L
+        private const val revealDurationMillis = 3_000L
 
         private fun revealUntilKey(widgetId: Int) = "widget_reveal_until_$widgetId"
     }
