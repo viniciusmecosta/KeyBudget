@@ -70,11 +70,12 @@ class AuthViewModel extends ChangeNotifier {
     AuthRepository? authRepository,
     LocalAuthService? localAuthService,
     bool listenToAuthChanges = true,
-  })  : _authRepository = authRepository ?? AuthRepository(),
-        _localAuthService = localAuthService ?? LocalAuthService() {
+  }) : _authRepository = authRepository ?? AuthRepository(),
+       _localAuthService = localAuthService ?? LocalAuthService() {
     if (listenToAuthChanges) {
-      _authStateSub =
-          _authRepository.firebaseAuthStateChanges.listen((firebaseUser) {
+      _authStateSub = _authRepository.firebaseAuthStateChanges.listen((
+        firebaseUser,
+      ) {
         _userProfileSub?.cancel();
 
         if (firebaseUser == null) {
@@ -86,25 +87,29 @@ class AuthViewModel extends ChangeNotifier {
         } else {
           _userProfileSub = _authRepository
               .getUserProfileStream(firebaseUser.uid)
-              .listen((user) {
-            _currentUser = user;
-            if (user != null) {
-              AppSecurityService.setSecure(user.appLocked ?? true);
-            }
-            if (!_isInitialized) {
-              _isInitialized = true;
-            }
-            notifyListeners();
-          }, onError: (e) {
-            if (kDebugMode) {
-              print("Error listening to user profile: $e");
-            }
-            _setErrorMessage('Erro ao carregar dados do perfil.');
-            if (!_isInitialized) {
-              _isInitialized = true;
-            }
-            notifyListeners();
-          });
+              .listen(
+                (user) {
+                  _currentUser = user;
+                  if (user != null) {
+                    AppSecurityService.setSecure(user.appLocked ?? true);
+                    unawaited(HomeWidgetService.setWidgetSession(user.id));
+                  }
+                  if (!_isInitialized) {
+                    _isInitialized = true;
+                  }
+                  notifyListeners();
+                },
+                onError: (e) {
+                  if (kDebugMode) {
+                    print("Error listening to user profile: $e");
+                  }
+                  _setErrorMessage('Erro ao carregar dados do perfil.');
+                  if (!_isInitialized) {
+                    _isInitialized = true;
+                  }
+                  notifyListeners();
+                },
+              );
         }
       });
     }
@@ -264,10 +269,7 @@ class AuthViewModel extends ChangeNotifier {
               'Se houver uma conta com este e-mail, você receberá as instruções para redefinir sua senha.',
         );
       }
-      return OperationResult.failed(
-        rawErrorCode: e.code,
-        safeError: safeMsg,
-      );
+      return OperationResult.failed(rawErrorCode: e.code, safeError: safeMsg);
     } catch (e) {
       const safeMsg =
           'Não foi possível solicitar a recuperação. Tente novamente mais tarde.';
@@ -333,9 +335,9 @@ class AuthViewModel extends ChangeNotifier {
 
       if (newPassword != null && newPassword.isNotEmpty) {
         try {
-          await _authRepository
-              .getCurrentFirebaseUser()
-              ?.updatePassword(newPassword);
+          await _authRepository.getCurrentFirebaseUser()?.updatePassword(
+            newPassword,
+          );
           passwordSaved = true;
         } on firebase.FirebaseAuthException catch (e) {
           passwordSaved = false;
@@ -441,7 +443,5 @@ class AuthViewModel extends ChangeNotifier {
 }
 
 final authViewModelProvider = ChangeNotifierProvider<AuthViewModel>(
-  (ref) => AuthViewModel(
-    authRepository: ref.read(authRepositoryProvider),
-  ),
+  (ref) => AuthViewModel(authRepository: ref.read(authRepositoryProvider)),
 );
