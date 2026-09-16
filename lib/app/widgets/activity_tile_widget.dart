@@ -38,18 +38,23 @@ class ActivityTile extends ConsumerWidget {
 
     final categoryColor = category?.color ?? colorScheme.primary;
 
-    return AppCard(
-      padding: const EdgeInsets.all(AppSpacing.md),
-      onTap: () =>
-          NavigationUtils.push(context, ExpenseDetailScreen(expense: expense)),
-      child: Row(
-        children: [
-          _buildCategoryIcon(categoryColor, category),
-          const SizedBox(width: AppSpacing.md),
-          _buildExpenseInfo(context, textTheme, colorScheme, category),
-          const SizedBox(width: AppSpacing.xs),
-          _buildAmountInfo(textTheme, currencyFormatter, colorScheme),
-        ],
+    return Padding(
+      padding: const EdgeInsets.only(bottom: AppSpacing.sm),
+      child: AppCard(
+        padding: const EdgeInsets.all(AppSpacing.md),
+        onTap: () => NavigationUtils.push(
+          context,
+          ExpenseDetailScreen(expense: expense),
+        ),
+        child: Row(
+          children: [
+            _buildCategoryIcon(categoryColor, category),
+            const SizedBox(width: AppSpacing.md),
+            _buildExpenseInfo(context, textTheme, colorScheme, category),
+            const SizedBox(width: AppSpacing.xs),
+            _buildAmountInfo(textTheme, currencyFormatter, colorScheme),
+          ],
+        ),
       ),
     );
   }
