@@ -7,14 +7,7 @@ import 'package:key_budget/features/expenses/repository/expense_repository.dart'
 import 'package:key_budget/features/expenses/repository/recurrence_occurrence_repository.dart';
 import 'package:key_budget/features/expenses/repository/recurring_expense_repository.dart';
 
-enum RecurrenceDeleteMode {
-
-  onlyRule,
-
-  futureOnly,
-
-  all,
-}
+enum RecurrenceDeleteMode { onlyRule, futureOnly, all }
 
 class RecurringDeleteSnapshot {
   final RecurringExpense rule;
@@ -51,7 +44,15 @@ class RecurrenceDeletionService {
   }) async {
     try {
       final now = clock.now();
-      final endOfToday = DateTime(now.year, now.month, now.day, 23, 59, 59, 999);
+      final endOfToday = DateTime(
+        now.year,
+        now.month,
+        now.day,
+        23,
+        59,
+        59,
+        999,
+      );
 
       final linkedExpenses = allExpenses
           .where((e) => e.recurringExpenseId == rule.id)
@@ -63,7 +64,6 @@ class RecurrenceDeletionService {
           expensesToDelete = [];
           break;
         case RecurrenceDeleteMode.futureOnly:
-
           expensesToDelete = linkedExpenses
               .where((e) => e.date.isAfter(endOfToday))
               .toList();
@@ -110,11 +110,7 @@ class RecurrenceDeletionService {
     required RecurringDeleteSnapshot snapshot,
   }) async {
     try {
-
-      await recurringRepository.restoreRecurringExpense(
-        userId,
-        snapshot.rule,
-      );
+      await recurringRepository.restoreRecurringExpense(userId, snapshot.rule);
 
       for (final exp in snapshot.deletedExpenses) {
         await expenseRepository.restoreExpense(userId, exp);
@@ -144,12 +140,16 @@ class RecurrenceDeletionService {
 
       if (expense.recurringExpenseId != null &&
           expense.recurringExpenseId!.isNotEmpty) {
-        final dateKey = RecurrenceOccurrence.formatDateKey(expense.date);
-        final occurrenceKey = RecurrenceOccurrence.generateKey(
-          uid: userId,
-          recurringExpenseId: expense.recurringExpenseId!,
-          scheduledDateKey: dateKey,
-        );
+        final dateKey =
+            expense.scheduledDateKey ??
+            RecurrenceOccurrence.formatDateKey(expense.date);
+        final occurrenceKey =
+            expense.occurrenceKey ??
+            RecurrenceOccurrence.generateKey(
+              uid: userId,
+              recurringExpenseId: expense.recurringExpenseId!,
+              scheduledDateKey: dateKey,
+            );
 
         final tombstone = RecurrenceOccurrence(
           occurrenceKey: occurrenceKey,
@@ -166,10 +166,7 @@ class RecurrenceDeletionService {
 
       await expenseRepository.deleteExpense(userId, expenseId);
 
-      return OperationResult.completed(
-        affectedIds: [expenseId],
-        count: 1,
-      );
+      return OperationResult.completed(affectedIds: [expenseId], count: 1);
     } catch (e) {
       return OperationResult.failed(
         safeError: 'Falha ao excluir ocorrência: ${e.toString()}',

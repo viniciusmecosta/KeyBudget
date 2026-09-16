@@ -1,6 +1,7 @@
-
 import 'dart:convert';
 import 'dart:io';
+
+import 'package:crypto/crypto.dart';
 
 class NotificationRegistryEntry {
   final String logicalKey;
@@ -81,7 +82,6 @@ class NotificationIdRegistry {
         });
       }
     } catch (_) {
-
       _entries.clear();
     }
   }
@@ -94,9 +94,7 @@ class NotificationIdRegistry {
         serialized[key] = entry.toMap();
       });
       await _storageFile!.writeAsString(json.encode(serialized), flush: true);
-    } catch (_) {
-
-    }
+    } catch (_) {}
   }
 
   Future<NotificationRegistryEntry> getOrAllocate({
@@ -109,7 +107,6 @@ class NotificationIdRegistry {
   }) async {
     final existing = _entries[logicalKey];
     if (existing != null) {
-
       final updated = NotificationRegistryEntry(
         logicalKey: logicalKey,
         nativeId: existing.nativeId,
@@ -126,7 +123,7 @@ class NotificationIdRegistry {
     }
 
     final usedNativeIds = _entries.values.map((e) => e.nativeId).toSet();
-    int candidate = (logicalKey.hashCode & 0x7FFFFFFF) % 2000000000 + 1000;
+    int candidate = _stableNativeId(logicalKey);
     while (usedNativeIds.contains(candidate)) {
       candidate = (candidate + 1) % 2000000000 + 1000;
     }
@@ -145,7 +142,8 @@ class NotificationIdRegistry {
     return newEntry;
   }
 
-  NotificationRegistryEntry? getEntry(String logicalKey) => _entries[logicalKey];
+  NotificationRegistryEntry? getEntry(String logicalKey) =>
+      _entries[logicalKey];
 
   List<NotificationRegistryEntry> getEntriesForUid(String uid) {
     return _entries.values.where((e) => e.uid == uid).toList();
@@ -176,5 +174,18 @@ class NotificationIdRegistry {
   Future<void> clearAll() async {
     _entries.clear();
     await _persistToStorage();
+  }
+
+  /// Dart's String.hashCode is deliberately not a durable persistence key.
+  /// The registry may outlive a process restart, so allocation starts from a
+  /// stable SHA-256 prefix and still resolves collisions deterministically.
+  static int _stableNativeId(String logicalKey) {
+    final digest = sha256.convert(utf8.encode(logicalKey)).bytes;
+    final value =
+        ((digest[0] & 0x7f) << 24) |
+        (digest[1] << 16) |
+        (digest[2] << 8) |
+        digest[3];
+    return value % 2000000000 + 1000;
   }
 }

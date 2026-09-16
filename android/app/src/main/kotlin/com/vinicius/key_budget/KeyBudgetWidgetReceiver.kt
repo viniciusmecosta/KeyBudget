@@ -32,7 +32,7 @@ class KeyBudgetWidgetReceiver : HomeWidgetProvider() {
 
             val displayText = when {
                 userId.isNullOrEmpty() || status == "logged_out" -> "Abra o KeyBudget"
-                referenceMonth.isNotEmpty() && referenceMonth != currentMonth -> "R$ •••••"
+                !referenceMonth.isNullOrEmpty() && referenceMonth != currentMonth -> "R$ •••••"
                 !showValues -> "R$ •••••"
                 else -> monthlySpent ?: "R$ 0,00"
             }

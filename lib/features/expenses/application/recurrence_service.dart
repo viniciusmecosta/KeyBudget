@@ -2,6 +2,7 @@ import 'package:key_budget/core/models/expense_model.dart';
 import 'package:key_budget/core/models/recurring_expense_model.dart';
 import 'package:key_budget/core/operations/operation_result.dart';
 import 'package:key_budget/core/time/app_clock.dart';
+import 'package:key_budget/features/expenses/application/recurrence_committer.dart';
 import 'package:key_budget/features/expenses/domain/recurrence_occurrence.dart';
 import 'package:key_budget/features/expenses/domain/recurrence_schedule.dart';
 import 'package:key_budget/features/expenses/repository/expense_repository.dart';
@@ -13,12 +14,14 @@ class RecurrenceService {
   final RecurringExpenseRepository recurringRepository;
   final RecurrenceOccurrenceRepository occurrenceRepository;
   final AppClock clock;
+  final FirestoreRecurrenceCommitter? committer;
 
   RecurrenceService({
     required this.expenseRepository,
     required this.recurringRepository,
     required this.occurrenceRepository,
     this.clock = const SystemAppClock(),
+    this.committer,
   });
 
   Future<OperationResult<List<Expense>>> generatePendingOccurrences(
@@ -28,7 +31,8 @@ class RecurrenceService {
   }) async {
     try {
       final now = clock.now();
-      final allRules = rulesToProcess ??
+      final allRules =
+          rulesToProcess ??
           await recurringRepository.getRecurringExpensesStream(userId).first;
 
       final List<Expense> allCreatedExpenses = [];
@@ -41,8 +45,10 @@ class RecurrenceService {
           continue;
         }
 
-        final targetHorizon =
-            RecurrenceSchedule.getTargetHorizonDate(now, rule);
+        final targetHorizon = RecurrenceSchedule.getTargetHorizonDate(
+          now,
+          rule,
+        );
 
         if (rule.lastInstanceDate != null &&
             rule.lastInstanceDate!.isAfter(targetHorizon)) {
@@ -85,7 +91,6 @@ class RecurrenceService {
           );
 
           if (existingOccurrence != null) {
-
             cursor = candidateDate;
             continue;
           }
@@ -109,10 +114,8 @@ class RecurrenceService {
             location: rule.location,
             isIncome: rule.isIncome ?? false,
             recurringExpenseId: rule.id,
-            unmappedData: {
-              'occurrenceKey': occurrenceKey,
-              'scheduledDateKey': dateKey,
-            },
+            occurrenceKey: occurrenceKey,
+            scheduledDateKey: dateKey,
           );
 
           toAddExpenses.add(newExpense);
@@ -120,26 +123,47 @@ class RecurrenceService {
           cursor = candidateDate;
         }
 
-        if (toAddExpenses.isNotEmpty) {
-          await expenseRepository.addExpensesBatch(userId, toAddExpenses);
-          await occurrenceRepository.saveOccurrencesBatch(
-            userId,
-            toAddOccurrences,
-          );
-          allCreatedExpenses.addAll(toAddExpenses);
-        }
-
         if (cursor != null && cursor != rule.lastInstanceDate) {
-          final updatedRule = rule.copyWith(
-            lastInstanceDate: cursor,
-            generationState: 'ready',
-            engineVersion: 1,
-            scheduleVersion: rule.scheduleVersion ?? 1,
-          );
-          await recurringRepository.updateRecurringExpense(
-            userId,
-            updatedRule,
-          );
+          if (committer != null) {
+            final commit = await committer!.commit(
+              userId: userId,
+              rule: rule,
+              expectedCursor: rule.lastInstanceDate,
+              nextCursor: cursor,
+              expenses: toAddExpenses,
+              occurrences: toAddOccurrences,
+            );
+            if (!commit.isCommitted) {
+              return OperationResult.conflict(
+                message:
+                    commit.message ??
+                    'A regra mudou durante a geração. Atualize e tente novamente.',
+                affectedIds: [rule.id!],
+              );
+            }
+            allCreatedExpenses.addAll(toAddExpenses);
+          } else {
+            // Fakes de teste não têm Firestore. A composição de produção
+            // sempre injeta o committer transacional abaixo.
+            if (toAddExpenses.isNotEmpty) {
+              await expenseRepository.addExpensesBatch(userId, toAddExpenses);
+              await occurrenceRepository.saveOccurrencesBatch(
+                userId,
+                toAddOccurrences,
+              );
+              allCreatedExpenses.addAll(toAddExpenses);
+            }
+            final updatedRule = rule.copyWith(
+              lastInstanceDate: cursor,
+              generationState: 'ready',
+              engineVersion: 1,
+              scheduleVersion: rule.scheduleVersion ?? 1,
+            );
+            await recurringRepository.updateRecurringExpense(
+              userId,
+              updatedRule,
+            );
+          }
         }
       }
 

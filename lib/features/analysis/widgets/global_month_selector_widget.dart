@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'package:key_budget/core/design_system/spacing/app_spacing.dart';
+import 'package:key_budget/core/money/money.dart';
 
 import '../viewmodel/analysis_viewmodel.dart';
 import 'category_analysis_section_widget.dart'; // For StringCapitalize extension
@@ -118,10 +119,12 @@ class GlobalMonthSelectorWidget extends ConsumerWidget {
                         exp.date.month == month.month,
                   );
 
-                  final monthTotal = monthExpenses.fold(
-                    0.0,
-                    (sum, exp) => sum + exp.amount,
-                  );
+                  final monthTotal = Money.fromCents(
+                    monthExpenses.fold<int>(
+                      0,
+                      (sum, exp) => sum + exp.money.amountMinor,
+                    ),
+                  ).toDouble();
 
                   return Container(
                     margin: const EdgeInsets.symmetric(

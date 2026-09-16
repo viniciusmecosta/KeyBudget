@@ -1,9 +1,9 @@
-
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/legacy.dart';
 import 'package:intl/intl.dart';
 import 'package:key_budget/core/models/expense_category_model.dart';
 import 'package:key_budget/core/models/expense_model.dart';
+import 'package:key_budget/core/money/money.dart';
 import 'package:key_budget/core/time/app_clock.dart';
 import 'package:key_budget/core/time/date_range.dart';
 import 'package:key_budget/features/analysis/domain/analysis_calculator.dart';
@@ -198,7 +198,6 @@ class AnalysisViewModel extends ChangeNotifier {
 
   AnalysisQuery get currentQuery {
     if (_useCustomRange && _customStartDate != null && _customEndDate != null) {
-
       final endExclusive = DateTime(
         _customEndDate!.year,
         _customEndDate!.month,
@@ -267,9 +266,10 @@ class AnalysisViewModel extends ChangeNotifier {
   }
 
   double get totalOverall {
-    return allExpenses
+    final totalMinor = allExpenses
         .where((exp) => exp.isIncome != true)
-        .fold(0.0, (sum, item) => sum + item.amount);
+        .fold<int>(0, (sum, item) => sum + item.money.amountMinor);
+    return Money.fromCents(totalMinor).toDouble();
   }
 
   double get totalCurrentMonth =>
@@ -293,8 +293,7 @@ class AnalysisViewModel extends ChangeNotifier {
   double get lastMonthIncome =>
       lastMonthSnapshot.totalIncomes.amountMinor / 100.0;
 
-  double get lastMonthBalance =>
-      lastMonthSnapshot.balance.amountMinor / 100.0;
+  double get lastMonthBalance => lastMonthSnapshot.balance.amountMinor / 100.0;
 
   double get percentageChangeFromLastMonth {
     final lastMonth = lastMonthExpense;

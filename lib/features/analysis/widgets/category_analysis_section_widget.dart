@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'package:key_budget/core/design_system/spacing/app_spacing.dart';
 import 'package:key_budget/core/design_system/widgets/app_card.dart';
+import 'package:key_budget/core/money/money.dart';
 import 'package:key_budget/features/auth/viewmodel/auth_viewmodel.dart';
 
 import '../viewmodel/analysis_viewmodel.dart';
@@ -175,10 +176,12 @@ class _CategoryAnalysisSectionWidgetState
                         exp.date.month == month.month,
                   );
 
-                  final monthTotal = monthExpenses.fold(
-                    0.0,
-                    (sum, exp) => sum + exp.amount,
-                  );
+                  final monthTotal = Money.fromCents(
+                    monthExpenses.fold<int>(
+                      0,
+                      (sum, exp) => sum + exp.money.amountMinor,
+                    ),
+                  ).toDouble();
 
                   return Container(
                     margin: const EdgeInsets.symmetric(

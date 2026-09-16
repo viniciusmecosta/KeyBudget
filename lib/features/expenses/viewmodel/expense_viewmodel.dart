@@ -22,6 +22,7 @@ import 'package:key_budget/core/import_export/csv_import_parser.dart';
 import 'package:key_budget/core/import_export/import_preview_screen.dart';
 import 'package:key_budget/core/import_export/import_service.dart';
 import 'package:key_budget/features/expenses/application/recurrence_deletion_service.dart';
+import 'package:key_budget/features/expenses/application/recurrence_committer.dart';
 import 'package:key_budget/features/expenses/application/recurrence_service.dart';
 import 'package:key_budget/features/expenses/domain/recurrence_occurrence.dart';
 import 'package:key_budget/features/expenses/repository/expense_repository.dart';
@@ -51,40 +52,43 @@ class ExpenseViewModel extends ChangeNotifier {
     PdfService? pdfService,
     DataImportService? dataImportService,
     AppClock? clock,
-  })  : _repository = repository ?? ExpenseRepository(),
-        _recurringRepository =
-            recurringRepository ?? RecurringExpenseRepository(),
-        _occurrenceRepository =
-            occurrenceRepository ?? RecurrenceOccurrenceRepository(),
-        _recurrenceService = recurrenceService ??
-            RecurrenceService(
-              expenseRepository: repository ?? ExpenseRepository(),
-              recurringRepository:
-                  recurringRepository ?? RecurringExpenseRepository(),
-              occurrenceRepository:
-                  occurrenceRepository ?? RecurrenceOccurrenceRepository(),
-              clock: clock ?? const SystemAppClock(),
-            ),
-        _recurrenceDeletionService = recurrenceDeletionService ??
-            RecurrenceDeletionService(
-              recurringRepository:
-                  recurringRepository ?? RecurringExpenseRepository(),
-              expenseRepository: repository ?? ExpenseRepository(),
-              occurrenceRepository:
-                  occurrenceRepository ?? RecurrenceOccurrenceRepository(),
-              clock: clock ?? const SystemAppClock(),
-            ),
-        _importService = importService ??
-            ImportService(
-              expenseRepository: repository ?? ExpenseRepository(),
-              credentialRepository: CredentialRepository(),
-              recurringRepository:
-                  recurringRepository ?? RecurringExpenseRepository(),
-            ),
-        _csvService = csvService ?? CsvService(),
-        _pdfService = pdfService ?? PdfService(),
-        _dataImportService = dataImportService ?? DataImportService(),
-        _clock = clock ?? const SystemAppClock() {
+  }) : _repository = repository ?? ExpenseRepository(),
+       _recurringRepository =
+           recurringRepository ?? RecurringExpenseRepository(),
+       _occurrenceRepository =
+           occurrenceRepository ?? RecurrenceOccurrenceRepository(),
+       _recurrenceService =
+           recurrenceService ??
+           RecurrenceService(
+             expenseRepository: repository ?? ExpenseRepository(),
+             recurringRepository:
+                 recurringRepository ?? RecurringExpenseRepository(),
+             occurrenceRepository:
+                 occurrenceRepository ?? RecurrenceOccurrenceRepository(),
+             clock: clock ?? const SystemAppClock(),
+           ),
+       _recurrenceDeletionService =
+           recurrenceDeletionService ??
+           RecurrenceDeletionService(
+             recurringRepository:
+                 recurringRepository ?? RecurringExpenseRepository(),
+             expenseRepository: repository ?? ExpenseRepository(),
+             occurrenceRepository:
+                 occurrenceRepository ?? RecurrenceOccurrenceRepository(),
+             clock: clock ?? const SystemAppClock(),
+           ),
+       _importService =
+           importService ??
+           ImportService(
+             expenseRepository: repository ?? ExpenseRepository(),
+             credentialRepository: CredentialRepository(),
+             recurringRepository:
+                 recurringRepository ?? RecurringExpenseRepository(),
+           ),
+       _csvService = csvService ?? CsvService(),
+       _pdfService = pdfService ?? PdfService(),
+       _dataImportService = dataImportService ?? DataImportService(),
+       _clock = clock ?? const SystemAppClock() {
     final now = _clock.now();
     _selectedMonth = DateTime(now.year, now.month);
   }
@@ -107,9 +111,7 @@ class ExpenseViewModel extends ChangeNotifier {
   bool _enableIncomes = false;
 
   @Deprecated('UI animation state belongs to presentation layer')
-  void setListKey(GlobalKey<SliverAnimatedListState>? key) {
-
-  }
+  void setListKey(GlobalKey<SliverAnimatedListState>? key) {}
 
   List<Expense> get allExpenses => _allExpenses;
 
@@ -184,9 +186,10 @@ class ExpenseViewModel extends ChangeNotifier {
         return loc.contains(_searchQuery) || mot.contains(_searchQuery);
       }).toList();
     }
-    return baseList
+    final totalMinor = baseList
         .where((e) => e.isIncome != true)
-        .fold<double>(0.0, (sum, exp) => sum + exp.amount);
+        .fold<int>(0, (sum, exp) => sum + exp.money.amountMinor);
+    return Money.fromCents(totalMinor).toDouble();
   }
 
   double get currentMonthIncomeTotal {
@@ -200,9 +203,10 @@ class ExpenseViewModel extends ChangeNotifier {
         return loc.contains(_searchQuery) || mot.contains(_searchQuery);
       }).toList();
     }
-    return baseList
+    final totalMinor = baseList
         .where((e) => e.isIncome == true)
-        .fold<double>(0.0, (sum, exp) => sum + exp.amount);
+        .fold<int>(0, (sum, exp) => sum + exp.money.amountMinor);
+    return Money.fromCents(totalMinor).toDouble();
   }
 
   double get currentMonthBalance {
@@ -417,11 +421,7 @@ class ExpenseViewModel extends ChangeNotifier {
   Future<void> deleteExpense(String userId, String expenseId) async {
     final expense = _allExpenses.firstWhere(
       (e) => e.id == expenseId,
-      orElse: () => Expense(
-        id: expenseId,
-        amount: 0,
-        date: DateTime.now(),
-      ),
+      orElse: () => Expense(id: expenseId, amount: 0, date: DateTime.now()),
     );
     if (expense.recurringExpenseId != null &&
         expense.recurringExpenseId!.isNotEmpty) {
@@ -479,12 +479,13 @@ class ExpenseViewModel extends ChangeNotifier {
     int deleteMode = 0,
     RecurrenceDeleteMode? mode,
   }) async {
-    final effectiveMode = mode ??
+    final effectiveMode =
+        mode ??
         (deleteMode == 1
             ? RecurrenceDeleteMode.futureOnly
             : deleteMode == 2
-                ? RecurrenceDeleteMode.all
-                : RecurrenceDeleteMode.onlyRule);
+            ? RecurrenceDeleteMode.all
+            : RecurrenceDeleteMode.onlyRule);
 
     final rule = _recurringExpenses.firstWhere(
       (r) => r.id == expenseId,
@@ -823,11 +824,13 @@ final recurrenceServiceProvider = Provider<RecurrenceService>((ref) {
     expenseRepository: ref.read(expenseRepositoryProvider),
     recurringRepository: ref.read(recurringExpenseRepositoryProvider),
     occurrenceRepository: ref.read(recurrenceOccurrenceRepositoryProvider),
+    committer: FirestoreRecurrenceCommitter(),
   );
 });
 
-final recurrenceDeletionServiceProvider =
-    Provider<RecurrenceDeletionService>((ref) {
+final recurrenceDeletionServiceProvider = Provider<RecurrenceDeletionService>((
+  ref,
+) {
   return RecurrenceDeletionService(
     recurringRepository: ref.read(recurringExpenseRepositoryProvider),
     expenseRepository: ref.read(expenseRepositoryProvider),
