@@ -143,8 +143,6 @@ class RecurrenceService {
             }
             allCreatedExpenses.addAll(toAddExpenses);
           } else {
-            // Fakes de teste não têm Firestore. A composição de produção
-            // sempre injeta o committer transacional abaixo.
             if (toAddExpenses.isNotEmpty) {
               await expenseRepository.addExpensesBatch(userId, toAddExpenses);
               await occurrenceRepository.saveOccurrencesBatch(
