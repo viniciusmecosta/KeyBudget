@@ -176,9 +176,6 @@ class NotificationIdRegistry {
     await _persistToStorage();
   }
 
-  /// Dart's String.hashCode is deliberately not a durable persistence key.
-  /// The registry may outlive a process restart, so allocation starts from a
-  /// stable SHA-256 prefix and still resolves collisions deterministically.
   static int _stableNativeId(String logicalKey) {
     final digest = sha256.convert(utf8.encode(logicalKey)).bytes;
     final value =

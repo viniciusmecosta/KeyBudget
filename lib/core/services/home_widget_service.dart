@@ -41,8 +41,6 @@ class HomeWidgetService {
     } catch (_) {}
   }
 
-  /// Marks the widget as belonging to the authenticated session without
-  /// replacing its last calculated financial value.
   static Future<void> setWidgetSession(String uid) async {
     if (uid.isEmpty) return;
     try {
@@ -73,8 +71,6 @@ class HomeWidgetService {
         decimalDigits: 2,
       );
 
-      // Android applies the temporary five-second reveal locally. Persist the
-      // real, formatted value so a refresh never replaces it with a mask.
       final formattedAmount = currencyFormatter.format(monthlySpent);
 
       await HomeWidget.saveWidgetData<int>(keyWidgetVersion, 1);

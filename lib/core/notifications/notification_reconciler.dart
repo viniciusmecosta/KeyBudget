@@ -99,8 +99,6 @@ class NotificationReconciler {
       final dateKey = dateFormat.format(scheduledAt);
       final logicalKey = '${uid}__${rule.id}__${dateKey}__expense_reminder';
       final title = 'Lembrete de Despesa';
-      // Notifications can be displayed on a locked device. Do not expose a
-      // merchant, description, or financial amount outside the application.
       const body = 'Você tem uma despesa programada para hoje.';
       final payload = json.encode({
         'ruleId': rule.id,

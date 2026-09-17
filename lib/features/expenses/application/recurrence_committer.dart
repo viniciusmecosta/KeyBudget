@@ -18,8 +18,6 @@ class RecurrenceCommitResult {
   bool get isCommitted => status == RecurrenceCommitStatus.committed;
 }
 
-/// Persists generated expenses, their ledger entries, and the rule cursor in
-/// one Firestore transaction. This prevents partial recurrence generation.
 class FirestoreRecurrenceCommitter {
   final FirebaseFirestore _firestore;
 
