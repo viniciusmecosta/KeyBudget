@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 
 class AppBorders {
-  // Radius
   static const double radiusXS = 4.0;
   static const double radiusS = 8.0;
   static const double radiusM = 12.0;
@@ -22,11 +21,9 @@ class AppBorders {
   static final BorderRadius borderRadiusXL = BorderRadius.circular(radiusXL);
   static final BorderRadius borderRadiusXXL = BorderRadius.circular(radiusXXL);
 
-  static final BorderRadius borderRadiusMD = BorderRadius.circular(
-    10.0,
-  ); // Alias or intermediate if needed
+  static final BorderRadius borderRadiusMD = BorderRadius.circular(10.0);
+  static final BorderRadius borderRadiusCircular = BorderRadius.circular(999.0);
 
-  // Vertical
   static final BorderRadius borderRadiusVerticalM = BorderRadius.vertical(
     top: circularM,
   );

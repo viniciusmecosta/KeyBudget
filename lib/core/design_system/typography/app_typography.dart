@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
@@ -13,7 +14,12 @@ class AppTypography {
         ? const Color(0xFF94A3B8)
         : const Color(0xFF64748B);
 
-    return GoogleFonts.interTextTheme(baseTheme).copyWith(
+    final isTestEnv = Platform.environment.containsKey('FLUTTER_TEST');
+    final base = isTestEnv
+        ? baseTheme.apply(fontFamily: 'Inter')
+        : GoogleFonts.interTextTheme(baseTheme);
+
+    return base.copyWith(
       displayLarge: TextStyle(
         fontWeight: FontWeight.w800,
         color: textColor,
