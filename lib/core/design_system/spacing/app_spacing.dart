@@ -9,7 +9,6 @@ class AppSpacing {
   static const double xxl = 40.0;
   static const double xxxl = 48.0;
 
-  // Semantic spacings
   static const double screenPadding = md;
   static const double cardPadding = lg;
   static const double itemSpacing = md;
