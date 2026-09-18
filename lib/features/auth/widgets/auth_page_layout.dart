@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:key_budget/app/utils/app_animations.dart';
+import 'package:key_budget/core/design_system/borders/app_borders.dart';
 import 'package:key_budget/core/design_system/spacing/app_spacing.dart';
 
 class AuthPageLayout extends StatelessWidget {
@@ -12,8 +13,8 @@ class AuthPageLayout extends StatelessWidget {
   const AuthPageLayout({
     super.key,
     required this.child,
-    this.title = "KeyBudget",
-    this.subtitle = "Gerencie suas finanças com segurança",
+    this.title = 'KeyBudget',
+    this.subtitle = 'Gerencie suas finanças com segurança',
     this.showBackButton = false,
     this.footer,
   });
@@ -21,6 +22,8 @@ class AuthPageLayout extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final isCompact = MediaQuery.of(context).size.width < 600;
+    final horizontalPadding = isCompact ? AppSpacing.md : AppSpacing.xl;
 
     return Scaffold(
       backgroundColor: theme.colorScheme.surface,
@@ -30,6 +33,7 @@ class AuthPageLayout extends StatelessWidget {
               elevation: 0,
               leading: IconButton(
                 icon: const Icon(Icons.arrow_back),
+                tooltip: 'Voltar',
                 onPressed: () => Navigator.of(context).pop(),
               ),
             )
@@ -38,50 +42,49 @@ class AuthPageLayout extends StatelessWidget {
         child: AppAnimations.fadeIn(
           Center(
             child: SingleChildScrollView(
-              padding: const EdgeInsets.symmetric(
-                horizontal: AppSpacing.xxl,
-                vertical: AppSpacing.xl,
+              padding: EdgeInsets.symmetric(
+                horizontal: horizontalPadding,
+                vertical: AppSpacing.lg,
               ),
               child: ConstrainedBox(
-                constraints: const BoxConstraints(maxWidth: 450),
+                constraints: const BoxConstraints(maxWidth: 480),
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    if (!showBackButton) ...[
-                      Center(
-                        child: Hero(
-                          tag: 'auth_logo',
-                          child: Container(
-                            width: 80,
-                            height: 80,
-                            decoration: BoxDecoration(
-                              color: theme.colorScheme.primary,
-                              shape: BoxShape.rectangle,
-                              borderRadius: BorderRadius.circular(24),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: theme.colorScheme.primary.withValues(
-                                    alpha: 0.3,
-                                  ),
-                                  blurRadius: 20,
-                                  offset: const Offset(0, 8),
-                                ),
-                              ],
+                    Center(
+                      child: Hero(
+                        tag: 'auth_logo',
+                        child: Container(
+                          width: 64,
+                          height: 64,
+                          decoration: BoxDecoration(
+                            borderRadius: AppBorders.borderRadiusL,
+                            border: Border.all(
+                              color: theme.colorScheme.outlineVariant,
+                              width: 1,
                             ),
-                            child: const Icon(
-                              Icons.account_balance_wallet_rounded,
-                              size: 40,
-                              color: Colors.white,
+                          ),
+                          clipBehavior: Clip.antiAlias,
+                          child: Image.asset(
+                            'assets/icon/logov2.png',
+                            fit: BoxFit.cover,
+                            errorBuilder: (context, error, stackTrace) => Container(
+                              color: theme.colorScheme.primary,
+                              child: const Icon(
+                                Icons.account_balance_wallet_rounded,
+                                size: 32,
+                                color: Colors.white,
+                              ),
                             ),
                           ),
                         ),
                       ),
-                      const SizedBox(height: AppSpacing.xxxl),
-                    ],
+                    ),
+                    const SizedBox(height: AppSpacing.lg),
                     Text(
                       title,
-                      textAlign: TextAlign.start,
+                      textAlign: TextAlign.center,
                       style: theme.textTheme.headlineMedium?.copyWith(
                         color: theme.colorScheme.onSurface,
                         fontWeight: FontWeight.w800,
@@ -91,15 +94,15 @@ class AuthPageLayout extends StatelessWidget {
                     const SizedBox(height: AppSpacing.xs),
                     Text(
                       subtitle,
-                      textAlign: TextAlign.start,
-                      style: theme.textTheme.titleMedium?.copyWith(
+                      textAlign: TextAlign.center,
+                      style: theme.textTheme.bodyMedium?.copyWith(
                         color: theme.colorScheme.onSurfaceVariant,
                       ),
                     ),
-                    const SizedBox(height: 32),
+                    const SizedBox(height: AppSpacing.xl),
                     child,
                     if (footer != null) ...[
-                      const SizedBox(height: 32),
+                      const SizedBox(height: AppSpacing.xl),
                       footer!,
                     ],
                   ],
