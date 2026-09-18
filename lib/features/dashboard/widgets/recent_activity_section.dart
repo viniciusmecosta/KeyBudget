@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:key_budget/app/navigation/app_destination.dart';
 import 'package:key_budget/app/utils/app_animations.dart';
 import 'package:key_budget/app/viewmodel/navigation_viewmodel.dart';
 import 'package:key_budget/app/widgets/activity_tile_widget.dart';
@@ -63,7 +64,7 @@ class RecentActivitySection extends ConsumerWidget {
         Text(title, style: theme.textTheme.titleLarge),
         TextButton(
           onPressed: () {
-            ref.read(navigationViewModelProvider).selectedIndex = 1;
+            ref.read(navigationViewModelProvider).navigateTo(AppDestination.expenses);
           },
           style: TextButton.styleFrom(
             padding: const EdgeInsets.symmetric(

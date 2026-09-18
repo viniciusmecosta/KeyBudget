@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
+import 'package:key_budget/app/navigation/app_destination.dart';
 import 'package:key_budget/app/utils/app_animations.dart';
 import 'package:key_budget/app/viewmodel/navigation_viewmodel.dart';
 import 'package:key_budget/app/widgets/balance_card.dart';
@@ -204,7 +205,7 @@ class _DashboardBalanceCardState extends ConsumerState<DashboardBalanceCard>
             end: Alignment.bottomRight,
           ),
           onTap: () {
-            ref.read(navigationViewModelProvider).selectedIndex = 1;
+            ref.read(navigationViewModelProvider).navigateTo(AppDestination.expenses);
           },
           valueSubtitle: valueSubtitle,
           subtitle: enableIncomes
