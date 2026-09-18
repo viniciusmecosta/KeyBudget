@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:key_budget/app/navigation/app_destination.dart';
 import 'package:key_budget/app/utils/navigation_utils.dart';
 import 'package:key_budget/app/viewmodel/navigation_viewmodel.dart';
 import 'package:key_budget/core/design_system/borders/app_borders.dart';
@@ -25,7 +26,7 @@ class QuickActionsSection extends ConsumerWidget {
             subtitle: '${viewModel.credentialCount} cadastradas',
             icon: Icons.security_rounded,
             color: Theme.of(context).colorScheme.secondary,
-            onTap: () => navigationViewModel.selectedIndex = 2,
+            onTap: () => navigationViewModel.navigateTo(AppDestination.credentials),
           ),
         ),
         const SizedBox(width: AppSpacing.md),

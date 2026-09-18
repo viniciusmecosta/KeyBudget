@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:key_budget/app/navigation/app_destination.dart';
 import 'package:key_budget/app/viewmodel/navigation_viewmodel.dart';
 import 'package:key_budget/app/widgets/main_bottom_navigation_bar.dart';
 import 'package:key_budget/app/widgets/responsive_center.dart';
@@ -19,117 +20,126 @@ class MainScreen extends ConsumerStatefulWidget {
 }
 
 class _MainScreenState extends ConsumerState<MainScreen> {
-  List<Widget> _buildWidgetOptions(bool enableSuppliers) {
-    return [
-      const DashboardScreen(),
-      const ExpensesScreen(),
-      const CredentialsScreen(),
-      const DocumentsScreen(),
-      if (enableSuppliers) const SuppliersScreen(),
-      const UserScreen(),
-    ];
+  final Set<AppDestination> _loadedDestinations = {};
+  String? _lastUserId;
+
+  Widget _buildDestinationWidget(AppDestination destination) {
+    switch (destination) {
+      case AppDestination.dashboard:
+        return const DashboardScreen();
+      case AppDestination.expenses:
+        return const ExpensesScreen();
+      case AppDestination.credentials:
+        return const CredentialsScreen();
+      case AppDestination.documents:
+        return const DocumentsScreen();
+      case AppDestination.suppliers:
+        return const SuppliersScreen();
+      case AppDestination.profile:
+        return const UserScreen();
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     final navigationViewModel = ref.watch(navigationViewModelProvider);
-    final isDesktop = MediaQuery.of(context).size.width >= 800;
-    final theme = Theme.of(context);
-
     final authViewModel = ref.watch(authViewModelProvider);
     final enableSuppliers = authViewModel.currentUser?.enableSuppliers ?? false;
-    final widgetOptions = _buildWidgetOptions(enableSuppliers);
+    final currentUserId = authViewModel.currentUser?.id ?? 'anonymous';
 
-    var selectedIndex = navigationViewModel.selectedIndex;
-    if (selectedIndex >= widgetOptions.length) {
-      selectedIndex = widgetOptions.length - 1;
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        navigationViewModel.selectedIndex = selectedIndex;
-      });
+    if (_lastUserId != currentUserId) {
+      _lastUserId = currentUserId;
+      _loadedDestinations.clear();
     }
 
-    final currentWidget = AnimatedSwitcher(
-      duration: const Duration(milliseconds: 350),
-      child: KeyedSubtree(
-        key: ValueKey<int>(selectedIndex),
-        child: isDesktop
-            ? ResponsiveCenter(
-                maxWidth: 800,
-                child: widgetOptions[selectedIndex],
-              )
-            : widgetOptions[selectedIndex],
-      ),
-      transitionBuilder: (Widget child, Animation<double> animation) {
-        return FadeTransition(opacity: animation, child: child);
-      },
+    final currentDestination = navigationViewModel.currentDestination;
+    _loadedDestinations.add(currentDestination);
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      navigationViewModel.updateSuppliersAvailability(enableSuppliers);
+    });
+
+    final availableDestinations = AppDestination.getAvailable(
+      enableSuppliers: enableSuppliers,
     );
 
-    if (isDesktop) {
+    final activeIndex = availableDestinations.indexOf(currentDestination);
+    final safeIndex = activeIndex >= 0 ? activeIndex : 0;
+
+    final theme = Theme.of(context);
+    final screenWidth = MediaQuery.of(context).size.width;
+    final isCompact = screenWidth < 600;
+    final isMedium = screenWidth >= 600 && screenWidth < 840;
+    final isExpanded = screenWidth >= 840;
+
+    final stack = KeyedSubtree(
+      key: ValueKey('main_stack_$currentUserId'),
+      child: IndexedStack(
+        index: safeIndex,
+        children: availableDestinations.map((dest) {
+          final isSelected = dest == currentDestination;
+          final isLoaded = _loadedDestinations.contains(dest);
+          final child = isLoaded ? _buildDestinationWidget(dest) : const SizedBox.shrink();
+          return TickerMode(
+            enabled: isSelected,
+            child: isExpanded
+                ? ResponsiveCenter(maxWidth: 1200, child: child)
+                : (isMedium ? ResponsiveCenter(maxWidth: 800, child: child) : child),
+          );
+        }).toList(),
+      ),
+    );
+
+    if (isCompact) {
       return Scaffold(
-        body: Row(
-          children: [
-            NavigationRail(
-              backgroundColor: theme.colorScheme.surface,
-              selectedIndex: selectedIndex,
-              onDestinationSelected: (int index) {
-                navigationViewModel.selectedIndex = index;
-              },
-              labelType: NavigationRailLabelType.all,
-              selectedIconTheme: IconThemeData(
-                color: theme.colorScheme.primary,
-              ),
-              selectedLabelTextStyle: TextStyle(
-                color: theme.colorScheme.primary,
-                fontWeight: FontWeight.w600,
-              ),
-              unselectedIconTheme: IconThemeData(
-                color: theme.colorScheme.onSurfaceVariant,
-              ),
-              unselectedLabelTextStyle: TextStyle(
-                color: theme.colorScheme.onSurfaceVariant,
-              ),
-              destinations: [
-                const NavigationRailDestination(
-                  icon: Icon(Icons.home_rounded),
-                  label: Text('Painel'),
-                ),
-                const NavigationRailDestination(
-                  icon: Icon(Icons.monetization_on_rounded),
-                  label: Text('Lançamentos'),
-                ),
-                const NavigationRailDestination(
-                  icon: Icon(Icons.vpn_key_rounded),
-                  label: Text('Credenciais'),
-                ),
-                const NavigationRailDestination(
-                  icon: Icon(Icons.folder_copy_rounded),
-                  label: Text('Documentos'),
-                ),
-                if (enableSuppliers)
-                  const NavigationRailDestination(
-                    icon: Icon(Icons.storefront_rounded),
-                    label: Text('Fornecedores'),
-                  ),
-                const NavigationRailDestination(
-                  icon: Icon(Icons.person_rounded),
-                  label: Text('Perfil'),
-                ),
-              ],
-            ),
-            VerticalDivider(
-              thickness: 1,
-              width: 1,
-              color: theme.dividerTheme.color,
-            ),
-            Expanded(child: currentWidget),
-          ],
-        ),
+        body: stack,
+        bottomNavigationBar: const MainBottomNavigationBar(),
       );
     }
 
     return Scaffold(
-      body: currentWidget,
-      bottomNavigationBar: const MainBottomNavigationBar(),
+      body: Row(
+        children: [
+          NavigationRail(
+            backgroundColor: theme.colorScheme.surface,
+            selectedIndex: safeIndex,
+            onDestinationSelected: (int index) {
+              if (index >= 0 && index < availableDestinations.length) {
+                navigationViewModel.navigateTo(availableDestinations[index]);
+              }
+            },
+            labelType: isExpanded
+                ? NavigationRailLabelType.all
+                : NavigationRailLabelType.selected,
+            selectedIconTheme: IconThemeData(
+              color: theme.colorScheme.primary,
+            ),
+            selectedLabelTextStyle: TextStyle(
+              color: theme.colorScheme.primary,
+              fontWeight: FontWeight.w600,
+            ),
+            unselectedIconTheme: IconThemeData(
+              color: theme.colorScheme.onSurfaceVariant,
+            ),
+            unselectedLabelTextStyle: TextStyle(
+              color: theme.colorScheme.onSurfaceVariant,
+            ),
+            destinations: availableDestinations.map((dest) {
+              return NavigationRailDestination(
+                icon: Icon(dest.icon),
+                selectedIcon: Icon(dest.selectedIcon),
+                label: Text(dest.label),
+              );
+            }).toList(),
+          ),
+          VerticalDivider(
+            thickness: 1,
+            width: 1,
+            color: theme.dividerTheme.color,
+          ),
+          Expanded(child: stack),
+        ],
+      ),
     );
   }
 }
