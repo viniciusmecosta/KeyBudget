@@ -342,5 +342,35 @@ void main() {
 
       expect(find.byType(ForgotPasswordScreen), findsOneWidget);
     });
+
+    testWidgets('LoginScreen renders brand, title, autofill fields and password toggle', (tester) async {
+      final fakeRepo = FakeAuthRepository();
+      final vm = AuthViewModel(
+        authRepository: fakeRepo,
+        listenToAuthChanges: false,
+      );
+
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: [
+            authViewModelProvider.overrideWith((ref) => vm),
+          ],
+          child: const MaterialApp(
+            home: LoginScreen(),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.text('Entre na sua conta'), findsOneWidget);
+      expect(find.text('Acesse suas finanças e informações em um só lugar.'), findsOneWidget);
+      expect(find.text('Continuar com Google'), findsOneWidget);
+      expect(find.text('Criar conta'), findsOneWidget);
+
+      expect(find.byTooltip('Mostrar senha'), findsOneWidget);
+      await tester.tap(find.byTooltip('Mostrar senha'));
+      await tester.pump();
+      expect(find.byTooltip('Ocultar senha'), findsOneWidget);
+    });
   });
 }

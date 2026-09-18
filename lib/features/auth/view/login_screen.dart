@@ -22,16 +22,23 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   final _formKey = GlobalKey<FormState>();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
+  final _passwordFocusNode = FocusNode();
   bool _isPasswordVisible = false;
+  String? _inlineError;
 
   @override
   void dispose() {
     _emailController.dispose();
     _passwordController.dispose();
+    _passwordFocusNode.dispose();
     super.dispose();
   }
 
   void _submit({String? explicitPassword}) async {
+    setState(() {
+      _inlineError = null;
+    });
+
     if (!_formKey.currentState!.validate()) return;
     final authViewModel = ref.read(authViewModelProvider);
     final email = _emailController.text.trim();
@@ -41,6 +48,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       email: email,
       password: password,
     );
+
     if (mounted && !success) {
       final hasEdgeSpaces = password.trim() != password;
       if (hasEdgeSpaces) {
@@ -59,41 +67,47 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
           ),
         );
       } else {
-        SnackbarService.showError(
-          context,
-          authViewModel.errorMessage ??
-              'Erro ao fazer login. Verifique suas credenciais.',
-        );
+        setState(() {
+          _inlineError = authViewModel.errorMessage ??
+              'Erro ao fazer login. Verifique suas credenciais.';
+        });
       }
       _passwordController.clear();
     }
   }
 
   void _submitGoogle() async {
+    setState(() {
+      _inlineError = null;
+    });
     final authViewModel = ref.read(authViewModelProvider);
     final success = await authViewModel.loginWithGoogle();
     if (mounted && !success) {
-      SnackbarService.showError(
-        context,
-        authViewModel.errorMessage ?? 'Erro ao fazer login com Google.',
-      );
+      if (authViewModel.errorMessage != null &&
+          !authViewModel.errorMessage!.contains('cancelado')) {
+        SnackbarService.showError(
+          context,
+          authViewModel.errorMessage!,
+        );
+      }
     }
   }
 
   @override
   Widget build(BuildContext context) {
     final viewModel = ref.watch(authViewModelProvider);
+    final isLoggingIn = viewModel.isOperating(AuthOperation.emailLogin);
+    final isGoogleLoggingIn = viewModel.isOperating(AuthOperation.googleLogin);
 
     return AuthPageLayout(
-      title: "Bem-vindo de volta",
-      subtitle: "Faça login para continuar",
+      title: 'Entre na sua conta',
+      subtitle: 'Acesse suas finanças e informações em um só lugar.',
       footer: Column(
         children: [
           Row(
             children: [
               Expanded(
-                child:
-                    Divider(color: Theme.of(context).colorScheme.outlineVariant),
+                child: Divider(color: Theme.of(context).colorScheme.outlineVariant),
               ),
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
@@ -105,14 +119,13 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 ),
               ),
               Expanded(
-                child:
-                    Divider(color: Theme.of(context).colorScheme.outlineVariant),
+                child: Divider(color: Theme.of(context).colorScheme.outlineVariant),
               ),
             ],
           ),
-          const SizedBox(height: AppSpacing.xl),
+          const SizedBox(height: AppSpacing.lg),
           _GoogleSignInButton(
-            isLoading: viewModel.isOperating(AuthOperation.googleLogin),
+            isLoading: isGoogleLoggingIn,
             onPressed: viewModel.isLoading ? null : _submitGoogle,
           ),
           const SizedBox(height: AppSpacing.xl),
@@ -120,21 +133,22 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               Text(
-                'Novo por aqui?',
+                'Ainda não tem conta?',
                 style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                       color: Theme.of(context).colorScheme.onSurfaceVariant,
                     ),
               ),
+              const SizedBox(width: AppSpacing.xs),
               TextButton(
                 onPressed: () =>
                     NavigationUtils.push(context, const RegisterScreen()),
                 style: TextButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(horizontal: AppSpacing.sm),
+                  padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xs),
                   minimumSize: Size.zero,
                   tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                 ),
                 child: Text(
-                  'Cadastre-se',
+                  'Criar conta',
                   style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                         color: Theme.of(context).colorScheme.primary,
                         fontWeight: FontWeight.bold,
@@ -145,78 +159,121 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
           ),
         ],
       ),
-      child: Form(
-        key: _formKey,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            AppTextField(
-              controller: _emailController,
-              label: 'Email',
-              prefixIcon: Icons.email_outlined,
-              keyboardType: TextInputType.emailAddress,
-              validator: (value) => (value == null || !value.contains('@'))
-                  ? 'Insira um email válido'
-                  : null,
-            ),
-            const SizedBox(height: AppSpacing.md),
-            AppTextField(
-              controller: _passwordController,
-              label: 'Senha',
-              prefixIcon: Icons.lock_outline,
-              obscureText: !_isPasswordVisible,
-              suffixIcon: IconButton(
-                icon: Icon(
-                  _isPasswordVisible ? Icons.visibility_off : Icons.visibility,
-                ),
-                onPressed: () {
-                  setState(() {
-                    _isPasswordVisible = !_isPasswordVisible;
-                  });
+      child: AutofillGroup(
+        child: Form(
+          key: _formKey,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              AppTextField(
+                controller: _emailController,
+                label: 'E-mail',
+                prefixIcon: Icons.email_outlined,
+                keyboardType: TextInputType.emailAddress,
+                autofillHints: const [AutofillHints.email, AutofillHints.username],
+                textInputAction: TextInputAction.next,
+                textCapitalization: TextCapitalization.none,
+                onFieldSubmitted: (_) {
+                  _passwordFocusNode.requestFocus();
                 },
+                validator: (value) => (value == null || !value.contains('@'))
+                    ? 'Insira um email válido'
+                    : null,
               ),
-              validator: (value) => (value == null || value.isEmpty)
-                  ? 'Informe sua senha'
-                  : null,
-            ),
-            Align(
-              alignment: Alignment.centerRight,
-              child: TextButton(
-                onPressed: () {
-                  NavigationUtils.push(
-                    context,
-                    ForgotPasswordScreen(
-                      initialEmail: _emailController.text.trim().isNotEmpty
-                          ? _emailController.text.trim()
-                          : null,
-                    ),
-                  );
-                },
-                style: TextButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: AppSpacing.xs,
-                    vertical: AppSpacing.sm,
+              const SizedBox(height: AppSpacing.md),
+              AppTextField(
+                controller: _passwordController,
+                focusNode: _passwordFocusNode,
+                label: 'Senha',
+                prefixIcon: Icons.lock_outline,
+                obscureText: !_isPasswordVisible,
+                autofillHints: const [AutofillHints.password],
+                autocorrect: false,
+                enableSuggestions: false,
+                textInputAction: TextInputAction.done,
+                onFieldSubmitted: (_) => _submit(),
+                suffixIcon: IconButton(
+                  icon: Icon(
+                    _isPasswordVisible ? Icons.visibility_off : Icons.visibility,
                   ),
-                  minimumSize: Size.zero,
-                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                  tooltip: _isPasswordVisible ? 'Ocultar senha' : 'Mostrar senha',
+                  onPressed: () {
+                    setState(() {
+                      _isPasswordVisible = !_isPasswordVisible;
+                    });
+                  },
                 ),
-                child: Text(
-                  'Esqueceu sua senha?',
-                  style: Theme.of(context).textTheme.labelMedium?.copyWith(
-                        color: Theme.of(context).colorScheme.primary,
-                        fontWeight: FontWeight.bold,
+                validator: (value) => (value == null || value.isEmpty)
+                    ? 'Informe sua senha'
+                    : null,
+              ),
+              Align(
+                alignment: Alignment.centerRight,
+                child: TextButton(
+                  onPressed: () {
+                    NavigationUtils.push(
+                      context,
+                      ForgotPasswordScreen(
+                        initialEmail: _emailController.text.trim().isNotEmpty
+                            ? _emailController.text.trim()
+                            : null,
                       ),
+                    );
+                  },
+                  style: TextButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: AppSpacing.xs,
+                      vertical: AppSpacing.sm,
+                    ),
+                    minimumSize: Size.zero,
+                    tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                  ),
+                  child: Text(
+                    'Esqueceu sua senha?',
+                    style: Theme.of(context).textTheme.labelMedium?.copyWith(
+                          color: Theme.of(context).colorScheme.primary,
+                          fontWeight: FontWeight.bold,
+                        ),
+                  ),
                 ),
               ),
-            ),
-            const SizedBox(height: AppSpacing.lg),
-            AppButton(
-              label: 'Entrar',
-              isFullWidth: true,
-              isLoading: viewModel.isOperating(AuthOperation.emailLogin),
-              onPressed: viewModel.isLoading ? null : _submit,
-            ),
-          ],
+              if (_inlineError != null) ...[
+                const SizedBox(height: AppSpacing.sm),
+                Container(
+                  padding: const EdgeInsets.all(AppSpacing.sm),
+                  decoration: BoxDecoration(
+                    color: Theme.of(context).colorScheme.errorContainer,
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Row(
+                    children: [
+                      Icon(
+                        Icons.error_outline,
+                        color: Theme.of(context).colorScheme.onErrorContainer,
+                        size: 18,
+                      ),
+                      const SizedBox(width: AppSpacing.sm),
+                      Expanded(
+                        child: Text(
+                          _inlineError!,
+                          style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                                color: Theme.of(context).colorScheme.onErrorContainer,
+                              ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+              const SizedBox(height: AppSpacing.lg),
+              AppButton(
+                label: isLoggingIn ? 'Entrando...' : 'Entrar',
+                isFullWidth: true,
+                isLoading: isLoggingIn,
+                onPressed: viewModel.isLoading ? null : _submit,
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -239,6 +296,7 @@ class _GoogleSignInButton extends StatelessWidget {
       child: OutlinedButton(
         onPressed: isLoading ? null : onPressed,
         style: OutlinedButton.styleFrom(
+          minimumSize: const Size(48, 48),
           padding: const EdgeInsets.symmetric(
             horizontal: AppSpacing.lg,
             vertical: AppSpacing.md,
