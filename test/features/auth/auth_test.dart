@@ -11,6 +11,7 @@ import 'package:key_budget/features/auth/repository/auth_repository.dart';
 import 'package:key_budget/features/auth/viewmodel/auth_viewmodel.dart';
 import 'package:key_budget/features/auth/view/forgot_password_screen.dart';
 import 'package:key_budget/features/auth/view/login_screen.dart';
+import 'package:key_budget/features/auth/view/register_screen.dart';
 import 'package:firebase_auth/firebase_auth.dart' as firebase;
 
 class FakeLocalAuthentication extends Fake implements LocalAuthentication {
@@ -95,11 +96,16 @@ class FakeAuthRepository extends Fake implements AuthRepository {
   final List<String> resetEmailsSent = [];
   String? lastLoginEmail;
   String? lastLoginPassword;
+  String? lastRegisterName;
   String? lastRegisterEmail;
   String? lastRegisterPassword;
+  String? lastRegisterPhone;
+  String? lastRegisterAvatar;
   bool throwOnReset = false;
   String resetErrorCode = 'user-not-found';
   bool throwOnLogin = false;
+  bool throwOnRegister = false;
+  String registerErrorCode = 'email-already-in-use';
 
   @override
   Stream<firebase.User?> get firebaseAuthStateChanges => const Stream.empty();
@@ -138,8 +144,14 @@ class FakeAuthRepository extends Fake implements AuthRepository {
     String? phoneNumber,
     String? avatarPath,
   }) async {
+    if (throwOnRegister) {
+      throw firebase.FirebaseAuthException(code: registerErrorCode);
+    }
+    lastRegisterName = name;
     lastRegisterEmail = email;
     lastRegisterPassword = password;
+    lastRegisterPhone = phoneNumber;
+    lastRegisterAvatar = avatarPath;
     return FakeUserCredential();
   }
 }
@@ -371,6 +383,191 @@ void main() {
       await tester.tap(find.byTooltip('Mostrar senha'));
       await tester.pump();
       expect(find.byTooltip('Ocultar senha'), findsOneWidget);
+    });
+
+    testWidgets('RegisterScreen renders hierarchy and toggles password visibility', (tester) async {
+      final fakeRepo = FakeAuthRepository();
+      final vm = AuthViewModel(
+        authRepository: fakeRepo,
+        listenToAuthChanges: false,
+      );
+
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: [
+            authViewModelProvider.overrideWith((ref) => vm),
+          ],
+          child: const MaterialApp(
+            home: RegisterScreen(),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.text('Crie sua conta'), findsOneWidget);
+      expect(find.text('Comece com seus dados essenciais.'), findsOneWidget);
+      expect(find.text('Nome completo'), findsOneWidget);
+      expect(find.text('E-mail'), findsOneWidget);
+      expect(find.text('Senha'), findsOneWidget);
+      expect(find.text('Mínimo de 6 caracteres'), findsOneWidget);
+      expect(find.text('Confirmar senha'), findsOneWidget);
+      expect(find.text('Adicionar foto e telefone (opcional)'), findsOneWidget);
+      expect(find.text('Criar conta'), findsOneWidget);
+      expect(find.text('Já tem uma conta?'), findsOneWidget);
+      expect(find.text('Entrar'), findsOneWidget);
+
+      final showPasswordFinder = find.byTooltip('Mostrar senha').first;
+      await tester.tap(showPasswordFinder);
+      await tester.pump();
+      expect(find.byTooltip('Ocultar senha'), findsWidgets);
+    });
+
+    testWidgets('RegisterScreen validates essential fields on submit', (tester) async {
+      final fakeRepo = FakeAuthRepository();
+      final vm = AuthViewModel(
+        authRepository: fakeRepo,
+        listenToAuthChanges: false,
+      );
+
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: [
+            authViewModelProvider.overrideWith((ref) => vm),
+          ],
+          child: const MaterialApp(
+            home: RegisterScreen(),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      await tester.ensureVisible(find.text('Criar conta'));
+      await tester.tap(find.text('Criar conta'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Insira seu nome completo'), findsOneWidget);
+      expect(find.text('Insira seu e-mail'), findsOneWidget);
+      expect(find.text('Informe sua senha'), findsOneWidget);
+      expect(fakeRepo.lastRegisterEmail, isNull);
+    });
+
+    testWidgets('RegisterScreen expands and collapses optional section preserving data', (tester) async {
+      final fakeRepo = FakeAuthRepository();
+      final vm = AuthViewModel(
+        authRepository: fakeRepo,
+        listenToAuthChanges: false,
+      );
+
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: [
+            authViewModelProvider.overrideWith((ref) => vm),
+          ],
+          child: const MaterialApp(
+            home: RegisterScreen(),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.text('Telefone (opcional)'), findsNothing);
+
+      await tester.ensureVisible(find.text('Adicionar foto e telefone (opcional)'));
+      await tester.tap(find.text('Adicionar foto e telefone (opcional)'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Telefone (opcional)'), findsOneWidget);
+
+      await tester.ensureVisible(find.widgetWithText(TextField, 'Telefone (opcional)'));
+      await tester.enterText(find.widgetWithText(TextField, 'Telefone (opcional)'), '11987654321');
+      await tester.pumpAndSettle();
+
+      await tester.ensureVisible(find.text('Foto e telefone (adicionados)'));
+      await tester.tap(find.text('Foto e telefone (adicionados)'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Telefone (opcional)'), findsNothing);
+      expect(find.text('1 adicionado'), findsOneWidget);
+
+      await tester.ensureVisible(find.text('Foto e telefone (adicionados)'));
+      await tester.tap(find.text('Foto e telefone (adicionados)'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Telefone (opcional)'), findsOneWidget);
+      expect(find.text('(11) 98765-4321'), findsOneWidget);
+    });
+
+    testWidgets('RegisterScreen registers successfully with only essential fields', (tester) async {
+      final fakeRepo = FakeAuthRepository();
+      final vm = AuthViewModel(
+        authRepository: fakeRepo,
+        listenToAuthChanges: false,
+      );
+
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: [
+            authViewModelProvider.overrideWith((ref) => vm),
+          ],
+          child: const MaterialApp(
+            home: RegisterScreen(),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      await tester.enterText(find.widgetWithText(TextField, 'Nome completo'), 'Alice Silva');
+      await tester.enterText(find.widgetWithText(TextField, 'E-mail'), 'alice@example.com');
+      await tester.enterText(find.widgetWithText(TextField, 'Senha'), 'secret123');
+      await tester.enterText(find.widgetWithText(TextField, 'Confirmar senha'), 'secret123');
+      await tester.pumpAndSettle();
+
+      await tester.ensureVisible(find.text('Criar conta'));
+      await tester.tap(find.text('Criar conta'));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 100));
+
+      expect(fakeRepo.lastRegisterName, 'Alice Silva');
+      expect(fakeRepo.lastRegisterEmail, 'alice@example.com');
+      expect(fakeRepo.lastRegisterPassword, 'secret123');
+      expect(fakeRepo.lastRegisterPhone, isNull);
+      expect(fakeRepo.lastRegisterAvatar, isNull);
+    });
+
+    testWidgets('RegisterScreen shows inline error when email is already in use', (tester) async {
+      final fakeRepo = FakeAuthRepository();
+      fakeRepo.throwOnRegister = true;
+      fakeRepo.registerErrorCode = 'email-already-in-use';
+      final vm = AuthViewModel(
+        authRepository: fakeRepo,
+        listenToAuthChanges: false,
+      );
+
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: [
+            authViewModelProvider.overrideWith((ref) => vm),
+          ],
+          child: const MaterialApp(
+            home: RegisterScreen(),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      await tester.enterText(find.widgetWithText(TextField, 'Nome completo'), 'Bob Silva');
+      await tester.enterText(find.widgetWithText(TextField, 'E-mail'), 'bob@example.com');
+      await tester.enterText(find.widgetWithText(TextField, 'Senha'), 'secret123');
+      await tester.enterText(find.widgetWithText(TextField, 'Confirmar senha'), 'secret123');
+      await tester.pumpAndSettle();
+
+      await tester.ensureVisible(find.text('Criar conta'));
+      await tester.tap(find.text('Criar conta'));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 100));
+
+      expect(find.textContaining('já existe', findRichText: true), findsWidgets);
+      expect(find.text('Entrar com esta conta'), findsOneWidget);
     });
   });
 }

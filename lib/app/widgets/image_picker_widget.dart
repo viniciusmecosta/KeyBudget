@@ -11,12 +11,17 @@ class ImagePickerWidget extends ConsumerStatefulWidget {
   final IconData placeholderIcon;
   final double radius;
 
+  final ValueChanged<String>? onError;
+  final VoidCallback? onImageRemoved;
+
   const ImagePickerWidget({
     super.key,
     required this.onImageSelected,
     this.initialImagePath,
     this.placeholderIcon = Icons.add_a_photo,
     this.radius = 50,
+    this.onError,
+    this.onImageRemoved,
   });
 
   @override
@@ -61,6 +66,8 @@ class _ImagePickerWidgetState extends ConsumerState<ImagePickerWidget> {
         });
         widget.onImageSelected(base64String);
       }
+    } catch (e) {
+      widget.onError?.call('Não foi possível carregar a imagem selecionada.');
     } finally {
       appLockService.endExternalPick();
     }
@@ -82,7 +89,7 @@ class _ImagePickerWidgetState extends ConsumerState<ImagePickerWidget> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    return GestureDetector(
+    final avatar = GestureDetector(
       onTap: _pickImage,
       child: CircleAvatar(
         radius: widget.radius,
@@ -90,7 +97,7 @@ class _ImagePickerWidgetState extends ConsumerState<ImagePickerWidget> {
           (255 * 0.1).round(),
         ),
         backgroundImage: _getImageProvider(),
-        child: _imageBase64 == null
+        child: _imageBase64 == null || _imageBase64!.isEmpty
             ? Icon(
                 widget.placeholderIcon,
                 size: widget.radius,
@@ -98,6 +105,44 @@ class _ImagePickerWidgetState extends ConsumerState<ImagePickerWidget> {
               )
             : null,
       ),
+    );
+
+    if (_imageBase64 == null || _imageBase64!.isEmpty) {
+      return avatar;
+    }
+
+    return Stack(
+      alignment: Alignment.center,
+      children: [
+        avatar,
+        Positioned(
+          right: 0,
+          bottom: 0,
+          child: Material(
+            color: theme.colorScheme.error,
+            shape: const CircleBorder(),
+            elevation: 2,
+            child: InkWell(
+              customBorder: const CircleBorder(),
+              onTap: () {
+                setState(() {
+                  _imageBase64 = null;
+                });
+                widget.onImageSelected('');
+                widget.onImageRemoved?.call();
+              },
+              child: const Padding(
+                padding: EdgeInsets.all(4),
+                child: Icon(
+                  Icons.close,
+                  size: 16,
+                  color: Colors.white,
+                ),
+              ),
+            ),
+          ),
+        ),
+      ],
     );
   }
 }

@@ -34,7 +34,7 @@ class AuthPageLayout extends StatelessWidget {
               leading: IconButton(
                 icon: const Icon(Icons.arrow_back),
                 tooltip: 'Voltar',
-                onPressed: () => Navigator.of(context).pop(),
+                onPressed: () => Navigator.of(context).maybePop(),
               ),
             )
           : null,
