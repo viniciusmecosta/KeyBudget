@@ -73,13 +73,14 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
       appBar: const DashboardHeader(),
       body: SafeArea(
         child: viewModel.isLoading
-            ? const ResponsiveCenter(child: DashboardSkeleton())
+            ? const ResponsiveCenter(maxWidth: 1200, child: DashboardSkeleton())
             : RefreshIndicator(
                 onRefresh: _fetchInitialData,
                 color: theme.colorScheme.primary,
                 backgroundColor: theme.colorScheme.surface,
                 strokeWidth: 2.5,
                 child: ResponsiveCenter(
+                  maxWidth: 1200,
                   child: CustomScrollView(
                     physics: const BouncingScrollPhysics(
                       parent: AlwaysScrollableScrollPhysics(),
@@ -92,31 +93,78 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                           AppSpacing.md,
                           AppSpacing.xl,
                         ),
-                        sliver: SliverList(
-                          delegate: SliverChildListDelegate([
-                            AppAnimations.fadeInFromBottom(
-                              const DashboardBalanceCard(),
-                              key: const Key('dashboard_balance'),
-                            ),
-                            const SizedBox(height: AppSpacing.md),
-                            AppAnimations.fadeInFromBottom(
-                              const DashboardMonthlyChart(),
-                              key: const Key('dashboard_chart'),
-                              delay: const Duration(milliseconds: 100),
-                            ),
-                            const SizedBox(height: AppSpacing.md),
-                            AppAnimations.fadeInFromBottom(
-                              const QuickActionsSection(),
-                              key: const Key('dashboard_quick_actions'),
-                              delay: const Duration(milliseconds: 200),
-                            ),
-                            const SizedBox(height: AppSpacing.md),
-                            AppAnimations.fadeInFromBottom(
-                              const RecentActivitySection(),
-                              key: const Key('dashboard_recent_activity'),
-                              delay: const Duration(milliseconds: 300),
-                            ),
-                          ]),
+                        sliver: SliverToBoxAdapter(
+                          child: LayoutBuilder(
+                            builder: (context, constraints) {
+                              final isExpanded = constraints.maxWidth >= 840;
+                              if (isExpanded) {
+                                return Row(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Expanded(
+                                      flex: 6,
+                                      child: Column(
+                                        children: [
+                                          AppAnimations.fadeInFromBottom(
+                                            const DashboardBalanceCard(),
+                                            key: const Key('dashboard_balance'),
+                                          ),
+                                          const SizedBox(height: AppSpacing.md),
+                                          AppAnimations.fadeInFromBottom(
+                                            const QuickActionsSection(),
+                                            key: const Key('dashboard_quick_actions'),
+                                            delay: const Duration(milliseconds: 100),
+                                          ),
+                                          const SizedBox(height: AppSpacing.md),
+                                          AppAnimations.fadeInFromBottom(
+                                            const DashboardMonthlyChart(),
+                                            key: const Key('dashboard_chart'),
+                                            delay: const Duration(milliseconds: 200),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                    const SizedBox(width: AppSpacing.lg),
+                                    Expanded(
+                                      flex: 5,
+                                      child: AppAnimations.fadeInFromBottom(
+                                        const RecentActivitySection(),
+                                        key: const Key('dashboard_recent_activity'),
+                                        delay: const Duration(milliseconds: 150),
+                                      ),
+                                    ),
+                                  ],
+                                );
+                              }
+
+                              return Column(
+                                children: [
+                                  AppAnimations.fadeInFromBottom(
+                                    const DashboardBalanceCard(),
+                                    key: const Key('dashboard_balance'),
+                                  ),
+                                  const SizedBox(height: AppSpacing.md),
+                                  AppAnimations.fadeInFromBottom(
+                                    const DashboardMonthlyChart(),
+                                    key: const Key('dashboard_chart'),
+                                    delay: const Duration(milliseconds: 100),
+                                  ),
+                                  const SizedBox(height: AppSpacing.md),
+                                  AppAnimations.fadeInFromBottom(
+                                    const QuickActionsSection(),
+                                    key: const Key('dashboard_quick_actions'),
+                                    delay: const Duration(milliseconds: 200),
+                                  ),
+                                  const SizedBox(height: AppSpacing.md),
+                                  AppAnimations.fadeInFromBottom(
+                                    const RecentActivitySection(),
+                                    key: const Key('dashboard_recent_activity'),
+                                    delay: const Duration(milliseconds: 300),
+                                  ),
+                                ],
+                              );
+                            },
+                          ),
                         ),
                       ),
                     ],
