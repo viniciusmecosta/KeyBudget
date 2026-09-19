@@ -70,6 +70,7 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen> {
   void _showCategoryFilter() {
     showModalBottomSheet(
       context: context,
+      isScrollControlled: true,
       shape: RoundedRectangleBorder(
         borderRadius: AppBorders.borderRadiusVerticalXL,
       ),
@@ -77,6 +78,101 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen> {
       builder: (context) {
         return const CategoryFilterModal();
       },
+    );
+  }
+
+  Widget _buildActiveFilterChips(
+    BuildContext context,
+    ExpenseViewModel expenseViewModel,
+    CategoryViewModel categoryViewModel,
+    ThemeData theme,
+  ) {
+    if (!expenseViewModel.hasActiveFilters) {
+      return const SizedBox.shrink();
+    }
+
+    final chips = <Widget>[];
+
+    if (expenseViewModel.filterIsIncome != null) {
+      chips.add(
+        InputChip(
+          label: Text(
+            expenseViewModel.filterIsIncome! ? 'Receitas' : 'Despesas',
+            style: theme.textTheme.labelSmall?.copyWith(fontWeight: FontWeight.w600),
+          ),
+          deleteIcon: const Icon(Icons.close, size: 16),
+          onDeleted: () => expenseViewModel.setTypeFilter(null),
+          deleteIconColor: theme.colorScheme.primary,
+        ),
+      );
+    }
+
+    for (final catId in expenseViewModel.selectedCategoryIds) {
+      final category = categoryViewModel.getCategoryById(catId);
+      chips.add(
+        InputChip(
+          label: Text(
+            category?.name ?? 'Categoria',
+            style: theme.textTheme.labelSmall?.copyWith(fontWeight: FontWeight.w600),
+          ),
+          deleteIcon: const Icon(Icons.close, size: 16),
+          onDeleted: () {
+            final next = List<String>.from(expenseViewModel.selectedCategoryIds)..remove(catId);
+            expenseViewModel.setCategoryFilter(next);
+          },
+          deleteIconColor: theme.colorScheme.primary,
+        ),
+      );
+    }
+
+    if (_searchController.text.isNotEmpty) {
+      chips.add(
+        InputChip(
+          label: Text(
+            'Busca: "${_searchController.text}"',
+            style: theme.textTheme.labelSmall?.copyWith(fontWeight: FontWeight.w600),
+          ),
+          deleteIcon: const Icon(Icons.close, size: 16),
+          onDeleted: () {
+            _searchController.clear();
+            expenseViewModel.setSearchQuery('');
+          },
+          deleteIconColor: theme.colorScheme.primary,
+        ),
+      );
+    }
+
+    chips.add(
+      ActionChip(
+        avatar: Icon(Icons.clear_all_rounded, size: 16, color: theme.colorScheme.error),
+        label: Text(
+          'Limpar filtros',
+          style: theme.textTheme.labelSmall?.copyWith(
+            color: theme.colorScheme.error,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        onPressed: () {
+          _searchController.clear();
+          expenseViewModel.setSearchQuery('');
+          expenseViewModel.clearFilters();
+        },
+      ),
+    );
+
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(AppSpacing.md, AppSpacing.sm, AppSpacing.md, 0),
+      child: SingleChildScrollView(
+        scrollDirection: Axis.horizontal,
+        child: Row(
+          children: chips
+              .map((c) => Padding(
+                    padding: const EdgeInsets.only(right: AppSpacing.xs),
+                    child: c,
+                  ))
+              .toList(),
+        ),
+      ),
     );
   }
 
@@ -99,12 +195,19 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen> {
       symbol: 'R\$',
     );
 
+    final isFiltered = expenseViewModel.hasActiveFilters || expenseViewModel.searchAllPeriods;
+    final rawPeriod = DateFormat("MMMM 'de' yyyy", 'pt_BR').format(expenseViewModel.selectedMonth);
+    final formattedPeriod = rawPeriod.isNotEmpty
+        ? '${rawPeriod[0].toUpperCase()}${rawPeriod.substring(1)}'
+        : rawPeriod;
+
     Widget body = RefreshIndicator(
       onRefresh: _handleRefresh,
       color: theme.colorScheme.primary,
       backgroundColor: theme.colorScheme.surface,
       strokeWidth: 2.5,
       child: ResponsiveCenter(
+        maxWidth: 1200,
         child: CustomScrollView(
           physics: const BouncingScrollPhysics(
             parent: AlwaysScrollableScrollPhysics(),
@@ -156,13 +259,16 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen> {
                             : theme.colorScheme.error;
 
                         return BalanceCard(
-                          title: expenseViewModel.searchAllPeriods
+                          title: isFiltered
                               ? (enableIncomes
                                     ? 'Saldo filtrado'
                                     : 'Total filtrado')
                               : (enableIncomes
                                     ? 'Saldo do mês'
                                     : 'Total do mês'),
+                          period: expenseViewModel.searchAllPeriods
+                              ? 'Todo o período'
+                              : formattedPeriod,
                           totalValue: value,
                           backgroundColor: theme.colorScheme.primary,
                           isCompact: enableIncomes,
@@ -218,17 +324,41 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen> {
                     ),
                   ),
                 ),
-                const SizedBox(height: AppSpacing.lg),
+                _buildActiveFilterChips(
+                  context,
+                  expenseViewModel,
+                  categoryViewModel,
+                  theme,
+                ),
+                const SizedBox(height: AppSpacing.md),
               ]),
             ),
             if (isLoading)
               const ExpensesListSkeleton()
             else if (expenseViewModel.currentDisplayItems.isEmpty)
-              const SliverFillRemaining(
+              SliverFillRemaining(
                 hasScrollBody: false,
                 child: EmptyStateWidget(
-                  icon: Icons.money_off_rounded,
-                  message: 'Nenhuma despesa encontrada.',
+                  icon: expenseViewModel.hasActiveFilters
+                      ? Icons.filter_alt_off_rounded
+                      : Icons.money_off_rounded,
+                  message: expenseViewModel.hasActiveFilters
+                      ? 'Nenhum lançamento encontrado para os filtros aplicados.'
+                      : (enableIncomes
+                            ? 'Nenhum lançamento encontrado neste período.'
+                            : 'Nenhuma despesa encontrada neste período.'),
+                  buttonText: expenseViewModel.hasActiveFilters
+                      ? 'Limpar filtros'
+                      : (enableIncomes ? 'Novo lançamento' : 'Nova despesa'),
+                  onButtonPressed: () {
+                    if (expenseViewModel.hasActiveFilters) {
+                      _searchController.clear();
+                      expenseViewModel.setSearchQuery('');
+                      expenseViewModel.clearFilters();
+                    } else {
+                      NavigationUtils.push(context, const AddExpenseScreen());
+                    }
+                  },
                 ),
               )
             else
@@ -335,9 +465,13 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen> {
               ),
             if (!_isSearching)
               IconButton(
-                icon: Icon(
-                  Icons.filter_list_rounded,
-                  color: theme.colorScheme.onSurface,
+                icon: Badge(
+                  isLabelVisible: expenseViewModel.hasActiveFilters,
+                  smallSize: 8,
+                  child: Icon(
+                    Icons.filter_list_rounded,
+                    color: theme.colorScheme.onSurface,
+                  ),
                 ),
                 onPressed: _showCategoryFilter,
               ),

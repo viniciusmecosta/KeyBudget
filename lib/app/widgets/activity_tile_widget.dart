@@ -5,6 +5,7 @@ import 'package:intl/intl.dart';
 import 'package:key_budget/app/utils/navigation_utils.dart';
 import 'package:key_budget/core/design_system/spacing/app_spacing.dart';
 import 'package:key_budget/core/design_system/widgets/app_card.dart';
+import 'package:key_budget/core/design_system/widgets/app_status_badge.dart';
 import 'package:key_budget/core/models/expense_model.dart';
 import 'package:key_budget/core/utils/date_utils.dart';
 import 'package:key_budget/features/category/viewmodel/category_viewmodel.dart';
@@ -98,6 +99,14 @@ class ActivityTile extends ConsumerWidget {
         ? DateFormat('dd/MM/yyyy').format(expense.date)
         : DateUtils.getRelativeDate(expense.date);
 
+    final now = DateTime.now();
+    final endOfToday = DateTime(now.year, now.month, now.day, 23, 59, 59);
+    final isFuture = expense.date.isAfter(endOfToday);
+    final isRecurring = expense.recurringExpenseId != null &&
+        expense.recurringExpenseId!.isNotEmpty;
+    final isInstallment = expense.currentInstallment != null &&
+        expense.totalInstallments != null;
+
     return Expanded(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -129,6 +138,34 @@ class ActivityTile extends ConsumerWidget {
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
           ),
+          if (isFuture || isInstallment || isRecurring) ...[
+            const SizedBox(height: AppSpacing.xs),
+            Wrap(
+              spacing: AppSpacing.xs,
+              runSpacing: AppSpacing.xxs,
+              children: [
+                if (isFuture)
+                  const AppStatusBadge(
+                    label: 'Agendado',
+                    icon: Icons.schedule_rounded,
+                    variant: AppBadgeVariant.info,
+                  ),
+                if (isInstallment)
+                  AppStatusBadge(
+                    label:
+                        'Parcela ${expense.currentInstallment} de ${expense.totalInstallments}',
+                    icon: Icons.credit_card_outlined,
+                    variant: AppBadgeVariant.neutral,
+                  ),
+                if (isRecurring)
+                  const AppStatusBadge(
+                    label: 'Recorrente',
+                    icon: Icons.repeat_rounded,
+                    variant: AppBadgeVariant.neutral,
+                  ),
+              ],
+            ),
+          ],
         ],
       ),
     );
