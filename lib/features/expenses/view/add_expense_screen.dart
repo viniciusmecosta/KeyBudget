@@ -290,11 +290,13 @@ class _AddExpenseScreenState extends ConsumerState<AddExpenseScreen> {
                   onDateChanged: (date) {
                     setState(() {
                       _selectedDate = date;
+                      _hasUnsavedChanges = true;
                     });
                   },
                   onCategoryChanged: (category) {
                     setState(() {
                       _selectedCategory = category;
+                      _hasUnsavedChanges = true;
                     });
                   },
                   isEditing: true,
@@ -302,15 +304,24 @@ class _AddExpenseScreenState extends ConsumerState<AddExpenseScreen> {
                   isInstallment: _isIncome ? false : _isInstallment,
                   onInstallmentChanged: _isIncome
                       ? null
-                      : (val) => setState(() => _isInstallment = val),
+                      : (val) => setState(() {
+                            _isInstallment = val;
+                            _hasUnsavedChanges = true;
+                          }),
                   installmentsValue: _installmentsValue,
                   onInstallmentsValueChanged: _isIncome
                       ? null
-                      : (val) => setState(() => _installmentsValue = val),
+                      : (val) => setState(() {
+                            _installmentsValue = val;
+                            _hasUnsavedChanges = true;
+                          }),
                   startNextMonth: _startNextMonth,
                   onStartNextMonthChanged: _isIncome
                       ? null
-                      : (val) => setState(() => _startNextMonth = val),
+                      : (val) => setState(() {
+                            _startNextMonth = val;
+                            _hasUnsavedChanges = true;
+                          }),
                 ),
               ),
               const SizedBox(height: AppSpacing.md),

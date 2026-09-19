@@ -324,6 +324,8 @@ class _ExpenseDetailScreenState extends ConsumerState<ExpenseDetailScreen> {
                   },
                   isEditing: _isEditing,
                   isIncome: _isIncome,
+                  isSingleInstallmentEdit: widget.expense.installmentGroupId != null ||
+                      widget.expense.currentInstallment != null,
                   bottomWidgets: related.isEmpty
                       ? null
                       : [

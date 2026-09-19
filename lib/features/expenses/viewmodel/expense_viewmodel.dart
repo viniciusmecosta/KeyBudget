@@ -145,6 +145,11 @@ class ExpenseViewModel extends ChangeNotifier {
 
   bool get searchAllPeriods => _searchAllPeriods;
 
+  bool get hasActiveFilters =>
+      _selectedCategoryIds.isNotEmpty ||
+      _filterIsIncome != null ||
+      _searchQuery.isNotEmpty;
+
   List<Expense> get filteredExpenses {
     List<Expense> filtered = List.from(_allExpenses);
     if (_filterIsIncome != null) {
@@ -247,6 +252,14 @@ class ExpenseViewModel extends ChangeNotifier {
 
   void setTypeFilter(bool? isIncome) {
     _filterIsIncome = isIncome;
+    _updateDisplayList(animate: true);
+  }
+
+  void setFilters({List<String>? categories, bool? type}) {
+    if (categories != null) {
+      _selectedCategoryIds = List.from(categories);
+    }
+    _filterIsIncome = type;
     _updateDisplayList(animate: true);
   }
 

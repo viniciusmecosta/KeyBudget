@@ -6,6 +6,8 @@ import 'package:key_budget/app/widgets/category_picker_field.dart';
 import 'package:key_budget/app/widgets/date_picker_field.dart';
 import 'package:key_budget/core/design_system/spacing/app_spacing.dart';
 import 'package:key_budget/core/models/expense_category_model.dart';
+import 'package:key_budget/core/money/money.dart';
+import 'package:key_budget/core/money/money_parser.dart';
 import 'package:key_budget/features/auth/viewmodel/auth_viewmodel.dart';
 import 'package:key_budget/features/category/view/categories_screen.dart';
 import 'package:key_budget/features/category/viewmodel/category_viewmodel.dart';
@@ -31,6 +33,7 @@ class ExpenseForm extends ConsumerWidget {
   final Function(int)? onInstallmentsValueChanged;
   final bool startNextMonth;
   final Function(bool)? onStartNextMonthChanged;
+  final bool isSingleInstallmentEdit;
   final List<Widget>? bottomWidgets;
 
   const ExpenseForm({
@@ -52,12 +55,47 @@ class ExpenseForm extends ConsumerWidget {
     this.onInstallmentsValueChanged,
     this.startNextMonth = false,
     this.onStartNextMonthChanged,
+    this.isSingleInstallmentEdit = false,
     this.bottomWidgets,
   });
+
+  static String formatInstallmentDistribution(Money totalMoney, int count) {
+    if (count <= 1) {
+      return totalMoney.formatBrl();
+    }
+    final totalCents = totalMoney.amountMinor;
+    if (totalCents <= 0) {
+      return '$count× de R\$ 0,00';
+    }
+    final baseCents = totalCents ~/ count;
+    final remainder = totalCents % count;
+
+    if (remainder == 0) {
+      final baseMoney = Money.fromCents(baseCents, currency: totalMoney.currency);
+      return '$count de ${baseMoney.formatBrl()}';
+    }
+
+    final higherMoney = Money.fromCents(baseCents + 1, currency: totalMoney.currency);
+    final baseMoney = Money.fromCents(baseCents, currency: totalMoney.currency);
+    final restCount = count - remainder;
+
+    return '$remainder de ${higherMoney.formatBrl()} e $restCount de ${baseMoney.formatBrl()}';
+  }
 
   Widget _buildAmountWidget(BuildContext context) {
     final theme = Theme.of(context);
     final accentColor = isIncome ? Colors.green[700]! : Colors.red;
+
+    final String amountLabel;
+    if (isSingleInstallmentEdit) {
+      amountLabel = 'Valor desta parcela';
+    } else if (isInstallment) {
+      amountLabel = 'Valor total';
+    } else if (isIncome) {
+      amountLabel = 'Valor da Receita';
+    } else {
+      amountLabel = 'Valor da Despesa';
+    }
 
     return Container(
       width: double.infinity,
@@ -83,7 +121,7 @@ class ExpenseForm extends ConsumerWidget {
       child: Column(
         children: [
           Text(
-            isIncome ? 'Valor da Receita' : 'Valor da Despesa',
+            amountLabel,
             style: theme.textTheme.labelMedium?.copyWith(
               color: accentColor.withValues(alpha: 0.8),
               fontWeight: FontWeight.w600,
@@ -121,7 +159,18 @@ class ExpenseForm extends ConsumerWidget {
               return null;
             },
           ),
-          if (!isEditing) ...[
+          if (isSingleInstallmentEdit) ...[
+            const SizedBox(height: AppSpacing.xs),
+            Text(
+              'Alterar o valor desta parcela não recalcula as demais parcelas do grupo.',
+              textAlign: TextAlign.center,
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: theme.colorScheme.onSurfaceVariant,
+                fontSize: 11,
+              ),
+            ),
+          ],
+          if (!isEditing && !isSingleInstallmentEdit) ...[
             const SizedBox(height: AppSpacing.xs),
             Text(
               'Toque em editar para alterar',
@@ -144,6 +193,9 @@ class ExpenseForm extends ConsumerWidget {
       options.sort();
     }
 
+    final money = MoneyParser.fromMaskedText(amountController.text);
+    final distributionText = formatInstallmentDistribution(money, installmentsValue);
+
     return AbsorbPointer(
       absorbing: !isEditing,
       child: DropdownButtonFormField<int>(
@@ -153,8 +205,7 @@ class ExpenseForm extends ConsumerWidget {
         decoration: InputDecoration(
           labelText: 'Número de Parcelas',
           prefixIcon: const Icon(Icons.credit_card_outlined),
-          helperText:
-              'Valor por parcela: ${_calcInstallmentAmount(amountController.numberValue, installmentsValue)}',
+          helperText: 'Distribuição: $distributionText',
         ),
         items: options.map((n) {
           return DropdownMenuItem(
@@ -167,12 +218,6 @@ class ExpenseForm extends ConsumerWidget {
             : null,
       ),
     );
-  }
-
-  String _calcInstallmentAmount(double total, int count) {
-    if (count <= 0) return 'R\$ 0,00';
-    final perInstallment = total / count;
-    return 'R\$ ${perInstallment.toStringAsFixed(2).replaceAll('.', ',')}';
   }
 
   @override
@@ -207,16 +252,21 @@ class ExpenseForm extends ConsumerWidget {
                 );
                 if (userId != null && context.mounted) {
                   await ref.read(categoryViewModelProvider).fetchCategories(userId);
+                  final categories = ref.read(categoryViewModelProvider).categories;
+                  if (selectedCategory != null &&
+                      !categories.any((c) => c.id == selectedCategory!.id)) {
+                    onCategoryChanged(null);
+                  }
                 }
               },
-              validator: (value) => value == null ? 'Selecione uma categoria' : null,
+              validator: (v) => v == null ? 'Selecione uma categoria' : null,
             ),
           ],
           const SizedBox(height: AppSpacing.md),
           AbsorbPointer(
             absorbing: !isEditing,
             child: CategoryAutocompleteField(
-              key: ValueKey('location_${isIncome ? "income" : selectedCategory?.id}'),
+              key: ValueKey('location_${selectedCategory?.id}_$isIncome'),
               label: 'Título *',
               prefixIcon: Icons.title_outlined,
               controller: locationController,
@@ -336,6 +386,4 @@ class ExpenseForm extends ConsumerWidget {
       ],
     );
   }
-
 }
-
