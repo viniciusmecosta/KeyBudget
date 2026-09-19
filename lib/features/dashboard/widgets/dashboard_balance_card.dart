@@ -127,6 +127,11 @@ class _DashboardBalanceCardState extends ConsumerState<DashboardBalanceCard>
         ? Colors.greenAccent[400]!
         : Colors.redAccent[200]!;
 
+    final rawPeriod = DateFormat("MMMM 'de' yyyy", 'pt_BR').format(DateTime.now());
+    final period = rawPeriod.isNotEmpty
+        ? '${rawPeriod[0].toUpperCase()}${rawPeriod.substring(1)}'
+        : rawPeriod;
+
     final valueSubtitle = hasPreviousMonths
         ? Row(
             mainAxisSize: MainAxisSize.min,
@@ -160,20 +165,30 @@ class _DashboardBalanceCardState extends ConsumerState<DashboardBalanceCard>
                 ),
               ),
               const SizedBox(width: 6),
-              Text(
-                enableIncomes
-                    ? 'em relação à média de saldo'
-                    : 'em relação à média de gastos',
-                style: theme.textTheme.bodySmall?.copyWith(
-                  color: theme.colorScheme.onPrimary.withAlpha(
-                    (255 * 0.8).round(),
+              Flexible(
+                child: Text(
+                  enableIncomes
+                      ? 'em relação à média anterior'
+                      : 'em relação à média anterior de gastos',
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: theme.colorScheme.onPrimary.withAlpha(
+                      (255 * 0.8).round(),
+                    ),
+                    fontSize: 11,
                   ),
-                  fontSize: 11,
                 ),
               ),
             ],
           )
-        : null;
+        : Text(
+            'Sem histórico anterior para comparação',
+            style: theme.textTheme.bodySmall?.copyWith(
+              color: theme.colorScheme.onPrimary.withAlpha(
+                (255 * 0.75).round(),
+              ),
+              fontSize: 11,
+            ),
+          );
 
     final currencyFormatter = NumberFormat.currency(
       locale: 'pt_BR',
@@ -194,7 +209,8 @@ class _DashboardBalanceCardState extends ConsumerState<DashboardBalanceCard>
             : theme.colorScheme.error;
 
         return BalanceCard(
-          title: enableIncomes ? 'Saldo do Mês' : 'Gasto Total do Mês',
+          title: enableIncomes ? 'Saldo do período' : 'Despesas do mês',
+          period: period,
           totalValue: _animation.value,
           gradient: LinearGradient(
             colors: [
@@ -209,12 +225,14 @@ class _DashboardBalanceCardState extends ConsumerState<DashboardBalanceCard>
           },
           valueSubtitle: valueSubtitle,
           subtitle: enableIncomes
-              ? Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Padding(
-                      padding: const EdgeInsets.only(top: AppSpacing.xs),
-                      child: Row(
+              ? Padding(
+                  padding: const EdgeInsets.only(top: AppSpacing.xs),
+                  child: Wrap(
+                    spacing: AppSpacing.lg,
+                    runSpacing: AppSpacing.xs,
+                    children: [
+                      Row(
+                        mainAxisSize: MainAxisSize.min,
                         children: [
                           Icon(
                             Icons.arrow_circle_up_rounded,
@@ -223,25 +241,7 @@ class _DashboardBalanceCardState extends ConsumerState<DashboardBalanceCard>
                           ),
                           const SizedBox(width: 6),
                           Text(
-                            currencyFormatter.format(
-                              viewModel.totalIncomeForMonth,
-                            ),
-                            style: theme.textTheme.bodyMedium?.copyWith(
-                              color: theme.colorScheme.onPrimary,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                          const SizedBox(width: AppSpacing.lg),
-                          Icon(
-                            Icons.arrow_circle_down_rounded,
-                            color: expenseIconColor,
-                            size: 18,
-                          ),
-                          const SizedBox(width: 6),
-                          Text(
-                            currencyFormatter.format(
-                              viewModel.totalAmountForMonth,
-                            ),
+                            'Receitas: ${currencyFormatter.format(viewModel.totalIncomeForMonth)}',
                             style: theme.textTheme.bodyMedium?.copyWith(
                               color: theme.colorScheme.onPrimary,
                               fontWeight: FontWeight.w600,
@@ -249,8 +249,26 @@ class _DashboardBalanceCardState extends ConsumerState<DashboardBalanceCard>
                           ),
                         ],
                       ),
-                    ),
-                  ],
+                      Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(
+                            Icons.arrow_circle_down_rounded,
+                            color: expenseIconColor,
+                            size: 18,
+                          ),
+                          const SizedBox(width: 6),
+                          Text(
+                            'Despesas: ${currencyFormatter.format(viewModel.totalAmountForMonth)}',
+                            style: theme.textTheme.bodyMedium?.copyWith(
+                              color: theme.colorScheme.onPrimary,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
                 )
               : null,
         );
