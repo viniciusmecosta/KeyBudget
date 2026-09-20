@@ -27,6 +27,16 @@ class _AnalysisScreenState extends ConsumerState<AnalysisScreen> {
   bool _isFirstLoad = true;
   bool _isExporting = false;
 
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        ref.read(analysisViewModelProvider).resetToCurrentMonth();
+      }
+    });
+  }
+
   Widget _buildAnimatedWidget(Widget child, int index) {
     if (_isFirstLoad) {
       return AppAnimations.fadeInFromBottom(

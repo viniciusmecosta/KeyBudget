@@ -77,13 +77,23 @@ class AnalysisViewModel extends ChangeNotifier {
   }
 
   void _initialize() {
-    if (availableMonthsForFilter.isNotEmpty) {
-      _selectedMonthForCategory = availableMonthsForFilter.first;
-    } else {
-      final now = _clock.now();
-      _selectedMonthForCategory = DateTime(now.year, now.month);
-    }
+    final now = _clock.now();
+    _selectedMonthForCategory = DateTime(now.year, now.month);
     _invalidateSnapshots();
+  }
+
+  void resetToCurrentMonth() {
+    final now = _clock.now();
+    final currentMonth = DateTime(now.year, now.month);
+    if (_selectedMonthForCategory != currentMonth ||
+        _periodOffset != 0 ||
+        _useCustomRange) {
+      _selectedMonthForCategory = currentMonth;
+      _periodOffset = 0;
+      _useCustomRange = false;
+      _invalidateSnapshots();
+      notifyListeners();
+    }
   }
 
   List<Expense> get allExpenses {
@@ -343,13 +353,15 @@ class AnalysisViewModel extends ChangeNotifier {
   }
 
   List<DateTime> get availableMonthsForFilter {
-    if (allExpenses.isEmpty) return [];
+    final now = _clock.now();
+    final currentMonth = DateTime(now.year, now.month);
     final uniqueMonths = allExpenses
         .map((e) => DateTime(e.date.year, e.date.month))
-        .toSet()
-        .toList();
-    uniqueMonths.sort((a, b) => b.compareTo(a));
-    return uniqueMonths;
+        .toSet();
+    uniqueMonths.add(currentMonth);
+    final sortedMonths = uniqueMonths.toList();
+    sortedMonths.sort((a, b) => b.compareTo(a));
+    return sortedMonths;
   }
 
   DateTimeRange? get availableDateRange {
