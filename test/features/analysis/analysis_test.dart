@@ -296,6 +296,43 @@ void main() {
 
       analysisVm.dispose();
     });
+
+    test('Inicializa e reseta selectedMonthForCategory sempre no mes atual', () {
+      final categoryVm = CategoryViewModel();
+      final expenseVm = ExpenseViewModel();
+      expenseVm.allExpenses = [
+        _createExpense(
+          id: 'exp_past',
+          motivation: 'Passado',
+          amount: 50.0,
+          date: DateTime(2026, 1, 15),
+        ),
+        _createExpense(
+          id: 'exp_future',
+          motivation: 'Futuro',
+          amount: 70.0,
+          date: DateTime(2026, 12, 10),
+        ),
+      ];
+
+      final analysisVm = AnalysisViewModel(
+        categoryViewModel: categoryVm,
+        expenseViewModel: expenseVm,
+        clock: fixedClock,
+      );
+
+      final currentMonth = DateTime(2026, 6);
+      expect(analysisVm.selectedMonthForCategory, equals(currentMonth));
+      expect(analysisVm.availableMonthsForFilter, contains(currentMonth));
+
+      analysisVm.setSelectedMonthForCategory(DateTime(2026, 1));
+      expect(analysisVm.selectedMonthForCategory, equals(DateTime(2026, 1)));
+
+      analysisVm.resetToCurrentMonth();
+      expect(analysisVm.selectedMonthForCategory, equals(currentMonth));
+
+      analysisVm.dispose();
+    });
   });
 
   group('CsvService & Snapshot - Exportação Determinística Congelada', () {

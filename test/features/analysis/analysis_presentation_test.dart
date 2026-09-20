@@ -11,6 +11,7 @@ import 'package:key_budget/features/analysis/widgets/monthly_trend_section_widge
 import 'package:key_budget/features/auth/repository/auth_repository.dart';
 import 'package:key_budget/features/auth/viewmodel/auth_viewmodel.dart';
 import 'package:key_budget/features/category/viewmodel/category_viewmodel.dart';
+import 'package:key_budget/features/analysis/viewmodel/analysis_viewmodel.dart';
 import 'package:key_budget/features/expenses/repository/expense_repository.dart';
 import 'package:key_budget/features/expenses/viewmodel/expense_viewmodel.dart';
 
@@ -312,6 +313,55 @@ void main() {
       expect(find.text('Exportar Análise'), findsOneWidget);
       expect(find.text('Relatório em PDF'), findsOneWidget);
       expect(find.text('Planilha em CSV'), findsOneWidget);
+    });
+
+    testWidgets('AnalysisScreen resets selectedMonthForCategory to current month on entry', (tester) async {
+      tester.view.physicalSize = const Size(1080, 1920);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+
+      final expenseVM = FakeExpenseVM(initialExpenses: [
+        Expense(
+          id: 'e_past',
+          amount: 100.0,
+          date: DateTime(2025, 1, 1),
+          categoryId: 'cat_1',
+          location: 'Passado',
+        ),
+      ]);
+      final categoryVM = FakeCategoryVM(testCategories);
+      final authVM = FakeAuthVM(mockUser: testUser);
+
+      final analysisVM = AnalysisViewModel(
+        categoryViewModel: categoryVM,
+        expenseViewModel: expenseVM,
+      );
+      analysisVM.setSelectedMonthForCategory(DateTime(2025, 1));
+      expect(analysisVM.selectedMonthForCategory, equals(DateTime(2025, 1)));
+
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: [
+            expenseViewModelProvider.overrideWith((ref) => expenseVM),
+            categoryViewModelProvider.overrideWith((ref) => categoryVM),
+            authViewModelProvider.overrideWith((ref) => authVM),
+            analysisViewModelProvider.overrideWith((ref) => analysisVM),
+          ],
+          child: const MaterialApp(
+            home: AnalysisScreen(),
+          ),
+        ),
+      );
+      await tester.pump();
+      await tester.pump(const Duration(seconds: 1));
+      await tester.pumpAndSettle();
+
+      final now = DateTime.now();
+      expect(
+        analysisVM.selectedMonthForCategory,
+        equals(DateTime(now.year, now.month)),
+      );
     });
   });
 }
