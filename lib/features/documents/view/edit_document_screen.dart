@@ -54,13 +54,16 @@ class _EditDocumentScreenState extends ConsumerState<EditDocumentScreen> {
     final userId = ref.read(authViewModelProvider).currentUser!.id;
 
     final updatedDocument = widget.document.copyWith(
-      documentName: _nameController.text,
-      number: _numberController.text,
+      documentName: _nameController.text.trim(),
+      number: _numberController.text.trim(),
+      clearNumber: _numberController.text.trim().isEmpty,
       issueDate: _issueDate.value,
+      clearIssueDate: _issueDate.value == null,
       expiryDate: _expiryDate.value,
+      clearExpiryDate: _expiryDate.value == null,
       additionalFields: {
         for (var field in _additionalFields.value)
-          if (field['name']!.isNotEmpty) field['name']!: field['value']!,
+          if (field['name']!.trim().isNotEmpty) field['name']!.trim(): field['value']!.trim(),
       },
       attachments: _attachments.value,
     );

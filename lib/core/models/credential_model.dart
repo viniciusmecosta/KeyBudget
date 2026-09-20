@@ -54,21 +54,26 @@ class Credential {
     String? login,
     String? encryptedPassword,
     String? email,
+    bool clearEmail = false,
     String? phoneNumber,
+    bool clearPhoneNumber = false,
     String? notes,
+    bool clearNotes = false,
     String? logoPath,
+    bool clearLogoPath = false,
     String? folderId,
+    bool clearFolderId = false,
   }) {
     return Credential(
       id: id ?? this.id,
       location: location ?? this.location,
       login: login ?? this.login,
       encryptedPassword: encryptedPassword ?? this.encryptedPassword,
-      email: email ?? this.email,
-      phoneNumber: phoneNumber ?? this.phoneNumber,
-      notes: notes ?? this.notes,
-      logoPath: logoPath ?? this.logoPath,
-      folderId: folderId ?? this.folderId,
+      email: clearEmail ? null : (email ?? this.email),
+      phoneNumber: clearPhoneNumber ? null : (phoneNumber ?? this.phoneNumber),
+      notes: clearNotes ? null : (notes ?? this.notes),
+      logoPath: clearLogoPath ? null : (logoPath ?? this.logoPath),
+      folderId: clearFolderId ? null : (folderId ?? this.folderId),
     );
   }
 }
