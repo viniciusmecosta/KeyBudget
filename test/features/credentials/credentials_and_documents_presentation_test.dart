@@ -150,7 +150,7 @@ void main() {
   group('DocumentListTile widget presentation', () {
     testWidgets('renders badges for principal, attachments, and expiry', (tester) async {
       final doc = Document(
-        id: 'd1',
+        id: 'doc_1',
         documentName: 'Certidão',
         number: '12345',
         isPrincipal: true,
