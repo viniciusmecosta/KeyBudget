@@ -72,13 +72,13 @@ void main() {
 
   final List<ExpenseCategory> testCategories = [
     ExpenseCategory(
-      id: 'c1',
+      id: 'cat_1',
       name: 'Alimentação',
       colorValue: Colors.blue.toARGB32(),
       iconCodePoint: Icons.fastfood.codePoint,
     ),
     ExpenseCategory(
-      id: 'c2',
+      id: 'cat_2',
       name: 'Transporte',
       colorValue: Colors.orange.toARGB32(),
       iconCodePoint: Icons.directions_car.codePoint,
@@ -118,7 +118,7 @@ void main() {
         id: 'e1',
         amount: 50.0,
         date: futureDate,
-        categoryId: 'c1',
+        categoryId: 'cat_1',
         location: 'Mercado Futuro',
       );
 
@@ -138,7 +138,7 @@ void main() {
         id: 'e2',
         amount: 100.0,
         date: DateTime.now().subtract(const Duration(days: 1)),
-        categoryId: 'c2',
+        categoryId: 'cat_2',
         currentInstallment: 2,
         totalInstallments: 5,
         location: 'Notebook',
@@ -160,7 +160,7 @@ void main() {
         id: 'e3',
         amount: 30.0,
         date: DateTime.now().subtract(const Duration(days: 1)),
-        categoryId: 'c1',
+        categoryId: 'cat_1',
         recurringExpenseId: 'rec_123',
         location: 'Assinatura Streaming',
       );
@@ -224,7 +224,7 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(expenseVM.filterIsIncome, isTrue);
-      expect(expenseVM.selectedCategoryIds, contains('c1'));
+      expect(expenseVM.selectedCategoryIds, contains('cat_1'));
       expect(expenseVM.hasActiveFilters, isTrue);
     });
 
@@ -235,7 +235,7 @@ void main() {
       addTearDown(tester.view.resetDevicePixelRatio);
 
       final expenseVM = FakeExpenseVM();
-      expenseVM.setFilters(categories: ['c1'], type: false);
+      expenseVM.setFilters(categories: ['cat_1'], type: false);
 
       await tester.pumpWidget(
         createTestApp(
@@ -269,7 +269,7 @@ void main() {
       expect(find.text('Aplicar'), findsOneWidget);
 
       expect(expenseVM.filterIsIncome, isFalse);
-      expect(expenseVM.selectedCategoryIds, contains('c1'));
+      expect(expenseVM.selectedCategoryIds, contains('cat_1'));
 
       await tester.tap(find.text('Aplicar'));
       await tester.pumpAndSettle();
@@ -292,11 +292,11 @@ void main() {
         id: 'e1',
         amount: 80.0,
         date: now,
-        categoryId: 'c1',
+        categoryId: 'cat_1',
         location: 'Restaurante',
       );
       final expenseVM = FakeExpenseVM(initialExpenses: [expense]);
-      expenseVM.setFilters(categories: ['c1']);
+      expenseVM.setFilters(categories: ['cat_1']);
 
       await tester.pumpWidget(
         createTestApp(
@@ -340,11 +340,11 @@ void main() {
         id: 'e1',
         amount: 80.0,
         date: now,
-        categoryId: 'c1',
+        categoryId: 'cat_1',
         location: 'Restaurante',
       );
       final expenseVM = FakeExpenseVM(initialExpenses: [expense]);
-      expenseVM.setFilters(categories: ['c1']);
+      expenseVM.setFilters(categories: ['cat_1']);
 
       await tester.pumpWidget(
         createTestApp(
