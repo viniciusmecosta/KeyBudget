@@ -718,6 +718,7 @@ class PdfService {
       currentY += 25;
 
       final PdfGrid categoryGrid = PdfGrid();
+      categoryGrid.repeatHeader = true;
       categoryGrid.columns.add(count: 4);
       final PdfGridRow catHeader = categoryGrid.headers.add(1)[0];
       catHeader.cells[0].value = 'Categoria';
@@ -797,6 +798,7 @@ class PdfService {
       page2Y += 30;
 
       final PdfGrid seriesGrid = PdfGrid();
+      seriesGrid.repeatHeader = true;
       seriesGrid.columns.add(count: 4);
       final PdfGridRow seriesHeader = seriesGrid.headers.add(1)[0];
       seriesHeader.cells[0].value = 'Mês';

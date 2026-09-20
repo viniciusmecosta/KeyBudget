@@ -2,10 +2,11 @@ import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
+import 'package:key_budget/core/design_system/borders/app_borders.dart';
 import 'package:key_budget/core/design_system/spacing/app_spacing.dart';
 import 'package:key_budget/core/design_system/widgets/app_card.dart';
 import 'package:key_budget/core/money/money.dart';
-import 'package:key_budget/features/auth/viewmodel/auth_viewmodel.dart';
+import 'package:key_budget/features/analysis/domain/analysis_snapshot.dart';
 
 import '../viewmodel/analysis_viewmodel.dart';
 import 'empty_chart_state_widget.dart';
@@ -28,376 +29,234 @@ class CategoryAnalysisSectionWidget extends ConsumerStatefulWidget {
 class _CategoryAnalysisSectionWidgetState
     extends ConsumerState<CategoryAnalysisSectionWidget> {
   int _touchedPieIndex = -1;
+  bool _isExpanded = false;
 
   @override
   Widget build(BuildContext context) {
     final viewModel = ref.watch(analysisViewModelProvider);
-    final enableIncomes =
-        ref.watch(authViewModelProvider).currentUser?.enableIncomes ?? false;
+    final theme = Theme.of(context);
+    final snapshot = viewModel.currentSnapshot;
+    final groups = snapshot.categoryDistribution;
+
+    final totalCents = snapshot.totalExpenses.amountMinor;
+
+    if (groups.isEmpty || totalCents <= 0) {
+      return AppCard(
+        padding: const EdgeInsets.all(AppSpacing.lg),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Composição de Gastos',
+              style: theme.textTheme.titleMedium?.copyWith(
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            const SizedBox(height: AppSpacing.md),
+            const EmptyChartStateWidget(
+              message: 'Nenhuma despesa para exibir no período',
+              icon: Icons.pie_chart_outline,
+            ),
+          ],
+        ),
+      );
+    }
+
+    final totalValue = Money.fromCents(totalCents).toDouble();
+    final currencyFormatter = NumberFormat.currency(
+      locale: 'pt_BR',
+      symbol: 'R\$',
+    );
+
+    final bool hasMoreThan5 = groups.length > 5;
+    final List<AnalysisCategoryGroup> top5 =
+        hasMoreThan5 ? groups.sublist(0, 5) : groups;
+
+    final int othersCents = hasMoreThan5
+        ? groups
+            .sublist(5)
+            .fold<int>(0, (sum, g) => sum + g.totalAmount.amountMinor)
+        : 0;
+    final double othersPercentage = hasMoreThan5
+        ? groups.sublist(5).fold<double>(0.0, (sum, g) => sum + g.percentage)
+        : 0.0;
+
+    final List<PieChartSectionData> pieSections = [];
+    for (int i = 0; i < top5.length; i++) {
+      final g = top5[i];
+      final isTouched = i == _touchedPieIndex;
+      final val = g.totalAmount.amountMinor / 100.0;
+      final color = Color(g.colorValue);
+
+      pieSections.add(
+        PieChartSectionData(
+          color: color,
+          value: val,
+          title: top5.length <= 4 ? '${g.percentage.toStringAsFixed(0)}%' : '',
+          radius: isTouched ? 65 : 55,
+          titleStyle: const TextStyle(
+            fontSize: 12,
+            fontWeight: FontWeight.bold,
+            color: Colors.white,
+            shadows: [
+              Shadow(
+                color: Colors.black26,
+                offset: Offset(1, 1),
+                blurRadius: 2,
+              ),
+            ],
+          ),
+          badgeWidget: isTouched
+              ? _buildTouchBadge(g.categoryName, g.percentage)
+              : null,
+          badgePositionPercentageOffset: 1.3,
+        ),
+      );
+    }
+
+    if (hasMoreThan5 && othersCents > 0) {
+      final othersIndex = top5.length;
+      final isTouched = othersIndex == _touchedPieIndex;
+      final othersColor = theme.colorScheme.outline;
+
+      pieSections.add(
+        PieChartSectionData(
+          color: othersColor,
+          value: othersCents / 100.0,
+          title: '',
+          radius: isTouched ? 65 : 55,
+          badgeWidget: isTouched
+              ? _buildTouchBadge('Outras', othersPercentage)
+              : null,
+          badgePositionPercentageOffset: 1.3,
+        ),
+      );
+    }
+
+    final displayedGroups =
+        (_isExpanded || !hasMoreThan5) ? groups : top5;
 
     return AppCard(
       padding: const EdgeInsets.all(AppSpacing.lg),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            'Composição de Gastos',
-            style: Theme.of(
-              context,
-            ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
-          ),
-          const SizedBox(height: 4),
-          Text(
-            enableIncomes && viewModel.selectedMonthForCategory != null
-                ? 'Referente a ${DateFormat.yMMMM('pt_BR').format(viewModel.selectedMonthForCategory!).capitalize()}'
-                : 'Entenda onde seu dinheiro é gasto',
-            style: Theme.of(context).textTheme.bodySmall?.copyWith(
-              color: Theme.of(context).colorScheme.onSurfaceVariant,
-            ),
-          ),
-          const SizedBox(height: AppSpacing.lg),
-          if (!enableIncomes) ...[
-            _buildCategoryMonthSelector(context, viewModel),
-            const SizedBox(height: AppSpacing.lg),
-          ],
-          _buildEnhancedCategoryBreakdown(context, viewModel),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildCategoryMonthSelector(
-    BuildContext context,
-    AnalysisViewModel viewModel,
-  ) {
-    final theme = Theme.of(context);
-
-    if (viewModel.availableMonthsForFilter.isEmpty ||
-        viewModel.selectedMonthForCategory == null) {
-      return const SizedBox.shrink();
-    }
-
-    return Material(
-      color: theme.colorScheme.surfaceContainerHighest,
-      borderRadius: BorderRadius.circular(12),
-      child: InkWell(
-        onTap: () => _showMonthPicker(context, viewModel),
-        borderRadius: BorderRadius.circular(12),
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-          child: Row(
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Icon(
-                Icons.calendar_month,
-                color: theme.colorScheme.primary,
-                size: 20,
-              ),
-              const SizedBox(width: AppSpacing.md),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Período',
-                      style: theme.textTheme.bodySmall?.copyWith(
-                        color: theme.colorScheme.onSurfaceVariant,
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                    Text(
-                      DateFormat.yMMMM('pt_BR')
-                          .format(viewModel.selectedMonthForCategory!)
-                          .capitalize(),
-                      style: theme.textTheme.bodyMedium?.copyWith(
-                        fontWeight: FontWeight.bold,
-                        color: theme.colorScheme.onSurface,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              Icon(
-                Icons.arrow_forward_ios,
-                color: theme.colorScheme.primary,
-                size: 16,
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  void _showMonthPicker(BuildContext context, AnalysisViewModel viewModel) {
-    final theme = Theme.of(context);
-
-    showModalBottomSheet(
-      context: context,
-      backgroundColor: theme.scaffoldBackgroundColor,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
-      builder: (bc) => SizedBox(
-        height: 400,
-        child: Column(
-          children: [
-            Container(
-              margin: const EdgeInsets.symmetric(vertical: 12),
-              width: 40,
-              height: 4,
-              decoration: BoxDecoration(
-                color: theme.colorScheme.onSurface.withAlpha(
-                  (255 * 0.3).round(),
-                ),
-                borderRadius: BorderRadius.circular(2),
-              ),
-            ),
-            Padding(
-              padding: const EdgeInsets.all(AppSpacing.md),
-              child: Text(
-                'Selecionar Período',
-                style: theme.textTheme.titleLarge?.copyWith(
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ),
-            Expanded(
-              child: ListView.builder(
-                itemCount: viewModel.availableMonthsForFilter.length,
-                itemBuilder: (context, index) {
-                  final month = viewModel.availableMonthsForFilter[index];
-                  final isSelected =
-                      month == viewModel.selectedMonthForCategory;
-
-                  final monthExpenses = viewModel.allExpenses.where(
-                    (exp) =>
-                        exp.isIncome != true &&
-                        exp.date.year == month.year &&
-                        exp.date.month == month.month,
-                  );
-
-                  final monthTotal = Money.fromCents(
-                    monthExpenses.fold<int>(
-                      0,
-                      (sum, exp) => sum + exp.money.amountMinor,
-                    ),
-                  ).toDouble();
-
-                  return Container(
-                    margin: const EdgeInsets.symmetric(
-                      horizontal: AppSpacing.md,
-                      vertical: 4,
-                    ),
-                    child: Material(
-                      color: isSelected
-                          ? theme.colorScheme.primaryContainer
-                          : theme.colorScheme.surface,
-                      borderRadius: BorderRadius.circular(12),
-                      child: InkWell(
-                        onTap: () {
-                          viewModel.setSelectedMonthForCategory(month);
-                          Navigator.pop(context);
-                        },
-                        borderRadius: BorderRadius.circular(12),
-                        child: Container(
-                          padding: const EdgeInsets.all(16),
-                          decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(12),
-                            border: Border.all(
-                              color: isSelected
-                                  ? theme.colorScheme.primaryContainer
-                                  : theme.colorScheme.outlineVariant,
-                            ),
-                          ),
-                          child: Row(
-                            children: [
-                              Icon(
-                                Icons.calendar_month,
-                                color: isSelected
-                                    ? theme.colorScheme.primary
-                                    : theme.colorScheme.onSurfaceVariant,
-                                size: 20,
-                              ),
-                              const SizedBox(width: AppSpacing.md),
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      DateFormat.yMMMM(
-                                        'pt_BR',
-                                      ).format(month).capitalize(),
-                                      style: TextStyle(
-                                        fontWeight: isSelected
-                                            ? FontWeight.bold
-                                            : FontWeight.w500,
-                                        color: isSelected
-                                            ? theme
-                                                  .colorScheme
-                                                  .onPrimaryContainer
-                                            : theme.colorScheme.onSurface,
-                                      ),
-                                    ),
-                                    if (monthTotal > 0) ...[
-                                      const SizedBox(height: 2),
-                                      Text(
-                                        NumberFormat.currency(
-                                          locale: 'pt_BR',
-                                          symbol: 'R\$',
-                                        ).format(monthTotal),
-                                        style: TextStyle(
-                                          fontSize: 12,
-                                          color: theme
-                                              .colorScheme
-                                              .onSurfaceVariant,
-                                        ),
-                                      ),
-                                    ],
-                                  ],
-                                ),
-                              ),
-                              if (isSelected)
-                                Icon(
-                                  Icons.check_circle,
-                                  color: theme.colorScheme.primary,
-                                  size: 20,
-                                ),
-                            ],
-                          ),
-                        ),
-                      ),
-                    ),
-                  );
-                },
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildEnhancedCategoryBreakdown(
-    BuildContext context,
-    AnalysisViewModel viewModel,
-  ) {
-    final theme = Theme.of(context);
-    final data = viewModel.expensesByCategoryForSelectedMonth;
-
-    if (data.isEmpty) {
-      return const EmptyChartStateWidget(
-        message: 'Nenhuma despesa para exibir no período',
-        icon: Icons.pie_chart_outline,
-      );
-    }
-
-    final total = data.values.fold(0.0, (sum, item) => sum + item);
-    final chartData = data.entries.toList()
-      ..sort((a, b) => b.value.compareTo(a.value));
-    final showPercentageInChart = chartData.length <= 5;
-
-    return Column(
-      children: [
-        SizedBox(
-          height: 200,
-          child: Stack(
-            alignment: Alignment.center,
-            children: [
-              PieChart(
-                PieChartData(
-                  pieTouchData: PieTouchData(
-                    touchCallback: (event, pieTouchResponse) {
-                      setState(() {
-                        if (!event.isInterestedForInteractions ||
-                            pieTouchResponse?.touchedSection == null) {
-                          _touchedPieIndex = -1;
-                          return;
-                        }
-                        _touchedPieIndex = pieTouchResponse!
-                            .touchedSection!
-                            .touchedSectionIndex;
-                      });
-                    },
-                  ),
-                  sectionsSpace: showPercentageInChart ? 2 : 1,
-                  centerSpaceRadius: 50,
-                  sections: List.generate(chartData.length, (i) {
-                    final isTouched = i == _touchedPieIndex;
-                    final entry = chartData[i];
-                    final percentage = (entry.value / total) * 100;
-
-                    return PieChartSectionData(
-                      color: entry.key.color,
-                      value: entry.value,
-                      title: showPercentageInChart
-                          ? '${percentage.toStringAsFixed(0)}%'
-                          : '',
-                      radius: isTouched ? 65 : 55,
-                      titleStyle: TextStyle(
-                        fontSize: showPercentageInChart ? 12 : 0,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.white,
-                        shadows: showPercentageInChart
-                            ? [
-                                const Shadow(
-                                  color: Colors.black26,
-                                  offset: Offset(1, 1),
-                                  blurRadius: 2,
-                                ),
-                              ]
-                            : [],
-                      ),
-                      badgeWidget: isTouched && !showPercentageInChart
-                          ? _buildTouchBadge(entry.key.name, percentage)
-                          : null,
-                      badgePositionPercentageOffset: 1.3,
-                    );
-                  }),
-                ),
-              ),
               Column(
-                mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'Total',
-                    style: theme.textTheme.bodySmall?.copyWith(
-                      color: theme.textTheme.bodySmall?.color?.withAlpha(178),
-                    ),
-                  ),
-                  Text(
-                    NumberFormat.currency(
-                      locale: 'pt_BR',
-                      symbol: 'R\$',
-                      decimalDigits: 0,
-                    ).format(total),
+                    'Composição de Gastos',
                     style: theme.textTheme.titleMedium?.copyWith(
                       fontWeight: FontWeight.bold,
-                      color: theme.colorScheme.primary,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    'Distribuição por categoria',
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: theme.colorScheme.onSurfaceVariant,
                     ),
                   ),
                 ],
               ),
+              if (hasMoreThan5)
+                TextButton(
+                  onPressed: () {
+                    setState(() {
+                      _isExpanded = !_isExpanded;
+                    });
+                  },
+                  child: Text(
+                    _isExpanded
+                        ? 'Mostrar top 5'
+                        : 'Ver todas (${groups.length})',
+                  ),
+                ),
             ],
           ),
-        ),
-        const SizedBox(height: AppSpacing.xl),
-        ...chartData.asMap().entries.map((entry) {
-          final index = entry.key;
-          final category = entry.value;
-          final percentage = (category.value / total) * 100;
-          final isHighlighted = index == _touchedPieIndex;
+          const SizedBox(height: AppSpacing.lg),
+          SizedBox(
+            height: 200,
+            child: Stack(
+              alignment: Alignment.center,
+              children: [
+                PieChart(
+                  PieChartData(
+                    pieTouchData: PieTouchData(
+                      touchCallback: (event, pieTouchResponse) {
+                        setState(() {
+                          if (!event.isInterestedForInteractions ||
+                              pieTouchResponse?.touchedSection == null) {
+                            _touchedPieIndex = -1;
+                            return;
+                          }
+                          _touchedPieIndex = pieTouchResponse!
+                              .touchedSection!
+                              .touchedSectionIndex;
+                        });
+                      },
+                    ),
+                    sectionsSpace: 2,
+                    centerSpaceRadius: 50,
+                    sections: pieSections,
+                  ),
+                ),
+                Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(
+                      'Total',
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: theme.colorScheme.onSurfaceVariant,
+                      ),
+                    ),
+                    Text(
+                      currencyFormatter.format(totalValue),
+                      style: theme.textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.bold,
+                        color: theme.colorScheme.primary,
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: AppSpacing.xl),
+          ...displayedGroups.asMap().entries.map((entry) {
+            final index = entry.key;
+            final group = entry.value;
+            final isHighlighted = index == _touchedPieIndex;
+            final color = Color(group.colorValue);
 
-          return _buildImprovedLegendItem(
-            context: context,
-            color: category.key.color,
-            name: category.key.name,
-            value: category.value,
-            percentage: percentage,
-            isHighlighted: isHighlighted,
-            showDivider: index < chartData.length - 1,
-          );
-        }),
-      ],
+            return _buildCategoryLegendRow(
+              context: context,
+              color: color,
+              name: group.categoryName,
+              valueText: group.totalAmount.formatBrl(),
+              percentage: group.percentage,
+              itemsCount: group.itemsCount,
+              isHighlighted: isHighlighted,
+              showDivider: index < displayedGroups.length - 1 ||
+                  (!_isExpanded && hasMoreThan5),
+            );
+          }),
+          if (!_isExpanded && hasMoreThan5)
+            _buildCategoryLegendRow(
+              context: context,
+              color: theme.colorScheme.outline,
+              name: 'Outras categorias (${groups.length - 5})',
+              valueText: Money.fromCents(othersCents).formatBrl(),
+              percentage: othersPercentage,
+              itemsCount: groups.sublist(5).fold<int>(0, (s, g) => s + g.itemsCount),
+              isHighlighted: top5.length == _touchedPieIndex,
+              showDivider: false,
+            ),
+        ],
+      ),
     );
   }
 
@@ -407,7 +266,7 @@ class _CategoryAnalysisSectionWidgetState
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(
         color: theme.colorScheme.inverseSurface,
-        borderRadius: BorderRadius.circular(8),
+        borderRadius: AppBorders.borderRadiusS,
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
@@ -423,9 +282,7 @@ class _CategoryAnalysisSectionWidgetState
           Text(
             '${percentage.toStringAsFixed(1)}%',
             style: TextStyle(
-              color: theme.colorScheme.onInverseSurface.withAlpha(
-                (255 * 0.7).round(),
-              ),
+              color: theme.colorScheme.onInverseSurface.withAlpha(200),
               fontSize: 9,
             ),
           ),
@@ -434,20 +291,17 @@ class _CategoryAnalysisSectionWidgetState
     );
   }
 
-  Widget _buildImprovedLegendItem({
+  Widget _buildCategoryLegendRow({
     required BuildContext context,
     required Color color,
     required String name,
-    required double value,
+    required String valueText,
     required double percentage,
+    required int itemsCount,
     required bool isHighlighted,
-    bool showDivider = true,
+    required bool showDivider,
   }) {
     final theme = Theme.of(context);
-    final formattedValue = NumberFormat.currency(
-      locale: 'pt_BR',
-      symbol: 'R\$',
-    ).format(value);
 
     return Column(
       children: [
@@ -458,7 +312,7 @@ class _CategoryAnalysisSectionWidgetState
             color: isHighlighted
                 ? color.withAlpha((255 * 0.08).round())
                 : Colors.transparent,
-            borderRadius: BorderRadius.circular(8),
+            borderRadius: AppBorders.borderRadiusS,
           ),
           child: Row(
             children: [
@@ -471,26 +325,38 @@ class _CategoryAnalysisSectionWidgetState
                   boxShadow: isHighlighted
                       ? [
                           BoxShadow(
-                            color: color.withAlpha((255 * 0.4).round()),
-                            blurRadius: 6,
-                            offset: const Offset(0, 2),
+                            color: color.withAlpha(100),
+                            blurRadius: 4,
+                            offset: const Offset(0, 1),
                           ),
                         ]
-                      : [],
+                      : null,
                 ),
               ),
-              const SizedBox(width: 12),
+              const SizedBox(width: AppSpacing.md),
               Expanded(
                 flex: 3,
-                child: Text(
-                  name,
-                  style: theme.textTheme.bodyMedium?.copyWith(
-                    fontWeight: isHighlighted
-                        ? FontWeight.bold
-                        : FontWeight.w500,
-                    color: isHighlighted ? color : theme.colorScheme.onSurface,
-                  ),
-                  overflow: TextOverflow.ellipsis,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      name,
+                      style: theme.textTheme.bodyMedium?.copyWith(
+                        fontWeight: isHighlighted
+                            ? FontWeight.bold
+                            : FontWeight.w500,
+                        color: isHighlighted ? color : theme.colorScheme.onSurface,
+                      ),
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    Text(
+                      '$itemsCount ${itemsCount == 1 ? "registro" : "registros"}',
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: theme.colorScheme.onSurfaceVariant,
+                        fontSize: 11,
+                      ),
+                    ),
+                  ],
                 ),
               ),
               Expanded(
@@ -499,7 +365,7 @@ class _CategoryAnalysisSectionWidgetState
                   crossAxisAlignment: CrossAxisAlignment.end,
                   children: [
                     Text(
-                      formattedValue,
+                      valueText,
                       style: theme.textTheme.bodySmall?.copyWith(
                         fontWeight: FontWeight.w600,
                         color: theme.colorScheme.onSurface,
@@ -524,7 +390,7 @@ class _CategoryAnalysisSectionWidgetState
           Divider(
             height: 1,
             thickness: 0.5,
-            color: theme.colorScheme.outlineVariant,
+            color: theme.colorScheme.outlineVariant.withAlpha(80),
           ),
       ],
     );
