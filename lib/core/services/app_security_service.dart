@@ -7,8 +7,8 @@ class AppSecurityService {
   static Future<void> setSecure(bool secure) async {
     try {
       await _channel.invokeMethod('setSecure', {'secure': secure});
-    } on PlatformException catch (e) {
-      debugPrint("Failed to set secure mode: '${e.message}'.");
+    } on Exception catch (e) {
+      debugPrint("Failed to set secure mode: '$e'.");
     }
   }
 }

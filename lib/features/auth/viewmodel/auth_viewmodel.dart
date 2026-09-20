@@ -61,6 +61,13 @@ class AuthViewModel extends ChangeNotifier {
   bool get isInitialized => _isInitialized;
   String? get errorMessage => _errorMessage;
   User? get currentUser => _currentUser;
+
+  @visibleForTesting
+  set currentUser(User? user) {
+    _currentUser = user;
+    notifyListeners();
+  }
+
   bool get justAuthenticated => _justAuthenticated;
 
   StreamSubscription? _userProfileSub;
@@ -91,7 +98,9 @@ class AuthViewModel extends ChangeNotifier {
                 (user) {
                   _currentUser = user;
                   if (user != null) {
-                    AppSecurityService.setSecure(user.appLocked ?? true);
+                    AppSecurityService.setSecure(
+                      user.effectiveProtectScreenCapture,
+                    );
                     unawaited(HomeWidgetService.setWidgetSession(user.id));
                   }
                   if (!_isInitialized) {
@@ -287,10 +296,14 @@ class AuthViewModel extends ChangeNotifier {
   Future<UpdateUserResult> updateUser({
     required String name,
     String? phoneNumber,
+    bool clearPhoneNumber = false,
     String? avatarPath,
+    bool clearAvatarPath = false,
     String? newPassword,
     bool? enableIncomes,
     bool? appLocked,
+    bool? protectScreenCapture,
+    bool clearProtectScreenCapture = false,
     bool? enableSuppliers,
     int? themeColor,
   }) async {
@@ -317,18 +330,28 @@ class AuthViewModel extends ChangeNotifier {
     String? error;
 
     try {
+      bool? resolvedCapture =
+          protectScreenCapture ?? _currentUser!.protectScreenCapture;
+      if (appLocked != null &&
+          _currentUser!.protectScreenCapture == null &&
+          protectScreenCapture == null) {
+        resolvedCapture = _currentUser!.effectiveProtectScreenCapture;
+      }
+
       final updatedUser = _currentUser!.copyWith(
         name: name,
         phoneNumber: phoneNumber,
+        clearPhoneNumber: clearPhoneNumber,
         avatarPath: avatarPath,
+        clearAvatarPath: clearAvatarPath,
         enableIncomes: enableIncomes,
         appLocked: appLocked,
+        protectScreenCapture: resolvedCapture,
+        clearProtectScreenCapture: clearProtectScreenCapture,
         enableSuppliers: enableSuppliers,
         themeColor: themeColor,
       );
-      if (appLocked != null) {
-        AppSecurityService.setSecure(appLocked);
-      }
+      AppSecurityService.setSecure(updatedUser.effectiveProtectScreenCapture);
       await _authRepository.updateUserProfile(updatedUser);
       _currentUser = updatedUser;
       profileSaved = true;

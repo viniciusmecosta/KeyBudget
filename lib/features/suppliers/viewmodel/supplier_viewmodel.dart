@@ -18,6 +18,29 @@ class SupplierViewModel extends ChangeNotifier {
 
   List<Supplier> get allSuppliers => _allSuppliers;
 
+  String _searchQuery = '';
+
+  String get searchQuery => _searchQuery;
+
+  void setSearchQuery(String query) {
+    _searchQuery = query.trim().toLowerCase();
+    notifyListeners();
+  }
+
+  List<Supplier> get filteredSuppliers {
+    if (_searchQuery.isEmpty) return _allSuppliers;
+    return _allSuppliers.where((s) {
+      final name = s.name.toLowerCase();
+      final rep = s.representativeName?.toLowerCase() ?? '';
+      final phone = s.phoneNumber ?? '';
+      final email = s.email?.toLowerCase() ?? '';
+      return name.contains(_searchQuery) ||
+          rep.contains(_searchQuery) ||
+          phone.contains(_searchQuery) ||
+          email.contains(_searchQuery);
+    }).toList();
+  }
+
   bool get isLoading => _isLoading;
 
   List<String> get userSupplierPhotos => _allSuppliers
@@ -105,6 +128,12 @@ class SupplierViewModel extends ChangeNotifier {
     _suppliersSubscription?.cancel();
     _allSuppliers = [];
     _isListening = false;
+    notifyListeners();
+  }
+
+  @visibleForTesting
+  void setSuppliersForTesting(List<Supplier> suppliers) {
+    _allSuppliers = suppliers;
     notifyListeners();
   }
 
