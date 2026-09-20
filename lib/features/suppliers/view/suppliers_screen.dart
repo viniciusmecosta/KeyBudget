@@ -21,6 +21,9 @@ class SuppliersScreen extends ConsumerStatefulWidget {
 }
 
 class _SuppliersScreenState extends ConsumerState<SuppliersScreen> {
+  final TextEditingController _searchController = TextEditingController();
+  bool _isSearching = false;
+
   @override
   void initState() {
     super.initState();
@@ -32,6 +35,12 @@ class _SuppliersScreenState extends ConsumerState<SuppliersScreen> {
             .listenToSuppliers(authViewModel.currentUser!.id);
       }
     });
+  }
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
   }
 
   Future<void> _handleRefresh() async {
@@ -46,61 +55,119 @@ class _SuppliersScreenState extends ConsumerState<SuppliersScreen> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    return Scaffold(
-      appBar: AppBar(title: const Text('Fornecedores')),
-      body: SafeArea(
-        child: AppAnimations.fadeInFromBottom(
-          Consumer(
-            builder: (context, ref, _) {
-              final viewModel = ref.watch(supplierViewModelProvider);
+    final viewModel = ref.watch(supplierViewModelProvider);
 
-              return RefreshIndicator(
-                onRefresh: _handleRefresh,
-                color: theme.colorScheme.primary,
-                backgroundColor: theme.colorScheme.surface,
-                strokeWidth: 2.5,
-                child: ResponsiveCenter(
-                  child: CustomScrollView(
-                    physics: const BouncingScrollPhysics(
-                      parent: AlwaysScrollableScrollPhysics(),
-                    ),
-                    slivers: [
-                      if (viewModel.isLoading)
-                        const SuppliersSkeleton()
-                      else if (viewModel.allSuppliers.isEmpty)
-                        SliverFillRemaining(
-                          hasScrollBody: false,
-                          child: EmptyStateWidget(
-                            icon: Icons.storefront_outlined,
-                            message: 'Nenhum fornecedor encontrado.',
-                            buttonText: 'Adicionar Fornecedor',
-                            onButtonPressed: () => NavigationUtils.push(
-                              context,
-                              const AddSupplierScreen(),
-                            ),
-                          ),
-                        )
-                      else
-                        SliverPadding(
-                          padding: const EdgeInsets.all(
-                            AppTheme.defaultPadding,
-                          ),
-                          sliver: SliverList(
-                            delegate: SliverChildBuilderDelegate((
-                              context,
-                              index,
-                            ) {
-                              final supplier = viewModel.allSuppliers[index];
-                              return SupplierListTile(supplier: supplier);
-                            }, childCount: viewModel.allSuppliers.length),
-                          ),
-                        ),
-                      const SliverPadding(padding: EdgeInsets.only(bottom: 80)),
-                    ],
+    return Scaffold(
+      appBar: AppBar(
+        leading: _isSearching
+            ? IconButton(
+                icon: const Icon(Icons.arrow_back),
+                onPressed: () {
+                  setState(() {
+                    _isSearching = false;
+                    _searchController.clear();
+                  });
+                  ref.read(supplierViewModelProvider).setSearchQuery('');
+                },
+              )
+            : null,
+        title: _isSearching
+            ? TextField(
+                controller: _searchController,
+                autofocus: true,
+                style: theme.textTheme.titleMedium,
+                decoration: InputDecoration(
+                  hintText: 'Buscar fornecedor...',
+                  border: InputBorder.none,
+                  hintStyle: theme.textTheme.bodyMedium?.copyWith(
+                    color: theme.colorScheme.onSurfaceVariant,
                   ),
                 ),
-              );
-            },
+                onChanged: (value) {
+                  ref.read(supplierViewModelProvider).setSearchQuery(value);
+                },
+              )
+            : const Text('Fornecedores'),
+        actions: [
+          if (_isSearching)
+            IconButton(
+              icon: const Icon(Icons.clear),
+              onPressed: () {
+                _searchController.clear();
+                ref.read(supplierViewModelProvider).setSearchQuery('');
+              },
+            )
+          else
+            IconButton(
+              icon: const Icon(Icons.search),
+              onPressed: () {
+                setState(() => _isSearching = true);
+              },
+            ),
+        ],
+      ),
+      body: SafeArea(
+        child: AppAnimations.fadeInFromBottom(
+          RefreshIndicator(
+            onRefresh: _handleRefresh,
+            color: theme.colorScheme.primary,
+            backgroundColor: theme.colorScheme.surface,
+            strokeWidth: 2.5,
+            child: ResponsiveCenter(
+              child: CustomScrollView(
+                physics: const BouncingScrollPhysics(
+                  parent: AlwaysScrollableScrollPhysics(),
+                ),
+                slivers: [
+                  if (viewModel.isLoading)
+                    const SuppliersSkeleton()
+                  else if (viewModel.allSuppliers.isEmpty)
+                    SliverFillRemaining(
+                      hasScrollBody: false,
+                      child: EmptyStateWidget(
+                        icon: Icons.storefront_outlined,
+                        message: 'Nenhum fornecedor cadastrado.',
+                        buttonText: 'Adicionar Fornecedor',
+                        onButtonPressed: () => NavigationUtils.push(
+                          context,
+                          const AddSupplierScreen(),
+                        ),
+                      ),
+                    )
+                  else if (viewModel.filteredSuppliers.isEmpty)
+                    SliverFillRemaining(
+                      hasScrollBody: false,
+                      child: EmptyStateWidget(
+                        icon: Icons.search_off_rounded,
+                        message: 'Nenhum fornecedor encontrado para a busca.',
+                        buttonText: 'Limpar busca',
+                        onButtonPressed: () {
+                          setState(() {
+                            _searchController.clear();
+                          });
+                          viewModel.setSearchQuery('');
+                        },
+                      ),
+                    )
+                  else
+                    SliverPadding(
+                      padding: const EdgeInsets.all(
+                        AppTheme.defaultPadding,
+                      ),
+                      sliver: SliverList(
+                        delegate: SliverChildBuilderDelegate((
+                          context,
+                          index,
+                        ) {
+                          final supplier = viewModel.filteredSuppliers[index];
+                          return SupplierListTile(supplier: supplier);
+                        }, childCount: viewModel.filteredSuppliers.length),
+                      ),
+                    ),
+                  const SliverPadding(padding: EdgeInsets.only(bottom: 80)),
+                ],
+              ),
+            ),
           ),
         ),
       ),

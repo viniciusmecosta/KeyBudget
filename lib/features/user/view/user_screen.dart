@@ -510,72 +510,61 @@ class UserScreen extends ConsumerWidget {
                         },
                       ),
                     ]),
-                    buildSection('Preferências', [
+                    buildSection('Aparência', [
                       SettingsTile(
                         icon: Icons.palette_outlined,
                         title: 'Cor do Tema',
                         subtitle: 'Personalize a cor principal',
                         onTap: () => _showThemeColorDialog(context, ref),
                       ),
-                    ]),
-                    buildSection('Módulos', [
+                      const Divider(height: 1, indent: 56, endIndent: 16),
                       SettingsTile(
+                        icon: Icons.brightness_auto_outlined,
+                        title: 'Modo de exibição',
+                        subtitle: 'Padrão do sistema',
+                        trailing: Text(
+                          'Sistema',
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            color: theme.colorScheme.onSurfaceVariant,
+                          ),
+                        ),
+                      ),
+                    ]),
+                    buildSection('Recursos', [
+                      SettingsSwitchTile(
                         icon: Icons.account_balance_wallet_outlined,
                         title: 'Habilitar Receitas',
                         subtitle: 'Exibe entradas e saldo no painel principal',
-                        trailing: Switch(
-                          value: user?.enableIncomes ?? false,
-                          activeTrackColor: theme.colorScheme.primary,
-                          activeThumbColor: theme.colorScheme.onPrimary,
-                          onChanged: (value) async {
-                            if (user != null) {
-                              await authViewModel.updateUser(
-                                name: user.name,
-                                enableIncomes: value,
-                              );
-                            }
-                          },
-                        ),
-                        onTap: () async {
+                        value: user?.enableIncomes ?? false,
+                        onChanged: (value) async {
                           if (user != null) {
                             await authViewModel.updateUser(
                               name: user.name,
-                              enableIncomes: !(user.enableIncomes ?? false),
+                              enableIncomes: value,
                             );
                           }
                         },
                       ),
-                      Divider(height: 1, indent: 56, endIndent: 16),
-                      SettingsTile(
+                      const Divider(height: 1, indent: 56, endIndent: 16),
+                      SettingsSwitchTile(
                         icon: Icons.storefront_outlined,
                         title: 'Habilitar Fornecedores',
                         subtitle: 'Exibe o módulo de fornecedores',
-                        trailing: Switch(
-                          value: user?.enableSuppliers ?? false,
-                          activeTrackColor: theme.colorScheme.primary,
-                          activeThumbColor: theme.colorScheme.onPrimary,
-                          onChanged: (value) async {
-                            if (user != null) {
-                              await authViewModel.updateUser(
-                                name: user.name,
-                                enableSuppliers: value,
-                              );
-                            }
-                          },
-                        ),
-                        onTap: () async {
+                        value: user?.enableSuppliers ?? false,
+                        onChanged: (value) async {
                           if (user != null) {
                             await authViewModel.updateUser(
                               name: user.name,
-                              enableSuppliers: !(user.enableSuppliers ?? false),
+                              enableSuppliers: value,
                             );
                           }
                         },
                       ),
-                      Divider(height: 1, indent: 56, endIndent: 16),
+                      const Divider(height: 1, indent: 56, endIndent: 16),
                       SettingsTile(
                         icon: Icons.category_outlined,
                         title: 'Gerenciar Categorias',
+                        subtitle: 'Personalize categorias de despesas',
                         onTap: () {
                           NavigationUtils.push(
                             context,
@@ -584,34 +573,40 @@ class UserScreen extends ConsumerWidget {
                         },
                       ),
                     ]),
-                    buildSection('Segurança e Dados', [
-                      SettingsTile(
-                        icon: Icons.security_outlined,
-                        title: 'Proteção do Aplicativo',
-                        subtitle: 'Exigir biometria e bloquear capturas',
-                        trailing: Switch(
-                          value: user?.appLocked ?? true,
-                          activeTrackColor: theme.colorScheme.primary,
-                          activeThumbColor: theme.colorScheme.onPrimary,
-                          onChanged: (value) async {
-                            if (user != null) {
-                              await authViewModel.updateUser(
-                                name: user.name,
-                                appLocked: value,
-                              );
-                            }
-                          },
-                        ),
-                        onTap: () async {
+                    buildSection('Segurança e privacidade', [
+                      SettingsSwitchTile(
+                        icon: Icons.lock_outline,
+                        title: 'Bloquear ao sair do aplicativo',
+                        subtitle:
+                            'Exige autenticação biométrica ou PIN ao reabrir',
+                        value: user?.appLocked ?? true,
+                        onChanged: (value) async {
                           if (user != null) {
                             await authViewModel.updateUser(
                               name: user.name,
-                              appLocked: !(user.appLocked ?? true),
+                              appLocked: value,
                             );
                           }
                         },
                       ),
-                      Divider(height: 1, indent: 56, endIndent: 16),
+                      const Divider(height: 1, indent: 56, endIndent: 16),
+                      SettingsSwitchTile(
+                        icon: Icons.screen_lock_portrait_outlined,
+                        title: 'Proteger captura de tela',
+                        subtitle:
+                            'Impede gravação e prints de dados confidenciais',
+                        value: user?.effectiveProtectScreenCapture ?? true,
+                        onChanged: (value) async {
+                          if (user != null) {
+                            await authViewModel.updateUser(
+                              name: user.name,
+                              protectScreenCapture: value,
+                            );
+                          }
+                        },
+                      ),
+                    ]),
+                    buildSection('Dados e recuperação', [
                       SettingsTile(
                         icon: Icons.shield_outlined,
                         title: 'Backup e Restauração (.kbudget)',
@@ -623,7 +618,7 @@ class UserScreen extends ConsumerWidget {
                           );
                         },
                       ),
-                      Divider(height: 1, indent: 56, endIndent: 16),
+                      const Divider(height: 1, indent: 56, endIndent: 16),
                       SettingsTile(
                         icon: Icons.cloud_upload_outlined,
                         title: 'Exportação CSV (Legado)',
@@ -631,10 +626,11 @@ class UserScreen extends ConsumerWidget {
                         onTap: () => _showBackupDialog(context, ref),
                       ),
                     ]),
-                    buildSection('Conta', [
+                    buildSection('Sessão', [
                       SettingsTile(
                         icon: Icons.logout,
                         title: 'Sair do Aplicativo',
+                        subtitle: 'Encerrar a sessão com segurança',
                         iconColor: theme.colorScheme.error,
                         textColor: theme.colorScheme.error,
                         trailing: const SizedBox.shrink(),
