@@ -403,12 +403,35 @@ class _CredentialsScreenState extends ConsumerState<CredentialsScreen> {
                         child: SingleChildScrollView(
                           physics: const AlwaysScrollableScrollPhysics(),
                           child: EmptyStateWidget(
-                            icon: vm.currentFolderId != null
-                                ? Icons.folder_open
-                                : Icons.key_off_outlined,
-                            message: vm.currentFolderId != null
-                                ? 'Pasta vazia'
-                                : 'Nenhuma credencial encontrada',
+                            icon: _isSearching || vm.searchQuery.isNotEmpty
+                                ? Icons.search_off_outlined
+                                : (vm.currentFolderId != null
+                                    ? Icons.folder_open_outlined
+                                    : Icons.key_off_outlined),
+                            message: _isSearching || vm.searchQuery.isNotEmpty
+                                ? 'Nenhuma credencial encontrada para a busca'
+                                : (vm.currentFolderId != null
+                                    ? 'Esta pasta está vazia'
+                                    : 'Nenhuma credencial encontrada'),
+                            buttonText: _isSearching || vm.searchQuery.isNotEmpty
+                                ? 'Limpar busca'
+                                : (vm.currentFolderId != null
+                                    ? 'Adicionar credencial'
+                                    : 'Nova credencial'),
+                            onButtonPressed: () {
+                              if (_isSearching || vm.searchQuery.isNotEmpty) {
+                                setState(() {
+                                  _isSearching = false;
+                                  _searchController.clear();
+                                  vm.setSearchQuery('');
+                                });
+                              } else {
+                                NavigationUtils.push(
+                                  context,
+                                  const AddCredentialScreen(),
+                                );
+                              }
+                            },
                           ),
                         ),
                       )

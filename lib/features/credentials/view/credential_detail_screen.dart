@@ -10,7 +10,10 @@ import 'package:key_budget/app/utils/widget_to_image.dart';
 import 'package:key_budget/core/design_system/borders/app_borders.dart';
 import 'package:key_budget/core/design_system/spacing/app_spacing.dart';
 import 'package:key_budget/core/design_system/widgets/app_button.dart';
+import 'package:key_budget/core/design_system/widgets/app_card.dart';
+import 'package:key_budget/core/design_system/widgets/app_status_badge.dart';
 import 'package:key_budget/core/models/credential_model.dart';
+import 'package:key_budget/core/models/folder_model.dart';
 import 'package:key_budget/core/services/snackbar_service.dart';
 import 'package:key_budget/features/auth/viewmodel/auth_viewmodel.dart';
 import 'package:key_budget/features/credentials/viewmodel/credential_viewmodel.dart';
@@ -31,7 +34,8 @@ class CredentialDetailScreen extends ConsumerStatefulWidget {
 }
 
 class _CredentialDetailScreenState
-    extends ConsumerState<CredentialDetailScreen> {
+    extends ConsumerState<CredentialDetailScreen>
+    with WidgetsBindingObserver {
   final _formKey = GlobalKey<FormState>();
   late TextEditingController _locationController;
   late TextEditingController _loginController;
@@ -45,6 +49,8 @@ class _CredentialDetailScreenState
   bool _isSaving = false;
   bool _isExporting = false;
   bool _decryptionError = false;
+  bool _isPasswordVisible = false;
+  late String _decryptedPassword;
 
   final _phoneMaskFormatter = MaskTextInputFormatter(
     mask: '(##) #####-####',
@@ -54,18 +60,19 @@ class _CredentialDetailScreenState
   @override
   void initState() {
     super.initState();
-    final decryptedPassword = ref
+    WidgetsBinding.instance.addObserver(this);
+    _decryptedPassword = ref
         .read(credentialViewModelProvider)
         .decryptPassword(widget.credential.encryptedPassword);
 
-    _decryptionError = decryptedPassword == 'ERRO_DECRIPT';
+    _decryptionError = _decryptedPassword == 'ERRO_DECRIPT';
 
     _locationController = TextEditingController(
       text: widget.credential.location,
     );
     _loginController = TextEditingController(text: widget.credential.login);
     _passwordController = TextEditingController(
-      text: _decryptionError ? 'Falha ao decifrar' : decryptedPassword,
+      text: _decryptionError ? '' : _decryptedPassword,
     );
     _emailController = TextEditingController(text: widget.credential.email);
     _phoneController = TextEditingController(
@@ -77,7 +84,23 @@ class _CredentialDetailScreenState
   }
 
   @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state != AppLifecycleState.resumed && _isPasswordVisible) {
+      setState(() {
+        _isPasswordVisible = false;
+      });
+    }
+  }
+
+  @override
+  void deactivate() {
+    _isPasswordVisible = false;
+    super.deactivate();
+  }
+
+  @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     _locationController.dispose();
     _loginController.dispose();
     _passwordController.dispose();
@@ -536,47 +559,350 @@ class _CredentialDetailScreenState
       body: AppAnimations.fadeInFromBottom(
         Padding(
           padding: const EdgeInsets.all(AppSpacing.md),
-          child: Column(
+          child: _isEditing
+              ? Column(
+                  children: [
+                    Expanded(
+                      child: CredentialForm(
+                        formKey: _formKey,
+                        locationController: _locationController,
+                        loginController: _loginController,
+                        passwordController: _passwordController,
+                        emailController: _emailController,
+                        phoneController: _phoneController,
+                        notesController: _notesController,
+                        logoPath: _logoPath,
+                        onLogoChanged: (path) {
+                          setState(() {
+                            _logoPath = path;
+                          });
+                        },
+                        isEditing: _isEditing,
+                        availableFolders: vm.allFolders,
+                        selectedFolderId: _selectedFolderId,
+                        onFolderChanged: (folderId) {
+                          setState(() {
+                            _selectedFolderId = folderId;
+                          });
+                        },
+                      ),
+                    ),
+                    const SizedBox(height: AppSpacing.md),
+                    SizedBox(
+                      width: double.infinity,
+                      child: AppButton(
+                        onPressed: _saveChanges,
+                        isLoading: _isSaving,
+                        label: 'Salvar Alterações',
+                      ),
+                    ),
+                  ],
+                )
+              : _buildDetailContent(theme, vm),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildDetailContent(ThemeData theme, CredentialViewModel vm) {
+    Folder? folder;
+    if (_selectedFolderId != null) {
+      folder = vm.allFolders.where((f) => f.id == _selectedFolderId).firstOrNull;
+    }
+
+    final hasComplements = _emailController.text.trim().isNotEmpty ||
+        _phoneController.text.replaceAll(RegExp(r'[^0-9]'), '').isNotEmpty ||
+        _notesController.text.trim().isNotEmpty;
+
+    return SingleChildScrollView(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Center(
+            child: Column(
+              children: [
+                if (_logoPath != null && _logoPath!.trim().isNotEmpty)
+                  ClipRRect(
+                    borderRadius: AppBorders.borderRadiusL,
+                    child: _buildLogoWidget(_logoPath!, theme),
+                  )
+                else
+                  _buildFallbackIcon(theme),
+                const SizedBox(height: AppSpacing.sm),
+                Text(
+                  _locationController.text.trim(),
+                  style: theme.textTheme.headlineSmall?.copyWith(
+                    fontWeight: FontWeight.bold,
+                    color: theme.colorScheme.onSurface,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+                if (folder != null) ...[
+                  const SizedBox(height: AppSpacing.xs),
+                  AppStatusBadge(
+                    label: folder.name,
+                    variant: AppBadgeVariant.neutral,
+                  ),
+                ],
+              ],
+            ),
+          ),
+          const SizedBox(height: AppSpacing.lg),
+          _buildDetailCard(
+            theme: theme,
+            title: 'IDENTIFICAÇÃO',
+            icon: Icons.badge_outlined,
             children: [
-              Expanded(
-                child: CredentialForm(
-                  formKey: _formKey,
-                  locationController: _locationController,
-                  loginController: _loginController,
-                  passwordController: _passwordController,
-                  emailController: _emailController,
-                  phoneController: _phoneController,
-                  notesController: _notesController,
-                  logoPath: _logoPath,
-                  onLogoChanged: (path) {
-                    setState(() {
-                      _logoPath = path;
-                    });
-                  },
-                  isEditing: _isEditing,
-                  availableFolders: vm.allFolders,
-                  selectedFolderId: _selectedFolderId,
-                  onFolderChanged: (folderId) {
-                    setState(() {
-                      _selectedFolderId = folderId;
-                    });
-                  },
+              _buildDetailRow(
+                context: context,
+                icon: Icons.language_outlined,
+                label: 'Local / Serviço',
+                value: _locationController.text.trim(),
+              ),
+              Divider(height: 1, color: theme.colorScheme.outlineVariant.withValues(alpha: 0.5)),
+              _buildDetailRow(
+                context: context,
+                icon: Icons.person_outline,
+                label: 'Login / Usuário',
+                value: _loginController.text.trim(),
+                onCopy: () {
+                  Clipboard.setData(ClipboardData(text: _loginController.text.trim()));
+                  HapticFeedback.lightImpact();
+                  SnackbarService.showSuccess(context, 'Login copiado!');
+                },
+                copyTooltip: 'Copiar login',
+              ),
+            ],
+          ),
+          const SizedBox(height: AppSpacing.md),
+          _buildDetailCard(
+            theme: theme,
+            title: 'ACESSO',
+            icon: Icons.lock_outline,
+            children: [
+              if (_decryptionError)
+                Padding(
+                  padding: const EdgeInsets.symmetric(vertical: AppSpacing.sm),
+                  child: Row(
+                    children: [
+                      Icon(Icons.lock_reset, color: theme.colorScheme.error, size: 28),
+                      const SizedBox(width: AppSpacing.md),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Erro de descriptografia',
+                              style: theme.textTheme.titleSmall?.copyWith(
+                                fontWeight: FontWeight.bold,
+                                color: theme.colorScheme.error,
+                              ),
+                            ),
+                            const SizedBox(height: 2),
+                            Text(
+                              'Não foi possível descriptografar esta senha com a chave atual.',
+                              style: theme.textTheme.bodySmall?.copyWith(
+                                color: theme.colorScheme.onSurfaceVariant,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      TextButton(
+                        onPressed: () => setState(() => _isEditing = true),
+                        child: const Text('Redefinir'),
+                      ),
+                    ],
+                  ),
+                )
+              else
+                Padding(
+                  padding: const EdgeInsets.symmetric(vertical: AppSpacing.xs),
+                  child: Row(
+                    children: [
+                      Icon(Icons.key_outlined, size: 20, color: theme.colorScheme.primary),
+                      const SizedBox(width: AppSpacing.md),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Senha',
+                              style: theme.textTheme.labelSmall?.copyWith(
+                                color: theme.colorScheme.onSurfaceVariant,
+                              ),
+                            ),
+                            const SizedBox(height: 2),
+                            Semantics(
+                              label: _isPasswordVisible ? 'Senha visível' : 'Senha oculta',
+                              child: Text(
+                                _isPasswordVisible ? _decryptedPassword : '••••••••••••',
+                                style: theme.textTheme.bodyLarge?.copyWith(
+                                  fontWeight: FontWeight.bold,
+                                  letterSpacing: _isPasswordVisible ? 0.5 : 2.0,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      IconButton(
+                        icon: Icon(
+                          _isPasswordVisible ? Icons.visibility_off_outlined : Icons.visibility_outlined,
+                        ),
+                        tooltip: _isPasswordVisible ? 'Ocultar senha' : 'Mostrar senha',
+                        onPressed: () {
+                          setState(() {
+                            _isPasswordVisible = !_isPasswordVisible;
+                          });
+                        },
+                      ),
+                      IconButton(
+                        icon: const Icon(Icons.copy_outlined),
+                        tooltip: 'Copiar senha',
+                        onPressed: () {
+                          Clipboard.setData(ClipboardData(text: _decryptedPassword));
+                          HapticFeedback.lightImpact();
+                          SnackbarService.showSuccess(
+                            context,
+                            'Senha copiada para a área de transferência',
+                          );
+                        },
+                      ),
+                    ],
+                  ),
+                ),
+            ],
+          ),
+          if (hasComplements) ...[
+            const SizedBox(height: AppSpacing.md),
+            _buildDetailCard(
+              theme: theme,
+              title: 'COMPLEMENTOS',
+              icon: Icons.notes_outlined,
+              children: [
+                if (_emailController.text.trim().isNotEmpty) ...[
+                  _buildDetailRow(
+                    context: context,
+                    icon: Icons.email_outlined,
+                    label: 'E-mail',
+                    value: _emailController.text.trim(),
+                    onCopy: () {
+                      Clipboard.setData(ClipboardData(text: _emailController.text.trim()));
+                      HapticFeedback.lightImpact();
+                      SnackbarService.showSuccess(context, 'E-mail copiado!');
+                    },
+                    copyTooltip: 'Copiar e-mail',
+                  ),
+                ],
+                if (_phoneController.text.replaceAll(RegExp(r'[^0-9]'), '').isNotEmpty) ...[
+                  Divider(height: 1, color: theme.colorScheme.outlineVariant.withValues(alpha: 0.5)),
+                  _buildDetailRow(
+                    context: context,
+                    icon: Icons.phone_outlined,
+                    label: 'Telefone',
+                    value: _phoneController.text.trim(),
+                    onCopy: () {
+                      Clipboard.setData(ClipboardData(text: _phoneController.text.trim()));
+                      HapticFeedback.lightImpact();
+                      SnackbarService.showSuccess(context, 'Telefone copiado!');
+                    },
+                    copyTooltip: 'Copiar telefone',
+                  ),
+                ],
+                if (_notesController.text.trim().isNotEmpty) ...[
+                  Divider(height: 1, color: theme.colorScheme.outlineVariant.withValues(alpha: 0.5)),
+                  _buildDetailRow(
+                    context: context,
+                    icon: Icons.edit_note_outlined,
+                    label: 'Observações',
+                    value: _notesController.text.trim(),
+                  ),
+                ],
+              ],
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
+  Widget _buildDetailCard({
+    required ThemeData theme,
+    required String title,
+    required IconData icon,
+    required List<Widget> children,
+  }) {
+    return AppCard(
+      padding: const EdgeInsets.all(AppSpacing.md),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(icon, size: 18, color: theme.colorScheme.primary),
+              const SizedBox(width: AppSpacing.xs),
+              Text(
+                title,
+                style: theme.textTheme.labelMedium?.copyWith(
+                  fontWeight: FontWeight.bold,
+                  color: theme.colorScheme.primary,
+                  letterSpacing: 1.1,
                 ),
               ),
-              if (_isEditing) ...[
-                const SizedBox(height: AppSpacing.md),
-                SizedBox(
-                  width: double.infinity,
-                  child: AppButton(
-                    onPressed: _saveChanges,
-                    isLoading: _isSaving,
-                    label: 'Salvar Alterações',
+            ],
+          ),
+          const SizedBox(height: AppSpacing.sm),
+          ...children,
+        ],
+      ),
+    );
+  }
+
+  Widget _buildDetailRow({
+    required BuildContext context,
+    required IconData icon,
+    required String label,
+    required String value,
+    VoidCallback? onCopy,
+    String? copyTooltip,
+  }) {
+    final theme = Theme.of(context);
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: AppSpacing.xs),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          Icon(icon, size: 20, color: theme.colorScheme.onSurfaceVariant),
+          const SizedBox(width: AppSpacing.md),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  label,
+                  style: theme.textTheme.labelSmall?.copyWith(
+                    color: theme.colorScheme.onSurfaceVariant,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  value,
+                  style: theme.textTheme.bodyMedium?.copyWith(
+                    fontWeight: FontWeight.w600,
+                    color: theme.colorScheme.onSurface,
                   ),
                 ),
               ],
-            ],
+            ),
           ),
-        ),
+          if (onCopy != null)
+            IconButton(
+              icon: const Icon(Icons.copy_outlined, size: 18),
+              tooltip: copyTooltip,
+              onPressed: onCopy,
+            ),
+        ],
       ),
     );
   }
