@@ -102,10 +102,11 @@ class ActivityTile extends ConsumerWidget {
     final now = DateTime.now();
     final endOfToday = DateTime(now.year, now.month, now.day, 23, 59, 59);
     final isFuture = expense.date.isAfter(endOfToday);
-    final isRecurring = expense.recurringExpenseId != null &&
+    final isRecurring =
+        expense.recurringExpenseId != null &&
         expense.recurringExpenseId!.isNotEmpty;
-    final isInstallment = expense.currentInstallment != null &&
-        expense.totalInstallments != null;
+    final isInstallment =
+        expense.currentInstallment != null && expense.totalInstallments != null;
 
     return Expanded(
       child: Column(
@@ -128,28 +129,37 @@ class ActivityTile extends ConsumerWidget {
             overflow: TextOverflow.ellipsis,
           ),
           const SizedBox(height: 4),
-          Text(
-            dateText,
-            style: textTheme.bodySmall?.copyWith(
-              color: colorScheme.onSurfaceVariant,
-              fontSize: 12,
-              height: 1.2,
-            ),
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
+          Row(
+            children: [
+              if (isFuture) ...[
+                Icon(
+                  Icons.schedule_rounded,
+                  size: 14,
+                  color: colorScheme.primary,
+                  semanticLabel: 'Despesa agendada',
+                ),
+                const SizedBox(width: AppSpacing.xxs),
+              ],
+              Flexible(
+                child: Text(
+                  dateText,
+                  style: textTheme.bodySmall?.copyWith(
+                    color: colorScheme.onSurfaceVariant,
+                    fontSize: 12,
+                    height: 1.2,
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+            ],
           ),
-          if (isFuture || isInstallment || isRecurring) ...[
+          if (isInstallment || isRecurring) ...[
             const SizedBox(height: AppSpacing.xs),
             Wrap(
               spacing: AppSpacing.xs,
               runSpacing: AppSpacing.xxs,
               children: [
-                if (isFuture)
-                  const AppStatusBadge(
-                    label: 'Agendado',
-                    icon: Icons.schedule_rounded,
-                    variant: AppBadgeVariant.info,
-                  ),
                 if (isInstallment)
                   AppStatusBadge(
                     label:
