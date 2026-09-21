@@ -107,7 +107,7 @@ void main() {
       expect(navVM.currentDestination, AppDestination.expenses);
     });
 
-    testWidgets('shows modal sheet on 5th tab when suppliers are enabled', (tester) async {
+    testWidgets('shows suppliers as a direct tab when suppliers are enabled', (tester) async {
       final navVM = NavigationViewModel();
       navVM.updateSuppliersAvailability(true);
 
@@ -126,15 +126,10 @@ void main() {
         ),
       );
 
-      expect(find.byType(GButton), findsNWidgets(5));
-
-      await tester.tap(find.byType(GButton).at(4));
-      await tester.pumpAndSettle();
-
-      expect(find.text('Mais opções'), findsOneWidget);
+      expect(find.byType(GButton), findsNWidgets(6));
       expect(find.text('Fornecedores'), findsOneWidget);
 
-      await tester.tap(find.text('Fornecedores'));
+      await tester.tap(find.byType(GButton).at(4));
       await tester.pumpAndSettle();
 
       expect(navVM.currentDestination, AppDestination.suppliers);
