@@ -72,6 +72,18 @@ void main() {
   });
 
   group('User Model screen capture protection truth table', () {
+    test('theme mode defaults safely and preserves known values', () {
+      final legacyUser = User(id: 'u1', name: 'User 1', email: 'u1@test.com');
+      expect(legacyUser.effectiveThemeMode, 'system');
+
+      final darkUser = legacyUser.copyWith(themeMode: 'dark');
+      expect(darkUser.effectiveThemeMode, 'dark');
+      expect(User.fromMap(darkUser.toMap()).effectiveThemeMode, 'dark');
+
+      final invalidUser = legacyUser.copyWith(themeMode: 'unknown');
+      expect(invalidUser.effectiveThemeMode, 'system');
+    });
+
     test('effectiveProtectScreenCapture defaults to appLocked when null', () {
       final userWithLock = User(
         id: 'u1',

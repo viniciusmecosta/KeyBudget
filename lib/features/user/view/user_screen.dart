@@ -376,6 +376,88 @@ class UserScreen extends ConsumerWidget {
     );
   }
 
+  void _showDisplayModeSheet(BuildContext context, WidgetRef ref) {
+    final authViewModel = ref.read(authViewModelProvider);
+    final user = authViewModel.currentUser;
+    if (user == null) return;
+
+    const options = <({String value, String title, IconData icon})>[
+      (value: 'light', title: 'Claro', icon: Icons.light_mode_outlined),
+      (value: 'dark', title: 'Escuro', icon: Icons.dark_mode_outlined),
+      (value: 'system', title: 'Sistema', icon: Icons.brightness_auto_outlined),
+    ];
+
+    showModalBottomSheet<void>(
+      context: context,
+      shape: RoundedRectangleBorder(
+        borderRadius: AppBorders.borderRadiusVerticalXL,
+      ),
+      builder: (sheetContext) {
+        return SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(
+              AppSpacing.md,
+              AppSpacing.sm,
+              AppSpacing.md,
+              AppSpacing.md,
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  width: 36,
+                  height: 4,
+                  decoration: BoxDecoration(
+                    color: Theme.of(sheetContext).colorScheme.outlineVariant,
+                    borderRadius: BorderRadius.circular(2),
+                  ),
+                ),
+                const SizedBox(height: AppSpacing.md),
+                Text(
+                  'Modo de exibição',
+                  style: Theme.of(
+                    sheetContext,
+                  ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w700),
+                ),
+                const SizedBox(height: AppSpacing.xs),
+                Text(
+                  'Escolha como o KeyBudget usa as cores do aplicativo.',
+                  textAlign: TextAlign.center,
+                  style: Theme.of(sheetContext).textTheme.bodyMedium?.copyWith(
+                    color: Theme.of(sheetContext).colorScheme.onSurfaceVariant,
+                  ),
+                ),
+                const SizedBox(height: AppSpacing.sm),
+                ...options.map((option) {
+                  final selected = user.effectiveThemeMode == option.value;
+                  return ListTile(
+                    leading: Icon(option.icon),
+                    title: Text(option.title),
+                    trailing: selected
+                        ? Icon(
+                            Icons.check_rounded,
+                            color: Theme.of(sheetContext).colorScheme.primary,
+                          )
+                        : null,
+                    onTap: () async {
+                      final result = await authViewModel.updateUser(
+                        name: user.name,
+                        themeMode: option.value,
+                      );
+                      if (sheetContext.mounted && result.profileUpdated) {
+                        Navigator.of(sheetContext).pop();
+                      }
+                    },
+                  );
+                }),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
@@ -521,13 +603,18 @@ class UserScreen extends ConsumerWidget {
                       SettingsTile(
                         icon: Icons.brightness_auto_outlined,
                         title: 'Modo de exibição',
-                        subtitle: 'Padrão do sistema',
+                        subtitle: 'Escolha claro, escuro ou sistema',
                         trailing: Text(
-                          'Sistema',
+                          switch (user?.effectiveThemeMode) {
+                            'light' => 'Claro',
+                            'dark' => 'Escuro',
+                            _ => 'Sistema',
+                          },
                           style: theme.textTheme.bodySmall?.copyWith(
                             color: theme.colorScheme.onSurfaceVariant,
                           ),
                         ),
+                        onTap: () => _showDisplayModeSheet(context, ref),
                       ),
                     ]),
                     buildSection('Recursos', [

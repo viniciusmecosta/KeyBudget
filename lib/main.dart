@@ -91,7 +91,9 @@ class _MyAppState extends ConsumerState<MyApp> with WidgetsBindingObserver {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
-    _widgetClickedSubscription = HomeWidget.widgetClicked.listen(_launchedFromWidget);
+    _widgetClickedSubscription = HomeWidget.widgetClicked.listen(
+      _launchedFromWidget,
+    );
     _checkInitialWidgetLaunch();
   }
 
@@ -148,6 +150,17 @@ class _MyAppState extends ConsumerState<MyApp> with WidgetsBindingObserver {
     }
   }
 
+  ThemeMode _resolveThemeMode(String? storedMode) {
+    switch (storedMode) {
+      case 'light':
+        return ThemeMode.light;
+      case 'dark':
+        return ThemeMode.dark;
+      default:
+        return ThemeMode.system;
+    }
+  }
+
   @override
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
@@ -179,7 +192,7 @@ class _MyAppState extends ConsumerState<MyApp> with WidgetsBindingObserver {
       title: 'KeyBudget',
       theme: AppTheme.getTheme(isDark: false, colorValue: themeColor),
       darkTheme: AppTheme.getTheme(isDark: true, colorValue: themeColor),
-      themeMode: ThemeMode.system,
+      themeMode: _resolveThemeMode(user?.effectiveThemeMode),
       debugShowCheckedModeBanner: false,
       scrollBehavior: const AppScrollBehavior(),
       localizationsDelegates: const [

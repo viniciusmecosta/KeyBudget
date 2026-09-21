@@ -306,6 +306,7 @@ class AuthViewModel extends ChangeNotifier {
     bool clearProtectScreenCapture = false,
     bool? enableSuppliers,
     int? themeColor,
+    String? themeMode,
   }) async {
     if (_currentUser == null) {
       return const UpdateUserResult(
@@ -350,6 +351,7 @@ class AuthViewModel extends ChangeNotifier {
         clearProtectScreenCapture: clearProtectScreenCapture,
         enableSuppliers: enableSuppliers,
         themeColor: themeColor,
+        themeMode: themeMode,
       );
       AppSecurityService.setSecure(updatedUser.effectiveProtectScreenCapture);
       await _authRepository.updateUserProfile(updatedUser);
