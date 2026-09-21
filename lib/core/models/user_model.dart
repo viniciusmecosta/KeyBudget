@@ -9,6 +9,7 @@ class User {
   final bool? protectScreenCapture;
   final bool? enableSuppliers;
   final int? themeColor;
+  final String? themeMode;
 
   User({
     required this.id,
@@ -21,10 +22,22 @@ class User {
     this.protectScreenCapture,
     this.enableSuppliers,
     this.themeColor,
+    this.themeMode,
   });
 
   bool get effectiveProtectScreenCapture =>
       protectScreenCapture ?? (appLocked ?? true);
+
+  String get effectiveThemeMode {
+    switch (themeMode) {
+      case 'light':
+      case 'dark':
+      case 'system':
+        return themeMode!;
+      default:
+        return 'system';
+    }
+  }
 
   User copyWith({
     String? id,
@@ -40,6 +53,7 @@ class User {
     bool clearProtectScreenCapture = false,
     bool? enableSuppliers,
     int? themeColor,
+    String? themeMode,
   }) {
     return User(
       id: id ?? this.id,
@@ -54,6 +68,7 @@ class User {
           : (protectScreenCapture ?? this.protectScreenCapture),
       enableSuppliers: enableSuppliers ?? this.enableSuppliers,
       themeColor: themeColor ?? this.themeColor,
+      themeMode: themeMode ?? this.themeMode,
     );
   }
 
@@ -69,6 +84,7 @@ class User {
       'protect_screen_capture': protectScreenCapture,
       'enable_suppliers': enableSuppliers ?? false,
       'theme_color': themeColor,
+      'theme_mode': themeMode,
     };
   }
 
@@ -84,6 +100,7 @@ class User {
       protectScreenCapture: map['protect_screen_capture'] as bool?,
       enableSuppliers: map['enable_suppliers'] ?? false,
       themeColor: map['theme_color'],
+      themeMode: map['theme_mode'] as String?,
     );
   }
 }
