@@ -28,6 +28,7 @@ class QuickActionsSection extends ConsumerWidget {
     final actions = <_QuickActionItem>[
       _QuickActionItem(
         title: enableIncomes ? 'Novo lançamento' : 'Nova despesa',
+        compactTitle: enableIncomes ? 'Lançar' : 'Despesa',
         subtitle: 'Registrar valor',
         icon: Icons.add_circle_outline_rounded,
         color: theme.colorScheme.primary,
@@ -35,6 +36,7 @@ class QuickActionsSection extends ConsumerWidget {
       ),
       _QuickActionItem(
         title: 'Credenciais',
+        compactTitle: 'Cofre',
         subtitle: '${viewModel.credentialCount} salvas',
         icon: Icons.security_rounded,
         color: theme.colorScheme.secondary,
@@ -42,6 +44,7 @@ class QuickActionsSection extends ConsumerWidget {
       ),
       _QuickActionItem(
         title: 'Análise',
+        compactTitle: 'Análise',
         subtitle: 'Ver relatórios',
         icon: Icons.bar_chart_rounded,
         color: theme.colorScheme.tertiary,
@@ -50,6 +53,7 @@ class QuickActionsSection extends ConsumerWidget {
       if (enableSuppliers)
         _QuickActionItem(
           title: 'Fornecedores',
+          compactTitle: 'Fornecedores',
           subtitle: 'Gerenciar',
           icon: Icons.store_rounded,
           color: theme.colorScheme.secondary,
@@ -59,12 +63,12 @@ class QuickActionsSection extends ConsumerWidget {
 
     return LayoutBuilder(
       builder: (context, constraints) {
-        final crossAxisCount = constraints.maxWidth < 450
-            ? 2
-            : (actions.length == 4 ? 4 : 3);
+        final crossAxisCount = actions.length == 3
+            ? 3
+            : (constraints.maxWidth < 450 ? 2 : 4);
         final itemWidth =
             (constraints.maxWidth - (crossAxisCount - 1) * AppSpacing.md) /
-                crossAxisCount;
+            crossAxisCount;
 
         return Wrap(
           spacing: AppSpacing.md,
@@ -72,7 +76,13 @@ class QuickActionsSection extends ConsumerWidget {
           children: actions.map((action) {
             return SizedBox(
               width: itemWidth,
-              child: _buildQuickActionCard(context, action: action),
+              child: _buildQuickActionCard(
+                context,
+                action: action,
+                compact: crossAxisCount == 3,
+                useCompactLabel:
+                    crossAxisCount == 3 && constraints.maxWidth < 390,
+              ),
             );
           }).toList(),
         );
@@ -83,29 +93,39 @@ class QuickActionsSection extends ConsumerWidget {
   Widget _buildQuickActionCard(
     BuildContext context, {
     required _QuickActionItem action,
+    required bool compact,
+    required bool useCompactLabel,
   }) {
     final theme = Theme.of(context);
 
     return AppCard(
-      padding: const EdgeInsets.all(AppSpacing.md),
+      padding: EdgeInsets.symmetric(
+        horizontal: compact ? AppSpacing.xs : AppSpacing.md,
+        vertical: compact ? AppSpacing.sm : AppSpacing.md,
+      ),
       onTap: action.onTap,
       child: ConstrainedBox(
-        constraints: const BoxConstraints(minHeight: 80),
+        constraints: BoxConstraints(minHeight: compact ? 60 : 80),
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          crossAxisAlignment: compact
+              ? CrossAxisAlignment.center
+              : CrossAxisAlignment.start,
+          mainAxisAlignment: compact
+              ? MainAxisAlignment.center
+              : MainAxisAlignment.spaceBetween,
           children: [
             Container(
-              padding: const EdgeInsets.all(AppSpacing.sm),
+              padding: EdgeInsets.all(compact ? AppSpacing.xs : AppSpacing.sm),
               decoration: BoxDecoration(
                 color: action.color.withAlpha((255 * 0.12).round()),
                 borderRadius: AppBorders.borderRadiusM,
               ),
               child: Icon(action.icon, color: action.color, size: 20),
             ),
-            const SizedBox(height: AppSpacing.sm),
+            SizedBox(height: compact ? AppSpacing.xs : AppSpacing.sm),
             Text(
-              action.title,
+              useCompactLabel ? action.compactTitle : action.title,
+              textAlign: compact ? TextAlign.center : TextAlign.start,
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
               style: theme.textTheme.titleSmall?.copyWith(
@@ -113,15 +133,16 @@ class QuickActionsSection extends ConsumerWidget {
                 color: theme.colorScheme.onSurface,
               ),
             ),
-            Text(
-              action.subtitle,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: theme.textTheme.bodySmall?.copyWith(
-                color: theme.colorScheme.onSurfaceVariant,
-                fontSize: 11,
+            if (!compact)
+              Text(
+                action.subtitle,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color: theme.colorScheme.onSurfaceVariant,
+                  fontSize: 11,
+                ),
               ),
-            ),
           ],
         ),
       ),
@@ -131,6 +152,7 @@ class QuickActionsSection extends ConsumerWidget {
 
 class _QuickActionItem {
   final String title;
+  final String compactTitle;
   final String subtitle;
   final IconData icon;
   final Color color;
@@ -138,6 +160,7 @@ class _QuickActionItem {
 
   const _QuickActionItem({
     required this.title,
+    required this.compactTitle,
     required this.subtitle,
     required this.icon,
     required this.color,

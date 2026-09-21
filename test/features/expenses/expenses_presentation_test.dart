@@ -112,7 +112,7 @@ void main() {
   }
 
   group('ActivityTile Badges', () {
-    testWidgets('renders scheduled badge when expense date is in the future', (tester) async {
+    testWidgets('renders compact scheduled icon when expense date is in the future', (tester) async {
       final futureDate = DateTime.now().add(const Duration(days: 5));
       final expense = Expense(
         id: 'e1',
@@ -130,7 +130,8 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      expect(find.text('Agendado'), findsOneWidget);
+      expect(find.text('Agendado'), findsNothing);
+      expect(find.byIcon(Icons.schedule_rounded), findsOneWidget);
     });
 
     testWidgets('renders installment badge when installment info is present', (tester) async {

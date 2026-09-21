@@ -45,39 +45,39 @@ class DashboardHeader extends ConsumerWidget implements PreferredSizeWidget {
       elevation: 0,
       scrolledUnderElevation: 0,
       backgroundColor: Colors.transparent,
-      toolbarHeight: 88,
+      toolbarHeight: 72,
       title: Padding(
-        padding: const EdgeInsets.only(top: AppSpacing.sm),
+        padding: const EdgeInsets.only(top: AppSpacing.xs),
         child: Row(
           children: [
             Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(
-                    greeting,
-                    style: theme.textTheme.bodyMedium?.copyWith(
-                      color: theme.colorScheme.onSurfaceVariant,
-                      fontSize: 14,
+              child: Semantics(
+                label: '$greeting $userName',
+                child: ExcludeSemantics(
+                  child: Text.rich(
+                    TextSpan(
+                      children: [
+                        TextSpan(
+                          text: '$greeting ',
+                          style: theme.textTheme.bodyLarge?.copyWith(
+                            color: theme.colorScheme.onSurfaceVariant,
+                            fontSize: 16,
+                          ),
+                        ),
+                        TextSpan(
+                          text: userName,
+                          style: theme.textTheme.titleLarge?.copyWith(
+                            fontWeight: FontWeight.w700,
+                            color: theme.colorScheme.onSurface,
+                            fontSize: 20,
+                          ),
+                        ),
+                      ],
                     ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
                   ),
-                  const SizedBox(height: 2),
-                  Semantics(
-                    label: 'Usuário: $userName',
-                    child: Text(
-                      userName,
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                      style: theme.textTheme.headlineSmall?.copyWith(
-                        fontWeight: FontWeight.w700,
-                        color: theme.colorScheme.onSurface,
-                        fontSize: 22,
-                        height: 1.2,
-                      ),
-                    ),
-                  ),
-                ],
+                ),
               ),
             ),
             const SizedBox(width: AppSpacing.md),
@@ -97,7 +97,8 @@ class DashboardHeader extends ConsumerWidget implements PreferredSizeWidget {
                     radius: 24,
                     backgroundColor: theme.colorScheme.primary.withAlpha(25),
                     backgroundImage: _getAvatarProvider(user?.avatarPath),
-                    child: (user?.avatarPath == null || user!.avatarPath!.isEmpty)
+                    child:
+                        (user?.avatarPath == null || user!.avatarPath!.isEmpty)
                         ? Icon(Icons.person, color: theme.colorScheme.primary)
                         : null,
                   ),

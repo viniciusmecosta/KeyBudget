@@ -35,9 +35,10 @@ class _DashboardBalanceCardState extends ConsumerState<DashboardBalanceCard>
       duration: AppAnimations.durationSlow,
       vsync: this,
     );
-    _animation = Tween<double>(begin: 0, end: 0).animate(
-      CurvedAnimation(parent: _controller, curve: AppAnimations.curve),
-    );
+    _animation = Tween<double>(
+      begin: 0,
+      end: 0,
+    ).animate(CurvedAnimation(parent: _controller, curve: AppAnimations.curve));
   }
 
   @override
@@ -57,9 +58,10 @@ class _DashboardBalanceCardState extends ConsumerState<DashboardBalanceCard>
       balance: enableIncomes ? to : viewModel.lastAnimatedBalanceForMonth,
     );
 
-    _animation = Tween<double>(begin: from, end: to).animate(
-      CurvedAnimation(parent: _controller, curve: AppAnimations.curve),
-    );
+    _animation = Tween<double>(
+      begin: from,
+      end: to,
+    ).animate(CurvedAnimation(parent: _controller, curve: AppAnimations.curve));
     _controller
       ..reset()
       ..forward();
@@ -96,8 +98,9 @@ class _DashboardBalanceCardState extends ConsumerState<DashboardBalanceCard>
         );
       });
     } else {
-      final scheduledTarget =
-          enableIncomes ? _scheduledTargetBalance : _scheduledTargetTotal;
+      final scheduledTarget = enableIncomes
+          ? _scheduledTargetBalance
+          : _scheduledTargetTotal;
       if (currentValue != scheduledTarget) {
         _scheduledTargetTotal = viewModel.totalAmountForMonth;
         _scheduledTargetBalance = viewModel.balanceForMonth;
@@ -126,11 +129,6 @@ class _DashboardBalanceCardState extends ConsumerState<DashboardBalanceCard>
     final badgeTextColor = isGood
         ? Colors.greenAccent[400]!
         : Colors.redAccent[200]!;
-
-    final rawPeriod = DateFormat("MMMM 'de' yyyy", 'pt_BR').format(DateTime.now());
-    final period = rawPeriod.isNotEmpty
-        ? '${rawPeriod[0].toUpperCase()}${rawPeriod.substring(1)}'
-        : rawPeriod;
 
     final valueSubtitle = hasPreviousMonths
         ? Row(
@@ -210,7 +208,6 @@ class _DashboardBalanceCardState extends ConsumerState<DashboardBalanceCard>
 
         return BalanceCard(
           title: enableIncomes ? 'Saldo do período' : 'Despesas do mês',
-          period: period,
           totalValue: _animation.value,
           gradient: LinearGradient(
             colors: [
@@ -221,7 +218,9 @@ class _DashboardBalanceCardState extends ConsumerState<DashboardBalanceCard>
             end: Alignment.bottomRight,
           ),
           onTap: () {
-            ref.read(navigationViewModelProvider).navigateTo(AppDestination.expenses);
+            ref
+                .read(navigationViewModelProvider)
+                .navigateTo(AppDestination.expenses);
           },
           valueSubtitle: valueSubtitle,
           subtitle: enableIncomes

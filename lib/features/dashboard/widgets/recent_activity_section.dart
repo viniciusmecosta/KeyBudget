@@ -39,13 +39,7 @@ class RecentActivitySection extends ConsumerWidget {
             itemCount: recentExpenses.length > 5 ? 5 : recentExpenses.length,
             itemBuilder: (context, index) {
               return AppAnimations.listFadeIn(
-                Padding(
-                  padding: const EdgeInsets.only(bottom: AppSpacing.sm),
-                  child: ActivityTile(
-                    expense: recentExpenses[index],
-                    index: index,
-                  ),
-                ),
+                ActivityTile(expense: recentExpenses[index], index: index),
                 index: index,
               );
             },
@@ -73,7 +67,9 @@ class RecentActivitySection extends ConsumerWidget {
         ),
         TextButton(
           onPressed: () {
-            ref.read(navigationViewModelProvider).navigateTo(AppDestination.expenses);
+            ref
+                .read(navigationViewModelProvider)
+                .navigateTo(AppDestination.expenses);
           },
           style: TextButton.styleFrom(
             padding: const EdgeInsets.symmetric(
@@ -154,7 +150,9 @@ class RecentActivitySection extends ConsumerWidget {
           const SizedBox(height: AppSpacing.lg),
           if (isCompletelyEmpty)
             AppButton(
-              label: enableIncomes ? 'Adicionar lançamento' : 'Adicionar despesa',
+              label: enableIncomes
+                  ? 'Adicionar lançamento'
+                  : 'Adicionar despesa',
               onPressed: () {
                 NavigationUtils.push(context, const AddExpenseScreen());
               },
