@@ -6,10 +6,12 @@ class NavigationViewModel extends ChangeNotifier {
   AppDestination _currentDestination = AppDestination.dashboard;
   AppDestination _previousDestination = AppDestination.dashboard;
   bool _enableSuppliers = false;
+  int _selectionRevision = 0;
 
   AppDestination get currentDestination => _currentDestination;
   AppDestination get previousDestination => _previousDestination;
   bool get enableSuppliers => _enableSuppliers;
+  int get selectionRevision => _selectionRevision;
 
   int get selectedIndex {
     final available = AppDestination.getAvailable(enableSuppliers: _enableSuppliers);
@@ -37,6 +39,7 @@ class NavigationViewModel extends ChangeNotifier {
     if (!enabled && _currentDestination == AppDestination.suppliers) {
       _previousDestination = _currentDestination;
       _currentDestination = AppDestination.dashboard;
+      _selectionRevision++;
       notifyListeners();
     }
   }
@@ -45,6 +48,7 @@ class NavigationViewModel extends ChangeNotifier {
     if (_currentDestination != destination) {
       _previousDestination = _currentDestination;
       _currentDestination = destination;
+      _selectionRevision++;
       notifyListeners();
     }
   }
@@ -53,6 +57,7 @@ class NavigationViewModel extends ChangeNotifier {
     _currentDestination = AppDestination.dashboard;
     _previousDestination = AppDestination.dashboard;
     _enableSuppliers = false;
+    _selectionRevision = 0;
     if (notify) {
       notifyListeners();
     }
