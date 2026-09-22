@@ -7,6 +7,7 @@ import 'package:key_budget/app/config/app_theme.dart';
 import 'package:key_budget/app/navigation/app_destination.dart';
 import 'package:key_budget/app/view/main_screen.dart';
 import 'package:key_budget/app/viewmodel/navigation_viewmodel.dart';
+import 'package:key_budget/app/widgets/main_bottom_navigation_bar.dart';
 import 'package:key_budget/app/widgets/tab_selection_transition.dart';
 import 'package:key_budget/core/models/document_model.dart';
 import 'package:key_budget/core/models/user_model.dart';
@@ -432,6 +433,49 @@ void main() {
       await tester.pump();
       expect(transitionState.controller.isAnimating, isTrue);
       await tester.pumpAndSettle();
+    });
+
+    testWidgets('six destinations fit on a narrow phone with large text', (tester) async {
+      tester.view.physicalSize = const Size(320, 720);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.resetPhysicalSize);
+
+      final navVM = NavigationViewModel();
+      navVM.updateSuppliersAvailability(true);
+      final authVM = FakeAuthVM(
+        mockUser: User(
+          id: 'u1',
+          name: 'Tester',
+          email: 't@t.com',
+          enableSuppliers: true,
+        ),
+      );
+
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: [
+            navigationViewModelProvider.overrideWith((ref) => navVM),
+            authViewModelProvider.overrideWith((ref) => authVM),
+          ],
+          child: MaterialApp(
+            builder: (context, child) => MediaQuery(
+              data: MediaQuery.of(context).copyWith(
+                textScaler: const TextScaler.linear(2),
+              ),
+              child: child!,
+            ),
+            home: const Scaffold(bottomNavigationBar: MainBottomNavigationBar()),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+      expect(find.text('Fornecedores'), findsOneWidget);
+      expect(tester.takeException(), isNull);
+
+      await tester.tap(find.text('Fornecedores'));
+      await tester.pumpAndSettle();
+      expect(navVM.currentDestination, AppDestination.suppliers);
+      expect(tester.takeException(), isNull);
     });
   });
 }
