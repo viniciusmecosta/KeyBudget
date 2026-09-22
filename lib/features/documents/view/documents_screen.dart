@@ -171,7 +171,8 @@ class _DocumentsScreenState extends ConsumerState<DocumentsScreen> {
                 ),
               ),
             ),
-          ),
+
+            context: context,),
         ),
         floatingActionButton: AppAnimations.scaleIn(
           FloatingActionButton.extended(
@@ -183,7 +184,8 @@ class _DocumentsScreenState extends ConsumerState<DocumentsScreen> {
               borderRadius: AppBorders.borderRadiusXXL,
             ),
           ),
-        ),
+
+          context: context,),
       ),
     );
   }

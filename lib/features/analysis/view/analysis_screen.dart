@@ -42,7 +42,8 @@ class _AnalysisScreenState extends ConsumerState<AnalysisScreen> {
       return AppAnimations.fadeInFromBottom(
         child,
         delay: Duration(milliseconds: 100 * (index + 1)),
-      );
+
+        context: context,);
     }
     return child;
   }

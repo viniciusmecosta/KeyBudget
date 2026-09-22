@@ -133,7 +133,8 @@ class _CategoriesScreenState extends ConsumerState<CategoriesScreen> {
               );
             },
           ),
-        ),
+
+          context: context,),
       ),
       floatingActionButton: AppAnimations.scaleIn(
         FloatingActionButton.extended(
@@ -151,7 +152,8 @@ class _CategoriesScreenState extends ConsumerState<CategoriesScreen> {
           foregroundColor: theme.colorScheme.onPrimary,
           elevation: 0,
         ),
-      ),
+
+        context: context,),
     );
   }
 }

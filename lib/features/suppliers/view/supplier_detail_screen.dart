@@ -189,7 +189,8 @@ class _SupplierDetailScreenState extends ConsumerState<SupplierDetailScreen> {
             ],
           ),
         ),
-      ),
+
+        context: context,),
     );
   }
 }

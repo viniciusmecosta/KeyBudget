@@ -168,7 +168,8 @@ class _AddDocumentScreenState extends ConsumerState<AddDocumentScreen> {
             ],
           ),
         ),
-      ),
+
+        context: context,),
     ),
     );
   }

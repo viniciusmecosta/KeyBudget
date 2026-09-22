@@ -288,7 +288,8 @@ class _LockScreenState extends ConsumerState<LockScreen>
                 ),
               ),
             ),
-          ),
+
+            context: context,),
         ),
       ),
     );

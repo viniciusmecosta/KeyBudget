@@ -206,7 +206,8 @@ class _AddEditCategoryScreenState extends ConsumerState<AddEditCategoryScreen> {
             ],
           ),
         ),
-      ),
+
+        context: context,),
     ),
     );
   }
