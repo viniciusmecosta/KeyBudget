@@ -18,6 +18,9 @@ class MainBottomNavigationBar extends ConsumerWidget {
     final enableSuppliers = authViewModel.currentUser?.enableSuppliers ?? false;
     final theme = Theme.of(context);
     final isDarkMode = theme.brightness == Brightness.dark;
+    final useTwoRows = enableSuppliers &&
+        (MediaQuery.sizeOf(context).width < 390 ||
+            MediaQuery.textScalerOf(context).scale(14) > 19);
 
     final currentDest = navigationViewModel.currentDestination;
 
@@ -36,7 +39,7 @@ class MainBottomNavigationBar extends ConsumerWidget {
 
     return Container(
       decoration: BoxDecoration(
-        color: isDarkMode ? theme.colorScheme.surface : Colors.white,
+        color: theme.colorScheme.surface,
         boxShadow: [
           BoxShadow(
             color: Colors.black.withAlpha(
@@ -49,11 +52,58 @@ class MainBottomNavigationBar extends ConsumerWidget {
       ),
       child: SafeArea(
         child: Padding(
-          padding: const EdgeInsets.symmetric(
+          padding: EdgeInsets.symmetric(
             horizontal: AppTheme.spaceM,
             vertical: AppTheme.spaceS,
           ),
-          child: GNav(
+          child: useTwoRows
+              ? Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    for (var row = 0; row < 2; row++)
+                      Row(
+                        children: [
+                          for (var column = 0; column < 3; column++)
+                            Expanded(
+                              child: Semantics(
+                                button: true,
+                                selected: activeTabIndex == row * 3 + column,
+                                label: destinations[row * 3 + column].label,
+                                child: InkWell(
+                                  onTap: () => navigationViewModel.navigateTo(
+                                    destinations[row * 3 + column],
+                                  ),
+                                  borderRadius: BorderRadius.circular(AppTheme.radiusM),
+                                  child: Padding(
+                                    padding: const EdgeInsets.symmetric(vertical: 4),
+                                    child: Column(
+                                      children: [
+                                        Icon(
+                                          destinations[row * 3 + column].icon,
+                                          color: activeTabIndex == row * 3 + column
+                                              ? theme.colorScheme.primary
+                                              : theme.colorScheme.onSurfaceVariant,
+                                        ),
+                                        Text(
+                                          destinations[row * 3 + column] == AppDestination.expenses && !enableIncomes
+                                              ? 'Despesas'
+                                              : destinations[row * 3 + column].label,
+                                          textAlign: TextAlign.center,
+                                          maxLines: 3,
+                                          overflow: TextOverflow.ellipsis,
+                                          style: theme.textTheme.labelSmall,
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ),
+                        ],
+                      ),
+                  ],
+                )
+              : GNav(
             rippleColor: theme.colorScheme.primary.withAlpha(
               (255 * 0.1).round(),
             ),
@@ -63,7 +113,7 @@ class MainBottomNavigationBar extends ConsumerWidget {
             gap: 8,
             activeColor: theme.colorScheme.primary,
             iconSize: 24,
-            padding: const EdgeInsets.symmetric(
+            padding: EdgeInsets.symmetric(
               horizontal: AppTheme.spaceS,
               vertical: AppTheme.spaceS + 2,
             ),
@@ -73,22 +123,22 @@ class MainBottomNavigationBar extends ConsumerWidget {
             ),
             color: theme.colorScheme.onSurfaceVariant,
             tabs: [
-              const GButton(icon: Icons.home_rounded, text: 'Painel'),
+              GButton(icon: Icons.home_rounded, text: 'Painel'),
               GButton(
                 icon: Icons.monetization_on_rounded,
                 text: enableIncomes ? 'Lançamentos' : 'Despesas',
               ),
-              const GButton(icon: Icons.vpn_key_rounded, text: 'Credenciais'),
-              const GButton(
+              GButton(icon: Icons.vpn_key_rounded, text: 'Credenciais'),
+              GButton(
                 icon: Icons.folder_copy_rounded,
                 text: 'Documentos',
               ),
               if (enableSuppliers)
-                const GButton(
+                GButton(
                   icon: Icons.storefront_rounded,
                   text: 'Fornecedores',
                 ),
-              const GButton(icon: Icons.person_rounded, text: 'Perfil'),
+              GButton(icon: Icons.person_rounded, text: 'Perfil'),
             ],
             selectedIndex: activeTabIndex,
             onTabChange: (index) {
