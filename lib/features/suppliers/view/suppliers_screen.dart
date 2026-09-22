@@ -8,6 +8,7 @@ import 'package:key_budget/app/utils/navigation_utils.dart';
 import 'package:key_budget/app/widgets/empty_state_widget.dart';
 import 'package:key_budget/app/widgets/responsive_center.dart';
 import 'package:key_budget/core/design_system/borders/app_borders.dart';
+import 'package:key_budget/core/design_system/widgets/app_search_field.dart';
 import 'package:key_budget/features/auth/viewmodel/auth_viewmodel.dart';
 import 'package:key_budget/features/suppliers/view/add_supplier_screen.dart';
 import 'package:key_budget/features/suppliers/viewmodel/supplier_viewmodel.dart';
@@ -73,19 +74,13 @@ class _SuppliersScreenState extends ConsumerState<SuppliersScreen> {
               )
             : null,
         title: _isSearching
-            ? TextField(
+            ? AppSearchField(
                 controller: _searchController,
-                autofocus: true,
-                style: theme.textTheme.titleMedium,
-                decoration: InputDecoration(
-                  hintText: 'Buscar fornecedor...',
-                  border: InputBorder.none,
-                  hintStyle: theme.textTheme.bodyMedium?.copyWith(
-                    color: theme.colorScheme.onSurfaceVariant,
-                  ),
-                ),
-                onChanged: (value) {
-                  ref.read(supplierViewModelProvider).setSearchQuery(value);
+                hint: 'Buscar fornecedores...',
+                onChanged: ref.read(supplierViewModelProvider).setSearchQuery,
+                onClear: () {
+                  _searchController.clear();
+                  ref.read(supplierViewModelProvider).setSearchQuery('');
                 },
               )
             : const Text('Fornecedores'),

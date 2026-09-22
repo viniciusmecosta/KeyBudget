@@ -9,6 +9,7 @@ import 'package:key_budget/app/widgets/empty_state_widget.dart';
 import 'package:key_budget/app/widgets/responsive_center.dart';
 import 'package:key_budget/core/design_system/borders/app_borders.dart';
 import 'package:key_budget/core/design_system/spacing/app_spacing.dart';
+import 'package:key_budget/core/design_system/widgets/app_search_field.dart';
 import 'package:key_budget/features/auth/viewmodel/auth_viewmodel.dart';
 import 'package:key_budget/features/documents/view/add_document_screen.dart';
 import 'package:key_budget/features/documents/viewmodel/document_viewmodel.dart';
@@ -92,40 +93,14 @@ class _DocumentsScreenState extends ConsumerState<DocumentsScreen> {
             transitionBuilder: (child, animation) =>
                 FadeTransition(opacity: animation, child: child),
             child: _isSearching
-                ? Container(
-                    key: const ValueKey('searchBox'),
-                    height: 40,
-                    decoration: BoxDecoration(
-                      color: theme.colorScheme.onSurface.withValues(
-                        alpha: 0.08,
-                      ),
-                      borderRadius: AppBorders.borderRadiusXXL,
-                    ),
-                    child: TextField(
-                      controller: _searchController,
-                      autofocus: true,
-                      textAlignVertical: TextAlignVertical.center,
-                      style: theme.textTheme.bodyLarge,
-                      decoration: InputDecoration(
-                        hintText: 'Buscar documentos...',
-                        border: InputBorder.none,
-                        isDense: true,
-                        contentPadding: const EdgeInsets.symmetric(
-                          horizontal: 16,
-                          vertical: 10,
-                        ),
-                        suffixIcon: _searchController.text.isNotEmpty
-                            ? IconButton(
-                                icon: const Icon(Icons.clear, size: 20),
-                                onPressed: () {
-                                  _searchController.clear();
-                                  viewModel.setSearchQuery('');
-                                },
-                              )
-                            : null,
-                      ),
-                      onChanged: (val) => viewModel.setSearchQuery(val),
-                    ),
+                ? AppSearchField(
+                    controller: _searchController,
+                    hint: 'Buscar documentos...',
+                    onChanged: viewModel.setSearchQuery,
+                    onClear: () {
+                      _searchController.clear();
+                      viewModel.setSearchQuery('');
+                    },
                   )
                 : const Text('Documentos', key: ValueKey('titleText')),
           ),
