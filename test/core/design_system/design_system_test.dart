@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:key_budget/app/config/app_theme.dart';
+import 'package:key_budget/core/design_system/colors/app_contrast.dart';
 import 'package:key_budget/core/design_system/theme/app_semantic_colors.dart';
 import 'package:key_budget/core/design_system/widgets/app_button.dart';
 import 'package:key_budget/core/design_system/widgets/app_feedback_panel.dart';
@@ -10,12 +11,14 @@ import 'package:key_budget/core/design_system/widgets/app_text_field.dart';
 
 void main() {
   group('AppTheme & Semantic Colors', () {
-    test('derives onPrimary contrast based on luminance for dark and light seeds', () {
-      final darkSeedTheme = AppTheme.getTheme(isDark: false, colorValue: 0xFF0D47A1);
-      expect(darkSeedTheme.colorScheme.onPrimary, Colors.white);
-
-      final brightYellowTheme = AppTheme.getTheme(isDark: false, colorValue: 0xFFFFEB3B);
-      expect(brightYellowTheme.colorScheme.onPrimary, Colors.black);
+    test('keeps custom accents and their labels readable in both themes', () {
+      for (final isDark in [false, true]) {
+        for (final seed in <int?>[null, 0xFF0D47A1, 0xFFFFEB3B, 0xFF9F1239, 0xFF0F766E]) {
+          final scheme = AppTheme.getTheme(isDark: isDark, colorValue: seed).colorScheme;
+          expect(AppContrast.ratio(scheme.primary, scheme.surface), greaterThanOrEqualTo(4.5));
+          expect(AppContrast.ratio(scheme.onPrimary, scheme.primary), greaterThanOrEqualTo(4.5));
+        }
+      }
     });
 
     test('exposes AppSemanticColors via ThemeExtension', () {
