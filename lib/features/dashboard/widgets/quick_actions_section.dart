@@ -1,92 +1,169 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:key_budget/app/navigation/app_destination.dart';
 import 'package:key_budget/app/utils/navigation_utils.dart';
 import 'package:key_budget/app/viewmodel/navigation_viewmodel.dart';
 import 'package:key_budget/core/design_system/borders/app_borders.dart';
 import 'package:key_budget/core/design_system/spacing/app_spacing.dart';
 import 'package:key_budget/core/design_system/widgets/app_card.dart';
 import 'package:key_budget/features/analysis/view/analysis_screen.dart';
+import 'package:key_budget/features/auth/viewmodel/auth_viewmodel.dart';
 import 'package:key_budget/features/dashboard/viewmodel/dashboard_viewmodel.dart';
+import 'package:key_budget/features/expenses/view/add_expense_screen.dart';
 
 class QuickActionsSection extends ConsumerWidget {
   const QuickActionsSection({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final theme = Theme.of(context);
     final viewModel = ref.watch(dashboardViewModelProvider);
+    final authViewModel = ref.watch(authViewModelProvider);
     final navigationViewModel = ref.read(navigationViewModelProvider);
 
-    return Row(
-      children: [
-        Expanded(
-          child: _buildQuickActionCard(
-            context,
-            title: 'Credenciais',
-            subtitle: '${viewModel.credentialCount} cadastradas',
-            icon: Icons.security_rounded,
-            color: Theme.of(context).colorScheme.secondary,
-            onTap: () => navigationViewModel.selectedIndex = 2,
-          ),
+    final user = authViewModel.currentUser;
+    final enableIncomes = user?.enableIncomes ?? false;
+    final enableSuppliers = user?.enableSuppliers ?? false;
+
+    final actions = <_QuickActionItem>[
+      _QuickActionItem(
+        title: enableIncomes ? 'Novo lançamento' : 'Nova despesa',
+        compactTitle: enableIncomes ? 'Lançar' : 'Despesa',
+        subtitle: 'Registrar valor',
+        icon: Icons.add_circle_outline_rounded,
+        color: theme.colorScheme.primary,
+        onTap: () => NavigationUtils.push(context, const AddExpenseScreen()),
+      ),
+      _QuickActionItem(
+        title: 'Credenciais',
+        compactTitle: 'Cofre',
+        subtitle: '${viewModel.credentialCount} salvas',
+        icon: Icons.security_rounded,
+        color: theme.colorScheme.secondary,
+        onTap: () => navigationViewModel.navigateTo(AppDestination.credentials),
+      ),
+      _QuickActionItem(
+        title: 'Análise',
+        compactTitle: 'Análise',
+        subtitle: 'Ver relatórios',
+        icon: Icons.bar_chart_rounded,
+        color: theme.colorScheme.tertiary,
+        onTap: () => NavigationUtils.push(context, const AnalysisScreen()),
+      ),
+      if (enableSuppliers)
+        _QuickActionItem(
+          title: 'Fornecedores',
+          compactTitle: 'Fornecedores',
+          subtitle: 'Gerenciar',
+          icon: Icons.store_rounded,
+          color: theme.colorScheme.secondary,
+          onTap: () => navigationViewModel.navigateTo(AppDestination.suppliers),
         ),
-        const SizedBox(width: AppSpacing.md),
-        Expanded(
-          child: _buildQuickActionCard(
-            context,
-            title: 'Análise',
-            subtitle: 'Ver relatórios',
-            icon: Icons.bar_chart_rounded,
-            color: Theme.of(context).colorScheme.tertiary,
-            onTap: () {
-              NavigationUtils.push(context, const AnalysisScreen());
-            },
-          ),
-        ),
-      ],
+    ];
+
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final crossAxisCount = actions.length == 3
+            ? 3
+            : (constraints.maxWidth < 450 ? 2 : 4);
+        final itemWidth =
+            (constraints.maxWidth - (crossAxisCount - 1) * AppSpacing.md) /
+            crossAxisCount;
+
+        return Wrap(
+          spacing: AppSpacing.md,
+          runSpacing: AppSpacing.md,
+          children: actions.map((action) {
+            return SizedBox(
+              width: itemWidth,
+              child: _buildQuickActionCard(
+                context,
+                action: action,
+                compact: crossAxisCount == 3,
+                useCompactLabel:
+                    crossAxisCount == 3 && constraints.maxWidth < 390,
+              ),
+            );
+          }).toList(),
+        );
+      },
     );
   }
 
   Widget _buildQuickActionCard(
     BuildContext context, {
-    required String title,
-    required String subtitle,
-    required IconData icon,
-    required Color color,
-    required VoidCallback onTap,
+    required _QuickActionItem action,
+    required bool compact,
+    required bool useCompactLabel,
   }) {
     final theme = Theme.of(context);
 
     return AppCard(
-      padding: const EdgeInsets.all(AppSpacing.lg),
-      onTap: onTap,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Container(
-            padding: const EdgeInsets.all(AppSpacing.sm + 2),
-            decoration: BoxDecoration(
-              color: color.withAlpha((255 * 0.12).round()),
-              borderRadius: AppBorders.borderRadiusM,
+      padding: EdgeInsets.symmetric(
+        horizontal: compact ? AppSpacing.xs : AppSpacing.md,
+        vertical: compact ? AppSpacing.sm : AppSpacing.md,
+      ),
+      onTap: action.onTap,
+      child: ConstrainedBox(
+        constraints: BoxConstraints(minHeight: compact ? 60 : 80),
+        child: Column(
+          crossAxisAlignment: compact
+              ? CrossAxisAlignment.center
+              : CrossAxisAlignment.start,
+          mainAxisAlignment: compact
+              ? MainAxisAlignment.center
+              : MainAxisAlignment.spaceBetween,
+          children: [
+            Container(
+              padding: EdgeInsets.all(compact ? AppSpacing.xs : AppSpacing.sm),
+              decoration: BoxDecoration(
+                color: action.color.withAlpha((255 * 0.12).round()),
+                borderRadius: AppBorders.borderRadiusM,
+              ),
+              child: Icon(action.icon, color: action.color, size: 20),
             ),
-            child: Icon(icon, color: color, size: 22),
-          ),
-          const SizedBox(height: AppSpacing.md),
-          Text(
-            title,
-            style: theme.textTheme.titleMedium?.copyWith(
-              fontWeight: FontWeight.w700,
-              color: theme.colorScheme.onSurface,
+            SizedBox(height: compact ? AppSpacing.xs : AppSpacing.sm),
+            Text(
+              useCompactLabel ? action.compactTitle : action.title,
+              textAlign: compact ? TextAlign.center : TextAlign.start,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: theme.textTheme.titleSmall?.copyWith(
+                fontWeight: FontWeight.w700,
+                color: theme.colorScheme.onSurface,
+              ),
             ),
-          ),
-          const SizedBox(height: AppSpacing.xs),
-          Text(
-            subtitle,
-            style: theme.textTheme.bodySmall?.copyWith(
-              color: theme.colorScheme.onSurfaceVariant,
-              fontWeight: FontWeight.w500,
-            ),
-          ),
-        ],
+            if (!compact)
+              Text(
+                action.subtitle,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color: theme.colorScheme.onSurfaceVariant,
+                  fontSize: 11,
+                ),
+              ),
+          ],
+        ),
       ),
     );
   }
+}
+
+class _QuickActionItem {
+  final String title;
+  final String compactTitle;
+  final String subtitle;
+  final IconData icon;
+  final Color color;
+  final VoidCallback onTap;
+
+  const _QuickActionItem({
+    required this.title,
+    required this.compactTitle,
+    required this.subtitle,
+    required this.icon,
+    required this.color,
+    required this.onTap,
+  });
 }

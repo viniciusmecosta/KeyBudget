@@ -1,74 +1,151 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:local_auth/local_auth.dart';
 import 'package:local_auth_android/local_auth_android.dart';
 
+enum LocalAuthAvailability {
+  supported,
+  deviceCredentialOnly,
+  noBiometricsEnrolled,
+  notSupported,
+}
+
+enum LocalAuthResult {
+  success,
+  cancelled,
+  temporarilyLockedOut,
+  permanentlyLockedOut,
+  notAvailable,
+  failed,
+}
+
 class LocalAuthService {
-  final LocalAuthentication _auth = LocalAuthentication();
-  final _storage = const FlutterSecureStorage();
+  final LocalAuthentication _auth;
+  final FlutterSecureStorage _storage;
   static const _emailKey = 'last_user_email';
   static const _passwordKey = 'last_user_password';
 
+  LocalAuthService({
+    LocalAuthentication? auth,
+    FlutterSecureStorage? storage,
+  })  : _auth = auth ?? LocalAuthentication(),
+        _storage = storage ?? const FlutterSecureStorage();
+
   Future<bool> canAuthenticate() async {
     try {
-      final bool canAuthenticateWithBiometrics = await _auth.canCheckBiometrics;
-      final List<BiometricType> availableBiometrics = await _auth
-          .getAvailableBiometrics();
-      return canAuthenticateWithBiometrics && availableBiometrics.isNotEmpty;
-    } catch (e) {
+      final bool isDeviceSupported = await _auth.isDeviceSupported();
+      final bool canCheckBiometrics = await _auth.canCheckBiometrics;
+      return isDeviceSupported || canCheckBiometrics;
+    } catch (_) {
       return false;
     }
   }
 
-  Future<bool> authenticate() async {
+  Future<LocalAuthAvailability> checkAvailability() async {
+    try {
+      final bool isSupported = await _auth.isDeviceSupported();
+      final bool canCheck = await _auth.canCheckBiometrics;
+      if (!isSupported && !canCheck) {
+        return LocalAuthAvailability.notSupported;
+      }
+
+      final List<BiometricType> biometrics =
+          await _auth.getAvailableBiometrics();
+      if (biometrics.isNotEmpty) {
+        return LocalAuthAvailability.supported;
+      }
+      if (isSupported) {
+        return LocalAuthAvailability.deviceCredentialOnly;
+      }
+      return LocalAuthAvailability.noBiometricsEnrolled;
+    } catch (_) {
+      return LocalAuthAvailability.notSupported;
+    }
+  }
+
+  Future<LocalAuthResult> authenticateLocal({
+    String reason = 'Confirme sua identidade',
+  }) async {
     final bool canAuth = await canAuthenticate();
-    if (!canAuth) return false;
+    if (!canAuth) return LocalAuthResult.notAvailable;
 
     try {
       final bool authenticated = await _auth.authenticate(
-        localizedReason: 'Confirme sua identidade',
+        localizedReason: reason,
         authMessages: const <AuthMessages>[
           AndroidAuthMessages(
-            signInTitle: ' ',
+            signInTitle: 'Confirme sua identidade',
             cancelButton: 'Cancelar',
-            signInHint: ' ',
+            signInHint: 'Toque no sensor biométrico ou use sua senha',
           ),
         ],
+        biometricOnly: false,
+        sensitiveTransaction: true,
+        persistAcrossBackgrounding: true,
       );
 
       if (authenticated) {
         await HapticFeedback.lightImpact();
+        return LocalAuthResult.success;
       } else {
         await HapticFeedback.vibrate();
+        return LocalAuthResult.cancelled;
       }
-
-      return authenticated;
-    } catch (e) {
+    } on PlatformException catch (e) {
       await HapticFeedback.vibrate();
-      return false;
+      if (e.code == 'LockedOut') {
+        return LocalAuthResult.temporarilyLockedOut;
+      } else if (e.code == 'PermanentlyLockedOut') {
+        return LocalAuthResult.permanentlyLockedOut;
+      } else if (e.code == 'NotAvailable') {
+        return LocalAuthResult.notAvailable;
+      }
+      return LocalAuthResult.failed;
+    } catch (_) {
+      await HapticFeedback.vibrate();
+      return LocalAuthResult.failed;
     }
   }
 
+  Future<bool> authenticate() async {
+    final result = await authenticateLocal();
+    return result == LocalAuthResult.success;
+  }
+
   Future<void> stopAuthentication() async {
-    await _auth.stopAuthentication();
+    try {
+      await _auth.stopAuthentication();
+    } catch (_) {}
   }
 
   Future<void> saveCredentials(String email, String password) async {
-    await _storage.write(key: _emailKey, value: email);
-    await _storage.write(key: _passwordKey, value: password);
+
   }
 
   Future<Map<String, String>?> getCredentials() async {
-    final email = await _storage.read(key: _emailKey);
-    final password = await _storage.read(key: _passwordKey);
-    if (email != null && password != null) {
-      return {'email': email, 'password': password};
+    try {
+      final email = await _storage.read(key: _emailKey);
+      final password = await _storage.read(key: _passwordKey);
+      if (email != null && password != null) {
+        return {'email': email, 'password': password};
+      }
+    } catch (e) {
+      if (kDebugMode) {
+        print("Error reading credentials: $e");
+      }
     }
     return null;
   }
 
   Future<void> clearCredentials() async {
-    await _storage.delete(key: _emailKey);
-    await _storage.delete(key: _passwordKey);
+    try {
+      await _storage.delete(key: _emailKey);
+      await _storage.delete(key: _passwordKey);
+    } catch (e) {
+      if (kDebugMode) {
+        print("Error clearing legacy credentials: $e");
+      }
+    }
   }
 }

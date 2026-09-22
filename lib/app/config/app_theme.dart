@@ -3,10 +3,10 @@ import 'package:flutter/services.dart';
 import 'package:key_budget/core/design_system/borders/app_borders.dart';
 import 'package:key_budget/core/design_system/colors/app_colors.dart';
 import 'package:key_budget/core/design_system/spacing/app_spacing.dart';
+import 'package:key_budget/core/design_system/theme/app_semantic_colors.dart';
 import 'package:key_budget/core/design_system/typography/app_typography.dart';
 
 class AppTheme {
-  // Legacy aliases to prevent breaking old code during migration
   static const double spaceXS = AppSpacing.xxs;
   static const double spaceS = AppSpacing.xs;
   static const double spaceM = AppSpacing.md;
@@ -63,6 +63,9 @@ class AppTheme {
         ? Color(colorValue)
         : (isDark ? AppColors.primaryDark : AppColors.primary);
     final primaryColor = basePrimary;
+    final onPrimaryColor = primaryColor.computeLuminance() > 0.5
+        ? Colors.black
+        : Colors.white;
     final backgroundColor = isDark
         ? AppColors.backgroundDark
         : AppColors.backgroundLight;
@@ -84,10 +87,13 @@ class AppTheme {
       brightness: isDark ? Brightness.dark : Brightness.light,
       scaffoldBackgroundColor: backgroundColor,
       primaryColor: primaryColor,
+      extensions: [
+        isDark ? AppSemanticColors.dark() : AppSemanticColors.light(),
+      ],
       colorScheme: ColorScheme(
         brightness: isDark ? Brightness.dark : Brightness.light,
         primary: primaryColor,
-        onPrimary: Colors.white,
+        onPrimary: onPrimaryColor,
         secondary: AppColors.secondary,
         onSecondary: Colors.white,
         tertiary: AppColors.tertiary,
@@ -119,7 +125,7 @@ class AppTheme {
       elevatedButtonTheme: ElevatedButtonThemeData(
         style: ElevatedButton.styleFrom(
           backgroundColor: primaryColor,
-          foregroundColor: Colors.white,
+          foregroundColor: onPrimaryColor,
           padding: const EdgeInsets.symmetric(
             horizontal: AppSpacing.lg,
             vertical: AppSpacing.md,

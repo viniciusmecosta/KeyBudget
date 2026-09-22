@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
+import 'package:key_budget/app/navigation/app_destination.dart';
 import 'package:key_budget/app/utils/app_animations.dart';
 import 'package:key_budget/app/viewmodel/navigation_viewmodel.dart';
 import 'package:key_budget/app/widgets/balance_card.dart';
@@ -18,14 +19,102 @@ class DashboardBalanceCard extends ConsumerStatefulWidget {
       _DashboardBalanceCardState();
 }
 
-class _DashboardBalanceCardState extends ConsumerState<DashboardBalanceCard> {
+class _DashboardBalanceCardState extends ConsumerState<DashboardBalanceCard>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _controller;
+  late Animation<double> _animation;
+
+  int _lastSeenRefreshCount = -1;
+  double _scheduledTargetTotal = double.nan;
+  double _scheduledTargetBalance = double.nan;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      duration: AppAnimations.durationSlow,
+      vsync: this,
+    );
+    _animation = Tween<double>(
+      begin: 0,
+      end: 0,
+    ).animate(CurvedAnimation(parent: _controller, curve: AppAnimations.curve));
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  void _animateTo({
+    required double from,
+    required double to,
+    required bool enableIncomes,
+    required DashboardViewModel viewModel,
+  }) {
+    viewModel.onAnimationStartedTo(
+      total: enableIncomes ? viewModel.lastAnimatedTotalForMonth : to,
+      balance: enableIncomes ? to : viewModel.lastAnimatedBalanceForMonth,
+    );
+
+    _animation = Tween<double>(
+      begin: from,
+      end: to,
+    ).animate(CurvedAnimation(parent: _controller, curve: AppAnimations.curve));
+    _controller
+      ..reset()
+      ..forward();
+  }
+
   @override
   Widget build(BuildContext context) {
     final viewModel = ref.watch(dashboardViewModelProvider);
     final theme = Theme.of(context);
-
     final authViewModel = ref.watch(authViewModelProvider);
     final enableIncomes = authViewModel.currentUser?.enableIncomes ?? false;
+
+    final currentValue = enableIncomes
+        ? viewModel.balanceForMonth
+        : viewModel.totalAmountForMonth;
+
+    final fromValue = enableIncomes
+        ? viewModel.lastAnimatedBalanceForMonth
+        : viewModel.lastAnimatedTotalForMonth;
+
+    final isNewRefresh = _lastSeenRefreshCount != viewModel.refreshCount;
+
+    if (isNewRefresh) {
+      _lastSeenRefreshCount = viewModel.refreshCount;
+      _scheduledTargetTotal = viewModel.totalAmountForMonth;
+      _scheduledTargetBalance = viewModel.balanceForMonth;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) return;
+        _animateTo(
+          from: 0,
+          to: currentValue,
+          enableIncomes: enableIncomes,
+          viewModel: viewModel,
+        );
+      });
+    } else {
+      final scheduledTarget = enableIncomes
+          ? _scheduledTargetBalance
+          : _scheduledTargetTotal;
+      if (currentValue != scheduledTarget) {
+        _scheduledTargetTotal = viewModel.totalAmountForMonth;
+        _scheduledTargetBalance = viewModel.balanceForMonth;
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (!mounted) return;
+          _animateTo(
+            from: fromValue,
+            to: currentValue,
+            enableIncomes: enableIncomes,
+            viewModel: viewModel,
+          );
+        });
+      }
+    }
 
     final percentageChange = viewModel.percentageChangeFromAverage(
       enableIncomes,
@@ -74,41 +163,39 @@ class _DashboardBalanceCardState extends ConsumerState<DashboardBalanceCard> {
                 ),
               ),
               const SizedBox(width: 6),
-              Text(
-                enableIncomes
-                    ? 'em relação à média de saldo'
-                    : 'em relação à média de gastos',
-                style: theme.textTheme.bodySmall?.copyWith(
-                  color: theme.colorScheme.onPrimary.withAlpha(
-                    (255 * 0.8).round(),
+              Flexible(
+                child: Text(
+                  enableIncomes
+                      ? 'em relação à média anterior'
+                      : 'em relação à média anterior de gastos',
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: theme.colorScheme.onPrimary.withAlpha(
+                      (255 * 0.8).round(),
+                    ),
+                    fontSize: 11,
                   ),
-                  fontSize: 11,
                 ),
               ),
             ],
           )
-        : null;
+        : Text(
+            'Sem histórico anterior para comparação',
+            style: theme.textTheme.bodySmall?.copyWith(
+              color: theme.colorScheme.onPrimary.withAlpha(
+                (255 * 0.75).round(),
+              ),
+              fontSize: 11,
+            ),
+          );
 
     final currencyFormatter = NumberFormat.currency(
       locale: 'pt_BR',
       symbol: 'R\$',
     );
 
-    return TweenAnimationBuilder<double>(
-      key: ValueKey(
-        enableIncomes
-            ? viewModel.balanceForMonth
-            : viewModel.totalAmountForMonth,
-      ),
-      tween: Tween<double>(
-        begin: 0,
-        end: enableIncomes
-            ? viewModel.balanceForMonth
-            : viewModel.totalAmountForMonth,
-      ),
-      duration: AppAnimations.durationSlow,
-      curve: AppAnimations.curve,
-      builder: (context, value, child) {
+    return AnimatedBuilder(
+      animation: _animation,
+      builder: (context, _) {
         final primaryHue = HSLColor.fromColor(theme.colorScheme.primary).hue;
         final isGreenish = primaryHue >= 70 && primaryHue <= 160;
         final isReddish = primaryHue >= 330 || primaryHue <= 20;
@@ -120,8 +207,8 @@ class _DashboardBalanceCardState extends ConsumerState<DashboardBalanceCard> {
             : theme.colorScheme.error;
 
         return BalanceCard(
-          title: enableIncomes ? 'Saldo do Mês' : 'Gasto Total do Mês',
-          totalValue: value,
+          title: enableIncomes ? 'Saldo do período' : 'Despesas do mês',
+          totalValue: _animation.value,
           gradient: LinearGradient(
             colors: [
               theme.colorScheme.primary,
@@ -131,16 +218,20 @@ class _DashboardBalanceCardState extends ConsumerState<DashboardBalanceCard> {
             end: Alignment.bottomRight,
           ),
           onTap: () {
-            ref.read(navigationViewModelProvider).selectedIndex = 1;
+            ref
+                .read(navigationViewModelProvider)
+                .navigateTo(AppDestination.expenses);
           },
           valueSubtitle: valueSubtitle,
           subtitle: enableIncomes
-              ? Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Padding(
-                      padding: const EdgeInsets.only(top: AppSpacing.xs),
-                      child: Row(
+              ? Padding(
+                  padding: const EdgeInsets.only(top: AppSpacing.xs),
+                  child: Wrap(
+                    spacing: AppSpacing.lg,
+                    runSpacing: AppSpacing.xs,
+                    children: [
+                      Row(
+                        mainAxisSize: MainAxisSize.min,
                         children: [
                           Icon(
                             Icons.arrow_circle_up_rounded,
@@ -149,25 +240,7 @@ class _DashboardBalanceCardState extends ConsumerState<DashboardBalanceCard> {
                           ),
                           const SizedBox(width: 6),
                           Text(
-                            currencyFormatter.format(
-                              viewModel.totalIncomeForMonth,
-                            ),
-                            style: theme.textTheme.bodyMedium?.copyWith(
-                              color: theme.colorScheme.onPrimary,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                          const SizedBox(width: AppSpacing.lg),
-                          Icon(
-                            Icons.arrow_circle_down_rounded,
-                            color: expenseIconColor,
-                            size: 18,
-                          ),
-                          const SizedBox(width: 6),
-                          Text(
-                            currencyFormatter.format(
-                              viewModel.totalAmountForMonth,
-                            ),
+                            'Receitas: ${currencyFormatter.format(viewModel.totalIncomeForMonth)}',
                             style: theme.textTheme.bodyMedium?.copyWith(
                               color: theme.colorScheme.onPrimary,
                               fontWeight: FontWeight.w600,
@@ -175,8 +248,26 @@ class _DashboardBalanceCardState extends ConsumerState<DashboardBalanceCard> {
                           ),
                         ],
                       ),
-                    ),
-                  ],
+                      Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(
+                            Icons.arrow_circle_down_rounded,
+                            color: expenseIconColor,
+                            size: 18,
+                          ),
+                          const SizedBox(width: 6),
+                          Text(
+                            'Despesas: ${currencyFormatter.format(viewModel.totalAmountForMonth)}',
+                            style: theme.textTheme.bodyMedium?.copyWith(
+                              color: theme.colorScheme.onPrimary,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
                 )
               : null,
         );

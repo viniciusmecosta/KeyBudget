@@ -9,6 +9,7 @@ import 'package:key_budget/core/design_system/spacing/app_spacing.dart';
 import 'package:key_budget/core/design_system/widgets/app_button.dart';
 import 'package:key_budget/core/models/expense_category_model.dart';
 import 'package:key_budget/core/models/expense_model.dart';
+import 'package:key_budget/core/money/money_parser.dart';
 import 'package:key_budget/core/services/snackbar_service.dart';
 import 'package:key_budget/features/auth/viewmodel/auth_viewmodel.dart';
 import 'package:key_budget/features/category/viewmodel/category_viewmodel.dart';
@@ -69,7 +70,8 @@ class _ExpenseDetailScreenState extends ConsumerState<ExpenseDetailScreen> {
   void _saveChanges() async {
     if (!_formKey.currentState!.validate()) return;
 
-    if (_amountController.numberValue == 0) {
+    final money = MoneyParser.fromMaskedText(_amountController.text);
+    if (money.isZero) {
       SnackbarService.showError(context, 'O valor não pode ser zero.');
       return;
     }
@@ -80,9 +82,15 @@ class _ExpenseDetailScreenState extends ConsumerState<ExpenseDetailScreen> {
     final authViewModel = ref.read(authViewModelProvider);
     final userId = authViewModel.currentUser!.id;
 
-    final updatedExpense = Expense(
-      id: widget.expense.id,
-      amount: _amountController.numberValue,
+    final currentMinor =
+        widget.expense.amountMinor ?? widget.expense.money.amountMinor;
+    final bool amountChanged = money.amountMinor != currentMinor;
+
+    final updatedExpense = widget.expense.copyWith(
+      amount: amountChanged ? money.toDouble() : null,
+      amountMinor: amountChanged ? money.amountMinor : null,
+      currency: amountChanged ? money.currency : null,
+      moneyVersion: amountChanged ? 1 : null,
       date: _selectedDate,
       categoryId: _selectedCategory?.id,
       motivation: _motivationController.text.isNotEmpty
@@ -91,19 +99,25 @@ class _ExpenseDetailScreenState extends ConsumerState<ExpenseDetailScreen> {
       location: _locationController.text.isNotEmpty
           ? _locationController.text
           : null,
-      installmentGroupId: widget.expense.installmentGroupId,
-      currentInstallment: widget.expense.currentInstallment,
-      totalInstallments: widget.expense.totalInstallments,
       isIncome: _isIncome,
     );
 
-    await ref
-        .read(expenseViewModelProvider)
-        .updateExpense(userId, updatedExpense);
+    try {
+      await ref
+          .read(expenseViewModelProvider)
+          .updateExpense(userId, updatedExpense);
 
-    if (mounted) {
-      setState(() => _isSaving = false);
-      Navigator.of(context).pop();
+      if (mounted) {
+        Navigator.of(context).pop();
+      }
+    } catch (e) {
+      if (mounted) {
+        SnackbarService.showError(context, 'Erro ao salvar alterações da despesa.');
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isSaving = false);
+      }
     }
   }
 
@@ -310,6 +324,8 @@ class _ExpenseDetailScreenState extends ConsumerState<ExpenseDetailScreen> {
                   },
                   isEditing: _isEditing,
                   isIncome: _isIncome,
+                  isSingleInstallmentEdit: widget.expense.installmentGroupId != null ||
+                      widget.expense.currentInstallment != null,
                   bottomWidgets: related.isEmpty
                       ? null
                       : [

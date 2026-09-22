@@ -9,6 +9,7 @@ import 'package:key_budget/core/design_system/borders/app_borders.dart';
 import 'package:key_budget/core/design_system/spacing/app_spacing.dart';
 import 'package:key_budget/core/models/credential_model.dart';
 import 'package:key_budget/core/models/folder_model.dart';
+import 'package:key_budget/core/services/app_lock_service.dart';
 import 'package:key_budget/features/auth/viewmodel/auth_viewmodel.dart';
 import 'package:key_budget/features/credentials/view/add_credential_screen.dart';
 import 'package:key_budget/features/credentials/viewmodel/credential_viewmodel.dart';
@@ -64,8 +65,17 @@ class _CredentialsScreenState extends ConsumerState<CredentialsScreen> {
 
     final viewModel = ref.read(credentialViewModelProvider);
     final authViewModel = ref.read(authViewModelProvider);
+    final appLock = ref.read(appLockServiceProvider);
 
-    await viewModel.importCredentialsFromCsv(authViewModel.currentUser!.id);
+    appLock.beginExternalPick();
+    try {
+      await viewModel.importCredentialsFromCsv(
+        authViewModel.currentUser!.id,
+        context: context,
+      );
+    } finally {
+      appLock.endExternalPick();
+    }
 
     if (mounted) setState(() => _isProcessing = false);
   }
@@ -86,7 +96,7 @@ class _CredentialsScreenState extends ConsumerState<CredentialsScreen> {
 
   void _showCreateFolderDialog(BuildContext context, String userId) {
     final controller = TextEditingController();
-    int selectedColorValue = 0xFF3B82F6; // default color
+    int selectedColorValue = 0xFF3B82F6;
     final theme = Theme.of(context);
 
     showDialog(
@@ -140,14 +150,14 @@ class _CredentialsScreenState extends ConsumerState<CredentialsScreen> {
                     alignment: WrapAlignment.center,
                     children:
                         [
-                          0xFF3B82F6, // Blue
-                          0xFF10B981, // Emerald
-                          0xFFF59E0B, // Amber
-                          0xFFEF4444, // Red
-                          0xFF8B5CF6, // Violet
-                          0xFFEC4899, // Pink
-                          0xFF14B8A6, // Teal
-                          0xFF64748B, // Slate
+                          0xFF3B82F6,
+                          0xFF10B981,
+                          0xFFF59E0B,
+                          0xFFEF4444,
+                          0xFF8B5CF6,
+                          0xFFEC4899,
+                          0xFF14B8A6,
+                          0xFF64748B,
                         ].map((colorValue) {
                           final isSelected = selectedColorValue == colorValue;
                           return GestureDetector(
@@ -393,12 +403,35 @@ class _CredentialsScreenState extends ConsumerState<CredentialsScreen> {
                         child: SingleChildScrollView(
                           physics: const AlwaysScrollableScrollPhysics(),
                           child: EmptyStateWidget(
-                            icon: vm.currentFolderId != null
-                                ? Icons.folder_open
-                                : Icons.key_off_outlined,
-                            message: vm.currentFolderId != null
-                                ? 'Pasta vazia'
-                                : 'Nenhuma credencial encontrada',
+                            icon: _isSearching || vm.searchQuery.isNotEmpty
+                                ? Icons.search_off_outlined
+                                : (vm.currentFolderId != null
+                                    ? Icons.folder_open_outlined
+                                    : Icons.key_off_outlined),
+                            message: _isSearching || vm.searchQuery.isNotEmpty
+                                ? 'Nenhuma credencial encontrada para a busca'
+                                : (vm.currentFolderId != null
+                                    ? 'Esta pasta está vazia'
+                                    : 'Nenhuma credencial encontrada'),
+                            buttonText: _isSearching || vm.searchQuery.isNotEmpty
+                                ? 'Limpar busca'
+                                : (vm.currentFolderId != null
+                                    ? 'Adicionar credencial'
+                                    : 'Nova credencial'),
+                            onButtonPressed: () {
+                              if (_isSearching || vm.searchQuery.isNotEmpty) {
+                                setState(() {
+                                  _isSearching = false;
+                                  _searchController.clear();
+                                  vm.setSearchQuery('');
+                                });
+                              } else {
+                                NavigationUtils.push(
+                                  context,
+                                  const AddCredentialScreen(),
+                                );
+                              }
+                            },
                           ),
                         ),
                       )

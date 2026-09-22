@@ -7,7 +7,9 @@ import 'package:key_budget/features/auth/viewmodel/auth_viewmodel.dart';
 import 'package:key_budget/core/design_system/widgets/app_button.dart';
 
 class LockScreen extends ConsumerStatefulWidget {
-  const LockScreen({super.key});
+  final LocalAuthService? localAuthService;
+
+  const LockScreen({super.key, this.localAuthService});
 
   @override
   ConsumerState<LockScreen> createState() => _LockScreenState();
@@ -16,13 +18,18 @@ class LockScreen extends ConsumerStatefulWidget {
 class _LockScreenState extends ConsumerState<LockScreen>
     with SingleTickerProviderStateMixin, WidgetsBindingObserver {
   bool _isAuthenticating = false;
+  bool _hasUserCancelled = false;
+  LocalAuthAvailability? _availability;
+  String? _statusFeedback;
   late AnimationController _pulseController;
+  late final LocalAuthService _localAuthService;
 
   @override
   void initState() {
     super.initState();
+    _localAuthService = widget.localAuthService ?? LocalAuthService();
     WidgetsBinding.instance.addObserver(this);
-    
+
     _pulseController = AnimationController(
       vsync: this,
       duration: const Duration(seconds: 2),
@@ -30,9 +37,22 @@ class _LockScreenState extends ConsumerState<LockScreen>
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) {
-        _authenticate();
+        _checkAvailabilityAndPrompt();
       }
     });
+  }
+
+  Future<void> _checkAvailabilityAndPrompt() async {
+    final availability = await _localAuthService.checkAvailability();
+    if (!mounted) return;
+    setState(() => _availability = availability);
+
+    if (availability != LocalAuthAvailability.notSupported) {
+      if (WidgetsBinding.instance.lifecycleState == AppLifecycleState.resumed &&
+          !_hasUserCancelled) {
+        _authenticate();
+      }
+    }
   }
 
   @override
@@ -45,11 +65,18 @@ class _LockScreenState extends ConsumerState<LockScreen>
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     super.didChangeAppLifecycleState(state);
-    if (state == AppLifecycleState.paused) {
-      if (mounted) {
-        setState(() {
-          _isAuthenticating = false;
-        });
+
+    if (state == AppLifecycleState.resumed) {
+      if (!_isAuthenticating && !_hasUserCancelled && mounted) {
+        if (_availability != LocalAuthAvailability.notSupported) {
+          _authenticate();
+        }
+      }
+    } else if (state == AppLifecycleState.paused) {
+      if (_isAuthenticating && mounted) {
+        _localAuthService.stopAuthentication();
+        setState(() => _isAuthenticating = false);
+        ref.read(appLockServiceProvider).isAuthenticating = false;
       }
     }
   }
@@ -57,22 +84,77 @@ class _LockScreenState extends ConsumerState<LockScreen>
   Future<void> _authenticate() async {
     if (_isAuthenticating) return;
 
-    setState(() => _isAuthenticating = true);
+    final startUid = ref.read(authViewModelProvider).currentUser?.id;
+    setState(() {
+      _isAuthenticating = true;
+      _statusFeedback = null;
+    });
 
     final appLockService = ref.read(appLockServiceProvider);
     appLockService.isAuthenticating = true;
 
-    final localAuthService = LocalAuthService();
-    final isAuthenticated = await localAuthService.authenticate();
+    try {
+      final result = await _localAuthService.authenticateLocal();
 
-    appLockService.isAuthenticating = false;
+      if (!mounted) return;
+      final currentUid = ref.read(authViewModelProvider).currentUser?.id;
+      if (currentUid != startUid) {
 
-    if (!mounted) return;
+        return;
+      }
 
-    if (isAuthenticated) {
-      ref.read(appLockServiceProvider).unlockApp();
-    } else {
-      setState(() => _isAuthenticating = false);
+      switch (result) {
+        case LocalAuthResult.success:
+          _hasUserCancelled = false;
+          ref.read(appLockServiceProvider).unlockApp();
+          break;
+        case LocalAuthResult.cancelled:
+          _hasUserCancelled = true;
+          setState(() {
+            _isAuthenticating = false;
+            _statusFeedback = 'Autenticação cancelada. Toque para tentar novamente.';
+          });
+          break;
+        case LocalAuthResult.temporarilyLockedOut:
+          _hasUserCancelled = true;
+          setState(() {
+            _isAuthenticating = false;
+            _statusFeedback =
+                'Muitas tentativas. Aguarde alguns instantes antes de tentar.';
+          });
+          break;
+        case LocalAuthResult.permanentlyLockedOut:
+          _hasUserCancelled = true;
+          setState(() {
+            _isAuthenticating = false;
+            _statusFeedback =
+                'Biometria bloqueada. Use a senha do dispositivo ou saia da conta.';
+          });
+          break;
+        case LocalAuthResult.notAvailable:
+          setState(() {
+            _isAuthenticating = false;
+            _availability = LocalAuthAvailability.notSupported;
+            _statusFeedback =
+                'Autenticação biométrica/PIN não disponível neste dispositivo.';
+          });
+          break;
+        case LocalAuthResult.failed:
+          setState(() {
+            _isAuthenticating = false;
+            _statusFeedback = 'Falha na verificação. Tente novamente.';
+          });
+          break;
+      }
+    } catch (_) {
+      if (mounted) {
+        setState(() {
+          _isAuthenticating = false;
+          _statusFeedback = 'Erro inesperado na verificação.';
+        });
+      }
+    } finally {
+      appLockService.isAuthenticating = false;
     }
   }
 
@@ -146,29 +228,45 @@ class _LockScreenState extends ConsumerState<LockScreen>
                     ),
                     const SizedBox(height: 12),
                     Text(
-                      'Sua privacidade e segurança estão ativas.\nToque abaixo para confirmar sua identidade.',
+                      _availability == LocalAuthAvailability.notSupported
+                          ? 'Autenticação biométrica não suportada neste aparelho.\nFaça login novamente para continuar.'
+                          : 'Sua privacidade e segurança estão ativas.\nToque abaixo para confirmar sua identidade.',
                       textAlign: TextAlign.center,
                       style: theme.textTheme.bodyMedium?.copyWith(
-                        color: theme.colorScheme.onSurface.withValues(alpha: 0.7),
+                        color:
+                            theme.colorScheme.onSurface.withValues(alpha: 0.7),
                         height: 1.5,
                       ),
                     ),
-                    const SizedBox(height: 48),
-                    SizedBox(
-                      width: double.infinity,
-                      height: 56,
-                      child: AppButton(
-                        onPressed: _isAuthenticating ? null : _authenticate,
-                        isLoading: _isAuthenticating,
-                        label: 'Desbloquear KeyBudget',
-                        icon: Icons.fingerprint,
+                    if (_statusFeedback != null) ...[
+                      const SizedBox(height: 16),
+                      Text(
+                        _statusFeedback!,
+                        textAlign: TextAlign.center,
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          color: theme.colorScheme.error,
+                          fontWeight: FontWeight.w500,
+                        ),
                       ),
-                    ),
+                    ],
+                    const SizedBox(height: 36),
+                    if (_availability != LocalAuthAvailability.notSupported)
+                      SizedBox(
+                        width: double.infinity,
+                        height: 56,
+                        child: AppButton(
+                          onPressed: _isAuthenticating ? null : _authenticate,
+                          isLoading: _isAuthenticating,
+                          label: 'Desbloquear KeyBudget',
+                          icon: Icons.fingerprint,
+                        ),
+                      ),
                     const SizedBox(height: 16),
                     TextButton.icon(
                       onPressed: () async {
                         final authViewModel = ref.read(authViewModelProvider);
-                        final appLockService = ref.read(appLockServiceProvider);
+                        final appLockService =
+                            ref.read(appLockServiceProvider);
                         await authViewModel.logout(context, ref);
                         appLockService.unlockApp();
                       },

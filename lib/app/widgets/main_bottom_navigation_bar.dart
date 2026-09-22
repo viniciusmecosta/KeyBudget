@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_nav_bar/google_nav_bar.dart';
 import 'package:key_budget/app/config/app_theme.dart';
+import 'package:key_budget/app/navigation/app_destination.dart';
 import 'package:key_budget/app/viewmodel/navigation_viewmodel.dart';
 import 'package:key_budget/features/auth/viewmodel/auth_viewmodel.dart';
 
@@ -18,11 +19,20 @@ class MainBottomNavigationBar extends ConsumerWidget {
     final theme = Theme.of(context);
     final isDarkMode = theme.brightness == Brightness.dark;
 
-    var selectedIndex = navigationViewModel.selectedIndex;
-    final tabCount = enableSuppliers ? 6 : 5;
-    if (selectedIndex >= tabCount) {
-      selectedIndex = tabCount - 1;
-    }
+    final currentDest = navigationViewModel.currentDestination;
+
+    final destinations = <AppDestination>[
+      AppDestination.dashboard,
+      AppDestination.expenses,
+      AppDestination.credentials,
+      AppDestination.documents,
+      if (enableSuppliers) AppDestination.suppliers,
+      AppDestination.profile,
+    ];
+    final activeTabIndex = destinations
+        .indexOf(currentDest)
+        .clamp(0, destinations.length - 1)
+        .toInt();
 
     return Container(
       decoration: BoxDecoration(
@@ -57,7 +67,7 @@ class MainBottomNavigationBar extends ConsumerWidget {
               horizontal: AppTheme.spaceS,
               vertical: AppTheme.spaceS + 2,
             ),
-            duration: const Duration(milliseconds: 400),
+            duration: const Duration(milliseconds: 200),
             tabBackgroundColor: theme.colorScheme.primary.withAlpha(
               (255 * 0.1).round(),
             ),
@@ -80,10 +90,10 @@ class MainBottomNavigationBar extends ConsumerWidget {
                 ),
               const GButton(icon: Icons.person_rounded, text: 'Perfil'),
             ],
-            selectedIndex: selectedIndex,
+            selectedIndex: activeTabIndex,
             onTabChange: (index) {
               HapticFeedback.selectionClick();
-              navigationViewModel.selectedIndex = index;
+              navigationViewModel.navigateTo(destinations[index]);
             },
           ),
         ),

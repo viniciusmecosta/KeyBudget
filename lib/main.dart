@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -40,8 +42,8 @@ class _AppInitializerState extends ConsumerState<AppInitializer> {
   Future<void> _initServices() async {
     await AppConfig.initialize();
     ref.read(authViewModelProvider);
-    HomeWidgetService.initialize();
-    NotificationService.initialize();
+    await HomeWidgetService.initialize();
+    await NotificationService.initialize();
   }
 
   @override
@@ -83,12 +85,15 @@ class MyApp extends ConsumerStatefulWidget {
 
 class _MyAppState extends ConsumerState<MyApp> with WidgetsBindingObserver {
   Uri? _pendingWidgetUri;
+  StreamSubscription<Uri?>? _widgetClickedSubscription;
 
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
-    HomeWidget.widgetClicked.listen(_launchedFromWidget);
+    _widgetClickedSubscription = HomeWidget.widgetClicked.listen(
+      _launchedFromWidget,
+    );
     _checkInitialWidgetLaunch();
   }
 
@@ -145,9 +150,21 @@ class _MyAppState extends ConsumerState<MyApp> with WidgetsBindingObserver {
     }
   }
 
+  ThemeMode _resolveThemeMode(String? storedMode) {
+    switch (storedMode) {
+      case 'light':
+        return ThemeMode.light;
+      case 'dark':
+        return ThemeMode.dark;
+      default:
+        return ThemeMode.system;
+    }
+  }
+
   @override
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
+    _widgetClickedSubscription?.cancel();
     super.dispose();
   }
 
@@ -175,7 +192,7 @@ class _MyAppState extends ConsumerState<MyApp> with WidgetsBindingObserver {
       title: 'KeyBudget',
       theme: AppTheme.getTheme(isDark: false, colorValue: themeColor),
       darkTheme: AppTheme.getTheme(isDark: true, colorValue: themeColor),
-      themeMode: ThemeMode.system,
+      themeMode: _resolveThemeMode(user?.effectiveThemeMode),
       debugShowCheckedModeBanner: false,
       scrollBehavior: const AppScrollBehavior(),
       localizationsDelegates: const [

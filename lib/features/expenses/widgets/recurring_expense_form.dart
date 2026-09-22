@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_masked_text2/flutter_masked_text2.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:intl/intl.dart';
 import 'package:key_budget/app/widgets/category_autocomplete_field.dart';
 import 'package:key_budget/app/widgets/category_picker_field.dart';
 import 'package:key_budget/app/widgets/date_picker_field.dart';
@@ -8,7 +9,10 @@ import 'package:key_budget/core/design_system/borders/app_borders.dart';
 import 'package:key_budget/core/design_system/spacing/app_spacing.dart';
 import 'package:key_budget/core/models/expense_category_model.dart';
 import 'package:key_budget/core/models/recurring_expense_model.dart';
+import 'package:key_budget/features/auth/viewmodel/auth_viewmodel.dart';
+import 'package:key_budget/features/category/view/categories_screen.dart';
 import 'package:key_budget/features/category/viewmodel/category_viewmodel.dart';
+import 'package:key_budget/features/expenses/domain/recurrence_schedule.dart';
 import 'package:key_budget/features/expenses/viewmodel/expense_viewmodel.dart';
 
 class RecurringExpenseForm extends ConsumerWidget {
@@ -65,7 +69,7 @@ class RecurringExpenseForm extends ConsumerWidget {
       child: Column(
         children: [
           Text(
-            'Valor da Despesa',
+            'Valor por ocorrência',
             style: theme.textTheme.labelMedium?.copyWith(
               color: accentColor.withValues(alpha: 0.8),
               fontWeight: FontWeight.w600,
@@ -127,6 +131,8 @@ class RecurringExpenseForm extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final categoryViewModel = ref.watch(categoryViewModelProvider);
+
     return Form(
       key: formKey,
       child: ListView(
@@ -143,9 +149,30 @@ class RecurringExpenseForm extends ConsumerWidget {
                 label: 'Categoria',
                 prefixIcon: Icons.category_outlined,
                 value: currentCategory,
-                categories: ref.watch(categoryViewModelProvider).categories,
-                onChanged: (category) => selectedCategory.value = category,
-                onManageCategories: () {},
+                categories: categoryViewModel.categories,
+                isEnabled: true,
+                onChanged: (cat) {
+                  selectedCategory.value = cat;
+                },
+                onManageCategories: () async {
+                  final userId =
+                      ref.read(authViewModelProvider).currentUser?.id;
+                  await Navigator.of(context).push(
+                    MaterialPageRoute(builder: (_) => const CategoriesScreen()),
+                  );
+                  if (userId != null && context.mounted) {
+                    await ref
+                        .read(categoryViewModelProvider)
+                        .fetchCategories(userId);
+                    final categories =
+                        ref.read(categoryViewModelProvider).categories;
+                    if (selectedCategory.value != null &&
+                        !categories
+                            .any((c) => c.id == selectedCategory.value!.id)) {
+                      selectedCategory.value = null;
+                    }
+                  }
+                },
                 validator: (v) => v == null ? 'Campo obrigatório' : null,
               );
             },
@@ -264,8 +291,113 @@ class RecurringExpenseForm extends ConsumerWidget {
               );
             },
           ),
+          _buildNextDatesPreview(context),
+          const SizedBox(height: AppSpacing.xl),
         ],
       ),
+    );
+  }
+
+  Widget _buildNextDatesPreview(BuildContext context) {
+    final theme = Theme.of(context);
+    return ListenableBuilder(
+      listenable: Listenable.merge([startDate, frequency, dayOfMonth, endDate]),
+      builder: (context, child) {
+        final candidateDates = <DateTime>[];
+        final tempRule = RecurringExpense(
+          id: 'temp_rule',
+          amount: 0,
+          frequency: frequency.value,
+          startDate: startDate.value,
+          dayOfMonth: frequency.value == RecurrenceFrequency.monthly ? dayOfMonth.value : null,
+          endDate: endDate.value,
+          scheduleVersion: 1,
+        );
+
+        DateTime? cursor;
+        for (int i = 0; i < 3; i++) {
+          final next = RecurrenceSchedule.getNextCandidateDate(rule: tempRule, cursor: cursor);
+          if (next == null) break;
+          if (RecurrenceSchedule.isPastEndDate(next, endDate.value, scheduleVersion: 1)) break;
+          candidateDates.add(next);
+          cursor = next;
+        }
+
+        if (candidateDates.isEmpty) {
+          return const SizedBox.shrink();
+        }
+
+        return Container(
+          width: double.infinity,
+          margin: const EdgeInsets.only(top: AppSpacing.lg),
+          padding: const EdgeInsets.all(AppSpacing.md),
+          decoration: BoxDecoration(
+            color: theme.colorScheme.surfaceContainerHighest.withAlpha((255 * 0.4).round()),
+            borderRadius: AppBorders.borderRadiusL,
+            border: Border.all(color: theme.colorScheme.outlineVariant),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Icon(Icons.preview_rounded, size: 18, color: theme.colorScheme.primary),
+                  const SizedBox(width: AppSpacing.xs),
+                  Text(
+                    'Prévia dos próximos 3 lançamentos',
+                    style: theme.textTheme.labelMedium?.copyWith(
+                      fontWeight: FontWeight.w700,
+                      color: theme.colorScheme.primary,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: AppSpacing.sm),
+              ...candidateDates.asMap().entries.map((entry) {
+                final idx = entry.key + 1;
+                final date = entry.value;
+                final dateStr = DateFormat("EEEE, dd 'de' MMMM 'de' yyyy", 'pt_BR').format(date);
+                final capitalized = dateStr.isNotEmpty
+                    ? '${dateStr[0].toUpperCase()}${dateStr.substring(1)}'
+                    : dateStr;
+                return Padding(
+                  padding: const EdgeInsets.only(bottom: AppSpacing.xs),
+                  child: Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                        decoration: BoxDecoration(
+                          color: theme.colorScheme.primary.withAlpha((255 * 0.12).round()),
+                          borderRadius: AppBorders.borderRadiusS,
+                        ),
+                        child: Text(
+                          '$idxª ocorrência',
+                          style: theme.textTheme.labelSmall?.copyWith(
+                            color: theme.colorScheme.primary,
+                            fontWeight: FontWeight.w700,
+                            fontSize: 10,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: AppSpacing.sm),
+                      Expanded(
+                        child: Text(
+                          capitalized,
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            color: theme.colorScheme.onSurface,
+                            fontWeight: FontWeight.w500,
+                          ),
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                    ],
+                  ),
+                );
+              }),
+            ],
+          ),
+        );
+      },
     );
   }
 
@@ -310,22 +442,24 @@ class RecurringExpenseForm extends ConsumerWidget {
           'Dia do Vencimento',
           style: Theme.of(context).textTheme.bodyLarge?.copyWith(fontWeight: FontWeight.w500),
         ),
-        const SizedBox(height: AppSpacing.md),
+        const SizedBox(height: AppSpacing.sm),
         ValueListenableBuilder<int>(
           valueListenable: dayOfMonth,
           builder: (context, selectedDay, child) {
             return Wrap(
               spacing: 8,
               runSpacing: 8,
-              children: List.generate(31, (index) => index + 1).map((day) {
-                final isSelected = selectedDay == day;
+              children: List.generate(31, (index) {
+                final day = index + 1;
+                final isSelected = day == selectedDay;
                 return InkWell(
-                  onTap: () => dayOfMonth.value = day,
+                  onTap: () {
+                    dayOfMonth.value = day;
+                  },
                   borderRadius: AppBorders.borderRadiusMD,
-                  child: AnimatedContainer(
-                    duration: const Duration(milliseconds: 200),
-                    width: 44,
-                    height: 44,
+                  child: Container(
+                    width: 40,
+                    height: 40,
                     decoration: BoxDecoration(
                       color: isSelected
                           ? Theme.of(context).colorScheme.primary
@@ -360,64 +494,82 @@ class RecurringExpenseForm extends ConsumerWidget {
     return ValueListenableBuilder<int>(
       valueListenable: advanceGenerationCount,
       builder: (context, count, child) {
-        return Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
+        return ValueListenableBuilder<RecurrenceFrequency>(
+          valueListenable: frequency,
+          builder: (context, freq, child) {
+            final String unit;
+            switch (freq) {
+              case RecurrenceFrequency.daily:
+                unit = count == 1 ? 'dia' : 'dias';
+                break;
+              case RecurrenceFrequency.weekly:
+                unit = count == 1 ? 'semana' : 'semanas';
+                break;
+              case RecurrenceFrequency.monthly:
+                unit = count == 1 ? 'mês' : 'meses';
+                break;
+            }
+
+            return Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Gerar antecipadamente',
-                        style: Theme.of(context).textTheme.bodyLarge?.copyWith(fontWeight: FontWeight.w500),
+                Row(
+                  children: [
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Gerar antecipadamente',
+                            style: Theme.of(context).textTheme.bodyLarge?.copyWith(fontWeight: FontWeight.w500),
+                          ),
+                          Text(
+                            'Cria as próximas recorrências antes da data',
+                            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                              color: Theme.of(context).colorScheme.onSurfaceVariant,
+                            ),
+                          ),
+                        ],
                       ),
-                      Text(
-                        'Cria as próximas recorrências antes da data',
-                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          color: Theme.of(context).colorScheme.onSurfaceVariant,
-                        ),
-                      ),
-                    ],
-                  ),
+                    ),
+                    Switch(
+                      value: count > 0,
+                      onChanged: (value) {
+                        advanceGenerationCount.value = value ? 3 : 0;
+                      },
+                    ),
+                  ],
                 ),
-                Switch(
-                  value: count > 0,
-                  onChanged: (value) {
-                    advanceGenerationCount.value = value ? 3 : 0;
-                  },
+                AnimatedSize(
+                  duration: const Duration(milliseconds: 300),
+                  curve: Curves.easeInOut,
+                  alignment: Alignment.topCenter,
+                  child: count > 0
+                      ? Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const SizedBox(height: AppSpacing.md),
+                            Text(
+                              'Antecipação: $count $unit à frente',
+                              style: Theme.of(context).textTheme.bodyMedium,
+                            ),
+                            Slider(
+                              value: count.toDouble(),
+                              min: 1,
+                              max: 12,
+                              divisions: 11,
+                              label: '$count $unit',
+                              onChanged: (value) {
+                                advanceGenerationCount.value = value.toInt();
+                              },
+                            ),
+                          ],
+                        )
+                      : const SizedBox.shrink(),
                 ),
               ],
-            ),
-            AnimatedSize(
-              duration: const Duration(milliseconds: 300),
-              curve: Curves.easeInOut,
-              alignment: Alignment.topCenter,
-              child: count > 0
-                  ? Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const SizedBox(height: AppSpacing.md),
-                        Text(
-                          'Manter cadastradas: $count vezes',
-                          style: Theme.of(context).textTheme.bodyMedium,
-                        ),
-                        Slider(
-                          value: count.toDouble(),
-                          min: 1,
-                          max: 12,
-                          divisions: 11,
-                          label: count.toString(),
-                          onChanged: (value) {
-                            advanceGenerationCount.value = value.toInt();
-                          },
-                        ),
-                      ],
-                    )
-                  : const SizedBox.shrink(),
-            ),
-          ],
+            );
+          },
         );
       },
     );

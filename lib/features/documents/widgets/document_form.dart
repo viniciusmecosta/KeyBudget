@@ -5,6 +5,7 @@ import 'package:key_budget/core/design_system/borders/app_borders.dart';
 import 'package:key_budget/core/design_system/spacing/app_spacing.dart';
 import 'package:key_budget/core/design_system/widgets/app_text_field.dart';
 import 'package:key_budget/core/models/document_model.dart';
+import 'package:key_budget/core/services/app_lock_service.dart';
 import 'package:key_budget/features/documents/viewmodel/document_viewmodel.dart';
 
 class DocumentForm extends ConsumerStatefulWidget {
@@ -128,11 +129,18 @@ class _DocumentFormState extends ConsumerState<DocumentForm> {
               onPressed: viewModel.isUploading
                   ? null
                   : () async {
-                      final attachment = await viewModel.pickAndUploadFile();
-                      if (attachment != null) {
-                        setState(() {
-                          widget.attachments.value.add(attachment);
-                        });
+                      final appLock = ref.read(appLockServiceProvider);
+                      appLock.beginExternalPick();
+                      try {
+                        final attachment =
+                            await viewModel.pickAndUploadFile();
+                        if (attachment != null) {
+                          setState(() {
+                            widget.attachments.value.add(attachment);
+                          });
+                        }
+                      } finally {
+                        appLock.endExternalPick();
                       }
                     },
             ),

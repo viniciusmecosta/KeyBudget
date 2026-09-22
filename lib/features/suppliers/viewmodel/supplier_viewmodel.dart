@@ -6,7 +6,10 @@ import 'package:key_budget/core/models/supplier_model.dart';
 import 'package:key_budget/features/suppliers/repository/supplier_repository.dart';
 
 class SupplierViewModel extends ChangeNotifier {
-  final SupplierRepository _repository = SupplierRepository();
+  final SupplierRepository _repository;
+
+  SupplierViewModel({SupplierRepository? repository})
+      : _repository = repository ?? SupplierRepository();
 
   List<Supplier> _allSuppliers = [];
   bool _isLoading = false;
@@ -14,6 +17,29 @@ class SupplierViewModel extends ChangeNotifier {
   bool _isListening = false;
 
   List<Supplier> get allSuppliers => _allSuppliers;
+
+  String _searchQuery = '';
+
+  String get searchQuery => _searchQuery;
+
+  void setSearchQuery(String query) {
+    _searchQuery = query.trim().toLowerCase();
+    notifyListeners();
+  }
+
+  List<Supplier> get filteredSuppliers {
+    if (_searchQuery.isEmpty) return _allSuppliers;
+    return _allSuppliers.where((s) {
+      final name = s.name.toLowerCase();
+      final rep = s.representativeName?.toLowerCase() ?? '';
+      final phone = s.phoneNumber ?? '';
+      final email = s.email?.toLowerCase() ?? '';
+      return name.contains(_searchQuery) ||
+          rep.contains(_searchQuery) ||
+          phone.contains(_searchQuery) ||
+          email.contains(_searchQuery);
+    }).toList();
+  }
 
   bool get isLoading => _isLoading;
 
@@ -105,6 +131,12 @@ class SupplierViewModel extends ChangeNotifier {
     notifyListeners();
   }
 
+  @visibleForTesting
+  void setSuppliersForTesting(List<Supplier> suppliers) {
+    _allSuppliers = suppliers;
+    notifyListeners();
+  }
+
   @override
   void dispose() {
     _suppliersSubscription?.cancel();
@@ -113,5 +145,7 @@ class SupplierViewModel extends ChangeNotifier {
 }
 
 final supplierViewModelProvider = ChangeNotifierProvider<SupplierViewModel>(
-  (ref) => SupplierViewModel(),
+  (ref) => SupplierViewModel(
+    repository: ref.read(supplierRepositoryProvider),
+  ),
 );

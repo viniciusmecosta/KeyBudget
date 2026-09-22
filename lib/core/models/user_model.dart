@@ -6,8 +6,10 @@ class User {
   final String? phoneNumber;
   final bool? enableIncomes;
   final bool? appLocked;
+  final bool? protectScreenCapture;
   final bool? enableSuppliers;
   final int? themeColor;
+  final String? themeMode;
 
   User({
     required this.id,
@@ -17,31 +19,56 @@ class User {
     this.phoneNumber,
     this.enableIncomes,
     this.appLocked,
+    this.protectScreenCapture,
     this.enableSuppliers,
     this.themeColor,
+    this.themeMode,
   });
+
+  bool get effectiveProtectScreenCapture =>
+      protectScreenCapture ?? (appLocked ?? true);
+
+  String get effectiveThemeMode {
+    switch (themeMode) {
+      case 'light':
+      case 'dark':
+      case 'system':
+        return themeMode!;
+      default:
+        return 'system';
+    }
+  }
 
   User copyWith({
     String? id,
     String? name,
     String? email,
     String? avatarPath,
+    bool clearAvatarPath = false,
     String? phoneNumber,
+    bool clearPhoneNumber = false,
     bool? enableIncomes,
     bool? appLocked,
+    bool? protectScreenCapture,
+    bool clearProtectScreenCapture = false,
     bool? enableSuppliers,
     int? themeColor,
+    String? themeMode,
   }) {
     return User(
       id: id ?? this.id,
       name: name ?? this.name,
       email: email ?? this.email,
-      avatarPath: avatarPath ?? this.avatarPath,
-      phoneNumber: phoneNumber ?? this.phoneNumber,
+      avatarPath: clearAvatarPath ? null : (avatarPath ?? this.avatarPath),
+      phoneNumber: clearPhoneNumber ? null : (phoneNumber ?? this.phoneNumber),
       enableIncomes: enableIncomes ?? this.enableIncomes,
       appLocked: appLocked ?? this.appLocked,
+      protectScreenCapture: clearProtectScreenCapture
+          ? null
+          : (protectScreenCapture ?? this.protectScreenCapture),
       enableSuppliers: enableSuppliers ?? this.enableSuppliers,
       themeColor: themeColor ?? this.themeColor,
+      themeMode: themeMode ?? this.themeMode,
     );
   }
 
@@ -54,8 +81,10 @@ class User {
       'phone_number': phoneNumber,
       'enable_incomes': enableIncomes,
       'app_locked': appLocked ?? true,
+      'protect_screen_capture': protectScreenCapture,
       'enable_suppliers': enableSuppliers ?? false,
       'theme_color': themeColor,
+      'theme_mode': themeMode,
     };
   }
 
@@ -68,8 +97,10 @@ class User {
       phoneNumber: map['phone_number'],
       enableIncomes: map['enable_incomes'],
       appLocked: map['app_locked'] ?? true,
+      protectScreenCapture: map['protect_screen_capture'] as bool?,
       enableSuppliers: map['enable_suppliers'] ?? false,
       themeColor: map['theme_color'],
+      themeMode: map['theme_mode'] as String?,
     );
   }
 }

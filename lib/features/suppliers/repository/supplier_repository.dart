@@ -3,7 +3,13 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:key_budget/core/models/supplier_model.dart';
 
 class SupplierRepository {
-  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  final FirebaseFirestore? _customFirestore;
+
+  SupplierRepository({FirebaseFirestore? firestore})
+      : _customFirestore = firestore;
+
+  FirebaseFirestore get _firestore =>
+      _customFirestore ?? FirebaseFirestore.instance;
 
   CollectionReference<Supplier> _getSuppliersCollection(String userId) {
     return _firestore

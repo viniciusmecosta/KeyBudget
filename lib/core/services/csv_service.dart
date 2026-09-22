@@ -4,11 +4,13 @@ import 'dart:io';
 import 'package:csv/csv.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import 'package:key_budget/core/models/credential_model.dart';
 import 'package:key_budget/core/models/expense_category_model.dart';
 import 'package:key_budget/core/models/expense_model.dart';
 import 'package:key_budget/core/models/recurring_expense_model.dart';
 import 'package:key_budget/core/services/snackbar_service.dart';
+import 'package:key_budget/features/analysis/domain/analysis_snapshot.dart';
 import 'package:key_budget/features/analysis/viewmodel/analysis_viewmodel.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
@@ -126,6 +128,8 @@ class CsvService {
     return _saveCsvFile(context, 'keybudget_expenses', csvStr);
   }
 
+  Future<File?> pickCsvFile() => _pickCsvFile();
+
   Future<File?> _pickCsvFile() async {
     FilePickerResult? result = await FilePicker.pickFiles(
       type: FileType.custom,
@@ -192,22 +196,74 @@ class CsvService {
 
   Future<bool> exportAnalysisCsv(
     BuildContext context,
-    AnalysisViewModel viewModel,
-  ) async {
+    AnalysisViewModel viewModel, {
+    AnalysisSnapshot? snapshot,
+  }) async {
+    final snap = snapshot ?? viewModel.currentSnapshot;
+    final csvStr = generateAnalysisCsvContent(snap);
+    return _saveCsvFile(context, 'keybudget_analise', csvStr);
+  }
+
+  String generateAnalysisCsvContent(AnalysisSnapshot snap) {
+    final currencyFormat =
+        NumberFormat.currency(locale: 'pt_BR', symbol: 'R\$ ');
+    final dateFormat = DateFormat('dd/MM/yyyy');
+
+    final startDateStr = dateFormat.format(snap.query.range.startInclusive);
+    final endDateStr = dateFormat.format(
+      snap.query.range.endExclusive.subtract(const Duration(milliseconds: 1)),
+    );
+
     List<List<dynamic>> rows = [
-      ['Month', 'Total Expenses'],
+      ['RELATÓRIO DE ANÁLISE FINANCEIRA - KEYBUDGET'],
+      ['Período', '$startDateStr até $endDateStr'],
+      [
+        'Data de Geração',
+        DateFormat('dd/MM/yyyy HH:mm:ss').format(snap.capturedAt),
+      ],
+      [
+        'Total de Receitas',
+        currencyFormat.format(snap.totalIncomes.amountMinor / 100.0),
+      ],
+      [
+        'Total de Despesas',
+        currencyFormat.format(snap.totalExpenses.amountMinor / 100.0),
+      ],
+      [
+        'Saldo Líquido',
+        currencyFormat.format(snap.balance.amountMinor / 100.0),
+      ],
+      [
+        'Média Mensal de Despesas',
+        currencyFormat.format(snap.averageMonthlyExpense.amountMinor / 100.0),
+      ],
+      [],
+      ['SÉRIE MENSAL (TENDÊNCIA)'],
+      ['Mês', 'Receitas', 'Despesas', 'Saldo'],
     ];
-    final data = viewModel.lastNMonthsData;
-    for (var entry in data.entries) {
-      rows.add([entry.key, entry.value]);
+
+    for (var point in snap.monthlySeries) {
+      rows.add([
+        point.label,
+        currencyFormat.format(point.incomeAmount.amountMinor / 100.0),
+        currencyFormat.format(point.expenseAmount.amountMinor / 100.0),
+        currencyFormat.format(point.balanceAmount.amountMinor / 100.0),
+      ]);
     }
+
     rows.add([]);
-    rows.add(['Category', 'Total Expenses']);
-    final categoryData = viewModel.expensesByCategoryForSelectedMonth;
-    for (var entry in categoryData.entries) {
-      rows.add([entry.key.name, entry.value]);
+    rows.add(['DISTRIBUIÇÃO POR CATEGORIA DE DESPESAS']);
+    rows.add(['Categoria', 'Quantidade', 'Valor Total', 'Participação (%)']);
+
+    for (var group in snap.categoryDistribution) {
+      rows.add([
+        group.categoryName,
+        group.itemsCount,
+        currencyFormat.format(group.totalAmount.amountMinor / 100.0),
+        '${group.percentage.toStringAsFixed(1)}%',
+      ]);
     }
-    String csvStr = '\uFEFF${csv.encode(rows)}';
-    return _saveCsvFile(context, 'keybudget_analysis', csvStr);
+
+    return '\uFEFF${csv.encode(rows)}';
   }
 }

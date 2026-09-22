@@ -5,6 +5,7 @@ import 'package:intl/intl.dart';
 import 'package:key_budget/app/utils/navigation_utils.dart';
 import 'package:key_budget/core/design_system/spacing/app_spacing.dart';
 import 'package:key_budget/core/design_system/widgets/app_card.dart';
+import 'package:key_budget/core/design_system/widgets/app_status_badge.dart';
 import 'package:key_budget/core/models/expense_model.dart';
 import 'package:key_budget/core/utils/date_utils.dart';
 import 'package:key_budget/features/category/viewmodel/category_viewmodel.dart';
@@ -38,18 +39,23 @@ class ActivityTile extends ConsumerWidget {
 
     final categoryColor = category?.color ?? colorScheme.primary;
 
-    return AppCard(
-      padding: const EdgeInsets.all(AppSpacing.md),
-      onTap: () =>
-          NavigationUtils.push(context, ExpenseDetailScreen(expense: expense)),
-      child: Row(
-        children: [
-          _buildCategoryIcon(categoryColor, category),
-          const SizedBox(width: AppSpacing.md),
-          _buildExpenseInfo(context, textTheme, colorScheme, category),
-          const SizedBox(width: AppSpacing.xs),
-          _buildAmountInfo(textTheme, currencyFormatter, colorScheme),
-        ],
+    return Padding(
+      padding: const EdgeInsets.only(bottom: AppSpacing.sm),
+      child: AppCard(
+        padding: const EdgeInsets.all(AppSpacing.md),
+        onTap: () => NavigationUtils.push(
+          context,
+          ExpenseDetailScreen(expense: expense),
+        ),
+        child: Row(
+          children: [
+            _buildCategoryIcon(categoryColor, category),
+            const SizedBox(width: AppSpacing.md),
+            _buildExpenseInfo(context, textTheme, colorScheme, category),
+            const SizedBox(width: AppSpacing.xs),
+            _buildAmountInfo(textTheme, currencyFormatter, colorScheme),
+          ],
+        ),
       ),
     );
   }
@@ -93,6 +99,15 @@ class ActivityTile extends ConsumerWidget {
         ? DateFormat('dd/MM/yyyy').format(expense.date)
         : DateUtils.getRelativeDate(expense.date);
 
+    final now = DateTime.now();
+    final endOfToday = DateTime(now.year, now.month, now.day, 23, 59, 59);
+    final isFuture = expense.date.isAfter(endOfToday);
+    final isRecurring =
+        expense.recurringExpenseId != null &&
+        expense.recurringExpenseId!.isNotEmpty;
+    final isInstallment =
+        expense.currentInstallment != null && expense.totalInstallments != null;
+
     return Expanded(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -114,16 +129,53 @@ class ActivityTile extends ConsumerWidget {
             overflow: TextOverflow.ellipsis,
           ),
           const SizedBox(height: 4),
-          Text(
-            dateText,
-            style: textTheme.bodySmall?.copyWith(
-              color: colorScheme.onSurfaceVariant,
-              fontSize: 12,
-              height: 1.2,
-            ),
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
+          Row(
+            children: [
+              if (isFuture) ...[
+                Icon(
+                  Icons.schedule_rounded,
+                  size: 14,
+                  color: colorScheme.primary,
+                  semanticLabel: 'Despesa agendada',
+                ),
+                const SizedBox(width: AppSpacing.xxs),
+              ],
+              Flexible(
+                child: Text(
+                  dateText,
+                  style: textTheme.bodySmall?.copyWith(
+                    color: colorScheme.onSurfaceVariant,
+                    fontSize: 12,
+                    height: 1.2,
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+            ],
           ),
+          if (isInstallment || isRecurring) ...[
+            const SizedBox(height: AppSpacing.xs),
+            Wrap(
+              spacing: AppSpacing.xs,
+              runSpacing: AppSpacing.xxs,
+              children: [
+                if (isInstallment)
+                  AppStatusBadge(
+                    label:
+                        'Parcela ${expense.currentInstallment} de ${expense.totalInstallments}',
+                    icon: Icons.credit_card_outlined,
+                    variant: AppBadgeVariant.neutral,
+                  ),
+                if (isRecurring)
+                  const AppStatusBadge(
+                    label: 'Recorrente',
+                    icon: Icons.repeat_rounded,
+                    variant: AppBadgeVariant.neutral,
+                  ),
+              ],
+            ),
+          ],
         ],
       ),
     );
