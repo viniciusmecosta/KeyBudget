@@ -44,7 +44,7 @@ class CredentialForm extends ConsumerWidget {
 
   Widget _sectionHeader(BuildContext context, String title, IconData icon) {
     final theme = Theme.of(context);
-    final color = theme.brightness == Brightness.dark ? Colors.white : Colors.black87;
+    final color = theme.colorScheme.onSurface;
     return Row(
       children: [
         Icon(icon, color: color, size: 20),
