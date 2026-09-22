@@ -4,6 +4,7 @@ import 'package:key_budget/app/navigation/app_destination.dart';
 import 'package:key_budget/app/viewmodel/navigation_viewmodel.dart';
 import 'package:key_budget/app/widgets/main_bottom_navigation_bar.dart';
 import 'package:key_budget/app/widgets/responsive_center.dart';
+import 'package:key_budget/app/widgets/tab_selection_transition.dart';
 import 'package:key_budget/features/auth/viewmodel/auth_viewmodel.dart';
 import 'package:key_budget/features/credentials/view/credentials_screen.dart';
 import 'package:key_budget/features/dashboard/view/dashboard_screen.dart';
@@ -53,6 +54,9 @@ class _MainScreenState extends ConsumerState<MainScreen> {
     }
 
     final currentDestination = navigationViewModel.currentDestination;
+    final hasVisitedCurrentDestination = _loadedDestinations.contains(
+      currentDestination,
+    );
     _loadedDestinations.add(currentDestination);
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -74,19 +78,23 @@ class _MainScreenState extends ConsumerState<MainScreen> {
 
     final stack = KeyedSubtree(
       key: ValueKey('main_stack_$currentUserId'),
-      child: IndexedStack(
-        index: safeIndex,
-        children: availableDestinations.map((dest) {
-          final isSelected = dest == currentDestination;
-          final isLoaded = _loadedDestinations.contains(dest);
-          final child = isLoaded ? _buildDestinationWidget(dest) : const SizedBox.shrink();
-          return TickerMode(
-            enabled: isSelected,
-            child: isExpanded
-                ? ResponsiveCenter(maxWidth: 1200, child: child)
-                : (isMedium ? ResponsiveCenter(maxWidth: 800, child: child) : child),
-          );
-        }).toList(),
+      child: TabSelectionTransition(
+        revision: navigationViewModel.selectionRevision,
+        enabled: hasVisitedCurrentDestination,
+        child: IndexedStack(
+          index: safeIndex,
+          children: availableDestinations.map((dest) {
+            final isSelected = dest == currentDestination;
+            final isLoaded = _loadedDestinations.contains(dest);
+            final child = isLoaded ? _buildDestinationWidget(dest) : const SizedBox.shrink();
+            return TickerMode(
+              enabled: isSelected,
+              child: isExpanded
+                  ? ResponsiveCenter(maxWidth: 1200, child: child)
+                  : (isMedium ? ResponsiveCenter(maxWidth: 800, child: child) : child),
+            );
+          }).toList(),
+        ),
       ),
     );
 

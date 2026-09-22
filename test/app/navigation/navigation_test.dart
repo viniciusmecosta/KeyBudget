@@ -79,6 +79,53 @@ void main() {
       vm.selectedIndex = 4;
       expect(vm.currentDestination, AppDestination.profile);
     });
+
+    test('selectionRevision increments only on effective destination change', () {
+      final vm = NavigationViewModel();
+      expect(vm.selectionRevision, 0);
+
+      vm.navigateTo(AppDestination.expenses);
+      expect(vm.selectionRevision, 1);
+
+      vm.navigateTo(AppDestination.expenses);
+      expect(vm.selectionRevision, 1);
+
+      vm.navigateTo(AppDestination.dashboard);
+      expect(vm.selectionRevision, 2);
+    });
+
+    test('suppliers availability toggle handles selectionRevision accurately', () {
+      final vm = NavigationViewModel();
+      vm.updateSuppliersAvailability(true);
+      expect(vm.selectionRevision, 0);
+
+      vm.navigateTo(AppDestination.profile);
+      expect(vm.selectionRevision, 1);
+
+      vm.updateSuppliersAvailability(false);
+      expect(vm.currentDestination, AppDestination.profile);
+      expect(vm.selectionRevision, 1);
+
+      vm.updateSuppliersAvailability(true);
+      expect(vm.selectionRevision, 1);
+
+      vm.navigateTo(AppDestination.suppliers);
+      expect(vm.selectionRevision, 2);
+
+      vm.updateSuppliersAvailability(false);
+      expect(vm.currentDestination, AppDestination.dashboard);
+      expect(vm.selectionRevision, 3);
+    });
+
+    test('clearData resets selectionRevision to zero', () {
+      final vm = NavigationViewModel();
+      vm.navigateTo(AppDestination.expenses);
+      expect(vm.selectionRevision, 1);
+
+      vm.clearData();
+      expect(vm.selectionRevision, 0);
+      expect(vm.currentDestination, AppDestination.dashboard);
+    });
   });
 
   group('MainBottomNavigationBar', () {
