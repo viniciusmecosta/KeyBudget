@@ -106,7 +106,7 @@ class _CredentialsScreenState extends ConsumerState<CredentialsScreen> {
           builder: (context, setState) {
             return AlertDialog(
               shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(20),
+                borderRadius: AppBorders.borderRadiusXL,
               ),
               title: Row(
                 children: [
@@ -128,7 +128,7 @@ class _CredentialsScreenState extends ConsumerState<CredentialsScreen> {
                       filled: true,
                       fillColor: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
                       border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
+                        borderRadius: AppBorders.borderRadiusM,
                         borderSide: BorderSide.none,
                       ),
                     ),
