@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:key_budget/core/design_system/borders/app_borders.dart';
 import 'package:key_budget/core/design_system/colors/app_colors.dart';
+import 'package:key_budget/core/design_system/colors/app_contrast.dart';
 import 'package:key_budget/core/design_system/spacing/app_spacing.dart';
 import 'package:key_budget/core/design_system/theme/app_semantic_colors.dart';
 import 'package:key_budget/core/design_system/typography/app_typography.dart';
@@ -62,16 +63,18 @@ class AppTheme {
     final basePrimary = colorValue != null
         ? Color(colorValue)
         : (isDark ? AppColors.primaryDark : AppColors.primary);
-    final primaryColor = basePrimary;
-    final onPrimaryColor = primaryColor.computeLuminance() > 0.5
-        ? Colors.black
-        : Colors.white;
     final backgroundColor = isDark
         ? AppColors.backgroundDark
         : AppColors.backgroundLight;
     final surfaceColor = isDark
         ? AppColors.surfaceDark
         : AppColors.surfaceLight;
+    final primaryColor = AppContrast.accentOnSurface(
+      basePrimary,
+      surfaceColor,
+      isDark: isDark,
+    );
+    final onPrimaryColor = AppContrast.foregroundOn(primaryColor);
     final onSurfaceColor = isDark
         ? AppColors.onSurfaceDark
         : AppColors.onSurfaceLight;
@@ -195,9 +198,7 @@ class AppTheme {
           color: onSurfaceVariantColor,
         ),
         floatingLabelStyle: textTheme.bodyMedium?.copyWith(color: primaryColor),
-        hintStyle: textTheme.bodyMedium?.copyWith(
-          color: onSurfaceVariantColor.withAlpha((255 * 0.6).round()),
-        ),
+        hintStyle: textTheme.bodyMedium?.copyWith(color: onSurfaceVariantColor),
       ),
       cardTheme: CardThemeData(
         elevation: 0,
