@@ -2,45 +2,76 @@ import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 
 class AppAnimations {
-  static const Duration duration = Duration(milliseconds: 400);
+  static const Duration feedback = Duration(milliseconds: 120);
+  static const Duration transition = Duration(milliseconds: 180);
+  static const Duration major = Duration(milliseconds: 240);
 
-  static const Duration durationSlow = Duration(milliseconds: 1200);
-
-  static const Duration durationFast = Duration(milliseconds: 200);
+  static const Duration duration = transition;
+  static const Duration durationSlow = major;
+  static const Duration durationFast = feedback;
 
   static const Curve curve = Curves.easeOutCubic;
 
-  static Animate fadeInFromBottom(Widget child, {Duration? delay}) {
-    return child
-        .animate(delay: delay)
-        .fadeIn(duration: duration, curve: curve)
-        .slideY(begin: 0.1, end: 0, duration: duration, curve: curve);
+  static bool isReducedMotion(BuildContext? context) {
+    if (context == null) return false;
+    return MediaQuery.maybeDisableAnimationsOf(context) ?? false;
   }
 
-  static Animate scaleIn(Widget child, {Duration? delay}) {
+  static Widget fadeInFromBottom(
+    Widget child, {
+    Key? key,
+    Duration? delay,
+    BuildContext? context,
+  }) {
+    if (isReducedMotion(context)) return child;
     return child
-        .animate(delay: delay)
+        .animate(key: key, delay: delay)
+        .fadeIn(duration: transition, curve: curve)
+        .slideY(begin: 0.05, end: 0, duration: transition, curve: curve);
+  }
+
+  static Widget scaleIn(
+    Widget child, {
+    Key? key,
+    Duration? delay,
+    BuildContext? context,
+  }) {
+    if (isReducedMotion(context)) return child;
+    return child
+        .animate(key: key, delay: delay)
         .scale(
-          begin: const Offset(0.9, 0.9),
+          begin: const Offset(0.95, 0.95),
           end: const Offset(1.0, 1.0),
-          duration: duration,
+          duration: transition,
           curve: curve,
         )
-        .fadeIn(duration: duration, curve: curve);
+        .fadeIn(duration: transition, curve: curve);
   }
 
-  static Animate fadeIn(Widget child, {Duration? delay}) {
-    return child.animate(delay: delay).fadeIn(duration: duration, curve: curve);
-  }
-
-  static Animate listFadeIn(
+  static Widget fadeIn(
     Widget child, {
-    required int index,
-    int delayStep = 40,
+    Key? key,
+    Duration? delay,
+    BuildContext? context,
   }) {
+    if (isReducedMotion(context)) return child;
     return child
-        .animate(delay: Duration(milliseconds: index * delayStep))
-        .fadeIn(duration: duration, curve: curve)
-        .slideY(begin: 0.05, end: 0, duration: duration, curve: curve);
+        .animate(key: key, delay: delay)
+        .fadeIn(duration: transition, curve: curve);
+  }
+
+  static Widget listFadeIn(
+    Widget child, {
+    Key? key,
+    required int index,
+    int delayStep = 20,
+    BuildContext? context,
+  }) {
+    if (isReducedMotion(context)) return child;
+    final cappedDelay = Duration(milliseconds: (index.clamp(0, 10)) * delayStep);
+    return child
+        .animate(key: key, delay: cappedDelay)
+        .fadeIn(duration: transition, curve: curve)
+        .slideY(begin: 0.03, end: 0, duration: transition, curve: curve);
   }
 }

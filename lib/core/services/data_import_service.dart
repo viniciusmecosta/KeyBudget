@@ -9,9 +9,19 @@ import 'package:key_budget/features/credentials/repository/credential_repository
 import 'package:key_budget/features/expenses/repository/expense_repository.dart';
 
 class DataImportService {
-  final ExpenseRepository _expenseRepository = ExpenseRepository();
-  final CredentialRepository _credentialRepository = CredentialRepository();
-  final EncryptionService _encryptionService = EncryptionService();
+  final ExpenseRepository _expenseRepository;
+  final CredentialRepository _credentialRepository;
+  final EncryptionService? encryptionService;
+
+  DataImportService({
+    ExpenseRepository? expenseRepository,
+    CredentialRepository? credentialRepository,
+    this.encryptionService,
+  })  : _expenseRepository = expenseRepository ?? ExpenseRepository(),
+        _credentialRepository = credentialRepository ?? CredentialRepository();
+
+  EncryptionService get _activeEncryptionService =>
+      encryptionService ?? EncryptionService();
 
   Future<int> importExpensesFromJsons(String userId) async {
     final manifestContent = await rootBundle.loadString('AssetManifest.json');
@@ -65,7 +75,8 @@ class DataImportService {
           continue;
         }
 
-        final encryptedPassword = _encryptionService.encryptData(plainPassword);
+        final encryptedPassword =
+            _activeEncryptionService.encryptData(plainPassword);
 
         final credential = Credential(
           location: item['location'],

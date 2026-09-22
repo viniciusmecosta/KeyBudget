@@ -9,9 +9,24 @@ import 'package:key_budget/core/models/expense_category_model.dart';
 import 'package:key_budget/core/models/user_model.dart';
 
 class AuthRepository {
-  final firebase.FirebaseAuth _firebaseAuth = firebase.FirebaseAuth.instance;
-  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
-  final GoogleSignIn _googleSignIn = GoogleSignIn.instance;
+  final firebase.FirebaseAuth? _customFirebaseAuth;
+  final FirebaseFirestore? _customFirestore;
+  final GoogleSignIn? _customGoogleSignIn;
+
+  AuthRepository({
+    firebase.FirebaseAuth? firebaseAuth,
+    FirebaseFirestore? firestore,
+    GoogleSignIn? googleSignIn,
+  })  : _customFirebaseAuth = firebaseAuth,
+        _customFirestore = firestore,
+        _customGoogleSignIn = googleSignIn;
+
+  firebase.FirebaseAuth get _firebaseAuth =>
+      _customFirebaseAuth ?? firebase.FirebaseAuth.instance;
+  FirebaseFirestore get _firestore =>
+      _customFirestore ?? FirebaseFirestore.instance;
+  GoogleSignIn get _googleSignIn =>
+      _customGoogleSignIn ?? GoogleSignIn.instance;
 
   bool _isInitialized = false;
 
@@ -199,8 +214,18 @@ class AuthRepository {
   }
 
   Future<void> signOut() async {
-    await _googleSignIn.signOut();
+    try {
+      await _googleSignIn.signOut();
+    } catch (e) {
+      if (kDebugMode) {
+        print("Error during Google sign-out: $e");
+      }
+    }
     await _firebaseAuth.signOut();
+  }
+
+  Future<void> sendPasswordResetEmail(String email) async {
+    await _firebaseAuth.sendPasswordResetEmail(email: email.trim());
   }
 
   firebase.User? getCurrentFirebaseUser() {

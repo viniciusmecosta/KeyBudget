@@ -8,6 +8,7 @@ import 'package:key_budget/core/design_system/spacing/app_spacing.dart';
 import 'package:key_budget/core/design_system/widgets/app_button.dart';
 import 'package:key_budget/core/models/expense_category_model.dart';
 import 'package:key_budget/core/models/recurring_expense_model.dart';
+import 'package:key_budget/core/money/money_parser.dart';
 import 'package:key_budget/core/services/snackbar_service.dart';
 import 'package:key_budget/features/auth/viewmodel/auth_viewmodel.dart';
 import 'package:key_budget/features/category/viewmodel/category_viewmodel.dart';
@@ -73,6 +74,12 @@ class _AddEditRecurringExpenseScreenState
   void _submit() async {
     if (!_formKey.currentState!.validate()) return;
 
+    final money = MoneyParser.fromMaskedText(_amountController.text);
+    if (money.isZero) {
+      SnackbarService.showError(context, 'O valor não pode ser zero.');
+      return;
+    }
+
     setState(() => _isSaving = true);
     HapticFeedback.mediumImpact();
 
@@ -80,20 +87,43 @@ class _AddEditRecurringExpenseScreenState
     final userId = ref.read(authViewModelProvider).currentUser!.id;
     final bool isUpdating = widget.expense != null;
 
-    final recurringExpense = RecurringExpense(
-      id: widget.expense?.id,
-      amount: _amountController.numberValue,
-      categoryId: _selectedCategory.value?.id,
-      motivation: _motivationController.text,
-      location: _locationController.text,
-      frequency: _frequency.value,
-      startDate: _startDate.value,
-      endDate: _endDate.value,
-      dayOfMonth: _dayOfMonth.value,
-      advanceGenerationCount: _advanceGenerationCount.value,
-      lastInstanceDate: widget.expense?.lastInstanceDate,
-      isIncome: widget.expense?.isIncome ?? false,
-    );
+    final RecurringExpense recurringExpense;
+    if (isUpdating) {
+      final currentMinor = widget.expense!.amountMinor ??
+          widget.expense!.money.amountMinor;
+      final bool amountChanged = money.amountMinor != currentMinor;
+
+      recurringExpense = widget.expense!.copyWith(
+        amount: amountChanged ? money.toDouble() : null,
+        amountMinor: amountChanged ? money.amountMinor : null,
+        currency: amountChanged ? money.currency : null,
+        moneyVersion: amountChanged ? 1 : null,
+        categoryId: _selectedCategory.value?.id,
+        motivation: _motivationController.text,
+        location: _locationController.text,
+        frequency: _frequency.value,
+        startDate: _startDate.value,
+        endDate: _endDate.value,
+        dayOfMonth: _dayOfMonth.value,
+        advanceGenerationCount: _advanceGenerationCount.value,
+        lastInstanceDate: widget.expense?.lastInstanceDate,
+        isIncome: widget.expense?.isIncome ?? false,
+      );
+    } else {
+      recurringExpense = RecurringExpense.withMoney(
+        money: money,
+        categoryId: _selectedCategory.value?.id,
+        motivation: _motivationController.text,
+        location: _locationController.text,
+        frequency: _frequency.value,
+        startDate: _startDate.value,
+        endDate: _endDate.value,
+        dayOfMonth: _dayOfMonth.value,
+        advanceGenerationCount: _advanceGenerationCount.value,
+        lastInstanceDate: null,
+        isIncome: false,
+      );
+    }
 
     try {
       if (isUpdating) {
@@ -182,7 +212,7 @@ class _AddEditRecurringExpenseScreenState
     final deletedExpense = widget.expense!;
 
     try {
-      await viewModel.deleteRecurringExpense(
+      final snapshot = await viewModel.deleteRecurringExpense(
         userId,
         deletedExpense.id!,
         deleteMode: result,
@@ -192,7 +222,11 @@ class _AddEditRecurringExpenseScreenState
         currentContext,
         message: 'Despesa recorrente excluída.',
         onUndo: () async {
-          await viewModel.restoreRecurringExpense(userId, deletedExpense);
+          if (snapshot != null) {
+            await viewModel.undoDeleteRecurringExpense(userId, snapshot);
+          } else {
+            await viewModel.restoreRecurringExpense(userId, deletedExpense);
+          }
         },
       );
       screenNavigator.pop();

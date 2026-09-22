@@ -39,15 +39,39 @@ class _AddEditCategoryScreenState extends ConsumerState<AddEditCategoryScreen> {
   }
 
   void _deleteCategory() async {
+    final shouldDelete = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Excluir categoria?'),
+        content: const Text(
+          'Deseja excluir esta categoria? As despesas vinculadas serão mantidas e classificadas como "Categoria removida".',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: const Text('Cancelar'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(true),
+            style: TextButton.styleFrom(
+              foregroundColor: Theme.of(context).colorScheme.error,
+            ),
+            child: const Text('Excluir'),
+          ),
+        ],
+      ),
+    );
+    if (shouldDelete != true || !mounted) return;
+
     HapticFeedback.mediumImpact();
     setState(() => _isSaving = true);
     final viewModel = ref.read(categoryViewModelProvider);
     final userId = ref.read(authViewModelProvider).currentUser!.id;
     final scaffoldContext = context;
     final navigator = Navigator.of(context);
-    
+
     await viewModel.deleteCategory(userId, widget.category!.id!);
-    
+
     if (scaffoldContext.mounted) {
       SnackbarService.showUndoSnackbar(
         scaffoldContext,

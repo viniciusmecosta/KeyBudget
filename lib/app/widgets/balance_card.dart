@@ -14,10 +14,12 @@ class BalanceCard extends ConsumerWidget {
   final Gradient? gradient;
   final Color? backgroundColor;
   final bool isCompact;
+  final String? period;
 
   const BalanceCard({
     super.key,
     required this.title,
+    this.period,
     required this.totalValue,
     this.subtitle,
     this.valueSubtitle,
@@ -75,14 +77,28 @@ class BalanceCard extends ConsumerWidget {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(
-                            title,
-                            style: theme.textTheme.titleMedium?.copyWith(
-                              color: textColor.withAlpha((255 * 0.8).round()),
-                              fontWeight: FontWeight.w600,
-                              letterSpacing: 0.5,
-                              fontSize: isCompact ? 14 : null,
-                            ),
+                          Wrap(
+                            crossAxisAlignment: WrapCrossAlignment.center,
+                            spacing: AppSpacing.xs,
+                            children: [
+                              Text(
+                                title,
+                                style: theme.textTheme.titleMedium?.copyWith(
+                                  color: textColor.withAlpha((255 * 0.85).round()),
+                                  fontWeight: FontWeight.w600,
+                                  letterSpacing: 0.5,
+                                  fontSize: isCompact ? 14 : null,
+                                ),
+                              ),
+                              if (period != null && period!.isNotEmpty)
+                                Text(
+                                  '• $period',
+                                  style: theme.textTheme.bodySmall?.copyWith(
+                                    color: textColor.withAlpha((255 * 0.7).round()),
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                ),
+                            ],
                           ),
                           SizedBox(
                             height: isCompact ? AppSpacing.xs : AppSpacing.sm,
@@ -94,7 +110,7 @@ class BalanceCard extends ConsumerWidget {
                             style: theme.textTheme.headlineMedium?.copyWith(
                               fontWeight: FontWeight.w800,
                               color: textColor,
-                              letterSpacing: -1,
+                              letterSpacing: -0.5,
                               fontSize: isCompact ? 24 : null,
                             ),
                           ),

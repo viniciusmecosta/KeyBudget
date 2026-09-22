@@ -1,27 +1,97 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_riverpod/legacy.dart';
-import 'package:key_budget/app/widgets/activity_tile_widget.dart';
-import 'package:key_budget/app/widgets/animated_list_item.dart';
 import 'package:key_budget/core/models/expense_model.dart';
 import 'package:key_budget/core/models/recurring_expense_model.dart';
 import 'package:key_budget/core/services/csv_service.dart';
 import 'package:key_budget/core/services/data_import_service.dart';
 import 'package:key_budget/core/services/notification_service.dart';
 import 'package:key_budget/core/services/pdf_service.dart';
+import 'package:key_budget/core/services/snackbar_service.dart';
 import 'package:key_budget/features/analysis/viewmodel/analysis_viewmodel.dart';
 import 'package:key_budget/features/category/viewmodel/category_viewmodel.dart';
+import 'package:key_budget/core/money/money.dart';
+import 'package:key_budget/core/operations/operation_result.dart';
+import 'package:key_budget/core/time/app_clock.dart';
+import 'package:key_budget/core/time/date_range.dart';
+import 'package:key_budget/features/credentials/repository/credential_repository.dart';
+import 'package:key_budget/features/expenses/domain/installment_calculator.dart';
+import 'package:key_budget/core/import_export/csv_import_parser.dart';
+import 'package:key_budget/core/import_export/import_preview_screen.dart';
+import 'package:key_budget/core/import_export/import_service.dart';
+import 'package:key_budget/features/expenses/application/recurrence_deletion_service.dart';
+import 'package:key_budget/features/expenses/application/recurrence_committer.dart';
+import 'package:key_budget/features/expenses/application/recurrence_service.dart';
+import 'package:key_budget/features/expenses/domain/recurrence_occurrence.dart';
 import 'package:key_budget/features/expenses/repository/expense_repository.dart';
+import 'package:key_budget/features/expenses/repository/recurrence_occurrence_repository.dart';
 import 'package:key_budget/features/expenses/repository/recurring_expense_repository.dart';
 
 class ExpenseViewModel extends ChangeNotifier {
-  final ExpenseRepository _repository = ExpenseRepository();
-  final RecurringExpenseRepository _recurringRepository =
-      RecurringExpenseRepository();
-  final CsvService _csvService = CsvService();
-  final PdfService _pdfService = PdfService();
-  final DataImportService _dataImportService = DataImportService();
+  final ExpenseRepository _repository;
+  final RecurringExpenseRepository _recurringRepository;
+  final RecurrenceOccurrenceRepository _occurrenceRepository;
+  final RecurrenceService _recurrenceService;
+  final RecurrenceDeletionService _recurrenceDeletionService;
+  final ImportService _importService;
+  final CsvService _csvService;
+  final PdfService _pdfService;
+  final DataImportService _dataImportService;
+  final AppClock _clock;
+
+  ExpenseViewModel({
+    ExpenseRepository? repository,
+    RecurringExpenseRepository? recurringRepository,
+    RecurrenceOccurrenceRepository? occurrenceRepository,
+    RecurrenceService? recurrenceService,
+    RecurrenceDeletionService? recurrenceDeletionService,
+    ImportService? importService,
+    CsvService? csvService,
+    PdfService? pdfService,
+    DataImportService? dataImportService,
+    AppClock? clock,
+  }) : _repository = repository ?? ExpenseRepository(),
+       _recurringRepository =
+           recurringRepository ?? RecurringExpenseRepository(),
+       _occurrenceRepository =
+           occurrenceRepository ?? RecurrenceOccurrenceRepository(),
+       _recurrenceService =
+           recurrenceService ??
+           RecurrenceService(
+             expenseRepository: repository ?? ExpenseRepository(),
+             recurringRepository:
+                 recurringRepository ?? RecurringExpenseRepository(),
+             occurrenceRepository:
+                 occurrenceRepository ?? RecurrenceOccurrenceRepository(),
+             clock: clock ?? const SystemAppClock(),
+           ),
+       _recurrenceDeletionService =
+           recurrenceDeletionService ??
+           RecurrenceDeletionService(
+             recurringRepository:
+                 recurringRepository ?? RecurringExpenseRepository(),
+             expenseRepository: repository ?? ExpenseRepository(),
+             occurrenceRepository:
+                 occurrenceRepository ?? RecurrenceOccurrenceRepository(),
+             clock: clock ?? const SystemAppClock(),
+           ),
+       _importService =
+           importService ??
+           ImportService(
+             expenseRepository: repository ?? ExpenseRepository(),
+             credentialRepository: CredentialRepository(),
+             recurringRepository:
+                 recurringRepository ?? RecurringExpenseRepository(),
+           ),
+       _csvService = csvService ?? CsvService(),
+       _pdfService = pdfService ?? PdfService(),
+       _dataImportService = dataImportService ?? DataImportService(),
+       _clock = clock ?? const SystemAppClock() {
+    final now = _clock.now();
+    _selectedMonth = DateTime(now.year, now.month);
+  }
 
   List<Expense> _allExpenses = [];
   List<Expense> _currentDisplayItems = [];
@@ -32,7 +102,7 @@ class ExpenseViewModel extends ChangeNotifier {
   bool _isImportingCsv = false;
   List<String> _selectedCategoryIds = [];
   bool? _filterIsIncome;
-  DateTime _selectedMonth = DateTime(DateTime.now().year, DateTime.now().month);
+  late DateTime _selectedMonth;
   String _searchQuery = '';
   bool _searchAllPeriods = false;
   StreamSubscription? _expensesSubscription;
@@ -40,13 +110,16 @@ class ExpenseViewModel extends ChangeNotifier {
   bool _isListening = false;
   bool _enableIncomes = false;
 
-  GlobalKey<SliverAnimatedListState>? _listKey;
-
-  void setListKey(GlobalKey<SliverAnimatedListState> key) {
-    _listKey = key;
-  }
+  @Deprecated('UI animation state belongs to presentation layer')
+  void setListKey(GlobalKey<SliverAnimatedListState>? key) {}
 
   List<Expense> get allExpenses => _allExpenses;
+
+  @visibleForTesting
+  set allExpenses(List<Expense> expenses) {
+    _allExpenses = expenses;
+    notifyListeners();
+  }
 
   List<Expense> get currentDisplayItems => _currentDisplayItems;
 
@@ -60,6 +133,8 @@ class ExpenseViewModel extends ChangeNotifier {
 
   bool get isImportingCsv => _isImportingCsv;
 
+  ImportService get importService => _importService;
+
   List<String> get selectedCategoryIds => _selectedCategoryIds;
 
   bool? get filterIsIncome => _filterIsIncome;
@@ -69,6 +144,11 @@ class ExpenseViewModel extends ChangeNotifier {
   String get searchQuery => _searchQuery;
 
   bool get searchAllPeriods => _searchAllPeriods;
+
+  bool get hasActiveFilters =>
+      _selectedCategoryIds.isNotEmpty ||
+      _filterIsIncome != null ||
+      _searchQuery.isNotEmpty;
 
   List<Expense> get filteredExpenses {
     List<Expense> filtered = List.from(_allExpenses);
@@ -111,9 +191,10 @@ class ExpenseViewModel extends ChangeNotifier {
         return loc.contains(_searchQuery) || mot.contains(_searchQuery);
       }).toList();
     }
-    return baseList
+    final totalMinor = baseList
         .where((e) => e.isIncome != true)
-        .fold<double>(0.0, (sum, exp) => sum + exp.amount);
+        .fold<int>(0, (sum, exp) => sum + exp.money.amountMinor);
+    return Money.fromCents(totalMinor).toDouble();
   }
 
   double get currentMonthIncomeTotal {
@@ -127,9 +208,10 @@ class ExpenseViewModel extends ChangeNotifier {
         return loc.contains(_searchQuery) || mot.contains(_searchQuery);
       }).toList();
     }
-    return baseList
+    final totalMinor = baseList
         .where((e) => e.isIncome == true)
-        .fold<double>(0.0, (sum, exp) => sum + exp.amount);
+        .fold<int>(0, (sum, exp) => sum + exp.money.amountMinor);
+    return Money.fromCents(totalMinor).toDouble();
   }
 
   double get currentMonthBalance {
@@ -173,6 +255,14 @@ class ExpenseViewModel extends ChangeNotifier {
     _updateDisplayList(animate: true);
   }
 
+  void setFilters({List<String>? categories, bool? type}) {
+    if (categories != null) {
+      _selectedCategoryIds = List.from(categories);
+    }
+    _filterIsIncome = type;
+    _updateDisplayList(animate: true);
+  }
+
   void clearFilters() {
     _selectedCategoryIds = [];
     _filterIsIncome = null;
@@ -182,7 +272,7 @@ class ExpenseViewModel extends ChangeNotifier {
   void setEnableIncomes(bool value) {
     if (_enableIncomes != value) {
       _enableIncomes = value;
-      // use Future.microtask to avoid modifying state during build
+
       Future.microtask(() => _updateDisplayList(animate: false));
     }
   }
@@ -258,132 +348,75 @@ class ExpenseViewModel extends ChangeNotifier {
       newList.retainWhere((exp) => exp.isIncome != true);
     }
 
-    if (!animate || _listKey?.currentState == null) {
-      _currentDisplayItems = List.from(newList);
-      notifyListeners();
-      return;
-    }
-
-    final oldList = List<Expense>.from(_currentDisplayItems);
-    bool hasChanges = false;
-
-    for (var i = oldList.length - 1; i >= 0; i--) {
-      final oldItem = oldList[i];
-      if (!newList.any((newItem) => newItem.id == oldItem.id)) {
-        final indexToRemove = _currentDisplayItems.indexWhere(
-          (item) => item.id == oldItem.id,
-        );
-        if (indexToRemove != -1) {
-          final removedItem = _currentDisplayItems.removeAt(indexToRemove);
-          _listKey?.currentState?.removeItem(
-            indexToRemove,
-            (context, animation) => AnimatedListItem(
-              animation: animation,
-              child: ActivityTile(
-                expense: removedItem,
-                index: indexToRemove,
-                showFullDate: _searchAllPeriods,
-              ),
-            ),
-            duration: const Duration(milliseconds: 300),
-          );
-          hasChanges = true;
-        }
-      }
-    }
-
-    for (var i = 0; i < newList.length; i++) {
-      final newItem = newList[i];
-      final oldIndex = _currentDisplayItems.indexWhere(
-        (item) => item.id == newItem.id,
-      );
-
-      if (oldIndex == -1) {
-        _currentDisplayItems.insert(i, newItem);
-        _listKey?.currentState?.insertItem(
-          i,
-          duration: const Duration(milliseconds: 300),
-        );
-        hasChanges = true;
-      } else {
-        if (_currentDisplayItems[oldIndex] != newItem) {
-          _currentDisplayItems[oldIndex] = newItem;
-          hasChanges = true;
-        }
-        if (oldIndex != i) {
-          final item = _currentDisplayItems.removeAt(oldIndex);
-          _currentDisplayItems.insert(i, item);
-          hasChanges = true;
-        }
-      }
-    }
-
-    if (hasChanges || _currentDisplayItems.length != newList.length) {
-      _currentDisplayItems = List.from(newList);
-      hasChanges = true;
-    }
-
-    if (hasChanges) {
-      notifyListeners();
-    }
+    _currentDisplayItems = List.unmodifiable(newList);
+    notifyListeners();
   }
 
   Future<void> addExpense(String userId, Expense expense) async {
-    await _repository.addExpense(userId, expense);
+    final Expense effectiveExpense;
+    if (expense.amountMinor == null) {
+      final m = Money.fromNumWithHalfAwayFromZero(expense.amount);
+      effectiveExpense = expense.copyWith(
+        amountMinor: m.amountMinor,
+        currency: 'BRL',
+        moneyVersion: 1,
+      );
+    } else {
+      effectiveExpense = expense;
+    }
+    await _repository.addExpense(userId, effectiveExpense);
   }
 
   Future<void> restoreExpense(String userId, Expense expense) async {
     await _repository.restoreExpense(userId, expense);
+    if (expense.recurringExpenseId != null &&
+        expense.recurringExpenseId!.isNotEmpty) {
+      final dateKey = RecurrenceOccurrence.formatDateKey(expense.date);
+      final occurrenceKey = RecurrenceOccurrence.generateKey(
+        uid: userId,
+        recurringExpenseId: expense.recurringExpenseId!,
+        scheduledDateKey: dateKey,
+      );
+      final occurrence = RecurrenceOccurrence(
+        occurrenceKey: occurrenceKey,
+        recurringExpenseId: expense.recurringExpenseId!,
+        scheduledDateKey: dateKey,
+        scheduledDateOriginal: expense.date,
+        expenseIds: [if (expense.id != null) expense.id!],
+        state: OccurrenceState.materialized,
+        engineVersion: 1,
+      );
+      await _occurrenceRepository.saveOccurrence(userId, occurrence);
+    }
   }
 
-  Future<void> addInstallmentExpenses(
+  Future<OperationResult<List<Expense>>> addInstallmentExpenses(
     String userId,
     Expense baseExpense,
     int installments,
-    bool startNextMonth,
-  ) async {
-    final String groupId = DateTime.now().millisecondsSinceEpoch.toString();
-    final double installmentAmount = baseExpense.amount / installments;
-    final List<Expense> toAdd = [];
-    int monthOffset = startNextMonth ? 1 : 0;
+    bool startNextMonth, {
+    String? operationId,
+  }) async {
+    try {
+      final calculation = InstallmentCalculator.calculate(
+        baseExpense: baseExpense,
+        count: installments,
+        startNextMonth: startNextMonth,
+        operationId: operationId,
+      );
 
-    for (int i = 1; i <= installments; i++) {
-      int year = baseExpense.date.year;
-      int month = baseExpense.date.month + monthOffset + (i - 1);
+      await _repository.addExpensesBatch(userId, calculation.expenses);
 
-      while (month > 12) {
-        month -= 12;
-        year += 1;
-      }
-
-      int day = baseExpense.date.day;
-      int daysInMonth = DateTime(year, month + 1, 0).day;
-      if (day > daysInMonth) {
-        day = daysInMonth;
-      }
-
-      DateTime date = DateTime(year, month, day);
-
-      String baseMotivation = baseExpense.motivation ?? '';
-      String motivation = baseMotivation.isNotEmpty
-          ? '$baseMotivation ($i/$installments)'
-          : 'Parcela $i/$installments';
-
-      toAdd.add(
-        Expense(
-          amount: installmentAmount,
-          date: date,
-          categoryId: baseExpense.categoryId,
-          motivation: motivation,
-          location: baseExpense.location,
-          installmentGroupId: groupId,
-          currentInstallment: i,
-          totalInstallments: installments,
-        ),
+      return OperationResult.completed(
+        data: calculation.expenses,
+        count: calculation.expenses.length,
+        affectedIds: calculation.expenses.map((e) => e.id ?? '').toList(),
+      );
+    } catch (e) {
+      return OperationResult.failed(
+        safeError: 'Falha ao gerar parcelas: ${e.toString()}',
       );
     }
-
-    await _repository.addExpensesBatch(userId, toAdd);
   }
 
   List<Expense> getRelatedInstallments(String groupId) {
@@ -399,16 +432,29 @@ class ExpenseViewModel extends ChangeNotifier {
   }
 
   Future<void> deleteExpense(String userId, String expenseId) async {
-    await _repository.deleteExpense(userId, expenseId);
+    final expense = _allExpenses.firstWhere(
+      (e) => e.id == expenseId,
+      orElse: () => Expense(id: expenseId, amount: 0, date: DateTime.now()),
+    );
+    if (expense.recurringExpenseId != null &&
+        expense.recurringExpenseId!.isNotEmpty) {
+      await _recurrenceDeletionService.deleteIndividualOccurrence(
+        userId: userId,
+        expense: expense,
+      );
+    } else {
+      await _repository.deleteExpense(userId, expenseId);
+    }
   }
 
   Future<void> deleteInstallmentGroup(String userId, String groupId) async {
-    final related = _allExpenses
-        .where((e) => e.installmentGroupId == groupId)
+    final expensesToDelete = _allExpenses
+        .where((expense) => expense.installmentGroupId == groupId)
         .toList();
-    final futures = related.map((exp) {
-      if (exp.id != null) {
-        return _repository.deleteExpense(userId, exp.id!);
+
+    final futures = expensesToDelete.map((expense) {
+      if (expense.id != null) {
+        return deleteExpense(userId, expense.id!);
       }
       return Future.value();
     });
@@ -419,7 +465,18 @@ class ExpenseViewModel extends ChangeNotifier {
     String userId,
     RecurringExpense expense,
   ) async {
-    await _recurringRepository.addRecurringExpense(userId, expense);
+    final RecurringExpense effectiveExpense;
+    if (expense.amountMinor == null) {
+      final m = Money.fromNumWithHalfAwayFromZero(expense.amount);
+      effectiveExpense = expense.copyWith(
+        amountMinor: m.amountMinor,
+        currency: 'BRL',
+        moneyVersion: 1,
+      );
+    } else {
+      effectiveExpense = expense;
+    }
+    await _recurringRepository.addRecurringExpense(userId, effectiveExpense);
   }
 
   Future<void> updateRecurringExpense(
@@ -429,32 +486,48 @@ class ExpenseViewModel extends ChangeNotifier {
     await _recurringRepository.updateRecurringExpense(userId, expense);
   }
 
-  Future<void> deleteRecurringExpense(
+  Future<RecurringDeleteSnapshot?> deleteRecurringExpense(
     String userId,
     String expenseId, {
     int deleteMode = 0,
+    RecurrenceDeleteMode? mode,
   }) async {
-    await _recurringRepository.deleteRecurringExpense(userId, expenseId);
+    final effectiveMode =
+        mode ??
+        (deleteMode == 1
+            ? RecurrenceDeleteMode.futureOnly
+            : deleteMode == 2
+            ? RecurrenceDeleteMode.all
+            : RecurrenceDeleteMode.onlyRule);
 
-    if (deleteMode == 1 || deleteMode == 2) {
-      final allExpenses = await _repository.getExpensesForUser(userId);
-      final now = DateTime.now();
+    final rule = _recurringExpenses.firstWhere(
+      (r) => r.id == expenseId,
+      orElse: () => RecurringExpense(
+        id: expenseId,
+        amount: 0,
+        frequency: RecurrenceFrequency.monthly,
+        startDate: DateTime.now(),
+      ),
+    );
 
-      final toDelete = allExpenses.where((e) {
-        if (e.recurringExpenseId != expenseId) return false;
-        if (deleteMode == 1) {
-          return e.date.isAfter(now);
-        }
+    final result = await _recurrenceDeletionService.deleteRule(
+      userId: userId,
+      rule: rule,
+      mode: effectiveMode,
+      allExpenses: _allExpenses,
+    );
 
-        return true;
-      }).toList();
+    return result.data;
+  }
 
-      for (var e in toDelete) {
-        if (e.id != null) {
-          await _repository.deleteExpense(userId, e.id!);
-        }
-      }
-    }
+  Future<void> undoDeleteRecurringExpense(
+    String userId,
+    RecurringDeleteSnapshot snapshot,
+  ) async {
+    await _recurrenceDeletionService.undoDelete(
+      userId: userId,
+      snapshot: snapshot,
+    );
   }
 
   Future<void> restoreRecurringExpense(
@@ -464,26 +537,6 @@ class ExpenseViewModel extends ChangeNotifier {
     await _recurringRepository.restoreRecurringExpense(userId, expense);
   }
 
-  DateTime _getTargetLimitDate(DateTime now, RecurringExpense recurring) {
-    int count = recurring.advanceGenerationCount;
-    if (count <= 0) return now;
-
-    switch (recurring.frequency) {
-      case RecurrenceFrequency.daily:
-        return now.add(Duration(days: count));
-      case RecurrenceFrequency.weekly:
-        return now.add(Duration(days: 7 * count));
-      case RecurrenceFrequency.monthly:
-        int y = now.year;
-        int m = now.month + count;
-        while (m > 12) {
-          m -= 12;
-          y++;
-        }
-        return DateTime(y, m, 31, 23, 59, 59);
-    }
-  }
-
   bool _isGeneratingRecurring = false;
 
   Future<void> checkAndCreateRecurringInstances(String userId) async {
@@ -491,118 +544,19 @@ class ExpenseViewModel extends ChangeNotifier {
     _isGeneratingRecurring = true;
 
     try {
-      final now = DateTime.now();
+      final result = await _recurrenceService.generatePendingOccurrences(
+        userId,
+        rulesToProcess: _recurringExpenses,
+      );
 
-      for (var recurring in _recurringExpenses) {
-        RecurringExpense currentRecurring = recurring;
-        bool notificationScheduled = false;
-
-        List<Expense> toAdd = [];
-
-        while (true) {
-          DateTime nextInstanceDate = _calculateNextInstanceDate(
-            currentRecurring,
-          );
-
-          DateTime targetLimit = currentRecurring.advanceGenerationCount > 0
-              ? _getTargetLimitDate(now, currentRecurring)
-              : now;
-
-          if (nextInstanceDate.isAfter(targetLimit)) {
-            break;
-          }
-
-          if (currentRecurring.endDate != null &&
-              nextInstanceDate.isAfter(currentRecurring.endDate!)) {
-            break;
-          }
-
-          if (nextInstanceDate.isAfter(now) && !notificationScheduled) {
-            final int notificationId =
-                currentRecurring.id?.hashCode ??
-                nextInstanceDate.millisecondsSinceEpoch;
-            await NotificationService.scheduleExpenseNotification(
-              notificationId,
-              'Despesa Recorrente Automática',
-              'Lembrete: "${currentRecurring.motivation ?? "Sua despesa"}" já foi registrada.',
-              nextInstanceDate,
-            );
-            notificationScheduled = true;
-          }
-
-          bool alreadyExists = _allExpenses.any(
-            (e) =>
-                e.recurringExpenseId == currentRecurring.id &&
-                e.date.year == nextInstanceDate.year &&
-                e.date.month == nextInstanceDate.month &&
-                e.date.day == nextInstanceDate.day,
-          );
-
-          if (!alreadyExists) {
-            toAdd.add(
-              Expense(
-                amount: currentRecurring.amount,
-                date: nextInstanceDate,
-                categoryId: currentRecurring.categoryId,
-                motivation: currentRecurring.motivation,
-                location: currentRecurring.location,
-                isIncome: currentRecurring.isIncome,
-                recurringExpenseId: currentRecurring.id,
-              ),
-            );
-          }
-
-          currentRecurring = RecurringExpense(
-            id: currentRecurring.id,
-            amount: currentRecurring.amount,
-            categoryId: currentRecurring.categoryId,
-            motivation: currentRecurring.motivation,
-            location: currentRecurring.location,
-            isIncome: currentRecurring.isIncome,
-            frequency: currentRecurring.frequency,
-            startDate: currentRecurring.startDate,
-            endDate: currentRecurring.endDate,
-            dayOfWeek: currentRecurring.dayOfWeek,
-            dayOfMonth: currentRecurring.dayOfMonth,
-            monthOfYear: currentRecurring.monthOfYear,
-            lastInstanceDate: nextInstanceDate,
-            advanceGenerationCount: currentRecurring.advanceGenerationCount,
-          );
-        }
-
-        if (toAdd.isNotEmpty) {
-          await _repository.addExpensesBatch(userId, toAdd);
-          await updateRecurringExpense(userId, currentRecurring);
-        }
+      if (result.isSuccess) {
+        await NotificationService.reconciler.reconcile(
+          uid: userId,
+          activeRules: _recurringExpenses,
+        );
       }
     } finally {
       _isGeneratingRecurring = false;
-    }
-  }
-
-  DateTime _calculateNextInstanceDate(RecurringExpense recurring) {
-    if (recurring.lastInstanceDate == null) {
-      return recurring.startDate;
-    }
-    DateTime lastDate = recurring.lastInstanceDate!;
-    switch (recurring.frequency) {
-      case RecurrenceFrequency.daily:
-        return lastDate.add(const Duration(days: 1));
-      case RecurrenceFrequency.weekly:
-        return lastDate.add(const Duration(days: 7));
-      case RecurrenceFrequency.monthly:
-        var year = lastDate.year;
-        var month = lastDate.month + 1;
-        if (month > 12) {
-          month = 1;
-          year++;
-        }
-        var day = recurring.dayOfMonth ?? lastDate.day;
-        var daysInNextMonth = DateTime(year, month + 1, 0).day;
-        if (day > daysInNextMonth) {
-          day = daysInNextMonth;
-        }
-        return DateTime(year, month, day);
     }
   }
 
@@ -613,16 +567,18 @@ class ExpenseViewModel extends ChangeNotifier {
   ) async {
     _setExportingCsv(true);
     try {
-      List<Expense> expensesToExport = _allExpenses;
+      List<Expense> expensesToExport;
       if (start != null && end != null) {
+        final range = DateRange.fromDays(start, end);
         expensesToExport = _allExpenses
-            .where(
-              (exp) =>
-                  exp.date.isAfter(start.subtract(const Duration(days: 1))) &&
-                  exp.date.isBefore(end.add(const Duration(days: 1))),
-            )
+            .where((exp) => range.contains(exp.date))
             .toList();
+      } else if (start == null && end == null) {
+        expensesToExport = List<Expense>.from(_allExpenses);
+      } else {
+        return false;
       }
+      expensesToExport.sort((a, b) => a.date.compareTo(b.date));
       return await _csvService.exportExpenses(context, expensesToExport);
     } finally {
       _setExportingCsv(false);
@@ -638,15 +594,16 @@ class ExpenseViewModel extends ChangeNotifier {
   ) async {
     _setExportingPdf(true);
     try {
-      List<Expense> expensesToExport = _allExpenses;
+      List<Expense> expensesToExport;
       if (start != null && end != null) {
+        final range = DateRange.fromDays(start, end);
         expensesToExport = _allExpenses
-            .where(
-              (exp) =>
-                  exp.date.isAfter(start.subtract(const Duration(days: 1))) &&
-                  exp.date.isBefore(end.add(const Duration(days: 1))),
-            )
+            .where((exp) => range.contains(exp.date))
             .toList();
+      } else if (start == null && end == null) {
+        expensesToExport = List<Expense>.from(_allExpenses);
+      } else {
+        return;
       }
       expensesToExport.sort((a, b) => a.date.compareTo(b.date));
       await _pdfService.exportExpensesPdf(
@@ -660,28 +617,63 @@ class ExpenseViewModel extends ChangeNotifier {
     }
   }
 
-  Future<int> importExpensesFromCsv(String userId) async {
+  Future<int> importExpensesFromCsv(
+    String userId, {
+    BuildContext? context,
+    String? rawCsvContent,
+    String? fileName,
+  }) async {
     _setImportingCsv(true);
     try {
-      final data = await _csvService.importCsv();
-      if (data == null) return 0;
+      String? content = rawCsvContent;
+      String name = fileName ?? 'expenses.csv';
 
-      int count = 0;
-      for (var row in data) {
-        final newExpense = Expense(
-          date:
-              DateTime.tryParse(row['date']?.toString() ?? '') ??
-              DateTime.now(),
-          amount: double.tryParse(row['amount']?.toString() ?? '0.0') ?? 0.0,
-          categoryId: null,
-          motivation: row['motivation']?.toString(),
-          location: row['location']?.toString(),
-          isIncome: row['isIncome']?.toString().toLowerCase() == 'true',
-        );
-        await _repository.addExpense(userId, newExpense);
-        count++;
+      if (content == null) {
+        final file = await _csvService.pickCsvFile();
+        if (file == null) return 0;
+        name = file.path.split('/').last;
+        content = await file.readAsString();
       }
-      return count;
+
+      final plan = await _importService.preparePlan(
+        userId: userId,
+        fileContent: content,
+        fileName: name,
+        forcedType: CsvImportType.expenses,
+        existingExpenses: _allExpenses,
+      );
+
+      if (!plan.canProceed) {
+        if (context != null && context.mounted) {
+          SnackbarService.showError(
+            context,
+            plan.globalErrors.isNotEmpty
+                ? plan.globalErrors.first
+                : 'O arquivo CSV não possui registros válidos para importar.',
+          );
+        }
+        return 0;
+      }
+
+      if (context != null && context.mounted) {
+        final resultCount = await Navigator.of(context).push<int>(
+          MaterialPageRoute(
+            builder: (_) => ImportPreviewScreen(
+              userId: userId,
+              plan: plan,
+              importService: _importService,
+            ),
+          ),
+        );
+        return resultCount ?? 0;
+      } else {
+        final result = await _importService.applyPlan(
+          userId: userId,
+          plan: plan,
+          importOnlyValid: true,
+        );
+        return result.data?.createdCount ?? 0;
+      }
     } finally {
       _setImportingCsv(false);
     }
@@ -840,6 +832,35 @@ class ExpenseViewModel extends ChangeNotifier {
   }
 }
 
+final recurrenceServiceProvider = Provider<RecurrenceService>((ref) {
+  return RecurrenceService(
+    expenseRepository: ref.read(expenseRepositoryProvider),
+    recurringRepository: ref.read(recurringExpenseRepositoryProvider),
+    occurrenceRepository: ref.read(recurrenceOccurrenceRepositoryProvider),
+    committer: FirestoreRecurrenceCommitter(),
+  );
+});
+
+final recurrenceDeletionServiceProvider = Provider<RecurrenceDeletionService>((
+  ref,
+) {
+  return RecurrenceDeletionService(
+    recurringRepository: ref.read(recurringExpenseRepositoryProvider),
+    expenseRepository: ref.read(expenseRepositoryProvider),
+    occurrenceRepository: ref.read(recurrenceOccurrenceRepositoryProvider),
+  );
+});
+
 final expenseViewModelProvider = ChangeNotifierProvider<ExpenseViewModel>(
-  (ref) => ExpenseViewModel(),
+  (ref) => ExpenseViewModel(
+    repository: ref.read(expenseRepositoryProvider),
+    recurringRepository: ref.read(recurringExpenseRepositoryProvider),
+    occurrenceRepository: ref.read(recurrenceOccurrenceRepositoryProvider),
+    recurrenceService: ref.read(recurrenceServiceProvider),
+    recurrenceDeletionService: ref.read(recurrenceDeletionServiceProvider),
+    importService: ref.read(importServiceProvider),
+    dataImportService: DataImportService(
+      expenseRepository: ref.read(expenseRepositoryProvider),
+    ),
+  ),
 );

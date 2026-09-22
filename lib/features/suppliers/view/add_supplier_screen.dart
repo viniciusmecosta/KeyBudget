@@ -79,6 +79,7 @@ class _AddSupplierScreenState extends ConsumerState<AddSupplierScreen> {
             children: [
               Expanded(
                 child: SupplierForm(
+                  isEditing: true,
                   formKey: _formKey,
                   nameController: _nameController,
                   repNameController: _repNameController,

@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'package:key_budget/app/utils/navigation_utils.dart';
 import 'package:key_budget/core/design_system/spacing/app_spacing.dart';
+import 'package:key_budget/core/design_system/widgets/app_status_badge.dart';
 import 'package:key_budget/core/design_system/widgets/app_text_field.dart';
 import 'package:key_budget/core/models/document_model.dart';
 import 'package:key_budget/core/services/snackbar_service.dart';
@@ -49,7 +50,34 @@ class DocumentDetailScreen extends ConsumerWidget {
           ),
           IconButton(
             icon: Icon(Icons.delete_outline, color: theme.colorScheme.error),
+            tooltip: 'Excluir',
             onPressed: () async {
+              final confirmed = await showDialog<bool>(
+                context: context,
+                builder: (ctx) => AlertDialog(
+                  title: const Text('Excluir Documento'),
+                  content: Text(
+                    document.versions.isNotEmpty
+                        ? 'Esta ação removerá este documento, suas ${document.versions.length} versões anteriores e todos os anexos.'
+                        : 'Esta ação removerá este documento e todos os seus anexos permanentemente.',
+                  ),
+                  actions: [
+                    TextButton(
+                      onPressed: () => Navigator.of(ctx).pop(false),
+                      child: const Text('Cancelar'),
+                    ),
+                    FilledButton(
+                      style: FilledButton.styleFrom(
+                        backgroundColor: theme.colorScheme.error,
+                      ),
+                      onPressed: () => Navigator.of(ctx).pop(true),
+                      child: const Text('Excluir'),
+                    ),
+                  ],
+                ),
+              );
+              if (confirmed != true || !context.mounted) return;
+
               HapticFeedback.mediumImpact();
               final navigator = Navigator.of(context);
               final scaffoldContext = context;
@@ -110,7 +138,7 @@ class DocumentDetailScreen extends ConsumerWidget {
                     controller: TextEditingController(
                       text: document.issueDate != null
                           ? DateFormat('dd/MM/yyyy').format(document.issueDate!)
-                          : 'Não informada',
+                          : 'Data de expedição não informada',
                     ),
                     label: 'Data de Expedição',
                     prefixIcon: Icons.calendar_today_outlined,
@@ -123,7 +151,7 @@ class DocumentDetailScreen extends ConsumerWidget {
                     controller: TextEditingController(
                       text: document.expiryDate != null
                           ? DateFormat('dd/MM/yyyy').format(document.expiryDate!)
-                          : 'Não informada',
+                          : 'Validade não informada',
                     ),
                     label: 'Validade',
                     prefixIcon: Icons.event_busy_outlined,
@@ -291,6 +319,10 @@ class DocumentDetailScreen extends ConsumerWidget {
       child: Column(
         children: document.versions.map((v) {
           final isLast = v == document.versions.last;
+          final dateText = v.issueDate != null
+              ? 'Expedição: ${DateFormat('dd/MM/yyyy').format(v.issueDate!)}'
+              : 'Data de expedição não informada';
+
           return Column(
             children: [
               ListTile(
@@ -302,10 +334,29 @@ class DocumentDetailScreen extends ConsumerWidget {
                   ),
                   child: Icon(Icons.history, color: theme.colorScheme.primary, size: 20),
                 ),
-                title: Text(
-                  v.issueDate != null ? DateFormat('dd/MM/yyyy').format(v.issueDate!) : 'Versão Antiga',
-                  style: theme.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600),
+                title: Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        dateText,
+                        style: theme.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600),
+                      ),
+                    ),
+                    if (v.isPrincipal)
+                      const AppStatusBadge(
+                        label: 'Principal',
+                        variant: AppBadgeVariant.info,
+                      ),
+                  ],
                 ),
+                subtitle: v.attachments.isNotEmpty
+                    ? Text(
+                        '${v.attachments.length} ${v.attachments.length == 1 ? "anexo" : "anexos"}',
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          color: theme.colorScheme.onSurfaceVariant,
+                        ),
+                      )
+                    : null,
                 trailing: TextButton(
                   onPressed: () async {
                     final allVersions = [document, ...document.versions];
@@ -314,13 +365,13 @@ class DocumentDetailScreen extends ConsumerWidget {
                     final success = await viewModel.setAsPrincipal(userId, v, allVersions);
                     if (!scaffoldContext.mounted) return;
                     if (success) {
-                      SnackbarService.showSuccess(scaffoldContext, 'Versão restaurada!');
+                      SnackbarService.showSuccess(scaffoldContext, 'Versão definida como principal!');
                       navigator.pop();
                     } else {
                       SnackbarService.showError(scaffoldContext, viewModel.errorMessage ?? 'Erro.');
                     }
                   },
-                  child: const Text('Restaurar'),
+                  child: const Text('Definir como principal'),
                 ),
                 onTap: () => Navigator.of(context).pushReplacement(
                   MaterialPageRoute(builder: (_) => DocumentDetailScreen(document: v)),
