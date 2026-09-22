@@ -41,7 +41,8 @@ class RecentActivitySection extends ConsumerWidget {
               return AppAnimations.listFadeIn(
                 ActivityTile(expense: recentExpenses[index], index: index),
                 index: index,
-              );
+
+                context: context,);
             },
           ),
       ],

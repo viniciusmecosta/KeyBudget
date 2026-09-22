@@ -108,19 +108,22 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                                           AppAnimations.fadeInFromBottom(
                                             const DashboardBalanceCard(),
                                             key: const Key('dashboard_balance'),
-                                          ),
+
+                                            context: context,),
                                           const SizedBox(height: AppSpacing.md),
                                           AppAnimations.fadeInFromBottom(
                                             const QuickActionsSection(),
                                             key: const Key('dashboard_quick_actions'),
                                             delay: const Duration(milliseconds: 100),
-                                          ),
+
+                                            context: context,),
                                           const SizedBox(height: AppSpacing.md),
                                           AppAnimations.fadeInFromBottom(
                                             const DashboardMonthlyChart(),
                                             key: const Key('dashboard_chart'),
                                             delay: const Duration(milliseconds: 200),
-                                          ),
+
+                                            context: context,),
                                         ],
                                       ),
                                     ),
@@ -131,7 +134,8 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                                         const RecentActivitySection(),
                                         key: const Key('dashboard_recent_activity'),
                                         delay: const Duration(milliseconds: 150),
-                                      ),
+
+                                        context: context,),
                                     ),
                                   ],
                                 );
@@ -142,25 +146,29 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                                   AppAnimations.fadeInFromBottom(
                                     const DashboardBalanceCard(),
                                     key: const Key('dashboard_balance'),
-                                  ),
+
+                                    context: context,),
                                   const SizedBox(height: AppSpacing.md),
                                   AppAnimations.fadeInFromBottom(
                                     const DashboardMonthlyChart(),
                                     key: const Key('dashboard_chart'),
                                     delay: const Duration(milliseconds: 100),
-                                  ),
+
+                                    context: context,),
                                   const SizedBox(height: AppSpacing.md),
                                   AppAnimations.fadeInFromBottom(
                                     const QuickActionsSection(),
                                     key: const Key('dashboard_quick_actions'),
                                     delay: const Duration(milliseconds: 200),
-                                  ),
+
+                                    context: context,),
                                   const SizedBox(height: AppSpacing.md),
                                   AppAnimations.fadeInFromBottom(
                                     const RecentActivitySection(),
                                     key: const Key('dashboard_recent_activity'),
                                     delay: const Duration(milliseconds: 300),
-                                  ),
+
+                                    context: context,),
                                 ],
                               );
                             },

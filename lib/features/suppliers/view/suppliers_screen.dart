@@ -165,7 +165,8 @@ class _SuppliersScreenState extends ConsumerState<SuppliersScreen> {
               ),
             ),
           ),
-        ),
+
+          context: context,),
       ),
       floatingActionButton: AppAnimations.scaleIn(
         FloatingActionButton.extended(
@@ -183,7 +184,8 @@ class _SuppliersScreenState extends ConsumerState<SuppliersScreen> {
           foregroundColor: theme.colorScheme.onPrimary,
           elevation: 0,
         ),
-      ),
+
+        context: context,),
     );
   }
 }

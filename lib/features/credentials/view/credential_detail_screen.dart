@@ -600,7 +600,8 @@ class _CredentialDetailScreenState
                 )
               : _buildDetailContent(theme, vm),
         ),
-      ),
+
+        context: context,),
     );
   }
 

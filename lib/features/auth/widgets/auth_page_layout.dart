@@ -110,7 +110,8 @@ class AuthPageLayout extends StatelessWidget {
               ),
             ),
           ),
-        ),
+
+          context: context,),
       ),
     );
   }

@@ -400,7 +400,8 @@ class _ExpenseDetailScreenState extends ConsumerState<ExpenseDetailScreen> {
             ],
           ),
         ),
-      ),
+
+        context: context,),
     );
   }
 }

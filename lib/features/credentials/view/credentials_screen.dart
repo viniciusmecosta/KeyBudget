@@ -458,7 +458,8 @@ class _CredentialsScreenState extends ConsumerState<CredentialsScreen> {
                 ),
               ),
             ),
-          ),
+
+            context: context,),
         ),
         floatingActionButton: AppAnimations.scaleIn(
           FloatingActionButton.extended(

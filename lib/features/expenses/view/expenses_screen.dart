@@ -322,7 +322,8 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen> {
                         );
                       },
                     ),
-                  ),
+
+                    context: context,),
                 ),
                 _buildActiveFilterChips(
                   context,
@@ -573,7 +574,7 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen> {
             ),
           ),
         ),
-        body: SafeArea(child: AppAnimations.fadeInFromBottom(body)),
+        body: SafeArea(child: AppAnimations.fadeInFromBottom(body, context: context)),
         floatingActionButton: AppAnimations.scaleIn(
           FloatingActionButton.extended(
             heroTag: 'fab_expenses',
@@ -590,7 +591,8 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen> {
             foregroundColor: theme.colorScheme.onPrimary,
             elevation: 0,
           ),
-        ),
+
+          context: context,),
       ),
     );
   }
