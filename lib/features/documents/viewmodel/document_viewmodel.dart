@@ -45,6 +45,7 @@ class DocumentViewModel extends ChangeNotifier {
   String get searchQuery => _searchQuery;
 
   List<Document> get currentDisplayItems => _currentDisplayItems;
+  bool get hasDocuments => _documents.isNotEmpty;
 
   String _sanitize(String input) {
     var text = input.toLowerCase().replaceAll(RegExp(r'\s+'), ' ').trim();
@@ -69,17 +70,29 @@ class DocumentViewModel extends ChangeNotifier {
         .getDocumentsStream(userId)
         .listen(
           (newDocs) async {
-            final processedNewDocs = await _processDocuments(newDocs, userId);
-            _documents = processedNewDocs;
-            _updateDisplayList(animate: true);
-            _setLoading(false);
+            try {
+              final processedNewDocs = await _processDocuments(newDocs, userId);
+              _documents = processedNewDocs;
+              _setErrorMessage(null);
+              _updateDisplayList(animate: true);
+            } catch (_) {
+              _setErrorMessage('Erro ao carregar os documentos.');
+            } finally {
+              _setLoading(false);
+            }
           },
           onError: (error) {
             _setErrorMessage('Erro ao carregar os documentos.');
+            _isListening = false;
             _setLoading(false);
           },
         );
     _isListening = true;
+  }
+
+  void retryListenToDocuments(String userId) {
+    _isListening = false;
+    listenToDocuments(userId);
   }
 
   void _updateDisplayList({bool animate = true}) {
@@ -159,11 +172,17 @@ class DocumentViewModel extends ChangeNotifier {
 
   Future<void> forceRefresh(String userId) async {
     _setLoading(true);
-    final docs = await _repository.getDocumentsForUser(userId);
-    final processedDocs = await _processDocuments(docs, userId);
-    _documents = processedDocs;
-    _updateDisplayList(animate: true);
-    _setLoading(false);
+    try {
+      final docs = await _repository.getDocumentsForUser(userId);
+      final processedDocs = await _processDocuments(docs, userId);
+      _documents = processedDocs;
+      _setErrorMessage(null);
+      _updateDisplayList(animate: true);
+    } catch (_) {
+      _setErrorMessage('Não foi possível atualizar os documentos.');
+    } finally {
+      _setLoading(false);
+    }
   }
 
   Future<List<Document>> _processDocuments(

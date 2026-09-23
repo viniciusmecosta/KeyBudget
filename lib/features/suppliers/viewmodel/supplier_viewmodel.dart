@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/legacy.dart';
 import 'package:key_budget/core/models/supplier_model.dart';
@@ -9,12 +10,14 @@ class SupplierViewModel extends ChangeNotifier {
   final SupplierRepository _repository;
 
   SupplierViewModel({SupplierRepository? repository})
-      : _repository = repository ?? SupplierRepository();
+    : _repository = repository ?? SupplierRepository();
 
   List<Supplier> _allSuppliers = [];
   bool _isLoading = false;
   StreamSubscription? _suppliersSubscription;
   bool _isListening = false;
+  bool _hasLoadError = false;
+  bool _isOffline = false;
 
   List<Supplier> get allSuppliers => _allSuppliers;
 
@@ -42,6 +45,8 @@ class SupplierViewModel extends ChangeNotifier {
   }
 
   bool get isLoading => _isLoading;
+  bool get hasLoadError => _hasLoadError;
+  bool get isOffline => _isOffline;
 
   List<String> get userSupplierPhotos => _allSuppliers
       .map((supp) => supp.photoPath)
@@ -61,17 +66,37 @@ class SupplierViewModel extends ChangeNotifier {
     }
 
     _setLoading(true);
+    _hasLoadError = false;
+    _isOffline = false;
     _suppliersSubscription?.cancel();
     _suppliersSubscription = _repository
         .getSuppliersStreamForUser(userId)
-        .listen((suppliers) {
-          _allSuppliers = suppliers;
-          _allSuppliers.sort(
-            (a, b) => a.name.toLowerCase().compareTo(b.name.toLowerCase()),
-          );
-          _setLoading(false);
-        });
+        .listen(
+          (suppliers) {
+            _allSuppliers = suppliers;
+            _hasLoadError = false;
+            _isOffline = false;
+            _allSuppliers.sort(
+              (a, b) => a.name.toLowerCase().compareTo(b.name.toLowerCase()),
+            );
+            _setLoading(false);
+          },
+          onError: (Object error) {
+            _hasLoadError = true;
+            _isOffline =
+                error is FirebaseException &&
+                (error.code == 'unavailable' ||
+                    error.code == 'network-request-failed');
+            _isListening = false;
+            _setLoading(false);
+          },
+        );
     _isListening = true;
+  }
+
+  void retryListenToSuppliers(String userId) {
+    _isListening = false;
+    listenToSuppliers(userId);
   }
 
   Future<void> addSupplier({
@@ -128,6 +153,8 @@ class SupplierViewModel extends ChangeNotifier {
     _suppliersSubscription?.cancel();
     _allSuppliers = [];
     _isListening = false;
+    _hasLoadError = false;
+    _isOffline = false;
     notifyListeners();
   }
 
@@ -145,7 +172,5 @@ class SupplierViewModel extends ChangeNotifier {
 }
 
 final supplierViewModelProvider = ChangeNotifierProvider<SupplierViewModel>(
-  (ref) => SupplierViewModel(
-    repository: ref.read(supplierRepositoryProvider),
-  ),
+  (ref) => SupplierViewModel(repository: ref.read(supplierRepositoryProvider)),
 );

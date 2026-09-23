@@ -9,6 +9,7 @@ import 'package:key_budget/app/widgets/empty_state_widget.dart';
 import 'package:key_budget/app/widgets/responsive_center.dart';
 import 'package:key_budget/core/design_system/borders/app_borders.dart';
 import 'package:key_budget/core/design_system/widgets/app_search_field.dart';
+import 'package:key_budget/core/design_system/widgets/app_feedback_panel.dart';
 import 'package:key_budget/features/auth/viewmodel/auth_viewmodel.dart';
 import 'package:key_budget/features/suppliers/view/add_supplier_screen.dart';
 import 'package:key_budget/features/suppliers/viewmodel/supplier_viewmodel.dart';
@@ -117,6 +118,29 @@ class _SuppliersScreenState extends ConsumerState<SuppliersScreen> {
                 slivers: [
                   if (viewModel.isLoading)
                     const SuppliersSkeleton()
+                  else if (viewModel.hasLoadError &&
+                      viewModel.allSuppliers.isEmpty)
+                    SliverFillRemaining(
+                      hasScrollBody: false,
+                      child: AppFeedbackPanel(
+                        title: viewModel.isOffline
+                            ? 'Sem conexão'
+                            : 'Falha ao carregar fornecedores',
+                        message: viewModel.isOffline
+                            ? 'Confira sua conexão e tente novamente.'
+                            : 'Não foi possível carregar seus fornecedores agora.',
+                        type: AppFeedbackType.error,
+                        actionLabel: 'Tentar novamente',
+                        onAction: () {
+                          final user = ref
+                              .read(authViewModelProvider)
+                              .currentUser;
+                          if (user != null) {
+                            viewModel.retryListenToSuppliers(user.id);
+                          }
+                        },
+                      ),
+                    )
                   else if (viewModel.allSuppliers.isEmpty)
                     SliverFillRemaining(
                       hasScrollBody: false,
@@ -147,14 +171,9 @@ class _SuppliersScreenState extends ConsumerState<SuppliersScreen> {
                     )
                   else
                     SliverPadding(
-                      padding: const EdgeInsets.all(
-                        AppTheme.defaultPadding,
-                      ),
+                      padding: const EdgeInsets.all(AppTheme.defaultPadding),
                       sliver: SliverList(
-                        delegate: SliverChildBuilderDelegate((
-                          context,
-                          index,
-                        ) {
+                        delegate: SliverChildBuilderDelegate((context, index) {
                           final supplier = viewModel.filteredSuppliers[index];
                           return SupplierListTile(supplier: supplier);
                         }, childCount: viewModel.filteredSuppliers.length),
@@ -166,7 +185,8 @@ class _SuppliersScreenState extends ConsumerState<SuppliersScreen> {
             ),
           ),
 
-          context: context,),
+          context: context,
+        ),
       ),
       floatingActionButton: AppAnimations.scaleIn(
         FloatingActionButton.extended(
@@ -177,15 +197,14 @@ class _SuppliersScreenState extends ConsumerState<SuppliersScreen> {
           },
           icon: const Icon(Icons.add_rounded),
           label: const Text("Novo Fornecedor"),
-          shape: RoundedRectangleBorder(
-            borderRadius: AppBorders.borderRadiusL,
-          ),
+          shape: RoundedRectangleBorder(borderRadius: AppBorders.borderRadiusL),
           backgroundColor: theme.colorScheme.primary,
           foregroundColor: theme.colorScheme.onPrimary,
           elevation: 0,
         ),
 
-        context: context,),
+        context: context,
+      ),
     );
   }
 }
