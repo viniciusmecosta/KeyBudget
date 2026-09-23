@@ -86,6 +86,36 @@ void main() {
     expect(nameField, findsOneWidget);
     await tester.enterText(nameField, 'Distribuidora Silva');
     expect(find.text('Distribuidora Silva'), findsOneWidget);
+    await tester.pump();
+
+    final popScope = tester.widget<PopScope>(
+      find.byWidgetPredicate((widget) => widget is PopScope),
+    );
+    expect(popScope.canPop, isFalse);
+    popScope.onPopInvokedWithResult!(false, null);
+    await tester.pumpAndSettle();
+    expect(find.text('Descartar alterações?'), findsOneWidget);
+    await tester.tap(find.text('Cancelar'));
+    await tester.pumpAndSettle();
+    expect(find.byType(AddSupplierScreen), findsOneWidget);
+  });
+
+  testWidgets('AppTextField advances focus when keyboard action is next', (tester) async {
+    await tester.pumpWidget(const MaterialApp(
+      home: Scaffold(
+        body: Column(
+          children: [
+            AppTextField(label: 'Primeiro', textInputAction: TextInputAction.next),
+            AppTextField(label: 'Segundo', textInputAction: TextInputAction.done),
+          ],
+        ),
+      ),
+    ));
+
+    await tester.tap(find.widgetWithText(AppTextField, 'Primeiro'));
+    await tester.testTextInput.receiveAction(TextInputAction.next);
+    await tester.pump();
+    expect(tester.widget<EditableText>(find.byType(EditableText).at(1)).focusNode.hasFocus, isTrue);
   });
 
   testWidgets('SavedLogosScreen filters photos by module and deduplicates', (tester) async {
