@@ -97,6 +97,7 @@ class _AddCredentialScreenState extends ConsumerState<AddCredentialScreen> {
 
     if (mounted) {
       setState(() => _isSaving = false);
+      _hasUnsavedChanges = false;
       Navigator.of(context).pop();
     }
   }
@@ -130,6 +131,7 @@ class _AddCredentialScreenState extends ConsumerState<AddCredentialScreen> {
         );
         if (shouldPop ?? false) {
           if (context.mounted) {
+            setState(() => _hasUnsavedChanges = false);
             Navigator.of(context).pop(result);
           }
         }

@@ -109,6 +109,7 @@ class _AddExpenseScreenState extends ConsumerState<AddExpenseScreen> {
 
     if (!scaffoldContext.mounted) return;
     setState(() => _isSaving = false);
+    _hasUnsavedChanges = false;
     navigator.pop();
   }
 
@@ -142,6 +143,7 @@ class _AddExpenseScreenState extends ConsumerState<AddExpenseScreen> {
         );
         if (shouldPop ?? false) {
           if (context.mounted) {
+            setState(() => _hasUnsavedChanges = false);
             Navigator.of(context).pop(result);
           }
         }
