@@ -133,7 +133,7 @@ class UserScreen extends ConsumerWidget {
       }
     } catch (e) {
       if (context.mounted) {
-        SnackbarService.showError(context, 'Erro ao realizar backup: $e');
+        SnackbarService.showError(context, 'Não foi possível concluir o backup. Tente novamente.');
       }
     }
   }

@@ -79,7 +79,7 @@ class RestoreService {
       );
     } catch (e) {
       return OperationResult.failed(
-        safeError: 'Falha ao descriptografar backup: $e',
+        safeError: 'Não foi possível abrir o backup. Confira a senha e o arquivo.',
       );
     }
 
@@ -92,7 +92,7 @@ class RestoreService {
       );
     } catch (e) {
       return OperationResult.failed(
-        safeError: 'Pacote de backup malformado: $e',
+        safeError: 'O arquivo de backup está danificado ou incompleto.',
       );
     }
 
@@ -108,7 +108,7 @@ class RestoreService {
       manifest = BackupManifest.fromJsonString(utf8.decode(manifestBytes));
     } catch (e) {
       return OperationResult.failed(
-        safeError: 'Não foi possível interpretar o manifesto do backup: $e',
+        safeError: 'O backup contém dados inválidos. Escolha outro arquivo.',
       );
     }
 
@@ -554,7 +554,7 @@ class RestoreService {
       await journal.saveToSecureStorage(storage: secureStorage);
       return OperationResult.partial(
         totalCount: createdCount + replacedCount,
-        safeError: 'Restauração interrompida: $e. O progresso foi salvo no journal para retomada.',
+        safeError: 'A restauração foi interrompida. O progresso foi salvo; tente continuar a restauração.',
       );
     }
   }

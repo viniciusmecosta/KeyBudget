@@ -12,6 +12,7 @@ import 'package:key_budget/app/view/lock_screen.dart';
 import 'package:key_budget/core/services/app_lock_service.dart';
 import 'package:key_budget/core/services/home_widget_service.dart';
 import 'package:key_budget/core/services/notification_service.dart';
+import 'package:key_budget/core/design_system/widgets/app_feedback_panel.dart';
 import 'package:key_budget/features/auth/viewmodel/auth_viewmodel.dart';
 import 'package:key_budget/features/dashboard/widgets/dashboard_skeleton.dart';
 import 'package:key_budget/features/expenses/view/add_expense_screen.dart';
@@ -46,6 +47,10 @@ class _AppInitializerState extends ConsumerState<AppInitializer> {
     await NotificationService.initialize();
   }
 
+  void _retryInitialization() {
+    setState(() => _initFuture = _initServices());
+  }
+
   @override
   Widget build(BuildContext context) {
     return FutureBuilder(
@@ -53,7 +58,7 @@ class _AppInitializerState extends ConsumerState<AppInitializer> {
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.done) {
           if (snapshot.hasError) {
-            return ErrorScreen(error: snapshot.error.toString());
+            return ErrorScreen(onRetry: _retryInitialization);
           }
           return const MyApp();
         }
@@ -217,28 +222,25 @@ class _MyAppState extends ConsumerState<MyApp> with WidgetsBindingObserver {
   }
 }
 
-class ErrorScreen extends ConsumerWidget {
-  final String error;
+class ErrorScreen extends StatelessWidget {
+  final VoidCallback onRetry;
 
-  const ErrorScreen({super.key, required this.error});
+  const ErrorScreen({super.key, required this.onRetry});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       theme: AppTheme.lightTheme,
       darkTheme: AppTheme.darkTheme,
       home: Scaffold(
-        body: Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: Center(
-            child: Text(
-              'Ocorreu um erro crítico na inicialização:\n\n$error',
-              textAlign: TextAlign.center,
-              style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                color: Theme.of(context).colorScheme.error,
-              ),
-            ),
+        body: SafeArea(
+          child: AppFeedbackPanel(
+            title: 'Não foi possível iniciar o KeyBudget',
+            message: 'Confira sua conexão e tente novamente.',
+            type: AppFeedbackType.error,
+            actionLabel: 'Tentar novamente',
+            onAction: onRetry,
           ),
         ),
       ),

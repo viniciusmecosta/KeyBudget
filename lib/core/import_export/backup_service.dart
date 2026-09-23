@@ -262,7 +262,7 @@ class BackupService {
       }
     } catch (e) {
       return OperationResult.failed(
-        safeError: 'Falha na auto-verificação de integridade do backup gerado: $e',
+        safeError: 'Não foi possível verificar o backup gerado. Tente criar outro backup.',
       );
     }
 

@@ -170,7 +170,7 @@ class RecurrenceReconciliationService {
       return OperationResult.completed(count: ledgerEntries.length);
     } catch (e) {
       return OperationResult.failed(
-        safeError: 'Falha na reconciliação da regra: ${e.toString()}',
+        safeError: 'Não foi possível atualizar a recorrência. Tente novamente.',
       );
     }
   }

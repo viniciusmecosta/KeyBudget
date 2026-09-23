@@ -172,7 +172,7 @@ class RecurrenceService {
       );
     } catch (e) {
       return OperationResult.failed(
-        safeError: 'Falha na geração de despesas recorrentes: ${e.toString()}',
+        safeError: 'Não foi possível gerar as despesas recorrentes. Tente novamente.',
       );
     }
   }

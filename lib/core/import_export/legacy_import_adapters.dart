@@ -78,7 +78,7 @@ class LegacyImportAdapters {
       );
     } catch (e) {
       return OperationResult.failed(
-        safeError: 'Falha ao carregar JSON legado: ${e.toString()}',
+        safeError: 'Não foi possível ler o arquivo legado. Verifique o arquivo e tente novamente.',
       );
     }
   }
@@ -130,7 +130,7 @@ class LegacyImportAdapters {
       );
     } catch (e) {
       return OperationResult.failed(
-        safeError: 'Erro de sintaxe JSON: ${e.toString()}',
+        safeError: 'O arquivo JSON está inválido. Verifique o conteúdo e tente novamente.',
       );
     }
   }

@@ -408,7 +408,7 @@ class PdfService {
       if (!context.mounted) return;
       SnackbarService.showError(
         context,
-        'Falha ao gerar relatório de despesas: $e',
+        'Não foi possível gerar o relatório de despesas. Tente novamente.',
         title: 'Erro Exportação PDF',
       );
     }
@@ -569,7 +569,7 @@ class PdfService {
       if (!context.mounted) return;
       SnackbarService.showError(
         context,
-        'Falha ao gerar relatório de credenciais: $e',
+        'Não foi possível gerar o relatório de credenciais. Tente novamente.',
         title: 'Erro Exportação PDF',
       );
     }
@@ -869,7 +869,7 @@ class PdfService {
       if (!context.mounted) return;
       SnackbarService.showError(
         context,
-        'Falha ao gerar relatório de análise: $e',
+        'Não foi possível gerar o relatório de análise. Tente novamente.',
         title: 'Erro Exportação PDF',
       );
     }

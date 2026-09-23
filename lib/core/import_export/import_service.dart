@@ -333,7 +333,7 @@ class ImportService {
       );
     } catch (e) {
       return OperationResult.failed(
-        safeError: 'Falha durante a aplicação da importação: ${e.toString()}',
+        safeError: 'Não foi possível concluir a importação. Verifique os dados e tente novamente.',
       );
     }
   }
@@ -356,7 +356,7 @@ class ImportService {
       return OperationResult.completed(count: report.createdIds.length);
     } catch (e) {
       return OperationResult.failed(
-        safeError: 'Falha ao desfazer importação: ${e.toString()}',
+        safeError: 'Não foi possível desfazer a importação. Tente novamente.',
       );
     }
   }
