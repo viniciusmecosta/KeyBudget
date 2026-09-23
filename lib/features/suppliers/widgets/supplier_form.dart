@@ -50,6 +50,30 @@ class SupplierForm extends ConsumerWidget {
     );
   }
 
+  Widget _fieldPair(Widget first, Widget second) {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        if (constraints.maxWidth >= 640) {
+          return Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Expanded(child: first),
+              const SizedBox(width: AppSpacing.md),
+              Expanded(child: second),
+            ],
+          );
+        }
+        return Column(
+          children: [
+            first,
+            const SizedBox(height: AppSpacing.md),
+            second,
+          ],
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
@@ -100,7 +124,9 @@ class SupplierForm extends ConsumerWidget {
                   onPressed: () => onPhotoChanged(null),
                   icon: const Icon(Icons.no_photography_outlined, size: 18),
                   label: const Text('Remover'),
-                  style: TextButton.styleFrom(foregroundColor: theme.colorScheme.error),
+                  style: TextButton.styleFrom(
+                    foregroundColor: theme.colorScheme.error,
+                  ),
                 ),
               ],
             ],
@@ -108,59 +134,69 @@ class SupplierForm extends ConsumerWidget {
           const SizedBox(height: AppSpacing.md),
           _sectionHeader(context, 'IDENTIFICAÇÃO', Icons.store_outlined),
           const SizedBox(height: AppSpacing.sm),
-          AppTextField(
-            controller: nameController,
-            label: 'Nome do Fornecedor / Loja *',
-            prefixIcon: Icons.storefront_outlined,
-            textCapitalization: TextCapitalization.words,
-            readOnly: !isEditing,
-            textInputAction: TextInputAction.next,
-            validator: (value) =>
-                value == null || value.isEmpty ? 'Informe o nome do fornecedor' : null,
-          ),
-          const SizedBox(height: AppSpacing.md),
-          AppTextField(
-            controller: repNameController,
-            label: 'Nome do Representante',
-            prefixIcon: Icons.person_outline,
-            textCapitalization: TextCapitalization.words,
-            readOnly: !isEditing,
-            textInputAction: TextInputAction.next,
+          _fieldPair(
+            AppTextField(
+              controller: nameController,
+              label: 'Nome do Fornecedor / Loja *',
+              prefixIcon: Icons.storefront_outlined,
+              textCapitalization: TextCapitalization.words,
+              readOnly: !isEditing,
+              textInputAction: TextInputAction.next,
+              validator: (value) => value == null || value.isEmpty
+                  ? 'Informe o nome do fornecedor'
+                  : null,
+            ),
+            AppTextField(
+              controller: repNameController,
+              label: 'Nome do Representante',
+              prefixIcon: Icons.person_outline,
+              textCapitalization: TextCapitalization.words,
+              readOnly: !isEditing,
+              textInputAction: TextInputAction.next,
+            ),
           ),
           const SizedBox(height: AppSpacing.md),
           _sectionHeader(context, 'CONTATO', Icons.contacts_outlined),
           const SizedBox(height: AppSpacing.sm),
-          AppTextField(
-            controller: emailController,
-            label: 'Email',
-            prefixIcon: Icons.email_outlined,
-            keyboardType: TextInputType.emailAddress,
-            readOnly: !isEditing,
-            textInputAction: TextInputAction.next,
-            validator: (value) {
-              if (value == null || value.isEmpty) return null;
-              final emailRegex = RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$');
-              if (!emailRegex.hasMatch(value)) return 'Insira um email válido';
-              return null;
-            },
-          ),
-          const SizedBox(height: AppSpacing.md),
-          AppTextField(
-            controller: phoneController,
-            label: 'Telefone / WhatsApp',
-            prefixIcon: Icons.phone_outlined,
-            inputFormatters: [PasteSanitizerInputFormatter(), phoneMaskFormatter],
-            keyboardType: TextInputType.phone,
-            readOnly: !isEditing,
-            textInputAction: TextInputAction.next,
-            validator: (value) {
-              if (value == null || value.isEmpty) return null;
-              final unmasked = phoneMaskFormatter.unmaskText(phoneController.text);
-              if (unmasked.isNotEmpty && unmasked.length < 10) {
-                return 'O telefone deve ter no mínimo 10 dígitos';
-              }
-              return null;
-            },
+          _fieldPair(
+            AppTextField(
+              controller: emailController,
+              label: 'Email',
+              prefixIcon: Icons.email_outlined,
+              keyboardType: TextInputType.emailAddress,
+              readOnly: !isEditing,
+              textInputAction: TextInputAction.next,
+              validator: (value) {
+                if (value == null || value.isEmpty) return null;
+                final emailRegex = RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$');
+                if (!emailRegex.hasMatch(value)) {
+                  return 'Insira um email válido';
+                }
+                return null;
+              },
+            ),
+            AppTextField(
+              controller: phoneController,
+              label: 'Telefone / WhatsApp',
+              prefixIcon: Icons.phone_outlined,
+              inputFormatters: [
+                PasteSanitizerInputFormatter(),
+                phoneMaskFormatter,
+              ],
+              keyboardType: TextInputType.phone,
+              readOnly: !isEditing,
+              textInputAction: TextInputAction.next,
+              validator: (value) {
+                if (value == null || value.isEmpty) return null;
+                final unmasked = phoneMaskFormatter.unmaskText(
+                  phoneController.text,
+                );
+                if (unmasked.isNotEmpty && unmasked.length < 10) {
+                  return 'O telefone deve ter no mínimo 10 dígitos';
+                }
+                return null;
+              },
+            ),
           ),
           const SizedBox(height: AppSpacing.md),
           _sectionHeader(context, 'EXTRAS', Icons.notes_outlined),

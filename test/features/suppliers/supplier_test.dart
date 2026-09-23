@@ -11,8 +11,10 @@ import 'package:key_budget/features/credentials/viewmodel/credential_viewmodel.d
 import 'package:key_budget/features/credentials/widgets/saved_logos_screen.dart';
 import 'package:key_budget/features/suppliers/repository/supplier_repository.dart';
 import 'package:key_budget/features/suppliers/view/add_supplier_screen.dart';
+import 'package:key_budget/features/suppliers/view/suppliers_screen.dart';
 import 'package:key_budget/features/suppliers/viewmodel/supplier_viewmodel.dart';
 import 'package:key_budget/features/suppliers/widgets/supplier_form.dart';
+import 'package:key_budget/features/suppliers/widgets/supplier_preview_panel.dart';
 
 class FakeSupplierRepository extends Fake implements SupplierRepository {}
 
@@ -21,18 +23,18 @@ class FakeCredentialRepository extends Fake implements CredentialRepository {}
 class FakeAuthRepository extends Fake implements AuthRepository {}
 
 class FakeSupplierViewModel extends SupplierViewModel {
-  FakeSupplierViewModel() : super(repository: FakeSupplierRepository());
-
-  final List<Supplier> _fakeSuppliers = [
+  FakeSupplierViewModel({List<Supplier>? suppliers}) : super(repository: FakeSupplierRepository()) {
+    setSuppliersForTesting(suppliers ?? [
     Supplier(
       id: 's1',
       name: 'Fornecedor A',
       photoPath: 'photo_supplier_a',
     ),
-  ];
+    ]);
+  }
 
   @override
-  List<Supplier> get allSuppliers => _fakeSuppliers;
+  void listenToSuppliers(String userId) {}
 
   @override
   List<String> get userSupplierPhotos =>
@@ -116,6 +118,53 @@ void main() {
     await tester.testTextInput.receiveAction(TextInputAction.next);
     await tester.pump();
     expect(tester.widget<EditableText>(find.byType(EditableText).at(1)).focusNode.hasFocus, isTrue);
+  });
+
+  testWidgets('SuppliersScreen shows list and selected detail on tablet', (tester) async {
+    tester.view.physicalSize = const Size(1200, 800);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    final vm = FakeSupplierViewModel(suppliers: [
+      Supplier(id: 's1', name: 'Fornecedor A'),
+      Supplier(id: 's2', name: 'Fornecedor B', email: 'b@exemplo.com'),
+    ]);
+
+    await tester.pumpWidget(ProviderScope(
+      overrides: [
+        authViewModelProvider.overrideWith((ref) => FakeAuthViewModel()),
+        supplierViewModelProvider.overrideWith((ref) => vm),
+      ],
+      child: const MaterialApp(home: SuppliersScreen()),
+    ));
+    await tester.pumpAndSettle();
+
+    expect(find.byType(SupplierPreviewPanel), findsOneWidget);
+    expect(tester.widget<SupplierPreviewPanel>(find.byType(SupplierPreviewPanel)).supplier.name, 'Fornecedor A');
+    await tester.tap(find.text('Fornecedor B').first);
+    await tester.pumpAndSettle();
+    expect(tester.widget<SupplierPreviewPanel>(find.byType(SupplierPreviewPanel)).supplier.name, 'Fornecedor B');
+  });
+
+  testWidgets('SupplierForm places paired fields in columns on tablet', (tester) async {
+    tester.view.physicalSize = const Size(1000, 800);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+
+    await tester.pumpWidget(ProviderScope(
+      overrides: [
+        authViewModelProvider.overrideWith((ref) => FakeAuthViewModel()),
+        supplierViewModelProvider.overrideWith((ref) => FakeSupplierViewModel()),
+      ],
+      child: const MaterialApp(home: AddSupplierScreen()),
+    ));
+    await tester.pumpAndSettle();
+
+    final name = tester.getTopLeft(find.widgetWithText(AppTextField, 'Nome do Fornecedor / Loja *'));
+    final representative = tester.getTopLeft(find.widgetWithText(AppTextField, 'Nome do Representante'));
+    expect(name.dy, representative.dy);
+    expect(representative.dx, greaterThan(name.dx));
   });
 
   testWidgets('SavedLogosScreen filters photos by module and deduplicates', (tester) async {
