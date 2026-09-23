@@ -21,7 +21,9 @@ class AppSectionHeader extends StatelessWidget {
       padding: const EdgeInsets.symmetric(vertical: AppSpacing.sm),
       child: LayoutBuilder(
         builder: (context, constraints) {
-          final isNarrow = constraints.maxWidth < 360;
+          final isNarrow =
+              constraints.maxWidth < 360 ||
+              MediaQuery.textScalerOf(context).scale(14) > 19;
 
           final titleWidget = Column(
             crossAxisAlignment: CrossAxisAlignment.start,

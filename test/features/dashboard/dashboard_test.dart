@@ -263,6 +263,36 @@ void main() {
       expect(find.text('Adicionar despesa'), findsOneWidget);
     });
 
+    testWidgets('RecentActivitySection keeps its action visible with 200% text', (tester) async {
+      tester.view.physicalSize = const Size(320, 720);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: [
+            authViewModelProvider.overrideWith((ref) => FakeAuthVM(
+              mockUser: User(id: 'u1', name: 'Tester', email: 't@t.com'),
+            )),
+            dashboardViewModelProvider.overrideWith((ref) => FakeDashboardVM()),
+            navigationViewModelProvider.overrideWith((ref) => NavigationViewModel()),
+          ],
+          child: MaterialApp(
+            builder: (context, child) => MediaQuery(
+              data: MediaQuery.of(context).copyWith(textScaler: const TextScaler.linear(2)),
+              child: child!,
+            ),
+            home: const Scaffold(body: SingleChildScrollView(child: RecentActivitySection())),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(tester.takeException(), isNull);
+      expect(find.text('Ver todas'), findsOneWidget);
+    });
+
     testWidgets('RecentActivitySection renders empty month state with historical link', (tester) async {
       final navVM = NavigationViewModel();
       final authVM = FakeAuthVM(
