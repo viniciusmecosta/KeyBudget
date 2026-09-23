@@ -7,6 +7,7 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:key_budget/app/config/app_theme.dart';
 import 'package:key_budget/app/utils/navigation_utils.dart';
 import 'package:key_budget/core/design_system/widgets/app_card.dart';
+import 'package:key_budget/core/design_system/borders/app_borders.dart';
 import 'package:key_budget/core/models/supplier_model.dart';
 import 'package:key_budget/core/services/snackbar_service.dart';
 import 'package:key_budget/features/suppliers/view/supplier_detail_screen.dart';
@@ -14,8 +15,15 @@ import 'package:url_launcher/url_launcher.dart';
 
 class SupplierListTile extends ConsumerWidget {
   final Supplier supplier;
+  final VoidCallback? onTap;
+  final bool selected;
 
-  const SupplierListTile({super.key, required this.supplier});
+  const SupplierListTile({
+    super.key,
+    required this.supplier,
+    this.onTap,
+    this.selected = false,
+  });
 
   void _launchWhatsApp(BuildContext context, String phone) async {
     final sanitizedPhone = phone.replaceAll(RegExp(r'[^0-9]'), '');
@@ -37,7 +45,7 @@ class SupplierListTile extends ConsumerWidget {
   void _launchEmail(BuildContext context, String email) async {
     final emailUrl = 'mailto:$email';
     final uri = Uri.parse(emailUrl);
-    
+
     try {
       await launchUrl(uri, mode: LaunchMode.externalApplication);
     } catch (e) {
@@ -67,76 +75,87 @@ class SupplierListTile extends ConsumerWidget {
       subtitleText = 'Sem contato';
     }
 
-    return Container(
-      margin: const EdgeInsets.only(bottom: AppTheme.spaceS),
-      child: AppCard(
-        onTap: () {
-          NavigationUtils.push(
-            context,
-            SupplierDetailScreen(supplier: supplier),
-          );
-        },
-        padding: const EdgeInsets.all(16),
-        child: Row(
-          children: [
-            CircleAvatar(
-              radius: 24,
-              backgroundColor: theme.colorScheme.tertiary.withAlpha(
-                (255 * 0.15).round(),
+    return Semantics(
+      selected: selected,
+      child: Container(
+        margin: const EdgeInsets.only(bottom: AppTheme.spaceS),
+        decoration: selected
+            ? BoxDecoration(
+                border: Border.all(color: theme.colorScheme.primary, width: 2),
+                borderRadius: AppBorders.borderRadiusL,
+              )
+            : null,
+        child: AppCard(
+          onTap:
+              onTap ??
+              () {
+                NavigationUtils.push(
+                  context,
+                  SupplierDetailScreen(supplier: supplier),
+                );
+              },
+          padding: const EdgeInsets.all(16),
+          child: Row(
+            children: [
+              CircleAvatar(
+                radius: 24,
+                backgroundColor: theme.colorScheme.tertiary.withAlpha(
+                  (255 * 0.15).round(),
+                ),
+                backgroundImage: photoPath != null && photoPath.isNotEmpty
+                    ? MemoryImage(base64Decode(photoPath))
+                    : null,
+                child: photoPath == null || photoPath.isEmpty
+                    ? Icon(
+                        Icons.store_outlined,
+                        color: theme.colorScheme.tertiary,
+                      )
+                    : null,
               ),
-              backgroundImage: photoPath != null && photoPath.isNotEmpty
-                  ? MemoryImage(base64Decode(photoPath))
-                  : null,
-              child: photoPath == null || photoPath.isEmpty
-                  ? Icon(
-                      Icons.store_outlined,
-                      color: theme.colorScheme.tertiary,
-                    )
-                  : null,
-            ),
-            const SizedBox(width: AppTheme.spaceM),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  AutoSizeText(
-                    supplier.name,
-                    style: theme.textTheme.bodyLarge?.copyWith(
-                      fontWeight: FontWeight.w600,
-                      color: theme.colorScheme.onSurface,
+              const SizedBox(width: AppTheme.spaceM),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    AutoSizeText(
+                      supplier.name,
+                      style: theme.textTheme.bodyLarge?.copyWith(
+                        fontWeight: FontWeight.w600,
+                        color: theme.colorScheme.onSurface,
+                      ),
+                      maxLines: 1,
+                      minFontSize: 14,
+                      overflow: TextOverflow.ellipsis,
                     ),
-                    maxLines: 1,
-                    minFontSize: 14,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    subtitleText,
-                    style: theme.textTheme.bodySmall?.copyWith(
-                      color: theme.colorScheme.onSurface.withAlpha(
-                        (255 * 0.6).round(),
+                    const SizedBox(height: 4),
+                    Text(
+                      subtitleText,
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: theme.colorScheme.onSurface.withAlpha(
+                          (255 * 0.6).round(),
+                        ),
                       ),
                     ),
-                  ),
-                ],
-              ),
-            ),
-            if (supplier.phoneNumber != null &&
-                supplier.phoneNumber!.isNotEmpty)
-              IconButton(
-                icon: FaIcon(
-                  FontAwesomeIcons.whatsapp,
-                  color: Colors.green.shade700,
+                  ],
                 ),
-                onPressed: () =>
-                    _launchWhatsApp(context, supplier.phoneNumber!),
               ),
-            if (supplier.email != null && supplier.email!.isNotEmpty)
-              IconButton(
-                icon: Icon(Icons.email_outlined, color: Colors.blue.shade600),
-                onPressed: () => _launchEmail(context, supplier.email!),
-              ),
-          ],
+              if (supplier.phoneNumber != null &&
+                  supplier.phoneNumber!.isNotEmpty)
+                IconButton(
+                  icon: FaIcon(
+                    FontAwesomeIcons.whatsapp,
+                    color: Colors.green.shade700,
+                  ),
+                  onPressed: () =>
+                      _launchWhatsApp(context, supplier.phoneNumber!),
+                ),
+              if (supplier.email != null && supplier.email!.isNotEmpty)
+                IconButton(
+                  icon: Icon(Icons.email_outlined, color: Colors.blue.shade600),
+                  onPressed: () => _launchEmail(context, supplier.email!),
+                ),
+            ],
+          ),
         ),
       ),
     );
