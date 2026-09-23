@@ -458,7 +458,7 @@ class CredentialViewModel extends ChangeNotifier {
       }
     } catch (e) {
       if (context != null && context.mounted) {
-        SnackbarService.showError(context, 'Erro ao importar credenciais: $e');
+        SnackbarService.showError(context, 'Não foi possível importar as credenciais. Verifique o arquivo e tente novamente.');
       }
       return 0;
     }

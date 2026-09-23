@@ -188,7 +188,7 @@ class _BackupRestoreScreenState extends ConsumerState<BackupRestoreScreen>
         setState(() {
           _isCreatingBackup = false;
         });
-        SnackbarService.showError(context, 'Erro inesperado: $e');
+        SnackbarService.showError(context, 'Não foi possível gerar o backup. Tente novamente.');
       }
     }
   }
@@ -228,7 +228,7 @@ class _BackupRestoreScreenState extends ConsumerState<BackupRestoreScreen>
       }
     } catch (e) {
       if (mounted) {
-        SnackbarService.showError(context, 'Erro no upload: $e');
+        SnackbarService.showError(context, 'Não foi possível enviar o backup. Tente novamente.');
       }
     }
   }
@@ -321,7 +321,7 @@ class _BackupRestoreScreenState extends ConsumerState<BackupRestoreScreen>
         setState(() {
           _isPreviewing = false;
         });
-        SnackbarService.showError(context, 'Erro ao analisar: $e');
+        SnackbarService.showError(context, 'Não foi possível analisar o backup. Verifique o arquivo e tente novamente.');
       }
     }
   }
@@ -429,7 +429,7 @@ class _BackupRestoreScreenState extends ConsumerState<BackupRestoreScreen>
         setState(() {
           _isRestoring = false;
         });
-        SnackbarService.showError(context, 'Erro durante restauração: $e');
+        SnackbarService.showError(context, 'Não foi possível concluir a restauração. Tente novamente.');
       }
     }
   }

@@ -100,7 +100,7 @@ class RecurrenceDeletionService {
       );
     } catch (e) {
       return OperationResult.failed(
-        safeError: 'Falha ao excluir regra recorrente: ${e.toString()}',
+        safeError: 'Não foi possível excluir a regra recorrente. Tente novamente.',
       );
     }
   }
@@ -121,7 +121,7 @@ class RecurrenceDeletionService {
       );
     } catch (e) {
       return OperationResult.failed(
-        safeError: 'Falha ao desfazer exclusão da regra: ${e.toString()}',
+        safeError: 'Não foi possível restaurar a regra recorrente. Tente novamente.',
       );
     }
   }
@@ -169,7 +169,7 @@ class RecurrenceDeletionService {
       return OperationResult.completed(affectedIds: [expenseId], count: 1);
     } catch (e) {
       return OperationResult.failed(
-        safeError: 'Falha ao excluir ocorrência: ${e.toString()}',
+        safeError: 'Não foi possível excluir a ocorrência. Tente novamente.',
       );
     }
   }

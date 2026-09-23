@@ -70,17 +70,28 @@ class _AddSupplierScreenState extends ConsumerState<AddSupplierScreen> {
     final userId = authViewModel.currentUser!.id;
     final phoneMaskFormatter = MaskTextInputFormatter(mask: '(##) #####-####');
 
-    await viewModel.addSupplier(
-      userId: userId,
-      name: _nameController.text,
-      representativeName: _repNameController.text.isNotEmpty
-          ? _repNameController.text
-          : null,
-      email: _emailController.text.isNotEmpty ? _emailController.text : null,
-      phoneNumber: phoneMaskFormatter.unmaskText(_phoneController.text),
-      photoPath: _photoPath,
-      notes: _notesController.text.isNotEmpty ? _notesController.text : null,
-    );
+    try {
+      await viewModel.addSupplier(
+        userId: userId,
+        name: _nameController.text,
+        representativeName: _repNameController.text.isNotEmpty
+            ? _repNameController.text
+            : null,
+        email: _emailController.text.isNotEmpty ? _emailController.text : null,
+        phoneNumber: phoneMaskFormatter.unmaskText(_phoneController.text),
+        photoPath: _photoPath,
+        notes: _notesController.text.isNotEmpty ? _notesController.text : null,
+      );
+    } catch (_) {
+      if (mounted) {
+        setState(() => _isSaving = false);
+        SnackbarService.showError(
+          context,
+          'Não foi possível salvar o fornecedor. Tente novamente.',
+        );
+      }
+      return;
+    }
 
     if (mounted) {
       setState(() => _isSaving = false);

@@ -414,7 +414,7 @@ class ExpenseViewModel extends ChangeNotifier {
       );
     } catch (e) {
       return OperationResult.failed(
-        safeError: 'Falha ao gerar parcelas: ${e.toString()}',
+        safeError: 'Não foi possível gerar as parcelas. Tente novamente.',
       );
     }
   }
