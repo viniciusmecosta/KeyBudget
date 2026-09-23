@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:key_budget/core/models/supplier_model.dart';
@@ -28,6 +29,19 @@ class MockSupplierRepository extends Fake implements SupplierRepository {
   @override
   Stream<List<Supplier>> getSuppliersStreamForUser(String userId) =>
       const Stream.empty();
+}
+
+class RecoveringSupplierRepository extends Fake implements SupplierRepository {
+  int attempts = 0;
+
+  @override
+  Stream<List<Supplier>> getSuppliersStreamForUser(String userId) {
+    attempts++;
+    if (attempts == 1) {
+      return Stream.error(FirebaseException(plugin: 'cloud_firestore', code: 'unavailable'));
+    }
+    return Stream.value([Supplier(id: '1', name: 'Mercado')]);
+  }
 }
 
 class TestAuthViewModel extends AuthViewModel {
@@ -204,6 +218,23 @@ void main() {
   });
 
   group('SupplierViewModel search filtering', () {
+    test('reports offline loading failure and recovers after retry', () async {
+      final repository = RecoveringSupplierRepository();
+      final vm = SupplierViewModel(repository: repository);
+
+      vm.listenToSuppliers('u1');
+      await Future<void>.delayed(Duration.zero);
+      expect(vm.hasLoadError, isTrue);
+      expect(vm.isOffline, isTrue);
+
+      vm.retryListenToSuppliers('u1');
+      await Future<void>.delayed(Duration.zero);
+      expect(repository.attempts, 2);
+      expect(vm.hasLoadError, isFalse);
+      expect(vm.allSuppliers.single.name, 'Mercado');
+      vm.dispose();
+    });
+
     test('filteredSuppliers filters by name, rep, phone, and email case-insensitively', () {
       final vm = SupplierViewModel(repository: MockSupplierRepository());
       final suppliers = [

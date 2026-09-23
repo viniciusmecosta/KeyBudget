@@ -10,6 +10,7 @@ import 'package:key_budget/app/widgets/responsive_center.dart';
 import 'package:key_budget/core/design_system/borders/app_borders.dart';
 import 'package:key_budget/core/design_system/spacing/app_spacing.dart';
 import 'package:key_budget/core/design_system/widgets/app_search_field.dart';
+import 'package:key_budget/core/design_system/widgets/app_feedback_panel.dart';
 import 'package:key_budget/features/auth/viewmodel/auth_viewmodel.dart';
 import 'package:key_budget/features/documents/view/add_document_screen.dart';
 import 'package:key_budget/features/documents/viewmodel/document_viewmodel.dart';
@@ -130,13 +131,51 @@ class _DocumentsScreenState extends ConsumerState<DocumentsScreen> {
                   slivers: [
                     if (viewModel.isLoading)
                       const DocumentsListSkeleton()
+                    else if (viewModel.errorMessage != null &&
+                        !viewModel.hasDocuments)
+                      SliverFillRemaining(
+                        hasScrollBody: false,
+                        child: AppFeedbackPanel(
+                          title: 'Falha ao carregar documentos',
+                          message: 'Confira sua conexão e tente novamente.',
+                          type: AppFeedbackType.error,
+                          actionLabel: 'Tentar novamente',
+                          onAction: () {
+                            final user = ref
+                                .read(authViewModelProvider)
+                                .currentUser;
+                            if (user != null) {
+                              viewModel.retryListenToDocuments(user.id);
+                            }
+                          },
+                        ),
+                      )
                     else if (viewModel.currentDisplayItems.isEmpty)
-                      const SliverFillRemaining(
+                      SliverFillRemaining(
+                        hasScrollBody: false,
                         child: SingleChildScrollView(
-                          physics: AlwaysScrollableScrollPhysics(),
+                          physics: const AlwaysScrollableScrollPhysics(),
                           child: EmptyStateWidget(
-                            icon: Icons.folder_off_outlined,
-                            message: 'Nenhum documento encontrado.',
+                            icon: viewModel.searchQuery.isNotEmpty
+                                ? Icons.search_off_rounded
+                                : Icons.folder_off_outlined,
+                            message: viewModel.searchQuery.isNotEmpty
+                                ? 'Nenhum documento encontrado para a busca.'
+                                : 'Nenhum documento cadastrado.',
+                            buttonText: viewModel.searchQuery.isNotEmpty
+                                ? 'Limpar busca'
+                                : 'Adicionar documento',
+                            onButtonPressed: () {
+                              if (viewModel.searchQuery.isNotEmpty) {
+                                _searchController.clear();
+                                viewModel.setSearchQuery('');
+                              } else {
+                                NavigationUtils.push(
+                                  context,
+                                  const AddDocumentScreen(),
+                                );
+                              }
+                            },
                           ),
                         ),
                       )
@@ -172,7 +211,8 @@ class _DocumentsScreenState extends ConsumerState<DocumentsScreen> {
               ),
             ),
 
-            context: context,),
+            context: context,
+          ),
         ),
         floatingActionButton: AppAnimations.scaleIn(
           FloatingActionButton.extended(
@@ -185,7 +225,8 @@ class _DocumentsScreenState extends ConsumerState<DocumentsScreen> {
             ),
           ),
 
-          context: context,),
+          context: context,
+        ),
       ),
     );
   }
