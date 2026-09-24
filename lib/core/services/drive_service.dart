@@ -260,10 +260,15 @@ class DriveService {
     return bytes;
   }
 
-  Future<void> deleteFile(String fileId, {String? serverClientId}) async {
+  Future<bool> deleteFile(String fileId, {String? serverClientId}) async {
     final driveApi = await _getDriveApi(serverClientId: serverClientId);
-    if (driveApi == null) return;
-    await driveApi.files.delete(fileId);
+    if (driveApi == null) return false;
+    try {
+      await driveApi.files.delete(fileId);
+    } on drive.DetailedApiRequestError catch (error) {
+      if (error.status != 404) rethrow;
+    }
+    return true;
   }
 }
 
