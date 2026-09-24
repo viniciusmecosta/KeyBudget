@@ -73,10 +73,6 @@ class TabSelectionTransitionState extends State<TabSelectionTransition>
 
   @override
   Widget build(BuildContext context) {
-    if (!widget.enabled || AppAnimations.isReducedMotion(context)) {
-      return widget.child;
-    }
-
     return FadeTransition(
       opacity: _fadeAnimation,
       child: SlideTransition(
