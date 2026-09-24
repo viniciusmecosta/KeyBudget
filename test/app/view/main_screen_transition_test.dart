@@ -19,6 +19,7 @@ import 'package:key_budget/features/credentials/viewmodel/credential_viewmodel.d
 import 'package:key_budget/features/dashboard/viewmodel/dashboard_viewmodel.dart';
 import 'package:key_budget/features/documents/viewmodel/document_viewmodel.dart';
 import 'package:key_budget/features/expenses/repository/expense_repository.dart';
+import 'package:key_budget/features/expenses/view/expenses_screen.dart';
 import 'package:key_budget/features/expenses/viewmodel/expense_viewmodel.dart';
 import 'package:key_budget/features/suppliers/repository/supplier_repository.dart';
 import 'package:key_budget/features/suppliers/viewmodel/supplier_viewmodel.dart';
@@ -425,6 +426,30 @@ void main() {
       await tester.pump(const Duration(milliseconds: 300));
       expect(transitionState.controller.isAnimating, isFalse);
       expect(transitionState.controller.value, 1.0);
+    });
+
+    testWidgets('expense tab state survives phone and tablet breakpoint changes', (tester) async {
+      tester.view.physicalSize = const Size(599, 800);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+
+      final navVM = NavigationViewModel();
+      navVM.navigateTo(AppDestination.expenses);
+      final authVM = FakeAuthVM(
+        mockUser: User(id: 'u1', name: 'Tester', email: 't@t.com'),
+      );
+      await tester.pumpWidget(createMainScreenTestWidget(navVM: navVM, authVM: authVM));
+      await tester.pumpAndSettle();
+      final state = tester.state(find.byType(ExpensesScreen));
+
+      tester.view.physicalSize = const Size(600, 800);
+      await tester.pumpAndSettle();
+      expect(tester.state(find.byType(ExpensesScreen)), same(state));
+
+      tester.view.physicalSize = const Size(840, 800);
+      await tester.pumpAndSettle();
+      expect(tester.state(find.byType(ExpensesScreen)), same(state));
     });
 
     testWidgets('tapping suppliers and profile with suppliers enabled triggers transitions and updates destination', (tester) async {
