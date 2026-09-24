@@ -271,6 +271,47 @@ void main() {
       expect(find.text('Counter: 1'), findsOneWidget);
     });
 
+    testWidgets('transition keeps child state when enabled and reduced motion change', (tester) async {
+      bool enabled = true;
+      bool reducedMotion = false;
+      late StateSetter update;
+
+      await tester.pumpWidget(MaterialApp(
+        home: StatefulBuilder(
+          builder: (context, setState) {
+            update = setState;
+            return MediaQuery(
+              data: MediaQuery.of(context).copyWith(disableAnimations: reducedMotion),
+              child: Scaffold(
+                body: TabSelectionTransition(
+                  revision: 0,
+                  enabled: enabled,
+                  child: const _CounterStatefulTab(),
+                ),
+              ),
+            );
+          },
+        ),
+      ));
+      await tester.tap(find.text('Increment'));
+      await tester.pump();
+
+      update(() => enabled = false);
+      await tester.pump();
+      expect(find.text('Counter: 1'), findsOneWidget);
+
+      update(() {
+        enabled = true;
+        reducedMotion = true;
+      });
+      await tester.pump();
+      expect(find.text('Counter: 1'), findsOneWidget);
+
+      update(() => reducedMotion = false);
+      await tester.pump();
+      expect(find.text('Counter: 1'), findsOneWidget);
+    });
+
     testWidgets('reduced motion renders child immediately without transition animation', (tester) async {
       int revision = 0;
 
@@ -301,11 +342,11 @@ void main() {
       final transitionFinder = find.byType(TabSelectionTransition);
       expect(
         find.descendant(of: transitionFinder, matching: find.byType(FadeTransition)),
-        findsNothing,
+        findsOneWidget,
       );
       expect(
         find.descendant(of: transitionFinder, matching: find.byType(SlideTransition)),
-        findsNothing,
+        findsOneWidget,
       );
       expect(find.text('Reduced Motion Tab Content'), findsOneWidget);
 
@@ -320,11 +361,11 @@ void main() {
       expect(transitionState.controller.value, 1.0);
       expect(
         find.descendant(of: transitionFinder, matching: find.byType(FadeTransition)),
-        findsNothing,
+        findsOneWidget,
       );
       expect(
         find.descendant(of: transitionFinder, matching: find.byType(SlideTransition)),
-        findsNothing,
+        findsOneWidget,
       );
       expect(find.text('Reduced Motion Tab Content'), findsOneWidget);
     });
