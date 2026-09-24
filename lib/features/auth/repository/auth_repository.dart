@@ -8,6 +8,10 @@ import 'package:key_budget/app/config/app_theme.dart';
 import 'package:key_budget/core/models/expense_category_model.dart';
 import 'package:key_budget/core/models/user_model.dart';
 
+class ProfileSetupException implements Exception {
+  const ProfileSetupException();
+}
+
 class AuthRepository {
   final firebase.FirebaseAuth? _customFirebaseAuth;
   final FirebaseFirestore? _customFirestore;
@@ -136,18 +140,30 @@ class AuthRepository {
     }
   }
 
-  Future<firebase.UserCredential> signUpWithEmail({
+  Future<User> signUpWithEmail({
     required String name,
     required String email,
     required String password,
     String? phoneNumber,
     String? avatarPath,
   }) async {
-    final userCredential = await _firebaseAuth.createUserWithEmailAndPassword(
-      email: email,
-      password: password,
-    );
-    final userId = userCredential.user!.uid;
+    firebase.User authUser;
+    try {
+      final credential = await _firebaseAuth.createUserWithEmailAndPassword(
+        email: email,
+        password: password,
+      );
+      authUser = credential.user!;
+    } on firebase.FirebaseAuthException catch (error) {
+      final current = _firebaseAuth.currentUser;
+      if (error.code != 'email-already-in-use' ||
+          current == null ||
+          current.email?.trim().toLowerCase() != email.trim().toLowerCase()) {
+        rethrow;
+      }
+      authUser = current;
+    }
+    final userId = authUser.uid;
 
     final newUser = User(
       id: userId,
@@ -157,10 +173,21 @@ class AuthRepository {
       avatarPath: avatarPath,
     );
 
-    await _firestore.collection('users').doc(newUser.id).set(newUser.toMap());
-    await ensureCategoriesExist(userId);
-
-    return userCredential;
+    try {
+      final profileRef = _firestore.collection('users').doc(userId);
+      final savedProfile = await _firestore.runTransaction((transaction) async {
+        final existing = await transaction.get(profileRef);
+        if (existing.exists) {
+          return User.fromMap(existing.data()!);
+        }
+        transaction.set(profileRef, newUser.toMap());
+        return newUser;
+      });
+      await ensureCategoriesExist(userId);
+      return savedProfile;
+    } catch (_) {
+      throw const ProfileSetupException();
+    }
   }
 
   Future<User?> signInWithGoogle({String? serverClientId}) async {
