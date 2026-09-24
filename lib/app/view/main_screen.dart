@@ -75,6 +75,9 @@ class _MainScreenState extends ConsumerState<MainScreen> {
     final isCompact = screenWidth < 600;
     final isMedium = screenWidth >= 600 && screenWidth < 840;
     final isExpanded = screenWidth >= 840;
+    final contentMaxWidth = isCompact
+        ? screenWidth
+        : (isMedium ? 800.0 : 1200.0);
 
     final stack = KeyedSubtree(
       key: ValueKey('main_stack_$currentUserId'),
@@ -89,26 +92,17 @@ class _MainScreenState extends ConsumerState<MainScreen> {
             final child = isLoaded ? _buildDestinationWidget(dest) : const SizedBox.shrink();
             return TickerMode(
               enabled: isSelected,
-              child: isExpanded
-                  ? ResponsiveCenter(maxWidth: 1200, child: child)
-                  : (isMedium ? ResponsiveCenter(maxWidth: 800, child: child) : child),
+              child: ResponsiveCenter(maxWidth: contentMaxWidth, child: child),
             );
           }).toList(),
         ),
       ),
     );
 
-    if (isCompact) {
-      return Scaffold(
-        body: stack,
-        bottomNavigationBar: const MainBottomNavigationBar(),
-      );
-    }
-
     return Scaffold(
       body: Row(
         children: [
-          NavigationRail(
+          if (!isCompact) NavigationRail(
             backgroundColor: theme.colorScheme.surface,
             selectedIndex: safeIndex,
             onDestinationSelected: (int index) {
@@ -140,7 +134,7 @@ class _MainScreenState extends ConsumerState<MainScreen> {
               );
             }).toList(),
           ),
-          VerticalDivider(
+          if (!isCompact) VerticalDivider(
             thickness: 1,
             width: 1,
             color: theme.dividerTheme.color,
@@ -148,6 +142,9 @@ class _MainScreenState extends ConsumerState<MainScreen> {
           Expanded(child: stack),
         ],
       ),
+      bottomNavigationBar: isCompact
+          ? const MainBottomNavigationBar()
+          : null,
     );
   }
 }
