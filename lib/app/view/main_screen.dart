@@ -68,7 +68,11 @@ class _MainScreenState extends ConsumerState<MainScreen> {
     );
 
     final activeIndex = availableDestinations.indexOf(currentDestination);
-    final safeIndex = activeIndex >= 0 ? activeIndex : 0;
+    final navigationIndex = activeIndex >= 0 ? activeIndex : 0;
+    final stackIndex = currentDestination == AppDestination.suppliers &&
+            !enableSuppliers
+        ? 0
+        : AppDestination.values.indexOf(currentDestination);
 
     final theme = Theme.of(context);
     final screenWidth = MediaQuery.of(context).size.width;
@@ -85,12 +89,13 @@ class _MainScreenState extends ConsumerState<MainScreen> {
         revision: navigationViewModel.selectionRevision,
         enabled: hasVisitedCurrentDestination,
         child: IndexedStack(
-          index: safeIndex,
-          children: availableDestinations.map((dest) {
+          index: stackIndex,
+          children: AppDestination.values.map((dest) {
             final isSelected = dest == currentDestination;
             final isLoaded = _loadedDestinations.contains(dest);
             final child = isLoaded ? _buildDestinationWidget(dest) : const SizedBox.shrink();
             return TickerMode(
+              key: ValueKey(dest),
               enabled: isSelected,
               child: ResponsiveCenter(maxWidth: contentMaxWidth, child: child),
             );
@@ -104,7 +109,7 @@ class _MainScreenState extends ConsumerState<MainScreen> {
         children: [
           if (!isCompact) NavigationRail(
             backgroundColor: theme.colorScheme.surface,
-            selectedIndex: safeIndex,
+            selectedIndex: navigationIndex,
             onDestinationSelected: (int index) {
               if (index >= 0 && index < availableDestinations.length) {
                 navigationViewModel.navigateTo(availableDestinations[index]);

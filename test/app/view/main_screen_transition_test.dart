@@ -23,6 +23,7 @@ import 'package:key_budget/features/expenses/view/expenses_screen.dart';
 import 'package:key_budget/features/expenses/viewmodel/expense_viewmodel.dart';
 import 'package:key_budget/features/suppliers/repository/supplier_repository.dart';
 import 'package:key_budget/features/suppliers/viewmodel/supplier_viewmodel.dart';
+import 'package:key_budget/features/user/view/user_screen.dart';
 
 class FakeAuthRepo extends Fake implements AuthRepository {}
 class FakeExpenseRepo extends Fake implements ExpenseRepository {}
@@ -30,12 +31,17 @@ class FakeCredentialRepo extends Fake implements CredentialRepository {}
 class FakeSupplierRepo extends Fake implements SupplierRepository {}
 
 class FakeAuthVM extends AuthViewModel {
-  final User? mockUser;
+  User? mockUser;
   FakeAuthVM({this.mockUser})
       : super(authRepository: FakeAuthRepo(), listenToAuthChanges: false);
 
   @override
   User? get currentUser => mockUser;
+
+  void setUser(User user) {
+    mockUser = user;
+    notifyListeners();
+  }
 }
 
 class FakeCategoryVM extends CategoryViewModel {
@@ -450,6 +456,27 @@ void main() {
       tester.view.physicalSize = const Size(840, 800);
       await tester.pumpAndSettle();
       expect(tester.state(find.byType(ExpensesScreen)), same(state));
+    });
+
+    testWidgets('profile state survives enabling and disabling suppliers', (tester) async {
+      final navVM = NavigationViewModel();
+      navVM.navigateTo(AppDestination.profile);
+      final authVM = FakeAuthVM(
+        mockUser: User(id: 'u1', name: 'Tester', email: 't@t.com'),
+      );
+      await tester.pumpWidget(createMainScreenTestWidget(navVM: navVM, authVM: authVM));
+      await tester.pumpAndSettle();
+      final profileState = tester.state(find.byType(UserScreen));
+
+      authVM.setUser(authVM.mockUser!.copyWith(enableSuppliers: true));
+      await tester.pumpAndSettle();
+      expect(tester.state(find.byType(UserScreen)), same(profileState));
+      expect(find.text('Fornecedores'), findsWidgets);
+
+      authVM.setUser(authVM.mockUser!.copyWith(enableSuppliers: false));
+      await tester.pumpAndSettle();
+      expect(tester.state(find.byType(UserScreen)), same(profileState));
+      expect(navVM.currentDestination, AppDestination.profile);
     });
 
     testWidgets('tapping suppliers and profile with suppliers enabled triggers transitions and updates destination', (tester) async {
