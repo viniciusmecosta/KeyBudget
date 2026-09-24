@@ -16,8 +16,27 @@ import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
 
 class DocumentViewModel extends ChangeNotifier {
-  final DocumentRepository _repository = DocumentRepository();
-  final DriveService _driveService = DriveService();
+  final DocumentRepository _repository;
+  final DriveService _driveService;
+  final Future<void> Function(String) _clearLocalCache;
+
+  DocumentViewModel({
+    DocumentRepository? repository,
+    DriveService? driveService,
+    Future<void> Function(String)? clearLocalCache,
+  }) : _repository = repository ?? DocumentRepository(),
+       _driveService = driveService ?? DriveService(),
+       _clearLocalCache = clearLocalCache ?? _deleteLocalAttachmentCache;
+
+  static Future<void> _deleteLocalAttachmentCache(String driveId) async {
+    final directory = await getApplicationDocumentsDirectory();
+    await for (final entry in directory.list()) {
+      if (entry is File && p.basename(entry.path).startsWith('$driveId-')) {
+        await entry.delete();
+      }
+    }
+  }
+
   StreamSubscription? _documentsSubscription;
   bool _isListening = false;
   bool _isLoading = false;
@@ -75,6 +94,7 @@ class DocumentViewModel extends ChangeNotifier {
               _documents = processedNewDocs;
               _setErrorMessage(null);
               _updateDisplayList(animate: true);
+              unawaited(retryPendingAttachmentCleanup(userId));
             } catch (_) {
               _setErrorMessage('Erro ao carregar os documentos.');
             } finally {
@@ -249,12 +269,15 @@ class DocumentViewModel extends ChangeNotifier {
                 !currentAttachments.any((cAtt) => cAtt.driveId == att.driveId),
           )
           .toList();
-
-      for (final attachment in attachmentsToDelete) {
-        await deleteAttachmentFile(attachment);
-      }
-
-      await _repository.updateDocument(userId, document);
+      await _repository.updateDocumentWithCleanup(
+        userId,
+        document,
+        attachmentsToDelete
+            .map((attachment) => attachment.driveId)
+            .toSet()
+            .toList(),
+      );
+      await retryPendingAttachmentCleanup(userId);
       return true;
     } catch (e) {
       _setErrorMessage('Não foi possível atualizar o documento.');
@@ -262,6 +285,27 @@ class DocumentViewModel extends ChangeNotifier {
     } finally {
       _setLoading(false);
     }
+  }
+
+  Future<void> retryPendingAttachmentCleanup(String userId) async {
+    try {
+      final pending = await _repository.getPendingAttachmentCleanup(userId);
+      if (pending.isEmpty) return;
+      final referenced = await _repository.getReferencedAttachmentIds(userId);
+      for (final driveId in pending) {
+        try {
+          if (referenced.contains(driveId)) {
+            await _repository.acknowledgeAttachmentCleanup(userId, driveId);
+            continue;
+          }
+          final deleted = await _driveService.deleteFile(driveId);
+          if (deleted) {
+            await _clearLocalCache(driveId);
+            await _repository.acknowledgeAttachmentCleanup(userId, driveId);
+          }
+        } catch (_) {}
+      }
+    } catch (_) {}
   }
 
   Future<bool> deleteDocument(String userId, Document document) async {
