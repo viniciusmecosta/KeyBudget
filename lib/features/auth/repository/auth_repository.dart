@@ -58,18 +58,14 @@ class AuthRepository {
   }
 
   Future<User?> getUserProfile(String uid) async {
-    try {
-      final doc = await _firestore.collection('users').doc(uid).get();
-      if (doc.exists) {
-        return User.fromMap(doc.data()!);
-      }
-      return null;
-    } catch (e) {
-      if (kDebugMode) {
-        print("Error getting user profile: $e");
-      }
-      return null;
+    final doc = await _firestore
+        .collection('users')
+        .doc(uid)
+        .get(const GetOptions(source: Source.server));
+    if (doc.exists) {
+      return User.fromMap(doc.data()!);
     }
+    return null;
   }
 
   Future<firebase.UserCredential> signInWithEmail(
@@ -191,11 +187,15 @@ class AuthRepository {
           email: userCredential.user!.email ?? '',
           avatarPath: userCredential.user!.photoURL,
         );
-        await _firestore
-            .collection('users')
-            .doc(newUser.id)
-            .set(newUser.toMap());
-        userProfile = newUser;
+        final profileRef = _firestore.collection('users').doc(newUser.id);
+        userProfile = await _firestore.runTransaction((transaction) async {
+          final existing = await transaction.get(profileRef);
+          if (existing.exists) {
+            return User.fromMap(existing.data()!);
+          }
+          transaction.set(profileRef, newUser.toMap());
+          return newUser;
+        });
       }
 
       await ensureCategoriesExist(userId);
