@@ -311,19 +311,63 @@ class DocumentViewModel extends ChangeNotifier {
   Future<bool> deleteDocument(String userId, Document document) async {
     _setLoading(true);
     try {
-      for (final attachment in document.attachments) {
-        await deleteAttachmentFile(attachment);
+      final rootId = document.originalDocumentId ?? document.id!;
+      final family = await _repository.getDocumentFamily(userId, rootId);
+      if (family.isEmpty) {
+        _setErrorMessage('O documento não foi encontrado. Atualize a lista.');
+        return false;
       }
-      for (final version in document.versions) {
-        for (final attachment in version.attachments) {
-          await deleteAttachmentFile(attachment);
-        }
-      }
-
-      await _repository.deleteDocument(userId, document.id!);
+      await _repository.deleteDocumentsWithCleanup(
+        userId,
+        family.map((version) => version.id!).toList(),
+        {
+          for (final version in family)
+            for (final attachment in version.attachments) attachment.driveId,
+        }.toList(),
+      );
+      await retryPendingAttachmentCleanup(userId);
       return true;
     } catch (e) {
       _setErrorMessage('Não foi possível excluir o documento.');
+      return false;
+    } finally {
+      _setLoading(false);
+    }
+  }
+
+  Future<bool> deleteVersion(String userId, Document version) async {
+    _setLoading(true);
+    try {
+      final rootId = version.originalDocumentId;
+      if (rootId == null || version.id == null) {
+        _setErrorMessage('Esta versão não pode ser excluída separadamente.');
+        return false;
+      }
+      final family = await _repository.getDocumentFamily(userId, rootId);
+      final current = family.where((item) => item.id == version.id).firstOrNull;
+      if (current == null) {
+        _setErrorMessage('A versão não foi encontrada. Atualize a lista.');
+        return false;
+      }
+      if (current.isPrincipal && family.length > 1) {
+        _setErrorMessage(
+          'Defina outra versão como principal antes de excluir esta versão.',
+        );
+        return false;
+      }
+      await _repository.deleteDocumentsWithCleanup(
+        userId,
+        [current.id!],
+        {
+          for (final attachment in current.attachments) attachment.driveId,
+        }.toList(),
+      );
+      await retryPendingAttachmentCleanup(userId);
+      return true;
+    } catch (_) {
+      _setErrorMessage(
+        'Não foi possível excluir esta versão. Tente novamente.',
+      );
       return false;
     } finally {
       _setLoading(false);

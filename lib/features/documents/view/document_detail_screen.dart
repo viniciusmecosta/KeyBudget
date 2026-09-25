@@ -27,6 +27,10 @@ class DocumentDetailScreen extends ConsumerWidget {
     final viewModel = ref.watch(documentViewModelProvider);
     final userId = ref.read(authViewModelProvider).currentUser!.id;
     final theme = Theme.of(context);
+    final isHistoricalVersion =
+        document.originalDocumentId != null &&
+        document.versions.isEmpty &&
+        !document.isPrincipal;
 
     return Scaffold(
       appBar: AppBar(
@@ -50,15 +54,23 @@ class DocumentDetailScreen extends ConsumerWidget {
           ),
           IconButton(
             icon: Icon(Icons.delete_outline, color: theme.colorScheme.error),
-            tooltip: 'Excluir',
+            tooltip: isHistoricalVersion
+                ? 'Excluir esta versão'
+                : 'Excluir documento e histórico',
             onPressed: () async {
               final confirmed = await showDialog<bool>(
                 context: context,
                 builder: (ctx) => AlertDialog(
-                  title: const Text('Excluir Documento'),
+                  title: Text(
+                    isHistoricalVersion
+                        ? 'Excluir esta versão'
+                        : 'Excluir documento e histórico',
+                  ),
                   content: Text(
-                    document.versions.isNotEmpty
-                        ? 'Esta ação removerá este documento, suas ${document.versions.length} versões anteriores e todos os anexos.'
+                    isHistoricalVersion
+                        ? 'Esta versão e seus anexos serão removidos. As outras versões permanecerão disponíveis.'
+                        : document.versions.isNotEmpty
+                        ? 'Esta ação removerá o documento, suas ${document.versions.length} versões anteriores e todos os anexos.'
                         : 'Esta ação removerá este documento e todos os seus anexos permanentemente.',
                   ),
                   actions: [
@@ -81,7 +93,9 @@ class DocumentDetailScreen extends ConsumerWidget {
               HapticFeedback.mediumImpact();
               final navigator = Navigator.of(context);
               final scaffoldContext = context;
-              final success = await viewModel.deleteDocument(userId, document);
+              final success = isHistoricalVersion
+                  ? await viewModel.deleteVersion(userId, document)
+                  : await viewModel.deleteDocument(userId, document);
               if (!scaffoldContext.mounted) return;
               if (success) {
                 SnackbarService.showSuccess(
@@ -104,7 +118,11 @@ class DocumentDetailScreen extends ConsumerWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            _buildSectionHeader(context, Icons.description_outlined, 'DADOS DO DOCUMENTO'),
+            _buildSectionHeader(
+              context,
+              Icons.description_outlined,
+              'DADOS DO DOCUMENTO',
+            ),
             const SizedBox(height: AppSpacing.md),
             if (document.number != null && document.number!.isNotEmpty) ...[
               Stack(
@@ -119,9 +137,14 @@ class DocumentDetailScreen extends ConsumerWidget {
                   Positioned(
                     right: 8,
                     child: IconButton(
-                      icon: Icon(Icons.copy_outlined, color: theme.colorScheme.primary),
+                      icon: Icon(
+                        Icons.copy_outlined,
+                        color: theme.colorScheme.primary,
+                      ),
                       onPressed: () {
-                        Clipboard.setData(ClipboardData(text: document.number!));
+                        Clipboard.setData(
+                          ClipboardData(text: document.number!),
+                        );
                         HapticFeedback.lightImpact();
                         SnackbarService.showSuccess(context, 'Número copiado!');
                       },
@@ -150,7 +173,9 @@ class DocumentDetailScreen extends ConsumerWidget {
                   child: AppTextField(
                     controller: TextEditingController(
                       text: document.expiryDate != null
-                          ? DateFormat('dd/MM/yyyy').format(document.expiryDate!)
+                          ? DateFormat(
+                              'dd/MM/yyyy',
+                            ).format(document.expiryDate!)
                           : 'Validade não informada',
                     ),
                     label: 'Validade',
@@ -162,27 +187,39 @@ class DocumentDetailScreen extends ConsumerWidget {
             ),
             if (document.additionalFields.isNotEmpty) ...[
               const SizedBox(height: AppSpacing.xl),
-              _buildSectionHeader(context, Icons.list_alt_outlined, 'CAMPOS ADICIONAIS'),
+              _buildSectionHeader(
+                context,
+                Icons.list_alt_outlined,
+                'CAMPOS ADICIONAIS',
+              ),
               const SizedBox(height: AppSpacing.md),
-              ...document.additionalFields.entries.map((e) => Padding(
-                padding: const EdgeInsets.only(bottom: AppSpacing.md),
-                child: AppTextField(
-                  controller: TextEditingController(text: e.value),
-                  label: e.key,
-                  prefixIcon: Icons.info_outline,
-                  readOnly: true,
+              ...document.additionalFields.entries.map(
+                (e) => Padding(
+                  padding: const EdgeInsets.only(bottom: AppSpacing.md),
+                  child: AppTextField(
+                    controller: TextEditingController(text: e.value),
+                    label: e.key,
+                    prefixIcon: Icons.info_outline,
+                    readOnly: true,
+                  ),
                 ),
-              )),
+              ),
             ],
             if (document.attachments.isNotEmpty) ...[
               const SizedBox(height: AppSpacing.xl),
               _buildSectionHeader(context, Icons.attachment_outlined, 'ANEXOS'),
               const SizedBox(height: AppSpacing.md),
-              ...document.attachments.map((a) => _buildAttachmentItem(a, context, ref)),
+              ...document.attachments.map(
+                (a) => _buildAttachmentItem(a, context, ref),
+              ),
             ],
             if (document.versions.isNotEmpty) ...[
               const SizedBox(height: AppSpacing.xl),
-              _buildSectionHeader(context, Icons.history_outlined, 'VERSÕES ANTERIORES'),
+              _buildSectionHeader(
+                context,
+                Icons.history_outlined,
+                'VERSÕES ANTERIORES',
+              ),
               const SizedBox(height: AppSpacing.md),
               _buildVersionsList(context, viewModel, userId),
             ],
@@ -192,9 +229,15 @@ class DocumentDetailScreen extends ConsumerWidget {
     );
   }
 
-  Widget _buildSectionHeader(BuildContext context, IconData icon, String title) {
+  Widget _buildSectionHeader(
+    BuildContext context,
+    IconData icon,
+    String title,
+  ) {
     final theme = Theme.of(context);
-    final color = theme.brightness == Brightness.dark ? Colors.white : Colors.black87;
+    final color = theme.brightness == Brightness.dark
+        ? Colors.white
+        : Colors.black87;
     return Row(
       children: [
         Icon(icon, color: color, size: 20),
@@ -210,7 +253,11 @@ class DocumentDetailScreen extends ConsumerWidget {
     );
   }
 
-  Widget _buildAttachmentItem(Attachment attachment, BuildContext context, WidgetRef ref) {
+  Widget _buildAttachmentItem(
+    Attachment attachment,
+    BuildContext context,
+    WidgetRef ref,
+  ) {
     final theme = Theme.of(context);
     final isPdf = attachment.type.contains('pdf');
 
@@ -219,14 +266,19 @@ class DocumentDetailScreen extends ConsumerWidget {
       decoration: BoxDecoration(
         color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: theme.colorScheme.outlineVariant.withValues(alpha: 0.5)),
+        border: Border.all(
+          color: theme.colorScheme.outlineVariant.withValues(alpha: 0.5),
+        ),
       ),
       clipBehavior: Clip.antiAlias,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           Container(
-            padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md, vertical: AppSpacing.sm),
+            padding: const EdgeInsets.symmetric(
+              horizontal: AppSpacing.md,
+              vertical: AppSpacing.sm,
+            ),
             color: theme.colorScheme.surface,
             child: Row(
               children: [
@@ -238,18 +290,27 @@ class DocumentDetailScreen extends ConsumerWidget {
                 Expanded(
                   child: Text(
                     attachment.name,
-                    style: theme.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600),
+                    style: theme.textTheme.bodyMedium?.copyWith(
+                      fontWeight: FontWeight.w600,
+                    ),
                     overflow: TextOverflow.ellipsis,
                   ),
                 ),
                 IconButton(
-                  icon: Icon(Icons.share_outlined, color: theme.colorScheme.primary),
+                  icon: Icon(
+                    Icons.share_outlined,
+                    color: theme.colorScheme.primary,
+                  ),
                   onPressed: () async {
                     final viewModel = ref.read(documentViewModelProvider);
                     final scaffoldContext = context;
                     await viewModel.shareAttachment(attachment);
-                    if (scaffoldContext.mounted && viewModel.errorMessage != null) {
-                      SnackbarService.showError(scaffoldContext, viewModel.errorMessage!);
+                    if (scaffoldContext.mounted &&
+                        viewModel.errorMessage != null) {
+                      SnackbarService.showError(
+                        scaffoldContext,
+                        viewModel.errorMessage!,
+                      );
                     }
                   },
                 ),
@@ -264,21 +325,30 @@ class DocumentDetailScreen extends ConsumerWidget {
                 final file = await viewModel.getAttachmentFile(attachment);
                 if (file != null && scaffoldContext.mounted) {
                   await viewModel.openFile(attachment);
-                  if (scaffoldContext.mounted && viewModel.errorMessage != null) {
-                    SnackbarService.showError(scaffoldContext, viewModel.errorMessage ?? 'Erro ao abrir PDF');
+                  if (scaffoldContext.mounted &&
+                      viewModel.errorMessage != null) {
+                    SnackbarService.showError(
+                      scaffoldContext,
+                      viewModel.errorMessage ?? 'Erro ao abrir PDF',
+                    );
                   }
                 }
               } else {
                 await viewModel.openFile(attachment);
                 if (scaffoldContext.mounted && viewModel.errorMessage != null) {
-                  SnackbarService.showError(scaffoldContext, viewModel.errorMessage ?? 'Erro ao abrir imagem');
+                  SnackbarService.showError(
+                    scaffoldContext,
+                    viewModel.errorMessage ?? 'Erro ao abrir imagem',
+                  );
                 }
               }
             },
             child: SizedBox(
               height: 200,
               child: FutureBuilder<String?>(
-                future: ref.read(documentViewModelProvider).getAttachmentAsBase64(attachment),
+                future: ref
+                    .read(documentViewModelProvider)
+                    .getAttachmentAsBase64(attachment),
                 builder: (context, snapshot) {
                   if (snapshot.connectionState == ConnectionState.waiting) {
                     return const Center(child: CircularProgressIndicator());
@@ -298,7 +368,11 @@ class DocumentDetailScreen extends ConsumerWidget {
                             Container(color: Colors.transparent),
                           ],
                         )
-                      : Image.memory(base64Decode(base64), fit: BoxFit.cover, width: double.infinity);
+                      : Image.memory(
+                          base64Decode(base64),
+                          fit: BoxFit.cover,
+                          width: double.infinity,
+                        );
                 },
               ),
             ),
@@ -308,13 +382,19 @@ class DocumentDetailScreen extends ConsumerWidget {
     );
   }
 
-  Widget _buildVersionsList(BuildContext context, DocumentViewModel viewModel, String userId) {
+  Widget _buildVersionsList(
+    BuildContext context,
+    DocumentViewModel viewModel,
+    String userId,
+  ) {
     final theme = Theme.of(context);
     return Container(
       decoration: BoxDecoration(
         color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: theme.colorScheme.outlineVariant.withValues(alpha: 0.5)),
+        border: Border.all(
+          color: theme.colorScheme.outlineVariant.withValues(alpha: 0.5),
+        ),
       ),
       child: Column(
         children: document.versions.map((v) {
@@ -332,14 +412,20 @@ class DocumentDetailScreen extends ConsumerWidget {
                     color: theme.colorScheme.primary.withValues(alpha: 0.1),
                     shape: BoxShape.circle,
                   ),
-                  child: Icon(Icons.history, color: theme.colorScheme.primary, size: 20),
+                  child: Icon(
+                    Icons.history,
+                    color: theme.colorScheme.primary,
+                    size: 20,
+                  ),
                 ),
                 title: Row(
                   children: [
                     Expanded(
                       child: Text(
                         dateText,
-                        style: theme.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600),
+                        style: theme.textTheme.bodyMedium?.copyWith(
+                          fontWeight: FontWeight.w600,
+                        ),
                       ),
                     ),
                     if (v.isPrincipal)
@@ -362,22 +448,40 @@ class DocumentDetailScreen extends ConsumerWidget {
                     final allVersions = [document, ...document.versions];
                     final scaffoldContext = context;
                     final navigator = Navigator.of(context);
-                    final success = await viewModel.setAsPrincipal(userId, v, allVersions);
+                    final success = await viewModel.setAsPrincipal(
+                      userId,
+                      v,
+                      allVersions,
+                    );
                     if (!scaffoldContext.mounted) return;
                     if (success) {
-                      SnackbarService.showSuccess(scaffoldContext, 'Versão definida como principal!');
+                      SnackbarService.showSuccess(
+                        scaffoldContext,
+                        'Versão definida como principal!',
+                      );
                       navigator.pop();
                     } else {
-                      SnackbarService.showError(scaffoldContext, viewModel.errorMessage ?? 'Erro.');
+                      SnackbarService.showError(
+                        scaffoldContext,
+                        viewModel.errorMessage ?? 'Erro.',
+                      );
                     }
                   },
                   child: const Text('Definir como principal'),
                 ),
                 onTap: () => Navigator.of(context).pushReplacement(
-                  MaterialPageRoute(builder: (_) => DocumentDetailScreen(document: v)),
+                  MaterialPageRoute(
+                    builder: (_) => DocumentDetailScreen(document: v),
+                  ),
                 ),
               ),
-              if (!isLast) Divider(color: theme.colorScheme.outlineVariant.withValues(alpha: 0.5), height: 1),
+              if (!isLast)
+                Divider(
+                  color: theme.colorScheme.outlineVariant.withValues(
+                    alpha: 0.5,
+                  ),
+                  height: 1,
+                ),
             ],
           );
         }).toList(),
