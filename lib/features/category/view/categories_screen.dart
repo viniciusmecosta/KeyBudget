@@ -10,6 +10,7 @@ import 'package:key_budget/app/widgets/responsive_center.dart';
 import 'package:key_budget/core/design_system/borders/app_borders.dart';
 import 'package:key_budget/core/design_system/spacing/app_spacing.dart';
 import 'package:key_budget/core/design_system/widgets/app_card.dart';
+import 'package:key_budget/core/design_system/widgets/app_feedback_panel.dart';
 
 import 'package:key_budget/features/auth/viewmodel/auth_viewmodel.dart';
 import 'package:key_budget/features/category/view/add_edit_category_screen.dart';
@@ -68,6 +69,27 @@ class _CategoriesScreenState extends ConsumerState<CategoriesScreen> {
                     slivers: [
                       if (viewModel.isLoading)
                         const CategoriesSkeleton()
+                      else if (viewModel.errorMessage != null)
+                        SliverFillRemaining(
+                          hasScrollBody: false,
+                          child: AppFeedbackPanel(
+                            title: 'Falha ao carregar categorias',
+                            message: viewModel.errorMessage!,
+                            type: AppFeedbackType.error,
+                            actionLabel: 'Tentar novamente',
+                            onAction: () {
+                              final userId = ref
+                                  .read(authViewModelProvider)
+                                  .currentUser
+                                  ?.id;
+                              if (userId != null) {
+                                ref
+                                    .read(categoryViewModelProvider)
+                                    .fetchCategories(userId);
+                              }
+                            },
+                          ),
+                        )
                       else if (viewModel.categories.isEmpty)
                         const SliverFillRemaining(
                           hasScrollBody: false,
@@ -116,12 +138,13 @@ class _CategoriesScreenState extends ConsumerState<CategoriesScreen> {
                                         ),
                                         Icon(
                                           Icons.chevron_right,
-                                          color: theme.colorScheme.onSurfaceVariant,
+                                          color: theme
+                                              .colorScheme
+                                              .onSurfaceVariant,
                                         ),
                                       ],
                                     ),
                                   ),
-
                                 );
                               }).toList(),
                             ),
@@ -134,7 +157,8 @@ class _CategoriesScreenState extends ConsumerState<CategoriesScreen> {
             },
           ),
 
-          context: context,),
+          context: context,
+        ),
       ),
       floatingActionButton: AppAnimations.scaleIn(
         FloatingActionButton.extended(
@@ -153,7 +177,8 @@ class _CategoriesScreenState extends ConsumerState<CategoriesScreen> {
           elevation: 0,
         ),
 
-        context: context,),
+        context: context,
+      ),
     );
   }
 }
@@ -193,7 +218,6 @@ class CategoriesSkeleton extends ConsumerWidget {
                     ],
                   ),
                 ),
-
               )
               .animate(onPlay: (controller) => controller.repeat())
               .shimmer(duration: 1500.ms, color: shimmerColor);

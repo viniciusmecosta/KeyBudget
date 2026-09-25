@@ -108,6 +108,7 @@ class ExpenseViewModel extends ChangeNotifier {
   StreamSubscription? _expensesSubscription;
   StreamSubscription? _recurringExpensesSubscription;
   bool _isListening = false;
+  String? _loadErrorMessage;
   bool _enableIncomes = false;
 
   @Deprecated('UI animation state belongs to presentation layer')
@@ -126,6 +127,7 @@ class ExpenseViewModel extends ChangeNotifier {
   List<RecurringExpense> get recurringExpenses => _recurringExpenses;
 
   bool get isLoading => _isLoading;
+  String? get loadErrorMessage => _loadErrorMessage;
 
   bool get isExportingCsv => _isExportingCsv;
 
@@ -308,26 +310,55 @@ class ExpenseViewModel extends ChangeNotifier {
   void listenToExpenses(String userId) {
     if (_isListening) return;
     if (!_isLoading) _setLoading(true);
+    _loadErrorMessage = null;
 
     _expensesSubscription?.cancel();
-    _expensesSubscription = _repository.getExpensesStreamForUser(userId).listen(
-      (newExpenses) {
-        _allExpenses = newExpenses;
-        _updateDisplayList(animate: true);
-        if (_isLoading) _setLoading(false);
-      },
-    );
+    _expensesSubscription = _repository
+        .getExpensesStreamForUser(userId)
+        .listen(
+          (newExpenses) {
+            _allExpenses = newExpenses;
+            _loadErrorMessage = null;
+            _updateDisplayList(animate: true);
+            if (_isLoading) _setLoading(false);
+          },
+          onError: (Object error) {
+            _loadErrorMessage =
+                'Não foi possível carregar os lançamentos. Confira sua conexão e tente novamente.';
+            _isListening = false;
+            _setLoading(false);
+          },
+        );
 
     _recurringExpensesSubscription?.cancel();
     _recurringExpensesSubscription = _recurringRepository
         .getRecurringExpensesStream(userId)
-        .listen((recurring) {
-          _recurringExpenses = recurring;
-          checkAndCreateRecurringInstances(userId);
-          notifyListeners();
-        });
+        .listen(
+          (recurring) {
+            _recurringExpenses = recurring;
+            checkAndCreateRecurringInstances(userId);
+            notifyListeners();
+          },
+          onError: (Object error) {
+            _loadErrorMessage =
+                'Não foi possível carregar as recorrências. Confira sua conexão e tente novamente.';
+            _isListening = false;
+            _setLoading(false);
+          },
+        );
 
     _isListening = true;
+  }
+
+  Future<void> retryListenToExpenses(String userId) async {
+    await Future.wait([
+      _expensesSubscription?.cancel() ?? Future<void>.value(),
+      _recurringExpensesSubscription?.cancel() ?? Future<void>.value(),
+    ]);
+    _expensesSubscription = null;
+    _recurringExpensesSubscription = null;
+    _isListening = false;
+    listenToExpenses(userId);
   }
 
   void _updateDisplayList({bool animate = true}) {
@@ -819,6 +850,7 @@ class ExpenseViewModel extends ChangeNotifier {
     _allExpenses = [];
     _currentDisplayItems = [];
     _recurringExpenses = [];
+    _loadErrorMessage = null;
     _selectedCategoryIds = [];
     _isListening = false;
     notifyListeners();
