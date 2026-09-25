@@ -9,6 +9,7 @@ import 'package:key_budget/app/widgets/empty_state_widget.dart';
 import 'package:key_budget/app/widgets/responsive_center.dart';
 import 'package:key_budget/core/design_system/borders/app_borders.dart';
 import 'package:key_budget/core/design_system/spacing/app_spacing.dart';
+import 'package:key_budget/core/design_system/widgets/app_feedback_panel.dart';
 import 'package:key_budget/features/auth/viewmodel/auth_viewmodel.dart';
 import 'package:key_budget/features/category/viewmodel/category_viewmodel.dart';
 import 'package:key_budget/features/expenses/view/add_expense_screen.dart';
@@ -61,9 +62,11 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen> {
   Future<void> _handleRefresh() async {
     final authViewModel = ref.read(authViewModelProvider);
     if (mounted && authViewModel.currentUser != null) {
-      ref
-          .read(expenseViewModelProvider)
-          .listenToExpenses(authViewModel.currentUser!.id);
+      final userId = authViewModel.currentUser!.id;
+      await Future.wait([
+        ref.read(expenseViewModelProvider).retryListenToExpenses(userId),
+        ref.read(categoryViewModelProvider).fetchCategories(userId),
+      ]);
     }
   }
 
@@ -98,7 +101,9 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen> {
         InputChip(
           label: Text(
             expenseViewModel.filterIsIncome! ? 'Receitas' : 'Despesas',
-            style: theme.textTheme.labelSmall?.copyWith(fontWeight: FontWeight.w600),
+            style: theme.textTheme.labelSmall?.copyWith(
+              fontWeight: FontWeight.w600,
+            ),
           ),
           deleteIcon: const Icon(Icons.close, size: 16),
           onDeleted: () => expenseViewModel.setTypeFilter(null),
@@ -113,11 +118,14 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen> {
         InputChip(
           label: Text(
             category?.name ?? 'Categoria',
-            style: theme.textTheme.labelSmall?.copyWith(fontWeight: FontWeight.w600),
+            style: theme.textTheme.labelSmall?.copyWith(
+              fontWeight: FontWeight.w600,
+            ),
           ),
           deleteIcon: const Icon(Icons.close, size: 16),
           onDeleted: () {
-            final next = List<String>.from(expenseViewModel.selectedCategoryIds)..remove(catId);
+            final next = List<String>.from(expenseViewModel.selectedCategoryIds)
+              ..remove(catId);
             expenseViewModel.setCategoryFilter(next);
           },
           deleteIconColor: theme.colorScheme.primary,
@@ -130,7 +138,9 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen> {
         InputChip(
           label: Text(
             'Busca: "${_searchController.text}"',
-            style: theme.textTheme.labelSmall?.copyWith(fontWeight: FontWeight.w600),
+            style: theme.textTheme.labelSmall?.copyWith(
+              fontWeight: FontWeight.w600,
+            ),
           ),
           deleteIcon: const Icon(Icons.close, size: 16),
           onDeleted: () {
@@ -144,7 +154,11 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen> {
 
     chips.add(
       ActionChip(
-        avatar: Icon(Icons.clear_all_rounded, size: 16, color: theme.colorScheme.error),
+        avatar: Icon(
+          Icons.clear_all_rounded,
+          size: 16,
+          color: theme.colorScheme.error,
+        ),
         label: Text(
           'Limpar filtros',
           style: theme.textTheme.labelSmall?.copyWith(
@@ -161,15 +175,22 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen> {
     );
 
     return Padding(
-      padding: const EdgeInsets.fromLTRB(AppSpacing.md, AppSpacing.sm, AppSpacing.md, 0),
+      padding: const EdgeInsets.fromLTRB(
+        AppSpacing.md,
+        AppSpacing.sm,
+        AppSpacing.md,
+        0,
+      ),
       child: SingleChildScrollView(
         scrollDirection: Axis.horizontal,
         child: Row(
           children: chips
-              .map((c) => Padding(
-                    padding: const EdgeInsets.only(right: AppSpacing.xs),
-                    child: c,
-                  ))
+              .map(
+                (c) => Padding(
+                  padding: const EdgeInsets.only(right: AppSpacing.xs),
+                  child: c,
+                ),
+              )
               .toList(),
         ),
       ),
@@ -195,8 +216,12 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen> {
       symbol: 'R\$',
     );
 
-    final isFiltered = expenseViewModel.hasActiveFilters || expenseViewModel.searchAllPeriods;
-    final rawPeriod = DateFormat("MMMM 'de' yyyy", 'pt_BR').format(expenseViewModel.selectedMonth);
+    final isFiltered =
+        expenseViewModel.hasActiveFilters || expenseViewModel.searchAllPeriods;
+    final rawPeriod = DateFormat(
+      "MMMM 'de' yyyy",
+      'pt_BR',
+    ).format(expenseViewModel.selectedMonth);
     final formattedPeriod = rawPeriod.isNotEmpty
         ? '${rawPeriod[0].toUpperCase()}${rawPeriod.substring(1)}'
         : rawPeriod;
@@ -323,7 +348,8 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen> {
                       },
                     ),
 
-                    context: context,),
+                    context: context,
+                  ),
                 ),
                 _buildActiveFilterChips(
                   context,
@@ -336,6 +362,34 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen> {
             ),
             if (isLoading)
               const ExpensesListSkeleton()
+            else if ((expenseViewModel.loadErrorMessage != null ||
+                    categoryViewModel.errorMessage != null) &&
+                expenseViewModel.allExpenses.isEmpty)
+              SliverFillRemaining(
+                hasScrollBody: false,
+                child: AppFeedbackPanel(
+                  title: 'Falha ao carregar lançamentos',
+                  message:
+                      expenseViewModel.loadErrorMessage ??
+                      categoryViewModel.errorMessage!,
+                  type: AppFeedbackType.error,
+                  actionLabel: 'Tentar novamente',
+                  onAction: () {
+                    final userId = ref
+                        .read(authViewModelProvider)
+                        .currentUser
+                        ?.id;
+                    if (userId != null) {
+                      ref
+                          .read(expenseViewModelProvider)
+                          .retryListenToExpenses(userId);
+                      ref
+                          .read(categoryViewModelProvider)
+                          .fetchCategories(userId);
+                    }
+                  },
+                ),
+              )
             else if (expenseViewModel.currentDisplayItems.isEmpty)
               SliverFillRemaining(
                 hasScrollBody: false,
@@ -574,7 +628,9 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen> {
             ),
           ),
         ),
-        body: SafeArea(child: AppAnimations.fadeInFromBottom(body, context: context)),
+        body: SafeArea(
+          child: AppAnimations.fadeInFromBottom(body, context: context),
+        ),
         floatingActionButton: AppAnimations.scaleIn(
           FloatingActionButton.extended(
             heroTag: 'fab_expenses',
@@ -592,7 +648,8 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen> {
             elevation: 0,
           ),
 
-          context: context,),
+          context: context,
+        ),
       ),
     );
   }
