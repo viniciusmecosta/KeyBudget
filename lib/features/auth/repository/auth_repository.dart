@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:key_budget/app/config/app_theme.dart';
 import 'package:key_budget/core/models/expense_category_model.dart';
+import 'package:key_budget/core/utils/string_extensions.dart';
 import 'package:key_budget/core/models/user_model.dart';
 
 class ProfileSetupException implements Exception {
@@ -21,9 +22,9 @@ class AuthRepository {
     firebase.FirebaseAuth? firebaseAuth,
     FirebaseFirestore? firestore,
     GoogleSignIn? googleSignIn,
-  })  : _customFirebaseAuth = firebaseAuth,
-        _customFirestore = firestore,
-        _customGoogleSignIn = googleSignIn;
+  }) : _customFirebaseAuth = firebaseAuth,
+       _customFirestore = firestore,
+       _customGoogleSignIn = googleSignIn;
 
   firebase.FirebaseAuth get _firebaseAuth =>
       _customFirebaseAuth ?? firebase.FirebaseAuth.instance;
@@ -88,51 +89,80 @@ class AuthRepository {
           .collection('users')
           .doc(userId)
           .collection('categories');
-      final existingCategories = await categoriesCollection.limit(1).get();
+      final existingCategories = await categoriesCollection.get();
+      final existingNames = existingCategories.docs
+          .map((doc) => (doc.data()['name'] as String?) ?? '')
+          .map((name) => name.withoutDiacritics.trim().toLowerCase())
+          .toSet();
+      final existingIds = existingCategories.docs.map((doc) => doc.id).toSet();
 
-      if (existingCategories.docs.isNotEmpty) {
-        return;
-      }
-
-      final List<ExpenseCategory> defaultCategories = [
-        ExpenseCategory(
-          name: 'Alimentação',
-          iconCodePoint: Icons.restaurant.codePoint,
-          colorValue: AppTheme.chartColors[0].toARGB32(),
+      final defaults = <({String id, ExpenseCategory category})>[
+        (
+          id: 'default_alimentacao',
+          category: ExpenseCategory(
+            name: 'Alimentação',
+            iconCodePoint: Icons.restaurant.codePoint,
+            colorValue: AppTheme.chartColors[0].toARGB32(),
+          ),
         ),
-        ExpenseCategory(
-          name: 'Lazer',
-          iconCodePoint: Icons.shopping_bag.codePoint,
-          colorValue: AppTheme.chartColors[1].toARGB32(),
+        (
+          id: 'default_lazer',
+          category: ExpenseCategory(
+            name: 'Lazer',
+            iconCodePoint: Icons.shopping_bag.codePoint,
+            colorValue: AppTheme.chartColors[1].toARGB32(),
+          ),
         ),
-        ExpenseCategory(
-          name: 'Roupa',
-          iconCodePoint: Icons.checkroom.codePoint,
-          colorValue: AppTheme.chartColors[2].toARGB32(),
+        (
+          id: 'default_roupa',
+          category: ExpenseCategory(
+            name: 'Roupa',
+            iconCodePoint: Icons.checkroom.codePoint,
+            colorValue: AppTheme.chartColors[2].toARGB32(),
+          ),
         ),
-        ExpenseCategory(
-          name: 'Farmácia',
-          iconCodePoint: Icons.medication_rounded.codePoint,
-          colorValue: AppTheme.chartColors[3].toARGB32(),
+        (
+          id: 'default_farmacia',
+          category: ExpenseCategory(
+            name: 'Farmácia',
+            iconCodePoint: Icons.medication_rounded.codePoint,
+            colorValue: AppTheme.chartColors[3].toARGB32(),
+          ),
         ),
-        ExpenseCategory(
-          name: 'Transporte',
-          iconCodePoint: Icons.directions_bus.codePoint,
-          colorValue: AppTheme.chartColors[4].toARGB32(),
+        (
+          id: 'default_transporte',
+          category: ExpenseCategory(
+            name: 'Transporte',
+            iconCodePoint: Icons.directions_bus.codePoint,
+            colorValue: AppTheme.chartColors[4].toARGB32(),
+          ),
         ),
-        ExpenseCategory(
-          name: 'Outros',
-          iconCodePoint: Icons.category_rounded.codePoint,
-          colorValue: AppTheme.chartColors[5].toARGB32(),
+        (
+          id: 'default_outros',
+          category: ExpenseCategory(
+            name: 'Outros',
+            iconCodePoint: Icons.category_rounded.codePoint,
+            colorValue: AppTheme.chartColors[5].toARGB32(),
+          ),
         ),
       ];
 
       final batch = _firestore.batch();
-      for (final category in defaultCategories) {
-        final docRef = categoriesCollection.doc();
-        batch.set(docRef, category.toMap());
+      var hasDefaultsToCreate = false;
+      for (final entry in defaults) {
+        final normalizedName = entry.category.name.withoutDiacritics
+            .trim()
+            .toLowerCase();
+        if (existingIds.contains(entry.id) ||
+            existingNames.contains(normalizedName)) {
+          continue;
+        }
+        batch.set(categoriesCollection.doc(entry.id), entry.category.toMap());
+        hasDefaultsToCreate = true;
       }
-      await batch.commit();
+      if (hasDefaultsToCreate) {
+        await batch.commit();
+      }
     } catch (e) {
       if (kDebugMode) {
         print("Error ensuring categories exist: $e");
