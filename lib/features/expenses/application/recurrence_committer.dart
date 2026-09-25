@@ -63,6 +63,11 @@ class FirestoreRecurrenceCommitter {
           'A regra foi atualizada por outra sessão. Atualize a lista antes de gerar novamente.',
         );
       }
+      if (!currentRule.hasSameGenerationInputs(rule)) {
+        return const RecurrenceCommitResult.conflict(
+          'A regra foi alterada durante a geração. Atualize a lista e tente novamente.',
+        );
+      }
       if (currentRule.generationState == 'paused' ||
           currentRule.generationState == 'deleting') {
         return const RecurrenceCommitResult.conflict(

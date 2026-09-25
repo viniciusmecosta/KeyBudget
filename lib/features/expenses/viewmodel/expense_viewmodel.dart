@@ -514,7 +514,12 @@ class ExpenseViewModel extends ChangeNotifier {
     String userId,
     RecurringExpense expense,
   ) async {
-    await _recurringRepository.updateRecurringExpense(userId, expense);
+    await _recurringRepository.updateRecurringExpense(
+      userId,
+      expense.copyWith(
+        generationRevision: (expense.generationRevision ?? 0) + 1,
+      ),
+    );
   }
 
   Future<RecurringDeleteSnapshot?> deleteRecurringExpense(
