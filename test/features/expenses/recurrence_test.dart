@@ -138,6 +138,35 @@ class FakeOccurrenceRepository implements RecurrenceOccurrenceRepository {
 }
 
 void main() {
+  group('RecurringExpense generation snapshot', () {
+    final rule = RecurringExpense.withMoney(
+      id: 'rule',
+      money: Money.fromCents(1200),
+      frequency: RecurrenceFrequency.monthly,
+      startDate: DateTime(2026, 1, 1),
+      dayOfMonth: 1,
+      generationRevision: 3,
+    );
+
+    test('matches the rule used to generate pending expenses', () {
+      expect(rule.hasSameGenerationInputs(rule.copyWith()), isTrue);
+    });
+
+    test('detects changed amount, schedule, and revision', () {
+      expect(rule.hasSameGenerationInputs(rule.copyWith(amount: 15)), isFalse);
+      expect(
+        rule.hasSameGenerationInputs(
+          rule.copyWith(frequency: RecurrenceFrequency.weekly),
+        ),
+        isFalse,
+      );
+      expect(
+        rule.hasSameGenerationInputs(rule.copyWith(generationRevision: 4)),
+        isFalse,
+      );
+    });
+  });
+
   group('RecurrenceSchedule Pure Engine', () {
     test(
       'Dia 31 em ano bissexto (2024) gera 29/02 e março volta ao dia 31',
