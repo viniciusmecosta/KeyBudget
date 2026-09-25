@@ -97,6 +97,42 @@ class DocumentRepository {
   Future<void> deleteDocument(String userId, String documentId) async {
     await getDocumentsCollection(userId).doc(documentId).delete();
   }
+
+  Future<List<Document>> getDocumentFamily(String userId, String rootId) async {
+    final collection = getDocumentsCollection(userId);
+    final root = await collection
+        .doc(rootId)
+        .get(const GetOptions(source: Source.server));
+    final versions = await collection
+        .where('originalDocumentId', isEqualTo: rootId)
+        .get(const GetOptions(source: Source.server));
+    final byId = <String, Document>{
+      if (root.exists) root.id: root.data()!,
+      for (final snapshot in versions.docs) snapshot.id: snapshot.data(),
+    };
+    return byId.values.toList();
+  }
+
+  Future<void> deleteDocumentsWithCleanup(
+    String userId,
+    List<String> documentIds,
+    List<String> driveIds,
+  ) async {
+    if (documentIds.length + (driveIds.isNotEmpty ? 1 : 0) > 500) {
+      throw StateError('O histórico excede o limite de uma operação.');
+    }
+    final batch = firestore.batch();
+    final collection = getDocumentsCollection(userId);
+    for (final id in documentIds) {
+      batch.delete(collection.doc(id));
+    }
+    if (driveIds.isNotEmpty) {
+      batch.update(_userRef(userId), {
+        'pendingDocumentAttachmentCleanup': FieldValue.arrayUnion(driveIds),
+      });
+    }
+    await batch.commit();
+  }
 }
 
 final documentRepositoryProvider = Provider<DocumentRepository>(
