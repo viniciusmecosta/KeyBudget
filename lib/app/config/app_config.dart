@@ -7,7 +7,7 @@ class AppConfig {
     await Firebase.initializeApp();
     FirebaseFirestore.instance.settings = const Settings(
       persistenceEnabled: true,
-      cacheSizeBytes: Settings.CACHE_SIZE_UNLIMITED,
+      cacheSizeBytes: 64 * 1024 * 1024,
     );
     await dotenv.load(fileName: "assets/.env");
   }
