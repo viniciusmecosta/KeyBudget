@@ -5,12 +5,14 @@ class AppSectionHeader extends StatelessWidget {
   final String title;
   final String? subtitle;
   final Widget? action;
+  final bool keepActionInline;
 
   const AppSectionHeader({
     super.key,
     required this.title,
     this.subtitle,
     this.action,
+    this.keepActionInline = false,
   });
 
   @override
@@ -50,7 +52,7 @@ class AppSectionHeader extends StatelessWidget {
 
           if (action == null) return titleWidget;
 
-          if (isNarrow) {
+          if (isNarrow && !keepActionInline) {
             return Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               mainAxisSize: MainAxisSize.min,
