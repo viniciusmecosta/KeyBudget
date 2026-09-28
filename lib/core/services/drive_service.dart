@@ -19,6 +19,10 @@ class GoogleAuthClient extends http.BaseClient {
   }
 }
 
+class DriveFileTooLargeException implements Exception {
+  const DriveFileTooLargeException();
+}
+
 class DriveService {
   final _googleSignIn = GoogleSignIn.instance;
   bool _isInitialized = false;
@@ -203,6 +207,59 @@ class DriveService {
     return bytes;
   }
 
+  Future<bool> downloadToFileLimited(
+    String fileId,
+    File destination, {
+    required int maxBytes,
+    String? serverClientId,
+  }) async {
+    final driveApi = await _getDriveApi(serverClientId: serverClientId);
+    if (driveApi == null) return false;
+
+    final response =
+        (await driveApi.files.get(
+              fileId,
+              downloadOptions: drive.DownloadOptions.fullMedia,
+            ))
+            as drive.Media;
+
+    await writeLimitedStreamToFile(
+      response.stream,
+      destination,
+      maxBytes: maxBytes,
+    );
+    return true;
+  }
+
+  static Future<void> writeLimitedStreamToFile(
+    Stream<List<int>> stream,
+    File destination, {
+    required int maxBytes,
+  }) async {
+    if (maxBytes <= 0) throw ArgumentError.value(maxBytes, 'maxBytes');
+    final temporary = File('${destination.path}.part');
+    IOSink? sink;
+    var received = 0;
+    try {
+      sink = temporary.openWrite();
+      await for (final chunk in stream) {
+        received += chunk.length;
+        if (received > maxBytes) throw const DriveFileTooLargeException();
+        sink.add(chunk);
+      }
+      await sink.flush();
+      await sink.close();
+      sink = null;
+      await temporary.rename(destination.path);
+    } catch (_) {
+      try {
+        await sink?.close();
+      } catch (_) {}
+      if (await temporary.exists()) await temporary.delete();
+      rethrow;
+    }
+  }
+
   Future<List<DriveBackupFile>> listBackupFiles({
     String? serverClientId,
   }) async {
@@ -212,8 +269,11 @@ class DriveService {
     final rootFolderId = await _getFolderId(driveApi);
     if (rootFolderId == null) return [];
 
-    final backupFolderId =
-        await _getSubFolderId(driveApi, rootFolderId, 'Backup');
+    final backupFolderId = await _getSubFolderId(
+      driveApi,
+      rootFolderId,
+      'Backup',
+    );
     if (backupFolderId == null) return [];
 
     final query =
@@ -244,16 +304,20 @@ class DriveService {
     final driveApi = await _getDriveApi(serverClientId: serverClientId);
     if (driveApi == null) return null;
 
-    final response = (await driveApi.files.get(
-      fileId,
-      downloadOptions: drive.DownloadOptions.fullMedia,
-    )) as drive.Media;
+    final response =
+        (await driveApi.files.get(
+              fileId,
+              downloadOptions: drive.DownloadOptions.fullMedia,
+            ))
+            as drive.Media;
 
     final bytes = <int>[];
     await for (final chunk in response.stream) {
       bytes.addAll(chunk);
       if (bytes.length > maxBytes) {
-        throw Exception('Arquivo excede o limite máximo permitido para download ($maxBytes bytes).');
+        throw Exception(
+          'Arquivo excede o limite máximo permitido para download ($maxBytes bytes).',
+        );
       }
     }
 
