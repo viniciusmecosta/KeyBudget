@@ -183,6 +183,8 @@ class _BackupRestoreScreenState extends ConsumerState<BackupRestoreScreen>
           );
         }
       }
+    } on DriveAuthorizationCancelled {
+      if (mounted) setState(() => _isCreatingBackup = false);
     } catch (e) {
       if (mounted) {
         setState(() {
@@ -226,6 +228,8 @@ class _BackupRestoreScreenState extends ConsumerState<BackupRestoreScreen>
           );
         }
       }
+    } on DriveAuthorizationCancelled {
+      return;
     } catch (e) {
       if (mounted) {
         SnackbarService.showError(context, 'Não foi possível enviar o backup. Tente novamente.');

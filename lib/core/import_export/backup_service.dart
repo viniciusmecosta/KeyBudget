@@ -146,6 +146,8 @@ class BackupService {
               if (driveService != null) {
                 try {
                   bytes = await driveService!.downloadFile(driveId);
+                } on DriveAuthorizationCancelled {
+                  rethrow;
                 } catch (_) {
                   bytes = null;
                 }

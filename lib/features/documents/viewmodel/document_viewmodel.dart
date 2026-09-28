@@ -485,6 +485,8 @@ class DocumentViewModel extends ChangeNotifier {
         );
       }
       return null;
+    } on DriveAuthorizationCancelled {
+      return null;
     } catch (e) {
       _setErrorMessage('Erro ao selecionar ou processar o arquivo.');
       return null;
@@ -541,6 +543,8 @@ class DocumentViewModel extends ChangeNotifier {
         }
         return file;
       }
+    } on DriveAuthorizationCancelled {
+      return null;
     } on DriveFileTooLargeException {
       _setErrorMessage('O anexo excede o limite de 25 MB.');
       return null;

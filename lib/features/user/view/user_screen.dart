@@ -131,9 +131,14 @@ class UserScreen extends ConsumerWidget {
           );
         }
       }
+    } on DriveAuthorizationCancelled {
+      return;
     } catch (e) {
       if (context.mounted) {
-        SnackbarService.showError(context, 'Não foi possível concluir o backup. Tente novamente.');
+        SnackbarService.showError(
+          context,
+          'Não foi possível concluir o backup. Tente novamente.',
+        );
       }
     }
   }
