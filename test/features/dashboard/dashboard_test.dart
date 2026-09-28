@@ -6,6 +6,8 @@ import 'package:key_budget/app/navigation/app_destination.dart';
 import 'package:key_budget/app/viewmodel/navigation_viewmodel.dart';
 import 'package:key_budget/core/models/expense_model.dart';
 import 'package:key_budget/core/models/user_model.dart';
+import 'package:key_budget/app/widgets/balance_card.dart';
+import 'package:key_budget/core/design_system/colors/app_contrast.dart';
 import 'package:key_budget/features/auth/repository/auth_repository.dart';
 import 'package:key_budget/features/auth/viewmodel/auth_viewmodel.dart';
 import 'package:key_budget/features/category/viewmodel/category_viewmodel.dart';
@@ -170,6 +172,41 @@ void main() {
       expect(find.text('Despesas do mês'), findsOneWidget);
       expect(find.textContaining(r'R$'), findsWidgets);
       expect(find.textContaining('Receitas:'), findsNothing);
+    });
+
+    testWidgets('dark dashboard balance card uses readable white text', (tester) async {
+      final dashboardVM = FakeDashboardVM();
+      final darkTheme = ThemeData.dark().copyWith(
+        colorScheme: const ColorScheme.dark(
+          primary: Color(0xffb3a2f0),
+          onPrimary: Colors.black,
+        ),
+      );
+
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: [
+            authViewModelProvider.overrideWith((ref) => FakeAuthVM(
+              mockUser: User(id: 'u1', name: 'Tester', email: 't@t.com', enableIncomes: false),
+            )),
+            dashboardViewModelProvider.overrideWith((ref) => dashboardVM),
+          ],
+          child: MaterialApp(
+            theme: darkTheme,
+            home: const Scaffold(body: DashboardBalanceCard()),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      final card = tester.widget<BalanceCard>(find.byType(BalanceCard));
+      final gradient = card.gradient! as LinearGradient;
+      expect(card.foregroundColor, Colors.white);
+      for (final color in gradient.colors) {
+        expect(AppContrast.ratio(Colors.white, color), greaterThanOrEqualTo(4.5));
+      }
+      final titleColor = tester.widget<Text>(find.text('Despesas do mês')).style!.color!;
+      expect(AppContrast.ratio(Color.alphaBlend(titleColor, gradient.colors.first), gradient.colors.first), greaterThanOrEqualTo(4.5));
     });
 
     testWidgets('DashboardBalanceCard displays balance and totals when enableIncomes is true', (tester) async {

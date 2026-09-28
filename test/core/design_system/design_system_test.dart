@@ -147,6 +147,36 @@ void main() {
       await tester.tap(find.text('Ver tudo'));
       expect(actionTapped, isTrue);
     });
+
+    testWidgets('keeps the analysis action inline at dashboard card width', (tester) async {
+      tester.view.physicalSize = const Size(329, 500);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.resetPhysicalSize);
+
+      await tester.pumpWidget(
+        MaterialApp(
+          theme: AppTheme.darkTheme,
+          home: Scaffold(
+            body: AppSectionHeader(
+              title: 'Gastos Mensais',
+              subtitle: 'Últimos 4 meses',
+              keepActionInline: true,
+              action: TextButton(
+                onPressed: () {},
+                child: const Text('Ver análise', maxLines: 1, softWrap: false),
+              ),
+            ),
+          ),
+        ),
+      );
+
+      expect(tester.takeException(), isNull);
+      expect(find.text('Gastos Mensais'), findsOneWidget);
+      expect(find.text('Ver análise'), findsOneWidget);
+      final action = tester.getRect(find.text('Ver análise'));
+      final title = tester.getRect(find.text('Gastos Mensais'));
+      expect(action.center.dy, lessThan(title.bottom + 8));
+    });
   });
 
   group('AppFeedbackPanel', () {

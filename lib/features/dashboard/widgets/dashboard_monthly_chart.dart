@@ -140,6 +140,7 @@ class DashboardMonthlyChart extends ConsumerWidget {
         children: [
           AppSectionHeader(
             title: enableIncomes ? 'Entradas vs Saídas' : 'Gastos Mensais',
+            keepActionInline: true,
             subtitle: monthsToShow <= 1
                 ? 'Último mês'
                 : 'Últimos $monthsToShow meses',
@@ -147,7 +148,11 @@ class DashboardMonthlyChart extends ConsumerWidget {
               onPressed: () {
                 NavigationUtils.push(context, const AnalysisScreen());
               },
-              label: const Text('Ver análise'),
+              style: TextButton.styleFrom(
+                padding: const EdgeInsets.symmetric(horizontal: 4),
+                minimumSize: const Size(48, 48),
+              ),
+              label: const Text('Ver análise', maxLines: 1, softWrap: false),
               icon: const Icon(Icons.arrow_forward_ios_rounded, size: 14),
             ),
           ),
