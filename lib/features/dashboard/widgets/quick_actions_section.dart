@@ -12,7 +12,9 @@ import 'package:key_budget/features/dashboard/viewmodel/dashboard_viewmodel.dart
 import 'package:key_budget/features/expenses/view/add_expense_screen.dart';
 
 class QuickActionsSection extends ConsumerWidget {
-  const QuickActionsSection({super.key});
+  final List<String>? actionIds;
+
+  const QuickActionsSection({super.key, this.actionIds});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -25,8 +27,8 @@ class QuickActionsSection extends ConsumerWidget {
     final enableIncomes = user?.enableIncomes ?? false;
     final enableSuppliers = user?.enableSuppliers ?? false;
 
-    final actions = <_QuickActionItem>[
-      _QuickActionItem(
+    final availableActions = <String, _QuickActionItem>{
+      'expense': _QuickActionItem(
         title: enableIncomes ? 'Novo lançamento' : 'Nova despesa',
         compactTitle: enableIncomes ? 'Lançar' : 'Despesa',
         subtitle: 'Registrar valor',
@@ -34,7 +36,7 @@ class QuickActionsSection extends ConsumerWidget {
         color: theme.colorScheme.primary,
         onTap: () => NavigationUtils.push(context, const AddExpenseScreen()),
       ),
-      _QuickActionItem(
+      'credentials': _QuickActionItem(
         title: 'Credenciais',
         compactTitle: 'Cofre',
         subtitle: '${viewModel.credentialCount} salvas',
@@ -42,7 +44,7 @@ class QuickActionsSection extends ConsumerWidget {
         color: theme.colorScheme.secondary,
         onTap: () => navigationViewModel.navigateTo(AppDestination.credentials),
       ),
-      _QuickActionItem(
+      'analysis': _QuickActionItem(
         title: 'Análise',
         compactTitle: 'Análise',
         subtitle: 'Ver relatórios',
@@ -51,7 +53,7 @@ class QuickActionsSection extends ConsumerWidget {
         onTap: () => NavigationUtils.push(context, const AnalysisScreen()),
       ),
       if (enableSuppliers)
-        _QuickActionItem(
+        'suppliers': _QuickActionItem(
           title: 'Fornecedores',
           compactTitle: 'Fornecedores',
           subtitle: 'Gerenciar',
@@ -59,7 +61,12 @@ class QuickActionsSection extends ConsumerWidget {
           color: theme.colorScheme.secondary,
           onTap: () => navigationViewModel.navigateTo(AppDestination.suppliers),
         ),
-    ];
+    };
+    final actions = (actionIds ?? availableActions.keys.toList())
+        .map((id) => availableActions[id])
+        .whereType<_QuickActionItem>()
+        .toList();
+    if (actions.isEmpty) return const SizedBox.shrink();
 
     return LayoutBuilder(
       builder: (context, constraints) {
