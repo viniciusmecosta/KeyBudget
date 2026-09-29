@@ -8,7 +8,9 @@ import 'package:key_budget/core/design_system/spacing/app_spacing.dart';
 import 'package:key_budget/features/auth/viewmodel/auth_viewmodel.dart';
 
 class DashboardHeader extends ConsumerWidget implements PreferredSizeWidget {
-  const DashboardHeader({super.key});
+  final VoidCallback? onCustomize;
+
+  const DashboardHeader({super.key, this.onCustomize});
 
   ImageProvider? _getAvatarProvider(String? path) {
     if (path == null || path.isEmpty) return null;
@@ -81,6 +83,12 @@ class DashboardHeader extends ConsumerWidget implements PreferredSizeWidget {
               ),
             ),
             const SizedBox(width: AppSpacing.md),
+            if (onCustomize != null)
+              IconButton(
+                tooltip: 'Personalizar painel',
+                onPressed: onCustomize,
+                icon: const Icon(Icons.tune_rounded),
+              ),
             Semantics(
               button: true,
               label: 'Abrir perfil',
