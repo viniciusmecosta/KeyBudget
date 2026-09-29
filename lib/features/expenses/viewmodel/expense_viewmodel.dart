@@ -9,18 +9,15 @@ import 'package:key_budget/core/services/csv_service.dart';
 import 'package:key_budget/core/services/data_import_service.dart';
 import 'package:key_budget/core/services/notification_service.dart';
 import 'package:key_budget/core/services/pdf_service.dart';
-import 'package:key_budget/core/services/snackbar_service.dart';
 import 'package:key_budget/features/analysis/viewmodel/analysis_viewmodel.dart';
 import 'package:key_budget/features/category/viewmodel/category_viewmodel.dart';
 import 'package:key_budget/core/money/money.dart';
 import 'package:key_budget/core/operations/operation_result.dart';
 import 'package:key_budget/core/time/app_clock.dart';
-import 'package:key_budget/core/time/date_range.dart';
 import 'package:key_budget/features/credentials/repository/credential_repository.dart';
 import 'package:key_budget/features/expenses/domain/installment_calculator.dart';
-import 'package:key_budget/core/import_export/csv_import_parser.dart';
-import 'package:key_budget/core/import_export/import_preview_screen.dart';
 import 'package:key_budget/core/import_export/import_service.dart';
+import 'package:key_budget/features/expenses/application/expense_transfer_service.dart';
 import 'package:key_budget/features/expenses/application/recurrence_deletion_service.dart';
 import 'package:key_budget/features/expenses/application/recurrence_committer.dart';
 import 'package:key_budget/features/expenses/application/recurrence_service.dart';
@@ -42,6 +39,7 @@ class ExpenseViewModel extends ChangeNotifier {
   final PdfService _pdfService;
   final DataImportService _dataImportService;
   final AppClock _clock;
+  late final ExpenseTransferService _transferService;
 
   ExpenseViewModel({
     ExpenseRepository? repository,
@@ -91,6 +89,12 @@ class ExpenseViewModel extends ChangeNotifier {
        _pdfService = pdfService ?? PdfService(),
        _dataImportService = dataImportService ?? DataImportService(),
        _clock = clock ?? const SystemAppClock() {
+    _transferService = ExpenseTransferService(
+      importService: _importService,
+      csvService: _csvService,
+      pdfService: _pdfService,
+      dataImportService: _dataImportService,
+    );
     final now = _clock.now();
     _selectedMonth = DateTime(now.year, now.month);
   }
@@ -619,19 +623,12 @@ class ExpenseViewModel extends ChangeNotifier {
   ) async {
     _setExportingCsv(true);
     try {
-      List<Expense> expensesToExport;
-      if (start != null && end != null) {
-        final range = DateRange.fromDays(start, end);
-        expensesToExport = _allExpenses
-            .where((exp) => range.contains(exp.date))
-            .toList();
-      } else if (start == null && end == null) {
-        expensesToExport = List<Expense>.from(_allExpenses);
-      } else {
-        return false;
-      }
-      expensesToExport.sort((a, b) => a.date.compareTo(b.date));
-      return await _csvService.exportExpenses(context, expensesToExport);
+      return await _transferService.exportCsv(
+        context,
+        _allExpenses,
+        start,
+        end,
+      );
     } finally {
       _setExportingCsv(false);
     }
@@ -646,21 +643,11 @@ class ExpenseViewModel extends ChangeNotifier {
   ) async {
     _setExportingPdf(true);
     try {
-      List<Expense> expensesToExport;
-      if (start != null && end != null) {
-        final range = DateRange.fromDays(start, end);
-        expensesToExport = _allExpenses
-            .where((exp) => range.contains(exp.date))
-            .toList();
-      } else if (start == null && end == null) {
-        expensesToExport = List<Expense>.from(_allExpenses);
-      } else {
-        return;
-      }
-      expensesToExport.sort((a, b) => a.date.compareTo(b.date));
-      await _pdfService.exportExpensesPdf(
+      await _transferService.exportPdf(
         context,
-        expensesToExport,
+        _allExpenses,
+        start,
+        end,
         analysisViewModel,
         categoryViewModel,
       );
@@ -677,55 +664,13 @@ class ExpenseViewModel extends ChangeNotifier {
   }) async {
     _setImportingCsv(true);
     try {
-      String? content = rawCsvContent;
-      String name = fileName ?? 'expenses.csv';
-
-      if (content == null) {
-        final file = await _csvService.pickCsvFile();
-        if (file == null) return 0;
-        name = file.path.split('/').last;
-        content = await file.readAsString();
-      }
-
-      final plan = await _importService.preparePlan(
-        userId: userId,
-        fileContent: content,
-        fileName: name,
-        forcedType: CsvImportType.expenses,
-        existingExpenses: _allExpenses,
+      return await _transferService.importCsv(
+        userId,
+        _allExpenses,
+        context: context,
+        rawCsvContent: rawCsvContent,
+        fileName: fileName,
       );
-
-      if (!plan.canProceed) {
-        if (context != null && context.mounted) {
-          SnackbarService.showError(
-            context,
-            plan.globalErrors.isNotEmpty
-                ? plan.globalErrors.first
-                : 'O arquivo CSV não possui registros válidos para importar.',
-          );
-        }
-        return 0;
-      }
-
-      if (context != null && context.mounted) {
-        final resultCount = await Navigator.of(context).push<int>(
-          MaterialPageRoute(
-            builder: (_) => ImportPreviewScreen(
-              userId: userId,
-              plan: plan,
-              importService: _importService,
-            ),
-          ),
-        );
-        return resultCount ?? 0;
-      } else {
-        final result = await _importService.applyPlan(
-          userId: userId,
-          plan: plan,
-          importOnlyValid: true,
-        );
-        return result.data?.createdCount ?? 0;
-      }
     } finally {
       _setImportingCsv(false);
     }
@@ -733,9 +678,11 @@ class ExpenseViewModel extends ChangeNotifier {
 
   Future<int> importAllExpensesFromJson(String userId) async {
     _setLoading(true);
-    final count = await _dataImportService.importExpensesFromJsons(userId);
-    _setLoading(false);
-    return count;
+    try {
+      return await _transferService.importLegacyJson(userId);
+    } finally {
+      _setLoading(false);
+    }
   }
 
   List<String> getUniqueLocationsForCategory(String? categoryId, String query) {
