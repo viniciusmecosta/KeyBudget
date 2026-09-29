@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:isolate';
 import 'package:crypto/crypto.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:key_budget/core/models/credential_model.dart';
@@ -93,10 +94,14 @@ class ImportService {
     String? defaultFolderId,
     String? explicitDelimiter,
   }) async {
-    final fileHash = sha256.convert(utf8.encode(fileContent)).toString();
-    final parseResult = csvParser.parseString(
-      fileContent,
-      explicitDelimiter: explicitDelimiter,
+    final fileHash = await Isolate.run(
+      () => sha256.convert(utf8.encode(fileContent)).toString(),
+    );
+    final parseResult = await Isolate.run(
+      () => csvParser.parseString(
+        fileContent,
+        explicitDelimiter: explicitDelimiter,
+      ),
     );
 
     if (!parseResult.isValid) {
