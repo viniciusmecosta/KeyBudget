@@ -2,11 +2,23 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:key_budget/core/models/expense_model.dart';
 
+class ExpenseStreamSnapshot {
+  final List<Expense> expenses;
+  final bool isFromCache;
+  final bool hasPendingWrites;
+
+  const ExpenseStreamSnapshot({
+    required this.expenses,
+    required this.isFromCache,
+    required this.hasPendingWrites,
+  });
+}
+
 class ExpenseRepository {
   final FirebaseFirestore? _customFirestore;
 
   ExpenseRepository({FirebaseFirestore? firestore})
-      : _customFirestore = firestore;
+    : _customFirestore = firestore;
 
   FirebaseFirestore get _firestore =>
       _customFirestore ?? FirebaseFirestore.instance;
@@ -60,6 +72,19 @@ class ExpenseRepository {
     return querySnapshot.map(
       (snapshot) => snapshot.docs.map((doc) => doc.data()).toList(),
     );
+  }
+
+  Stream<ExpenseStreamSnapshot> getExpensesWithMetadataStream(String userId) {
+    return _getExpensesCollection(userId)
+        .orderBy('date', descending: true)
+        .snapshots(includeMetadataChanges: true)
+        .map(
+          (snapshot) => ExpenseStreamSnapshot(
+            expenses: snapshot.docs.map((doc) => doc.data()).toList(),
+            isFromCache: snapshot.metadata.isFromCache,
+            hasPendingWrites: snapshot.metadata.hasPendingWrites,
+          ),
+        );
   }
 
   Future<List<Expense>> getExpensesForUser(String userId) async {

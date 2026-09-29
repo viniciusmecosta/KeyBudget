@@ -18,6 +18,7 @@ import 'package:key_budget/features/expenses/viewmodel/expense_viewmodel.dart';
 import '../widgets/category_filter_modal.dart';
 import '../widgets/expense_actions_popup_menu.dart';
 import '../widgets/expense_list.dart';
+import '../widgets/expense_sync_indicator.dart';
 import '../widgets/expenses_list_skeleton.dart';
 import '../widgets/month_selector.dart';
 
@@ -249,6 +250,19 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen> {
                   onAllPeriodsChanged: (isAll) {
                     expenseViewModel.setSearchAllPeriods(isAll);
                   },
+                ),
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
+                  child: ExpenseSyncIndicator(
+                    status: expenseViewModel.syncStatus,
+                    lastServerConfirmation: expenseViewModel.lastServerConfirmation,
+                    onRetry: () {
+                      final userId = authViewModel.currentUser?.id;
+                      if (userId != null) {
+                        expenseViewModel.retryListenToExpenses(userId);
+                      }
+                    },
+                  ),
                 ),
                 Padding(
                   padding: const EdgeInsets.symmetric(
