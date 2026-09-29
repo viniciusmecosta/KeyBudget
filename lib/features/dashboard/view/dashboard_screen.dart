@@ -8,6 +8,7 @@ import 'package:key_budget/features/category/viewmodel/category_viewmodel.dart';
 import 'package:key_budget/features/credentials/viewmodel/credential_viewmodel.dart';
 import 'package:key_budget/features/dashboard/viewmodel/dashboard_viewmodel.dart';
 import 'package:key_budget/features/expenses/viewmodel/expense_viewmodel.dart';
+import 'package:key_budget/features/expenses/widgets/expense_sync_indicator.dart';
 
 import '../widgets/dashboard_balance_card.dart';
 import '../widgets/dashboard_header.dart';
@@ -66,6 +67,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
   @override
   Widget build(BuildContext context) {
     final viewModel = ref.watch(dashboardViewModelProvider);
+    final expenseViewModel = ref.watch(expenseViewModelProvider);
     final theme = Theme.of(context);
 
     return Scaffold(
@@ -86,6 +88,21 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                       parent: AlwaysScrollableScrollPhysics(),
                     ),
                     slivers: [
+                      SliverToBoxAdapter(
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
+                          child: ExpenseSyncIndicator(
+                            status: expenseViewModel.syncStatus,
+                            lastServerConfirmation: expenseViewModel.lastServerConfirmation,
+                            onRetry: () {
+                              final userId = ref.read(authViewModelProvider).currentUser?.id;
+                              if (userId != null) {
+                                expenseViewModel.retryListenToExpenses(userId);
+                              }
+                            },
+                          ),
+                        ),
+                      ),
                       SliverPadding(
                         padding: const EdgeInsets.fromLTRB(
                           AppSpacing.md,

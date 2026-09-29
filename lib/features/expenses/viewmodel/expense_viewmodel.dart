@@ -29,6 +29,8 @@ import 'package:key_budget/features/expenses/repository/expense_repository.dart'
 import 'package:key_budget/features/expenses/repository/recurrence_occurrence_repository.dart';
 import 'package:key_budget/features/expenses/repository/recurring_expense_repository.dart';
 
+enum ExpenseSyncStatus { loading, cached, pending, synced, failed }
+
 class ExpenseViewModel extends ChangeNotifier {
   final ExpenseRepository _repository;
   final RecurringExpenseRepository _recurringRepository;
@@ -109,6 +111,8 @@ class ExpenseViewModel extends ChangeNotifier {
   StreamSubscription? _recurringExpensesSubscription;
   bool _isListening = false;
   String? _loadErrorMessage;
+  ExpenseSyncStatus _syncStatus = ExpenseSyncStatus.loading;
+  DateTime? _lastServerConfirmation;
   bool _enableIncomes = false;
 
   @Deprecated('UI animation state belongs to presentation layer')
@@ -128,6 +132,8 @@ class ExpenseViewModel extends ChangeNotifier {
 
   bool get isLoading => _isLoading;
   String? get loadErrorMessage => _loadErrorMessage;
+  ExpenseSyncStatus get syncStatus => _syncStatus;
+  DateTime? get lastServerConfirmation => _lastServerConfirmation;
 
   bool get isExportingCsv => _isExportingCsv;
 
@@ -311,18 +317,28 @@ class ExpenseViewModel extends ChangeNotifier {
     if (_isListening) return;
     if (!_isLoading) _setLoading(true);
     _loadErrorMessage = null;
+    _syncStatus = ExpenseSyncStatus.loading;
 
     _expensesSubscription?.cancel();
     _expensesSubscription = _repository
-        .getExpensesStreamForUser(userId)
+        .getExpensesWithMetadataStream(userId)
         .listen(
-          (newExpenses) {
-            _allExpenses = newExpenses;
+          (snapshot) {
+            _allExpenses = snapshot.expenses;
+            _syncStatus = snapshot.hasPendingWrites
+                ? ExpenseSyncStatus.pending
+                : snapshot.isFromCache
+                ? ExpenseSyncStatus.cached
+                : ExpenseSyncStatus.synced;
+            if (_syncStatus == ExpenseSyncStatus.synced) {
+              _lastServerConfirmation = _clock.now();
+            }
             _loadErrorMessage = null;
             _updateDisplayList(animate: true);
             if (_isLoading) _setLoading(false);
           },
           onError: (Object error) {
+            _syncStatus = ExpenseSyncStatus.failed;
             _loadErrorMessage =
                 'Não foi possível carregar os lançamentos. Confira sua conexão e tente novamente.';
             _isListening = false;
@@ -856,6 +872,8 @@ class ExpenseViewModel extends ChangeNotifier {
     _currentDisplayItems = [];
     _recurringExpenses = [];
     _loadErrorMessage = null;
+    _syncStatus = ExpenseSyncStatus.loading;
+    _lastServerConfirmation = null;
     _selectedCategoryIds = [];
     _isListening = false;
     notifyListeners();
