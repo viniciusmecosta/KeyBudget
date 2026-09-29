@@ -5,12 +5,14 @@ import 'package:file_picker/file_picker.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:intl/intl.dart';
 import 'package:key_budget/app/widgets/responsive_center.dart';
 import 'package:key_budget/core/design_system/borders/app_borders.dart';
 import 'package:key_budget/core/design_system/spacing/app_spacing.dart';
 import 'package:key_budget/core/design_system/widgets/app_button.dart';
 import 'package:key_budget/core/design_system/widgets/app_text_field.dart';
 import 'package:key_budget/core/import_export/backup_service.dart';
+import 'package:key_budget/core/import_export/automatic_backup_service.dart';
 import 'package:key_budget/core/import_export/import_plan.dart';
 import 'package:key_budget/core/import_export/raw_storage.dart';
 import 'package:key_budget/core/import_export/restore_service.dart';
@@ -39,6 +41,13 @@ class _BackupRestoreScreenState extends ConsumerState<BackupRestoreScreen>
   String _createProgressStatus = '';
   double _createProgressValue = 0.0;
   BackupResultData? _lastBackupResult;
+  final AutomaticBackupService _automaticBackupService = AutomaticBackupService();
+  final TextEditingController _automaticPasswordController = TextEditingController();
+  AutomaticBackupSettings? _automaticSettings;
+  List<AutomaticBackupFile> _automaticHistory = [];
+  AutomaticBackupInterval _automaticInterval = AutomaticBackupInterval.off;
+  int _automaticRetention = 7;
+  bool _isSavingAutomaticBackup = false;
 
   final Map<String, bool> _selectedModules = {
     'expenses': true,
@@ -65,6 +74,7 @@ class _BackupRestoreScreenState extends ConsumerState<BackupRestoreScreen>
   void initState() {
     super.initState();
     _tabController = TabController(length: 2, vsync: this);
+    WidgetsBinding.instance.addPostFrameCallback((_) => _loadAutomaticBackup());
   }
 
   @override
@@ -73,7 +83,67 @@ class _BackupRestoreScreenState extends ConsumerState<BackupRestoreScreen>
     _createPassController.dispose();
     _createConfirmPassController.dispose();
     _restorePassController.dispose();
+    _automaticPasswordController.dispose();
     super.dispose();
+  }
+
+  Future<void> _loadAutomaticBackup() async {
+    final userId = FirebaseAuth.instance.currentUser?.uid;
+    if (userId == null) return;
+    final settings = await _automaticBackupService.readSettings(userId);
+    final history = await _automaticBackupService.listLocalHistory(userId);
+    if (!mounted) return;
+    setState(() {
+      _automaticSettings = settings;
+      _automaticHistory = history;
+      _automaticInterval = settings.interval;
+      _automaticRetention = settings.retention;
+    });
+  }
+
+  Future<void> _saveAutomaticBackup({bool force = false}) async {
+    final userId = FirebaseAuth.instance.currentUser?.uid;
+    if (userId == null) return;
+    setState(() => _isSavingAutomaticBackup = true);
+    try {
+      if (!force) {
+        await _automaticBackupService.saveSettings(
+          userId: userId,
+          interval: _automaticInterval,
+          retention: _automaticRetention,
+          password: _automaticPasswordController.text.isEmpty
+              ? null
+              : _automaticPasswordController.text,
+        );
+      }
+      _automaticPasswordController.clear();
+      if (_automaticInterval != AutomaticBackupInterval.off) {
+        await _automaticBackupService.runIfDue(
+          userId,
+          allowInteractive: true,
+          force: force,
+        );
+      }
+      await _loadAutomaticBackup();
+      if (mounted) SnackbarService.showSuccess(context, 'Configuração de backup atualizada.');
+    } on ArgumentError catch (error) {
+      if (mounted) SnackbarService.showError(context, error.message?.toString() ?? 'Configuração inválida.');
+    } catch (_) {
+      if (mounted) SnackbarService.showError(context, 'Não foi possível configurar o backup automático.');
+    } finally {
+      if (mounted) setState(() => _isSavingAutomaticBackup = false);
+    }
+  }
+
+  Future<void> _selectAutomaticBackup(AutomaticBackupFile item) async {
+    final bytes = await item.file.readAsBytes();
+    if (!mounted) return;
+    setState(() {
+      _selectedRestoreBytes = bytes;
+      _selectedRestoreFileName = item.file.uri.pathSegments.last;
+      _importPlan = null;
+    });
+    _tabController.animateTo(1);
   }
 
   String _getModuleLabel(String key) {
@@ -463,6 +533,102 @@ class _BackupRestoreScreenState extends ConsumerState<BackupRestoreScreen>
     );
   }
 
+  Widget _buildAutomaticBackupCard() {
+    final theme = Theme.of(context);
+    String formatDate(DateTime? value) => value == null
+        ? 'Nenhuma cópia concluída'
+        : DateFormat('dd/MM/yyyy HH:mm', 'pt_BR').format(value.toLocal());
+
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(AppSpacing.md),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text('Backup automático', style: theme.textTheme.titleMedium),
+            const SizedBox(height: AppSpacing.xs),
+            Text(
+              'Cria uma cópia criptografada quando o aplicativo estiver aberto e desbloqueado. O envio ao Drive é retomado quando houver acesso autorizado.',
+              style: theme.textTheme.bodySmall,
+            ),
+            const SizedBox(height: AppSpacing.md),
+            DropdownButtonFormField<AutomaticBackupInterval>(
+              key: ValueKey(_automaticInterval),
+              initialValue: _automaticInterval,
+              decoration: const InputDecoration(labelText: 'Periodicidade'),
+              items: const [
+                DropdownMenuItem(value: AutomaticBackupInterval.off, child: Text('Desativado')),
+                DropdownMenuItem(value: AutomaticBackupInterval.daily, child: Text('Diário')),
+                DropdownMenuItem(value: AutomaticBackupInterval.weekly, child: Text('Semanal')),
+              ],
+              onChanged: _isSavingAutomaticBackup
+                  ? null
+                  : (value) => setState(() => _automaticInterval = value ?? AutomaticBackupInterval.off),
+            ),
+            if (_automaticInterval != AutomaticBackupInterval.off) ...[
+              const SizedBox(height: AppSpacing.sm),
+              DropdownButtonFormField<int>(
+                key: ValueKey(_automaticRetention),
+                initialValue: _automaticRetention,
+                decoration: const InputDecoration(labelText: 'Cópias mantidas'),
+                items: const [
+                  DropdownMenuItem(value: 3, child: Text('3 cópias')),
+                  DropdownMenuItem(value: 7, child: Text('7 cópias')),
+                  DropdownMenuItem(value: 14, child: Text('14 cópias')),
+                ],
+                onChanged: _isSavingAutomaticBackup
+                    ? null
+                    : (value) => setState(() => _automaticRetention = value ?? 7),
+              ),
+              const SizedBox(height: AppSpacing.sm),
+              AppTextField(
+                controller: _automaticPasswordController,
+                label: _automaticSettings?.interval == AutomaticBackupInterval.off
+                    ? 'Senha do backup automático'
+                    : 'Nova senha (deixe em branco para manter)',
+                obscureText: true,
+                prefixIcon: Icons.lock_outline,
+              ),
+            ],
+            const SizedBox(height: AppSpacing.md),
+            AppButton(
+              label: 'Salvar configuração',
+              isFullWidth: true,
+              isLoading: _isSavingAutomaticBackup,
+              onPressed: _isSavingAutomaticBackup ? null : () => _saveAutomaticBackup(),
+            ),
+            if (_automaticSettings?.interval != AutomaticBackupInterval.off) ...[
+              const SizedBox(height: AppSpacing.sm),
+              OutlinedButton.icon(
+                onPressed: _isSavingAutomaticBackup ? null : () => _saveAutomaticBackup(force: true),
+                icon: const Icon(Icons.backup_outlined),
+                label: const Text('Criar cópia agora'),
+              ),
+            ],
+            const SizedBox(height: AppSpacing.md),
+            Text('Última cópia local: ${formatDate(_automaticSettings?.lastLocalCompletion)}', style: theme.textTheme.bodySmall),
+            Text('Último envio ao Drive: ${formatDate(_automaticSettings?.lastDriveCompletion)}', style: theme.textTheme.bodySmall),
+            if (_automaticSettings?.lastError != null) ...[
+              const SizedBox(height: AppSpacing.xs),
+              Text(_automaticSettings!.lastError!, style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.error)),
+            ],
+            if (_automaticHistory.isNotEmpty) ...[
+              const Divider(height: AppSpacing.xl),
+              Text('Histórico local', style: theme.textTheme.titleSmall),
+              ..._automaticHistory.map((item) => ListTile(
+                contentPadding: EdgeInsets.zero,
+                title: Text(formatDate(item.modifiedAt)),
+                subtitle: Text('${(item.sizeBytes / 1024).toStringAsFixed(1)} KB'),
+                trailing: const Icon(Icons.settings_backup_restore_rounded),
+                onTap: () => _selectAutomaticBackup(item),
+              )),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+
   Widget _buildCreateBackupTab() {
     return ListView(
       padding: const EdgeInsets.all(AppSpacing.md),
@@ -490,6 +656,8 @@ class _BackupRestoreScreenState extends ConsumerState<BackupRestoreScreen>
             ),
           ),
         ),
+        const SizedBox(height: AppSpacing.md),
+        _buildAutomaticBackupCard(),
         const SizedBox(height: AppSpacing.md),
         Text(
           'Módulos Incluídos no Pacote',

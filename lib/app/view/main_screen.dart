@@ -1,5 +1,9 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:key_budget/core/import_export/automatic_backup_service.dart';
+import 'package:key_budget/core/services/app_lock_service.dart';
 import 'package:key_budget/app/navigation/app_destination.dart';
 import 'package:key_budget/app/viewmodel/navigation_viewmodel.dart';
 import 'package:key_budget/app/widgets/main_bottom_navigation_bar.dart';
@@ -22,7 +26,31 @@ class MainScreen extends ConsumerStatefulWidget {
 
 class _MainScreenState extends ConsumerState<MainScreen> {
   final Set<AppDestination> _loadedDestinations = {};
+  final AutomaticBackupService _automaticBackupService = AutomaticBackupService();
+  Timer? _automaticBackupTimer;
   String? _lastUserId;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) => _runAutomaticBackup());
+    _automaticBackupTimer = Timer.periodic(
+      const Duration(hours: 1),
+      (_) => _runAutomaticBackup(),
+    );
+  }
+
+  void _runAutomaticBackup() {
+    if (!mounted || ref.read(appLockServiceProvider).isLocked) return;
+    final userId = ref.read(authViewModelProvider).currentUser?.id;
+    if (userId != null) _automaticBackupService.runIfDue(userId);
+  }
+
+  @override
+  void dispose() {
+    _automaticBackupTimer?.cancel();
+    super.dispose();
+  }
 
   Widget _buildDestinationWidget(AppDestination destination) {
     switch (destination) {
