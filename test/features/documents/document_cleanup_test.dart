@@ -65,7 +65,11 @@ class RecordingDriveService extends DriveService {
   RecordingDriveService(this.events);
 
   @override
-  Future<bool> deleteFile(String fileId, {String? serverClientId}) async {
+  Future<bool> deleteFile(
+    String fileId, {
+    String? serverClientId,
+    bool allowInteractive = true,
+  }) async {
     events.add('drive');
     return true;
   }

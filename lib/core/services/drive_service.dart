@@ -68,11 +68,22 @@ class DriveService {
     });
   }
 
-  Future<_DriveSession?> _getDriveApi({String? serverClientId}) async {
+  Future<_DriveSession?> _getDriveApi({
+    String? serverClientId,
+    bool allowInteractive = true,
+  }) async {
     try {
       await _ensureGoogleSignInInitialized(serverClientId: serverClientId);
 
       GoogleSignInAccount? googleUser = _currentUser;
+
+      if (googleUser == null) {
+        if (!allowInteractive) {
+          final lightweight = _googleSignIn.attemptLightweightAuthentication();
+          googleUser = lightweight == null ? null : await lightweight;
+          if (googleUser == null) return null;
+        }
+      }
 
       if (googleUser == null) {
         if (_googleSignIn.supportsAuthenticate()) {
@@ -88,6 +99,7 @@ class DriveService {
           .authorizationForScopes(scopes);
 
       if (authorization == null) {
+        if (!allowInteractive) return null;
         await googleUser.authorizationClient.authorizeScopes(scopes);
 
         final newAuth = await googleUser.authorizationClient
@@ -138,8 +150,12 @@ class DriveService {
     void Function(int, int) onProgress, {
     String? serverClientId,
     bool isBackup = false,
+    bool allowInteractive = true,
   }) async {
-    final session = await _getDriveApi(serverClientId: serverClientId);
+    final session = await _getDriveApi(
+      serverClientId: serverClientId,
+      allowInteractive: allowInteractive,
+    );
     if (session == null) return null;
     try {
       String? folderId = await _getFolderId(session.api);
@@ -273,8 +289,12 @@ class DriveService {
 
   Future<List<DriveBackupFile>> listBackupFiles({
     String? serverClientId,
+    bool allowInteractive = true,
   }) async {
-    final session = await _getDriveApi(serverClientId: serverClientId);
+    final session = await _getDriveApi(
+      serverClientId: serverClientId,
+      allowInteractive: allowInteractive,
+    );
     if (session == null) return [];
     try {
       final rootFolderId = await _getFolderId(session.api);
@@ -345,8 +365,15 @@ class DriveService {
     }
   }
 
-  Future<bool> deleteFile(String fileId, {String? serverClientId}) async {
-    final session = await _getDriveApi(serverClientId: serverClientId);
+  Future<bool> deleteFile(
+    String fileId, {
+    String? serverClientId,
+    bool allowInteractive = true,
+  }) async {
+    final session = await _getDriveApi(
+      serverClientId: serverClientId,
+      allowInteractive: allowInteractive,
+    );
     if (session == null) return false;
     try {
       await session.api.files.delete(fileId);
