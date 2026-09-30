@@ -26,13 +26,16 @@ class MainScreen extends ConsumerStatefulWidget {
 
 class _MainScreenState extends ConsumerState<MainScreen> {
   final Set<AppDestination> _loadedDestinations = {};
-  final AutomaticBackupService _automaticBackupService = AutomaticBackupService();
+  late final AutomaticBackupService _automaticBackupService;
   Timer? _automaticBackupTimer;
   String? _lastUserId;
 
   @override
   void initState() {
     super.initState();
+    _automaticBackupService = AutomaticBackupService(
+      currentUserId: () => ref.read(authViewModelProvider).currentUser?.id,
+    );
     WidgetsBinding.instance.addPostFrameCallback((_) => _runAutomaticBackup());
     _automaticBackupTimer = Timer.periodic(
       const Duration(hours: 1),
