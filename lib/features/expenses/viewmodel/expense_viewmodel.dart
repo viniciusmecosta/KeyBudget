@@ -94,6 +94,7 @@ class ExpenseViewModel extends ChangeNotifier {
       csvService: _csvService,
       pdfService: _pdfService,
       dataImportService: _dataImportService,
+      expenseRepository: _repository,
     );
     final now = _clock.now();
     _selectedMonth = DateTime(now.year, now.month);
@@ -635,6 +636,7 @@ class ExpenseViewModel extends ChangeNotifier {
     try {
       return await _transferService.exportCsv(
         context,
+        _activeUserId,
         _allExpenses,
         start,
         end,
@@ -655,6 +657,7 @@ class ExpenseViewModel extends ChangeNotifier {
     try {
       await _transferService.exportPdf(
         context,
+        _activeUserId,
         _allExpenses,
         start,
         end,

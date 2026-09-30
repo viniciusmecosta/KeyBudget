@@ -10,18 +10,21 @@ import 'package:key_budget/core/services/snackbar_service.dart';
 import 'package:key_budget/core/time/date_range.dart';
 import 'package:key_budget/features/analysis/viewmodel/analysis_viewmodel.dart';
 import 'package:key_budget/features/category/viewmodel/category_viewmodel.dart';
+import 'package:key_budget/features/expenses/repository/expense_repository.dart';
 
 class ExpenseTransferService {
   final ImportService importService;
   final CsvService csvService;
   final PdfService pdfService;
   final DataImportService dataImportService;
+  final ExpenseRepository expenseRepository;
 
   const ExpenseTransferService({
     required this.importService,
     required this.csvService,
     required this.pdfService,
     required this.dataImportService,
+    required this.expenseRepository,
   });
 
   List<Expense>? selectExpenses(
@@ -37,13 +40,44 @@ class ExpenseTransferService {
     ]..sort((a, b) => a.date.compareTo(b.date));
   }
 
+  Future<List<Expense>?> _loadForExport(
+    String? userId,
+    List<Expense> currentExpenses,
+    DateTime? start,
+    DateTime? end,
+  ) async {
+    if (start == null || end == null || userId == null) {
+      return selectExpenses(currentExpenses, start, end);
+    }
+    final range = DateRange.fromDays(start, end);
+    final selected = <Expense>[];
+    var page = await expenseRepository.getHistoryPage(
+      userId,
+      startInclusive: range.startInclusive,
+      endExclusive: range.endExclusive,
+    );
+    selected.addAll(page.expenses);
+    while (page.nextCursor != null) {
+      page = await expenseRepository.getHistoryPage(
+        userId,
+        startInclusive: range.startInclusive,
+        endExclusive: range.endExclusive,
+        after: page.nextCursor,
+      );
+      selected.addAll(page.expenses);
+    }
+    return selected..sort((a, b) => a.date.compareTo(b.date));
+  }
+
   Future<bool> exportCsv(
     BuildContext context,
+    String? userId,
     List<Expense> expenses,
     DateTime? start,
     DateTime? end,
   ) async {
-    final selected = selectExpenses(expenses, start, end);
+    final selected = await _loadForExport(userId, expenses, start, end);
+    if (!context.mounted) return false;
     return selected == null
         ? false
         : csvService.exportExpenses(context, selected);
@@ -51,14 +85,15 @@ class ExpenseTransferService {
 
   Future<void> exportPdf(
     BuildContext context,
+    String? userId,
     List<Expense> expenses,
     DateTime? start,
     DateTime? end,
     AnalysisViewModel analysisViewModel,
     CategoryViewModel categoryViewModel,
   ) async {
-    final selected = selectExpenses(expenses, start, end);
-    if (selected == null) return;
+    final selected = await _loadForExport(userId, expenses, start, end);
+    if (selected == null || !context.mounted) return;
     await pdfService.exportExpensesPdf(
       context,
       selected,
