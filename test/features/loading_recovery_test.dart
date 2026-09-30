@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:key_budget/core/models/expense_category_model.dart';
+import 'package:key_budget/core/models/expense_model.dart';
 import 'package:key_budget/core/models/recurring_expense_model.dart';
 import 'package:key_budget/features/category/repository/category_repository.dart';
 import 'package:key_budget/features/category/viewmodel/category_viewmodel.dart';
@@ -34,6 +35,14 @@ class _ControlledExpenseRepository extends ExpenseRepository {
       controller.stream;
 }
 
+class _AccountExpenseRepository extends ExpenseRepository {
+  final streams = <String, StreamController<ExpenseStreamSnapshot>>{};
+
+  @override
+  Stream<ExpenseStreamSnapshot> getExpensesWithMetadataStream(String userId) =>
+      streams.putIfAbsent(userId, StreamController.new).stream;
+}
+
 class _EmptyRecurringExpenseRepository extends RecurringExpenseRepository {
   @override
   Stream<List<RecurringExpense>> getRecurringExpensesStream(String userId) =>
@@ -53,6 +62,55 @@ class _RecoveringCategoryRepository extends CategoryRepository {
 
 void main() {
   group('loading recovery', () {
+    test(
+      'account change clears old expenses before the next snapshot',
+      () async {
+        final repository = _AccountExpenseRepository();
+        final viewModel = ExpenseViewModel(
+          repository: repository,
+          recurringRepository: _EmptyRecurringExpenseRepository(),
+        );
+        viewModel.listenToExpenses('first');
+        repository.streams['first']!.add(
+          ExpenseStreamSnapshot(
+            expenses: [
+              Expense(id: 'private', amount: 42, date: DateTime(2026, 10, 1)),
+            ],
+            isFromCache: false,
+            hasPendingWrites: false,
+          ),
+        );
+        await Future<void>.delayed(Duration.zero);
+        expect(viewModel.allExpenses.single.id, 'private');
+
+        viewModel.listenToExpenses('second');
+        expect(viewModel.allExpenses, isEmpty);
+        expect(viewModel.lastServerConfirmation, isNull);
+        repository.streams['first']!.add(
+          ExpenseStreamSnapshot(
+            expenses: [
+              Expense(id: 'stale', amount: 1, date: DateTime(2026, 10, 1)),
+            ],
+            isFromCache: false,
+            hasPendingWrites: false,
+          ),
+        );
+        repository.streams['second']!.add(
+          const ExpenseStreamSnapshot(
+            expenses: [],
+            isFromCache: false,
+            hasPendingWrites: false,
+          ),
+        );
+        await Future<void>.delayed(Duration.zero);
+        expect(viewModel.allExpenses, isEmpty);
+        viewModel.dispose();
+        for (final controller in repository.streams.values) {
+          await controller.close();
+        }
+      },
+    );
+
     test('expense stream failure ends loading and can be retried', () async {
       final repository = _RecoveringExpenseRepository();
       final viewModel = ExpenseViewModel(
