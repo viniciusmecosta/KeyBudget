@@ -114,6 +114,7 @@ class ExpenseViewModel extends ChangeNotifier {
   StreamSubscription? _expensesSubscription;
   StreamSubscription? _recurringExpensesSubscription;
   bool _isListening = false;
+  String? _activeUserId;
   String? _loadErrorMessage;
   ExpenseSyncStatus _syncStatus = ExpenseSyncStatus.loading;
   DateTime? _lastServerConfirmation;
@@ -318,7 +319,15 @@ class ExpenseViewModel extends ChangeNotifier {
   }
 
   void listenToExpenses(String userId) {
-    if (_isListening) return;
+    if (_isListening && _activeUserId == userId) return;
+    if (_activeUserId != null && _activeUserId != userId) {
+      _allExpenses = [];
+      _currentDisplayItems = [];
+      _recurringExpenses = [];
+      _lastServerConfirmation = null;
+      notifyListeners();
+    }
+    _activeUserId = userId;
     if (!_isLoading) _setLoading(true);
     _loadErrorMessage = null;
     _syncStatus = ExpenseSyncStatus.loading;
@@ -378,6 +387,7 @@ class ExpenseViewModel extends ChangeNotifier {
     _expensesSubscription = null;
     _recurringExpensesSubscription = null;
     _isListening = false;
+    _activeUserId = null;
     listenToExpenses(userId);
   }
 
@@ -823,6 +833,7 @@ class ExpenseViewModel extends ChangeNotifier {
     _lastServerConfirmation = null;
     _selectedCategoryIds = [];
     _isListening = false;
+    _activeUserId = null;
     notifyListeners();
   }
 

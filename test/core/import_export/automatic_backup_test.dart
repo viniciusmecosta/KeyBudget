@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 import 'dart:typed_data';
 
@@ -66,7 +67,115 @@ class _OfflineDrive extends DriveService {
   }) async => null;
 }
 
+class _FailingDrive extends DriveService {
+  @override
+  Future<drive.File?> uploadFile(
+    File file,
+    void Function(int, int) onProgress, {
+    String? serverClientId,
+    bool isBackup = false,
+    bool allowInteractive = true,
+  }) async => throw StateError('network unavailable');
+}
+
 void main() {
+  test('Drive failure preserves the verified local backup for retry', () async {
+    final directory = await Directory.systemTemp.createTemp(
+      'keybudget-partial',
+    );
+    addTearDown(() => directory.delete(recursive: true));
+    final storage = _MemoryStorage();
+    final now = DateTime(2026, 10, 1);
+    final service = AutomaticBackupService(
+      storage: storage,
+      driveService: _FailingDrive(),
+      documentsDirectory: () async => directory,
+      currentUserId: () => 'user',
+      now: () => now,
+      createBackup: (userId, password) async {
+        const completeness = BackupCompleteness(isComplete: true);
+        return BackupResultData(
+          envelopeBytes: Uint8List.fromList([1, 2, 3]),
+          completeness: completeness,
+          manifest: BackupManifest(
+            appVersion: 'test',
+            createdAt: now,
+            backupId: 'partial',
+            originUid: userId,
+            modules: const [],
+            counts: const {},
+            hashes: const {},
+            completeness: completeness,
+          ),
+        );
+      },
+    );
+    await service.saveSettings(
+      userId: 'user',
+      interval: AutomaticBackupInterval.daily,
+      retention: 2,
+      password: 'secret123',
+    );
+    expect(await service.runIfDue('user'), isFalse);
+    expect((await service.listLocalHistory('user')).length, 1);
+    final settings = await service.readSettings('user');
+    expect(settings.lastLocalCompletion, now);
+    expect(settings.lastDriveCompletion, isNull);
+    expect(settings.lastError, isNotNull);
+  });
+
+  test(
+    'account switch during generation does not save another account backup',
+    () async {
+      final directory = await Directory.systemTemp.createTemp(
+        'keybudget-switch',
+      );
+      addTearDown(() => directory.delete(recursive: true));
+      final storage = _MemoryStorage();
+      final generation = Completer<BackupResultData>();
+      final started = Completer<void>();
+      var currentUser = 'first';
+      final service = AutomaticBackupService(
+        storage: storage,
+        driveService: _OfflineDrive(),
+        documentsDirectory: () async => directory,
+        currentUserId: () => currentUser,
+        createBackup: (_, _) {
+          started.complete();
+          return generation.future;
+        },
+      );
+      await service.saveSettings(
+        userId: 'first',
+        interval: AutomaticBackupInterval.daily,
+        retention: 2,
+        password: 'secret123',
+      );
+      final operation = service.runIfDue('first');
+      await started.future;
+      currentUser = 'second';
+      const completeness = BackupCompleteness(isComplete: true);
+      generation.complete(
+        BackupResultData(
+          envelopeBytes: Uint8List.fromList([1]),
+          completeness: completeness,
+          manifest: BackupManifest(
+            appVersion: 'test',
+            createdAt: DateTime(2026, 10, 1),
+            backupId: 'switch',
+            originUid: 'first',
+            modules: const [],
+            counts: const {},
+            hashes: const {},
+            completeness: completeness,
+          ),
+        ),
+      );
+      expect(await operation, isFalse);
+      expect(await service.listLocalHistory('first'), isEmpty);
+    },
+  );
+
   test(
     'daily automatic backups keep only the selected local history',
     () async {
