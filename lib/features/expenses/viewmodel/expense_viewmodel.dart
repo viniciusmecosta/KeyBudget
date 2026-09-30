@@ -7,7 +7,6 @@ import 'package:key_budget/core/models/expense_model.dart';
 import 'package:key_budget/core/models/recurring_expense_model.dart';
 import 'package:key_budget/core/services/csv_service.dart';
 import 'package:key_budget/core/services/data_import_service.dart';
-import 'package:key_budget/core/services/notification_service.dart';
 import 'package:key_budget/core/services/pdf_service.dart';
 import 'package:key_budget/features/analysis/viewmodel/analysis_viewmodel.dart';
 import 'package:key_budget/features/category/viewmodel/category_viewmodel.dart';
@@ -18,6 +17,7 @@ import 'package:key_budget/features/credentials/repository/credential_repository
 import 'package:key_budget/features/expenses/domain/installment_calculator.dart';
 import 'package:key_budget/core/import_export/import_service.dart';
 import 'package:key_budget/features/expenses/application/expense_transfer_service.dart';
+import 'package:key_budget/features/expenses/application/recurrence_generation_coordinator.dart';
 import 'package:key_budget/features/expenses/application/recurrence_deletion_service.dart';
 import 'package:key_budget/features/expenses/application/recurrence_committer.dart';
 import 'package:key_budget/features/expenses/application/recurrence_service.dart';
@@ -40,6 +40,7 @@ class ExpenseViewModel extends ChangeNotifier {
   final DataImportService _dataImportService;
   final AppClock _clock;
   late final ExpenseTransferService _transferService;
+  late final RecurrenceGenerationCoordinator _generationCoordinator;
 
   ExpenseViewModel({
     ExpenseRepository? repository,
@@ -95,6 +96,9 @@ class ExpenseViewModel extends ChangeNotifier {
       pdfService: _pdfService,
       dataImportService: _dataImportService,
       expenseRepository: _repository,
+    );
+    _generationCoordinator = RecurrenceGenerationCoordinator(
+      recurrenceService: _recurrenceService,
     );
     final now = _clock.now();
     _selectedMonth = DateTime(now.year, now.month);
@@ -604,27 +608,8 @@ class ExpenseViewModel extends ChangeNotifier {
     await _recurringRepository.restoreRecurringExpense(userId, expense);
   }
 
-  bool _isGeneratingRecurring = false;
-
   Future<void> checkAndCreateRecurringInstances(String userId) async {
-    if (_isGeneratingRecurring) return;
-    _isGeneratingRecurring = true;
-
-    try {
-      final result = await _recurrenceService.generatePendingOccurrences(
-        userId,
-        rulesToProcess: _recurringExpenses,
-      );
-
-      if (result.isSuccess) {
-        await NotificationService.reconciler.reconcile(
-          uid: userId,
-          activeRules: _recurringExpenses,
-        );
-      }
-    } finally {
-      _isGeneratingRecurring = false;
-    }
+    await _generationCoordinator.synchronize(userId, _recurringExpenses);
   }
 
   Future<bool> exportExpensesToCsv(
