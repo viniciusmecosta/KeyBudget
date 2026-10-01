@@ -750,8 +750,8 @@ class UserScreen extends ConsumerWidget {
                     buildSection('Dados e recuperação', [
                       SettingsTile(
                         icon: Icons.shield_outlined,
-                        title: 'Backup e Restauração (.kbudget)',
-                        subtitle: 'Cópia criptografada, completa e verificável',
+                        title: 'Criar backup manual',
+                        subtitle: 'Gerar um arquivo .kbudget com senha própria',
                         onTap: () {
                           NavigationUtils.push(
                             context,
@@ -761,9 +761,33 @@ class UserScreen extends ConsumerWidget {
                       ),
                       const Divider(height: 1, indent: 56, endIndent: 16),
                       SettingsTile(
+                        icon: Icons.schedule_outlined,
+                        title: 'Backup automático',
+                        subtitle: 'Periodicidade, senha e histórico de cópias',
+                        onTap: () {
+                          NavigationUtils.push(
+                            context,
+                            const BackupRestoreScreen(initialTab: 1),
+                          );
+                        },
+                      ),
+                      const Divider(height: 1, indent: 56, endIndent: 16),
+                      SettingsTile(
+                        icon: Icons.settings_backup_restore_outlined,
+                        title: 'Restaurar backup',
+                        subtitle: 'Abrir um arquivo .kbudget com a senha dele',
+                        onTap: () {
+                          NavigationUtils.push(
+                            context,
+                            const BackupRestoreScreen(initialTab: 2),
+                          );
+                        },
+                      ),
+                      const Divider(height: 1, indent: 56, endIndent: 16),
+                      SettingsTile(
                         icon: Icons.cloud_upload_outlined,
-                        title: 'Exportação CSV (Legado)',
-                        subtitle: 'Exportar dados para planilhas CSV',
+                        title: 'Exportar planilhas CSV',
+                        subtitle: 'Exportação separada do backup criptografado',
                         onTap: () => _showBackupDialog(context, ref),
                       ),
                     ]),
