@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:key_budget/core/design_system/spacing/app_spacing.dart';
 import 'package:key_budget/features/dashboard/repository/dashboard_layout_repository.dart';
+import 'package:key_budget/features/auth/viewmodel/auth_viewmodel.dart';
 
 class DashboardLayoutEditor extends ConsumerStatefulWidget {
   final String userId;
@@ -90,7 +91,9 @@ class _DashboardLayoutEditorState extends ConsumerState<DashboardLayoutEditor> {
     required Map<String, String> labels,
     required Set<String> visible,
     String? mandatoryId,
+    String? hiddenId,
   }) {
+    final displayIds = ids.where((id) => id != hiddenId).toList();
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -102,14 +105,18 @@ class _DashboardLayoutEditorState extends ConsumerState<DashboardLayoutEditor> {
           shrinkWrap: true,
           physics: const NeverScrollableScrollPhysics(),
           buildDefaultDragHandles: false,
-          itemCount: ids.length,
+          itemCount: displayIds.length,
           onReorderItem: (oldIndex, newIndex) {
             setState(() {
-              ids.insert(newIndex, ids.removeAt(oldIndex));
+              displayIds.insert(newIndex, displayIds.removeAt(oldIndex));
+              ids
+                ..clear()
+                ..addAll(displayIds);
+              if (hiddenId != null) ids.add(hiddenId);
             });
           },
           itemBuilder: (context, index) {
-            final id = ids[index];
+            final id = displayIds[index];
             return CheckboxListTile(
               key: ValueKey(id),
               contentPadding: const EdgeInsets.symmetric(
@@ -142,6 +149,8 @@ class _DashboardLayoutEditorState extends ConsumerState<DashboardLayoutEditor> {
 
   @override
   Widget build(BuildContext context) {
+    final suppliersEnabled =
+        ref.watch(authViewModelProvider).currentUser?.enableSuppliers ?? false;
     return SafeArea(
       child: Padding(
         padding: EdgeInsets.fromLTRB(
@@ -175,6 +184,7 @@ class _DashboardLayoutEditorState extends ConsumerState<DashboardLayoutEditor> {
                       ids: _actions,
                       labels: _actionLabels,
                       visible: _visibleActions,
+                      hiddenId: suppliersEnabled ? null : 'suppliers',
                     ),
                   ],
                 ),

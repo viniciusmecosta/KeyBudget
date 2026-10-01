@@ -3,6 +3,27 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:key_budget/features/dashboard/repository/dashboard_layout_repository.dart';
 import 'package:key_budget/features/dashboard/widgets/dashboard_layout_editor.dart';
+import 'package:key_budget/features/auth/repository/auth_repository.dart';
+import 'package:key_budget/features/auth/viewmodel/auth_viewmodel.dart';
+import 'package:key_budget/core/models/user_model.dart';
+
+class _FakeAuthRepository extends Fake implements AuthRepository {}
+
+class _AuthWithSuppliers extends AuthViewModel {
+  _AuthWithSuppliers(bool enabled)
+    : _enabled = enabled,
+      super(authRepository: _FakeAuthRepository(), listenToAuthChanges: false);
+
+  final bool _enabled;
+
+  @override
+  User? get currentUser => User(
+    id: 'user',
+    name: 'Teste',
+    email: 'teste@example.com',
+    enableSuppliers: _enabled,
+  );
+}
 
 class _SavingLayoutRepository extends DashboardLayoutRepository {
   DashboardLayout? saved;
@@ -38,6 +59,7 @@ void main() {
     await tester.pumpWidget(
       ProviderScope(
         overrides: [
+          authViewModelProvider.overrideWith((ref) => _AuthWithSuppliers(false)),
           dashboardLayoutRepositoryProvider.overrideWithValue(repository),
         ],
         child: MaterialApp(
@@ -78,4 +100,37 @@ void main() {
     await tester.pumpAndSettle();
     expect(repository.saved?.cards, ['balance', 'quick_actions', 'recent']);
   });
+
+  for (final enabled in [false, true]) {
+    testWidgets('supplier shortcut follows module setting: $enabled', (
+      tester,
+    ) async {
+      final repository = _SavingLayoutRepository();
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: [
+            authViewModelProvider.overrideWith(
+              (ref) => _AuthWithSuppliers(enabled),
+            ),
+            dashboardLayoutRepositoryProvider.overrideWithValue(repository),
+          ],
+          child: MaterialApp(
+            home: Scaffold(
+              body: DashboardLayoutEditor(
+                userId: 'user',
+                initial: DashboardLayout(),
+              ),
+            ),
+          ),
+        ),
+      );
+      expect(
+        find.text('Fornecedores'),
+        enabled ? findsOneWidget : findsNothing,
+      );
+      await tester.tap(find.text('Salvar painel'));
+      await tester.pump();
+      expect(repository.saved?.actions, contains('suppliers'));
+    });
+  }
 }
