@@ -148,7 +148,7 @@ void main() {
   });
 
   group('DocumentListTile widget presentation', () {
-    testWidgets('renders badges for principal, attachments, and expiry', (tester) async {
+    testWidgets('shows identity without attachment and expiry badges', (tester) async {
       final doc = Document(
         id: 'doc_1',
         documentName: 'Certidão',
@@ -173,8 +173,8 @@ void main() {
       expect(find.text('Certidão'), findsOneWidget);
       expect(find.text('Nº: 12345'), findsOneWidget);
       expect(find.text('Principal'), findsOneWidget);
-      expect(find.text('Validade não informada'), findsOneWidget);
-      expect(find.text('1 anexo'), findsOneWidget);
+      expect(find.text('Validade não informada'), findsNothing);
+      expect(find.text('1 anexo'), findsNothing);
     });
   });
 

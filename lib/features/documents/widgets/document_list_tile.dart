@@ -6,7 +6,6 @@ import 'package:key_budget/core/design_system/spacing/app_spacing.dart';
 import 'package:key_budget/core/design_system/widgets/app_card.dart';
 import 'package:key_budget/core/design_system/widgets/app_status_badge.dart';
 import 'package:key_budget/core/models/document_model.dart';
-import 'package:key_budget/features/documents/utils/document_expiry_helper.dart';
 import 'package:key_budget/features/documents/view/document_detail_screen.dart';
 
 class DocumentListTile extends ConsumerWidget {
@@ -17,7 +16,6 @@ class DocumentListTile extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
-    final expiryInfo = DocumentExpiryHelper.calculate(doc.expiryDate);
 
     return AppCard(
       padding: const EdgeInsets.all(AppSpacing.md),
@@ -78,23 +76,6 @@ class DocumentListTile extends ConsumerWidget {
                     overflow: TextOverflow.ellipsis,
                   ),
                 ],
-                const SizedBox(height: AppSpacing.xs),
-                Wrap(
-                  spacing: AppSpacing.xs,
-                  runSpacing: AppSpacing.xs,
-                  children: [
-                    AppStatusBadge(
-                      label: expiryInfo.label,
-                      variant: expiryInfo.variant,
-                    ),
-                    if (doc.attachments.isNotEmpty)
-                      AppStatusBadge(
-                        label:
-                            '${doc.attachments.length} ${doc.attachments.length == 1 ? "anexo" : "anexos"}',
-                        variant: AppBadgeVariant.neutral,
-                      ),
-                  ],
-                ),
               ],
             ),
           ),
