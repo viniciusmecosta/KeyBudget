@@ -140,6 +140,7 @@ void main() {
 
       expect(tester.takeException(), isNull);
       expect(find.textContaining('Alexandre Bernardo'), findsOneWidget);
+      expect(find.byTooltip('Personalizar painel'), findsNothing);
 
       await tester.tap(find.byType(InkWell));
       await tester.pumpAndSettle();
@@ -200,13 +201,12 @@ void main() {
       await tester.pumpAndSettle();
 
       final card = tester.widget<BalanceCard>(find.byType(BalanceCard));
-      final gradient = card.gradient! as LinearGradient;
+      final background = card.backgroundColor!;
       expect(card.foregroundColor, Colors.white);
-      for (final color in gradient.colors) {
-        expect(AppContrast.ratio(Colors.white, color), greaterThanOrEqualTo(4.5));
-      }
+      expect(card.gradient, isNull);
+      expect(AppContrast.ratio(Colors.white, background), greaterThanOrEqualTo(4.5));
       final titleColor = tester.widget<Text>(find.text('Despesas do mês')).style!.color!;
-      expect(AppContrast.ratio(Color.alphaBlend(titleColor, gradient.colors.first), gradient.colors.first), greaterThanOrEqualTo(4.5));
+      expect(AppContrast.ratio(Color.alphaBlend(titleColor, background), background), greaterThanOrEqualTo(4.5));
     });
 
     testWidgets('DashboardBalanceCard displays balance and totals when enableIncomes is true', (tester) async {

@@ -6,9 +6,8 @@ import 'package:key_budget/core/design_system/spacing/app_spacing.dart';
 import 'package:key_budget/features/auth/viewmodel/auth_viewmodel.dart';
 import 'package:key_budget/features/category/viewmodel/category_viewmodel.dart';
 import 'package:key_budget/features/credentials/viewmodel/credential_viewmodel.dart';
-import 'package:key_budget/features/dashboard/viewmodel/dashboard_viewmodel.dart';
 import 'package:key_budget/features/dashboard/repository/dashboard_layout_repository.dart';
-import 'package:key_budget/features/dashboard/widgets/dashboard_layout_editor.dart';
+import 'package:key_budget/features/dashboard/viewmodel/dashboard_viewmodel.dart';
 import 'package:key_budget/features/expenses/viewmodel/expense_viewmodel.dart';
 import 'package:key_budget/features/expenses/widgets/expense_sync_indicator.dart';
 
@@ -92,19 +91,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
 
     return Scaffold(
       backgroundColor: theme.scaffoldBackgroundColor,
-      appBar: DashboardHeader(
-        onCustomize: userId == null
-            ? null
-            : () {
-                showModalBottomSheet<void>(
-                  context: context,
-                  isScrollControlled: true,
-                  showDragHandle: true,
-                  builder: (_) =>
-                      DashboardLayoutEditor(userId: userId, initial: layout),
-                );
-              },
-      ),
+      appBar: const DashboardHeader(),
       body: SafeArea(
         child: viewModel.isLoading
             ? const ResponsiveCenter(maxWidth: 1200, child: DashboardSkeleton())
@@ -127,8 +114,6 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                           ),
                           child: ExpenseSyncIndicator(
                             status: expenseViewModel.syncStatus,
-                            lastServerConfirmation:
-                                expenseViewModel.lastServerConfirmation,
                             onRetry: () {
                               final userId = ref
                                   .read(authViewModelProvider)

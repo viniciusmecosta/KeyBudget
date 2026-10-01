@@ -19,7 +19,23 @@ class AppContrast {
         : Colors.white;
   }
 
-  static Color accentOnSurface(Color accent, Color surface, {required bool isDark}) {
+  static Color primaryWithWhiteText(Color primary) {
+    var adjusted = primary.withAlpha(255);
+    for (
+      var step = 0;
+      step < 24 && ratio(Colors.white, adjusted) < 4.5;
+      step++
+    ) {
+      adjusted = Color.lerp(adjusted, Colors.black, 0.08)!;
+    }
+    return adjusted;
+  }
+
+  static Color accentOnSurface(
+    Color accent,
+    Color surface, {
+    required bool isDark,
+  }) {
     final target = isDark ? Colors.white : Colors.black;
     var adjusted = accent.withAlpha(255);
     for (var step = 0; step < 20 && ratio(adjusted, surface) < 4.5; step++) {

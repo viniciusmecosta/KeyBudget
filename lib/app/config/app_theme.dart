@@ -75,6 +75,7 @@ class AppTheme {
       isDark: isDark,
     );
     final onPrimaryColor = AppContrast.foregroundOn(primaryColor);
+    final filledPrimaryColor = AppContrast.primaryWithWhiteText(primaryColor);
     final onSurfaceColor = isDark
         ? AppColors.onSurfaceDark
         : AppColors.onSurfaceLight;
@@ -127,8 +128,8 @@ class AppTheme {
       ),
       elevatedButtonTheme: ElevatedButtonThemeData(
         style: ElevatedButton.styleFrom(
-          backgroundColor: primaryColor,
-          foregroundColor: onPrimaryColor,
+          backgroundColor: filledPrimaryColor,
+          foregroundColor: Colors.white,
           padding: const EdgeInsets.symmetric(
             horizontal: AppSpacing.lg,
             vertical: AppSpacing.md,
@@ -137,6 +138,16 @@ class AppTheme {
           textStyle: textTheme.titleMedium,
           elevation: 0,
         ),
+      ),
+      filledButtonTheme: FilledButtonThemeData(
+        style: FilledButton.styleFrom(
+          backgroundColor: filledPrimaryColor,
+          foregroundColor: Colors.white,
+        ),
+      ),
+      floatingActionButtonTheme: FloatingActionButtonThemeData(
+        backgroundColor: filledPrimaryColor,
+        foregroundColor: Colors.white,
       ),
       outlinedButtonTheme: OutlinedButtonThemeData(
         style: OutlinedButton.styleFrom(

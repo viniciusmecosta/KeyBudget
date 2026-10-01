@@ -6,7 +6,6 @@ import 'package:key_budget/app/utils/app_animations.dart';
 import 'package:key_budget/app/viewmodel/navigation_viewmodel.dart';
 import 'package:key_budget/app/widgets/balance_card.dart';
 import 'package:key_budget/core/design_system/borders/app_borders.dart';
-import 'package:key_budget/core/design_system/colors/app_colors.dart';
 import 'package:key_budget/core/design_system/colors/app_contrast.dart';
 import 'package:key_budget/core/design_system/spacing/app_spacing.dart';
 import 'package:key_budget/features/auth/viewmodel/auth_viewmodel.dart';
@@ -72,9 +71,7 @@ class _DashboardBalanceCardState extends ConsumerState<DashboardBalanceCard>
   Widget build(BuildContext context) {
     final viewModel = ref.watch(dashboardViewModelProvider);
     final theme = Theme.of(context);
-    final cardTextColor = theme.brightness == Brightness.dark
-        ? Colors.white
-        : theme.colorScheme.onPrimary;
+    const cardTextColor = Colors.white;
     final authViewModel = ref.watch(authViewModelProvider);
     final enableIncomes = authViewModel.currentUser?.enableIncomes ?? false;
 
@@ -173,9 +170,7 @@ class _DashboardBalanceCardState extends ConsumerState<DashboardBalanceCard>
                       ? 'em relação à média anterior'
                       : 'em relação à média anterior de gastos',
                   style: theme.textTheme.bodySmall?.copyWith(
-                    color: theme.brightness == Brightness.dark
-                        ? cardTextColor
-                        : cardTextColor.withAlpha((255 * 0.8).round()),
+                    color: cardTextColor.withAlpha((255 * 0.88).round()),
                     fontSize: 11,
                   ),
                 ),
@@ -185,9 +180,7 @@ class _DashboardBalanceCardState extends ConsumerState<DashboardBalanceCard>
         : Text(
             'Sem histórico anterior para comparação',
             style: theme.textTheme.bodySmall?.copyWith(
-              color: theme.brightness == Brightness.dark
-                  ? cardTextColor
-                  : cardTextColor.withAlpha((255 * 0.75).round()),
+              color: cardTextColor.withAlpha((255 * 0.88).round()),
               fontSize: 11,
             ),
           );
@@ -209,22 +202,12 @@ class _DashboardBalanceCardState extends ConsumerState<DashboardBalanceCard>
         final expenseIconColor = isReddish
             ? cardTextColor
             : theme.colorScheme.error;
-        final gradientColors = [
-          theme.colorScheme.primary,
-          AppColors.getGradientSecondaryColor(theme.colorScheme.primary),
-        ];
-        final cardGradientColors = theme.brightness == Brightness.dark
-            ? gradientColors.map(_darkenForWhiteContrast).toList()
-            : gradientColors;
-
         return BalanceCard(
           title: enableIncomes ? 'Saldo do período' : 'Despesas do mês',
           totalValue: _animation.value,
           foregroundColor: cardTextColor,
-          gradient: LinearGradient(
-            colors: cardGradientColors,
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
+          backgroundColor: AppContrast.primaryWithWhiteText(
+            theme.colorScheme.primary,
           ),
           onTap: () {
             ref
@@ -282,17 +265,5 @@ class _DashboardBalanceCardState extends ConsumerState<DashboardBalanceCard>
         );
       },
     );
-  }
-
-  Color _darkenForWhiteContrast(Color color) {
-    var adjusted = color;
-    for (
-      var attempt = 0;
-      attempt < 20 && AppContrast.ratio(Colors.white, adjusted) < 4.5;
-      attempt++
-    ) {
-      adjusted = Color.lerp(adjusted, Colors.black, 0.08)!;
-    }
-    return adjusted;
   }
 }

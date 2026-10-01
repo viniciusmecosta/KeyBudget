@@ -21,6 +21,18 @@ void main() {
       }
     });
 
+    test('primary filled surfaces keep white labels legible', () {
+      for (final isDark in [false, true]) {
+        for (final seed in <int?>[null, 0xFF0D47A1, 0xFFFFEB3B, 0xFF9F1239, 0xFF0F766E, 0xFFB3A2F0]) {
+          final theme = AppTheme.getTheme(isDark: isDark, colorValue: seed);
+          final background = AppContrast.primaryWithWhiteText(theme.colorScheme.primary);
+          expect(AppContrast.ratio(Colors.white, background), greaterThanOrEqualTo(4.5));
+          expect(theme.floatingActionButtonTheme.backgroundColor, background);
+          expect(theme.floatingActionButtonTheme.foregroundColor, Colors.white);
+        }
+      }
+    });
+
     test('exposes AppSemanticColors via ThemeExtension', () {
       final lightTheme = AppTheme.lightTheme;
       final semanticLight = lightTheme.extension<AppSemanticColors>();
@@ -34,6 +46,21 @@ void main() {
   });
 
   group('AppButton', () {
+    testWidgets('uses white text on a light custom primary color', (tester) async {
+      final theme = AppTheme.getTheme(isDark: true, colorValue: 0xFFB3A2F0);
+      await tester.pumpWidget(MaterialApp(
+        theme: theme,
+        home: Scaffold(body: AppButton(label: 'Salvar', onPressed: () {})),
+      ));
+
+      final button = tester.widget<ElevatedButton>(find.byType(ElevatedButton));
+      expect(button.style!.foregroundColor!.resolve({}), Colors.white);
+      expect(AppContrast.ratio(
+        Colors.white,
+        button.style!.backgroundColor!.resolve({})!,
+      ), greaterThanOrEqualTo(4.5));
+    });
+
     testWidgets('renders primary button and fires onPressed', (tester) async {
       bool pressed = false;
       await tester.pumpWidget(
