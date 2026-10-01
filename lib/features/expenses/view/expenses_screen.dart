@@ -8,6 +8,7 @@ import 'package:key_budget/app/widgets/balance_card.dart';
 import 'package:key_budget/app/widgets/empty_state_widget.dart';
 import 'package:key_budget/app/widgets/responsive_center.dart';
 import 'package:key_budget/core/design_system/borders/app_borders.dart';
+import 'package:key_budget/core/design_system/colors/app_contrast.dart';
 import 'package:key_budget/core/design_system/spacing/app_spacing.dart';
 import 'package:key_budget/core/design_system/widgets/app_feedback_panel.dart';
 import 'package:key_budget/features/auth/viewmodel/auth_viewmodel.dart';
@@ -201,6 +202,9 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final filledPrimary = AppContrast.primaryWithWhiteText(
+      theme.colorScheme.primary,
+    );
     final expenseViewModel = ref.watch(expenseViewModelProvider);
     final categoryViewModel = ref.watch(categoryViewModelProvider);
 
@@ -252,10 +256,11 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen> {
                   },
                 ),
                 Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: AppSpacing.md,
+                  ),
                   child: ExpenseSyncIndicator(
                     status: expenseViewModel.syncStatus,
-                    lastServerConfirmation: expenseViewModel.lastServerConfirmation,
                     onRetry: () {
                       final userId = authViewModel.currentUser?.id;
                       if (userId != null) {
@@ -291,10 +296,10 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen> {
                             primaryHue >= 70 && primaryHue <= 160;
                         final isReddish = primaryHue >= 330 || primaryHue <= 20;
                         final incomeIconColor = isGreenish
-                            ? theme.colorScheme.onPrimary
+                            ? Colors.white
                             : Colors.greenAccent[400]!;
                         final expenseIconColor = isReddish
-                            ? theme.colorScheme.onPrimary
+                            ? Colors.white
                             : theme.colorScheme.error;
 
                         return BalanceCard(
@@ -309,7 +314,8 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen> {
                               ? 'Todo o período'
                               : formattedPeriod,
                           totalValue: value,
-                          backgroundColor: theme.colorScheme.primary,
+                          backgroundColor: filledPrimary,
+                          foregroundColor: Colors.white,
                           isCompact: enableIncomes,
                           subtitle: enableIncomes
                               ? Padding(
@@ -331,8 +337,7 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen> {
                                         ),
                                         style: theme.textTheme.bodyMedium
                                             ?.copyWith(
-                                              color:
-                                                  theme.colorScheme.onPrimary,
+                                              color: Colors.white,
                                               fontWeight: FontWeight.w600,
                                             ),
                                       ),
@@ -349,8 +354,7 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen> {
                                         ),
                                         style: theme.textTheme.bodyMedium
                                             ?.copyWith(
-                                              color:
-                                                  theme.colorScheme.onPrimary,
+                                              color: Colors.white,
                                               fontWeight: FontWeight.w600,
                                             ),
                                       ),
@@ -657,8 +661,8 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen> {
             shape: RoundedRectangleBorder(
               borderRadius: AppBorders.borderRadiusXXL,
             ),
-            backgroundColor: theme.colorScheme.primary,
-            foregroundColor: theme.colorScheme.onPrimary,
+            backgroundColor: filledPrimary,
+            foregroundColor: Colors.white,
             elevation: 0,
           ),
 

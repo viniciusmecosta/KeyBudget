@@ -9,6 +9,7 @@ import 'package:key_budget/features/auth/repository/auth_repository.dart';
 import 'package:key_budget/features/auth/viewmodel/auth_viewmodel.dart';
 import 'package:key_budget/features/category/viewmodel/category_viewmodel.dart';
 import 'package:key_budget/features/credentials/viewmodel/credential_viewmodel.dart';
+import 'package:key_budget/features/dashboard/repository/dashboard_layout_repository.dart';
 import 'package:key_budget/features/expenses/viewmodel/expense_viewmodel.dart';
 import 'package:key_budget/features/suppliers/repository/supplier_repository.dart';
 import 'package:key_budget/features/suppliers/view/suppliers_screen.dart';
@@ -23,6 +24,11 @@ class MockAuthRepository extends Fake implements AuthRepository {
   Future<void> updateUserProfile(User user) async {
     lastUpdatedUser = user;
   }
+}
+
+class FakeDashboardLayoutRepository extends DashboardLayoutRepository {
+  @override
+  Stream<DashboardLayout> watch(String userId) => Stream.value(const DashboardLayout());
 }
 
 class MockSupplierRepository extends Fake implements SupplierRepository {
@@ -355,6 +361,7 @@ void main() {
             expenseViewModelProvider.overrideWith((ref) => FakeExpenseViewModel()),
             categoryViewModelProvider.overrideWith((ref) => FakeCategoryViewModel()),
             credentialViewModelProvider.overrideWith((ref) => FakeCredentialViewModel()),
+            dashboardLayoutRepositoryProvider.overrideWithValue(FakeDashboardLayoutRepository()),
           ],
           child: const MaterialApp(home: UserScreen()),
         ),
@@ -367,6 +374,7 @@ void main() {
       expect(find.text('SEGURANÇA E PRIVACIDADE'), findsOneWidget);
       expect(find.text('DADOS E RECUPERAÇÃO'), findsOneWidget);
       expect(find.text('SESSÃO'), findsOneWidget);
+      expect(find.text('Personalizar painel'), findsOneWidget);
 
       expect(find.text('Bloquear ao sair do aplicativo'), findsOneWidget);
       expect(find.text('Proteger captura de tela'), findsOneWidget);
@@ -379,6 +387,28 @@ void main() {
 
       expect(mockRepo.lastUpdatedUser, isNotNull);
       expect(mockRepo.lastUpdatedUser!.appLocked, isFalse);
+    });
+
+    testWidgets('opens panel customization from profile settings', (tester) async {
+      final user = User(id: 'u1', name: 'Tester', email: 'tester@test.com');
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: [
+            authViewModelProvider.overrideWith((ref) => TestAuthViewModel(
+              mockRepo: MockAuthRepository(), initialUser: user,
+            )),
+            dashboardLayoutRepositoryProvider.overrideWithValue(FakeDashboardLayoutRepository()),
+          ],
+          child: const MaterialApp(home: UserScreen()),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      await tester.ensureVisible(find.text('Personalizar painel'));
+      await tester.tap(find.text('Personalizar painel'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Salvar painel'), findsOneWidget);
     });
   });
 }

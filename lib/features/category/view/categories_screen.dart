@@ -14,7 +14,6 @@ import 'package:key_budget/core/design_system/widgets/app_feedback_panel.dart';
 import 'package:key_budget/core/money/money.dart';
 import 'package:key_budget/core/money/money_parser.dart';
 import 'package:key_budget/core/services/snackbar_service.dart';
-
 import 'package:key_budget/features/auth/viewmodel/auth_viewmodel.dart';
 import 'package:key_budget/features/category/repository/category_budget_repository.dart';
 import 'package:key_budget/features/category/view/add_edit_category_screen.dart';
@@ -383,8 +382,6 @@ class _CategoriesScreenState extends ConsumerState<CategoriesScreen> {
           shape: RoundedRectangleBorder(
             borderRadius: AppBorders.borderRadiusXXL,
           ),
-          backgroundColor: theme.colorScheme.primary,
-          foregroundColor: theme.colorScheme.onPrimary,
           elevation: 0,
         ),
 

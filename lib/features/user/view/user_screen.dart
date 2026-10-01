@@ -16,6 +16,8 @@ import 'package:key_budget/features/auth/viewmodel/auth_viewmodel.dart';
 import 'package:key_budget/features/category/view/categories_screen.dart';
 import 'package:key_budget/features/category/viewmodel/category_viewmodel.dart';
 import 'package:key_budget/features/credentials/viewmodel/credential_viewmodel.dart';
+import 'package:key_budget/features/dashboard/repository/dashboard_layout_repository.dart';
+import 'package:key_budget/features/dashboard/widgets/dashboard_layout_editor.dart';
 import 'package:key_budget/features/expenses/viewmodel/expense_viewmodel.dart';
 import 'package:key_budget/features/user/view/backup_restore_screen.dart';
 import 'package:key_budget/features/user/view/edit_user_screen.dart';
@@ -463,6 +465,19 @@ class UserScreen extends ConsumerWidget {
     );
   }
 
+  void _showDashboardLayoutEditor(
+    BuildContext context,
+    String userId,
+    DashboardLayout layout,
+  ) {
+    showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      showDragHandle: true,
+      builder: (_) => DashboardLayoutEditor(userId: userId, initial: layout),
+    );
+  }
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
@@ -476,6 +491,10 @@ class UserScreen extends ConsumerWidget {
           builder: (context, ref, _) {
             final authViewModel = ref.watch(authViewModelProvider);
             final user = authViewModel.currentUser;
+            final layoutState = user == null
+                ? null
+                : ref.watch(dashboardLayoutProvider(user.id));
+            final dashboardLayout = layoutState?.asData?.value;
             final avatarPath = user?.avatarPath;
             ImageProvider? imageProvider;
 
@@ -620,6 +639,36 @@ class UserScreen extends ConsumerWidget {
                           ),
                         ),
                         onTap: () => _showDisplayModeSheet(context, ref),
+                      ),
+                      const Divider(height: 1, indent: 56, endIndent: 16),
+                      SettingsTile(
+                        icon: Icons.dashboard_customize_outlined,
+                        title: 'Personalizar painel',
+                        subtitle: 'Escolha e ordene cartões e atalhos',
+                        onTap: user == null
+                            ? null
+                            : () {
+                                if (dashboardLayout != null) {
+                                  _showDashboardLayoutEditor(
+                                    context,
+                                    user.id,
+                                    dashboardLayout,
+                                  );
+                                } else if (layoutState?.hasError == true) {
+                                  ref.invalidate(
+                                    dashboardLayoutProvider(user.id),
+                                  );
+                                  SnackbarService.showError(
+                                    context,
+                                    'Não foi possível carregar o painel. Tentando novamente.',
+                                  );
+                                } else {
+                                  SnackbarService.showInfo(
+                                    context,
+                                    'Carregando as opções do painel.',
+                                  );
+                                }
+                              },
                       ),
                     ]),
                     buildSection('Recursos', [

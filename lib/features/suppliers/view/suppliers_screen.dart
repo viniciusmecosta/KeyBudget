@@ -8,8 +8,8 @@ import 'package:key_budget/app/utils/navigation_utils.dart';
 import 'package:key_budget/app/widgets/empty_state_widget.dart';
 import 'package:key_budget/app/widgets/responsive_center.dart';
 import 'package:key_budget/core/design_system/borders/app_borders.dart';
-import 'package:key_budget/core/design_system/widgets/app_search_field.dart';
 import 'package:key_budget/core/design_system/widgets/app_feedback_panel.dart';
+import 'package:key_budget/core/design_system/widgets/app_search_field.dart';
 import 'package:key_budget/features/auth/viewmodel/auth_viewmodel.dart';
 import 'package:key_budget/features/suppliers/view/add_supplier_screen.dart';
 import 'package:key_budget/features/suppliers/view/supplier_detail_screen.dart';
@@ -260,8 +260,6 @@ class _SuppliersScreenState extends ConsumerState<SuppliersScreen> {
           icon: const Icon(Icons.add_rounded),
           label: const Text("Novo Fornecedor"),
           shape: RoundedRectangleBorder(borderRadius: AppBorders.borderRadiusL),
-          backgroundColor: theme.colorScheme.primary,
-          foregroundColor: theme.colorScheme.onPrimary,
           elevation: 0,
         ),
 
