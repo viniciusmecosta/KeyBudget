@@ -23,7 +23,9 @@ import 'package:key_budget/core/services/snackbar_service.dart';
 import 'package:share_plus/share_plus.dart';
 
 class BackupRestoreScreen extends ConsumerStatefulWidget {
-  const BackupRestoreScreen({super.key});
+  final int initialTab;
+
+  const BackupRestoreScreen({super.key, this.initialTab = 0});
 
   @override
   ConsumerState<BackupRestoreScreen> createState() =>
@@ -73,7 +75,11 @@ class _BackupRestoreScreenState extends ConsumerState<BackupRestoreScreen>
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 2, vsync: this);
+    _tabController = TabController(
+      length: 3,
+      initialIndex: widget.initialTab.clamp(0, 2),
+      vsync: this,
+    );
     WidgetsBinding.instance.addPostFrameCallback((_) => _loadAutomaticBackup());
   }
 
@@ -106,6 +112,7 @@ class _BackupRestoreScreenState extends ConsumerState<BackupRestoreScreen>
     if (userId == null) return;
     setState(() => _isSavingAutomaticBackup = true);
     try {
+      bool? uploaded;
       if (!force) {
         await _automaticBackupService.saveSettings(
           userId: userId,
@@ -118,14 +125,29 @@ class _BackupRestoreScreenState extends ConsumerState<BackupRestoreScreen>
       }
       _automaticPasswordController.clear();
       if (_automaticInterval != AutomaticBackupInterval.off) {
-        await _automaticBackupService.runIfDue(
+        uploaded = await _automaticBackupService.runIfDue(
           userId,
           allowInteractive: true,
           force: force,
         );
       }
       await _loadAutomaticBackup();
-      if (mounted) SnackbarService.showSuccess(context, 'Configuração de backup atualizada.');
+      if (mounted) {
+        if (force && uploaded != true) {
+          SnackbarService.showError(
+            context,
+            _automaticSettings?.lastError ??
+                'Não foi possível concluir a cópia. Tente novamente.',
+          );
+        } else {
+          SnackbarService.showSuccess(
+            context,
+            force
+                ? 'Cópia criada e enviada ao Drive.'
+                : 'Configuração de backup atualizada.',
+          );
+        }
+      }
     } on ArgumentError catch (error) {
       if (mounted) SnackbarService.showError(context, error.message?.toString() ?? 'Configuração inválida.');
     } catch (_) {
@@ -143,7 +165,7 @@ class _BackupRestoreScreenState extends ConsumerState<BackupRestoreScreen>
       _selectedRestoreFileName = item.file.uri.pathSegments.last;
       _importPlan = null;
     });
-    _tabController.animateTo(1);
+    _tabController.animateTo(2);
   }
 
   String _getModuleLabel(String key) {
@@ -512,12 +534,14 @@ class _BackupRestoreScreenState extends ConsumerState<BackupRestoreScreen>
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Backup e Restauração (.kbudget)'),
+        title: const Text('Backups'),
         bottom: TabBar(
           controller: _tabController,
+          isScrollable: true,
           tabs: const [
-            Tab(icon: Icon(Icons.backup_outlined), text: 'Criar Backup'),
-            Tab(icon: Icon(Icons.settings_backup_restore), text: 'Restaurar Dados'),
+            Tab(text: 'Manual'),
+            Tab(text: 'Automático'),
+            Tab(text: 'Restaurar'),
           ],
         ),
       ),
@@ -526,6 +550,7 @@ class _BackupRestoreScreenState extends ConsumerState<BackupRestoreScreen>
           controller: _tabController,
           children: [
             _buildCreateBackupTab(),
+            _buildAutomaticBackupTab(),
             _buildRestoreBackupTab(),
           ],
         ),
@@ -597,7 +622,8 @@ class _BackupRestoreScreenState extends ConsumerState<BackupRestoreScreen>
               isLoading: _isSavingAutomaticBackup,
               onPressed: _isSavingAutomaticBackup ? null : () => _saveAutomaticBackup(),
             ),
-            if (_automaticSettings?.interval != AutomaticBackupInterval.off) ...[
+            if ((_automaticSettings?.interval ?? AutomaticBackupInterval.off) !=
+                AutomaticBackupInterval.off) ...[
               const SizedBox(height: AppSpacing.sm),
               OutlinedButton.icon(
                 onPressed: _isSavingAutomaticBackup ? null : () => _saveAutomaticBackup(force: true),
@@ -629,6 +655,25 @@ class _BackupRestoreScreenState extends ConsumerState<BackupRestoreScreen>
     );
   }
 
+  Widget _buildAutomaticBackupTab() {
+    return ListView(
+      padding: const EdgeInsets.all(AppSpacing.md),
+      children: [
+        Text(
+          'Cópias automáticas',
+          style: Theme.of(context).textTheme.titleLarge,
+        ),
+        const SizedBox(height: AppSpacing.xs),
+        Text(
+          'Defina uma senha para proteger as cópias periódicas. Ela fica salva com segurança neste dispositivo. Para restaurar uma cópia, informe a senha usada quando ela foi criada.',
+          style: Theme.of(context).textTheme.bodyMedium,
+        ),
+        const SizedBox(height: AppSpacing.md),
+        _buildAutomaticBackupCard(),
+      ],
+    );
+  }
+
   Widget _buildCreateBackupTab() {
     return ListView(
       padding: const EdgeInsets.all(AppSpacing.md),
@@ -657,7 +702,10 @@ class _BackupRestoreScreenState extends ConsumerState<BackupRestoreScreen>
           ),
         ),
         const SizedBox(height: AppSpacing.md),
-        _buildAutomaticBackupCard(),
+        Text(
+          'Crie uma cópia quando quiser. Escolha uma senha para este arquivo e guarde-a para restaurá-lo depois. A senha do backup automático é independente.',
+          style: Theme.of(context).textTheme.bodyMedium,
+        ),
         const SizedBox(height: AppSpacing.md),
         Text(
           'Módulos Incluídos no Pacote',
@@ -787,6 +835,11 @@ class _BackupRestoreScreenState extends ConsumerState<BackupRestoreScreen>
     return ListView(
       padding: const EdgeInsets.all(AppSpacing.md),
       children: [
+        Text(
+          'Informe a senha usada para criar o arquivo selecionado, seja ele manual ou automático.',
+          style: Theme.of(context).textTheme.bodyMedium,
+        ),
+        const SizedBox(height: AppSpacing.md),
         Card(
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(AppBorders.radiusM),
@@ -806,8 +859,8 @@ class _BackupRestoreScreenState extends ConsumerState<BackupRestoreScreen>
                   style: TextStyle(
                     fontWeight: FontWeight.bold,
                     color: _selectedRestoreFileName != null
-                        ? Colors.black87
-                        : Colors.grey,
+                        ? Theme.of(context).colorScheme.onSurface
+                        : Theme.of(context).colorScheme.onSurfaceVariant,
                   ),
                 ),
                 const SizedBox(height: AppSpacing.sm),
