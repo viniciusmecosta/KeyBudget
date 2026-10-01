@@ -18,7 +18,7 @@ class LockScreen extends ConsumerStatefulWidget {
 class _LockScreenState extends ConsumerState<LockScreen>
     with SingleTickerProviderStateMixin, WidgetsBindingObserver {
   bool _isAuthenticating = false;
-  bool _hasUserCancelled = false;
+  bool _didPromptAutomatically = false;
   LocalAuthAvailability? _availability;
   String? _statusFeedback;
   late AnimationController _pulseController;
@@ -47,12 +47,18 @@ class _LockScreenState extends ConsumerState<LockScreen>
     if (!mounted) return;
     setState(() => _availability = availability);
 
-    if (availability != LocalAuthAvailability.notSupported) {
-      if (WidgetsBinding.instance.lifecycleState == AppLifecycleState.resumed &&
-          !_hasUserCancelled) {
-        _authenticate();
-      }
+    _promptAutomaticallyOnce();
+  }
+
+  void _promptAutomaticallyOnce() {
+    if (_didPromptAutomatically ||
+        _availability == null ||
+        _availability == LocalAuthAvailability.notSupported ||
+        WidgetsBinding.instance.lifecycleState != AppLifecycleState.resumed) {
+      return;
     }
+    _didPromptAutomatically = true;
+    _authenticate();
   }
 
   @override
@@ -66,24 +72,15 @@ class _LockScreenState extends ConsumerState<LockScreen>
   void didChangeAppLifecycleState(AppLifecycleState state) {
     super.didChangeAppLifecycleState(state);
 
-    if (state == AppLifecycleState.resumed) {
-      if (!_isAuthenticating && !_hasUserCancelled && mounted) {
-        if (_availability != LocalAuthAvailability.notSupported) {
-          _authenticate();
-        }
-      }
-    } else if (state == AppLifecycleState.paused) {
-      if (_isAuthenticating && mounted) {
-        _localAuthService.stopAuthentication();
-        setState(() => _isAuthenticating = false);
-        ref.read(appLockServiceProvider).isAuthenticating = false;
-      }
+    if (state == AppLifecycleState.resumed && mounted) {
+      _promptAutomaticallyOnce();
     }
   }
 
   Future<void> _authenticate() async {
     if (_isAuthenticating) return;
 
+    _didPromptAutomatically = true;
     final startUid = ref.read(authViewModelProvider).currentUser?.id;
     setState(() {
       _isAuthenticating = true;
@@ -99,24 +96,22 @@ class _LockScreenState extends ConsumerState<LockScreen>
       if (!mounted) return;
       final currentUid = ref.read(authViewModelProvider).currentUser?.id;
       if (currentUid != startUid) {
-
+        setState(() => _isAuthenticating = false);
         return;
       }
 
       switch (result) {
         case LocalAuthResult.success:
-          _hasUserCancelled = false;
           ref.read(appLockServiceProvider).unlockApp();
           break;
         case LocalAuthResult.cancelled:
-          _hasUserCancelled = true;
           setState(() {
             _isAuthenticating = false;
-            _statusFeedback = 'Autenticação cancelada. Toque para tentar novamente.';
+            _statusFeedback =
+                'Autenticação cancelada. Toque para tentar novamente.';
           });
           break;
         case LocalAuthResult.temporarilyLockedOut:
-          _hasUserCancelled = true;
           setState(() {
             _isAuthenticating = false;
             _statusFeedback =
@@ -124,7 +119,6 @@ class _LockScreenState extends ConsumerState<LockScreen>
           });
           break;
         case LocalAuthResult.permanentlyLockedOut:
-          _hasUserCancelled = true;
           setState(() {
             _isAuthenticating = false;
             _statusFeedback =
@@ -200,10 +194,14 @@ class _LockScreenState extends ConsumerState<LockScreen>
                             padding: const EdgeInsets.all(24),
                             decoration: BoxDecoration(
                               shape: BoxShape.circle,
-                              color: theme.colorScheme.primary.withValues(alpha: 0.1),
+                              color: theme.colorScheme.primary.withValues(
+                                alpha: 0.1,
+                              ),
                               boxShadow: [
                                 BoxShadow(
-                                  color: theme.colorScheme.primary.withValues(alpha: 0.2 * _pulseController.value),
+                                  color: theme.colorScheme.primary.withValues(
+                                    alpha: 0.2 * _pulseController.value,
+                                  ),
                                   blurRadius: 30,
                                   spreadRadius: 10,
                                 ),
@@ -233,8 +231,9 @@ class _LockScreenState extends ConsumerState<LockScreen>
                           : 'Sua privacidade e segurança estão ativas.\nToque abaixo para confirmar sua identidade.',
                       textAlign: TextAlign.center,
                       style: theme.textTheme.bodyMedium?.copyWith(
-                        color:
-                            theme.colorScheme.onSurface.withValues(alpha: 0.7),
+                        color: theme.colorScheme.onSurface.withValues(
+                          alpha: 0.7,
+                        ),
                         height: 1.5,
                       ),
                     ),
@@ -265,8 +264,7 @@ class _LockScreenState extends ConsumerState<LockScreen>
                     TextButton.icon(
                       onPressed: () async {
                         final authViewModel = ref.read(authViewModelProvider);
-                        final appLockService =
-                            ref.read(appLockServiceProvider);
+                        final appLockService = ref.read(appLockServiceProvider);
                         await authViewModel.logout(context, ref);
                         appLockService.unlockApp();
                       },
@@ -289,7 +287,8 @@ class _LockScreenState extends ConsumerState<LockScreen>
               ),
             ),
 
-            context: context,),
+            context: context,
+          ),
         ),
       ),
     );
