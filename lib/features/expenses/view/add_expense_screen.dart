@@ -12,6 +12,7 @@ import 'package:key_budget/core/money/money_parser.dart';
 import 'package:key_budget/core/operations/operation_result.dart';
 import 'package:key_budget/core/services/snackbar_service.dart';
 import 'package:key_budget/features/auth/viewmodel/auth_viewmodel.dart';
+import 'package:key_budget/features/category/viewmodel/category_viewmodel.dart';
 import 'package:key_budget/features/expenses/viewmodel/expense_viewmodel.dart';
 
 import '../widgets/expense_form.dart';
@@ -45,6 +46,14 @@ class _AddExpenseScreenState extends ConsumerState<AddExpenseScreen> {
   void initState() {
     super.initState();
     _amountController.addListener(_onAmountChanged);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      final userId = ref.read(authViewModelProvider).currentUser?.id;
+      final categories = ref.read(categoryViewModelProvider);
+      if (userId != null && categories.categories.isEmpty && !categories.isLoading) {
+        categories.fetchCategories(userId);
+      }
+    });
   }
 
   void _onAmountChanged() {
