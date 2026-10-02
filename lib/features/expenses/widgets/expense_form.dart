@@ -243,7 +243,7 @@ class ExpenseForm extends ConsumerWidget {
               prefixIcon: Icons.category_outlined,
               value: selectedCategory,
               categories: categoryViewModel.categories,
-              isEnabled: isEditing,
+              isEnabled: isEditing && !categoryViewModel.isLoading,
               onChanged: onCategoryChanged,
               onManageCategories: () async {
                 final userId = ref.read(authViewModelProvider).currentUser?.id;
@@ -261,6 +261,29 @@ class ExpenseForm extends ConsumerWidget {
               },
               validator: (v) => v == null ? 'Selecione uma categoria' : null,
             ),
+            if (categoryViewModel.isLoading) ...[
+              const SizedBox(height: AppSpacing.xs),
+              const LinearProgressIndicator(),
+              const Text('Carregando categorias...'),
+            ] else if (categoryViewModel.errorMessage != null &&
+                categoryViewModel.categories.isEmpty) ...[
+              const SizedBox(height: AppSpacing.xs),
+              Text(
+                categoryViewModel.errorMessage!,
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color: theme.colorScheme.error,
+                ),
+              ),
+              TextButton(
+                onPressed: () {
+                  final userId = ref.read(authViewModelProvider).currentUser?.id;
+                  if (userId != null) {
+                    ref.read(categoryViewModelProvider).fetchCategories(userId);
+                  }
+                },
+                child: const Text('Tentar novamente'),
+              ),
+            ],
           ],
           const SizedBox(height: AppSpacing.md),
           AbsorbPointer(

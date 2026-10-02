@@ -125,7 +125,15 @@ class PdfService {
           symbol: '',
         );
 
-        for (var expense in expenses) {
+        for (
+          var expenseIndex = 0;
+          expenseIndex < expenses.length;
+          expenseIndex++
+        ) {
+          if (expenseIndex > 0 && expenseIndex % 50 == 0) {
+            await Future<void>.delayed(Duration.zero);
+          }
+          final expense = expenses[expenseIndex];
           final isIncome = expense.isIncome ?? false;
           final PdfGridRow row = grid.rows.add();
           row.cells[0].value = DateFormat('dd/MM/yyyy').format(expense.date);
@@ -135,7 +143,8 @@ class PdfService {
           final category = categoryViewModel.getCategoryById(
             expense.categoryId,
           );
-          final categoryName = category?.name ??
+          final categoryName =
+              category?.name ??
               (expense.categoryId == null || expense.categoryId!.isEmpty
                   ? 'Sem categoria'
                   : 'Categoria removida');
@@ -154,15 +163,15 @@ class PdfService {
               font: font,
               textBrush: PdfSolidBrush(onSurfaceColor),
               backgroundBrush: PdfSolidBrush(
-                expenses.indexOf(expense) % 2 == 0
-                    ? surfaceColor
-                    : lightGreyColor,
+                expenseIndex.isEven ? surfaceColor : lightGreyColor,
               ),
               cellPadding: PdfPaddings(left: 5, right: 5, top: 5, bottom: 5),
               format: PdfStringFormat(
                 alignment: i == 2
                     ? PdfTextAlignment.right
-                    : (i == 0 || i == 1 ? PdfTextAlignment.center : PdfTextAlignment.left),
+                    : (i == 0 || i == 1
+                          ? PdfTextAlignment.center
+                          : PdfTextAlignment.left),
                 lineAlignment: PdfVerticalAlignment.middle,
               ),
             );
@@ -172,7 +181,9 @@ class PdfService {
         final PdfGridRow expenseTotalRow = grid.rows.add();
         expenseTotalRow.cells[0].value = 'Total Despesas';
         expenseTotalRow.cells[1].value = '';
-        expenseTotalRow.cells[2].value = currencyFormat.format(totalExpensesAmount);
+        expenseTotalRow.cells[2].value = currencyFormat.format(
+          totalExpensesAmount,
+        );
         for (int i = 3; i < expenseTotalRow.cells.count; i++) {
           expenseTotalRow.cells[i].value = '';
         }
@@ -194,7 +205,9 @@ class PdfService {
         final PdfGridRow incomeTotalRow = grid.rows.add();
         incomeTotalRow.cells[0].value = 'Total Receitas';
         incomeTotalRow.cells[1].value = '';
-        incomeTotalRow.cells[2].value = currencyFormat.format(totalIncomesAmount);
+        incomeTotalRow.cells[2].value = currencyFormat.format(
+          totalIncomesAmount,
+        );
         for (int i = 3; i < incomeTotalRow.cells.count; i++) {
           incomeTotalRow.cells[i].value = '';
         }
@@ -216,7 +229,9 @@ class PdfService {
         final PdfGridRow balanceRow = grid.rows.add();
         balanceRow.cells[0].value = 'Saldo Líquido';
         balanceRow.cells[1].value = '';
-        balanceRow.cells[2].value = currencyFormat.format(totalIncomesAmount - totalExpensesAmount);
+        balanceRow.cells[2].value = currencyFormat.format(
+          totalIncomesAmount - totalExpensesAmount,
+        );
         for (int i = 3; i < balanceRow.cells.count; i++) {
           balanceRow.cells[i].value = '';
         }
@@ -408,7 +423,7 @@ class PdfService {
       if (!context.mounted) return;
       SnackbarService.showError(
         context,
-        'Falha ao gerar relatório de despesas: $e',
+        'Não foi possível gerar o relatório de despesas. Tente novamente.',
         title: 'Erro Exportação PDF',
       );
     }
@@ -569,7 +584,7 @@ class PdfService {
       if (!context.mounted) return;
       SnackbarService.showError(
         context,
-        'Falha ao gerar relatório de credenciais: $e',
+        'Não foi possível gerar o relatório de credenciais. Tente novamente.',
         title: 'Erro Exportação PDF',
       );
     }
@@ -581,11 +596,12 @@ class PdfService {
     AnalysisSnapshot? snapshot,
   }) async {
     try {
-
       final snap = snapshot ?? analysisViewModel.currentSnapshot;
       final dateFormat = DateFormat('dd/MM/yyyy');
-      final currencyFormat =
-          NumberFormat.currency(locale: 'pt_BR', symbol: 'R\$ ');
+      final currencyFormat = NumberFormat.currency(
+        locale: 'pt_BR',
+        symbol: 'R\$ ',
+      );
       final startDateStr = dateFormat.format(snap.query.range.startInclusive);
       final endDateStr = dateFormat.format(
         snap.query.range.endExclusive.subtract(const Duration(milliseconds: 1)),
@@ -685,10 +701,18 @@ class PdfService {
       }
 
       final PdfGridRow summaryRow = summaryGrid.rows.add();
-      summaryRow.cells[0].value = currencyFormat.format(snap.totalIncomes.amountMinor / 100.0);
-      summaryRow.cells[1].value = currencyFormat.format(snap.totalExpenses.amountMinor / 100.0);
-      summaryRow.cells[2].value = currencyFormat.format(snap.balance.amountMinor / 100.0);
-      summaryRow.cells[3].value = currencyFormat.format(snap.averageMonthlyExpense.amountMinor / 100.0);
+      summaryRow.cells[0].value = currencyFormat.format(
+        snap.totalIncomes.amountMinor / 100.0,
+      );
+      summaryRow.cells[1].value = currencyFormat.format(
+        snap.totalExpenses.amountMinor / 100.0,
+      );
+      summaryRow.cells[2].value = currencyFormat.format(
+        snap.balance.amountMinor / 100.0,
+      );
+      summaryRow.cells[3].value = currencyFormat.format(
+        snap.averageMonthlyExpense.amountMinor / 100.0,
+      );
 
       for (int i = 0; i < 4; i++) {
         summaryRow.cells[i].style = PdfGridCellStyle(
@@ -733,7 +757,9 @@ class PdfService {
           font: boldFont,
           cellPadding: PdfPaddings(left: 4, right: 4, top: 4, bottom: 4),
           format: PdfStringFormat(
-            alignment: i >= 2 ? PdfTextAlignment.right : (i == 1 ? PdfTextAlignment.center : PdfTextAlignment.left),
+            alignment: i >= 2
+                ? PdfTextAlignment.right
+                : (i == 1 ? PdfTextAlignment.center : PdfTextAlignment.left),
             lineAlignment: PdfVerticalAlignment.middle,
           ),
         );
@@ -743,19 +769,25 @@ class PdfService {
         final row = categoryGrid.rows.add();
         row.cells[0].value = group.categoryName;
         row.cells[1].value = group.itemsCount.toString();
-        row.cells[2].value = currencyFormat.format(group.totalAmount.amountMinor / 100.0);
+        row.cells[2].value = currencyFormat.format(
+          group.totalAmount.amountMinor / 100.0,
+        );
         row.cells[3].value = '${group.percentage.toStringAsFixed(1)}%';
 
         for (int i = 0; i < 4; i++) {
           row.cells[i].style = PdfGridCellStyle(
             backgroundBrush: PdfSolidBrush(
-              snap.categoryDistribution.indexOf(group) % 2 == 0 ? surfaceColor : lightGreyColor,
+              snap.categoryDistribution.indexOf(group) % 2 == 0
+                  ? surfaceColor
+                  : lightGreyColor,
             ),
             textBrush: PdfSolidBrush(onSurfaceColor),
             font: font,
             cellPadding: PdfPaddings(left: 4, right: 4, top: 4, bottom: 4),
             format: PdfStringFormat(
-              alignment: i >= 2 ? PdfTextAlignment.right : (i == 1 ? PdfTextAlignment.center : PdfTextAlignment.left),
+              alignment: i >= 2
+                  ? PdfTextAlignment.right
+                  : (i == 1 ? PdfTextAlignment.center : PdfTextAlignment.left),
               lineAlignment: PdfVerticalAlignment.middle,
             ),
           );
@@ -765,7 +797,9 @@ class PdfService {
       final catTotalRow = categoryGrid.rows.add();
       catTotalRow.cells[0].value = 'Total';
       catTotalRow.cells[1].value = snap.expenseCount.toString();
-      catTotalRow.cells[2].value = currencyFormat.format(snap.totalExpenses.amountMinor / 100.0);
+      catTotalRow.cells[2].value = currencyFormat.format(
+        snap.totalExpenses.amountMinor / 100.0,
+      );
       catTotalRow.cells[3].value = '100.0%';
       for (int i = 0; i < 4; i++) {
         catTotalRow.cells[i].style = PdfGridCellStyle(
@@ -774,7 +808,9 @@ class PdfService {
           font: boldFont,
           cellPadding: PdfPaddings(left: 4, right: 4, top: 4, bottom: 4),
           format: PdfStringFormat(
-            alignment: i >= 2 ? PdfTextAlignment.right : (i == 1 ? PdfTextAlignment.center : PdfTextAlignment.left),
+            alignment: i >= 2
+                ? PdfTextAlignment.right
+                : (i == 1 ? PdfTextAlignment.center : PdfTextAlignment.left),
             lineAlignment: PdfVerticalAlignment.middle,
           ),
         );
@@ -782,7 +818,12 @@ class PdfService {
 
       categoryGrid.draw(
         page: page1,
-        bounds: Rect.fromLTWH(0, currentY, pageSize.width, pageSize.height - currentY),
+        bounds: Rect.fromLTWH(
+          0,
+          currentY,
+          pageSize.width,
+          pageSize.height - currentY,
+        ),
       );
 
       PdfPage page2 = document.pages.add();
@@ -822,20 +863,30 @@ class PdfService {
       for (final point in snap.monthlySeries) {
         final row = seriesGrid.rows.add();
         row.cells[0].value = point.label;
-        row.cells[1].value = currencyFormat.format(point.incomeAmount.amountMinor / 100.0);
-        row.cells[2].value = currencyFormat.format(point.expenseAmount.amountMinor / 100.0);
-        row.cells[3].value = currencyFormat.format(point.balanceAmount.amountMinor / 100.0);
+        row.cells[1].value = currencyFormat.format(
+          point.incomeAmount.amountMinor / 100.0,
+        );
+        row.cells[2].value = currencyFormat.format(
+          point.expenseAmount.amountMinor / 100.0,
+        );
+        row.cells[3].value = currencyFormat.format(
+          point.balanceAmount.amountMinor / 100.0,
+        );
 
         for (int i = 0; i < 4; i++) {
           row.cells[i].style = PdfGridCellStyle(
             backgroundBrush: PdfSolidBrush(
-              snap.monthlySeries.indexOf(point) % 2 == 0 ? surfaceColor : lightGreyColor,
+              snap.monthlySeries.indexOf(point) % 2 == 0
+                  ? surfaceColor
+                  : lightGreyColor,
             ),
             textBrush: PdfSolidBrush(onSurfaceColor),
             font: font,
             cellPadding: PdfPaddings(left: 4, right: 4, top: 4, bottom: 4),
             format: PdfStringFormat(
-              alignment: i == 0 ? PdfTextAlignment.left : PdfTextAlignment.right,
+              alignment: i == 0
+                  ? PdfTextAlignment.left
+                  : PdfTextAlignment.right,
               lineAlignment: PdfVerticalAlignment.middle,
             ),
           );
@@ -844,7 +895,12 @@ class PdfService {
 
       seriesGrid.draw(
         page: page2,
-        bounds: Rect.fromLTWH(0, page2Y, page2Size.width, page2Size.height - page2Y),
+        bounds: Rect.fromLTWH(
+          0,
+          page2Y,
+          page2Size.width,
+          page2Size.height - page2Y,
+        ),
       );
 
       final List<int> bytes = await document.save();
@@ -869,7 +925,7 @@ class PdfService {
       if (!context.mounted) return;
       SnackbarService.showError(
         context,
-        'Falha ao gerar relatório de análise: $e',
+        'Não foi possível gerar o relatório de análise. Tente novamente.',
         title: 'Erro Exportação PDF',
       );
     }

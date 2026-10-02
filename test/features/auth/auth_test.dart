@@ -19,7 +19,7 @@ class FakeLocalAuthentication extends Fake implements LocalAuthentication {
   bool canCheckBiometricsValue = true;
   List<BiometricType> biometrics = [BiometricType.fingerprint];
   bool authenticateResult = true;
-  PlatformException? throwOnAuth;
+  Object? throwOnAuth;
 
   @override
   Future<bool> isDeviceSupported() async => isDeviceSupportedValue;
@@ -105,7 +105,9 @@ class FakeAuthRepository extends Fake implements AuthRepository {
   String resetErrorCode = 'user-not-found';
   bool throwOnLogin = false;
   bool throwOnRegister = false;
+  bool failProfileSetupOnce = false;
   String registerErrorCode = 'email-already-in-use';
+  bool hasProfile = true;
 
   @override
   Stream<firebase.User?> get firebaseAuthStateChanges => const Stream.empty();
@@ -114,6 +116,11 @@ class FakeAuthRepository extends Fake implements AuthRepository {
   Stream<User?> getUserProfileStream(String uid) => Stream.value(
         User(id: uid, name: 'Tester', email: 'tester@test.com', appLocked: true),
       );
+
+  @override
+  Future<User?> getUserProfile(String uid) async => hasProfile
+      ? User(id: uid, name: 'Tester', email: 'tester@test.com')
+      : null;
 
   @override
   Future<void> sendPasswordResetEmail(String email) async {
@@ -137,13 +144,17 @@ class FakeAuthRepository extends Fake implements AuthRepository {
   Future<void> ensureCategoriesExist(String userId) async {}
 
   @override
-  Future<firebase.UserCredential> signUpWithEmail({
+  Future<User> signUpWithEmail({
     required String name,
     required String email,
     required String password,
     String? phoneNumber,
     String? avatarPath,
   }) async {
+    if (failProfileSetupOnce) {
+      failProfileSetupOnce = false;
+      throw const ProfileSetupException();
+    }
     if (throwOnRegister) {
       throw firebase.FirebaseAuthException(code: registerErrorCode);
     }
@@ -152,7 +163,7 @@ class FakeAuthRepository extends Fake implements AuthRepository {
     lastRegisterPassword = password;
     lastRegisterPhone = phoneNumber;
     lastRegisterAvatar = avatarPath;
-    return FakeUserCredential();
+    return User(id: 'test_uid_123', name: name, email: email);
   }
 }
 
@@ -211,7 +222,33 @@ void main() {
       expect(await service.authenticateLocal(), LocalAuthResult.success);
 
       fakeAuth.authenticateResult = false;
+      expect(await service.authenticateLocal(), LocalAuthResult.failed);
+
+      fakeAuth.throwOnAuth = const LocalAuthException(
+        code: LocalAuthExceptionCode.userCanceled,
+      );
       expect(await service.authenticateLocal(), LocalAuthResult.cancelled);
+
+      fakeAuth.throwOnAuth = const LocalAuthException(
+        code: LocalAuthExceptionCode.systemCanceled,
+      );
+      expect(await service.authenticateLocal(), LocalAuthResult.cancelled);
+
+      fakeAuth.throwOnAuth = const LocalAuthException(
+        code: LocalAuthExceptionCode.temporaryLockout,
+      );
+      expect(
+        await service.authenticateLocal(),
+        LocalAuthResult.temporarilyLockedOut,
+      );
+
+      fakeAuth.throwOnAuth = const LocalAuthException(
+        code: LocalAuthExceptionCode.biometricLockout,
+      );
+      expect(
+        await service.authenticateLocal(),
+        LocalAuthResult.permanentlyLockedOut,
+      );
 
       fakeAuth.throwOnAuth = PlatformException(code: 'LockedOut');
       expect(await service.authenticateLocal(), LocalAuthResult.temporarilyLockedOut);
@@ -289,6 +326,30 @@ void main() {
       );
       expect(fakeRepo.lastRegisterEmail, 'john@domain.com');
       expect(fakeRepo.lastRegisterPassword, exactPassword);
+    });
+
+    test('registerUser can retry after profile setup fails', () async {
+      fakeRepo.failProfileSetupOnce = true;
+      final first = await viewModel.registerUser(
+        name: 'Ana', email: 'ana@test.com', password: 'senha123',
+      );
+      expect(first, isFalse);
+      expect(viewModel.errorMessage, contains('perfil ainda não foi salvo'));
+
+      final retry = await viewModel.registerUser(
+        name: 'Ana', email: 'ana@test.com', password: 'senha123',
+      );
+      expect(retry, isTrue);
+      expect(viewModel.currentUser?.name, 'Ana');
+    });
+
+    test('loginUser explains how to finish a missing profile', () async {
+      fakeRepo.hasProfile = false;
+      final result = await viewModel.loginUser(
+        email: 'ana@test.com', password: 'senha123',
+      );
+      expect(result, isFalse);
+      expect(viewModel.errorMessage, contains('cadastro está pendente'));
     });
 
     test('authenticateWithBiometrics returns false when no user is logged in', () async {

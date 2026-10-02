@@ -131,6 +131,27 @@ class RecurringExpense {
     );
   }
 
+  bool hasSameGenerationInputs(RecurringExpense other) {
+    bool sameDate(DateTime? first, DateTime? second) =>
+        first == null || second == null
+        ? first == second
+        : first.isAtSameMomentAs(second);
+
+    return money == other.money &&
+        categoryId == other.categoryId &&
+        motivation == other.motivation &&
+        location == other.location &&
+        frequency == other.frequency &&
+        sameDate(startDate, other.startDate) &&
+        sameDate(endDate, other.endDate) &&
+        dayOfWeek == other.dayOfWeek &&
+        dayOfMonth == other.dayOfMonth &&
+        monthOfYear == other.monthOfYear &&
+        isIncome == other.isIncome &&
+        advanceGenerationCount == other.advanceGenerationCount &&
+        generationRevision == other.generationRevision;
+  }
+
   Map<String, dynamic> toMap() {
     final map = <String, dynamic>{
       ...unmappedData,

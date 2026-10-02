@@ -12,6 +12,7 @@ import 'package:key_budget/app/view/lock_screen.dart';
 import 'package:key_budget/core/services/app_lock_service.dart';
 import 'package:key_budget/core/services/home_widget_service.dart';
 import 'package:key_budget/core/services/notification_service.dart';
+import 'package:key_budget/core/design_system/widgets/app_feedback_panel.dart';
 import 'package:key_budget/features/auth/viewmodel/auth_viewmodel.dart';
 import 'package:key_budget/features/dashboard/widgets/dashboard_skeleton.dart';
 import 'package:key_budget/features/expenses/view/add_expense_screen.dart';
@@ -46,6 +47,10 @@ class _AppInitializerState extends ConsumerState<AppInitializer> {
     await NotificationService.initialize();
   }
 
+  void _retryInitialization() {
+    setState(() => _initFuture = _initServices());
+  }
+
   @override
   Widget build(BuildContext context) {
     return FutureBuilder(
@@ -53,7 +58,7 @@ class _AppInitializerState extends ConsumerState<AppInitializer> {
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.done) {
           if (snapshot.hasError) {
-            return ErrorScreen(error: snapshot.error.toString());
+            return ErrorScreen(onRetry: _retryInitialization);
           }
           return const MyApp();
         }
@@ -86,6 +91,8 @@ class MyApp extends ConsumerStatefulWidget {
 class _MyAppState extends ConsumerState<MyApp> with WidgetsBindingObserver {
   Uri? _pendingWidgetUri;
   StreamSubscription<Uri?>? _widgetClickedSubscription;
+  bool _isWaitingForWidgetReady = false;
+  bool _isWidgetNavigationScheduled = false;
 
   @override
   void initState() {
@@ -105,49 +112,51 @@ class _MyAppState extends ConsumerState<MyApp> with WidgetsBindingObserver {
   }
 
   void _launchedFromWidget(Uri? uri) {
-    if (uri?.host == 'addexpense') {
+    if (uri?.host == 'addexpense' && _pendingWidgetUri == null) {
       _pendingWidgetUri = uri;
       _processPendingWidgetUri();
     }
   }
 
   void _processPendingWidgetUri() {
-    if (_pendingWidgetUri == null) return;
-    final context = navigatorKey.currentContext;
-
-    if (context == null) {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        _processPendingWidgetUri();
-      });
-      return;
-    }
+    if (_pendingWidgetUri == null || _isWidgetNavigationScheduled) return;
 
     final authViewModel = ref.read(authViewModelProvider);
     final appLockService = ref.read(appLockServiceProvider);
 
-    void navigateAndClear() {
+    if (authViewModel.currentUser == null || appLockService.isLocked) {
+      if (!_isWaitingForWidgetReady) {
+        authViewModel.addListener(_processPendingWidgetUri);
+        appLockService.addListener(_processPendingWidgetUri);
+        _isWaitingForWidgetReady = true;
+      }
+      return;
+    }
+
+    _removeWidgetReadinessListeners();
+    _isWidgetNavigationScheduled = true;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _isWidgetNavigationScheduled = false;
+      if (!mounted || _pendingWidgetUri == null) return;
+      final currentUser = ref.read(authViewModelProvider).currentUser;
+      final isLocked = ref.read(appLockServiceProvider).isLocked;
+      if (currentUser == null || isLocked) {
+        _processPendingWidgetUri();
+        return;
+      }
+
       _pendingWidgetUri = null;
       navigatorKey.currentState?.push(
         MaterialPageRoute(builder: (context) => const AddExpenseScreen()),
       );
-    }
+    });
+  }
 
-    void checkReady() {
-      if (authViewModel.currentUser != null && !appLockService.isLocked) {
-        authViewModel.removeListener(checkReady);
-        appLockService.removeListener(checkReady);
-        WidgetsBinding.instance.addPostFrameCallback((_) {
-          navigateAndClear();
-        });
-      }
-    }
-
-    if (authViewModel.currentUser != null && !appLockService.isLocked) {
-      navigateAndClear();
-    } else {
-      authViewModel.addListener(checkReady);
-      appLockService.addListener(checkReady);
-    }
+  void _removeWidgetReadinessListeners() {
+    if (!_isWaitingForWidgetReady) return;
+    ref.read(authViewModelProvider).removeListener(_processPendingWidgetUri);
+    ref.read(appLockServiceProvider).removeListener(_processPendingWidgetUri);
+    _isWaitingForWidgetReady = false;
   }
 
   ThemeMode _resolveThemeMode(String? storedMode) {
@@ -164,6 +173,7 @@ class _MyAppState extends ConsumerState<MyApp> with WidgetsBindingObserver {
   @override
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
+    _removeWidgetReadinessListeners();
     _widgetClickedSubscription?.cancel();
     super.dispose();
   }
@@ -217,28 +227,25 @@ class _MyAppState extends ConsumerState<MyApp> with WidgetsBindingObserver {
   }
 }
 
-class ErrorScreen extends ConsumerWidget {
-  final String error;
+class ErrorScreen extends StatelessWidget {
+  final VoidCallback onRetry;
 
-  const ErrorScreen({super.key, required this.error});
+  const ErrorScreen({super.key, required this.onRetry});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       theme: AppTheme.lightTheme,
       darkTheme: AppTheme.darkTheme,
       home: Scaffold(
-        body: Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: Center(
-            child: Text(
-              'Ocorreu um erro crítico na inicialização:\n\n$error',
-              textAlign: TextAlign.center,
-              style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                color: Theme.of(context).colorScheme.error,
-              ),
-            ),
+        body: SafeArea(
+          child: AppFeedbackPanel(
+            title: 'Não foi possível iniciar o KeyBudget',
+            message: 'Confira sua conexão e tente novamente.',
+            type: AppFeedbackType.error,
+            actionLabel: 'Tentar novamente',
+            onAction: onRetry,
           ),
         ),
       ),

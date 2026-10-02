@@ -2,13 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:key_budget/app/config/app_theme.dart';
-import 'package:key_budget/app/utils/app_animations.dart';
 import 'package:key_budget/app/utils/navigation_utils.dart';
 import 'package:key_budget/app/widgets/animated_list_item.dart';
 import 'package:key_budget/app/widgets/empty_state_widget.dart';
 import 'package:key_budget/app/widgets/responsive_center.dart';
 import 'package:key_budget/core/design_system/borders/app_borders.dart';
 import 'package:key_budget/core/design_system/spacing/app_spacing.dart';
+import 'package:key_budget/core/design_system/widgets/app_search_field.dart';
+import 'package:key_budget/core/design_system/widgets/app_feedback_panel.dart';
 import 'package:key_budget/features/auth/viewmodel/auth_viewmodel.dart';
 import 'package:key_budget/features/documents/view/add_document_screen.dart';
 import 'package:key_budget/features/documents/viewmodel/document_viewmodel.dart';
@@ -92,40 +93,14 @@ class _DocumentsScreenState extends ConsumerState<DocumentsScreen> {
             transitionBuilder: (child, animation) =>
                 FadeTransition(opacity: animation, child: child),
             child: _isSearching
-                ? Container(
-                    key: const ValueKey('searchBox'),
-                    height: 40,
-                    decoration: BoxDecoration(
-                      color: theme.colorScheme.onSurface.withValues(
-                        alpha: 0.08,
-                      ),
-                      borderRadius: AppBorders.borderRadiusXXL,
-                    ),
-                    child: TextField(
-                      controller: _searchController,
-                      autofocus: true,
-                      textAlignVertical: TextAlignVertical.center,
-                      style: theme.textTheme.bodyLarge,
-                      decoration: InputDecoration(
-                        hintText: 'Buscar documentos...',
-                        border: InputBorder.none,
-                        isDense: true,
-                        contentPadding: const EdgeInsets.symmetric(
-                          horizontal: 16,
-                          vertical: 10,
-                        ),
-                        suffixIcon: _searchController.text.isNotEmpty
-                            ? IconButton(
-                                icon: const Icon(Icons.clear, size: 20),
-                                onPressed: () {
-                                  _searchController.clear();
-                                  viewModel.setSearchQuery('');
-                                },
-                              )
-                            : null,
-                      ),
-                      onChanged: (val) => viewModel.setSearchQuery(val),
-                    ),
+                ? AppSearchField(
+                    controller: _searchController,
+                    hint: 'Buscar documentos...',
+                    onChanged: viewModel.setSearchQuery,
+                    onClear: () {
+                      _searchController.clear();
+                      viewModel.setSearchQuery('');
+                    },
                   )
                 : const Text('Documentos', key: ValueKey('titleText')),
           ),
@@ -142,8 +117,7 @@ class _DocumentsScreenState extends ConsumerState<DocumentsScreen> {
           ],
         ),
         body: SafeArea(
-          child: AppAnimations.fadeInFromBottom(
-            RefreshIndicator(
+          child: RefreshIndicator(
               onRefresh: _handleRefresh,
               color: theme.colorScheme.primary,
               backgroundColor: theme.colorScheme.surface,
@@ -155,13 +129,51 @@ class _DocumentsScreenState extends ConsumerState<DocumentsScreen> {
                   slivers: [
                     if (viewModel.isLoading)
                       const DocumentsListSkeleton()
+                    else if (viewModel.errorMessage != null &&
+                        !viewModel.hasDocuments)
+                      SliverFillRemaining(
+                        hasScrollBody: false,
+                        child: AppFeedbackPanel(
+                          title: 'Falha ao carregar documentos',
+                          message: 'Confira sua conexão e tente novamente.',
+                          type: AppFeedbackType.error,
+                          actionLabel: 'Tentar novamente',
+                          onAction: () {
+                            final user = ref
+                                .read(authViewModelProvider)
+                                .currentUser;
+                            if (user != null) {
+                              viewModel.retryListenToDocuments(user.id);
+                            }
+                          },
+                        ),
+                      )
                     else if (viewModel.currentDisplayItems.isEmpty)
-                      const SliverFillRemaining(
+                      SliverFillRemaining(
+                        hasScrollBody: false,
                         child: SingleChildScrollView(
-                          physics: AlwaysScrollableScrollPhysics(),
+                          physics: const AlwaysScrollableScrollPhysics(),
                           child: EmptyStateWidget(
-                            icon: Icons.folder_off_outlined,
-                            message: 'Nenhum documento encontrado.',
+                            icon: viewModel.searchQuery.isNotEmpty
+                                ? Icons.search_off_rounded
+                                : Icons.folder_off_outlined,
+                            message: viewModel.searchQuery.isNotEmpty
+                                ? 'Nenhum documento encontrado para a busca.'
+                                : 'Nenhum documento cadastrado.',
+                            buttonText: viewModel.searchQuery.isNotEmpty
+                                ? 'Limpar busca'
+                                : 'Adicionar documento',
+                            onButtonPressed: () {
+                              if (viewModel.searchQuery.isNotEmpty) {
+                                _searchController.clear();
+                                viewModel.setSearchQuery('');
+                              } else {
+                                NavigationUtils.push(
+                                  context,
+                                  const AddDocumentScreen(),
+                                );
+                              }
+                            },
                           ),
                         ),
                       )
@@ -196,10 +208,8 @@ class _DocumentsScreenState extends ConsumerState<DocumentsScreen> {
                 ),
               ),
             ),
-          ),
         ),
-        floatingActionButton: AppAnimations.scaleIn(
-          FloatingActionButton.extended(
+        floatingActionButton: FloatingActionButton.extended(
             onPressed: () =>
                 NavigationUtils.push(context, const AddDocumentScreen()),
             label: const Text('Novo Documento'),
@@ -207,7 +217,6 @@ class _DocumentsScreenState extends ConsumerState<DocumentsScreen> {
             shape: RoundedRectangleBorder(
               borderRadius: AppBorders.borderRadiusXXL,
             ),
-          ),
         ),
       ),
     );

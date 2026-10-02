@@ -5,6 +5,7 @@ import 'package:intl/intl.dart';
 import 'package:key_budget/app/utils/navigation_utils.dart';
 import 'package:key_budget/core/design_system/spacing/app_spacing.dart';
 import 'package:key_budget/core/design_system/widgets/app_card.dart';
+import 'package:key_budget/core/design_system/widgets/app_section_header.dart';
 import 'package:key_budget/features/analysis/view/analysis_screen.dart';
 import 'package:key_budget/features/auth/viewmodel/auth_viewmodel.dart';
 import 'package:key_budget/features/dashboard/viewmodel/dashboard_viewmodel.dart';
@@ -61,6 +62,27 @@ class DashboardMonthlyChart extends ConsumerWidget {
 
     final validMonths = expensesByMonth.keys.toList();
     validMonths.sort((a, b) => b.compareTo(a));
+    final currencyFormatter = NumberFormat.currency(
+      locale: 'pt_BR',
+      symbol: 'R\$',
+    );
+    final chartDescription = validMonths.isEmpty
+        ? 'Gráfico de gastos mensais sem lançamentos nos últimos quatro meses.'
+        : validMonths
+              .map((monthKey) {
+                final month = DateFormat.yMMMM(
+                  'pt_BR',
+                ).format(DateTime(now.year, now.month - monthKey));
+                final expense = currencyFormatter.format(
+                  expensesByMonth[monthKey],
+                );
+                if (!enableIncomes) return '$month: gastos de $expense';
+                final income = currencyFormatter.format(
+                  incomesByMonth[monthKey],
+                );
+                return '$month: entradas de $income e saídas de $expense';
+              })
+              .join('. ');
 
     double maxAmount = 0.0;
     for (int i in validMonths) {
@@ -116,64 +138,23 @@ class DashboardMonthlyChart extends ConsumerWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      enableIncomes ? 'Entradas vs Saídas' : 'Gastos Mensais',
-                      style: theme.textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.bold,
-                      ),
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                    const SizedBox(height: 2),
-                    Text(
-                      monthsToShow <= 1
-                          ? 'Último mês'
-                          : 'Últimos $monthsToShow meses',
-                      style: theme.textTheme.labelSmall?.copyWith(
-                        color: theme.colorScheme.onSurfaceVariant,
-                      ),
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ],
-                ),
+          AppSectionHeader(
+            title: enableIncomes ? 'Entradas vs Saídas' : 'Gastos Mensais',
+            keepActionInline: true,
+            subtitle: monthsToShow <= 1
+                ? 'Último mês'
+                : 'Últimos $monthsToShow meses',
+            action: TextButton.icon(
+              onPressed: () {
+                NavigationUtils.push(context, const AnalysisScreen());
+              },
+              style: TextButton.styleFrom(
+                padding: const EdgeInsets.symmetric(horizontal: 4),
+                minimumSize: const Size(48, 48),
               ),
-              TextButton(
-                onPressed: () {
-                  NavigationUtils.push(context, const AnalysisScreen());
-                },
-                style: TextButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: AppSpacing.sm,
-                    vertical: AppSpacing.xs,
-                  ),
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text(
-                      'Ver análise',
-                      style: TextStyle(
-                        color: theme.colorScheme.primary,
-                        fontWeight: FontWeight.w600,
-                        fontSize: 13,
-                      ),
-                    ),
-                    const SizedBox(width: AppSpacing.xxs),
-                    Icon(
-                      Icons.arrow_forward_ios_rounded,
-                      color: theme.colorScheme.primary,
-                      size: 12,
-                    ),
-                  ],
-                ),
-              ),
-            ],
+              label: const Text('Ver análise', maxLines: 1, softWrap: false),
+              icon: const Icon(Icons.arrow_forward_ios_rounded, size: 14),
+            ),
           ),
           if (enableIncomes) ...[
             const SizedBox(height: AppSpacing.sm),
@@ -204,107 +185,118 @@ class DashboardMonthlyChart extends ConsumerWidget {
             ),
           ],
           const SizedBox(height: AppSpacing.xl),
-          SizedBox(
-            height: 100,
-            child: validMonths.isEmpty
-                ? Center(
-                    child: Text(
-                      enableIncomes
-                          ? 'Nenhum lançamento nos últimos 4 meses'
-                          : 'Nenhum gasto nos últimos 4 meses',
-                      style: theme.textTheme.bodyMedium?.copyWith(
-                        color: theme.colorScheme.onSurfaceVariant,
-                      ),
-                    ),
-                  )
-                : BarChart(
-                    BarChartData(
-                      alignment: BarChartAlignment.spaceAround,
-                      maxY: maxAmount * 1.2,
-                      minY: 0,
-                      barTouchData: BarTouchData(
-                        enabled: true,
-                        touchTooltipData: BarTouchTooltipData(
-                          getTooltipColor: (group) => theme.colorScheme.surface,
-                          tooltipBorder: BorderSide(
-                            color: theme.colorScheme.outlineVariant,
-                            width: 1.5,
+          Semantics(
+            label: chartDescription,
+            child: ExcludeSemantics(
+              child: SizedBox(
+                height: 100,
+                child: validMonths.isEmpty
+                    ? Center(
+                        child: Text(
+                          enableIncomes
+                              ? 'Nenhum lançamento nos últimos 4 meses'
+                              : 'Nenhum gasto nos últimos 4 meses',
+                          style: theme.textTheme.bodyMedium?.copyWith(
+                            color: theme.colorScheme.onSurfaceVariant,
                           ),
-                          tooltipPadding: const EdgeInsets.symmetric(
-                            horizontal: 12,
-                            vertical: 8,
-                          ),
-                          getTooltipItem: (group, groupIndex, rod, rodIndex) {
-                            final isIncomeRod = enableIncomes && rodIndex == 0;
-                            return BarTooltipItem(
-                              NumberFormat.currency(
-                                locale: 'pt_BR',
-                                symbol: 'R\$',
-                              ).format(rod.toY),
-                              TextStyle(
-                                color: isIncomeRod
-                                    ? Colors.greenAccent[400]
-                                    : (enableIncomes
-                                          ? theme.colorScheme.error
-                                          : theme.colorScheme.primary),
-                                fontWeight: FontWeight.bold,
-                                fontSize: 13,
+                        ),
+                      )
+                    : BarChart(
+                        BarChartData(
+                          alignment: BarChartAlignment.spaceAround,
+                          maxY: maxAmount * 1.2,
+                          minY: 0,
+                          barTouchData: BarTouchData(
+                            enabled: true,
+                            touchTooltipData: BarTouchTooltipData(
+                              getTooltipColor: (group) =>
+                                  theme.colorScheme.surface,
+                              tooltipBorder: BorderSide(
+                                color: theme.colorScheme.outlineVariant,
+                                width: 1.5,
                               ),
-                            );
-                          },
-                        ),
-                      ),
-                      titlesData: FlTitlesData(
-                        show: true,
-                        bottomTitles: AxisTitles(
-                          sideTitles: SideTitles(
-                            showTitles: true,
-                            getTitlesWidget: (value, meta) {
-                              if (value.toInt() < 0 ||
-                                  value.toInt() >= validMonths.length) {
-                                return const SizedBox.shrink();
-                              }
-                              final monthKey = validMonths[value.toInt()];
-                              final monthDate = DateTime(
-                                now.year,
-                                now.month - monthKey,
-                                1,
-                              );
-                              final monthName = DateFormat.MMM(
-                                'pt_BR',
-                              ).format(monthDate).toUpperCase();
-                              return Padding(
-                                padding: const EdgeInsets.only(top: 8.0),
-                                child: Text(
-                                  monthName,
-                                  style: theme.textTheme.labelSmall?.copyWith(
-                                    color: theme.colorScheme.onSurfaceVariant,
-                                    fontWeight: FontWeight.w600,
-                                    fontSize: 10,
-                                  ),
-                                ),
-                              );
-                            },
-                            reservedSize: 24,
+                              tooltipPadding: const EdgeInsets.symmetric(
+                                horizontal: 12,
+                                vertical: 8,
+                              ),
+                              getTooltipItem:
+                                  (group, groupIndex, rod, rodIndex) {
+                                    final isIncomeRod =
+                                        enableIncomes && rodIndex == 0;
+                                    return BarTooltipItem(
+                                      NumberFormat.currency(
+                                        locale: 'pt_BR',
+                                        symbol: 'R\$',
+                                      ).format(rod.toY),
+                                      TextStyle(
+                                        color: isIncomeRod
+                                            ? Colors.greenAccent[400]
+                                            : (enableIncomes
+                                                  ? theme.colorScheme.error
+                                                  : theme.colorScheme.primary),
+                                        fontWeight: FontWeight.bold,
+                                        fontSize: 13,
+                                      ),
+                                    );
+                                  },
+                            ),
                           ),
+                          titlesData: FlTitlesData(
+                            show: true,
+                            bottomTitles: AxisTitles(
+                              sideTitles: SideTitles(
+                                showTitles: true,
+                                getTitlesWidget: (value, meta) {
+                                  if (value.toInt() < 0 ||
+                                      value.toInt() >= validMonths.length) {
+                                    return const SizedBox.shrink();
+                                  }
+                                  final monthKey = validMonths[value.toInt()];
+                                  final monthDate = DateTime(
+                                    now.year,
+                                    now.month - monthKey,
+                                    1,
+                                  );
+                                  final monthName = DateFormat.MMM(
+                                    'pt_BR',
+                                  ).format(monthDate).toUpperCase();
+                                  return Padding(
+                                    padding: const EdgeInsets.only(top: 8.0),
+                                    child: Text(
+                                      monthName,
+                                      style: theme.textTheme.labelSmall
+                                          ?.copyWith(
+                                            color: theme
+                                                .colorScheme
+                                                .onSurfaceVariant,
+                                            fontWeight: FontWeight.w600,
+                                            fontSize: 10,
+                                          ),
+                                    ),
+                                  );
+                                },
+                                reservedSize: 24,
+                              ),
+                            ),
+                            leftTitles: const AxisTitles(
+                              sideTitles: SideTitles(showTitles: false),
+                            ),
+                            topTitles: const AxisTitles(
+                              sideTitles: SideTitles(showTitles: false),
+                            ),
+                            rightTitles: const AxisTitles(
+                              sideTitles: SideTitles(showTitles: false),
+                            ),
+                          ),
+                          gridData: const FlGridData(show: false),
+                          borderData: FlBorderData(show: false),
+                          barGroups: barGroups,
                         ),
-                        leftTitles: const AxisTitles(
-                          sideTitles: SideTitles(showTitles: false),
-                        ),
-                        topTitles: const AxisTitles(
-                          sideTitles: SideTitles(showTitles: false),
-                        ),
-                        rightTitles: const AxisTitles(
-                          sideTitles: SideTitles(showTitles: false),
-                        ),
+                        duration: const Duration(milliseconds: 300),
+                        curve: Curves.easeInOut,
                       ),
-                      gridData: const FlGridData(show: false),
-                      borderData: FlBorderData(show: false),
-                      barGroups: barGroups,
-                    ),
-                    duration: const Duration(milliseconds: 300),
-                    curve: Curves.easeInOut,
-                  ),
+              ),
+            ),
           ),
         ],
       ),

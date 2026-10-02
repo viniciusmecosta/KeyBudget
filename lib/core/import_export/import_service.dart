@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:isolate';
 import 'package:crypto/crypto.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:key_budget/core/models/credential_model.dart';
@@ -93,10 +94,14 @@ class ImportService {
     String? defaultFolderId,
     String? explicitDelimiter,
   }) async {
-    final fileHash = sha256.convert(utf8.encode(fileContent)).toString();
-    final parseResult = csvParser.parseString(
-      fileContent,
-      explicitDelimiter: explicitDelimiter,
+    final fileHash = await Isolate.run(
+      () => sha256.convert(utf8.encode(fileContent)).toString(),
+    );
+    final parseResult = await Isolate.run(
+      () => csvParser.parseString(
+        fileContent,
+        explicitDelimiter: explicitDelimiter,
+      ),
     );
 
     if (!parseResult.isValid) {
@@ -333,7 +338,7 @@ class ImportService {
       );
     } catch (e) {
       return OperationResult.failed(
-        safeError: 'Falha durante a aplicação da importação: ${e.toString()}',
+        safeError: 'Não foi possível concluir a importação. Verifique os dados e tente novamente.',
       );
     }
   }
@@ -356,7 +361,7 @@ class ImportService {
       return OperationResult.completed(count: report.createdIds.length);
     } catch (e) {
       return OperationResult.failed(
-        safeError: 'Falha ao desfazer importação: ${e.toString()}',
+        safeError: 'Não foi possível desfazer a importação. Tente novamente.',
       );
     }
   }

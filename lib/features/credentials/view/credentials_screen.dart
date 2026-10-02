@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:key_budget/app/utils/app_animations.dart';
 import 'package:key_budget/app/utils/navigation_utils.dart';
 import 'package:key_budget/app/widgets/animated_list_item.dart';
 import 'package:key_budget/app/widgets/empty_state_widget.dart';
 import 'package:key_budget/app/widgets/responsive_center.dart';
 import 'package:key_budget/core/design_system/borders/app_borders.dart';
+import 'package:key_budget/core/design_system/widgets/app_search_field.dart';
 import 'package:key_budget/core/design_system/spacing/app_spacing.dart';
 import 'package:key_budget/core/models/credential_model.dart';
 import 'package:key_budget/core/models/folder_model.dart';
@@ -106,7 +106,7 @@ class _CredentialsScreenState extends ConsumerState<CredentialsScreen> {
           builder: (context, setState) {
             return AlertDialog(
               shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(20),
+                borderRadius: AppBorders.borderRadiusXL,
               ),
               title: Row(
                 children: [
@@ -128,7 +128,7 @@ class _CredentialsScreenState extends ConsumerState<CredentialsScreen> {
                       filled: true,
                       fillColor: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
                       border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
+                        borderRadius: AppBorders.borderRadiusM,
                         borderSide: BorderSide.none,
                       ),
                     ),
@@ -274,40 +274,14 @@ class _CredentialsScreenState extends ConsumerState<CredentialsScreen> {
             transitionBuilder: (child, animation) =>
                 FadeTransition(opacity: animation, child: child),
             child: _isSearching
-                ? Container(
-                    key: const ValueKey('searchBox'),
-                    height: 40,
-                    decoration: BoxDecoration(
-                      color: theme.colorScheme.onSurface.withValues(
-                        alpha: 0.08,
-                      ),
-                      borderRadius: AppBorders.borderRadiusXXL,
-                    ),
-                    child: TextField(
-                      controller: _searchController,
-                      autofocus: true,
-                      textAlignVertical: TextAlignVertical.center,
-                      style: theme.textTheme.bodyLarge,
-                      decoration: InputDecoration(
-                        hintText: 'Buscar credenciais...',
-                        border: InputBorder.none,
-                        isDense: true,
-                        contentPadding: const EdgeInsets.symmetric(
-                          horizontal: 16,
-                          vertical: 10,
-                        ),
-                        suffixIcon: _searchController.text.isNotEmpty
-                            ? IconButton(
-                                icon: const Icon(Icons.clear, size: 20),
-                                onPressed: () {
-                                  _searchController.clear();
-                                  vm.setSearchQuery('');
-                                },
-                              )
-                            : null,
-                      ),
-                      onChanged: (val) => vm.setSearchQuery(val),
-                    ),
+                ? AppSearchField(
+                    controller: _searchController,
+                    hint: 'Buscar credenciais...',
+                    onChanged: vm.setSearchQuery,
+                    onClear: () {
+                      _searchController.clear();
+                      vm.setSearchQuery('');
+                    },
                   )
                 : Text(
                     vm.currentFolder?.name ?? 'Credenciais',
@@ -385,8 +359,7 @@ class _CredentialsScreenState extends ConsumerState<CredentialsScreen> {
           ],
         ),
         body: SafeArea(
-          child: AppAnimations.fadeInFromBottom(
-            RefreshIndicator(
+          child: RefreshIndicator(
               onRefresh: _handleRefresh,
               color: theme.colorScheme.primary,
               backgroundColor: theme.colorScheme.surface,
@@ -483,10 +456,8 @@ class _CredentialsScreenState extends ConsumerState<CredentialsScreen> {
                 ),
               ),
             ),
-          ),
         ),
-        floatingActionButton: AppAnimations.scaleIn(
-          FloatingActionButton.extended(
+        floatingActionButton: FloatingActionButton.extended(
             heroTag: 'fab_credentials',
             onPressed: () {
               if (vm.currentFolderId != null) {
@@ -534,7 +505,6 @@ class _CredentialsScreenState extends ConsumerState<CredentialsScreen> {
             shape: RoundedRectangleBorder(
               borderRadius: AppBorders.borderRadiusXXL,
             ),
-          ),
         ),
       ),
     );

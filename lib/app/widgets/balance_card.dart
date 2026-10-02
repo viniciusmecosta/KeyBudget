@@ -13,6 +13,7 @@ class BalanceCard extends ConsumerWidget {
   final VoidCallback? onTap;
   final Gradient? gradient;
   final Color? backgroundColor;
+  final Color? foregroundColor;
   final bool isCompact;
   final String? period;
 
@@ -26,6 +27,7 @@ class BalanceCard extends ConsumerWidget {
     this.onTap,
     this.gradient,
     this.backgroundColor,
+    this.foregroundColor,
     this.isCompact = false,
   });
 
@@ -41,9 +43,10 @@ class BalanceCard extends ConsumerWidget {
         backgroundColor ??
         (gradient == null ? theme.colorScheme.surface : null);
     final textColor =
-        (gradient != null || backgroundColor == theme.colorScheme.primary)
-        ? theme.colorScheme.onPrimary
-        : theme.colorScheme.onSurface;
+        foregroundColor ??
+        ((gradient != null || backgroundColor == theme.colorScheme.primary)
+            ? theme.colorScheme.onPrimary
+            : theme.colorScheme.onSurface);
 
     return Container(
       decoration: BoxDecoration(
@@ -84,7 +87,11 @@ class BalanceCard extends ConsumerWidget {
                               Text(
                                 title,
                                 style: theme.textTheme.titleMedium?.copyWith(
-                                  color: textColor.withAlpha((255 * 0.85).round()),
+                                  color: foregroundColor != null
+                                      ? textColor
+                                      : textColor.withAlpha(
+                                          (255 * 0.85).round(),
+                                        ),
                                   fontWeight: FontWeight.w600,
                                   letterSpacing: 0.5,
                                   fontSize: isCompact ? 14 : null,
@@ -94,7 +101,9 @@ class BalanceCard extends ConsumerWidget {
                                 Text(
                                   '• $period',
                                   style: theme.textTheme.bodySmall?.copyWith(
-                                    color: textColor.withAlpha((255 * 0.7).round()),
+                                    color: textColor.withAlpha(
+                                      (255 * 0.7).round(),
+                                    ),
                                     fontWeight: FontWeight.w500,
                                   ),
                                 ),

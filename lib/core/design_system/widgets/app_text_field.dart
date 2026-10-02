@@ -72,8 +72,18 @@ class AppTextField extends StatelessWidget {
       textCapitalization: textCapitalization,
       focusNode: focusNode,
       textInputAction: textInputAction,
-      onFieldSubmitted: onFieldSubmitted,
-      onEditingComplete: onEditingComplete,
+      onFieldSubmitted:
+          onFieldSubmitted ??
+          (textInputAction == TextInputAction.next
+              ? (_) => FocusScope.of(context).nextFocus()
+              : textInputAction == TextInputAction.done
+              ? (_) => FocusScope.of(context).unfocus()
+              : null),
+      onEditingComplete: onEditingComplete ??
+          (textInputAction == TextInputAction.next ||
+                  textInputAction == TextInputAction.done
+              ? () {}
+              : null),
       autofillHints: autofillHints,
       decoration: InputDecoration(
         labelText: label,
@@ -87,4 +97,3 @@ class AppTextField extends StatelessWidget {
     );
   }
 }
-

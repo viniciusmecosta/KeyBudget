@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:key_budget/app/config/app_theme.dart';
+import 'package:key_budget/core/design_system/colors/app_contrast.dart';
 import 'package:key_budget/core/design_system/theme/app_semantic_colors.dart';
 import 'package:key_budget/core/design_system/widgets/app_button.dart';
 import 'package:key_budget/core/design_system/widgets/app_feedback_panel.dart';
@@ -10,12 +11,37 @@ import 'package:key_budget/core/design_system/widgets/app_text_field.dart';
 
 void main() {
   group('AppTheme & Semantic Colors', () {
-    test('derives onPrimary contrast based on luminance for dark and light seeds', () {
-      final darkSeedTheme = AppTheme.getTheme(isDark: false, colorValue: 0xFF0D47A1);
-      expect(darkSeedTheme.colorScheme.onPrimary, Colors.white);
+    test('keeps custom accents and their labels readable in both themes', () {
+      for (final isDark in [false, true]) {
+        for (final seed in <int?>[null, 0xFF0D47A1, 0xFFFFEB3B, 0xFF9F1239, 0xFF0F766E]) {
+          final scheme = AppTheme.getTheme(isDark: isDark, colorValue: seed).colorScheme;
+          expect(AppContrast.ratio(scheme.primary, scheme.surface), greaterThanOrEqualTo(4.5));
+          expect(AppContrast.ratio(scheme.onPrimary, scheme.primary), greaterThanOrEqualTo(4.5));
+        }
+      }
+    });
 
-      final brightYellowTheme = AppTheme.getTheme(isDark: false, colorValue: 0xFFFFEB3B);
-      expect(brightYellowTheme.colorScheme.onPrimary, Colors.black);
+    test('theme swatches match the effective accent in both modes', () {
+      for (final isDark in [false, true]) {
+        for (final color in [0xFF1E40AF, 0xFF15803D, 0xFF9F1239]) {
+          expect(
+            AppTheme.effectivePrimary(isDark: isDark, colorValue: color),
+            AppTheme.getTheme(isDark: isDark, colorValue: color).colorScheme.primary,
+          );
+        }
+      }
+    });
+
+    test('primary filled surfaces keep white labels legible', () {
+      for (final isDark in [false, true]) {
+        for (final seed in <int?>[null, 0xFF0D47A1, 0xFFFFEB3B, 0xFF9F1239, 0xFF0F766E, 0xFFB3A2F0]) {
+          final theme = AppTheme.getTheme(isDark: isDark, colorValue: seed);
+          final background = AppContrast.primaryWithWhiteText(theme.colorScheme.primary);
+          expect(AppContrast.ratio(Colors.white, background), greaterThanOrEqualTo(4.5));
+          expect(theme.floatingActionButtonTheme.backgroundColor, background);
+          expect(theme.floatingActionButtonTheme.foregroundColor, Colors.white);
+        }
+      }
     });
 
     test('exposes AppSemanticColors via ThemeExtension', () {
@@ -31,6 +57,21 @@ void main() {
   });
 
   group('AppButton', () {
+    testWidgets('uses white text on a light custom primary color', (tester) async {
+      final theme = AppTheme.getTheme(isDark: true, colorValue: 0xFFB3A2F0);
+      await tester.pumpWidget(MaterialApp(
+        theme: theme,
+        home: Scaffold(body: AppButton(label: 'Salvar', onPressed: () {})),
+      ));
+
+      final button = tester.widget<ElevatedButton>(find.byType(ElevatedButton));
+      expect(button.style!.foregroundColor!.resolve({}), Colors.white);
+      expect(AppContrast.ratio(
+        Colors.white,
+        button.style!.backgroundColor!.resolve({})!,
+      ), greaterThanOrEqualTo(4.5));
+    });
+
     testWidgets('renders primary button and fires onPressed', (tester) async {
       bool pressed = false;
       await tester.pumpWidget(
@@ -143,6 +184,36 @@ void main() {
       expect(find.text('Ver tudo'), findsOneWidget);
       await tester.tap(find.text('Ver tudo'));
       expect(actionTapped, isTrue);
+    });
+
+    testWidgets('keeps the analysis action inline at dashboard card width', (tester) async {
+      tester.view.physicalSize = const Size(329, 500);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.resetPhysicalSize);
+
+      await tester.pumpWidget(
+        MaterialApp(
+          theme: AppTheme.darkTheme,
+          home: Scaffold(
+            body: AppSectionHeader(
+              title: 'Gastos Mensais',
+              subtitle: 'Últimos 4 meses',
+              keepActionInline: true,
+              action: TextButton(
+                onPressed: () {},
+                child: const Text('Ver análise', maxLines: 1, softWrap: false),
+              ),
+            ),
+          ),
+        ),
+      );
+
+      expect(tester.takeException(), isNull);
+      expect(find.text('Gastos Mensais'), findsOneWidget);
+      expect(find.text('Ver análise'), findsOneWidget);
+      final action = tester.getRect(find.text('Ver análise'));
+      final title = tester.getRect(find.text('Gastos Mensais'));
+      expect(action.center.dy, lessThan(title.bottom + 8));
     });
   });
 

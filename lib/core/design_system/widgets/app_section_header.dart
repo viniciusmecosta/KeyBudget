@@ -5,12 +5,14 @@ class AppSectionHeader extends StatelessWidget {
   final String title;
   final String? subtitle;
   final Widget? action;
+  final bool keepActionInline;
 
   const AppSectionHeader({
     super.key,
     required this.title,
     this.subtitle,
     this.action,
+    this.keepActionInline = false,
   });
 
   @override
@@ -21,7 +23,9 @@ class AppSectionHeader extends StatelessWidget {
       padding: const EdgeInsets.symmetric(vertical: AppSpacing.sm),
       child: LayoutBuilder(
         builder: (context, constraints) {
-          final isNarrow = constraints.maxWidth < 360;
+          final isNarrow =
+              constraints.maxWidth < 360 ||
+              MediaQuery.textScalerOf(context).scale(14) > 19;
 
           final titleWidget = Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -48,7 +52,7 @@ class AppSectionHeader extends StatelessWidget {
 
           if (action == null) return titleWidget;
 
-          if (isNarrow) {
+          if (isNarrow && !keepActionInline) {
             return Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               mainAxisSize: MainAxisSize.min,

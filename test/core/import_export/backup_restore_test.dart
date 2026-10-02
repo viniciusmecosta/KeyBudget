@@ -11,6 +11,7 @@ import 'package:key_budget/core/import_export/operation_journal.dart';
 import 'package:key_budget/core/import_export/raw_storage.dart';
 import 'package:key_budget/core/import_export/restore_service.dart';
 import 'package:key_budget/core/operations/session_context.dart';
+import 'package:key_budget/core/services/encryption_service.dart';
 import 'package:key_budget/core/time/app_clock.dart';
 
 import '../../fixtures/legacy/legacy_fixtures.dart';
@@ -71,6 +72,21 @@ class FakeSecureStorage extends Fake implements FlutterSecureStorage {
     WindowsOptions? wOptions,
   }) async =>
       Map.from(store);
+}
+
+class _CredentialCipher extends Fake implements EncryptionService {
+  final String prefix;
+
+  _CredentialCipher(this.prefix);
+
+  @override
+  String decryptData(String encryptedText) =>
+      encryptedText.startsWith('$prefix:')
+          ? encryptedText.substring(prefix.length + 1)
+          : 'ERRO_DECRIPT';
+
+  @override
+  String encryptData(String plainText) => '$prefix:$plainText';
 }
 
 void main() {
@@ -307,6 +323,47 @@ void main() {
         'email': 'contato@eletrica.com',
         'notes': 'Atendimento 24h',
       };
+    });
+
+    test('restores a legacy credential using the destination encryption key', () async {
+      sourceStorage.documents['users/$testUid/credentials/legacy'] = {
+        'id': 'legacy',
+        'location': 'example.org',
+        'login': 'user',
+        'encrypted_password': 'old-key:secret',
+      };
+      final backup = await BackupService(
+        rawReader: sourceStorage,
+        sessionContext: sessionContext,
+        clock: testClock,
+        encryptionService: _CredentialCipher('old-key'),
+      ).createBackup(password: backupPassword);
+      expect(backup.isSuccess, isTrue);
+      expect(backup.data?.completeness.isComplete, isTrue);
+
+      final restore = RestoreService(
+        rawReader: targetStorage,
+        rawWriter: targetStorage,
+        sessionContext: sessionContext,
+        encryptionService: _CredentialCipher('new-key'),
+        clock: testClock,
+        secureStorage: fakeSecureStorage,
+      );
+      final preview = await restore.previewRestore(
+        backupBytes: backup.data!.envelopeBytes,
+        password: backupPassword,
+      );
+      expect(preview.isSuccess, isTrue);
+      final result = await restore.executeRestore(
+        plan: preview.data!,
+        backupBytes: backup.data!.envelopeBytes,
+        password: backupPassword,
+      );
+      expect(result.isSuccess, isTrue);
+      expect(
+        targetStorage.documents['users/$testUid/credentials/legacy']?['encrypted_password'],
+        'new-key:secret',
+      );
     });
 
     test('Creates verifiable backup with self-verification', () async {

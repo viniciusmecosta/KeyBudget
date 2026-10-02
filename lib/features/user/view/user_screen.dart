@@ -3,7 +3,7 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:key_budget/app/utils/app_animations.dart';
+import 'package:key_budget/app/config/app_theme.dart';
 import 'package:key_budget/app/utils/navigation_utils.dart';
 import 'package:key_budget/app/widgets/responsive_center.dart';
 import 'package:key_budget/core/design_system/borders/app_borders.dart';
@@ -16,6 +16,8 @@ import 'package:key_budget/features/auth/viewmodel/auth_viewmodel.dart';
 import 'package:key_budget/features/category/view/categories_screen.dart';
 import 'package:key_budget/features/category/viewmodel/category_viewmodel.dart';
 import 'package:key_budget/features/credentials/viewmodel/credential_viewmodel.dart';
+import 'package:key_budget/features/dashboard/repository/dashboard_layout_repository.dart';
+import 'package:key_budget/features/dashboard/widgets/dashboard_layout_editor.dart';
 import 'package:key_budget/features/expenses/viewmodel/expense_viewmodel.dart';
 import 'package:key_budget/features/user/view/backup_restore_screen.dart';
 import 'package:key_budget/features/user/view/edit_user_screen.dart';
@@ -131,9 +133,14 @@ class UserScreen extends ConsumerWidget {
           );
         }
       }
+    } on DriveAuthorizationCancelled {
+      return;
     } catch (e) {
       if (context.mounted) {
-        SnackbarService.showError(context, 'Erro ao realizar backup: $e');
+        SnackbarService.showError(
+          context,
+          'Não foi possível concluir o backup. Tente novamente.',
+        );
       }
     }
   }
@@ -281,6 +288,8 @@ class UserScreen extends ConsumerWidget {
         borderRadius: AppBorders.borderRadiusVerticalXL,
       ),
       builder: (ctx) {
+        final sheetTheme = Theme.of(ctx);
+        final isDark = sheetTheme.brightness == Brightness.dark;
         return SafeArea(
           child: Padding(
             padding: const EdgeInsets.symmetric(
@@ -315,6 +324,12 @@ class UserScreen extends ConsumerWidget {
                   children: _themeColors.map((colorOption) {
                     final isSelected =
                         colorOption.colorValue == currentThemeColor;
+                    final previewColor = user?.themeColor == null && isSelected
+                        ? sheetTheme.colorScheme.primary
+                        : AppTheme.effectivePrimary(
+                            isDark: isDark,
+                            colorValue: colorOption.colorValue,
+                          );
                     return GestureDetector(
                       onTap: () async {
                         if (user != null) {
@@ -332,11 +347,11 @@ class UserScreen extends ConsumerWidget {
                             width: 50,
                             height: 50,
                             decoration: BoxDecoration(
-                              color: Color(colorOption.colorValue),
+                              color: previewColor,
                               shape: BoxShape.circle,
                               border: Border.all(
                                 color: isSelected
-                                    ? Theme.of(context).colorScheme.primary
+                                    ? sheetTheme.colorScheme.onSurface
                                     : Colors.transparent,
                                 width: 3,
                               ),
@@ -458,6 +473,19 @@ class UserScreen extends ConsumerWidget {
     );
   }
 
+  void _showDashboardLayoutEditor(
+    BuildContext context,
+    String userId,
+    DashboardLayout layout,
+  ) {
+    showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      showDragHandle: true,
+      builder: (_) => DashboardLayoutEditor(userId: userId, initial: layout),
+    );
+  }
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
@@ -471,6 +499,10 @@ class UserScreen extends ConsumerWidget {
           builder: (context, ref, _) {
             final authViewModel = ref.watch(authViewModelProvider);
             final user = authViewModel.currentUser;
+            final layoutState = user == null
+                ? null
+                : ref.watch(dashboardLayoutProvider(user.id));
+            final dashboardLayout = layoutState?.asData?.value;
             final avatarPath = user?.avatarPath;
             ImageProvider? imageProvider;
 
@@ -528,8 +560,7 @@ class UserScreen extends ConsumerWidget {
               );
             }
 
-            return AppAnimations.fadeInFromBottom(
-              ResponsiveCenter(
+            return ResponsiveCenter(
                 child: ListView(
                   padding: const EdgeInsets.all(AppSpacing.md),
                   children: [
@@ -616,6 +647,36 @@ class UserScreen extends ConsumerWidget {
                         ),
                         onTap: () => _showDisplayModeSheet(context, ref),
                       ),
+                      const Divider(height: 1, indent: 56, endIndent: 16),
+                      SettingsTile(
+                        icon: Icons.dashboard_customize_outlined,
+                        title: 'Personalizar painel',
+                        subtitle: 'Escolha e ordene cartões e atalhos',
+                        onTap: user == null
+                            ? null
+                            : () {
+                                if (dashboardLayout != null) {
+                                  _showDashboardLayoutEditor(
+                                    context,
+                                    user.id,
+                                    dashboardLayout,
+                                  );
+                                } else if (layoutState?.hasError == true) {
+                                  ref.invalidate(
+                                    dashboardLayoutProvider(user.id),
+                                  );
+                                  SnackbarService.showError(
+                                    context,
+                                    'Não foi possível carregar o painel. Tentando novamente.',
+                                  );
+                                } else {
+                                  SnackbarService.showInfo(
+                                    context,
+                                    'Carregando as opções do painel.',
+                                  );
+                                }
+                              },
+                      ),
                     ]),
                     buildSection('Recursos', [
                       SettingsSwitchTile(
@@ -696,8 +757,8 @@ class UserScreen extends ConsumerWidget {
                     buildSection('Dados e recuperação', [
                       SettingsTile(
                         icon: Icons.shield_outlined,
-                        title: 'Backup e Restauração (.kbudget)',
-                        subtitle: 'Cópia criptografada, completa e verificável',
+                        title: 'Backup',
+                        subtitle: 'Criar, agendar e restaurar cópias',
                         onTap: () {
                           NavigationUtils.push(
                             context,
@@ -708,8 +769,8 @@ class UserScreen extends ConsumerWidget {
                       const Divider(height: 1, indent: 56, endIndent: 16),
                       SettingsTile(
                         icon: Icons.cloud_upload_outlined,
-                        title: 'Exportação CSV (Legado)',
-                        subtitle: 'Exportar dados para planilhas CSV',
+                        title: 'Exportar planilhas CSV',
+                        subtitle: 'Exportação separada do backup criptografado',
                         onTap: () => _showBackupDialog(context, ref),
                       ),
                     ]),
@@ -771,7 +832,6 @@ class UserScreen extends ConsumerWidget {
                     const SizedBox(height: AppSpacing.xxl),
                   ],
                 ),
-              ),
             );
           },
         ),

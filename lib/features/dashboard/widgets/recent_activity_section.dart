@@ -8,6 +8,7 @@ import 'package:key_budget/app/widgets/activity_tile_widget.dart';
 import 'package:key_budget/core/design_system/spacing/app_spacing.dart';
 import 'package:key_budget/core/design_system/widgets/app_button.dart';
 import 'package:key_budget/core/design_system/widgets/app_card.dart';
+import 'package:key_budget/core/design_system/widgets/app_section_header.dart';
 import 'package:key_budget/features/auth/viewmodel/auth_viewmodel.dart';
 import 'package:key_budget/features/dashboard/viewmodel/dashboard_viewmodel.dart';
 import 'package:key_budget/features/expenses/view/add_expense_screen.dart';
@@ -41,6 +42,8 @@ class RecentActivitySection extends ConsumerWidget {
               return AppAnimations.listFadeIn(
                 ActivityTile(expense: recentExpenses[index], index: index),
                 index: index,
+
+                context: context,
               );
             },
           ),
@@ -53,51 +56,17 @@ class RecentActivitySection extends ConsumerWidget {
     WidgetRef ref,
     String title,
   ) {
-    final theme = Theme.of(context);
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      crossAxisAlignment: CrossAxisAlignment.center,
-      children: [
-        Expanded(
-          child: Text(
-            title,
-            style: theme.textTheme.titleLarge,
-            overflow: TextOverflow.ellipsis,
-          ),
-        ),
-        TextButton(
-          onPressed: () {
-            ref
-                .read(navigationViewModelProvider)
-                .navigateTo(AppDestination.expenses);
-          },
-          style: TextButton.styleFrom(
-            padding: const EdgeInsets.symmetric(
-              horizontal: AppSpacing.md,
-              vertical: AppSpacing.sm,
-            ),
-          ),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text(
-                'Ver todas',
-                style: TextStyle(
-                  color: theme.colorScheme.primary,
-                  fontWeight: FontWeight.w600,
-                  fontSize: 14,
-                ),
-              ),
-              const SizedBox(width: AppSpacing.xs),
-              Icon(
-                Icons.arrow_forward_ios_rounded,
-                color: theme.colorScheme.primary,
-                size: 14,
-              ),
-            ],
-          ),
-        ),
-      ],
+    return AppSectionHeader(
+      title: title,
+      action: TextButton.icon(
+        onPressed: () {
+          ref
+              .read(navigationViewModelProvider)
+              .navigateTo(AppDestination.expenses);
+        },
+        label: const Text('Ver todas'),
+        icon: const Icon(Icons.arrow_forward_ios_rounded, size: 14),
+      ),
     );
   }
 

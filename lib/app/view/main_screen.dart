@@ -1,5 +1,9 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:key_budget/core/import_export/automatic_backup_service.dart';
+import 'package:key_budget/core/services/app_lock_service.dart';
 import 'package:key_budget/app/navigation/app_destination.dart';
 import 'package:key_budget/app/viewmodel/navigation_viewmodel.dart';
 import 'package:key_budget/app/widgets/main_bottom_navigation_bar.dart';
@@ -22,7 +26,34 @@ class MainScreen extends ConsumerStatefulWidget {
 
 class _MainScreenState extends ConsumerState<MainScreen> {
   final Set<AppDestination> _loadedDestinations = {};
+  late final AutomaticBackupService _automaticBackupService;
+  Timer? _automaticBackupTimer;
   String? _lastUserId;
+
+  @override
+  void initState() {
+    super.initState();
+    _automaticBackupService = AutomaticBackupService(
+      currentUserId: () => ref.read(authViewModelProvider).currentUser?.id,
+    );
+    WidgetsBinding.instance.addPostFrameCallback((_) => _runAutomaticBackup());
+    _automaticBackupTimer = Timer.periodic(
+      const Duration(hours: 1),
+      (_) => _runAutomaticBackup(),
+    );
+  }
+
+  void _runAutomaticBackup() {
+    if (!mounted || ref.read(appLockServiceProvider).isLocked) return;
+    final userId = ref.read(authViewModelProvider).currentUser?.id;
+    if (userId != null) _automaticBackupService.runIfDue(userId);
+  }
+
+  @override
+  void dispose() {
+    _automaticBackupTimer?.cancel();
+    super.dispose();
+  }
 
   Widget _buildDestinationWidget(AppDestination destination) {
     switch (destination) {
@@ -54,9 +85,6 @@ class _MainScreenState extends ConsumerState<MainScreen> {
     }
 
     final currentDestination = navigationViewModel.currentDestination;
-    final hasVisitedCurrentDestination = _loadedDestinations.contains(
-      currentDestination,
-    );
     _loadedDestinations.add(currentDestination);
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -68,49 +96,47 @@ class _MainScreenState extends ConsumerState<MainScreen> {
     );
 
     final activeIndex = availableDestinations.indexOf(currentDestination);
-    final safeIndex = activeIndex >= 0 ? activeIndex : 0;
+    final navigationIndex = activeIndex >= 0 ? activeIndex : 0;
+    final stackIndex = currentDestination == AppDestination.suppliers &&
+            !enableSuppliers
+        ? 0
+        : AppDestination.values.indexOf(currentDestination);
 
     final theme = Theme.of(context);
     final screenWidth = MediaQuery.of(context).size.width;
     final isCompact = screenWidth < 600;
     final isMedium = screenWidth >= 600 && screenWidth < 840;
     final isExpanded = screenWidth >= 840;
+    final contentMaxWidth = isCompact
+        ? screenWidth
+        : (isMedium ? 800.0 : 1200.0);
 
     final stack = KeyedSubtree(
       key: ValueKey('main_stack_$currentUserId'),
       child: TabSelectionTransition(
         revision: navigationViewModel.selectionRevision,
-        enabled: hasVisitedCurrentDestination,
         child: IndexedStack(
-          index: safeIndex,
-          children: availableDestinations.map((dest) {
+          index: stackIndex,
+          children: AppDestination.values.map((dest) {
             final isSelected = dest == currentDestination;
             final isLoaded = _loadedDestinations.contains(dest);
             final child = isLoaded ? _buildDestinationWidget(dest) : const SizedBox.shrink();
             return TickerMode(
+              key: ValueKey(dest),
               enabled: isSelected,
-              child: isExpanded
-                  ? ResponsiveCenter(maxWidth: 1200, child: child)
-                  : (isMedium ? ResponsiveCenter(maxWidth: 800, child: child) : child),
+              child: ResponsiveCenter(maxWidth: contentMaxWidth, child: child),
             );
           }).toList(),
         ),
       ),
     );
 
-    if (isCompact) {
-      return Scaffold(
-        body: stack,
-        bottomNavigationBar: const MainBottomNavigationBar(),
-      );
-    }
-
     return Scaffold(
       body: Row(
         children: [
-          NavigationRail(
+          if (!isCompact) NavigationRail(
             backgroundColor: theme.colorScheme.surface,
-            selectedIndex: safeIndex,
+            selectedIndex: navigationIndex,
             onDestinationSelected: (int index) {
               if (index >= 0 && index < availableDestinations.length) {
                 navigationViewModel.navigateTo(availableDestinations[index]);
@@ -140,7 +166,7 @@ class _MainScreenState extends ConsumerState<MainScreen> {
               );
             }).toList(),
           ),
-          VerticalDivider(
+          if (!isCompact) VerticalDivider(
             thickness: 1,
             width: 1,
             color: theme.dividerTheme.color,
@@ -148,6 +174,9 @@ class _MainScreenState extends ConsumerState<MainScreen> {
           Expanded(child: stack),
         ],
       ),
+      bottomNavigationBar: isCompact
+          ? const MainBottomNavigationBar()
+          : null,
     );
   }
 }

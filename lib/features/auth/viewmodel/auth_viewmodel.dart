@@ -145,15 +145,19 @@ class AuthViewModel extends ChangeNotifier {
     notifyListeners();
 
     try {
-      await _authRepository.signUpWithEmail(
+      final profile = await _authRepository.signUpWithEmail(
         name: name,
         email: email.trim(),
         password: password,
         phoneNumber: phoneNumber,
         avatarPath: avatarPath,
       );
+      _currentUser = profile;
       _justAuthenticated = true;
       return true;
+    } on ProfileSetupException {
+      _setErrorMessage('A conta foi criada, mas o perfil ainda não foi salvo. Tente concluir o cadastro novamente.');
+      return false;
     } on firebase.FirebaseAuthException catch (e) {
       _setErrorMessage(_mapAuthError(e.code));
       return false;
@@ -180,6 +184,12 @@ class AuthViewModel extends ChangeNotifier {
         email.trim(),
         password,
       );
+      final profile = await _authRepository.getUserProfile(credential.user!.uid);
+      if (profile == null) {
+        _setErrorMessage('Seu cadastro está pendente. Abra Cadastro e preencha seus dados para concluir.');
+        return false;
+      }
+      _currentUser = profile;
       await _authRepository.ensureCategoriesExist(credential.user!.uid);
       _justAuthenticated = true;
       return true;

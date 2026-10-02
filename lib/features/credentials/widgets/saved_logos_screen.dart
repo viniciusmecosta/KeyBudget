@@ -120,7 +120,8 @@ class SavedLogosScreen extends ConsumerWidget {
                   );
                 },
               ),
-      ),
+
+        context: context,),
     );
   }
 }

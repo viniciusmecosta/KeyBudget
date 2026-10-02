@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:isolate';
 import 'dart:io';
 import 'dart:typed_data';
 
@@ -85,7 +86,8 @@ class BackupService {
     final conflict = _detectReadDrift(read1, read2);
     if (conflict != null) {
       return OperationResult.conflict(
-        message: 'Detectada alteração concorrente durante a captura de dados. Tente novamente.',
+        message:
+            'Detectada alteração concorrente durante a captura de dados. Tente novamente.',
         affectedIds: conflict,
       );
     }
@@ -118,11 +120,7 @@ class BackupService {
       }
 
       credentialRecords.add(
-        BackupRecord(
-          id: id,
-          data: raw,
-          portablePassword: portablePass,
-        ),
+        BackupRecord(id: id, data: raw, portablePassword: portablePass),
       );
     }
 
@@ -140,12 +138,15 @@ class BackupService {
           final type = att['type']?.toString() ?? 'application/octet-stream';
 
           if (driveId != null && driveId.isNotEmpty) {
-            final internalId = 'att_${sha256.convert(utf8.encode(driveId)).toString().substring(0, 12)}';
+            final internalId =
+                'att_${sha256.convert(utf8.encode(driveId)).toString().substring(0, 12)}';
             if (!attachmentFiles.containsKey(internalId)) {
               List<int>? bytes;
               if (driveService != null) {
                 try {
                   bytes = await driveService!.downloadFile(driveId);
+                } on DriveAuthorizationCancelled {
+                  rethrow;
                 } catch (_) {
                   bytes = null;
                 }
@@ -165,7 +166,9 @@ class BackupService {
                   ),
                 );
               } else {
-                missingAttachments.add('Documento "${doc['documentName'] ?? doc['id']}": $name');
+                missingAttachments.add(
+                  'Documento "${doc['documentName'] ?? doc['id']}": $name',
+                );
               }
             }
           }
@@ -188,7 +191,10 @@ class BackupService {
         hashes[filePath] = sha256.convert(bytes).toString();
       } else {
         final recordsList = (capturedData[mod] ?? [])
-            .map((raw) => BackupRecord(id: (raw['id'] ?? '').toString(), data: raw))
+            .map(
+              (raw) =>
+                  BackupRecord(id: (raw['id'] ?? '').toString(), data: raw),
+            )
             .toList();
         final jsonStr = BackupCodec.encodeRecords(recordsList);
         final bytes = utf8.encode(jsonStr);
@@ -204,7 +210,8 @@ class BackupService {
       hashes[entry.key] = sha256.convert(entry.value).toString();
     }
 
-    final isComplete = missingAttachments.isEmpty && undecryptableCredentials.isEmpty;
+    final isComplete =
+        missingAttachments.isEmpty && undecryptableCredentials.isEmpty;
     final completeness = BackupCompleteness(
       isComplete: isComplete,
       missingAttachments: missingAttachments,
@@ -212,7 +219,8 @@ class BackupService {
       warnings: warnings,
     );
 
-    final backupId = 'bkp_${clock.now().millisecondsSinceEpoch}_${uid.substring(0, uid.length.clamp(0, 6))}';
+    final backupId =
+        'bkp_${clock.now().millisecondsSinceEpoch}_${uid.substring(0, uid.length.clamp(0, 6))}';
     final manifest = BackupManifest(
       formatVersion: 1,
       appVersion: '1.1.2',
@@ -229,42 +237,19 @@ class BackupService {
     final manifestBytes = utf8.encode(manifest.toJsonString());
     filesToPack['manifest.json'] = manifestBytes;
 
-    onProgress?.call('Criptografando pacote com AES-256-GCM...', 0.75);
-    final zipBytes = BackupCrypto.packArchive(filesToPack);
-    final envelopeBytes = BackupCrypto.encryptEnvelope(
-      payload: zipBytes,
-      password: password,
-    );
-
-    onProgress?.call('Realizando auto-verificação de integridade...', 0.9);
+    onProgress?.call('Criptografando e verificando o pacote...', 0.75);
+    final Uint8List envelopeBytes;
     try {
-      final decryptedZip = BackupCrypto.decryptEnvelope(
-        envelope: envelopeBytes,
-        password: password,
+      envelopeBytes = await Isolate.run(
+        () => _buildVerifiedEnvelope(filesToPack, password),
       );
-      final unpacked = BackupCrypto.unpackArchive(decryptedZip);
-      if (!unpacked.containsKey('manifest.json')) {
-        throw const BackupCryptoException('Auto-verificação falhou: manifesto ausente.');
-      }
-      final verifiedManifest = BackupManifest.fromJsonString(
-        utf8.decode(unpacked['manifest.json']!),
-      );
-
-      for (final hashEntry in verifiedManifest.hashes.entries) {
-        final content = unpacked[hashEntry.key];
-        if (content == null) {
-          throw BackupCryptoException('Arquivo verificado ausente: ${hashEntry.key}');
-        }
-        final calculated = sha256.convert(content).toString();
-        if (calculated != hashEntry.value) {
-          throw BackupCryptoException('Hash divergente em ${hashEntry.key}');
-        }
-      }
-    } catch (e) {
+    } catch (_) {
       return OperationResult.failed(
-        safeError: 'Falha na auto-verificação de integridade do backup gerado: $e',
+        safeError:
+            'Não foi possível verificar o backup gerado. Tente criar outro backup.',
       );
     }
+    onProgress?.call('Integridade verificada.', 0.9);
 
     File? savedFile;
     try {
@@ -272,9 +257,7 @@ class BackupService {
       final filePath = '${tempDir.path}/backup_$backupId.kbudget';
       savedFile = File(filePath);
       await savedFile.writeAsBytes(envelopeBytes, flush: true);
-    } catch (_) {
-
-    }
+    } catch (_) {}
 
     onProgress?.call('Backup concluído com sucesso!', 1.0);
 
@@ -293,7 +276,8 @@ class BackupService {
 
   List<String> _expandDependencies(List<String> selected) {
     final modules = selected.toSet();
-    if (modules.contains('expenses') || modules.contains('recurring_expenses')) {
+    if (modules.contains('expenses') ||
+        modules.contains('recurring_expenses')) {
       modules.add('categories');
     }
     if (modules.contains('recurring_expenses')) {
@@ -357,4 +341,30 @@ class BackupService {
 
     return conflictingIds.isNotEmpty ? conflictingIds : null;
   }
+}
+
+Uint8List _buildVerifiedEnvelope(
+  Map<String, List<int>> files,
+  String password,
+) {
+  final zipBytes = BackupCrypto.packArchive(files);
+  final envelope = BackupCrypto.encryptEnvelope(
+    payload: zipBytes,
+    password: password,
+  );
+  final unpacked = BackupCrypto.unpackArchive(
+    BackupCrypto.decryptEnvelope(envelope: envelope, password: password),
+  );
+  final manifestBytes = unpacked['manifest.json'];
+  if (manifestBytes == null) {
+    throw const BackupCryptoException('Manifesto ausente.');
+  }
+  final manifest = BackupManifest.fromJsonString(utf8.decode(manifestBytes));
+  for (final entry in manifest.hashes.entries) {
+    final content = unpacked[entry.key];
+    if (content == null || sha256.convert(content).toString() != entry.value) {
+      throw BackupCryptoException('Arquivo inválido: ${entry.key}');
+    }
+  }
+  return envelope;
 }

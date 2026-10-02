@@ -46,6 +46,17 @@ class _AddDocumentScreenState extends ConsumerState<AddDocumentScreen> {
     );
   }
 
+  @override
+  void dispose() {
+    _nameController.dispose();
+    _numberController.dispose();
+    _issueDate.dispose();
+    _expiryDate.dispose();
+    _additionalFields.dispose();
+    _attachments.dispose();
+    super.dispose();
+  }
+
   void _submit() async {
     if (!_formKey.currentState!.validate()) return;
     HapticFeedback.mediumImpact();
@@ -87,6 +98,7 @@ class _AddDocumentScreenState extends ConsumerState<AddDocumentScreen> {
           );
         }
         if (!mounted) return;
+        _hasUnsavedChanges = false;
         Navigator.of(context).pop();
       } else {
         SnackbarService.showError(
@@ -125,6 +137,7 @@ class _AddDocumentScreenState extends ConsumerState<AddDocumentScreen> {
         );
         if (shouldPop ?? false) {
           if (context.mounted) {
+            setState(() => _hasUnsavedChanges = false);
             Navigator.of(context).pop(result);
           }
         }
@@ -168,7 +181,8 @@ class _AddDocumentScreenState extends ConsumerState<AddDocumentScreen> {
             ],
           ),
         ),
-      ),
+
+        context: context,),
     ),
     );
   }

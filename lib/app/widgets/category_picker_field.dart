@@ -82,13 +82,12 @@ class CategoryPickerField extends ConsumerWidget {
           maxChildSize: 0.9,
           expand: false,
           builder: (_, controller) {
-            return Container(
-              decoration: BoxDecoration(
-                color: theme.cardColor,
-                borderRadius: const BorderRadius.vertical(
-                  top: Radius.circular(24),
-                ),
+            return Material(
+              color: theme.cardColor,
+              borderRadius: const BorderRadius.vertical(
+                top: Radius.circular(24),
               ),
+              clipBehavior: Clip.antiAlias,
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [

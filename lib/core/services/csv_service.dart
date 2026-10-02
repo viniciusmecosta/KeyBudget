@@ -183,12 +183,12 @@ class CsvService {
       );
       await SharePlus.instance.share(params);
       return true;
-    } catch (e) {
+    } catch (_) {
       if (!context.mounted) return false;
       SnackbarService.showError(
         context,
-        'Failed to save file: $e',
-        title: 'Error Exporting CSV',
+        'Não foi possível exportar o arquivo CSV. Tente novamente.',
+        title: 'Falha na exportação',
       );
       return false;
     }

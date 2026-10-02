@@ -6,7 +6,7 @@ import 'package:key_budget/app/utils/app_animations.dart';
 import 'package:key_budget/app/viewmodel/navigation_viewmodel.dart';
 import 'package:key_budget/app/widgets/balance_card.dart';
 import 'package:key_budget/core/design_system/borders/app_borders.dart';
-import 'package:key_budget/core/design_system/colors/app_colors.dart';
+import 'package:key_budget/core/design_system/colors/app_contrast.dart';
 import 'package:key_budget/core/design_system/spacing/app_spacing.dart';
 import 'package:key_budget/features/auth/viewmodel/auth_viewmodel.dart';
 import 'package:key_budget/features/dashboard/viewmodel/dashboard_viewmodel.dart';
@@ -71,6 +71,7 @@ class _DashboardBalanceCardState extends ConsumerState<DashboardBalanceCard>
   Widget build(BuildContext context) {
     final viewModel = ref.watch(dashboardViewModelProvider);
     final theme = Theme.of(context);
+    const cardTextColor = Colors.white;
     final authViewModel = ref.watch(authViewModelProvider);
     final enableIncomes = authViewModel.currentUser?.enableIncomes ?? false;
 
@@ -169,9 +170,7 @@ class _DashboardBalanceCardState extends ConsumerState<DashboardBalanceCard>
                       ? 'em relação à média anterior'
                       : 'em relação à média anterior de gastos',
                   style: theme.textTheme.bodySmall?.copyWith(
-                    color: theme.colorScheme.onPrimary.withAlpha(
-                      (255 * 0.8).round(),
-                    ),
+                    color: cardTextColor.withAlpha((255 * 0.88).round()),
                     fontSize: 11,
                   ),
                 ),
@@ -181,9 +180,7 @@ class _DashboardBalanceCardState extends ConsumerState<DashboardBalanceCard>
         : Text(
             'Sem histórico anterior para comparação',
             style: theme.textTheme.bodySmall?.copyWith(
-              color: theme.colorScheme.onPrimary.withAlpha(
-                (255 * 0.75).round(),
-              ),
+              color: cardTextColor.withAlpha((255 * 0.88).round()),
               fontSize: 11,
             ),
           );
@@ -200,22 +197,17 @@ class _DashboardBalanceCardState extends ConsumerState<DashboardBalanceCard>
         final isGreenish = primaryHue >= 70 && primaryHue <= 160;
         final isReddish = primaryHue >= 330 || primaryHue <= 20;
         final incomeIconColor = isGreenish
-            ? theme.colorScheme.onPrimary
+            ? cardTextColor
             : Colors.greenAccent[400]!;
         final expenseIconColor = isReddish
-            ? theme.colorScheme.onPrimary
+            ? cardTextColor
             : theme.colorScheme.error;
-
         return BalanceCard(
           title: enableIncomes ? 'Saldo do período' : 'Despesas do mês',
           totalValue: _animation.value,
-          gradient: LinearGradient(
-            colors: [
-              theme.colorScheme.primary,
-              AppColors.getGradientSecondaryColor(theme.colorScheme.primary),
-            ],
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
+          foregroundColor: cardTextColor,
+          backgroundColor: AppContrast.primaryWithWhiteText(
+            theme.colorScheme.primary,
           ),
           onTap: () {
             ref
@@ -242,7 +234,7 @@ class _DashboardBalanceCardState extends ConsumerState<DashboardBalanceCard>
                           Text(
                             'Receitas: ${currencyFormatter.format(viewModel.totalIncomeForMonth)}',
                             style: theme.textTheme.bodyMedium?.copyWith(
-                              color: theme.colorScheme.onPrimary,
+                              color: cardTextColor,
                               fontWeight: FontWeight.w600,
                             ),
                           ),
@@ -260,7 +252,7 @@ class _DashboardBalanceCardState extends ConsumerState<DashboardBalanceCard>
                           Text(
                             'Despesas: ${currencyFormatter.format(viewModel.totalAmountForMonth)}',
                             style: theme.textTheme.bodyMedium?.copyWith(
-                              color: theme.colorScheme.onPrimary,
+                              color: cardTextColor,
                               fontWeight: FontWeight.w600,
                             ),
                           ),

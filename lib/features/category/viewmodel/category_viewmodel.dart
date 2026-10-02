@@ -5,14 +5,19 @@ import 'package:key_budget/core/utils/string_extensions.dart';
 import 'package:key_budget/features/category/repository/category_repository.dart';
 
 class CategoryViewModel extends ChangeNotifier {
-  final CategoryRepository _repository = CategoryRepository();
+  final CategoryRepository _repository;
+
+  CategoryViewModel({CategoryRepository? repository})
+    : _repository = repository ?? CategoryRepository();
 
   List<ExpenseCategory> _categories = [];
   bool _isLoading = false;
+  String? _errorMessage;
 
   List<ExpenseCategory> get categories => _categories;
 
   bool get isLoading => _isLoading;
+  String? get errorMessage => _errorMessage;
 
   void _setLoading(bool value) {
     _isLoading = value;
@@ -21,9 +26,19 @@ class CategoryViewModel extends ChangeNotifier {
 
   Future<void> fetchCategories(String userId) async {
     _setLoading(true);
-    _categories = await _repository.getCategoriesForUser(userId);
-    _categories.sort((a, b) => a.name.withoutDiacritics.toLowerCase().compareTo(b.name.withoutDiacritics.toLowerCase()));
-    _setLoading(false);
+    _errorMessage = null;
+    try {
+      _categories = await _repository.getCategoriesForUser(userId);
+      _categories.sort(
+        (a, b) => a.name.withoutDiacritics.toLowerCase().compareTo(
+          b.name.withoutDiacritics.toLowerCase(),
+        ),
+      );
+    } catch (_) {
+      _errorMessage = 'Não foi possível carregar as categorias.';
+    } finally {
+      _setLoading(false);
+    }
   }
 
   Future<void> addCategory(String userId, ExpenseCategory category) async {
@@ -57,6 +72,7 @@ class CategoryViewModel extends ChangeNotifier {
 
   void clearData() {
     _categories = [];
+    _errorMessage = null;
     notifyListeners();
   }
 }

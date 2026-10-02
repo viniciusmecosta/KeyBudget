@@ -7,20 +7,17 @@ import 'package:key_budget/core/models/expense_model.dart';
 import 'package:key_budget/core/models/recurring_expense_model.dart';
 import 'package:key_budget/core/services/csv_service.dart';
 import 'package:key_budget/core/services/data_import_service.dart';
-import 'package:key_budget/core/services/notification_service.dart';
 import 'package:key_budget/core/services/pdf_service.dart';
-import 'package:key_budget/core/services/snackbar_service.dart';
 import 'package:key_budget/features/analysis/viewmodel/analysis_viewmodel.dart';
 import 'package:key_budget/features/category/viewmodel/category_viewmodel.dart';
 import 'package:key_budget/core/money/money.dart';
 import 'package:key_budget/core/operations/operation_result.dart';
 import 'package:key_budget/core/time/app_clock.dart';
-import 'package:key_budget/core/time/date_range.dart';
 import 'package:key_budget/features/credentials/repository/credential_repository.dart';
 import 'package:key_budget/features/expenses/domain/installment_calculator.dart';
-import 'package:key_budget/core/import_export/csv_import_parser.dart';
-import 'package:key_budget/core/import_export/import_preview_screen.dart';
 import 'package:key_budget/core/import_export/import_service.dart';
+import 'package:key_budget/features/expenses/application/expense_transfer_service.dart';
+import 'package:key_budget/features/expenses/application/recurrence_generation_coordinator.dart';
 import 'package:key_budget/features/expenses/application/recurrence_deletion_service.dart';
 import 'package:key_budget/features/expenses/application/recurrence_committer.dart';
 import 'package:key_budget/features/expenses/application/recurrence_service.dart';
@@ -28,6 +25,8 @@ import 'package:key_budget/features/expenses/domain/recurrence_occurrence.dart';
 import 'package:key_budget/features/expenses/repository/expense_repository.dart';
 import 'package:key_budget/features/expenses/repository/recurrence_occurrence_repository.dart';
 import 'package:key_budget/features/expenses/repository/recurring_expense_repository.dart';
+
+enum ExpenseSyncStatus { loading, cached, pending, synced, failed }
 
 class ExpenseViewModel extends ChangeNotifier {
   final ExpenseRepository _repository;
@@ -40,6 +39,8 @@ class ExpenseViewModel extends ChangeNotifier {
   final PdfService _pdfService;
   final DataImportService _dataImportService;
   final AppClock _clock;
+  late final ExpenseTransferService _transferService;
+  late final RecurrenceGenerationCoordinator _generationCoordinator;
 
   ExpenseViewModel({
     ExpenseRepository? repository,
@@ -89,6 +90,16 @@ class ExpenseViewModel extends ChangeNotifier {
        _pdfService = pdfService ?? PdfService(),
        _dataImportService = dataImportService ?? DataImportService(),
        _clock = clock ?? const SystemAppClock() {
+    _transferService = ExpenseTransferService(
+      importService: _importService,
+      csvService: _csvService,
+      pdfService: _pdfService,
+      dataImportService: _dataImportService,
+      expenseRepository: _repository,
+    );
+    _generationCoordinator = RecurrenceGenerationCoordinator(
+      recurrenceService: _recurrenceService,
+    );
     final now = _clock.now();
     _selectedMonth = DateTime(now.year, now.month);
   }
@@ -108,6 +119,10 @@ class ExpenseViewModel extends ChangeNotifier {
   StreamSubscription? _expensesSubscription;
   StreamSubscription? _recurringExpensesSubscription;
   bool _isListening = false;
+  String? _activeUserId;
+  String? _loadErrorMessage;
+  ExpenseSyncStatus _syncStatus = ExpenseSyncStatus.loading;
+  DateTime? _lastServerConfirmation;
   bool _enableIncomes = false;
 
   @Deprecated('UI animation state belongs to presentation layer')
@@ -126,6 +141,9 @@ class ExpenseViewModel extends ChangeNotifier {
   List<RecurringExpense> get recurringExpenses => _recurringExpenses;
 
   bool get isLoading => _isLoading;
+  String? get loadErrorMessage => _loadErrorMessage;
+  ExpenseSyncStatus get syncStatus => _syncStatus;
+  DateTime? get lastServerConfirmation => _lastServerConfirmation;
 
   bool get isExportingCsv => _isExportingCsv;
 
@@ -306,28 +324,76 @@ class ExpenseViewModel extends ChangeNotifier {
   }
 
   void listenToExpenses(String userId) {
-    if (_isListening) return;
+    if (_isListening && _activeUserId == userId) return;
+    if (_activeUserId != null && _activeUserId != userId) {
+      _allExpenses = [];
+      _currentDisplayItems = [];
+      _recurringExpenses = [];
+      _lastServerConfirmation = null;
+      notifyListeners();
+    }
+    _activeUserId = userId;
     if (!_isLoading) _setLoading(true);
+    _loadErrorMessage = null;
+    _syncStatus = ExpenseSyncStatus.loading;
 
     _expensesSubscription?.cancel();
-    _expensesSubscription = _repository.getExpensesStreamForUser(userId).listen(
-      (newExpenses) {
-        _allExpenses = newExpenses;
-        _updateDisplayList(animate: true);
-        if (_isLoading) _setLoading(false);
-      },
-    );
+    _expensesSubscription = _repository
+        .getExpensesWithMetadataStream(userId)
+        .listen(
+          (snapshot) {
+            _allExpenses = snapshot.expenses;
+            _syncStatus = snapshot.hasPendingWrites
+                ? ExpenseSyncStatus.pending
+                : snapshot.isFromCache
+                ? ExpenseSyncStatus.cached
+                : ExpenseSyncStatus.synced;
+            if (_syncStatus == ExpenseSyncStatus.synced) {
+              _lastServerConfirmation = _clock.now();
+            }
+            _loadErrorMessage = null;
+            _updateDisplayList(animate: true);
+            if (_isLoading) _setLoading(false);
+          },
+          onError: (Object error) {
+            _syncStatus = ExpenseSyncStatus.failed;
+            _loadErrorMessage =
+                'Não foi possível carregar os lançamentos. Confira sua conexão e tente novamente.';
+            _isListening = false;
+            _setLoading(false);
+          },
+        );
 
     _recurringExpensesSubscription?.cancel();
     _recurringExpensesSubscription = _recurringRepository
         .getRecurringExpensesStream(userId)
-        .listen((recurring) {
-          _recurringExpenses = recurring;
-          checkAndCreateRecurringInstances(userId);
-          notifyListeners();
-        });
+        .listen(
+          (recurring) {
+            _recurringExpenses = recurring;
+            checkAndCreateRecurringInstances(userId);
+            notifyListeners();
+          },
+          onError: (Object error) {
+            _loadErrorMessage =
+                'Não foi possível carregar as recorrências. Confira sua conexão e tente novamente.';
+            _isListening = false;
+            _setLoading(false);
+          },
+        );
 
     _isListening = true;
+  }
+
+  Future<void> retryListenToExpenses(String userId) async {
+    await Future.wait([
+      _expensesSubscription?.cancel() ?? Future<void>.value(),
+      _recurringExpensesSubscription?.cancel() ?? Future<void>.value(),
+    ]);
+    _expensesSubscription = null;
+    _recurringExpensesSubscription = null;
+    _isListening = false;
+    _activeUserId = null;
+    listenToExpenses(userId);
   }
 
   void _updateDisplayList({bool animate = true}) {
@@ -414,7 +480,7 @@ class ExpenseViewModel extends ChangeNotifier {
       );
     } catch (e) {
       return OperationResult.failed(
-        safeError: 'Falha ao gerar parcelas: ${e.toString()}',
+        safeError: 'Não foi possível gerar as parcelas. Tente novamente.',
       );
     }
   }
@@ -483,7 +549,12 @@ class ExpenseViewModel extends ChangeNotifier {
     String userId,
     RecurringExpense expense,
   ) async {
-    await _recurringRepository.updateRecurringExpense(userId, expense);
+    await _recurringRepository.updateRecurringExpense(
+      userId,
+      expense.copyWith(
+        generationRevision: (expense.generationRevision ?? 0) + 1,
+      ),
+    );
   }
 
   Future<RecurringDeleteSnapshot?> deleteRecurringExpense(
@@ -537,27 +608,8 @@ class ExpenseViewModel extends ChangeNotifier {
     await _recurringRepository.restoreRecurringExpense(userId, expense);
   }
 
-  bool _isGeneratingRecurring = false;
-
   Future<void> checkAndCreateRecurringInstances(String userId) async {
-    if (_isGeneratingRecurring) return;
-    _isGeneratingRecurring = true;
-
-    try {
-      final result = await _recurrenceService.generatePendingOccurrences(
-        userId,
-        rulesToProcess: _recurringExpenses,
-      );
-
-      if (result.isSuccess) {
-        await NotificationService.reconciler.reconcile(
-          uid: userId,
-          activeRules: _recurringExpenses,
-        );
-      }
-    } finally {
-      _isGeneratingRecurring = false;
-    }
+    await _generationCoordinator.synchronize(userId, _recurringExpenses);
   }
 
   Future<bool> exportExpensesToCsv(
@@ -567,19 +619,13 @@ class ExpenseViewModel extends ChangeNotifier {
   ) async {
     _setExportingCsv(true);
     try {
-      List<Expense> expensesToExport;
-      if (start != null && end != null) {
-        final range = DateRange.fromDays(start, end);
-        expensesToExport = _allExpenses
-            .where((exp) => range.contains(exp.date))
-            .toList();
-      } else if (start == null && end == null) {
-        expensesToExport = List<Expense>.from(_allExpenses);
-      } else {
-        return false;
-      }
-      expensesToExport.sort((a, b) => a.date.compareTo(b.date));
-      return await _csvService.exportExpenses(context, expensesToExport);
+      return await _transferService.exportCsv(
+        context,
+        _activeUserId,
+        _allExpenses,
+        start,
+        end,
+      );
     } finally {
       _setExportingCsv(false);
     }
@@ -594,21 +640,12 @@ class ExpenseViewModel extends ChangeNotifier {
   ) async {
     _setExportingPdf(true);
     try {
-      List<Expense> expensesToExport;
-      if (start != null && end != null) {
-        final range = DateRange.fromDays(start, end);
-        expensesToExport = _allExpenses
-            .where((exp) => range.contains(exp.date))
-            .toList();
-      } else if (start == null && end == null) {
-        expensesToExport = List<Expense>.from(_allExpenses);
-      } else {
-        return;
-      }
-      expensesToExport.sort((a, b) => a.date.compareTo(b.date));
-      await _pdfService.exportExpensesPdf(
+      await _transferService.exportPdf(
         context,
-        expensesToExport,
+        _activeUserId,
+        _allExpenses,
+        start,
+        end,
         analysisViewModel,
         categoryViewModel,
       );
@@ -625,55 +662,13 @@ class ExpenseViewModel extends ChangeNotifier {
   }) async {
     _setImportingCsv(true);
     try {
-      String? content = rawCsvContent;
-      String name = fileName ?? 'expenses.csv';
-
-      if (content == null) {
-        final file = await _csvService.pickCsvFile();
-        if (file == null) return 0;
-        name = file.path.split('/').last;
-        content = await file.readAsString();
-      }
-
-      final plan = await _importService.preparePlan(
-        userId: userId,
-        fileContent: content,
-        fileName: name,
-        forcedType: CsvImportType.expenses,
-        existingExpenses: _allExpenses,
+      return await _transferService.importCsv(
+        userId,
+        _allExpenses,
+        context: context,
+        rawCsvContent: rawCsvContent,
+        fileName: fileName,
       );
-
-      if (!plan.canProceed) {
-        if (context != null && context.mounted) {
-          SnackbarService.showError(
-            context,
-            plan.globalErrors.isNotEmpty
-                ? plan.globalErrors.first
-                : 'O arquivo CSV não possui registros válidos para importar.',
-          );
-        }
-        return 0;
-      }
-
-      if (context != null && context.mounted) {
-        final resultCount = await Navigator.of(context).push<int>(
-          MaterialPageRoute(
-            builder: (_) => ImportPreviewScreen(
-              userId: userId,
-              plan: plan,
-              importService: _importService,
-            ),
-          ),
-        );
-        return resultCount ?? 0;
-      } else {
-        final result = await _importService.applyPlan(
-          userId: userId,
-          plan: plan,
-          importOnlyValid: true,
-        );
-        return result.data?.createdCount ?? 0;
-      }
     } finally {
       _setImportingCsv(false);
     }
@@ -681,9 +676,11 @@ class ExpenseViewModel extends ChangeNotifier {
 
   Future<int> importAllExpensesFromJson(String userId) async {
     _setLoading(true);
-    final count = await _dataImportService.importExpensesFromJsons(userId);
-    _setLoading(false);
-    return count;
+    try {
+      return await _transferService.importLegacyJson(userId);
+    } finally {
+      _setLoading(false);
+    }
   }
 
   List<String> getUniqueLocationsForCategory(String? categoryId, String query) {
@@ -819,8 +816,12 @@ class ExpenseViewModel extends ChangeNotifier {
     _allExpenses = [];
     _currentDisplayItems = [];
     _recurringExpenses = [];
+    _loadErrorMessage = null;
+    _syncStatus = ExpenseSyncStatus.loading;
+    _lastServerConfirmation = null;
     _selectedCategoryIds = [];
     _isListening = false;
+    _activeUserId = null;
     notifyListeners();
   }
 

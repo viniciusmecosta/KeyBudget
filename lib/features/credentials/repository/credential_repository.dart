@@ -7,7 +7,7 @@ class CredentialRepository {
   final FirebaseFirestore? _customFirestore;
 
   CredentialRepository({FirebaseFirestore? firestore})
-      : _customFirestore = firestore;
+    : _customFirestore = firestore;
 
   FirebaseFirestore get _firestore =>
       _customFirestore ?? FirebaseFirestore.instance;
@@ -101,17 +101,20 @@ class CredentialRepository {
   }
 
   Future<void> deleteFolder(String userId, String folderId) async {
-    await _getFoldersCollection(userId).doc(folderId).delete();
-
-    final batch = _firestore.batch();
     final credentials = await _getCredentialsCollection(
       userId,
     ).where('folder_id', isEqualTo: folderId).get();
 
-    for (var doc in credentials.docs) {
-      batch.update(doc.reference, {'folder_id': null});
+    for (var offset = 0; offset < credentials.docs.length; offset += 450) {
+      final batch = _firestore.batch();
+      final end = (offset + 450).clamp(0, credentials.docs.length);
+      for (final doc in credentials.docs.sublist(offset, end)) {
+        batch.update(doc.reference, {'folder_id': null});
+      }
+      await batch.commit();
     }
-    await batch.commit();
+
+    await _getFoldersCollection(userId).doc(folderId).delete();
   }
 }
 

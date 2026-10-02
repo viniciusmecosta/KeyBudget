@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:key_budget/app/utils/app_animations.dart';
 import 'package:key_budget/core/design_system/spacing/app_spacing.dart';
 import 'package:key_budget/core/design_system/widgets/app_button.dart';
+import 'package:key_budget/core/services/snackbar_service.dart';
 import 'package:key_budget/features/auth/viewmodel/auth_viewmodel.dart';
 import 'package:key_budget/features/credentials/viewmodel/credential_viewmodel.dart';
 import 'package:mask_text_input_formatter/mask_text_input_formatter.dart';
@@ -81,22 +82,34 @@ class _AddCredentialScreenState extends ConsumerState<AddCredentialScreen> {
     final userId = authViewModel.currentUser!.id;
     final phoneMaskFormatter = MaskTextInputFormatter(mask: '(##) #####-####');
 
-    await credentialViewModel.addCredential(
-      userId: userId,
-      location: _locationController.text,
-      login: _loginController.text,
-      plainPassword: _passwordController.text,
-      email: _emailController.text.isNotEmpty ? _emailController.text : null,
-      phoneNumber: _phoneController.text.isNotEmpty
-          ? phoneMaskFormatter.unmaskText(_phoneController.text)
-          : null,
-      notes: _notesController.text.isNotEmpty ? _notesController.text : null,
-      logoPath: _logoPath,
-      folderId: _selectedFolderId,
-    );
+    try {
+      await credentialViewModel.addCredential(
+        userId: userId,
+        location: _locationController.text,
+        login: _loginController.text,
+        plainPassword: _passwordController.text,
+        email: _emailController.text.isNotEmpty ? _emailController.text : null,
+        phoneNumber: _phoneController.text.isNotEmpty
+            ? phoneMaskFormatter.unmaskText(_phoneController.text)
+            : null,
+        notes: _notesController.text.isNotEmpty ? _notesController.text : null,
+        logoPath: _logoPath,
+        folderId: _selectedFolderId,
+      );
+    } catch (_) {
+      if (mounted) {
+        setState(() => _isSaving = false);
+        SnackbarService.showError(
+          context,
+          'Não foi possível salvar a credencial. Tente novamente.',
+        );
+      }
+      return;
+    }
 
     if (mounted) {
       setState(() => _isSaving = false);
+      _hasUnsavedChanges = false;
       Navigator.of(context).pop();
     }
   }
@@ -114,7 +127,9 @@ class _AddCredentialScreenState extends ConsumerState<AddCredentialScreen> {
           context: context,
           builder: (context) => AlertDialog(
             title: const Text('Descartar alterações?'),
-            content: const Text('Você tem alterações não salvas. Deseja sair sem salvar?'),
+            content: const Text(
+              'Você tem alterações não salvas. Deseja sair sem salvar?',
+            ),
             actions: [
               TextButton(
                 onPressed: () => Navigator.of(context).pop(false),
@@ -122,7 +137,9 @@ class _AddCredentialScreenState extends ConsumerState<AddCredentialScreen> {
               ),
               TextButton(
                 onPressed: () => Navigator.of(context).pop(true),
-                style: TextButton.styleFrom(foregroundColor: theme.colorScheme.error),
+                style: TextButton.styleFrom(
+                  foregroundColor: theme.colorScheme.error,
+                ),
                 child: const Text('Sair'),
               ),
             ],
@@ -130,6 +147,7 @@ class _AddCredentialScreenState extends ConsumerState<AddCredentialScreen> {
         );
         if (shouldPop ?? false) {
           if (context.mounted) {
+            setState(() => _hasUnsavedChanges = false);
             Navigator.of(context).pop(result);
           }
         }
@@ -137,55 +155,57 @@ class _AddCredentialScreenState extends ConsumerState<AddCredentialScreen> {
       child: Scaffold(
         appBar: AppBar(title: const Text('Adicionar Credencial')),
         body: AppAnimations.fadeInFromBottom(
-        Padding(
-          padding: const EdgeInsets.all(AppSpacing.md),
-          child: Column(
-            children: [
-              Expanded(
-                child: CredentialForm(
-                  formKey: _formKey,
-                  locationController: _locationController,
-                  loginController: _loginController,
-                  passwordController: _passwordController,
-                  emailController: _emailController,
-                  phoneController: _phoneController,
-                  notesController: _notesController,
-                  logoPath: _logoPath,
-                  onLogoChanged: (path) {
-                    setState(() {
-                      _logoPath = path;
-                    });
-                  },
-                  isEditing: true,
-                  availableFolders: vm.allFolders,
-                  selectedFolderId: _selectedFolderId,
-                  onFolderChanged: (folderId) {
-                    setState(() {
-                      _selectedFolderId = folderId;
-                      _hasUnsavedChanges = true;
-                    });
-                  },
-                  onChanged: () {
-                    if (!_hasUnsavedChanges) {
-                      setState(() => _hasUnsavedChanges = true);
-                    }
-                  },
+          Padding(
+            padding: const EdgeInsets.all(AppSpacing.md),
+            child: Column(
+              children: [
+                Expanded(
+                  child: CredentialForm(
+                    formKey: _formKey,
+                    locationController: _locationController,
+                    loginController: _loginController,
+                    passwordController: _passwordController,
+                    emailController: _emailController,
+                    phoneController: _phoneController,
+                    notesController: _notesController,
+                    logoPath: _logoPath,
+                    onLogoChanged: (path) {
+                      setState(() {
+                        _logoPath = path;
+                      });
+                    },
+                    isEditing: true,
+                    availableFolders: vm.allFolders,
+                    selectedFolderId: _selectedFolderId,
+                    onFolderChanged: (folderId) {
+                      setState(() {
+                        _selectedFolderId = folderId;
+                        _hasUnsavedChanges = true;
+                      });
+                    },
+                    onChanged: () {
+                      if (!_hasUnsavedChanges) {
+                        setState(() => _hasUnsavedChanges = true);
+                      }
+                    },
+                  ),
                 ),
-              ),
-              const SizedBox(height: AppSpacing.md),
-              SizedBox(
-                width: double.infinity,
-                child: AppButton(
-                  onPressed: _submit,
-                  isLoading: _isSaving,
-                  label: 'Salvar Credencial',
+                const SizedBox(height: AppSpacing.md),
+                SizedBox(
+                  width: double.infinity,
+                  child: AppButton(
+                    onPressed: _submit,
+                    isLoading: _isSaving,
+                    label: 'Salvar Credencial',
+                  ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
+
+          context: context,
         ),
       ),
-    ),
     );
   }
 }

@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'dart:io';
+import 'dart:isolate';
 import 'dart:typed_data';
 
 import 'package:crypto/crypto.dart';
@@ -69,30 +70,31 @@ class RestoreService {
 
     final Uint8List zipBytes;
     try {
-      zipBytes = BackupCrypto.decryptEnvelope(
-        envelope: backupBytes,
-        password: password,
+      zipBytes = await Isolate.run(
+        () => BackupCrypto.decryptEnvelope(
+          envelope: backupBytes,
+          password: password,
+        ),
       );
     } on BackupCryptoException catch (e) {
-      return OperationResult.failed(
-        safeError: e.message,
-      );
+      return OperationResult.failed(safeError: e.message);
     } catch (e) {
       return OperationResult.failed(
-        safeError: 'Falha ao descriptografar backup: $e',
+        safeError:
+            'Não foi possível abrir o backup. Confira a senha e o arquivo.',
       );
     }
 
     final Map<String, List<int>> unpacked;
     try {
-      unpacked = BackupCrypto.unpackArchive(zipBytes);
+      unpacked = await Isolate.run(() => BackupCrypto.unpackArchive(zipBytes));
     } on BackupSecurityException catch (e) {
       return OperationResult.failed(
         safeError: 'Violação de segurança do arquivo de backup: ${e.message}',
       );
     } catch (e) {
       return OperationResult.failed(
-        safeError: 'Pacote de backup malformado: $e',
+        safeError: 'O arquivo de backup está danificado ou incompleto.',
       );
     }
 
@@ -108,7 +110,7 @@ class RestoreService {
       manifest = BackupManifest.fromJsonString(utf8.decode(manifestBytes));
     } catch (e) {
       return OperationResult.failed(
-        safeError: 'Não foi possível interpretar o manifesto do backup: $e',
+        safeError: 'O backup contém dados inválidos. Escolha outro arquivo.',
       );
     }
 
@@ -142,9 +144,7 @@ class RestoreService {
     }
 
     if (validationErrors.isNotEmpty) {
-      return OperationResult.failed(
-        safeError: validationErrors.join(' | '),
-      );
+      return OperationResult.failed(safeError: validationErrors.join(' | '));
     }
 
     final items = <ImportItemPlan>[];
@@ -169,7 +169,7 @@ class RestoreService {
       }
 
       final targetMap = {
-        for (final doc in targetDocs) (doc['id'] ?? '').toString(): doc
+        for (final doc in targetDocs) (doc['id'] ?? '').toString(): doc,
       };
 
       if (mod == 'categories') {
@@ -233,16 +233,22 @@ class RestoreService {
     for (final item in items) {
       if (item.parentId != null && item.parentId!.isNotEmpty) {
         if (item.parentCollection == 'categories') {
-          final exists = existingCategories.contains(item.parentId) ||
+          final exists =
+              existingCategories.contains(item.parentId) ||
               plannedCategories.contains(item.parentId);
           if (!exists) {
-            orphans.add('${item.collection}/${item.documentId} -> Categoria órfã "${item.parentId}"');
+            orphans.add(
+              '${item.collection}/${item.documentId} -> Categoria órfã "${item.parentId}"',
+            );
           }
         } else if (item.parentCollection == 'folders') {
-          final exists = existingFolders.contains(item.parentId) ||
+          final exists =
+              existingFolders.contains(item.parentId) ||
               plannedFolders.contains(item.parentId);
           if (!exists) {
-            orphans.add('${item.collection}/${item.documentId} -> Pasta órfã "${item.parentId}"');
+            orphans.add(
+              '${item.collection}/${item.documentId} -> Pasta órfã "${item.parentId}"',
+            );
           }
         }
       }
@@ -286,19 +292,21 @@ class RestoreService {
   }) async {
     if (!plan.canExecute) {
       return OperationResult.failed(
-        safeError: 'O plano de importação contém erros impeditivos e não pode ser executado.',
+        safeError:
+            'O plano de importação contém erros impeditivos e não pode ser executado.',
       );
     }
 
     final uid = sessionContext.userId;
 
-    final zipBytes = BackupCrypto.decryptEnvelope(
-      envelope: backupBytes,
-      password: password,
+    final unpacked = await Isolate.run(
+      () => BackupCrypto.unpackArchive(
+        BackupCrypto.decryptEnvelope(envelope: backupBytes, password: password),
+      ),
     );
-    final unpacked = BackupCrypto.unpackArchive(zipBytes);
 
-    final journal = customJournal ??
+    final journal =
+        customJournal ??
         OperationJournal(
           operationId: 'rst_${clock.now().millisecondsSinceEpoch}',
           uid: uid,
@@ -311,7 +319,6 @@ class RestoreService {
     final warnings = <String>[];
 
     try {
-
       journal.phase = JournalPhase.categoriesAndFolders;
       onProgress?.call('Restaurando categorias e pastas...', 0.1);
 
@@ -350,7 +357,9 @@ class RestoreService {
       journal.phase = JournalPhase.recurringRulesSuspended;
       onProgress?.call('Restaurando regras de recorrência...', 0.25);
 
-      final recItems = plan.items.where((i) => i.collection == 'recurring_expenses');
+      final recItems = plan.items.where(
+        (i) => i.collection == 'recurring_expenses',
+      );
       for (final item in recItems) {
         if (!item.willWrite) {
           skippedCount++;
@@ -382,7 +391,10 @@ class RestoreService {
       }
 
       journal.phase = JournalPhase.expensesCredentialsSuppliers;
-      onProgress?.call('Restaurando despesas, credenciais e fornecedores...', 0.5);
+      onProgress?.call(
+        'Restaurando despesas, credenciais e fornecedores...',
+        0.5,
+      );
 
       final secondTierItems = plan.items.where(
         (i) =>
@@ -408,10 +420,10 @@ class RestoreService {
 
         if (item.collection == 'credentials') {
           if (item.portablePassword != null && encryptionService != null) {
-            dataToWrite['encrypted_password'] =
-                encryptionService!.encryptData(item.portablePassword!);
+            dataToWrite['encrypted_password'] = encryptionService!.encryptData(
+              item.portablePassword!,
+            );
           }
-
         }
 
         await rawWriter.setDocument(path, dataToWrite);
@@ -442,7 +454,6 @@ class RestoreService {
 
         final fileBytes = unpacked['attachments/${attPlan.internalId}'];
         if (fileBytes != null && driveService != null) {
-
           try {
             final tempDir = await getTemporaryDirectory();
             final tempFile = File('${tempDir.path}/${attPlan.fileName}');
@@ -527,11 +538,7 @@ class RestoreService {
             ..remove('email')
             ..remove('uid');
           await rawWriter.setDocument('users/$uid', safeData, merge: true);
-          journal.recordCommit(
-            'profile',
-            item.documentId,
-            isCreate: false,
-          );
+          journal.recordCommit('profile', item.documentId, isCreate: false);
         }
       }
 
@@ -550,11 +557,11 @@ class RestoreService {
         count: createdCount + replacedCount,
       );
     } catch (e) {
-
       await journal.saveToSecureStorage(storage: secureStorage);
       return OperationResult.partial(
         totalCount: createdCount + replacedCount,
-        safeError: 'Restauração interrompida: $e. O progresso foi salvo no journal para retomada.',
+        safeError:
+            'A restauração foi interrompida. O progresso foi salvo; tente continuar a restauração.',
       );
     }
   }

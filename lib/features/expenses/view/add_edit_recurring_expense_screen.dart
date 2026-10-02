@@ -297,7 +297,8 @@ class _AddEditRecurringExpenseScreenState
             ],
           ),
         ),
-      ),
+
+        context: context,),
     );
   }
 }

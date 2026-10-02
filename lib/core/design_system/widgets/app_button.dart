@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:key_budget/core/design_system/borders/app_borders.dart';
+import 'package:key_budget/core/design_system/colors/app_contrast.dart';
 import 'package:key_budget/core/design_system/spacing/app_spacing.dart';
 
 enum AppButtonVariant { primary, secondary, outline, ghost, destructive }
@@ -33,7 +34,9 @@ class AppButton extends StatelessWidget {
     Color defaultSpinnerColor;
     switch (variant) {
       case AppButtonVariant.primary:
-        defaultSpinnerColor = theme.colorScheme.onPrimary;
+        defaultSpinnerColor = backgroundColor == null
+            ? Colors.white
+            : AppContrast.foregroundOn(backgroundColor!);
         break;
       case AppButtonVariant.secondary:
         defaultSpinnerColor = theme.colorScheme.onSecondary;
@@ -79,12 +82,18 @@ class AppButton extends StatelessWidget {
     Widget button;
     switch (variant) {
       case AppButtonVariant.primary:
+        final primaryBackground =
+            backgroundColor ??
+            AppContrast.primaryWithWhiteText(theme.colorScheme.primary);
         button = ElevatedButton(
           onPressed: isLoading ? null : onPressed,
           style: ElevatedButton.styleFrom(
             minimumSize: const Size(48, 48),
-            backgroundColor: backgroundColor ?? theme.colorScheme.primary,
-            foregroundColor: foregroundColor ?? theme.colorScheme.onPrimary,
+            backgroundColor: primaryBackground,
+            foregroundColor: foregroundColor ??
+                (backgroundColor == null
+                    ? Colors.white
+                    : AppContrast.foregroundOn(primaryBackground)),
           ),
           child: child,
         );
@@ -106,9 +115,7 @@ class AppButton extends StatelessWidget {
           style: OutlinedButton.styleFrom(
             minimumSize: const Size(48, 48),
             foregroundColor: foregroundColor ?? theme.colorScheme.onSurface,
-            side: BorderSide(
-              color: theme.colorScheme.outline,
-            ),
+            side: BorderSide(color: theme.colorScheme.outline),
           ),
           child: child,
         );
@@ -130,7 +137,9 @@ class AppButton extends StatelessWidget {
             minimumSize: const Size(48, 48),
             backgroundColor: backgroundColor ?? theme.colorScheme.error,
             foregroundColor: foregroundColor ?? theme.colorScheme.onError,
-            shape: RoundedRectangleBorder(borderRadius: AppBorders.borderRadiusM),
+            shape: RoundedRectangleBorder(
+              borderRadius: AppBorders.borderRadiusM,
+            ),
             elevation: 0,
           ),
           child: child,

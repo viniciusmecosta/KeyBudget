@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:key_budget/core/design_system/borders/app_borders.dart';
 import 'package:key_budget/core/design_system/colors/app_colors.dart';
+import 'package:key_budget/core/design_system/colors/app_contrast.dart';
 import 'package:key_budget/core/design_system/spacing/app_spacing.dart';
 import 'package:key_budget/core/design_system/theme/app_semantic_colors.dart';
 import 'package:key_budget/core/design_system/typography/app_typography.dart';
@@ -56,22 +57,32 @@ class AppTheme {
 
   static ThemeData get darkTheme => _buildTheme(isDark: true);
 
+  static Color effectivePrimary({required bool isDark, int? colorValue}) {
+    final chosen = colorValue == null
+        ? (isDark ? AppColors.primaryDark : AppColors.primary)
+        : Color(colorValue);
+    return AppContrast.accentOnSurface(
+      chosen,
+      isDark ? AppColors.surfaceDark : AppColors.surfaceLight,
+      isDark: isDark,
+    );
+  }
+
   static ThemeData _buildTheme({required bool isDark, int? colorValue}) {
     final textTheme = AppTypography.getTextTheme(isDark: isDark);
 
-    final basePrimary = colorValue != null
-        ? Color(colorValue)
-        : (isDark ? AppColors.primaryDark : AppColors.primary);
-    final primaryColor = basePrimary;
-    final onPrimaryColor = primaryColor.computeLuminance() > 0.5
-        ? Colors.black
-        : Colors.white;
     final backgroundColor = isDark
         ? AppColors.backgroundDark
         : AppColors.backgroundLight;
     final surfaceColor = isDark
         ? AppColors.surfaceDark
         : AppColors.surfaceLight;
+    final primaryColor = effectivePrimary(
+      isDark: isDark,
+      colorValue: colorValue,
+    );
+    final onPrimaryColor = AppContrast.foregroundOn(primaryColor);
+    final filledPrimaryColor = AppContrast.primaryWithWhiteText(primaryColor);
     final onSurfaceColor = isDark
         ? AppColors.onSurfaceDark
         : AppColors.onSurfaceLight;
@@ -124,8 +135,8 @@ class AppTheme {
       ),
       elevatedButtonTheme: ElevatedButtonThemeData(
         style: ElevatedButton.styleFrom(
-          backgroundColor: primaryColor,
-          foregroundColor: onPrimaryColor,
+          backgroundColor: filledPrimaryColor,
+          foregroundColor: Colors.white,
           padding: const EdgeInsets.symmetric(
             horizontal: AppSpacing.lg,
             vertical: AppSpacing.md,
@@ -134,6 +145,16 @@ class AppTheme {
           textStyle: textTheme.titleMedium,
           elevation: 0,
         ),
+      ),
+      filledButtonTheme: FilledButtonThemeData(
+        style: FilledButton.styleFrom(
+          backgroundColor: filledPrimaryColor,
+          foregroundColor: Colors.white,
+        ),
+      ),
+      floatingActionButtonTheme: FloatingActionButtonThemeData(
+        backgroundColor: filledPrimaryColor,
+        foregroundColor: Colors.white,
       ),
       outlinedButtonTheme: OutlinedButtonThemeData(
         style: OutlinedButton.styleFrom(
@@ -195,9 +216,7 @@ class AppTheme {
           color: onSurfaceVariantColor,
         ),
         floatingLabelStyle: textTheme.bodyMedium?.copyWith(color: primaryColor),
-        hintStyle: textTheme.bodyMedium?.copyWith(
-          color: onSurfaceVariantColor.withAlpha((255 * 0.6).round()),
-        ),
+        hintStyle: textTheme.bodyMedium?.copyWith(color: onSurfaceVariantColor),
       ),
       cardTheme: CardThemeData(
         elevation: 0,

@@ -8,7 +8,9 @@ import 'package:key_budget/app/widgets/balance_card.dart';
 import 'package:key_budget/app/widgets/empty_state_widget.dart';
 import 'package:key_budget/app/widgets/responsive_center.dart';
 import 'package:key_budget/core/design_system/borders/app_borders.dart';
+import 'package:key_budget/core/design_system/colors/app_contrast.dart';
 import 'package:key_budget/core/design_system/spacing/app_spacing.dart';
+import 'package:key_budget/core/design_system/widgets/app_feedback_panel.dart';
 import 'package:key_budget/features/auth/viewmodel/auth_viewmodel.dart';
 import 'package:key_budget/features/category/viewmodel/category_viewmodel.dart';
 import 'package:key_budget/features/expenses/view/add_expense_screen.dart';
@@ -17,6 +19,7 @@ import 'package:key_budget/features/expenses/viewmodel/expense_viewmodel.dart';
 import '../widgets/category_filter_modal.dart';
 import '../widgets/expense_actions_popup_menu.dart';
 import '../widgets/expense_list.dart';
+import '../widgets/expense_sync_indicator.dart';
 import '../widgets/expenses_list_skeleton.dart';
 import '../widgets/month_selector.dart';
 
@@ -61,9 +64,11 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen> {
   Future<void> _handleRefresh() async {
     final authViewModel = ref.read(authViewModelProvider);
     if (mounted && authViewModel.currentUser != null) {
-      ref
-          .read(expenseViewModelProvider)
-          .listenToExpenses(authViewModel.currentUser!.id);
+      final userId = authViewModel.currentUser!.id;
+      await Future.wait([
+        ref.read(expenseViewModelProvider).retryListenToExpenses(userId),
+        ref.read(categoryViewModelProvider).fetchCategories(userId),
+      ]);
     }
   }
 
@@ -98,7 +103,9 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen> {
         InputChip(
           label: Text(
             expenseViewModel.filterIsIncome! ? 'Receitas' : 'Despesas',
-            style: theme.textTheme.labelSmall?.copyWith(fontWeight: FontWeight.w600),
+            style: theme.textTheme.labelSmall?.copyWith(
+              fontWeight: FontWeight.w600,
+            ),
           ),
           deleteIcon: const Icon(Icons.close, size: 16),
           onDeleted: () => expenseViewModel.setTypeFilter(null),
@@ -113,11 +120,14 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen> {
         InputChip(
           label: Text(
             category?.name ?? 'Categoria',
-            style: theme.textTheme.labelSmall?.copyWith(fontWeight: FontWeight.w600),
+            style: theme.textTheme.labelSmall?.copyWith(
+              fontWeight: FontWeight.w600,
+            ),
           ),
           deleteIcon: const Icon(Icons.close, size: 16),
           onDeleted: () {
-            final next = List<String>.from(expenseViewModel.selectedCategoryIds)..remove(catId);
+            final next = List<String>.from(expenseViewModel.selectedCategoryIds)
+              ..remove(catId);
             expenseViewModel.setCategoryFilter(next);
           },
           deleteIconColor: theme.colorScheme.primary,
@@ -130,7 +140,9 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen> {
         InputChip(
           label: Text(
             'Busca: "${_searchController.text}"',
-            style: theme.textTheme.labelSmall?.copyWith(fontWeight: FontWeight.w600),
+            style: theme.textTheme.labelSmall?.copyWith(
+              fontWeight: FontWeight.w600,
+            ),
           ),
           deleteIcon: const Icon(Icons.close, size: 16),
           onDeleted: () {
@@ -144,7 +156,11 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen> {
 
     chips.add(
       ActionChip(
-        avatar: Icon(Icons.clear_all_rounded, size: 16, color: theme.colorScheme.error),
+        avatar: Icon(
+          Icons.clear_all_rounded,
+          size: 16,
+          color: theme.colorScheme.error,
+        ),
         label: Text(
           'Limpar filtros',
           style: theme.textTheme.labelSmall?.copyWith(
@@ -161,15 +177,22 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen> {
     );
 
     return Padding(
-      padding: const EdgeInsets.fromLTRB(AppSpacing.md, AppSpacing.sm, AppSpacing.md, 0),
+      padding: const EdgeInsets.fromLTRB(
+        AppSpacing.md,
+        AppSpacing.sm,
+        AppSpacing.md,
+        0,
+      ),
       child: SingleChildScrollView(
         scrollDirection: Axis.horizontal,
         child: Row(
           children: chips
-              .map((c) => Padding(
-                    padding: const EdgeInsets.only(right: AppSpacing.xs),
-                    child: c,
-                  ))
+              .map(
+                (c) => Padding(
+                  padding: const EdgeInsets.only(right: AppSpacing.xs),
+                  child: c,
+                ),
+              )
               .toList(),
         ),
       ),
@@ -179,6 +202,9 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final filledPrimary = AppContrast.primaryWithWhiteText(
+      theme.colorScheme.primary,
+    );
     final expenseViewModel = ref.watch(expenseViewModelProvider);
     final categoryViewModel = ref.watch(categoryViewModelProvider);
 
@@ -195,8 +221,12 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen> {
       symbol: 'R\$',
     );
 
-    final isFiltered = expenseViewModel.hasActiveFilters || expenseViewModel.searchAllPeriods;
-    final rawPeriod = DateFormat("MMMM 'de' yyyy", 'pt_BR').format(expenseViewModel.selectedMonth);
+    final isFiltered =
+        expenseViewModel.hasActiveFilters || expenseViewModel.searchAllPeriods;
+    final rawPeriod = DateFormat(
+      "MMMM 'de' yyyy",
+      'pt_BR',
+    ).format(expenseViewModel.selectedMonth);
     final formattedPeriod = rawPeriod.isNotEmpty
         ? '${rawPeriod[0].toUpperCase()}${rawPeriod.substring(1)}'
         : rawPeriod;
@@ -229,15 +259,25 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen> {
                   padding: const EdgeInsets.symmetric(
                     horizontal: AppSpacing.md,
                   ),
-                  child: AppAnimations.fadeInFromBottom(
-                    TweenAnimationBuilder<double>(
-                      key: ValueKey(
-                        enableIncomes
+                  child: ExpenseSyncIndicator(
+                    status: expenseViewModel.syncStatus,
+                    onRetry: () {
+                      final userId = authViewModel.currentUser?.id;
+                      if (userId != null) {
+                        expenseViewModel.retryListenToExpenses(userId);
+                      }
+                    },
+                  ),
+                ),
+                Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: AppSpacing.md,
+                  ),
+                  child: TweenAnimationBuilder<double>(
+                      tween: Tween<double>(
+                        begin: enableIncomes
                             ? expenseViewModel.currentMonthBalance
                             : expenseViewModel.currentMonthTotal,
-                      ),
-                      tween: Tween<double>(
-                        begin: 0,
                         end: enableIncomes
                             ? expenseViewModel.currentMonthBalance
                             : expenseViewModel.currentMonthTotal,
@@ -252,10 +292,10 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen> {
                             primaryHue >= 70 && primaryHue <= 160;
                         final isReddish = primaryHue >= 330 || primaryHue <= 20;
                         final incomeIconColor = isGreenish
-                            ? theme.colorScheme.onPrimary
+                            ? Colors.white
                             : Colors.greenAccent[400]!;
                         final expenseIconColor = isReddish
-                            ? theme.colorScheme.onPrimary
+                            ? Colors.white
                             : theme.colorScheme.error;
 
                         return BalanceCard(
@@ -270,7 +310,8 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen> {
                               ? 'Todo o período'
                               : formattedPeriod,
                           totalValue: value,
-                          backgroundColor: theme.colorScheme.primary,
+                          backgroundColor: filledPrimary,
+                          foregroundColor: Colors.white,
                           isCompact: enableIncomes,
                           subtitle: enableIncomes
                               ? Padding(
@@ -292,8 +333,7 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen> {
                                         ),
                                         style: theme.textTheme.bodyMedium
                                             ?.copyWith(
-                                              color:
-                                                  theme.colorScheme.onPrimary,
+                                              color: Colors.white,
                                               fontWeight: FontWeight.w600,
                                             ),
                                       ),
@@ -310,8 +350,7 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen> {
                                         ),
                                         style: theme.textTheme.bodyMedium
                                             ?.copyWith(
-                                              color:
-                                                  theme.colorScheme.onPrimary,
+                                              color: Colors.white,
                                               fontWeight: FontWeight.w600,
                                             ),
                                       ),
@@ -321,7 +360,6 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen> {
                               : null,
                         );
                       },
-                    ),
                   ),
                 ),
                 _buildActiveFilterChips(
@@ -335,6 +373,34 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen> {
             ),
             if (isLoading)
               const ExpensesListSkeleton()
+            else if ((expenseViewModel.loadErrorMessage != null ||
+                    categoryViewModel.errorMessage != null) &&
+                expenseViewModel.allExpenses.isEmpty)
+              SliverFillRemaining(
+                hasScrollBody: false,
+                child: AppFeedbackPanel(
+                  title: 'Falha ao carregar lançamentos',
+                  message:
+                      expenseViewModel.loadErrorMessage ??
+                      categoryViewModel.errorMessage!,
+                  type: AppFeedbackType.error,
+                  actionLabel: 'Tentar novamente',
+                  onAction: () {
+                    final userId = ref
+                        .read(authViewModelProvider)
+                        .currentUser
+                        ?.id;
+                    if (userId != null) {
+                      ref
+                          .read(expenseViewModelProvider)
+                          .retryListenToExpenses(userId);
+                      ref
+                          .read(categoryViewModelProvider)
+                          .fetchCategories(userId);
+                    }
+                  },
+                ),
+              )
             else if (expenseViewModel.currentDisplayItems.isEmpty)
               SliverFillRemaining(
                 hasScrollBody: false,
@@ -573,9 +639,8 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen> {
             ),
           ),
         ),
-        body: SafeArea(child: AppAnimations.fadeInFromBottom(body)),
-        floatingActionButton: AppAnimations.scaleIn(
-          FloatingActionButton.extended(
+        body: SafeArea(child: body),
+        floatingActionButton: FloatingActionButton.extended(
             heroTag: 'fab_expenses',
             onPressed: () {
               HapticFeedback.lightImpact();
@@ -586,10 +651,9 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen> {
             shape: RoundedRectangleBorder(
               borderRadius: AppBorders.borderRadiusXXL,
             ),
-            backgroundColor: theme.colorScheme.primary,
-            foregroundColor: theme.colorScheme.onPrimary,
+            backgroundColor: filledPrimary,
+            foregroundColor: Colors.white,
             elevation: 0,
-          ),
         ),
       ),
     );

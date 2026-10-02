@@ -7,6 +7,7 @@ import 'package:key_budget/app/config/app_theme.dart';
 import 'package:key_budget/app/navigation/app_destination.dart';
 import 'package:key_budget/app/view/main_screen.dart';
 import 'package:key_budget/app/viewmodel/navigation_viewmodel.dart';
+import 'package:key_budget/app/widgets/main_bottom_navigation_bar.dart';
 import 'package:key_budget/app/widgets/tab_selection_transition.dart';
 import 'package:key_budget/core/models/document_model.dart';
 import 'package:key_budget/core/models/user_model.dart';
@@ -18,9 +19,11 @@ import 'package:key_budget/features/credentials/viewmodel/credential_viewmodel.d
 import 'package:key_budget/features/dashboard/viewmodel/dashboard_viewmodel.dart';
 import 'package:key_budget/features/documents/viewmodel/document_viewmodel.dart';
 import 'package:key_budget/features/expenses/repository/expense_repository.dart';
+import 'package:key_budget/features/expenses/view/expenses_screen.dart';
 import 'package:key_budget/features/expenses/viewmodel/expense_viewmodel.dart';
 import 'package:key_budget/features/suppliers/repository/supplier_repository.dart';
 import 'package:key_budget/features/suppliers/viewmodel/supplier_viewmodel.dart';
+import 'package:key_budget/features/user/view/user_screen.dart';
 
 class FakeAuthRepo extends Fake implements AuthRepository {}
 class FakeExpenseRepo extends Fake implements ExpenseRepository {}
@@ -28,12 +31,17 @@ class FakeCredentialRepo extends Fake implements CredentialRepository {}
 class FakeSupplierRepo extends Fake implements SupplierRepository {}
 
 class FakeAuthVM extends AuthViewModel {
-  final User? mockUser;
+  User? mockUser;
   FakeAuthVM({this.mockUser})
       : super(authRepository: FakeAuthRepo(), listenToAuthChanges: false);
 
   @override
   User? get currentUser => mockUser;
+
+  void setUser(User user) {
+    mockUser = user;
+    notifyListeners();
+  }
 }
 
 class FakeCategoryVM extends CategoryViewModel {
@@ -176,7 +184,7 @@ void main() {
   });
 
   group('MainScreen & TabSelectionTransition', () {
-    testWidgets('MainScreen animates revisits without duplicating a first-visit animation', (tester) async {
+    testWidgets('MainScreen uses the same transition on first and later visits', (tester) async {
       final navVM = NavigationViewModel();
       final authVM = FakeAuthVM(
         mockUser: User(id: 'u1', name: 'Tester', email: 't@t.com'),
@@ -198,8 +206,8 @@ void main() {
       navVM.navigateTo(AppDestination.expenses);
       await tester.pump();
 
-      expect(transitionState.controller.value, 1.0);
-      expect(transitionState.controller.isAnimating, isFalse);
+      expect(transitionState.controller.value, 0.0);
+      expect(transitionState.controller.isAnimating, isTrue);
       await tester.pumpAndSettle();
       expect(transitionState.controller.value, 1.0);
       expect(transitionState.controller.isAnimating, isFalse);
@@ -270,6 +278,47 @@ void main() {
       expect(find.text('Counter: 1'), findsOneWidget);
     });
 
+    testWidgets('transition keeps child state when enabled and reduced motion change', (tester) async {
+      bool enabled = true;
+      bool reducedMotion = false;
+      late StateSetter update;
+
+      await tester.pumpWidget(MaterialApp(
+        home: StatefulBuilder(
+          builder: (context, setState) {
+            update = setState;
+            return MediaQuery(
+              data: MediaQuery.of(context).copyWith(disableAnimations: reducedMotion),
+              child: Scaffold(
+                body: TabSelectionTransition(
+                  revision: 0,
+                  enabled: enabled,
+                  child: const _CounterStatefulTab(),
+                ),
+              ),
+            );
+          },
+        ),
+      ));
+      await tester.tap(find.text('Increment'));
+      await tester.pump();
+
+      update(() => enabled = false);
+      await tester.pump();
+      expect(find.text('Counter: 1'), findsOneWidget);
+
+      update(() {
+        enabled = true;
+        reducedMotion = true;
+      });
+      await tester.pump();
+      expect(find.text('Counter: 1'), findsOneWidget);
+
+      update(() => reducedMotion = false);
+      await tester.pump();
+      expect(find.text('Counter: 1'), findsOneWidget);
+    });
+
     testWidgets('reduced motion renders child immediately without transition animation', (tester) async {
       int revision = 0;
 
@@ -300,11 +349,11 @@ void main() {
       final transitionFinder = find.byType(TabSelectionTransition);
       expect(
         find.descendant(of: transitionFinder, matching: find.byType(FadeTransition)),
-        findsNothing,
+        findsOneWidget,
       );
       expect(
         find.descendant(of: transitionFinder, matching: find.byType(SlideTransition)),
-        findsNothing,
+        findsOneWidget,
       );
       expect(find.text('Reduced Motion Tab Content'), findsOneWidget);
 
@@ -319,11 +368,11 @@ void main() {
       expect(transitionState.controller.value, 1.0);
       expect(
         find.descendant(of: transitionFinder, matching: find.byType(FadeTransition)),
-        findsNothing,
+        findsOneWidget,
       );
       expect(
         find.descendant(of: transitionFinder, matching: find.byType(SlideTransition)),
-        findsNothing,
+        findsOneWidget,
       );
       expect(find.text('Reduced Motion Tab Content'), findsOneWidget);
     });
@@ -385,6 +434,51 @@ void main() {
       expect(transitionState.controller.value, 1.0);
     });
 
+    testWidgets('expense tab state survives phone and tablet breakpoint changes', (tester) async {
+      tester.view.physicalSize = const Size(599, 800);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+
+      final navVM = NavigationViewModel();
+      navVM.navigateTo(AppDestination.expenses);
+      final authVM = FakeAuthVM(
+        mockUser: User(id: 'u1', name: 'Tester', email: 't@t.com'),
+      );
+      await tester.pumpWidget(createMainScreenTestWidget(navVM: navVM, authVM: authVM));
+      await tester.pumpAndSettle();
+      final state = tester.state(find.byType(ExpensesScreen));
+
+      tester.view.physicalSize = const Size(600, 800);
+      await tester.pumpAndSettle();
+      expect(tester.state(find.byType(ExpensesScreen)), same(state));
+
+      tester.view.physicalSize = const Size(840, 800);
+      await tester.pumpAndSettle();
+      expect(tester.state(find.byType(ExpensesScreen)), same(state));
+    });
+
+    testWidgets('profile state survives enabling and disabling suppliers', (tester) async {
+      final navVM = NavigationViewModel();
+      navVM.navigateTo(AppDestination.profile);
+      final authVM = FakeAuthVM(
+        mockUser: User(id: 'u1', name: 'Tester', email: 't@t.com'),
+      );
+      await tester.pumpWidget(createMainScreenTestWidget(navVM: navVM, authVM: authVM));
+      await tester.pumpAndSettle();
+      final profileState = tester.state(find.byType(UserScreen));
+
+      authVM.setUser(authVM.mockUser!.copyWith(enableSuppliers: true));
+      await tester.pumpAndSettle();
+      expect(tester.state(find.byType(UserScreen)), same(profileState));
+      expect(find.text('Fornecedores'), findsWidgets);
+
+      authVM.setUser(authVM.mockUser!.copyWith(enableSuppliers: false));
+      await tester.pumpAndSettle();
+      expect(tester.state(find.byType(UserScreen)), same(profileState));
+      expect(navVM.currentDestination, AppDestination.profile);
+    });
+
     testWidgets('tapping suppliers and profile with suppliers enabled triggers transitions and updates destination', (tester) async {
       tester.view.physicalSize = const Size(500, 844);
       tester.view.devicePixelRatio = 1.0;
@@ -416,14 +510,14 @@ void main() {
 
       await tester.tap(find.byType(GButton).at(4));
       await tester.pump();
-      expect(transitionState.controller.isAnimating, isFalse);
+      expect(transitionState.controller.isAnimating, isTrue);
       await tester.pumpAndSettle();
       expect(navVM.currentDestination, AppDestination.suppliers);
       expect(transitionState.controller.isAnimating, isFalse);
 
       await tester.tap(find.byType(GButton).at(5));
       await tester.pump();
-      expect(transitionState.controller.isAnimating, isFalse);
+      expect(transitionState.controller.isAnimating, isTrue);
       await tester.pumpAndSettle();
       expect(navVM.currentDestination, AppDestination.profile);
       expect(transitionState.controller.isAnimating, isFalse);
@@ -432,6 +526,49 @@ void main() {
       await tester.pump();
       expect(transitionState.controller.isAnimating, isTrue);
       await tester.pumpAndSettle();
+    });
+
+    testWidgets('six destinations fit on a narrow phone with large text', (tester) async {
+      tester.view.physicalSize = const Size(320, 720);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.resetPhysicalSize);
+
+      final navVM = NavigationViewModel();
+      navVM.updateSuppliersAvailability(true);
+      final authVM = FakeAuthVM(
+        mockUser: User(
+          id: 'u1',
+          name: 'Tester',
+          email: 't@t.com',
+          enableSuppliers: true,
+        ),
+      );
+
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: [
+            navigationViewModelProvider.overrideWith((ref) => navVM),
+            authViewModelProvider.overrideWith((ref) => authVM),
+          ],
+          child: MaterialApp(
+            builder: (context, child) => MediaQuery(
+              data: MediaQuery.of(context).copyWith(
+                textScaler: const TextScaler.linear(2),
+              ),
+              child: child!,
+            ),
+            home: const Scaffold(bottomNavigationBar: MainBottomNavigationBar()),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+      expect(find.text('Fornecedores'), findsOneWidget);
+      expect(tester.takeException(), isNull);
+
+      await tester.tap(find.text('Fornecedores'));
+      await tester.pumpAndSettle();
+      expect(navVM.currentDestination, AppDestination.suppliers);
+      expect(tester.takeException(), isNull);
     });
   });
 }
