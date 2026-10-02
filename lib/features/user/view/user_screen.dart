@@ -3,6 +3,7 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:key_budget/app/config/app_theme.dart';
 import 'package:key_budget/app/utils/navigation_utils.dart';
 import 'package:key_budget/app/widgets/responsive_center.dart';
 import 'package:key_budget/core/design_system/borders/app_borders.dart';
@@ -287,6 +288,8 @@ class UserScreen extends ConsumerWidget {
         borderRadius: AppBorders.borderRadiusVerticalXL,
       ),
       builder: (ctx) {
+        final sheetTheme = Theme.of(ctx);
+        final isDark = sheetTheme.brightness == Brightness.dark;
         return SafeArea(
           child: Padding(
             padding: const EdgeInsets.symmetric(
@@ -321,6 +324,12 @@ class UserScreen extends ConsumerWidget {
                   children: _themeColors.map((colorOption) {
                     final isSelected =
                         colorOption.colorValue == currentThemeColor;
+                    final previewColor = user?.themeColor == null && isSelected
+                        ? sheetTheme.colorScheme.primary
+                        : AppTheme.effectivePrimary(
+                            isDark: isDark,
+                            colorValue: colorOption.colorValue,
+                          );
                     return GestureDetector(
                       onTap: () async {
                         if (user != null) {
@@ -338,11 +347,11 @@ class UserScreen extends ConsumerWidget {
                             width: 50,
                             height: 50,
                             decoration: BoxDecoration(
-                              color: Color(colorOption.colorValue),
+                              color: previewColor,
                               shape: BoxShape.circle,
                               border: Border.all(
                                 color: isSelected
-                                    ? Theme.of(context).colorScheme.primary
+                                    ? sheetTheme.colorScheme.onSurface
                                     : Colors.transparent,
                                 width: 3,
                               ),
