@@ -113,6 +113,11 @@ class KeyBudgetWidgetReceiver : HomeWidgetProvider() {
             if (isTemporarilyVisible) R.drawable.ic_visibility_off
             else R.drawable.ic_visibility,
         )
+        views.setContentDescription(
+            R.id.btn_toggle_visibility,
+            if (isTemporarilyVisible) "Ocultar gasto do mês"
+            else "Mostrar gasto do mês",
+        )
 
         val addExpenseIntent = HomeWidgetLaunchIntent.getActivity(
             context,
