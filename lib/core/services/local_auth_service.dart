@@ -89,12 +89,31 @@ class LocalAuthService {
         await HapticFeedback.lightImpact();
         return LocalAuthResult.success;
       } else {
-        await HapticFeedback.vibrate();
-        return LocalAuthResult.cancelled;
+        return LocalAuthResult.failed;
+      }
+    } on LocalAuthException catch (e) {
+      switch (e.code) {
+        case LocalAuthExceptionCode.userCanceled:
+        case LocalAuthExceptionCode.systemCanceled:
+        case LocalAuthExceptionCode.timeout:
+          return LocalAuthResult.cancelled;
+        case LocalAuthExceptionCode.temporaryLockout:
+          return LocalAuthResult.temporarilyLockedOut;
+        case LocalAuthExceptionCode.biometricLockout:
+          return LocalAuthResult.permanentlyLockedOut;
+        case LocalAuthExceptionCode.noCredentialsSet:
+        case LocalAuthExceptionCode.noBiometricsEnrolled:
+        case LocalAuthExceptionCode.noBiometricHardware:
+          return LocalAuthResult.notAvailable;
+        default:
+          return LocalAuthResult.failed;
       }
     } on PlatformException catch (e) {
-      await HapticFeedback.vibrate();
-      if (e.code == 'LockedOut') {
+      if (e.code == 'UserCanceled' ||
+          e.code == 'SystemCanceled' ||
+          e.code == 'Canceled') {
+        return LocalAuthResult.cancelled;
+      } else if (e.code == 'LockedOut') {
         return LocalAuthResult.temporarilyLockedOut;
       } else if (e.code == 'PermanentlyLockedOut') {
         return LocalAuthResult.permanentlyLockedOut;
@@ -103,7 +122,6 @@ class LocalAuthService {
       }
       return LocalAuthResult.failed;
     } catch (_) {
-      await HapticFeedback.vibrate();
       return LocalAuthResult.failed;
     }
   }

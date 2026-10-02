@@ -19,6 +19,9 @@ class _SignedInAuthViewModel extends AuthViewModel {
 }
 
 class _CancelledLocalAuthService extends LocalAuthService {
+  _CancelledLocalAuthService({this.result = LocalAuthResult.cancelled});
+
+  final LocalAuthResult result;
   int attempts = 0;
 
   @override
@@ -30,7 +33,7 @@ class _CancelledLocalAuthService extends LocalAuthService {
     String reason = 'Confirme sua identidade',
   }) async {
     attempts++;
-    return LocalAuthResult.cancelled;
+    return result;
   }
 }
 
@@ -52,14 +55,39 @@ void main() {
     await tester.pump(const Duration(milliseconds: 400));
     expect(localAuth.attempts, 1);
     expect(find.text('Sair da Conta'), findsOneWidget);
+    expect(find.textContaining('Falha'), findsNothing);
+    expect(find.textContaining('Não foi possível confirmar'), findsNothing);
+    expect(find.textContaining('Sua privacidade'), findsNothing);
 
     tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.paused);
     tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.resumed);
     await tester.pump();
     expect(localAuth.attempts, 1);
 
-    await tester.tap(find.text('Desbloquear KeyBudget'));
+    await tester.tap(find.text('Desbloquear'));
     await tester.pump();
     expect(localAuth.attempts, 2);
+  });
+
+  testWidgets('real authentication failure shows a retry message', (
+    tester,
+  ) async {
+    tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.resumed);
+    final localAuth = _CancelledLocalAuthService(result: LocalAuthResult.failed);
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          authViewModelProvider.overrideWith((ref) => _SignedInAuthViewModel()),
+        ],
+        child: MaterialApp(home: LockScreen(localAuthService: localAuth)),
+      ),
+    );
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 400));
+    expect(
+      find.text('Não foi possível confirmar. Tente novamente.'),
+      findsOneWidget,
+    );
+    expect(find.text('Sair da Conta'), findsOneWidget);
   });
 }

@@ -16,12 +16,11 @@ class LockScreen extends ConsumerStatefulWidget {
 }
 
 class _LockScreenState extends ConsumerState<LockScreen>
-    with SingleTickerProviderStateMixin, WidgetsBindingObserver {
+    with WidgetsBindingObserver {
   bool _isAuthenticating = false;
   bool _didPromptAutomatically = false;
   LocalAuthAvailability? _availability;
   String? _statusFeedback;
-  late AnimationController _pulseController;
   late final LocalAuthService _localAuthService;
 
   @override
@@ -29,11 +28,6 @@ class _LockScreenState extends ConsumerState<LockScreen>
     super.initState();
     _localAuthService = widget.localAuthService ?? LocalAuthService();
     WidgetsBinding.instance.addObserver(this);
-
-    _pulseController = AnimationController(
-      vsync: this,
-      duration: const Duration(seconds: 2),
-    )..repeat(reverse: true);
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) {
@@ -64,7 +58,6 @@ class _LockScreenState extends ConsumerState<LockScreen>
   @override
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
-    _pulseController.dispose();
     super.dispose();
   }
 
@@ -107,8 +100,6 @@ class _LockScreenState extends ConsumerState<LockScreen>
         case LocalAuthResult.cancelled:
           setState(() {
             _isAuthenticating = false;
-            _statusFeedback =
-                'Autenticação cancelada. Toque para tentar novamente.';
           });
           break;
         case LocalAuthResult.temporarilyLockedOut:
@@ -136,7 +127,7 @@ class _LockScreenState extends ConsumerState<LockScreen>
         case LocalAuthResult.failed:
           setState(() {
             _isAuthenticating = false;
-            _statusFeedback = 'Falha na verificação. Tente novamente.';
+            _statusFeedback = 'Não foi possível confirmar. Tente novamente.';
           });
           break;
       }
@@ -185,58 +176,38 @@ class _LockScreenState extends ConsumerState<LockScreen>
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     const Spacer(),
-                    AnimatedBuilder(
-                      animation: _pulseController,
-                      builder: (context, child) {
-                        return Transform.scale(
-                          scale: 1.0 + (_pulseController.value * 0.05),
-                          child: Container(
-                            padding: const EdgeInsets.all(24),
-                            decoration: BoxDecoration(
-                              shape: BoxShape.circle,
-                              color: theme.colorScheme.primary.withValues(
-                                alpha: 0.1,
-                              ),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: theme.colorScheme.primary.withValues(
-                                    alpha: 0.2 * _pulseController.value,
-                                  ),
-                                  blurRadius: 30,
-                                  spreadRadius: 10,
-                                ),
-                              ],
-                            ),
-                            child: Icon(
-                              Icons.lock_person_outlined,
-                              size: 72,
-                              color: theme.colorScheme.primary,
-                            ),
-                          ),
-                        );
-                      },
+                    Container(
+                      padding: const EdgeInsets.all(22),
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: theme.colorScheme.primary.withValues(
+                          alpha: 0.12,
+                        ),
+                      ),
+                      child: Icon(
+                        Icons.lock_person_outlined,
+                        size: 60,
+                        color: theme.colorScheme.primary,
+                      ),
                     ),
-                    const SizedBox(height: 40),
+                    const SizedBox(height: 28),
                     Text(
-                      'App Bloqueado',
+                      'KeyBudget bloqueado',
                       style: theme.textTheme.headlineMedium?.copyWith(
                         fontWeight: FontWeight.bold,
                         letterSpacing: -0.5,
                       ),
                     ),
-                    const SizedBox(height: 12),
-                    Text(
-                      _availability == LocalAuthAvailability.notSupported
-                          ? 'Autenticação biométrica não suportada neste aparelho.\nFaça login novamente para continuar.'
-                          : 'Sua privacidade e segurança estão ativas.\nToque abaixo para confirmar sua identidade.',
-                      textAlign: TextAlign.center,
-                      style: theme.textTheme.bodyMedium?.copyWith(
-                        color: theme.colorScheme.onSurface.withValues(
-                          alpha: 0.7,
+                    if (_availability == LocalAuthAvailability.notSupported) ...[
+                      const SizedBox(height: 12),
+                      Text(
+                        'Desbloqueio indisponível neste dispositivo. Entre novamente na sua conta.',
+                        textAlign: TextAlign.center,
+                        style: theme.textTheme.bodyMedium?.copyWith(
+                          color: theme.colorScheme.onSurfaceVariant,
                         ),
-                        height: 1.5,
                       ),
-                    ),
+                    ],
                     if (_statusFeedback != null) ...[
                       const SizedBox(height: 16),
                       Text(
@@ -248,7 +219,7 @@ class _LockScreenState extends ConsumerState<LockScreen>
                         ),
                       ),
                     ],
-                    const SizedBox(height: 36),
+                    const SizedBox(height: 28),
                     if (_availability != LocalAuthAvailability.notSupported)
                       SizedBox(
                         width: double.infinity,
@@ -256,7 +227,7 @@ class _LockScreenState extends ConsumerState<LockScreen>
                         child: AppButton(
                           onPressed: _isAuthenticating ? null : _authenticate,
                           isLoading: _isAuthenticating,
-                          label: 'Desbloquear KeyBudget',
+                          label: 'Desbloquear',
                           icon: Icons.fingerprint,
                         ),
                       ),
