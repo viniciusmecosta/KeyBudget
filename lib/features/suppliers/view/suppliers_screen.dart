@@ -3,7 +3,6 @@ import 'package:flutter/services.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:key_budget/app/config/app_theme.dart';
-import 'package:key_budget/app/utils/app_animations.dart';
 import 'package:key_budget/app/utils/navigation_utils.dart';
 import 'package:key_budget/app/widgets/empty_state_widget.dart';
 import 'package:key_budget/app/widgets/responsive_center.dart';
@@ -107,8 +106,7 @@ class _SuppliersScreenState extends ConsumerState<SuppliersScreen> {
         ],
       ),
       body: SafeArea(
-        child: AppAnimations.fadeInFromBottom(
-          RefreshIndicator(
+        child: RefreshIndicator(
             onRefresh: _handleRefresh,
             color: theme.colorScheme.primary,
             backgroundColor: theme.colorScheme.surface,
@@ -246,12 +244,8 @@ class _SuppliersScreenState extends ConsumerState<SuppliersScreen> {
               ),
             ),
           ),
-
-          context: context,
-        ),
       ),
-      floatingActionButton: AppAnimations.scaleIn(
-        FloatingActionButton.extended(
+      floatingActionButton: FloatingActionButton.extended(
           heroTag: 'fab_suppliers',
           onPressed: () {
             HapticFeedback.lightImpact();
@@ -261,9 +255,6 @@ class _SuppliersScreenState extends ConsumerState<SuppliersScreen> {
           label: const Text("Novo Fornecedor"),
           shape: RoundedRectangleBorder(borderRadius: AppBorders.borderRadiusL),
           elevation: 0,
-        ),
-
-        context: context,
       ),
     );
   }

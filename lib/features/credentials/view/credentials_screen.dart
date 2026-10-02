@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:key_budget/app/utils/app_animations.dart';
 import 'package:key_budget/app/utils/navigation_utils.dart';
 import 'package:key_budget/app/widgets/animated_list_item.dart';
 import 'package:key_budget/app/widgets/empty_state_widget.dart';
@@ -360,8 +359,7 @@ class _CredentialsScreenState extends ConsumerState<CredentialsScreen> {
           ],
         ),
         body: SafeArea(
-          child: AppAnimations.fadeInFromBottom(
-            RefreshIndicator(
+          child: RefreshIndicator(
               onRefresh: _handleRefresh,
               color: theme.colorScheme.primary,
               backgroundColor: theme.colorScheme.surface,
@@ -458,11 +456,8 @@ class _CredentialsScreenState extends ConsumerState<CredentialsScreen> {
                 ),
               ),
             ),
-
-            context: context,),
         ),
-        floatingActionButton: AppAnimations.scaleIn(
-          FloatingActionButton.extended(
+        floatingActionButton: FloatingActionButton.extended(
             heroTag: 'fab_credentials',
             onPressed: () {
               if (vm.currentFolderId != null) {
@@ -510,7 +505,6 @@ class _CredentialsScreenState extends ConsumerState<CredentialsScreen> {
             shape: RoundedRectangleBorder(
               borderRadius: AppBorders.borderRadiusXXL,
             ),
-          ),
         ),
       ),
     );

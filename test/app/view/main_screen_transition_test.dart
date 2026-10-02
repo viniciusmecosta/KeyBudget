@@ -184,7 +184,7 @@ void main() {
   });
 
   group('MainScreen & TabSelectionTransition', () {
-    testWidgets('MainScreen animates revisits without duplicating a first-visit animation', (tester) async {
+    testWidgets('MainScreen uses the same transition on first and later visits', (tester) async {
       final navVM = NavigationViewModel();
       final authVM = FakeAuthVM(
         mockUser: User(id: 'u1', name: 'Tester', email: 't@t.com'),
@@ -206,8 +206,8 @@ void main() {
       navVM.navigateTo(AppDestination.expenses);
       await tester.pump();
 
-      expect(transitionState.controller.value, 1.0);
-      expect(transitionState.controller.isAnimating, isFalse);
+      expect(transitionState.controller.value, 0.0);
+      expect(transitionState.controller.isAnimating, isTrue);
       await tester.pumpAndSettle();
       expect(transitionState.controller.value, 1.0);
       expect(transitionState.controller.isAnimating, isFalse);
@@ -510,14 +510,14 @@ void main() {
 
       await tester.tap(find.byType(GButton).at(4));
       await tester.pump();
-      expect(transitionState.controller.isAnimating, isFalse);
+      expect(transitionState.controller.isAnimating, isTrue);
       await tester.pumpAndSettle();
       expect(navVM.currentDestination, AppDestination.suppliers);
       expect(transitionState.controller.isAnimating, isFalse);
 
       await tester.tap(find.byType(GButton).at(5));
       await tester.pump();
-      expect(transitionState.controller.isAnimating, isFalse);
+      expect(transitionState.controller.isAnimating, isTrue);
       await tester.pumpAndSettle();
       expect(navVM.currentDestination, AppDestination.profile);
       expect(transitionState.controller.isAnimating, isFalse);

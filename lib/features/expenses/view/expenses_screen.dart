@@ -273,15 +273,11 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen> {
                   padding: const EdgeInsets.symmetric(
                     horizontal: AppSpacing.md,
                   ),
-                  child: AppAnimations.fadeInFromBottom(
-                    TweenAnimationBuilder<double>(
-                      key: ValueKey(
-                        enableIncomes
+                  child: TweenAnimationBuilder<double>(
+                      tween: Tween<double>(
+                        begin: enableIncomes
                             ? expenseViewModel.currentMonthBalance
                             : expenseViewModel.currentMonthTotal,
-                      ),
-                      tween: Tween<double>(
-                        begin: 0,
                         end: enableIncomes
                             ? expenseViewModel.currentMonthBalance
                             : expenseViewModel.currentMonthTotal,
@@ -364,9 +360,6 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen> {
                               : null,
                         );
                       },
-                    ),
-
-                    context: context,
                   ),
                 ),
                 _buildActiveFilterChips(
@@ -646,11 +639,8 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen> {
             ),
           ),
         ),
-        body: SafeArea(
-          child: AppAnimations.fadeInFromBottom(body, context: context),
-        ),
-        floatingActionButton: AppAnimations.scaleIn(
-          FloatingActionButton.extended(
+        body: SafeArea(child: body),
+        floatingActionButton: FloatingActionButton.extended(
             heroTag: 'fab_expenses',
             onPressed: () {
               HapticFeedback.lightImpact();
@@ -664,9 +654,6 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen> {
             backgroundColor: filledPrimary,
             foregroundColor: Colors.white,
             elevation: 0,
-          ),
-
-          context: context,
         ),
       ),
     );
