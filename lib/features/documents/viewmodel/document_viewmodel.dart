@@ -438,19 +438,19 @@ class DocumentViewModel extends ChangeNotifier {
     notifyListeners();
 
     try {
-      FilePickerResult? result = await FilePicker.pickFiles(
+      final selected = await FilePicker.pickFile(
         type: FileType.custom,
         allowedExtensions: ['jpg', 'png', 'webp', 'pdf'],
       );
 
-      if (result != null) {
-        final filePath = result.files.single.path;
+      if (selected != null) {
+        final filePath = selected.path;
         if (filePath == null) {
           _setErrorMessage('Não foi possível acessar o arquivo selecionado.');
           return null;
         }
         final file = File(filePath);
-        final extension = result.files.single.extension?.toLowerCase() ?? '';
+        final extension = selected.extension?.toLowerCase() ?? '';
         if (!allowedAttachmentTypes.contains(extension)) {
           _setErrorMessage('Selecione um arquivo JPG, PNG, WEBP ou PDF.');
           return null;
@@ -479,7 +479,7 @@ class DocumentViewModel extends ChangeNotifier {
         }
 
         return Attachment(
-          name: result.files.single.name,
+          name: selected.name,
           type: extension,
           driveId: driveFile.id!,
         );

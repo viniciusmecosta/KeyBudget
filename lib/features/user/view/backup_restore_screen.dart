@@ -330,18 +330,19 @@ class _BackupRestoreScreenState extends ConsumerState<BackupRestoreScreen>
   }
 
   Future<void> _pickRestoreFile() async {
-    final result = await FilePicker.pickFiles(
+    final selected = await FilePicker.pickFile(
       type: FileType.any,
     );
 
-    if (result != null && result.files.isNotEmpty) {
-      final path = result.files.first.path;
+    if (selected != null) {
+      final path = selected.path;
       if (path != null) {
         final file = File(path);
         final bytes = await file.readAsBytes();
+        if (!mounted) return;
         setState(() {
           _selectedRestoreBytes = bytes;
-          _selectedRestoreFileName = result.files.first.name;
+          _selectedRestoreFileName = selected.name;
           _importPlan = null;
         });
       }
