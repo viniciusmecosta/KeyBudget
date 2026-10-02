@@ -21,6 +21,17 @@ void main() {
       }
     });
 
+    test('theme swatches match the effective accent in both modes', () {
+      for (final isDark in [false, true]) {
+        for (final color in [0xFF1E40AF, 0xFF15803D, 0xFF9F1239]) {
+          expect(
+            AppTheme.effectivePrimary(isDark: isDark, colorValue: color),
+            AppTheme.getTheme(isDark: isDark, colorValue: color).colorScheme.primary,
+          );
+        }
+      }
+    });
+
     test('primary filled surfaces keep white labels legible', () {
       for (final isDark in [false, true]) {
         for (final seed in <int?>[null, 0xFF0D47A1, 0xFFFFEB3B, 0xFF9F1239, 0xFF0F766E, 0xFFB3A2F0]) {

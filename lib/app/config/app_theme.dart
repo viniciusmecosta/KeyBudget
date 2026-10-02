@@ -57,22 +57,29 @@ class AppTheme {
 
   static ThemeData get darkTheme => _buildTheme(isDark: true);
 
+  static Color effectivePrimary({required bool isDark, int? colorValue}) {
+    final chosen = colorValue == null
+        ? (isDark ? AppColors.primaryDark : AppColors.primary)
+        : Color(colorValue);
+    return AppContrast.accentOnSurface(
+      chosen,
+      isDark ? AppColors.surfaceDark : AppColors.surfaceLight,
+      isDark: isDark,
+    );
+  }
+
   static ThemeData _buildTheme({required bool isDark, int? colorValue}) {
     final textTheme = AppTypography.getTextTheme(isDark: isDark);
 
-    final basePrimary = colorValue != null
-        ? Color(colorValue)
-        : (isDark ? AppColors.primaryDark : AppColors.primary);
     final backgroundColor = isDark
         ? AppColors.backgroundDark
         : AppColors.backgroundLight;
     final surfaceColor = isDark
         ? AppColors.surfaceDark
         : AppColors.surfaceLight;
-    final primaryColor = AppContrast.accentOnSurface(
-      basePrimary,
-      surfaceColor,
+    final primaryColor = effectivePrimary(
       isDark: isDark,
+      colorValue: colorValue,
     );
     final onPrimaryColor = AppContrast.foregroundOn(primaryColor);
     final filledPrimaryColor = AppContrast.primaryWithWhiteText(primaryColor);
