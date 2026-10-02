@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:key_budget/app/widgets/activity_tile_widget.dart';
+import 'package:key_budget/app/widgets/category_picker_field.dart';
 import 'package:key_budget/core/models/expense_category_model.dart';
 import 'package:key_budget/core/models/expense_model.dart';
 import 'package:key_budget/core/models/recurring_expense_model.dart';
@@ -12,6 +13,7 @@ import 'package:key_budget/features/auth/repository/auth_repository.dart';
 import 'package:key_budget/features/auth/viewmodel/auth_viewmodel.dart';
 import 'package:key_budget/features/category/viewmodel/category_viewmodel.dart';
 import 'package:key_budget/features/expenses/domain/recurrence_schedule.dart';
+import 'package:key_budget/features/expenses/view/add_expense_screen.dart';
 import 'package:key_budget/features/expenses/view/expenses_screen.dart';
 import 'package:key_budget/features/expenses/viewmodel/expense_viewmodel.dart';
 import 'package:key_budget/features/expenses/widgets/category_filter_modal.dart';
@@ -38,6 +40,20 @@ class FakeCategoryVM extends CategoryViewModel {
 
   @override
   Future<void> fetchCategories(String userId) async {}
+}
+
+class ColdStartCategoryVM extends FakeCategoryVM {
+  ColdStartCategoryVM(this.loadedCategories) : super([]);
+
+  final List<ExpenseCategory> loadedCategories;
+  int fetchCount = 0;
+
+  @override
+  Future<void> fetchCategories(String userId) async {
+    fetchCount++;
+    mockCategories.addAll(loadedCategories);
+    notifyListeners();
+  }
 }
 
 class FakeAuthVM extends AuthViewModel {
@@ -110,6 +126,30 @@ void main() {
       ),
     );
   }
+
+  testWidgets('direct expense launch loads categories before selection', (tester) async {
+    final categories = ColdStartCategoryVM(testCategories);
+    await tester.pumpWidget(
+      createTestApp(
+        child: const AddExpenseScreen(),
+        expenseVM: FakeExpenseVM(),
+        categoryVM: categories,
+        authVM: FakeAuthVM(mockUser: testUser),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(categories.fetchCount, 1);
+    await tester.ensureVisible(find.byType(CategoryPickerField));
+    await tester.tap(find.byType(CategoryPickerField));
+    await tester.pumpAndSettle();
+    expect(find.text('Selecione uma Categoria'), findsOneWidget);
+    expect(find.text('Alimentação'), findsOneWidget);
+    await tester.tap(find.text('Alimentação'));
+    await tester.pumpAndSettle();
+    expect(find.text('Selecione uma Categoria'), findsNothing);
+    expect(find.text('Alimentação'), findsOneWidget);
+  });
 
   group('ActivityTile Badges', () {
     testWidgets('renders compact scheduled icon when expense date is in the future', (tester) async {
