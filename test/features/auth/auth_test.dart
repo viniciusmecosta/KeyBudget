@@ -19,7 +19,7 @@ class FakeLocalAuthentication extends Fake implements LocalAuthentication {
   bool canCheckBiometricsValue = true;
   List<BiometricType> biometrics = [BiometricType.fingerprint];
   bool authenticateResult = true;
-  PlatformException? throwOnAuth;
+  Object? throwOnAuth;
 
   @override
   Future<bool> isDeviceSupported() async => isDeviceSupportedValue;
@@ -222,7 +222,33 @@ void main() {
       expect(await service.authenticateLocal(), LocalAuthResult.success);
 
       fakeAuth.authenticateResult = false;
+      expect(await service.authenticateLocal(), LocalAuthResult.failed);
+
+      fakeAuth.throwOnAuth = const LocalAuthException(
+        code: LocalAuthExceptionCode.userCanceled,
+      );
       expect(await service.authenticateLocal(), LocalAuthResult.cancelled);
+
+      fakeAuth.throwOnAuth = const LocalAuthException(
+        code: LocalAuthExceptionCode.systemCanceled,
+      );
+      expect(await service.authenticateLocal(), LocalAuthResult.cancelled);
+
+      fakeAuth.throwOnAuth = const LocalAuthException(
+        code: LocalAuthExceptionCode.temporaryLockout,
+      );
+      expect(
+        await service.authenticateLocal(),
+        LocalAuthResult.temporarilyLockedOut,
+      );
+
+      fakeAuth.throwOnAuth = const LocalAuthException(
+        code: LocalAuthExceptionCode.biometricLockout,
+      );
+      expect(
+        await service.authenticateLocal(),
+        LocalAuthResult.permanentlyLockedOut,
+      );
 
       fakeAuth.throwOnAuth = PlatformException(code: 'LockedOut');
       expect(await service.authenticateLocal(), LocalAuthResult.temporarilyLockedOut);
