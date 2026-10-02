@@ -757,36 +757,12 @@ class UserScreen extends ConsumerWidget {
                     buildSection('Dados e recuperação', [
                       SettingsTile(
                         icon: Icons.shield_outlined,
-                        title: 'Criar backup manual',
-                        subtitle: 'Gerar um arquivo .kbudget com senha própria',
+                        title: 'Backup',
+                        subtitle: 'Criar, agendar e restaurar cópias',
                         onTap: () {
                           NavigationUtils.push(
                             context,
                             const BackupRestoreScreen(),
-                          );
-                        },
-                      ),
-                      const Divider(height: 1, indent: 56, endIndent: 16),
-                      SettingsTile(
-                        icon: Icons.schedule_outlined,
-                        title: 'Backup automático',
-                        subtitle: 'Periodicidade, senha e histórico de cópias',
-                        onTap: () {
-                          NavigationUtils.push(
-                            context,
-                            const BackupRestoreScreen(initialTab: 1),
-                          );
-                        },
-                      ),
-                      const Divider(height: 1, indent: 56, endIndent: 16),
-                      SettingsTile(
-                        icon: Icons.settings_backup_restore_outlined,
-                        title: 'Restaurar backup',
-                        subtitle: 'Abrir um arquivo .kbudget com a senha dele',
-                        onTap: () {
-                          NavigationUtils.push(
-                            context,
-                            const BackupRestoreScreen(initialTab: 2),
                           );
                         },
                       ),

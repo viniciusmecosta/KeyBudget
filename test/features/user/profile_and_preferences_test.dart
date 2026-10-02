@@ -375,6 +375,10 @@ void main() {
       expect(find.text('DADOS E RECUPERAÇÃO'), findsOneWidget);
       expect(find.text('SESSÃO'), findsOneWidget);
       expect(find.text('Personalizar painel'), findsOneWidget);
+      expect(find.text('Backup'), findsOneWidget);
+      expect(find.text('Criar backup manual'), findsNothing);
+      expect(find.text('Backup automático'), findsNothing);
+      expect(find.text('Restaurar backup'), findsNothing);
 
       expect(find.text('Bloquear ao sair do aplicativo'), findsOneWidget);
       expect(find.text('Proteger captura de tela'), findsOneWidget);
