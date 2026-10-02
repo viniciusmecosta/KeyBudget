@@ -85,9 +85,6 @@ class _MainScreenState extends ConsumerState<MainScreen> {
     }
 
     final currentDestination = navigationViewModel.currentDestination;
-    final hasVisitedCurrentDestination = _loadedDestinations.contains(
-      currentDestination,
-    );
     _loadedDestinations.add(currentDestination);
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -118,7 +115,6 @@ class _MainScreenState extends ConsumerState<MainScreen> {
       key: ValueKey('main_stack_$currentUserId'),
       child: TabSelectionTransition(
         revision: navigationViewModel.selectionRevision,
-        enabled: hasVisitedCurrentDestination,
         child: IndexedStack(
           index: stackIndex,
           children: AppDestination.values.map((dest) {

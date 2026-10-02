@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:key_budget/app/config/app_theme.dart';
-import 'package:key_budget/app/utils/app_animations.dart';
 import 'package:key_budget/app/utils/navigation_utils.dart';
 import 'package:key_budget/app/widgets/animated_list_item.dart';
 import 'package:key_budget/app/widgets/empty_state_widget.dart';
@@ -118,8 +117,7 @@ class _DocumentsScreenState extends ConsumerState<DocumentsScreen> {
           ],
         ),
         body: SafeArea(
-          child: AppAnimations.fadeInFromBottom(
-            RefreshIndicator(
+          child: RefreshIndicator(
               onRefresh: _handleRefresh,
               color: theme.colorScheme.primary,
               backgroundColor: theme.colorScheme.surface,
@@ -210,12 +208,8 @@ class _DocumentsScreenState extends ConsumerState<DocumentsScreen> {
                 ),
               ),
             ),
-
-            context: context,
-          ),
         ),
-        floatingActionButton: AppAnimations.scaleIn(
-          FloatingActionButton.extended(
+        floatingActionButton: FloatingActionButton.extended(
             onPressed: () =>
                 NavigationUtils.push(context, const AddDocumentScreen()),
             label: const Text('Novo Documento'),
@@ -223,9 +217,6 @@ class _DocumentsScreenState extends ConsumerState<DocumentsScreen> {
             shape: RoundedRectangleBorder(
               borderRadius: AppBorders.borderRadiusXXL,
             ),
-          ),
-
-          context: context,
         ),
       ),
     );

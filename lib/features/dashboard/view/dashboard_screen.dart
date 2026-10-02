@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart' hide DateUtils;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:key_budget/app/utils/app_animations.dart';
 import 'package:key_budget/app/widgets/responsive_center.dart';
 import 'package:key_budget/core/design_system/spacing/app_spacing.dart';
 import 'package:key_budget/features/auth/viewmodel/auth_viewmodel.dart';
@@ -154,15 +153,9 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                                         'dashboard_${layout.cards[index]}',
                                       ),
                                       width: width,
-                                      child: AppAnimations.fadeInFromBottom(
-                                        _cardFor(
-                                          layout.cards[index],
-                                          layout.actions,
-                                        ),
-                                        context: context,
-                                        delay: Duration(
-                                          milliseconds: index * 100,
-                                        ),
+                                      child: _cardFor(
+                                        layout.cards[index],
+                                        layout.actions,
                                       ),
                                     ),
                                 ],
