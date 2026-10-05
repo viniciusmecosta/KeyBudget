@@ -15,6 +15,7 @@ import 'package:key_budget/core/design_system/widgets/app_status_badge.dart';
 import 'package:key_budget/core/models/credential_model.dart';
 import 'package:key_budget/core/models/folder_model.dart';
 import 'package:key_budget/core/services/snackbar_service.dart';
+import 'package:key_budget/core/services/sensitive_clipboard.dart';
 import 'package:key_budget/features/auth/viewmodel/auth_viewmodel.dart';
 import 'package:key_budget/features/credentials/viewmodel/credential_viewmodel.dart';
 import 'package:mask_text_input_formatter/mask_text_input_formatter.dart';
@@ -33,8 +34,7 @@ class CredentialDetailScreen extends ConsumerStatefulWidget {
       _CredentialDetailScreenState();
 }
 
-class _CredentialDetailScreenState
-    extends ConsumerState<CredentialDetailScreen>
+class _CredentialDetailScreenState extends ConsumerState<CredentialDetailScreen>
     with WidgetsBindingObserver {
   final _formKey = GlobalKey<FormState>();
   late TextEditingController _locationController;
@@ -553,7 +553,7 @@ class _CredentialDetailScreenState
               tooltip: 'Salvar',
               onPressed: _saveChanges,
             ),
-          ]
+          ],
         ],
       ),
       body: AppAnimations.fadeInFromBottom(
@@ -601,17 +601,21 @@ class _CredentialDetailScreenState
               : _buildDetailContent(theme, vm),
         ),
 
-        context: context,),
+        context: context,
+      ),
     );
   }
 
   Widget _buildDetailContent(ThemeData theme, CredentialViewModel vm) {
     Folder? folder;
     if (_selectedFolderId != null) {
-      folder = vm.allFolders.where((f) => f.id == _selectedFolderId).firstOrNull;
+      folder = vm.allFolders
+          .where((f) => f.id == _selectedFolderId)
+          .firstOrNull;
     }
 
-    final hasComplements = _emailController.text.trim().isNotEmpty ||
+    final hasComplements =
+        _emailController.text.trim().isNotEmpty ||
         _phoneController.text.replaceAll(RegExp(r'[^0-9]'), '').isNotEmpty ||
         _notesController.text.trim().isNotEmpty;
 
@@ -660,14 +664,19 @@ class _CredentialDetailScreenState
                 label: 'Local / Serviço',
                 value: _locationController.text.trim(),
               ),
-              Divider(height: 1, color: theme.colorScheme.outlineVariant.withValues(alpha: 0.5)),
+              Divider(
+                height: 1,
+                color: theme.colorScheme.outlineVariant.withValues(alpha: 0.5),
+              ),
               _buildDetailRow(
                 context: context,
                 icon: Icons.person_outline,
                 label: 'Login / Usuário',
                 value: _loginController.text.trim(),
                 onCopy: () {
-                  Clipboard.setData(ClipboardData(text: _loginController.text.trim()));
+                  Clipboard.setData(
+                    ClipboardData(text: _loginController.text.trim()),
+                  );
                   HapticFeedback.lightImpact();
                   SnackbarService.showSuccess(context, 'Login copiado!');
                 },
@@ -686,7 +695,11 @@ class _CredentialDetailScreenState
                   padding: const EdgeInsets.symmetric(vertical: AppSpacing.sm),
                   child: Row(
                     children: [
-                      Icon(Icons.lock_reset, color: theme.colorScheme.error, size: 28),
+                      Icon(
+                        Icons.lock_reset,
+                        color: theme.colorScheme.error,
+                        size: 28,
+                      ),
                       const SizedBox(width: AppSpacing.md),
                       Expanded(
                         child: Column(
@@ -721,7 +734,11 @@ class _CredentialDetailScreenState
                   padding: const EdgeInsets.symmetric(vertical: AppSpacing.xs),
                   child: Row(
                     children: [
-                      Icon(Icons.key_outlined, size: 20, color: theme.colorScheme.primary),
+                      Icon(
+                        Icons.key_outlined,
+                        size: 20,
+                        color: theme.colorScheme.primary,
+                      ),
                       const SizedBox(width: AppSpacing.md),
                       Expanded(
                         child: Column(
@@ -735,9 +752,13 @@ class _CredentialDetailScreenState
                             ),
                             const SizedBox(height: 2),
                             Semantics(
-                              label: _isPasswordVisible ? 'Senha visível' : 'Senha oculta',
+                              label: _isPasswordVisible
+                                  ? 'Senha visível'
+                                  : 'Senha oculta',
                               child: Text(
-                                _isPasswordVisible ? _decryptedPassword : '••••••••••••',
+                                _isPasswordVisible
+                                    ? _decryptedPassword
+                                    : '••••••••••••',
                                 style: theme.textTheme.bodyLarge?.copyWith(
                                   fontWeight: FontWeight.bold,
                                   letterSpacing: _isPasswordVisible ? 0.5 : 2.0,
@@ -749,9 +770,13 @@ class _CredentialDetailScreenState
                       ),
                       IconButton(
                         icon: Icon(
-                          _isPasswordVisible ? Icons.visibility_off_outlined : Icons.visibility_outlined,
+                          _isPasswordVisible
+                              ? Icons.visibility_off_outlined
+                              : Icons.visibility_outlined,
                         ),
-                        tooltip: _isPasswordVisible ? 'Ocultar senha' : 'Mostrar senha',
+                        tooltip: _isPasswordVisible
+                            ? 'Ocultar senha'
+                            : 'Mostrar senha',
                         onPressed: () {
                           setState(() {
                             _isPasswordVisible = !_isPasswordVisible;
@@ -761,12 +786,15 @@ class _CredentialDetailScreenState
                       IconButton(
                         icon: const Icon(Icons.copy_outlined),
                         tooltip: 'Copiar senha',
-                        onPressed: () {
-                          Clipboard.setData(ClipboardData(text: _decryptedPassword));
+                        onPressed: () async {
+                          await SensitiveClipboard.copyPassword(
+                            _decryptedPassword,
+                          );
+                          if (!mounted) return;
                           HapticFeedback.lightImpact();
                           SnackbarService.showSuccess(
                             context,
-                            'Senha copiada para a área de transferência',
+                            'Senha copiada por 30 segundos',
                           );
                         },
                       ),
@@ -789,22 +817,33 @@ class _CredentialDetailScreenState
                     label: 'E-mail',
                     value: _emailController.text.trim(),
                     onCopy: () {
-                      Clipboard.setData(ClipboardData(text: _emailController.text.trim()));
+                      Clipboard.setData(
+                        ClipboardData(text: _emailController.text.trim()),
+                      );
                       HapticFeedback.lightImpact();
                       SnackbarService.showSuccess(context, 'E-mail copiado!');
                     },
                     copyTooltip: 'Copiar e-mail',
                   ),
                 ],
-                if (_phoneController.text.replaceAll(RegExp(r'[^0-9]'), '').isNotEmpty) ...[
-                  Divider(height: 1, color: theme.colorScheme.outlineVariant.withValues(alpha: 0.5)),
+                if (_phoneController.text
+                    .replaceAll(RegExp(r'[^0-9]'), '')
+                    .isNotEmpty) ...[
+                  Divider(
+                    height: 1,
+                    color: theme.colorScheme.outlineVariant.withValues(
+                      alpha: 0.5,
+                    ),
+                  ),
                   _buildDetailRow(
                     context: context,
                     icon: Icons.phone_outlined,
                     label: 'Telefone',
                     value: _phoneController.text.trim(),
                     onCopy: () {
-                      Clipboard.setData(ClipboardData(text: _phoneController.text.trim()));
+                      Clipboard.setData(
+                        ClipboardData(text: _phoneController.text.trim()),
+                      );
                       HapticFeedback.lightImpact();
                       SnackbarService.showSuccess(context, 'Telefone copiado!');
                     },
@@ -812,7 +851,12 @@ class _CredentialDetailScreenState
                   ),
                 ],
                 if (_notesController.text.trim().isNotEmpty) ...[
-                  Divider(height: 1, color: theme.colorScheme.outlineVariant.withValues(alpha: 0.5)),
+                  Divider(
+                    height: 1,
+                    color: theme.colorScheme.outlineVariant.withValues(
+                      alpha: 0.5,
+                    ),
+                  ),
                   _buildDetailRow(
                     context: context,
                     icon: Icons.edit_note_outlined,

@@ -70,6 +70,45 @@ class DocumentViewModel extends ChangeNotifier {
         await entry.delete();
       }
     }
+    final cacheRoot = Directory(p.join(directory.path, 'attachment_cache'));
+    if (!await cacheRoot.exists()) return;
+    await for (final userDirectory in cacheRoot.list()) {
+      if (userDirectory is! Directory) continue;
+      await for (final entry in userDirectory.list()) {
+        if (entry is File && p.basename(entry.path).startsWith('$driveId-')) {
+          await entry.delete();
+        }
+      }
+    }
+  }
+
+  static Future<void> _clearUserAttachmentCache(
+    String userId,
+    List<Document> documents,
+  ) async {
+    try {
+      final directory = await getApplicationDocumentsDirectory();
+      final cache = Directory(
+        p.join(directory.path, 'attachment_cache', p.basename(userId)),
+      );
+      if (await cache.exists()) {
+        await cache.delete(recursive: true);
+      }
+      final driveIds = documents
+          .expand((document) => document.attachments)
+          .map((attachment) => attachment.driveId)
+          .toSet();
+      if (driveIds.isEmpty) return;
+      await for (final entry in directory.list()) {
+        if (entry is! File) continue;
+        final name = p.basename(entry.path);
+        if (driveIds.any((id) => name.startsWith('${p.basename(id)}-'))) {
+          await entry.delete();
+        }
+      }
+    } catch (_) {
+      return;
+    }
   }
 
   StreamSubscription? _documentsSubscription;
@@ -120,6 +159,10 @@ class DocumentViewModel extends ChangeNotifier {
   void listenToDocuments(String userId) {
     if (_isListening && _listeningUserId == userId) return;
     if (_listeningUserId != userId) {
+      final previousUserId = _listeningUserId;
+      if (previousUserId != null) {
+        unawaited(_clearUserAttachmentCache(previousUserId, _documents));
+      }
       _documents = [];
       _currentDisplayItems = [];
       _searchQuery = '';
@@ -510,8 +553,16 @@ class DocumentViewModel extends ChangeNotifier {
 
   Future<File> _getLocalFile(Attachment attachment) async {
     final dir = await getApplicationDocumentsDirectory();
+    final userId = _listeningUserId;
+    if (userId == null) {
+      throw StateError('Nenhuma conta ativa para abrir o anexo.');
+    }
+    final cache = Directory(
+      p.join(dir.path, 'attachment_cache', p.basename(userId)),
+    );
+    await cache.create(recursive: true);
     final filePath = p.join(
-      dir.path,
+      cache.path,
       '${p.basename(attachment.driveId)}-${p.basename(attachment.name)}',
     );
     return File(filePath);
@@ -621,6 +672,10 @@ class DocumentViewModel extends ChangeNotifier {
   }
 
   void clearData() {
+    final previousUserId = _listeningUserId;
+    if (previousUserId != null) {
+      unawaited(_clearUserAttachmentCache(previousUserId, _documents));
+    }
     _documentsSubscription?.cancel();
     _documents = [];
     _currentDisplayItems = [];

@@ -12,6 +12,7 @@ import 'package:key_budget/app/view/lock_screen.dart';
 import 'package:key_budget/core/services/app_lock_service.dart';
 import 'package:key_budget/core/services/home_widget_service.dart';
 import 'package:key_budget/core/services/notification_service.dart';
+import 'package:key_budget/core/services/sensitive_export_cache.dart';
 import 'package:key_budget/core/design_system/widgets/app_feedback_panel.dart';
 import 'package:key_budget/features/auth/viewmodel/auth_viewmodel.dart';
 import 'package:key_budget/features/dashboard/widgets/dashboard_skeleton.dart';
@@ -42,6 +43,7 @@ class _AppInitializerState extends ConsumerState<AppInitializer> {
 
   Future<void> _initServices() async {
     await AppConfig.initialize();
+    unawaited(SensitiveExportCache.clearExpired());
     ref.read(authViewModelProvider);
     await HomeWidgetService.initialize();
     await NotificationService.initialize();

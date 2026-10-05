@@ -81,18 +81,40 @@ class _CredentialsScreenState extends ConsumerState<CredentialsScreen> {
     if (mounted) setState(() => _isProcessing = false);
   }
 
-  void _export(BuildContext context, {String type = 'csv'}) async {
+  Future<void> _export(BuildContext context, {String type = 'csv'}) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('Exportar credenciais?'),
+        content: Text(
+          type == 'csv'
+              ? 'O arquivo CSV inclui as senhas em texto legível. Compartilhe somente com um destino confiável e apague a cópia quando terminar.'
+              : 'O relatório PDF pode incluir dados das suas credenciais. Compartilhe somente com um destino confiável.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(dialogContext).pop(false),
+            child: const Text('Cancelar'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.of(dialogContext).pop(true),
+            child: const Text('Continuar'),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true || !mounted || !context.mounted) return;
     setState(() => _isProcessing = true);
-
-    final viewModel = ref.read(credentialViewModelProvider);
-
-    if (type == 'csv') {
-      await viewModel.exportCredentialsToCsv(context);
-    } else if (type == 'pdf') {
-      await viewModel.exportCredentialsToPdf(context);
+    try {
+      final viewModel = ref.read(credentialViewModelProvider);
+      if (type == 'csv') {
+        await viewModel.exportCredentialsToCsv(context);
+      } else if (type == 'pdf') {
+        await viewModel.exportCredentialsToPdf(context);
+      }
+    } finally {
+      if (mounted) setState(() => _isProcessing = false);
     }
-
-    if (mounted) setState(() => _isProcessing = false);
   }
 
   void _showCreateFolderDialog(BuildContext context, String userId) {
