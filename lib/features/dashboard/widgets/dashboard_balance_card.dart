@@ -147,8 +147,24 @@ class _DashboardBalanceCardState extends ConsumerState<DashboardBalanceCard>
       filledPrimary,
       isDark: true,
     );
+    final scheduledExpenses = viewModel.scheduledExpensesMinorForMonth;
+    final scheduledIncomes = viewModel.scheduledIncomesMinorForMonth;
+    final hasScheduled = scheduledExpenses != 0 || scheduledIncomes != 0;
 
-    final valueSubtitle = hasPreviousMonths
+    final valueSubtitle = hasScheduled
+        ? Text(
+            enableIncomes
+                ? scheduledExpenses != 0 && scheduledIncomes != 0
+                      ? 'Inclui receitas e despesas agendadas'
+                      : scheduledIncomes != 0
+                      ? 'Inclui receitas agendadas'
+                      : 'Inclui despesas agendadas'
+                : 'Inclui ${NumberFormat.currency(locale: 'pt_BR', symbol: 'R\$').format(scheduledExpenses / 100)} agendados',
+            style: theme.textTheme.bodySmall?.copyWith(
+              color: cardTextColor.withAlpha((255 * 0.88).round()),
+            ),
+          )
+        : hasPreviousMonths
         ? Row(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.center,

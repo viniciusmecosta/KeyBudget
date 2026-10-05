@@ -124,6 +124,29 @@ class DashboardViewModel extends ChangeNotifier {
     return Money.fromCents(totalMinor).toDouble();
   }
 
+  static int scheduledMinorForMonth(
+    List<Expense> expenses, {
+    required DateTime now,
+    required bool isIncome,
+  }) {
+    final tomorrow = DateTime(now.year, now.month, now.day + 1);
+    return expenses
+        .where(
+          (expense) =>
+              expense.date.year == now.year &&
+              expense.date.month == now.month &&
+              !expense.date.isBefore(tomorrow) &&
+              (expense.isIncome == true) == isIncome,
+        )
+        .fold<int>(0, (total, expense) => total + expense.money.amountMinor);
+  }
+
+  int get scheduledExpensesMinorForMonth =>
+      scheduledMinorForMonth(allExpenses, now: DateTime.now(), isIncome: false);
+
+  int get scheduledIncomesMinorForMonth =>
+      scheduledMinorForMonth(allExpenses, now: DateTime.now(), isIncome: true);
+
   double get balanceForMonth {
     return totalIncomeForMonth - totalAmountForMonth;
   }
