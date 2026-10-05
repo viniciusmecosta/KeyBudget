@@ -127,9 +127,14 @@ class _DashboardBalanceCardState extends ConsumerState<DashboardBalanceCard>
         '${isIncrease ? '+' : ''}${percentageChange.abs().toStringAsFixed(1)}%';
 
     final isGood = enableIncomes ? isIncrease : !isIncrease;
-    final badgeTextColor = isGood
-        ? Colors.greenAccent[400]!
-        : Colors.redAccent[200]!;
+    final filledPrimary = AppContrast.primaryWithWhiteText(
+      theme.colorScheme.primary,
+    );
+    final badgeTextColor = AppContrast.accentOnSurface(
+      isGood ? Colors.greenAccent[400]! : Colors.redAccent[200]!,
+      filledPrimary,
+      isDark: true,
+    );
 
     final valueSubtitle = hasPreviousMonths
         ? Row(
@@ -198,17 +203,23 @@ class _DashboardBalanceCardState extends ConsumerState<DashboardBalanceCard>
         final isReddish = primaryHue >= 330 || primaryHue <= 20;
         final incomeIconColor = isGreenish
             ? cardTextColor
-            : Colors.greenAccent[400]!;
+            : AppContrast.accentOnSurface(
+                Colors.greenAccent[400]!,
+                filledPrimary,
+                isDark: true,
+              );
         final expenseIconColor = isReddish
             ? cardTextColor
-            : theme.colorScheme.error;
+            : AppContrast.accentOnSurface(
+                theme.colorScheme.error,
+                filledPrimary,
+                isDark: true,
+              );
         return BalanceCard(
           title: enableIncomes ? 'Saldo do período' : 'Despesas do mês',
           totalValue: _animation.value,
           foregroundColor: cardTextColor,
-          backgroundColor: AppContrast.primaryWithWhiteText(
-            theme.colorScheme.primary,
-          ),
+          backgroundColor: filledPrimary,
           onTap: () {
             ref
                 .read(navigationViewModelProvider)

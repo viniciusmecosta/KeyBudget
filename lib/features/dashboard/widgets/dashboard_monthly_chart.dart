@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'package:key_budget/app/utils/navigation_utils.dart';
+import 'package:key_budget/core/design_system/colors/app_contrast.dart';
 import 'package:key_budget/core/design_system/spacing/app_spacing.dart';
 import 'package:key_budget/core/design_system/widgets/app_card.dart';
 import 'package:key_budget/core/design_system/widgets/app_section_header.dart';
@@ -19,6 +20,16 @@ class DashboardMonthlyChart extends ConsumerWidget {
     final authViewModel = ref.watch(authViewModelProvider);
     final enableIncomes = authViewModel.currentUser?.enableIncomes ?? false;
     final theme = Theme.of(context);
+    final incomeChartColor = AppContrast.accentOnSurface(
+      Colors.greenAccent[400]!,
+      theme.colorScheme.surface,
+      isDark: theme.brightness == Brightness.dark,
+    );
+    final expenseChartColor = AppContrast.accentOnSurface(
+      theme.colorScheme.error,
+      theme.colorScheme.surface,
+      isDark: theme.brightness == Brightness.dark,
+    );
     final now = DateTime.now();
 
     final Map<int, double> expensesByMonth = {};
@@ -119,7 +130,7 @@ class DashboardMonthlyChart extends ConsumerWidget {
 
       final incomeRod = BarChartRodData(
         toY: incVal,
-        color: Colors.greenAccent[400],
+        color: incomeChartColor,
         width: 16,
         borderRadius: BorderRadius.circular(6),
       );
@@ -164,7 +175,7 @@ class DashboardMonthlyChart extends ConsumerWidget {
                   width: 8,
                   height: 8,
                   decoration: BoxDecoration(
-                    color: Colors.greenAccent[400],
+                    color: incomeChartColor,
                     shape: BoxShape.circle,
                   ),
                 ),
@@ -175,7 +186,7 @@ class DashboardMonthlyChart extends ConsumerWidget {
                   width: 8,
                   height: 8,
                   decoration: BoxDecoration(
-                    color: theme.colorScheme.error,
+                    color: expenseChartColor,
                     shape: BoxShape.circle,
                   ),
                 ),
@@ -230,9 +241,9 @@ class DashboardMonthlyChart extends ConsumerWidget {
                                       ).format(rod.toY),
                                       TextStyle(
                                         color: isIncomeRod
-                                            ? Colors.greenAccent[400]
+                                            ? incomeChartColor
                                             : (enableIncomes
-                                                  ? theme.colorScheme.error
+                                                  ? expenseChartColor
                                                   : theme.colorScheme.primary),
                                         fontWeight: FontWeight.bold,
                                         fontSize: 13,

@@ -38,9 +38,9 @@ class AppContrast {
   }) {
     final target = isDark ? Colors.white : Colors.black;
     var adjusted = accent.withAlpha(255);
-    for (var step = 0; step < 20 && ratio(adjusted, surface) < 4.5; step++) {
+    for (var step = 0; step < 48 && ratio(adjusted, surface) < 4.5; step++) {
       adjusted = Color.lerp(adjusted, target, 0.1)!;
     }
-    return adjusted;
+    return ratio(adjusted, surface) >= 4.5 ? adjusted : target;
   }
 }

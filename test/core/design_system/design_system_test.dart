@@ -13,10 +13,25 @@ void main() {
   group('AppTheme & Semantic Colors', () {
     test('keeps custom accents and their labels readable in both themes', () {
       for (final isDark in [false, true]) {
-        for (final seed in <int?>[null, 0xFF0D47A1, 0xFFFFEB3B, 0xFF9F1239, 0xFF0F766E]) {
-          final scheme = AppTheme.getTheme(isDark: isDark, colorValue: seed).colorScheme;
-          expect(AppContrast.ratio(scheme.primary, scheme.surface), greaterThanOrEqualTo(4.5));
-          expect(AppContrast.ratio(scheme.onPrimary, scheme.primary), greaterThanOrEqualTo(4.5));
+        for (final seed in <int?>[
+          null,
+          0xFF0D47A1,
+          0xFFFFEB3B,
+          0xFF9F1239,
+          0xFF0F766E,
+        ]) {
+          final scheme = AppTheme.getTheme(
+            isDark: isDark,
+            colorValue: seed,
+          ).colorScheme;
+          expect(
+            AppContrast.ratio(scheme.primary, scheme.surface),
+            greaterThanOrEqualTo(4.5),
+          );
+          expect(
+            AppContrast.ratio(scheme.onPrimary, scheme.primary),
+            greaterThanOrEqualTo(4.5),
+          );
         }
       }
     });
@@ -26,7 +41,10 @@ void main() {
         for (final color in [0xFF1E40AF, 0xFF15803D, 0xFF9F1239]) {
           expect(
             AppTheme.effectivePrimary(isDark: isDark, colorValue: color),
-            AppTheme.getTheme(isDark: isDark, colorValue: color).colorScheme.primary,
+            AppTheme.getTheme(
+              isDark: isDark,
+              colorValue: color,
+            ).colorScheme.primary,
           );
         }
       }
@@ -34,15 +52,72 @@ void main() {
 
     test('primary filled surfaces keep white labels legible', () {
       for (final isDark in [false, true]) {
-        for (final seed in <int?>[null, 0xFF0D47A1, 0xFFFFEB3B, 0xFF9F1239, 0xFF0F766E, 0xFFB3A2F0]) {
+        for (final seed in <int?>[
+          null,
+          0xFF0D47A1,
+          0xFFFFEB3B,
+          0xFF9F1239,
+          0xFF0F766E,
+          0xFFB3A2F0,
+        ]) {
           final theme = AppTheme.getTheme(isDark: isDark, colorValue: seed);
-          final background = AppContrast.primaryWithWhiteText(theme.colorScheme.primary);
-          expect(AppContrast.ratio(Colors.white, background), greaterThanOrEqualTo(4.5));
+          final background = AppContrast.primaryWithWhiteText(
+            theme.colorScheme.primary,
+          );
+          expect(
+            AppContrast.ratio(Colors.white, background),
+            greaterThanOrEqualTo(4.5),
+          );
           expect(theme.floatingActionButtonTheme.backgroundColor, background);
           expect(theme.floatingActionButtonTheme.foregroundColor, Colors.white);
         }
       }
     });
+
+    test(
+      'status accents remain readable on custom cards and chart surfaces',
+      () {
+        for (final isDark in [false, true]) {
+          for (final seed in <int?>[
+            null,
+            0xFF0D47A1,
+            0xFFFFEB3B,
+            0xFF9F1239,
+            0xFF0F766E,
+            0xFFB3A2F0,
+          ]) {
+            final theme = AppTheme.getTheme(isDark: isDark, colorValue: seed);
+            final filled = AppContrast.primaryWithWhiteText(
+              theme.colorScheme.primary,
+            );
+            for (final accent in [
+              Colors.greenAccent,
+              Colors.redAccent,
+              theme.colorScheme.error,
+            ]) {
+              final onCard = AppContrast.accentOnSurface(
+                accent,
+                filled,
+                isDark: true,
+              );
+              final onChart = AppContrast.accentOnSurface(
+                accent,
+                theme.colorScheme.surface,
+                isDark: isDark,
+              );
+              expect(
+                AppContrast.ratio(onCard, filled),
+                greaterThanOrEqualTo(4.5),
+              );
+              expect(
+                AppContrast.ratio(onChart, theme.colorScheme.surface),
+                greaterThanOrEqualTo(4.5),
+              );
+            }
+          }
+        }
+      },
+    );
 
     test('exposes AppSemanticColors via ThemeExtension', () {
       final lightTheme = AppTheme.lightTheme;
@@ -57,19 +132,28 @@ void main() {
   });
 
   group('AppButton', () {
-    testWidgets('uses white text on a light custom primary color', (tester) async {
+    testWidgets('uses white text on a light custom primary color', (
+      tester,
+    ) async {
       final theme = AppTheme.getTheme(isDark: true, colorValue: 0xFFB3A2F0);
-      await tester.pumpWidget(MaterialApp(
-        theme: theme,
-        home: Scaffold(body: AppButton(label: 'Salvar', onPressed: () {})),
-      ));
+      await tester.pumpWidget(
+        MaterialApp(
+          theme: theme,
+          home: Scaffold(
+            body: AppButton(label: 'Salvar', onPressed: () {}),
+          ),
+        ),
+      );
 
       final button = tester.widget<ElevatedButton>(find.byType(ElevatedButton));
       expect(button.style!.foregroundColor!.resolve({}), Colors.white);
-      expect(AppContrast.ratio(
-        Colors.white,
-        button.style!.backgroundColor!.resolve({})!,
-      ), greaterThanOrEqualTo(4.5));
+      expect(
+        AppContrast.ratio(
+          Colors.white,
+          button.style!.backgroundColor!.resolve({})!,
+        ),
+        greaterThanOrEqualTo(4.5),
+      );
     });
 
     testWidgets('renders primary button and fires onPressed', (tester) async {
@@ -78,10 +162,7 @@ void main() {
         MaterialApp(
           theme: AppTheme.lightTheme,
           home: Scaffold(
-            body: AppButton(
-              label: 'Salvar',
-              onPressed: () => pressed = true,
-            ),
+            body: AppButton(label: 'Salvar', onPressed: () => pressed = true),
           ),
         ),
       );
@@ -92,32 +173,35 @@ void main() {
       expect(pressed, isTrue);
     });
 
-    testWidgets('shows spinner with appropriate variant color on loading and disables tap', (tester) async {
-      bool pressed = false;
-      await tester.pumpWidget(
-        MaterialApp(
-          theme: AppTheme.lightTheme,
-          home: Scaffold(
-            body: AppButton(
-              label: 'Excluir',
-              variant: AppButtonVariant.outline,
-              isLoading: true,
-              onPressed: () => pressed = true,
+    testWidgets(
+      'shows spinner with appropriate variant color on loading and disables tap',
+      (tester) async {
+        bool pressed = false;
+        await tester.pumpWidget(
+          MaterialApp(
+            theme: AppTheme.lightTheme,
+            home: Scaffold(
+              body: AppButton(
+                label: 'Excluir',
+                variant: AppButtonVariant.outline,
+                isLoading: true,
+                onPressed: () => pressed = true,
+              ),
             ),
           ),
-        ),
-      );
+        );
 
-      expect(find.byType(CircularProgressIndicator), findsOneWidget);
-      final indicator = tester.widget<CircularProgressIndicator>(
-        find.byType(CircularProgressIndicator),
-      );
-      expect(indicator.color, AppTheme.lightTheme.colorScheme.primary);
+        expect(find.byType(CircularProgressIndicator), findsOneWidget);
+        final indicator = tester.widget<CircularProgressIndicator>(
+          find.byType(CircularProgressIndicator),
+        );
+        expect(indicator.color, AppTheme.lightTheme.colorScheme.primary);
 
-      await tester.tap(find.byType(AppButton));
-      await tester.pump();
-      expect(pressed, isFalse);
-    });
+        await tester.tap(find.byType(AppButton));
+        await tester.pump();
+        expect(pressed, isFalse);
+      },
+    );
   });
 
   group('AppTextField', () {
@@ -161,7 +245,9 @@ void main() {
       expect(find.byIcon(Icons.calendar_today), findsOneWidget);
     });
 
-    testWidgets('renders section header with responsive action', (tester) async {
+    testWidgets('renders section header with responsive action', (
+      tester,
+    ) async {
       bool actionTapped = false;
       await tester.pumpWidget(
         MaterialApp(
@@ -186,7 +272,9 @@ void main() {
       expect(actionTapped, isTrue);
     });
 
-    testWidgets('keeps the analysis action inline at dashboard card width', (tester) async {
+    testWidgets('keeps the analysis action inline at dashboard card width', (
+      tester,
+    ) async {
       tester.view.physicalSize = const Size(329, 500);
       tester.view.devicePixelRatio = 1;
       addTearDown(tester.view.resetPhysicalSize);
@@ -218,7 +306,9 @@ void main() {
   });
 
   group('AppFeedbackPanel', () {
-    testWidgets('renders empty feedback panel with optional action', (tester) async {
+    testWidgets('renders empty feedback panel with optional action', (
+      tester,
+    ) async {
       bool retryClicked = false;
       await tester.pumpWidget(
         MaterialApp(
