@@ -93,12 +93,15 @@ class _ExpenseDetailScreenState extends ConsumerState<ExpenseDetailScreen> {
       moneyVersion: amountChanged ? 1 : null,
       date: _selectedDate,
       categoryId: _selectedCategory?.id,
+      clearCategoryId: _selectedCategory == null,
       motivation: _motivationController.text.isNotEmpty
           ? _motivationController.text
           : null,
+      clearMotivation: _motivationController.text.isEmpty,
       location: _locationController.text.isNotEmpty
           ? _locationController.text
           : null,
+      clearLocation: _locationController.text.isEmpty,
       isIncome: _isIncome,
     );
 
@@ -112,7 +115,10 @@ class _ExpenseDetailScreenState extends ConsumerState<ExpenseDetailScreen> {
       }
     } catch (e) {
       if (mounted) {
-        SnackbarService.showError(context, 'Erro ao salvar alterações da despesa.');
+        SnackbarService.showError(
+          context,
+          'Erro ao salvar alterações da despesa.',
+        );
       }
     } finally {
       if (mounted) {
@@ -251,7 +257,10 @@ class _ExpenseDetailScreenState extends ConsumerState<ExpenseDetailScreen> {
                     ),
                   )
                 : IconButton(
-                    icon: Icon(Icons.delete_outline, color: theme.colorScheme.error),
+                    icon: Icon(
+                      Icons.delete_outline,
+                      color: theme.colorScheme.error,
+                    ),
                     tooltip: 'Excluir',
                     onPressed: _deleteExpense,
                   ),
@@ -324,7 +333,8 @@ class _ExpenseDetailScreenState extends ConsumerState<ExpenseDetailScreen> {
                   },
                   isEditing: _isEditing,
                   isIncome: _isIncome,
-                  isSingleInstallmentEdit: widget.expense.installmentGroupId != null ||
+                  isSingleInstallmentEdit:
+                      widget.expense.installmentGroupId != null ||
                       widget.expense.currentInstallment != null,
                   bottomWidgets: related.isEmpty
                       ? null
@@ -401,7 +411,8 @@ class _ExpenseDetailScreenState extends ConsumerState<ExpenseDetailScreen> {
           ),
         ),
 
-        context: context,),
+        context: context,
+      ),
     );
   }
 }
