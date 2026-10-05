@@ -11,6 +11,7 @@ import 'package:key_budget/core/design_system/borders/app_borders.dart';
 import 'package:key_budget/core/design_system/spacing/app_spacing.dart';
 import 'package:key_budget/core/design_system/widgets/app_card.dart';
 import 'package:key_budget/core/design_system/widgets/app_feedback_panel.dart';
+import 'package:key_budget/core/models/expense_model.dart';
 import 'package:key_budget/core/money/money.dart';
 import 'package:key_budget/core/money/money_parser.dart';
 import 'package:key_budget/core/services/snackbar_service.dart';
@@ -18,7 +19,7 @@ import 'package:key_budget/features/auth/viewmodel/auth_viewmodel.dart';
 import 'package:key_budget/features/category/repository/category_budget_repository.dart';
 import 'package:key_budget/features/category/view/add_edit_category_screen.dart';
 import 'package:key_budget/features/category/viewmodel/category_viewmodel.dart';
-import 'package:key_budget/features/expenses/viewmodel/expense_viewmodel.dart';
+import 'package:key_budget/features/expenses/repository/expense_period_providers.dart';
 
 class CategoriesScreen extends ConsumerStatefulWidget {
   const CategoriesScreen({super.key});
@@ -55,7 +56,6 @@ class _CategoriesScreenState extends ConsumerState<CategoriesScreen> {
       final userId = ref.read(authViewModelProvider).currentUser?.id;
       if (userId != null) {
         ref.read(categoryViewModelProvider).fetchCategories(userId);
-        ref.read(expenseViewModelProvider).listenToExpenses(userId);
       }
     });
   }
@@ -161,7 +161,15 @@ class _CategoriesScreenState extends ConsumerState<CategoriesScreen> {
             builder: (context, ref, _) {
               final viewModel = ref.watch(categoryViewModelProvider);
               final userId = ref.watch(authViewModelProvider).currentUser?.id;
-              final expenses = ref.watch(expenseViewModelProvider).allExpenses;
+              final monthExpenses = userId == null
+                  ? null
+                  : ref.watch(
+                      expensesForMonthProvider((
+                        userId: userId,
+                        month: _selectedMonth,
+                      )),
+                    );
+              final expenses = monthExpenses?.value ?? const <Expense>[];
               final budgets = userId == null
                   ? <String, int>{}
                   : ref
@@ -187,6 +195,12 @@ class _CategoriesScreenState extends ConsumerState<CategoriesScreen> {
                     await ref
                         .read(categoryViewModelProvider)
                         .fetchCategories(userId);
+                    ref.invalidate(
+                      expensesForMonthProvider((
+                        userId: userId,
+                        month: _selectedMonth,
+                      )),
+                    );
                   }
                 },
                 color: theme.colorScheme.primary,
@@ -255,6 +269,28 @@ class _CategoriesScreenState extends ConsumerState<CategoriesScreen> {
                                 ref
                                     .read(categoryViewModelProvider)
                                     .fetchCategories(userId);
+                              }
+                            },
+                          ),
+                        )
+                      else if (monthExpenses?.isLoading == true)
+                        const CategoriesSkeleton()
+                      else if (monthExpenses?.hasError == true)
+                        SliverFillRemaining(
+                          hasScrollBody: false,
+                          child: AppFeedbackPanel(
+                            title: 'Falha ao carregar o consumo do mês',
+                            message: 'Confira sua conexão e tente novamente.',
+                            type: AppFeedbackType.error,
+                            actionLabel: 'Tentar novamente',
+                            onAction: () {
+                              if (userId != null) {
+                                ref.invalidate(
+                                  expensesForMonthProvider((
+                                    userId: userId,
+                                    month: _selectedMonth,
+                                  )),
+                                );
                               }
                             },
                           ),
