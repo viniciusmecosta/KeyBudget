@@ -140,6 +140,7 @@ class DocumentViewModel extends ChangeNotifier {
   String get searchQuery => _searchQuery;
 
   List<Document> get currentDisplayItems => _currentDisplayItems;
+  List<Document> get allDocuments => List.unmodifiable(_documents);
   bool get hasDocuments => _documents.isNotEmpty;
 
   String _sanitize(String input) {

@@ -21,6 +21,7 @@ import 'package:key_budget/features/dashboard/repository/dashboard_layout_reposi
 import 'package:key_budget/features/dashboard/widgets/dashboard_layout_editor.dart';
 import 'package:key_budget/features/expenses/viewmodel/expense_viewmodel.dart';
 import 'package:key_budget/features/goals/view/savings_goals_screen.dart';
+import 'package:key_budget/features/search/view/global_search_screen.dart';
 import 'package:key_budget/features/user/view/navigation_customization_screen.dart';
 import 'package:key_budget/features/user/view/backup_restore_screen.dart';
 import 'package:key_budget/features/user/view/edit_user_screen.dart';
@@ -662,6 +663,16 @@ class UserScreen extends ConsumerWidget {
                     ),
                   ]),
                   buildSection('Recursos', [
+                    SettingsTile(
+                      icon: Icons.search_outlined,
+                      title: 'Busca e favoritos',
+                      subtitle: 'Encontre dados e guarde acessos rápidos',
+                      onTap: () => NavigationUtils.push(
+                        context,
+                        const GlobalSearchScreen(),
+                      ),
+                    ),
+                    const Divider(height: 1, indent: 56, endIndent: 16),
                     SettingsTile(
                       icon: Icons.view_week_outlined,
                       title: 'Personalizar abas',

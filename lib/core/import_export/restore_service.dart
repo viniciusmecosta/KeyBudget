@@ -405,7 +405,8 @@ class RestoreService {
             i.collection == 'recurrence_occurrences' ||
             i.collection == 'credentials' ||
             i.collection == 'suppliers' ||
-            i.collection == 'goal_movements',
+            i.collection == 'goal_movements' ||
+            i.collection == 'search_favorites',
       );
 
       for (final item in secondTierItems) {

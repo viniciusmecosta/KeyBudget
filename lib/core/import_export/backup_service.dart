@@ -56,6 +56,7 @@ class BackupService {
     'documents',
     'goals',
     'goal_movements',
+    'search_favorites',
     'profile',
   ];
 
