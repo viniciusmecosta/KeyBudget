@@ -79,10 +79,27 @@ class DocumentRepository {
     final snapshot = await getDocumentsCollection(
       userId,
     ).get(const GetOptions(source: Source.server));
-    return {
+    final trashSnapshot = await _userRef(
+      userId,
+    ).collection('trash').get(const GetOptions(source: Source.server));
+    final referenced = <String>{
       for (final doc in snapshot.docs)
         for (final attachment in doc.data().attachments) attachment.driveId,
     };
+    for (final entry in trashSnapshot.docs) {
+      if (entry.data()['collection'] != 'documents') continue;
+      for (final record in entry.data()['records'] as List<dynamic>? ?? []) {
+        if (record is! Map) continue;
+        final data = record['data'];
+        if (data is! Map) continue;
+        for (final attachment in data['attachments'] as List<dynamic>? ?? []) {
+          if (attachment is Map && attachment['driveId'] is String) {
+            referenced.add(attachment['driveId'] as String);
+          }
+        }
+      }
+    }
+    return referenced;
   }
 
   Future<void> acknowledgeAttachmentCleanup(

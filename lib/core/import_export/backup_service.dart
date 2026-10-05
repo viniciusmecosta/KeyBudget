@@ -57,6 +57,7 @@ class BackupService {
     'goals',
     'goal_movements',
     'search_favorites',
+    'trash',
     'profile',
   ];
 

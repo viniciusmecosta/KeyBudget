@@ -159,12 +159,9 @@ class _CredentialDetailScreenState extends ConsumerState<CredentialDetailScreen>
     await viewModel.deleteCredential(userId, deletedCredential.id!);
 
     if (!currentContext.mounted) return;
-    SnackbarService.showUndoSnackbar(
+    SnackbarService.showSuccess(
       currentContext,
-      message: 'Credencial excluída.',
-      onUndo: () async {
-        await viewModel.restoreCredential(userId, deletedCredential);
-      },
+      'Credencial movida para a lixeira.',
     );
     screenNavigator.pop();
   }

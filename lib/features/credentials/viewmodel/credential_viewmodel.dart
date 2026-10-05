@@ -17,6 +17,7 @@ import 'package:key_budget/features/credentials/widgets/credential_list_tile.dar
 import 'package:key_budget/features/credentials/widgets/folder_list_tile.dart';
 import 'package:key_budget/features/expenses/repository/expense_repository.dart';
 import 'package:key_budget/features/expenses/repository/recurring_expense_repository.dart';
+import 'package:key_budget/features/trash/repository/trash_repository.dart';
 
 class CredentialViewModel extends ChangeNotifier {
   final CredentialRepository _repository;
@@ -25,6 +26,7 @@ class CredentialViewModel extends ChangeNotifier {
   final PdfService _pdfService;
   final DataImportService _dataImportService;
   final ImportService _importService;
+  final TrashRepository _trashRepository;
   late final CredentialTransferService _transferService;
 
   CredentialViewModel({
@@ -34,10 +36,12 @@ class CredentialViewModel extends ChangeNotifier {
     PdfService? pdfService,
     DataImportService? dataImportService,
     ImportService? importService,
+    TrashRepository? trashRepository,
   }) : _repository = repository ?? CredentialRepository(),
        _csvService = csvService ?? CsvService(),
        _pdfService = pdfService ?? PdfService(),
        _dataImportService = dataImportService ?? DataImportService(),
+       _trashRepository = trashRepository ?? TrashRepository(),
        _importService =
            importService ??
            ImportService(
@@ -402,7 +406,15 @@ class CredentialViewModel extends ChangeNotifier {
   }
 
   Future<void> deleteCredential(String userId, String credentialId) async {
-    await _repository.deleteCredential(userId, credentialId);
+    final credential = _allCredentials
+        .where((item) => item.id == credentialId)
+        .firstOrNull;
+    await _trashRepository.move(
+      userId,
+      collection: 'credentials',
+      ids: [credentialId],
+      title: credential?.location ?? 'Credencial',
+    );
   }
 
   Future<void> restoreCredential(String userId, Credential credential) async {

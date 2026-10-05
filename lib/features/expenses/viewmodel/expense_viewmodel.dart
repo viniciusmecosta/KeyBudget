@@ -24,6 +24,7 @@ import 'package:key_budget/features/expenses/application/recurrence_committer.da
 import 'package:key_budget/features/expenses/application/recurrence_service.dart';
 import 'package:key_budget/features/expenses/domain/recurrence_occurrence.dart';
 import 'package:key_budget/features/expenses/repository/expense_repository.dart';
+import 'package:key_budget/features/trash/repository/trash_repository.dart';
 import 'package:key_budget/features/expenses/repository/recurrence_occurrence_repository.dart';
 import 'package:key_budget/features/expenses/repository/recurring_expense_repository.dart';
 
@@ -40,6 +41,7 @@ class ExpenseViewModel extends ChangeNotifier {
   final PdfService _pdfService;
   final DataImportService _dataImportService;
   final AppClock _clock;
+  final TrashRepository _trashRepository;
   late final ExpenseTransferService _transferService;
   late final RecurrenceGenerationCoordinator _generationCoordinator;
 
@@ -54,6 +56,7 @@ class ExpenseViewModel extends ChangeNotifier {
     PdfService? pdfService,
     DataImportService? dataImportService,
     AppClock? clock,
+    TrashRepository? trashRepository,
   }) : _repository = repository ?? ExpenseRepository(),
        _recurringRepository =
            recurringRepository ?? RecurringExpenseRepository(),
@@ -90,7 +93,8 @@ class ExpenseViewModel extends ChangeNotifier {
        _csvService = csvService ?? CsvService(),
        _pdfService = pdfService ?? PdfService(),
        _dataImportService = dataImportService ?? DataImportService(),
-       _clock = clock ?? const SystemAppClock() {
+       _clock = clock ?? const SystemAppClock(),
+       _trashRepository = trashRepository ?? TrashRepository() {
     _transferService = ExpenseTransferService(
       importService: _importService,
       csvService: _csvService,
@@ -504,7 +508,14 @@ class ExpenseViewModel extends ChangeNotifier {
         expense: expense,
       );
     } else {
-      await _repository.deleteExpense(userId, expenseId);
+      await _trashRepository.move(
+        userId,
+        collection: 'expenses',
+        ids: [expenseId],
+        title: expense.motivation?.trim().isNotEmpty == true
+            ? expense.motivation!
+            : 'Lançamento',
+      );
     }
   }
 

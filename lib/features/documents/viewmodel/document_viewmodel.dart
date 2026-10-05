@@ -11,6 +11,7 @@ import 'package:key_budget/core/search/search_normalizer.dart';
 import 'package:key_budget/core/services/drive_service.dart';
 import 'package:key_budget/features/documents/repository/document_repository.dart';
 import 'package:key_budget/features/documents/widgets/document_list_tile.dart';
+import 'package:key_budget/features/trash/repository/trash_repository.dart';
 import 'package:open_file/open_file.dart';
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
@@ -54,14 +55,17 @@ class DocumentViewModel extends ChangeNotifier {
 
   final DocumentRepository _repository;
   final DriveService _driveService;
+  final TrashRepository _trashRepository;
   final Future<void> Function(String) _clearLocalCache;
 
   DocumentViewModel({
     DocumentRepository? repository,
     DriveService? driveService,
+    TrashRepository? trashRepository,
     Future<void> Function(String)? clearLocalCache,
   }) : _repository = repository ?? DocumentRepository(),
        _driveService = driveService ?? DriveService(),
+       _trashRepository = trashRepository ?? TrashRepository(),
        _clearLocalCache = clearLocalCache ?? _deleteLocalAttachmentCache;
 
   static Future<void> _deleteLocalAttachmentCache(String driveId) async {
@@ -402,15 +406,12 @@ class DocumentViewModel extends ChangeNotifier {
         _setErrorMessage('O documento não foi encontrado. Atualize a lista.');
         return false;
       }
-      await _repository.deleteDocumentsWithCleanup(
+      await _trashRepository.move(
         userId,
-        family.map((version) => version.id!).toList(),
-        {
-          for (final version in family)
-            for (final attachment in version.attachments) attachment.driveId,
-        }.toList(),
+        collection: 'documents',
+        ids: family.map((version) => version.id!).toList(),
+        title: document.documentName,
       );
-      await retryPendingAttachmentCleanup(userId);
       return true;
     } catch (e) {
       _setErrorMessage('Não foi possível excluir o documento.');
@@ -440,14 +441,12 @@ class DocumentViewModel extends ChangeNotifier {
         );
         return false;
       }
-      await _repository.deleteDocumentsWithCleanup(
+      await _trashRepository.move(
         userId,
-        [current.id!],
-        {
-          for (final attachment in current.attachments) attachment.driveId,
-        }.toList(),
+        collection: 'documents',
+        ids: [current.id!],
+        title: '${current.documentName} (versão)',
       );
-      await retryPendingAttachmentCleanup(userId);
       return true;
     } catch (_) {
       _setErrorMessage(

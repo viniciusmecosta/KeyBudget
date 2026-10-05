@@ -6,12 +6,17 @@ import 'package:flutter_riverpod/legacy.dart';
 import 'package:key_budget/core/models/supplier_model.dart';
 import 'package:key_budget/core/search/search_normalizer.dart';
 import 'package:key_budget/features/suppliers/repository/supplier_repository.dart';
+import 'package:key_budget/features/trash/repository/trash_repository.dart';
 
 class SupplierViewModel extends ChangeNotifier {
   final SupplierRepository _repository;
+  final TrashRepository _trashRepository;
 
-  SupplierViewModel({SupplierRepository? repository})
-    : _repository = repository ?? SupplierRepository();
+  SupplierViewModel({
+    SupplierRepository? repository,
+    TrashRepository? trashRepository,
+  }) : _repository = repository ?? SupplierRepository(),
+       _trashRepository = trashRepository ?? TrashRepository();
 
   List<Supplier> _allSuppliers = [];
   bool _isLoading = false;
@@ -154,7 +159,15 @@ class SupplierViewModel extends ChangeNotifier {
   }
 
   Future<void> deleteSupplier(String userId, String supplierId) async {
-    await _repository.deleteSupplier(userId, supplierId);
+    final supplier = _allSuppliers
+        .where((item) => item.id == supplierId)
+        .firstOrNull;
+    await _trashRepository.move(
+      userId,
+      collection: 'suppliers',
+      ids: [supplierId],
+      title: supplier?.name ?? 'Fornecedor',
+    );
   }
 
   Future<void> restoreSupplier(String userId, Supplier supplier) async {

@@ -22,6 +22,7 @@ import 'package:key_budget/features/dashboard/widgets/dashboard_layout_editor.da
 import 'package:key_budget/features/expenses/viewmodel/expense_viewmodel.dart';
 import 'package:key_budget/features/goals/view/savings_goals_screen.dart';
 import 'package:key_budget/features/search/view/global_search_screen.dart';
+import 'package:key_budget/features/trash/view/trash_screen.dart';
 import 'package:key_budget/features/user/view/navigation_customization_screen.dart';
 import 'package:key_budget/features/user/view/backup_restore_screen.dart';
 import 'package:key_budget/features/user/view/edit_user_screen.dart';
@@ -768,6 +769,14 @@ class UserScreen extends ConsumerWidget {
                     ),
                   ]),
                   buildSection('Dados e recuperação', [
+                    SettingsTile(
+                      icon: Icons.delete_outline,
+                      title: 'Lixeira',
+                      subtitle: 'Restaure itens removidos',
+                      onTap: () =>
+                          NavigationUtils.push(context, const TrashScreen()),
+                    ),
+                    const Divider(height: 1, indent: 56, endIndent: 16),
                     SettingsTile(
                       icon: Icons.shield_outlined,
                       title: 'Backup',

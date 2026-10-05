@@ -198,12 +198,13 @@ class _ExpenseDetailScreenState extends ConsumerState<ExpenseDetailScreen> {
     } else {
       await expenseViewModel.deleteExpense(userId, deletedExpense.id!);
       if (currentContext.mounted) {
-        SnackbarService.showUndoSnackbar(
+        SnackbarService.showSuccess(
           currentContext,
-          message: _isIncome ? 'Receita excluída.' : 'Despesa excluída.',
-          onUndo: () async {
-            await expenseViewModel.restoreExpense(userId, deletedExpense);
-          },
+          deletedExpense.recurringExpenseId != null
+              ? 'Lançamento recorrente excluído.'
+              : _isIncome
+              ? 'Receita movida para a lixeira.'
+              : 'Despesa movida para a lixeira.',
         );
         Navigator.of(currentContext).pop();
       }
