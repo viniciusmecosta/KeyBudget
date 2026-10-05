@@ -4,6 +4,7 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/legacy.dart';
 import 'package:key_budget/core/models/supplier_model.dart';
+import 'package:key_budget/core/search/search_normalizer.dart';
 import 'package:key_budget/features/suppliers/repository/supplier_repository.dart';
 
 class SupplierViewModel extends ChangeNotifier {
@@ -27,17 +28,17 @@ class SupplierViewModel extends ChangeNotifier {
   String get searchQuery => _searchQuery;
 
   void setSearchQuery(String query) {
-    _searchQuery = query.trim().toLowerCase();
+    _searchQuery = SearchNormalizer.normalize(query);
     notifyListeners();
   }
 
   List<Supplier> get filteredSuppliers {
     if (_searchQuery.isEmpty) return _allSuppliers;
     return _allSuppliers.where((s) {
-      final name = s.name.toLowerCase();
-      final rep = s.representativeName?.toLowerCase() ?? '';
-      final phone = s.phoneNumber ?? '';
-      final email = s.email?.toLowerCase() ?? '';
+      final name = SearchNormalizer.normalize(s.name);
+      final rep = SearchNormalizer.normalize(s.representativeName ?? '');
+      final phone = SearchNormalizer.normalize(s.phoneNumber ?? '');
+      final email = SearchNormalizer.normalize(s.email ?? '');
       return name.contains(_searchQuery) ||
           rep.contains(_searchQuery) ||
           phone.contains(_searchQuery) ||
@@ -103,7 +104,9 @@ class SupplierViewModel extends ChangeNotifier {
     _isListening = true;
   }
 
-  void retryListenToSuppliers(String userId) {
+  Future<void> retryListenToSuppliers(String userId) async {
+    await _suppliersSubscription?.cancel();
+    _suppliersSubscription = null;
     _isListening = false;
     listenToSuppliers(userId);
   }

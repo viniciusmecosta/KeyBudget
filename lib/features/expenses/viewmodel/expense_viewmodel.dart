@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_riverpod/legacy.dart';
 import 'package:key_budget/core/models/expense_model.dart';
+import 'package:key_budget/core/search/search_normalizer.dart';
 import 'package:key_budget/core/models/recurring_expense_model.dart';
 import 'package:key_budget/core/services/csv_service.dart';
 import 'package:key_budget/core/services/data_import_service.dart';
@@ -237,13 +238,7 @@ class ExpenseViewModel extends ChangeNotifier {
   }
 
   String _sanitize(String input) {
-    var text = input.toLowerCase().replaceAll(RegExp(r'\s+'), ' ').trim();
-    const withDia = 'áàãâäéèêëíìîïóòõôöúùûüçñ';
-    const withoutDia = 'aaaaaeeeeiiiiooooouuuucn';
-    for (int i = 0; i < withDia.length; i++) {
-      text = text.replaceAll(withDia[i], withoutDia[i]);
-    }
-    return text;
+    return SearchNormalizer.normalize(input);
   }
 
   void setSearchQuery(String query) {

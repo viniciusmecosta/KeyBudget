@@ -7,6 +7,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/legacy.dart';
 import 'package:key_budget/app/widgets/animated_list_item.dart';
 import 'package:key_budget/core/models/document_model.dart';
+import 'package:key_budget/core/search/search_normalizer.dart';
 import 'package:key_budget/core/services/drive_service.dart';
 import 'package:key_budget/features/documents/repository/document_repository.dart';
 import 'package:key_budget/features/documents/widgets/document_list_tile.dart';
@@ -142,13 +143,7 @@ class DocumentViewModel extends ChangeNotifier {
   bool get hasDocuments => _documents.isNotEmpty;
 
   String _sanitize(String input) {
-    var text = input.toLowerCase().replaceAll(RegExp(r'\s+'), ' ').trim();
-    const withDia = 'áàãâäéèêëíìîïóòõôöúùûüçñ';
-    const withoutDia = 'aaaaaeeeeiiiiooooouuuucn';
-    for (int i = 0; i < withDia.length; i++) {
-      text = text.replaceAll(withDia[i], withoutDia[i]);
-    }
-    return text;
+    return SearchNormalizer.normalize(input);
   }
 
   void setSearchQuery(String query) {
