@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:key_budget/app/utils/app_animations.dart';
+import 'package:key_budget/core/design_system/widgets/app_color_choice.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:key_budget/core/design_system/spacing/app_spacing.dart';
 import 'package:key_budget/core/design_system/widgets/app_text_field.dart';
@@ -96,58 +96,16 @@ class CategoryForm extends ConsumerWidget {
             spacing: 12,
             runSpacing: 12,
             alignment: WrapAlignment.center,
-            children:
-                [
-                  0xFF3B82F6, // Blue
-                  0xFF10B981, // Emerald
-                  0xFFF59E0B, // Amber
-                  0xFFEF4444, // Red
-                  0xFF8B5CF6, // Violet
-                  0xFFEC4899, // Pink
-                  0xFF14B8A6, // Teal
-                  0xFF64748B, // Slate
-                ].map((colorValue) {
-                  final isSelected = displayColor.toARGB32() == colorValue;
-                  return GestureDetector(
-                    onTap: () => onColorChanged(Color(colorValue)),
-                    child: AnimatedContainer(
-                      duration: AppAnimations.durationFor(
-                        context,
-                        const Duration(milliseconds: 200),
-                      ),
-                      width: isSelected ? 36 : 32,
-                      height: isSelected ? 36 : 32,
-                      decoration: BoxDecoration(
-                        color: Color(colorValue),
-                        shape: BoxShape.circle,
-                        boxShadow: isSelected
-                            ? [
-                                BoxShadow(
-                                  color: Color(
-                                    colorValue,
-                                  ).withValues(alpha: 0.4),
-                                  blurRadius: 8,
-                                  offset: const Offset(0, 2),
-                                ),
-                              ]
-                            : null,
-                        border: isSelected
-                            ? Border.all(
-                                color: theme.colorScheme.surface,
-                                width: 2,
-                              )
-                            : null,
-                      ),
-                      child: isSelected
-                          ? const Icon(
-                              Icons.check,
-                              size: 18,
-                              color: Colors.white,
-                            )
-                          : null,
-                    ),
-                  );
-                }).toList(),
+            children: AppColorChoice.palette.entries
+                .map(
+                  (entry) => AppColorChoice(
+                    color: Color(entry.key),
+                    label: 'Cor ${entry.value} da categoria',
+                    selected: displayColor.toARGB32() == entry.key,
+                    onPressed: () => onColorChanged(Color(entry.key)),
+                  ),
+                )
+                .toList(),
           ),
           const SizedBox(height: AppSpacing.lg),
           Row(

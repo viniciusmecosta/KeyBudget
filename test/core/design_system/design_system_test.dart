@@ -4,6 +4,7 @@ import 'package:key_budget/app/config/app_theme.dart';
 import 'package:key_budget/core/design_system/colors/app_contrast.dart';
 import 'package:key_budget/core/design_system/theme/app_semantic_colors.dart';
 import 'package:key_budget/core/design_system/widgets/app_button.dart';
+import 'package:key_budget/core/design_system/widgets/app_color_choice.dart';
 import 'package:key_budget/core/design_system/widgets/app_feedback_panel.dart';
 import 'package:key_budget/core/design_system/widgets/app_section_header.dart';
 import 'package:key_budget/core/design_system/widgets/app_status_badge.dart';
@@ -132,6 +133,31 @@ void main() {
   });
 
   group('AppButton', () {
+    testWidgets(
+      'shared color choice has readable selection and 48-pixel target',
+      (tester) async {
+        var pressed = false;
+        await tester.pumpWidget(
+          MaterialApp(
+            home: Scaffold(
+              body: AppColorChoice(
+                color: const Color(0xFFFFEB3B),
+                label: 'Cor amarela',
+                selected: true,
+                onPressed: () => pressed = true,
+              ),
+            ),
+          ),
+        );
+        final choice = find.bySemanticsLabel('Cor amarela');
+        expect(tester.getSize(choice), const Size(48, 48));
+        final icon = tester.widget<Icon>(find.byIcon(Icons.check));
+        expect(icon.color, Colors.black);
+        await tester.tap(choice);
+        expect(pressed, isTrue);
+      },
+    );
+
     testWidgets('uses white text on a light custom primary color', (
       tester,
     ) async {

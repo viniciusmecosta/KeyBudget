@@ -7,6 +7,7 @@ import 'package:key_budget/app/widgets/empty_state_widget.dart';
 import 'package:key_budget/app/widgets/responsive_center.dart';
 import 'package:key_budget/core/design_system/borders/app_borders.dart';
 import 'package:key_budget/core/design_system/widgets/app_search_field.dart';
+import 'package:key_budget/core/design_system/widgets/app_color_choice.dart';
 import 'package:key_budget/core/design_system/widgets/app_feedback_panel.dart';
 import 'package:key_budget/core/design_system/spacing/app_spacing.dart';
 import 'package:key_budget/core/models/credential_model.dart';
@@ -179,74 +180,17 @@ class _CredentialsScreenState extends ConsumerState<CredentialsScreen> {
                     spacing: 12,
                     runSpacing: 12,
                     alignment: WrapAlignment.center,
-                    children:
-                        [
-                          0xFF3B82F6,
-                          0xFF10B981,
-                          0xFFF59E0B,
-                          0xFFEF4444,
-                          0xFF8B5CF6,
-                          0xFFEC4899,
-                          0xFF14B8A6,
-                          0xFF64748B,
-                        ].map((colorValue) {
-                          final isSelected = selectedColorValue == colorValue;
-                          return Semantics(
-                            button: true,
-                            selected: isSelected,
-                            label:
-                                'Cor ${const <int, String>{0xFF3B82F6: 'azul', 0xFF10B981: 'verde', 0xFFF59E0B: 'amarela', 0xFFEF4444: 'vermelha', 0xFF8B5CF6: 'roxa', 0xFFEC4899: 'rosa', 0xFF14B8A6: 'turquesa', 0xFF64748B: 'cinza'}[colorValue]} da pasta',
-                            child: InkWell(
-                              customBorder: const CircleBorder(),
-                              onTap: () {
-                                setState(() {
-                                  selectedColorValue = colorValue;
-                                });
-                              },
-                              child: SizedBox.square(
-                                dimension: 48,
-                                child: Center(
-                                  child: AnimatedContainer(
-                                    duration: AppAnimations.durationFor(
-                                      context,
-                                      const Duration(milliseconds: 200),
-                                    ),
-                                    width: isSelected ? 36 : 32,
-                                    height: isSelected ? 36 : 32,
-                                    decoration: BoxDecoration(
-                                      color: Color(colorValue),
-                                      shape: BoxShape.circle,
-                                      boxShadow: isSelected
-                                          ? [
-                                              BoxShadow(
-                                                color: Color(
-                                                  colorValue,
-                                                ).withValues(alpha: 0.4),
-                                                blurRadius: 8,
-                                                offset: const Offset(0, 2),
-                                              ),
-                                            ]
-                                          : null,
-                                      border: isSelected
-                                          ? Border.all(
-                                              color: theme.colorScheme.surface,
-                                              width: 2,
-                                            )
-                                          : null,
-                                    ),
-                                    child: isSelected
-                                        ? const Icon(
-                                            Icons.check,
-                                            size: 18,
-                                            color: Colors.white,
-                                          )
-                                        : null,
-                                  ),
-                                ),
-                              ),
-                            ),
-                          );
-                        }).toList(),
+                    children: AppColorChoice.palette.entries
+                        .map(
+                          (entry) => AppColorChoice(
+                            color: Color(entry.key),
+                            label: 'Cor ${entry.value} da pasta',
+                            selected: selectedColorValue == entry.key,
+                            onPressed: () =>
+                                setState(() => selectedColorValue = entry.key),
+                          ),
+                        )
+                        .toList(),
                   ),
                 ],
               ),

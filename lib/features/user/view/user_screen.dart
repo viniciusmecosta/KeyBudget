@@ -9,6 +9,7 @@ import 'package:key_budget/app/widgets/responsive_center.dart';
 import 'package:key_budget/core/design_system/borders/app_borders.dart';
 import 'package:key_budget/core/design_system/spacing/app_spacing.dart';
 import 'package:key_budget/core/design_system/widgets/app_button.dart';
+import 'package:key_budget/core/design_system/widgets/app_color_choice.dart';
 import 'package:key_budget/core/services/csv_service.dart';
 import 'package:key_budget/core/services/drive_service.dart';
 import 'package:key_budget/core/services/snackbar_service.dart';
@@ -330,60 +331,35 @@ class UserScreen extends ConsumerWidget {
                             isDark: isDark,
                             colorValue: colorOption.colorValue,
                           );
-                    return Semantics(
-                      button: true,
-                      selected: isSelected,
-                      label: 'Escolher cor ${colorOption.name} do tema',
-                      child: GestureDetector(
-                        onTap: () async {
-                          if (user != null) {
-                            await authViewModel.updateUser(
-                              name: user.name,
-                              themeColor: colorOption.colorValue,
-                            );
-                          }
-                          if (context.mounted) Navigator.pop(context);
-                        },
-                        child: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Container(
-                              width: 50,
-                              height: 50,
-                              decoration: BoxDecoration(
-                                color: previewColor,
-                                shape: BoxShape.circle,
-                                border: Border.all(
-                                  color: isSelected
-                                      ? sheetTheme.colorScheme.onSurface
-                                      : Colors.transparent,
-                                  width: 3,
-                                ),
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: Colors.black.withValues(alpha: 0.1),
-                                    blurRadius: 4,
-                                    offset: const Offset(0, 2),
-                                  ),
-                                ],
-                              ),
-                              child: isSelected
-                                  ? const Icon(Icons.check, color: Colors.white)
-                                  : null,
-                            ),
-                            const SizedBox(height: 8),
-                            Text(
-                              colorOption.name,
-                              style: Theme.of(context).textTheme.bodySmall
-                                  ?.copyWith(
-                                    fontWeight: isSelected
-                                        ? FontWeight.bold
-                                        : FontWeight.normal,
-                                  ),
-                            ),
-                          ],
+                    return Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        AppColorChoice(
+                          color: previewColor,
+                          label: 'Escolher cor ${colorOption.name} do tema',
+                          selected: isSelected,
+                          diameter: 50,
+                          onPressed: () async {
+                            if (user != null) {
+                              await authViewModel.updateUser(
+                                name: user.name,
+                                themeColor: colorOption.colorValue,
+                              );
+                            }
+                            if (context.mounted) Navigator.pop(context);
+                          },
                         ),
-                      ),
+                        const SizedBox(height: 8),
+                        Text(
+                          colorOption.name,
+                          style: Theme.of(context).textTheme.bodySmall
+                              ?.copyWith(
+                                fontWeight: isSelected
+                                    ? FontWeight.bold
+                                    : FontWeight.normal,
+                              ),
+                        ),
+                      ],
                     );
                   }).toList(),
                 ),
