@@ -73,6 +73,7 @@ class DocumentViewModel extends ChangeNotifier {
   }
 
   StreamSubscription? _documentsSubscription;
+  String? _listeningUserId;
   bool _isListening = false;
   bool _isLoading = false;
   String? _errorMessage;
@@ -117,15 +118,24 @@ class DocumentViewModel extends ChangeNotifier {
   }
 
   void listenToDocuments(String userId) {
-    if (_isListening) return;
+    if (_isListening && _listeningUserId == userId) return;
+    if (_listeningUserId != userId) {
+      _documents = [];
+      _currentDisplayItems = [];
+      _searchQuery = '';
+      _errorMessage = null;
+    }
+    _listeningUserId = userId;
     _setLoading(true);
     _documentsSubscription?.cancel();
     _documentsSubscription = _repository
         .getDocumentsStream(userId)
         .listen(
           (newDocs) async {
+            if (_listeningUserId != userId) return;
             try {
               final processedNewDocs = await _processDocuments(newDocs, userId);
+              if (_listeningUserId != userId) return;
               _documents = processedNewDocs;
               _setErrorMessage(null);
               _updateDisplayList(animate: true);
@@ -137,6 +147,7 @@ class DocumentViewModel extends ChangeNotifier {
             }
           },
           onError: (error) {
+            if (_listeningUserId != userId) return;
             _setErrorMessage('Erro ao carregar os documentos.');
             _isListening = false;
             _setLoading(false);
@@ -614,6 +625,12 @@ class DocumentViewModel extends ChangeNotifier {
     _documents = [];
     _currentDisplayItems = [];
     _isListening = false;
+    _listeningUserId = null;
+    _isLoading = false;
+    _isUploading = false;
+    _uploadProgress = null;
+    _errorMessage = null;
+    _searchQuery = '';
     notifyListeners();
   }
 }

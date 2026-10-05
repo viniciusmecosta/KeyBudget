@@ -15,6 +15,7 @@ class SupplierViewModel extends ChangeNotifier {
   List<Supplier> _allSuppliers = [];
   bool _isLoading = false;
   StreamSubscription? _suppliersSubscription;
+  String? _listeningUserId;
   bool _isListening = false;
   bool _hasLoadError = false;
   bool _isOffline = false;
@@ -61,9 +62,15 @@ class SupplierViewModel extends ChangeNotifier {
   }
 
   void listenToSuppliers(String userId) {
-    if (_isListening) {
+    if (_isListening && _listeningUserId == userId) {
       return;
     }
+
+    if (_listeningUserId != userId) {
+      _allSuppliers = [];
+      _searchQuery = '';
+    }
+    _listeningUserId = userId;
 
     _setLoading(true);
     _hasLoadError = false;
@@ -73,6 +80,7 @@ class SupplierViewModel extends ChangeNotifier {
         .getSuppliersStreamForUser(userId)
         .listen(
           (suppliers) {
+            if (_listeningUserId != userId) return;
             _allSuppliers = suppliers;
             _hasLoadError = false;
             _isOffline = false;
@@ -82,6 +90,7 @@ class SupplierViewModel extends ChangeNotifier {
             _setLoading(false);
           },
           onError: (Object error) {
+            if (_listeningUserId != userId) return;
             _hasLoadError = true;
             _isOffline =
                 error is FirebaseException &&
@@ -153,6 +162,9 @@ class SupplierViewModel extends ChangeNotifier {
     _suppliersSubscription?.cancel();
     _allSuppliers = [];
     _isListening = false;
+    _listeningUserId = null;
+    _isLoading = false;
+    _searchQuery = '';
     _hasLoadError = false;
     _isOffline = false;
     notifyListeners();
