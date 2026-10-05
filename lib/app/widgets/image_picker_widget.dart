@@ -89,21 +89,28 @@ class _ImagePickerWidgetState extends ConsumerState<ImagePickerWidget> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final avatar = GestureDetector(
-      onTap: _pickImage,
-      child: CircleAvatar(
-        radius: widget.radius,
-        backgroundColor: theme.colorScheme.secondary.withAlpha(
-          (255 * 0.1).round(),
+    final avatar = Semantics(
+      button: true,
+      label: _imageBase64 == null || _imageBase64!.isEmpty
+          ? 'Escolher imagem'
+          : 'Alterar imagem',
+      child: InkWell(
+        customBorder: const CircleBorder(),
+        onTap: _pickImage,
+        child: CircleAvatar(
+          radius: widget.radius,
+          backgroundColor: theme.colorScheme.secondary.withAlpha(
+            (255 * 0.1).round(),
+          ),
+          backgroundImage: _getImageProvider(),
+          child: _imageBase64 == null || _imageBase64!.isEmpty
+              ? Icon(
+                  widget.placeholderIcon,
+                  size: widget.radius,
+                  color: theme.colorScheme.secondary,
+                )
+              : null,
         ),
-        backgroundImage: _getImageProvider(),
-        child: _imageBase64 == null || _imageBase64!.isEmpty
-            ? Icon(
-                widget.placeholderIcon,
-                size: widget.radius,
-                color: theme.colorScheme.secondary,
-              )
-            : null,
       ),
     );
 
@@ -112,31 +119,43 @@ class _ImagePickerWidgetState extends ConsumerState<ImagePickerWidget> {
     }
 
     return Stack(
+      clipBehavior: Clip.none,
       alignment: Alignment.center,
       children: [
         avatar,
         Positioned(
           right: 0,
           bottom: 0,
-          child: Material(
-            color: theme.colorScheme.error,
-            shape: const CircleBorder(),
-            elevation: 2,
-            child: InkWell(
-              customBorder: const CircleBorder(),
-              onTap: () {
-                setState(() {
-                  _imageBase64 = null;
-                });
-                widget.onImageSelected('');
-                widget.onImageRemoved?.call();
-              },
-              child: const Padding(
-                padding: EdgeInsets.all(4),
-                child: Icon(
-                  Icons.close,
-                  size: 16,
-                  color: Colors.white,
+          child: Semantics(
+            button: true,
+            label: 'Remover imagem',
+            child: SizedBox.square(
+              dimension: 48,
+              child: Material(
+                color: Colors.transparent,
+                shape: const CircleBorder(),
+                child: InkWell(
+                  customBorder: const CircleBorder(),
+                  onTap: () {
+                    setState(() => _imageBase64 = null);
+                    widget.onImageSelected('');
+                    widget.onImageRemoved?.call();
+                  },
+                  child: Center(
+                    child: Container(
+                      width: 32,
+                      height: 32,
+                      decoration: BoxDecoration(
+                        color: theme.colorScheme.error,
+                        shape: BoxShape.circle,
+                      ),
+                      child: const Icon(
+                        Icons.close,
+                        size: 18,
+                        color: Colors.white,
+                      ),
+                    ),
+                  ),
                 ),
               ),
             ),

@@ -190,44 +190,56 @@ class _CredentialsScreenState extends ConsumerState<CredentialsScreen> {
                           0xFF64748B,
                         ].map((colorValue) {
                           final isSelected = selectedColorValue == colorValue;
-                          return GestureDetector(
-                            onTap: () {
-                              setState(() {
-                                selectedColorValue = colorValue;
-                              });
-                            },
-                            child: AnimatedContainer(
-                              duration: const Duration(milliseconds: 200),
-                              width: isSelected ? 36 : 32,
-                              height: isSelected ? 36 : 32,
-                              decoration: BoxDecoration(
-                                color: Color(colorValue),
-                                shape: BoxShape.circle,
-                                boxShadow: isSelected
-                                    ? [
-                                        BoxShadow(
-                                          color: Color(
-                                            colorValue,
-                                          ).withValues(alpha: 0.4),
-                                          blurRadius: 8,
-                                          offset: const Offset(0, 2),
-                                        ),
-                                      ]
-                                    : null,
-                                border: isSelected
-                                    ? Border.all(
-                                        color: theme.colorScheme.surface,
-                                        width: 2,
-                                      )
-                                    : null,
+                          return Semantics(
+                            button: true,
+                            selected: isSelected,
+                            label:
+                                'Cor ${const <int, String>{0xFF3B82F6: 'azul', 0xFF10B981: 'verde', 0xFFF59E0B: 'amarela', 0xFFEF4444: 'vermelha', 0xFF8B5CF6: 'roxa', 0xFFEC4899: 'rosa', 0xFF14B8A6: 'turquesa', 0xFF64748B: 'cinza'}[colorValue]} da pasta',
+                            child: InkWell(
+                              customBorder: const CircleBorder(),
+                              onTap: () {
+                                setState(() {
+                                  selectedColorValue = colorValue;
+                                });
+                              },
+                              child: SizedBox.square(
+                                dimension: 48,
+                                child: Center(
+                                  child: AnimatedContainer(
+                                    duration: const Duration(milliseconds: 200),
+                                    width: isSelected ? 36 : 32,
+                                    height: isSelected ? 36 : 32,
+                                    decoration: BoxDecoration(
+                                      color: Color(colorValue),
+                                      shape: BoxShape.circle,
+                                      boxShadow: isSelected
+                                          ? [
+                                              BoxShadow(
+                                                color: Color(
+                                                  colorValue,
+                                                ).withValues(alpha: 0.4),
+                                                blurRadius: 8,
+                                                offset: const Offset(0, 2),
+                                              ),
+                                            ]
+                                          : null,
+                                      border: isSelected
+                                          ? Border.all(
+                                              color: theme.colorScheme.surface,
+                                              width: 2,
+                                            )
+                                          : null,
+                                    ),
+                                    child: isSelected
+                                        ? const Icon(
+                                            Icons.check,
+                                            size: 18,
+                                            color: Colors.white,
+                                          )
+                                        : null,
+                                  ),
+                                ),
                               ),
-                              child: isSelected
-                                  ? const Icon(
-                                      Icons.check,
-                                      size: 18,
-                                      color: Colors.white,
-                                    )
-                                  : null,
                             ),
                           );
                         }).toList(),
