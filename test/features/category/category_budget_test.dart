@@ -6,6 +6,17 @@ import 'package:key_budget/core/money/money.dart';
 import 'package:key_budget/features/category/repository/category_budget_repository.dart';
 
 void main() {
+  test('monthly overrides preserve legacy defaults and historical values', () {
+    expect(CategoryBudgetRepository.monthKey(DateTime(2026, 10, 5)), '2026-10');
+    expect(
+      CategoryBudgetRepository.resolveMonthly(
+        {'food': 10000, 'travel': 5000},
+        {'food': 12000, 'travel': 0, 'health': 3000},
+      ),
+      {'food': 12000, 'health': 3000},
+    );
+  });
+
   test('archived category remains readable with its historical identity', () {
     final category = ExpenseCategory(
       id: 'food',
@@ -66,4 +77,26 @@ void main() {
       expect(progress.isExceeded, isFalse);
     },
   );
+
+  test('historical progress uses the selected month', () {
+    final progress = CategoryBudgetRepository.progressFor(
+      categoryId: 'food',
+      limitMinor: 10000,
+      month: DateTime(2026, 9),
+      now: DateTime(2026, 9, 30, 23, 59),
+      expenses: [
+        Expense.withMoney(
+          money: Money.fromCents(2500),
+          date: DateTime(2026, 9, 15),
+          categoryId: 'food',
+        ),
+        Expense.withMoney(
+          money: Money.fromCents(9000),
+          date: DateTime(2026, 10, 1),
+          categoryId: 'food',
+        ),
+      ],
+    );
+    expect(progress.spentMinor, 2500);
+  });
 }

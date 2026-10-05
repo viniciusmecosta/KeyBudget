@@ -28,6 +28,26 @@ class CategoriesScreen extends ConsumerStatefulWidget {
 }
 
 class _CategoriesScreenState extends ConsumerState<CategoriesScreen> {
+  late DateTime _selectedMonth = DateTime(
+    DateTime.now().year,
+    DateTime.now().month,
+  );
+
+  static const _monthNames = [
+    'Janeiro',
+    'Fevereiro',
+    'Março',
+    'Abril',
+    'Maio',
+    'Junho',
+    'Julho',
+    'Agosto',
+    'Setembro',
+    'Outubro',
+    'Novembro',
+    'Dezembro',
+  ];
+
   @override
   void initState() {
     super.initState();
@@ -67,7 +87,8 @@ class _CategoriesScreenState extends ConsumerState<CategoriesScreen> {
               decoration: InputDecoration(
                 labelText: 'Limite mensal',
                 prefixText: 'R\$ ',
-                helperText: 'O limite se repete a cada mês.',
+                helperText:
+                    'Vale apenas para ${_monthNames[_selectedMonth.month - 1]} de ${_selectedMonth.year}.',
                 errorText: validationMessage,
               ),
             ),
@@ -110,7 +131,12 @@ class _CategoriesScreenState extends ConsumerState<CategoriesScreen> {
     try {
       await ref
           .read(categoryBudgetRepositoryProvider)
-          .setBudget(userId, categoryId, chosenLimit < 0 ? null : chosenLimit);
+          .setMonthlyBudget(
+            userId,
+            _selectedMonth,
+            categoryId,
+            chosenLimit < 0 ? null : chosenLimit,
+          );
       if (mounted) {
         SnackbarService.showSuccess(context, 'Orçamento atualizado.');
       }
@@ -139,7 +165,12 @@ class _CategoriesScreenState extends ConsumerState<CategoriesScreen> {
               final budgets = userId == null
                   ? <String, int>{}
                   : ref
-                        .watch(categoryBudgetsProvider(userId))
+                        .watch(
+                          categoryBudgetsForMonthProvider((
+                            userId: userId,
+                            month: _selectedMonth,
+                          )),
+                        )
                         .when(
                           data: (value) => value,
                           loading: () => <String, int>{},
@@ -167,6 +198,44 @@ class _CategoriesScreenState extends ConsumerState<CategoriesScreen> {
                       parent: AlwaysScrollableScrollPhysics(),
                     ),
                     slivers: [
+                      SliverToBoxAdapter(
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: AppSpacing.md,
+                          ),
+                          child: Row(
+                            children: [
+                              IconButton(
+                                tooltip: 'Mês anterior',
+                                onPressed: () => setState(() {
+                                  _selectedMonth = DateTime(
+                                    _selectedMonth.year,
+                                    _selectedMonth.month - 1,
+                                  );
+                                }),
+                                icon: const Icon(Icons.chevron_left),
+                              ),
+                              Expanded(
+                                child: Text(
+                                  '${_monthNames[_selectedMonth.month - 1]} de ${_selectedMonth.year}',
+                                  textAlign: TextAlign.center,
+                                  style: theme.textTheme.titleMedium,
+                                ),
+                              ),
+                              IconButton(
+                                tooltip: 'Próximo mês',
+                                onPressed: () => setState(() {
+                                  _selectedMonth = DateTime(
+                                    _selectedMonth.year,
+                                    _selectedMonth.month + 1,
+                                  );
+                                }),
+                                icon: const Icon(Icons.chevron_right),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
                       if (viewModel.isLoading)
                         const CategoriesSkeleton()
                       else if (viewModel.errorMessage != null)
@@ -277,7 +346,27 @@ class _CategoriesScreenState extends ConsumerState<CategoriesScreen> {
                                                     limitMinor:
                                                         budgets[category.id]!,
                                                     expenses: expenses,
-                                                    now: DateTime.now(),
+                                                    month: _selectedMonth,
+                                                    now: () {
+                                                      final now =
+                                                          DateTime.now();
+                                                      final monthEnd =
+                                                          DateTime(
+                                                            _selectedMonth.year,
+                                                            _selectedMonth
+                                                                    .month +
+                                                                1,
+                                                          ).subtract(
+                                                            const Duration(
+                                                              microseconds: 1,
+                                                            ),
+                                                          );
+                                                      return now.isBefore(
+                                                            monthEnd,
+                                                          )
+                                                          ? now
+                                                          : monthEnd;
+                                                    }(),
                                                   );
                                               final spent = Money.fromCents(
                                                 progress.spentMinor,
@@ -293,7 +382,7 @@ class _CategoriesScreenState extends ConsumerState<CategoriesScreen> {
                                                     CrossAxisAlignment.start,
                                                 children: [
                                                   Text(
-                                                    '$spent de $limit no mês',
+                                                    '$spent de $limit no período',
                                                     style: theme
                                                         .textTheme
                                                         .bodySmall,
