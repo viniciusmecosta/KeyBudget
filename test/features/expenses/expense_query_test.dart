@@ -35,6 +35,18 @@ class _PagedRepository extends ExpenseRepository {
 }
 
 void main() {
+  test('expense dates expose a stable calendar key for period queries', () {
+    final expense = Expense(amount: 12.5, date: DateTime(2026, 2, 9, 23, 45));
+    expect(expense.toMap()['dateKey'], '2026-02-09');
+    expect(
+      Expense.fromMap({
+        ...expense.toMap(),
+        'unknown': 1,
+      }, 'expense').unmappedData,
+      {'unknown': 1},
+    );
+  });
+
   test('period totals sum legacy amounts in cents', () async {
     final repository = _PagedRepository();
     final totals = await repository.getPeriodTotals(

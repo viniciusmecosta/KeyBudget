@@ -35,6 +35,7 @@ class ExpensePeriodTotals {
 
 class ExpenseRepository {
   final FirebaseFirestore? _customFirestore;
+  final Map<String, Future<bool>> _dateIndexTasks = {};
 
   ExpenseRepository({FirebaseFirestore? firestore})
     : _customFirestore = firestore;
@@ -53,6 +54,44 @@ class ExpenseRepository {
           toFirestore: (expense, _) => expense.toMap(),
         );
   }
+
+  static String _dateKey(DateTime date) =>
+      '${date.year.toString().padLeft(4, '0')}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}';
+
+  Future<bool> _ensureDateIndex(String userId) => _dateIndexTasks.putIfAbsent(
+    userId,
+    () async {
+      try {
+        final user = _firestore.collection('users').doc(userId);
+        final marker = user.collection('migrations').doc('expense_date_key_v1');
+        if ((await marker.get()).exists) return true;
+        final expenses = user.collection('expenses');
+        DocumentSnapshot<Map<String, dynamic>>? cursor;
+        while (true) {
+          var query = expenses.orderBy(FieldPath.documentId).limit(200);
+          if (cursor != null) query = query.startAfterDocument(cursor);
+          final page = await query.get();
+          if (page.docs.isEmpty) break;
+          final batch = _firestore.batch();
+          var changed = false;
+          for (final doc in page.docs) {
+            final data = doc.data();
+            if (data.containsKey('dateKey')) continue;
+            final expense = Expense.fromMap(data, doc.id);
+            batch.update(doc.reference, {'dateKey': _dateKey(expense.date)});
+            changed = true;
+          }
+          if (changed) await batch.commit();
+          cursor = page.docs.last;
+          if (page.docs.length < 200) break;
+        }
+        await marker.set({'completedAt': FieldValue.serverTimestamp()});
+        return true;
+      } catch (_) {
+        return false;
+      }
+    },
+  );
 
   Future<void> addExpense(String userId, Expense expense) async {
     if (expense.id != null && expense.id!.isNotEmpty) {
@@ -114,7 +153,37 @@ class ExpenseRepository {
     if (!startInclusive.isBefore(endExclusive)) {
       throw ArgumentError('O período deve ter início anterior ao fim.');
     }
-    return getExpensesWithMetadataStream(userId).map(
+    return _watchIndexedPeriod(userId, startInclusive, endExclusive);
+  }
+
+  Stream<ExpenseStreamSnapshot> _watchIndexedPeriod(
+    String userId,
+    DateTime startInclusive,
+    DateTime endExclusive,
+  ) async* {
+    if (await _ensureDateIndex(userId)) {
+      yield* _getExpensesCollection(userId)
+          .where('dateKey', isGreaterThanOrEqualTo: _dateKey(startInclusive))
+          .where('dateKey', isLessThanOrEqualTo: _dateKey(endExclusive))
+          .orderBy('dateKey', descending: true)
+          .snapshots(includeMetadataChanges: true)
+          .map(
+            (snapshot) => ExpenseStreamSnapshot(
+              expenses: snapshot.docs
+                  .map((doc) => doc.data())
+                  .where(
+                    (expense) =>
+                        !expense.date.isBefore(startInclusive) &&
+                        expense.date.isBefore(endExclusive),
+                  )
+                  .toList(),
+              isFromCache: snapshot.metadata.isFromCache,
+              hasPendingWrites: snapshot.metadata.hasPendingWrites,
+            ),
+          );
+      return;
+    }
+    yield* getExpensesWithMetadataStream(userId).map(
       (snapshot) => ExpenseStreamSnapshot(
         expenses: snapshot.expenses
             .where(
@@ -143,9 +212,15 @@ class ExpenseRepository {
         (startInclusive != null && !startInclusive.isBefore(endExclusive!))) {
       throw ArgumentError('Informe um período válido.');
     }
-    final ordered = _getExpensesCollection(
+    Query<Expense> ordered = _getExpensesCollection(
       userId,
     ).orderBy('date', descending: true);
+    if (startInclusive != null && await _ensureDateIndex(userId)) {
+      ordered = _getExpensesCollection(userId)
+          .where('dateKey', isGreaterThanOrEqualTo: _dateKey(startInclusive))
+          .where('dateKey', isLessThanOrEqualTo: _dateKey(endExclusive!))
+          .orderBy('dateKey', descending: true);
+    }
     final visible = <Expense>[];
     DocumentSnapshot<Expense>? lastIncluded;
     DocumentSnapshot<Expense>? scanCursor = after;

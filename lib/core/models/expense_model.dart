@@ -100,6 +100,8 @@ class Expense {
     final map = <String, dynamic>{
       ...unmappedData,
       'date': date.toIso8601String(),
+      'dateKey':
+          '${date.year.toString().padLeft(4, '0')}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}',
       'categoryId': categoryId,
       'motivation': motivation,
       'location': location,
@@ -174,6 +176,7 @@ class Expense {
       'currency',
       'moneyVersion',
       'date',
+      'dateKey',
       'categoryId',
       'motivation',
       'location',
