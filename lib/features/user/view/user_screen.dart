@@ -24,6 +24,7 @@ import 'package:key_budget/features/goals/view/savings_goals_screen.dart';
 import 'package:key_budget/features/search/view/global_search_screen.dart';
 import 'package:key_budget/features/trash/view/trash_screen.dart';
 import 'package:key_budget/features/user/view/navigation_customization_screen.dart';
+import 'package:key_budget/features/user/view/account_center_screen.dart';
 import 'package:key_budget/features/user/view/backup_restore_screen.dart';
 import 'package:key_budget/features/user/view/edit_user_screen.dart';
 import 'package:path_provider/path_provider.dart';
@@ -736,6 +737,16 @@ class UserScreen extends ConsumerWidget {
                     ),
                   ]),
                   buildSection('Segurança e privacidade', [
+                    SettingsTile(
+                      icon: Icons.manage_accounts_outlined,
+                      title: 'Conta e recuperação',
+                      subtitle: 'Email, verificação e opções de acesso',
+                      onTap: () => NavigationUtils.push(
+                        context,
+                        const AccountCenterScreen(),
+                      ),
+                    ),
+                    const Divider(height: 1, indent: 56, endIndent: 16),
                     SettingsSwitchTile(
                       icon: Icons.lock_outline,
                       title: 'Bloquear ao sair do aplicativo',
