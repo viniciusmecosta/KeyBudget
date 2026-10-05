@@ -30,16 +30,32 @@ class BackupCrypto {
   static const int macBitsCount = 128;
 
   static const int maxDecompressedBytesLimit = 200 * 1024 * 1024;
+  static const int maxBackupBytesLimit = 200 * 1024 * 1024;
   static const int maxArchiveEntriesLimit = 2000;
 
-  static Uint8List packArchive(Map<String, List<int>> files) {
+  static Uint8List packArchive(
+    Map<String, List<int>> files, {
+    int maxTotalBytes = maxDecompressedBytesLimit,
+  }) {
+    var totalBytes = 0;
     final archive = Archive();
     for (final entry in files.entries) {
       final name = entry.key;
       final bytes = entry.value;
+      totalBytes += bytes.length;
+      if (totalBytes > maxTotalBytes) {
+        throw BackupSecurityException(
+          'O backup excede o limite de $maxTotalBytes bytes.',
+        );
+      }
       archive.addFile(ArchiveFile(name, bytes.length, bytes));
     }
     final zipBytes = ZipEncoder().encode(archive);
+    if (zipBytes.length > maxBackupBytesLimit - 56) {
+      throw const BackupSecurityException(
+        'O backup excede o limite de 200 MB.',
+      );
+    }
     return Uint8List.fromList(zipBytes);
   }
 
@@ -48,6 +64,11 @@ class BackupCrypto {
     int maxTotalBytes = maxDecompressedBytesLimit,
     int maxEntries = maxArchiveEntriesLimit,
   }) {
+    if (zipBytes.length > maxBackupBytesLimit) {
+      throw const BackupSecurityException(
+        'O arquivo de backup excede o limite de 200 MB.',
+      );
+    }
     final Archive archive;
     try {
       archive = ZipDecoder().decodeBytes(zipBytes);
@@ -130,7 +151,8 @@ class BackupCrypto {
     final headerBuilder = BytesBuilder();
     headerBuilder.add(magicBytes);
 
-    final versionData = ByteData(2)..setUint16(0, currentFormatVersion, Endian.big);
+    final versionData = ByteData(2)
+      ..setUint16(0, currentFormatVersion, Endian.big);
     headerBuilder.add(versionData.buffer.asUint8List());
 
     final iterData = ByteData(4)..setUint32(0, iterations, Endian.big);
@@ -172,6 +194,12 @@ class BackupCrypto {
   }) {
     if (password.isEmpty) {
       throw BackupCryptoException('A senha do backup não pode ser vazia.');
+    }
+
+    if (envelope.length > maxBackupBytesLimit) {
+      throw const BackupSecurityException(
+        'O arquivo de backup excede o limite de 200 MB.',
+      );
     }
 
     if (envelope.length < 56) {
@@ -244,9 +272,7 @@ class BackupCrypto {
         'Senha incorreta ou arquivo de backup adulterado/corrompido.',
       );
     } catch (e) {
-      throw BackupCryptoException(
-        'Falha na descriptografia do backup: $e',
-      );
+      throw BackupCryptoException('Falha na descriptografia do backup: $e');
     }
   }
 }

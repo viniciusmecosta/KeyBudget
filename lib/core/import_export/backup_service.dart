@@ -127,6 +127,7 @@ class BackupService {
     onProgress?.call('Processando anexos e arquivos...', 0.4);
     final attachmentMetas = <BackupAttachmentMeta>[];
     final attachmentFiles = <String, List<int>>{};
+    var attachmentBytes = 0;
 
     final rawDocuments = capturedData['documents'] ?? [];
     for (final doc in rawDocuments) {
@@ -153,6 +154,13 @@ class BackupService {
               }
 
               if (bytes != null) {
+                attachmentBytes += bytes.length;
+                if (attachmentBytes > BackupCrypto.maxDecompressedBytesLimit) {
+                  return OperationResult.failed(
+                    safeError:
+                        'O backup excede o limite de 200 MB de anexos. Remova arquivos grandes e tente novamente.',
+                  );
+                }
                 final hash = sha256.convert(bytes).toString();
                 attachmentFiles['attachments/$internalId'] = bytes;
                 attachmentMetas.add(
