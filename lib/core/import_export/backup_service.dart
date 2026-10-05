@@ -54,6 +54,8 @@ class BackupService {
     'credentials',
     'suppliers',
     'documents',
+    'goals',
+    'goal_movements',
     'profile',
   ];
 
@@ -293,6 +295,10 @@ class BackupService {
     }
     if (modules.contains('credentials')) {
       modules.add('folders');
+    }
+    if (modules.contains('goals') || modules.contains('goal_movements')) {
+      modules.add('goals');
+      modules.add('goal_movements');
     }
     return modules.toList();
   }

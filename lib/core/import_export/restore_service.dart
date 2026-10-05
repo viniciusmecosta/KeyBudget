@@ -323,7 +323,10 @@ class RestoreService {
       onProgress?.call('Restaurando categorias e pastas...', 0.1);
 
       final catFolderItems = plan.items.where(
-        (i) => i.collection == 'categories' || i.collection == 'folders',
+        (i) =>
+            i.collection == 'categories' ||
+            i.collection == 'folders' ||
+            i.collection == 'goals',
       );
 
       for (final item in catFolderItems) {
@@ -401,7 +404,8 @@ class RestoreService {
             i.collection == 'expenses' ||
             i.collection == 'recurrence_occurrences' ||
             i.collection == 'credentials' ||
-            i.collection == 'suppliers',
+            i.collection == 'suppliers' ||
+            i.collection == 'goal_movements',
       );
 
       for (final item in secondTierItems) {

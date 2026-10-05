@@ -20,6 +20,7 @@ import 'package:key_budget/features/credentials/viewmodel/credential_viewmodel.d
 import 'package:key_budget/features/dashboard/repository/dashboard_layout_repository.dart';
 import 'package:key_budget/features/dashboard/widgets/dashboard_layout_editor.dart';
 import 'package:key_budget/features/expenses/viewmodel/expense_viewmodel.dart';
+import 'package:key_budget/features/goals/view/savings_goals_screen.dart';
 import 'package:key_budget/features/user/view/backup_restore_screen.dart';
 import 'package:key_budget/features/user/view/edit_user_screen.dart';
 import 'package:path_provider/path_provider.dart';
@@ -696,6 +697,18 @@ class UserScreen extends ConsumerWidget {
                       subtitle: 'Personalize categorias de despesas',
                       onTap: () {
                         NavigationUtils.push(context, const CategoriesScreen());
+                      },
+                    ),
+                    const Divider(height: 1, indent: 56, endIndent: 16),
+                    SettingsTile(
+                      icon: Icons.flag_outlined,
+                      title: 'Metas',
+                      subtitle: 'Acompanhe objetivos e valores guardados',
+                      onTap: () {
+                        NavigationUtils.push(
+                          context,
+                          const SavingsGoalsScreen(),
+                        );
                       },
                     ),
                   ]),
