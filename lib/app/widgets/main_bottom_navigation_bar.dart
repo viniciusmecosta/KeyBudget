@@ -33,6 +33,9 @@ class MainBottomNavigationBar extends ConsumerWidget {
     final width = MediaQuery.sizeOf(context).width;
     final largeText = MediaQuery.textScalerOf(context).scale(14) > 18;
     final useTwoRows = destinations.length > 6;
+    final showSelectedLabel =
+        !largeText &&
+        (width - AppTheme.spaceM * 2) / (destinations.length + 1) >= 48;
     final activeTabIndex = destinations
         .indexOf(currentDest)
         .clamp(0, destinations.length - 1)
@@ -126,10 +129,7 @@ class MainBottomNavigationBar extends ConsumerWidget {
                   children: [
                     for (var index = 0; index < destinations.length; index++)
                       Flexible(
-                        flex:
-                            activeTabIndex == index &&
-                                !largeText &&
-                                width >= 320
+                        flex: activeTabIndex == index && showSelectedLabel
                             ? 2
                             : 1,
                         child: Semantics(
@@ -179,8 +179,7 @@ class MainBottomNavigationBar extends ConsumerWidget {
                                     ),
                                   ),
                                   if (activeTabIndex == index &&
-                                      !largeText &&
-                                      width >= 320) ...[
+                                      showSelectedLabel) ...[
                                     const SizedBox(width: 4),
                                     Flexible(
                                       child: Text(

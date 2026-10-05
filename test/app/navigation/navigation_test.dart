@@ -272,5 +272,41 @@ void main() {
 
       expect(navVM.currentDestination, AppDestination.suppliers);
     });
+
+    testWidgets('keeps six tab hit areas wide enough on a narrow phone', (
+      tester,
+    ) async {
+      tester.view.physicalSize = const Size(320, 720);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.resetPhysicalSize);
+      final navVM = NavigationViewModel()..updateSuppliersAvailability(true);
+
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: [
+            authViewModelProvider.overrideWith(
+              (ref) => FakeAuthVM(suppliersEnabled: true),
+            ),
+            navigationViewModelProvider.overrideWith((ref) => navVM),
+          ],
+          child: MaterialApp(
+            theme: AppTheme.lightTheme,
+            home: const Scaffold(
+              bottomNavigationBar: MainBottomNavigationBar(),
+            ),
+          ),
+        ),
+      );
+
+      for (final destination in AppDestination.values) {
+        final tab = find.bySemanticsLabel(
+          destination == AppDestination.expenses
+              ? 'Despesas'
+              : destination.label,
+        );
+        expect(tester.getSize(tab).width, greaterThanOrEqualTo(48));
+      }
+      expect(tester.takeException(), isNull);
+    });
   });
 }
