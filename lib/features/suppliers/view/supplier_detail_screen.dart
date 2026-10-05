@@ -64,6 +64,7 @@ class _SupplierDetailScreenState extends ConsumerState<SupplierDetailScreen> {
   }
 
   void _saveChanges() async {
+    if (_isSaving) return;
     if (!_formKey.currentState!.validate()) return;
 
     setState(() => _isSaving = true);
@@ -75,30 +76,36 @@ class _SupplierDetailScreenState extends ConsumerState<SupplierDetailScreen> {
     final navigator = Navigator.of(context);
     final userId = authViewModel.currentUser!.id;
 
-    await viewModel.updateSupplier(
-      userId: userId,
-      originalSupplier: widget.supplier,
-      name: _nameController.text,
-      representativeName: _repNameController.text.isNotEmpty
-          ? _repNameController.text
-          : null,
-      email: _emailController.text.isNotEmpty ? _emailController.text : null,
-      phoneNumber: _phoneMaskFormatter.unmaskText(_phoneController.text),
-      photoPath: _photoPath,
-      notes: _notesController.text.isNotEmpty ? _notesController.text : null,
-    );
-
-    if (!scaffoldContext.mounted) return;
-
-    setState(() {
-      _isSaving = false;
+    try {
+      await viewModel.updateSupplier(
+        userId: userId,
+        originalSupplier: widget.supplier,
+        name: _nameController.text,
+        representativeName: _repNameController.text.isNotEmpty
+            ? _repNameController.text
+            : null,
+        email: _emailController.text.isNotEmpty ? _emailController.text : null,
+        phoneNumber: _phoneMaskFormatter.unmaskText(_phoneController.text),
+        photoPath: _photoPath,
+        notes: _notesController.text.isNotEmpty ? _notesController.text : null,
+      );
+      if (!scaffoldContext.mounted) return;
       _isEditing = false;
-    });
-    SnackbarService.showSuccess(
-      scaffoldContext,
-      'Fornecedor atualizado com sucesso!',
-    );
-    navigator.pop();
+      SnackbarService.showSuccess(
+        scaffoldContext,
+        'Fornecedor atualizado com sucesso!',
+      );
+      navigator.pop();
+    } catch (_) {
+      if (scaffoldContext.mounted) {
+        SnackbarService.showError(
+          scaffoldContext,
+          'Não foi possível salvar o fornecedor. Tente novamente.',
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _isSaving = false);
+    }
   }
 
   void _deleteSupplier() async {
@@ -190,7 +197,8 @@ class _SupplierDetailScreenState extends ConsumerState<SupplierDetailScreen> {
           ),
         ),
 
-        context: context,),
+        context: context,
+      ),
     );
   }
 }

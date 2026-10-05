@@ -70,21 +70,32 @@ class _AddEditCategoryScreenState extends ConsumerState<AddEditCategoryScreen> {
     final scaffoldContext = context;
     final navigator = Navigator.of(context);
 
-    await viewModel.deleteCategory(userId, widget.category!.id!);
-
-    if (scaffoldContext.mounted) {
-      SnackbarService.showUndoSnackbar(
-        scaffoldContext,
-        message: 'Categoria excluída.',
-        onUndo: () async {
-          await viewModel.restoreCategory(userId, widget.category!);
-        },
-      );
-      navigator.pop();
+    try {
+      await viewModel.deleteCategory(userId, widget.category!.id!);
+      if (scaffoldContext.mounted) {
+        SnackbarService.showUndoSnackbar(
+          scaffoldContext,
+          message: 'Categoria excluída.',
+          onUndo: () async {
+            await viewModel.restoreCategory(userId, widget.category!);
+          },
+        );
+        navigator.pop();
+      }
+    } catch (_) {
+      if (scaffoldContext.mounted) {
+        SnackbarService.showError(
+          scaffoldContext,
+          'Não foi possível excluir a categoria. Tente novamente.',
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _isSaving = false);
     }
   }
 
-  void _submit() {
+  Future<void> _submit() async {
+    if (_isSaving) return;
     if (!_formKey.currentState!.validate()) return;
     if (_selectedIcon == null || _selectedColor == null) {
       SnackbarService.showError(
@@ -108,16 +119,25 @@ class _AddEditCategoryScreenState extends ConsumerState<AddEditCategoryScreen> {
       colorValue: _selectedColor!.toARGB32(),
     );
 
-    final future = widget.category == null
-        ? viewModel.addCategory(userId, category)
-        : viewModel.updateCategory(userId, category);
-
-    future.whenComplete(() {
-      if (mounted) {
-        setState(() => _isSaving = false);
-        navigator.pop();
+    try {
+      if (widget.category == null) {
+        await viewModel.addCategory(userId, category);
+      } else {
+        await viewModel.updateCategory(userId, category);
       }
-    });
+      if (!mounted) return;
+      _hasUnsavedChanges = false;
+      navigator.pop();
+    } catch (_) {
+      if (mounted) {
+        SnackbarService.showError(
+          context,
+          'Não foi possível salvar a categoria. Tente novamente.',
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _isSaving = false);
+    }
   }
 
   @override
@@ -130,7 +150,9 @@ class _AddEditCategoryScreenState extends ConsumerState<AddEditCategoryScreen> {
           context: context,
           builder: (context) => AlertDialog(
             title: const Text('Descartar alterações?'),
-            content: const Text('Você tem alterações não salvas. Deseja sair sem salvar?'),
+            content: const Text(
+              'Você tem alterações não salvas. Deseja sair sem salvar?',
+            ),
             actions: [
               TextButton(
                 onPressed: () => Navigator.of(context).pop(false),
@@ -138,7 +160,9 @@ class _AddEditCategoryScreenState extends ConsumerState<AddEditCategoryScreen> {
               ),
               TextButton(
                 onPressed: () => Navigator.of(context).pop(true),
-                style: TextButton.styleFrom(foregroundColor: Theme.of(context).colorScheme.error),
+                style: TextButton.styleFrom(
+                  foregroundColor: Theme.of(context).colorScheme.error,
+                ),
                 child: const Text('Sair'),
               ),
             ],
@@ -152,63 +176,64 @@ class _AddEditCategoryScreenState extends ConsumerState<AddEditCategoryScreen> {
       },
       child: Scaffold(
         appBar: AppBar(
-        title: Text(
-          widget.category == null ? 'Nova Categoria' : 'Editar Categoria',
-        ),
-        actions: [
-          if (widget.category != null)
-            IconButton(
-              icon: const Icon(Icons.delete_outline),
-              onPressed: _deleteCategory,
-            ),
-        ],
-      ),
-      body: AppAnimations.fadeInFromBottom(
-        Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: Column(
-            children: [
-              Expanded(
-                child: CategoryForm(
-                  formKey: _formKey,
-                  nameController: _nameController,
-                  selectedIcon: _selectedIcon,
-                  selectedColor: _selectedColor,
-                  onChanged: () {
-                    if (!_hasUnsavedChanges) {
-                      setState(() => _hasUnsavedChanges = true);
-                    }
-                  },
-                  onIconChanged: (icon) {
-                    setState(() {
-                      _selectedIcon = icon;
-                      _hasUnsavedChanges = true;
-                    });
-                  },
-                  onColorChanged: (color) {
-                    setState(() {
-                      _selectedColor = color;
-                      _hasUnsavedChanges = true;
-                    });
-                  },
-                ),
-              ),
-              const SizedBox(height: AppSpacing.xl),
-              SizedBox(
-                width: double.infinity,
-                child: AppButton(
-                  label: 'Salvar Categoria',
-                  onPressed: _submit,
-                  isLoading: _isSaving,
-                  icon: Icons.check,
-                ),
-              ),
-            ],
+          title: Text(
+            widget.category == null ? 'Nova Categoria' : 'Editar Categoria',
           ),
+          actions: [
+            if (widget.category != null)
+              IconButton(
+                icon: const Icon(Icons.delete_outline),
+                onPressed: _deleteCategory,
+              ),
+          ],
         ),
+        body: AppAnimations.fadeInFromBottom(
+          Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Column(
+              children: [
+                Expanded(
+                  child: CategoryForm(
+                    formKey: _formKey,
+                    nameController: _nameController,
+                    selectedIcon: _selectedIcon,
+                    selectedColor: _selectedColor,
+                    onChanged: () {
+                      if (!_hasUnsavedChanges) {
+                        setState(() => _hasUnsavedChanges = true);
+                      }
+                    },
+                    onIconChanged: (icon) {
+                      setState(() {
+                        _selectedIcon = icon;
+                        _hasUnsavedChanges = true;
+                      });
+                    },
+                    onColorChanged: (color) {
+                      setState(() {
+                        _selectedColor = color;
+                        _hasUnsavedChanges = true;
+                      });
+                    },
+                  ),
+                ),
+                const SizedBox(height: AppSpacing.xl),
+                SizedBox(
+                  width: double.infinity,
+                  child: AppButton(
+                    label: 'Salvar Categoria',
+                    onPressed: _submit,
+                    isLoading: _isSaving,
+                    icon: Icons.check,
+                  ),
+                ),
+              ],
+            ),
+          ),
 
-        context: context,),
-    ),
+          context: context,
+        ),
+      ),
     );
   }
 }
