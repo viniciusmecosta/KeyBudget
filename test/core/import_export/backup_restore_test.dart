@@ -195,6 +195,41 @@ void main() {
       expect(decrypted, equals(sampleZipPayload));
     });
 
+    test('New envelopes preserve Unicode passwords without truncation', () {
+      final envelope = BackupCrypto.encryptEnvelope(
+        payload: sampleZipPayload,
+        password: 'senha🔐é',
+        iterations: 10000,
+      );
+      expect(ByteData.sublistView(envelope).getUint16(4, Endian.big), 2);
+      expect(
+        BackupCrypto.decryptEnvelope(envelope: envelope, password: 'senha🔐é'),
+        sampleZipPayload,
+      );
+      expect(
+        () => BackupCrypto.decryptEnvelope(
+          envelope: envelope,
+          password: 'senha=\u0010é',
+        ),
+        throwsA(isA<BackupCryptoException>()),
+      );
+    });
+
+    test('Version 1 envelopes still accept the original password encoding', () {
+      final legacyEnvelope = base64Decode(
+        'S0JHMQABAAAnEBB3mKxsVhyHdTWIAdM6u6zTDOkdkDD+4VFAgxTlzFAc+ubLdKjV7Zd5tYaPklqq8zsS2t3w35WoHk53XQ==',
+      );
+      expect(
+        utf8.decode(
+          BackupCrypto.decryptEnvelope(
+            envelope: legacyEnvelope,
+            password: 'senh🔐é',
+          ),
+        ),
+        'legacy payload',
+      );
+    });
+
     test('Rejects wrong password without decrypting', () {
       final envelope = BackupCrypto.encryptEnvelope(
         payload: sampleZipPayload,
@@ -440,7 +475,7 @@ void main() {
       expect(result.data, isNotNull);
       final backupData = result.data!;
 
-      expect(backupData.manifest.formatVersion, equals(1));
+      expect(backupData.manifest.formatVersion, equals(2));
       expect(backupData.manifest.originUid, equals(testUid));
       expect(backupData.manifest.counts['categories'], equals(2));
       expect(backupData.manifest.counts['folders'], equals(1));

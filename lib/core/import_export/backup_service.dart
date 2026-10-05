@@ -230,7 +230,7 @@ class BackupService {
     final backupId =
         'bkp_${clock.now().millisecondsSinceEpoch}_${uid.substring(0, uid.length.clamp(0, 6))}';
     final manifest = BackupManifest(
-      formatVersion: 1,
+      formatVersion: BackupCrypto.currentFormatVersion,
       appVersion: '1.1.2',
       createdAt: clock.now().toUtc(),
       backupId: backupId,

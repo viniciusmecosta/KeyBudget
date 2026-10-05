@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'dart:math';
 import 'dart:typed_data';
 import 'package:archive/archive.dart';
@@ -21,7 +22,7 @@ class BackupSecurityException implements Exception {
 
 class BackupCrypto {
   static const List<int> magicBytes = [0x4B, 0x42, 0x47, 0x31];
-  static const int currentFormatVersion = 1;
+  static const int currentFormatVersion = 2;
   static const int defaultIterations = 50000;
   static const int minIterations = 10000;
   static const int maxIterations = 500000;
@@ -130,6 +131,11 @@ class BackupCrypto {
     if (password.isEmpty) {
       throw BackupCryptoException('A senha do backup não pode ser vazia.');
     }
+    if (payload.length > maxBackupBytesLimit - 56) {
+      throw const BackupSecurityException(
+        'O backup excede o limite de 200 MB.',
+      );
+    }
     if (iterations < minIterations || iterations > maxIterations) {
       throw BackupCryptoException(
         'Número de iterações inválido: $iterations. Deve estar entre $minIterations e $maxIterations.',
@@ -168,7 +174,7 @@ class BackupCrypto {
 
     final kdf = PBKDF2KeyDerivator(HMac(SHA256Digest(), 64));
     kdf.init(Pbkdf2Parameters(salt, iterations, 32));
-    final derivedKey = kdf.process(Uint8List.fromList(password.codeUnits));
+    final derivedKey = kdf.process(Uint8List.fromList(utf8.encode(password)));
 
     final cipher = GCMBlockCipher(AESEngine());
     final aeadParams = AEADParameters(
@@ -254,7 +260,10 @@ class BackupCrypto {
 
     final kdf = PBKDF2KeyDerivator(HMac(SHA256Digest(), 64));
     kdf.init(Pbkdf2Parameters(salt, iterations, 32));
-    final derivedKey = kdf.process(Uint8List.fromList(password.codeUnits));
+    final passwordBytes = version == 1
+        ? password.codeUnits
+        : utf8.encode(password);
+    final derivedKey = kdf.process(Uint8List.fromList(passwordBytes));
 
     try {
       final cipher = GCMBlockCipher(AESEngine());
