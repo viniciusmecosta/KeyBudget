@@ -55,7 +55,7 @@ class _AuthGateState extends ConsumerState<AuthGate> {
       });
     }
 
-    if (appLockService.isLocked) {
+    if (appLockService.isLocked && _status != AuthStatus.success) {
       return const Scaffold(body: SafeArea(child: DashboardSkeleton()));
     }
 
@@ -101,7 +101,7 @@ class _AuthGateState extends ConsumerState<AuthGate> {
         appLockService.lockApp();
         if (mounted) setState(() => _status = AuthStatus.pending);
       }
-      
+
       if (mounted) {
         _isAuthenticating = false;
       }

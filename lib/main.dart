@@ -218,7 +218,19 @@ class _MyAppState extends ConsumerState<MyApp> with WidgetsBindingObserver {
           builder: (context, ref, _) {
             final appLock = ref.watch(appLockServiceProvider);
             return Stack(
-              children: [?navigator, if (appLock.isLocked) const LockScreen()],
+              children: [
+                ExcludeSemantics(
+                  excluding: appLock.isLocked,
+                  child: AbsorbPointer(
+                    absorbing: appLock.isLocked,
+                    child: TickerMode(
+                      enabled: !appLock.isLocked,
+                      child: navigator ?? const SizedBox.shrink(),
+                    ),
+                  ),
+                ),
+                if (appLock.isLocked) const LockScreen(),
+              ],
             );
           },
         );
