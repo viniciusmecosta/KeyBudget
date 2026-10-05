@@ -20,6 +20,7 @@ import 'package:key_budget/features/credentials/viewmodel/credential_viewmodel.d
 import 'package:key_budget/features/dashboard/repository/dashboard_layout_repository.dart';
 import 'package:key_budget/features/dashboard/widgets/dashboard_layout_editor.dart';
 import 'package:key_budget/features/expenses/viewmodel/expense_viewmodel.dart';
+import 'package:key_budget/features/expenses/repository/expense_repository.dart';
 import 'package:key_budget/features/goals/view/savings_goals_screen.dart';
 import 'package:key_budget/features/search/view/global_search_screen.dart';
 import 'package:key_budget/features/trash/view/trash_screen.dart';
@@ -74,7 +75,14 @@ class UserScreen extends ConsumerWidget {
       int successCount = 0;
 
       if (exp) {
-        final csvStr = csvService.generateExpensesCsvString(expVm.allExpenses);
+        final userId = ref.read(authViewModelProvider).currentUser?.id;
+        if (userId == null) {
+          throw StateError('Entre na sua conta para exportar os lançamentos.');
+        }
+        final expenses = await ref
+            .read(expenseRepositoryProvider)
+            .getAllPaged(userId);
+        final csvStr = csvService.generateExpensesCsvString(expenses);
         final file = File('${dir.path}/despesas_backup.csv');
         await file.writeAsBytes(utf8.encode(csvStr));
         final res = await driveService.uploadFile(

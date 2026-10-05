@@ -283,6 +283,27 @@ class ExpenseRepository {
     );
   }
 
+  Future<List<Expense>> getAllPaged(
+    String userId, {
+    DateTime? startInclusive,
+    DateTime? endExclusive,
+  }) async {
+    final all = <Expense>[];
+    DocumentSnapshot<Expense>? cursor;
+    do {
+      final page = await getHistoryPage(
+        userId,
+        startInclusive: startInclusive,
+        endExclusive: endExclusive,
+        after: cursor,
+        pageSize: 200,
+      );
+      all.addAll(page.expenses);
+      cursor = page.nextCursor;
+    } while (cursor != null);
+    return all;
+  }
+
   Future<List<Expense>> getExpensesForUser(String userId) async {
     final querySnapshot = await _getExpensesCollection(
       userId,
