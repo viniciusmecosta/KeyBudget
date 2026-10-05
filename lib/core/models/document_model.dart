@@ -88,7 +88,9 @@ class Document {
       additionalFields: additionalFields ?? this.additionalFields,
       attachments: attachments ?? this.attachments,
       isPrincipal: isPrincipal ?? this.isPrincipal,
-      originalDocumentId: clearOriginalDocumentId ? null : (originalDocumentId ?? this.originalDocumentId),
+      originalDocumentId: clearOriginalDocumentId
+          ? null
+          : (originalDocumentId ?? this.originalDocumentId),
       versions: versions ?? this.versions,
     );
   }
@@ -100,6 +102,8 @@ class Attachment {
   final String driveId;
 
   Attachment({required this.name, required this.type, required this.driveId});
+
+  Attachment copy() => Attachment(name: name, type: type, driveId: driveId);
 
   Map<String, dynamic> toMap() {
     return {'name': name, 'type': type, 'driveId': driveId};

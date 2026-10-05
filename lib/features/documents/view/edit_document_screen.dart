@@ -28,6 +28,8 @@ class _EditDocumentScreenState extends ConsumerState<EditDocumentScreen> {
   late ValueNotifier<DateTime?> _expiryDate;
   late ValueNotifier<List<Map<String, String>>> _additionalFields;
   late ValueNotifier<List<Attachment>> _attachments;
+  bool _hasUnsavedChanges = false;
+  bool _isSaving = false;
 
   @override
   void initState() {
@@ -42,12 +44,33 @@ class _EditDocumentScreenState extends ConsumerState<EditDocumentScreen> {
           .toList(),
     );
     _attachments = ValueNotifier(
-      List<Attachment>.from(widget.document.attachments),
+      widget.document.attachments
+          .map((attachment) => attachment.copy())
+          .toList(),
     );
   }
 
+  @override
+  void dispose() {
+    _nameController.dispose();
+    _numberController.dispose();
+    _issueDate.dispose();
+    _expiryDate.dispose();
+    _additionalFields.dispose();
+    _attachments.dispose();
+    super.dispose();
+  }
+
+  void _markChanged() {
+    if (!_hasUnsavedChanges) {
+      setState(() => _hasUnsavedChanges = true);
+    }
+  }
+
   void _submit() async {
+    if (_isSaving) return;
     if (!_formKey.currentState!.validate()) return;
+    setState(() => _isSaving = true);
     HapticFeedback.mediumImpact();
 
     final viewModel = ref.read(documentViewModelProvider);
@@ -63,68 +86,116 @@ class _EditDocumentScreenState extends ConsumerState<EditDocumentScreen> {
       clearExpiryDate: _expiryDate.value == null,
       additionalFields: {
         for (var field in _additionalFields.value)
-          if (field['name']!.trim().isNotEmpty) field['name']!.trim(): field['value']!.trim(),
+          if (field['name']!.trim().isNotEmpty)
+            field['name']!.trim(): field['value']!.trim(),
       },
       attachments: _attachments.value,
     );
 
-    final success = await viewModel.updateDocument(
-      userId,
-      updatedDocument,
-      widget.document,
-    );
-
-    if (mounted) {
+    try {
+      final success = await viewModel.updateDocument(
+        userId,
+        updatedDocument,
+        widget.document,
+      );
+      if (!mounted) return;
       if (success) {
+        setState(() => _hasUnsavedChanges = false);
         SnackbarService.showSuccess(
           context,
           'Documento atualizado com sucesso!',
         );
-        Navigator.of(context).pop();
+        await WidgetsBinding.instance.endOfFrame;
+        if (mounted) Navigator.of(context).pop();
       } else {
         SnackbarService.showError(
           context,
-          viewModel.errorMessage ?? 'Ocorreu um erro.',
+          viewModel.errorMessage ?? 'Não foi possível salvar o documento.',
         );
       }
+    } catch (_) {
+      if (mounted) {
+        SnackbarService.showError(
+          context,
+          'Não foi possível salvar o documento. Tente novamente.',
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _isSaving = false);
     }
   }
 
   @override
   Widget build(BuildContext context) {
     final viewModel = ref.watch(documentViewModelProvider);
-    return Scaffold(
-      appBar: AppBar(title: const Text('Editar Documento')),
-      body: AppAnimations.fadeInFromBottom(
-        Padding(
-          padding: const EdgeInsets.all(AppSpacing.md),
-          child: Column(
-            children: [
-              Expanded(
-                child: DocumentForm(
-                  formKey: _formKey,
-                  nameController: _nameController,
-                  numberController: _numberController,
-                  issueDate: _issueDate,
-                  expiryDate: _expiryDate,
-                  additionalFields: _additionalFields,
-                  attachments: _attachments,
-                ),
+    final theme = Theme.of(context);
+    return PopScope(
+      canPop: !_hasUnsavedChanges,
+      onPopInvokedWithResult: (didPop, result) async {
+        if (didPop) return;
+        final shouldPop = await showDialog<bool>(
+          context: context,
+          builder: (dialogContext) => AlertDialog(
+            title: const Text('Descartar alterações?'),
+            content: const Text(
+              'Você tem alterações não salvas. Deseja sair sem salvar?',
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(dialogContext).pop(false),
+                child: const Text('Cancelar'),
               ),
-              const SizedBox(height: AppSpacing.md),
-              SizedBox(
-                width: double.infinity,
-                child: AppButton(
-                  onPressed: _submit,
-                  isLoading: viewModel.isLoading,
-                  label: 'Salvar Alterações',
+              TextButton(
+                onPressed: () => Navigator.of(dialogContext).pop(true),
+                style: TextButton.styleFrom(
+                  foregroundColor: theme.colorScheme.error,
                 ),
+                child: const Text('Sair'),
               ),
             ],
           ),
-        ),
+        );
+        if (shouldPop == true && mounted) {
+          setState(() => _hasUnsavedChanges = false);
+          await WidgetsBinding.instance.endOfFrame;
+          if (mounted) Navigator.of(this.context).pop(result);
+        }
+      },
+      child: Scaffold(
+        appBar: AppBar(title: const Text('Editar Documento')),
+        body: AppAnimations.fadeInFromBottom(
+          Padding(
+            padding: const EdgeInsets.all(AppSpacing.md),
+            child: Column(
+              children: [
+                Expanded(
+                  child: DocumentForm(
+                    formKey: _formKey,
+                    nameController: _nameController,
+                    numberController: _numberController,
+                    issueDate: _issueDate,
+                    expiryDate: _expiryDate,
+                    additionalFields: _additionalFields,
+                    attachments: _attachments,
+                    onChanged: _markChanged,
+                  ),
+                ),
+                const SizedBox(height: AppSpacing.md),
+                SizedBox(
+                  width: double.infinity,
+                  child: AppButton(
+                    onPressed: _submit,
+                    isLoading: _isSaving || viewModel.isLoading,
+                    label: 'Salvar Alterações',
+                  ),
+                ),
+              ],
+            ),
+          ),
 
-        context: context,),
+          context: context,
+        ),
+      ),
     );
   }
 }

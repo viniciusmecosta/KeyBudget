@@ -37,7 +37,9 @@ class DocumentForm extends ConsumerStatefulWidget {
 class _DocumentFormState extends ConsumerState<DocumentForm> {
   Widget _sectionHeader(BuildContext context, String title, IconData icon) {
     final theme = Theme.of(context);
-    final color = theme.brightness == Brightness.dark ? Colors.white : Colors.black87;
+    final color = theme.brightness == Brightness.dark
+        ? Colors.white
+        : Colors.black87;
     return Row(
       children: [
         Icon(icon, color: color, size: 20),
@@ -65,7 +67,11 @@ class _DocumentFormState extends ConsumerState<DocumentForm> {
       child: ListView(
         padding: const EdgeInsets.all(AppSpacing.md),
         children: [
-          _sectionHeader(context, 'INFORMAÇÕES PRINCIPAIS', Icons.description_outlined),
+          _sectionHeader(
+            context,
+            'INFORMAÇÕES PRINCIPAIS',
+            Icons.description_outlined,
+          ),
           const SizedBox(height: AppSpacing.sm),
           AppTextField(
             controller: widget.nameController,
@@ -99,6 +105,7 @@ class _DocumentFormState extends ConsumerState<DocumentForm> {
                 setState(() {
                   widget.additionalFields.value.add({'name': '', 'value': ''});
                 });
+                widget.onChanged?.call();
               },
             ),
           ),
@@ -132,12 +139,12 @@ class _DocumentFormState extends ConsumerState<DocumentForm> {
                       final appLock = ref.read(appLockServiceProvider);
                       appLock.beginExternalPick();
                       try {
-                        final attachment =
-                            await viewModel.pickAndUploadFile();
+                        final attachment = await viewModel.pickAndUploadFile();
                         if (attachment != null) {
                           setState(() {
                             widget.attachments.value.add(attachment);
                           });
+                          widget.onChanged?.call();
                         }
                       } finally {
                         appLock.endExternalPick();
@@ -184,11 +191,15 @@ class _DocumentFormState extends ConsumerState<DocumentForm> {
               ),
             ),
             IconButton(
-              icon: Icon(Icons.remove_circle_outline, color: theme.colorScheme.error),
+              icon: Icon(
+                Icons.remove_circle_outline,
+                color: theme.colorScheme.error,
+              ),
               onPressed: () {
                 setState(() {
                   widget.additionalFields.value.removeAt(index);
                 });
+                widget.onChanged?.call();
               },
             ),
           ],
@@ -200,7 +211,6 @@ class _DocumentFormState extends ConsumerState<DocumentForm> {
   List<Widget> _buildAttachments(BuildContext context) {
     final theme = Theme.of(context);
     return widget.attachments.value.map((attachment) {
-      final nameController = TextEditingController(text: attachment.name);
       return Container(
         margin: const EdgeInsets.only(bottom: AppSpacing.sm),
         decoration: BoxDecoration(
@@ -208,7 +218,9 @@ class _DocumentFormState extends ConsumerState<DocumentForm> {
           border: Border.all(
             color: theme.colorScheme.outline.withValues(alpha: 0.2),
           ),
-          color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.4),
+          color: theme.colorScheme.surfaceContainerHighest.withValues(
+            alpha: 0.4,
+          ),
         ),
         child: ListTile(
           contentPadding: const EdgeInsets.symmetric(
@@ -221,10 +233,14 @@ class _DocumentFormState extends ConsumerState<DocumentForm> {
               color: theme.colorScheme.primary.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(8),
             ),
-            child: Icon(Icons.insert_drive_file_outlined, color: theme.colorScheme.primary),
+            child: Icon(
+              Icons.insert_drive_file_outlined,
+              color: theme.colorScheme.primary,
+            ),
           ),
           title: TextFormField(
-            controller: nameController,
+            key: ValueKey(attachment.driveId),
+            initialValue: attachment.name,
             decoration: const InputDecoration(
               hintText: 'Nome do anexo',
               border: InputBorder.none,
@@ -237,11 +253,15 @@ class _DocumentFormState extends ConsumerState<DocumentForm> {
             },
           ),
           trailing: IconButton(
-            icon: Icon(Icons.remove_circle_outline, color: theme.colorScheme.error),
+            icon: Icon(
+              Icons.remove_circle_outline,
+              color: theme.colorScheme.error,
+            ),
             onPressed: () {
               setState(() {
                 widget.attachments.value.remove(attachment);
               });
+              widget.onChanged?.call();
             },
           ),
         ),
@@ -268,6 +288,7 @@ class _DocumentFormState extends ConsumerState<DocumentForm> {
           setState(() {
             notifier.value = date;
           });
+          widget.onChanged?.call();
         }
       },
       borderRadius: AppBorders.borderRadiusM,
@@ -277,11 +298,15 @@ class _DocumentFormState extends ConsumerState<DocumentForm> {
           prefixIcon: const Icon(Icons.calendar_today_outlined),
           suffixIcon: notifier.value != null
               ? IconButton(
-                  icon: Icon(Icons.clear, color: theme.colorScheme.onSurfaceVariant),
+                  icon: Icon(
+                    Icons.clear,
+                    color: theme.colorScheme.onSurfaceVariant,
+                  ),
                   onPressed: () {
                     setState(() {
                       notifier.value = null;
                     });
+                    widget.onChanged?.call();
                   },
                 )
               : const Icon(Icons.chevron_right),
@@ -292,7 +317,9 @@ class _DocumentFormState extends ConsumerState<DocumentForm> {
               : DateFormat('dd/MM/yyyy').format(notifier.value!),
           style: notifier.value == null
               ? theme.textTheme.bodyMedium?.copyWith(
-                  color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.6),
+                  color: theme.colorScheme.onSurfaceVariant.withValues(
+                    alpha: 0.6,
+                  ),
                 )
               : theme.textTheme.bodyMedium,
         ),
