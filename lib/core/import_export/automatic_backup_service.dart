@@ -202,7 +202,7 @@ class AutomaticBackupService {
         final directory = await _backupDirectory(userId);
         await directory.create(recursive: true);
         latestFile = File(
-          '${directory.path}/auto_${now.millisecondsSinceEpoch}_${result.manifest.backupId}.kbudget',
+          '${directory.path}/auto_${userId}_${now.millisecondsSinceEpoch}_${result.manifest.backupId}.kbudget',
         );
         await latestFile.writeAsBytes(result.envelopeBytes, flush: true);
         await _storage.write(
@@ -238,7 +238,7 @@ class AutomaticBackupService {
         value: _now().toIso8601String(),
       );
       await _storage.delete(key: _key(userId, 'last_error'));
-      await _pruneDrive(settings.retention);
+      await _pruneDrive(userId, settings.retention);
       return true;
     } on DriveAuthorizationCancelled {
       return false;
@@ -260,17 +260,18 @@ class AutomaticBackupService {
     }
   }
 
-  Future<void> _pruneDrive(int retention) async {
+  Future<void> _pruneDrive(String userId, int retention) async {
     final files = await _driveService.listBackupFiles(allowInteractive: false);
     final automatic =
-        files.where((file) => file.name.startsWith('auto_')).toList()..sort(
-          (first, second) =>
-              (second.modifiedTime ?? DateTime.fromMillisecondsSinceEpoch(0))
-                  .compareTo(
-                    first.modifiedTime ??
-                        DateTime.fromMillisecondsSinceEpoch(0),
-                  ),
-        );
+        files.where((file) => file.name.startsWith('auto_${userId}_')).toList()
+          ..sort(
+            (first, second) =>
+                (second.modifiedTime ?? DateTime.fromMillisecondsSinceEpoch(0))
+                    .compareTo(
+                      first.modifiedTime ??
+                          DateTime.fromMillisecondsSinceEpoch(0),
+                    ),
+          );
     for (final file in automatic.skip(retention)) {
       await _driveService.deleteFile(file.id, allowInteractive: false);
     }

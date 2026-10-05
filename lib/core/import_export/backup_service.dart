@@ -141,7 +141,7 @@ class BackupService {
           if (driveId != null && driveId.isNotEmpty) {
             final internalId =
                 'att_${sha256.convert(utf8.encode(driveId)).toString().substring(0, 12)}';
-            if (!attachmentFiles.containsKey(internalId)) {
+            if (!attachmentFiles.containsKey('attachments/$internalId')) {
               List<int>? bytes;
               if (driveService != null) {
                 try {

@@ -11,6 +11,7 @@ import 'package:key_budget/core/import_export/operation_journal.dart';
 import 'package:key_budget/core/import_export/raw_storage.dart';
 import 'package:key_budget/core/import_export/restore_service.dart';
 import 'package:key_budget/core/operations/session_context.dart';
+import 'package:key_budget/core/services/drive_service.dart';
 import 'package:key_budget/core/services/encryption_service.dart';
 import 'package:key_budget/core/time/app_clock.dart';
 
@@ -85,6 +86,19 @@ class _CredentialCipher extends Fake implements EncryptionService {
 
   @override
   String encryptData(String plainText) => '$prefix:$plainText';
+}
+
+class _AttachmentDrive extends DriveService {
+  int downloadCount = 0;
+
+  @override
+  Future<List<int>?> downloadFile(
+    String fileId, {
+    String? serverClientId,
+  }) async {
+    downloadCount++;
+    return [1, 2, 3];
+  }
 }
 
 void main() {
@@ -344,6 +358,28 @@ void main() {
         'email': 'contato@eletrica.com',
         'notes': 'Atendimento 24h',
       };
+    });
+
+    test('Shared attachment is downloaded once in a verified backup', () async {
+      sourceStorage.documents['users/$testUid/documents/doc_1'] = {
+        'id': 'doc_1',
+        'documentName': 'Documento',
+        'attachments': [
+          {'driveId': 'same-file', 'name': 'anexo.pdf'},
+          {'driveId': 'same-file', 'name': 'anexo.pdf'},
+        ],
+      };
+      final driveService = _AttachmentDrive();
+      final backup = await BackupService(
+        rawReader: sourceStorage,
+        sessionContext: sessionContext,
+        clock: testClock,
+        driveService: driveService,
+      ).createBackup(password: backupPassword);
+
+      expect(backup.isSuccess, isTrue);
+      expect(driveService.downloadCount, 1);
+      expect(backup.data!.manifest.attachments.length, 1);
     });
 
     test(

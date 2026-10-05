@@ -78,7 +78,111 @@ class _FailingDrive extends DriveService {
   }) async => throw StateError('network unavailable');
 }
 
+class _RetentionDrive extends DriveService {
+  final deletedIds = <String>[];
+
+  @override
+  Future<drive.File?> uploadFile(
+    File file,
+    void Function(int, int) onProgress, {
+    String? serverClientId,
+    bool isBackup = false,
+    bool allowInteractive = true,
+  }) async => drive.File()..id = 'uploaded';
+
+  @override
+  Future<List<DriveBackupFile>> listBackupFiles({
+    String? serverClientId,
+    bool allowInteractive = true,
+  }) async => [
+    DriveBackupFile(
+      id: 'new',
+      name: 'auto_user_3_a.kbudget',
+      sizeBytes: 1,
+      modifiedTime: DateTime(2026, 10, 3),
+    ),
+    DriveBackupFile(
+      id: 'old',
+      name: 'auto_user_1_a.kbudget',
+      sizeBytes: 1,
+      modifiedTime: DateTime(2026, 10, 1),
+    ),
+    DriveBackupFile(
+      id: 'other',
+      name: 'auto_other_1_a.kbudget',
+      sizeBytes: 1,
+      modifiedTime: DateTime(2026, 10, 1),
+    ),
+    DriveBackupFile(
+      id: 'legacy',
+      name: 'auto_1_a.kbudget',
+      sizeBytes: 1,
+      modifiedTime: DateTime(2026, 10, 1),
+    ),
+  ];
+
+  @override
+  Future<bool> deleteFile(
+    String fileId, {
+    String? serverClientId,
+    bool allowInteractive = true,
+  }) async {
+    deletedIds.add(fileId);
+    return true;
+  }
+}
+
 void main() {
+  test(
+    'Drive retention never deletes another account or legacy backups',
+    () async {
+      final directory = await Directory.systemTemp.createTemp(
+        'keybudget-retain',
+      );
+      addTearDown(() => directory.delete(recursive: true));
+      final storage = _MemoryStorage();
+      final driveService = _RetentionDrive();
+      final now = DateTime(2026, 10, 3);
+      final service = AutomaticBackupService(
+        storage: storage,
+        driveService: driveService,
+        documentsDirectory: () async => directory,
+        currentUserId: () => 'user',
+        now: () => now,
+        createBackup: (userId, _) async {
+          const completeness = BackupCompleteness(isComplete: true);
+          return BackupResultData(
+            envelopeBytes: Uint8List.fromList([1]),
+            completeness: completeness,
+            manifest: BackupManifest(
+              appVersion: 'test',
+              createdAt: now,
+              backupId: 'latest',
+              originUid: userId,
+              modules: const [],
+              counts: const {},
+              hashes: const {},
+              completeness: completeness,
+            ),
+          );
+        },
+      );
+      await service.saveSettings(
+        userId: 'user',
+        interval: AutomaticBackupInterval.daily,
+        retention: 1,
+        password: 'secret123',
+      );
+
+      expect(await service.runIfDue('user'), isTrue);
+      expect(driveService.deletedIds, ['old']);
+      expect(
+        (await service.listLocalHistory('user')).single.file.path,
+        contains('auto_user_'),
+      );
+    },
+  );
+
   test('Drive failure preserves the verified local backup for retry', () async {
     final directory = await Directory.systemTemp.createTemp(
       'keybudget-partial',
