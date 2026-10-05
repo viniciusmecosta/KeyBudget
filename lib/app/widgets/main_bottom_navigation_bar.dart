@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:google_nav_bar/google_nav_bar.dart';
 import 'package:key_budget/app/config/app_theme.dart';
 import 'package:key_budget/app/utils/app_animations.dart';
 import 'package:key_budget/app/navigation/app_destination.dart';
@@ -10,6 +9,11 @@ import 'package:key_budget/features/auth/viewmodel/auth_viewmodel.dart';
 
 class MainBottomNavigationBar extends ConsumerWidget {
   const MainBottomNavigationBar({super.key});
+
+  String _label(AppDestination destination, bool enableIncomes) =>
+      destination == AppDestination.expenses && !enableIncomes
+      ? 'Despesas'
+      : destination.label;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -29,7 +33,6 @@ class MainBottomNavigationBar extends ConsumerWidget {
     final width = MediaQuery.sizeOf(context).width;
     final largeText = MediaQuery.textScalerOf(context).scale(14) > 18;
     final useTwoRows = destinations.length > 6;
-    final useCompactRow = !useTwoRows && (width < 420 || largeText);
     final activeTabIndex = destinations
         .indexOf(currentDest)
         .clamp(0, destinations.length - 1)
@@ -69,8 +72,12 @@ class MainBottomNavigationBar extends ConsumerWidget {
                             Expanded(
                               child: Semantics(
                                 button: true,
+                                excludeSemantics: true,
                                 selected: activeTabIndex == index,
-                                label: destinations[index].label,
+                                label: _label(
+                                  destinations[index],
+                                  enableIncomes,
+                                ),
                                 child: InkWell(
                                   onTap: () => navigationViewModel.navigateTo(
                                     destinations[index],
@@ -96,11 +103,10 @@ class MainBottomNavigationBar extends ConsumerWidget {
                                                     .onSurfaceVariant,
                                         ),
                                         Text(
-                                          destinations[index] ==
-                                                      AppDestination.expenses &&
-                                                  !enableIncomes
-                                              ? 'Despesas'
-                                              : destinations[index].label,
+                                          _label(
+                                            destinations[index],
+                                            enableIncomes,
+                                          ),
                                           textAlign: TextAlign.center,
                                           maxLines: 2,
                                           overflow: TextOverflow.ellipsis,
@@ -116,8 +122,7 @@ class MainBottomNavigationBar extends ConsumerWidget {
                       ),
                   ],
                 )
-              : useCompactRow
-              ? Row(
+              : Row(
                   children: [
                     for (var index = 0; index < destinations.length; index++)
                       Flexible(
@@ -129,8 +134,9 @@ class MainBottomNavigationBar extends ConsumerWidget {
                             : 1,
                         child: Semantics(
                           button: true,
+                          excludeSemantics: true,
                           selected: activeTabIndex == index,
-                          label: destinations[index].label,
+                          label: _label(destinations[index], enableIncomes),
                           child: InkWell(
                             onTap: () {
                               HapticFeedback.selectionClick();
@@ -141,30 +147,36 @@ class MainBottomNavigationBar extends ConsumerWidget {
                             borderRadius: BorderRadius.circular(
                               AppTheme.radiusM,
                             ),
-                            child: Container(
+                            child: ConstrainedBox(
                               constraints: const BoxConstraints(minHeight: 48),
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 2,
-                              ),
-                              decoration: BoxDecoration(
-                                color: activeTabIndex == index
-                                    ? theme.colorScheme.primary.withAlpha(26)
-                                    : null,
-                                borderRadius: BorderRadius.circular(
-                                  AppTheme.radiusM,
-                                ),
-                              ),
                               child: Row(
                                 mainAxisAlignment: MainAxisAlignment.center,
                                 children: [
-                                  Icon(
-                                    activeTabIndex == index
-                                        ? destinations[index].selectedIcon
-                                        : destinations[index].icon,
-                                    color: activeTabIndex == index
-                                        ? theme.colorScheme.primary
-                                        : theme.colorScheme.onSurfaceVariant,
-                                    size: 22,
+                                  AnimatedContainer(
+                                    duration: AppAnimations.durationFor(
+                                      context,
+                                      const Duration(milliseconds: 180),
+                                    ),
+                                    width: 36,
+                                    height: 36,
+                                    alignment: Alignment.center,
+                                    decoration: BoxDecoration(
+                                      shape: BoxShape.circle,
+                                      color: activeTabIndex == index
+                                          ? theme.colorScheme.primary.withAlpha(
+                                              24,
+                                            )
+                                          : Colors.transparent,
+                                    ),
+                                    child: Icon(
+                                      activeTabIndex == index
+                                          ? destinations[index].selectedIcon
+                                          : destinations[index].icon,
+                                      color: activeTabIndex == index
+                                          ? theme.colorScheme.primary
+                                          : theme.colorScheme.onSurfaceVariant,
+                                      size: 22,
+                                    ),
                                   ),
                                   if (activeTabIndex == index &&
                                       !largeText &&
@@ -172,11 +184,10 @@ class MainBottomNavigationBar extends ConsumerWidget {
                                     const SizedBox(width: 4),
                                     Flexible(
                                       child: Text(
-                                        destinations[index] ==
-                                                    AppDestination.expenses &&
-                                                !enableIncomes
-                                            ? 'Despesas'
-                                            : destinations[index].label,
+                                        _label(
+                                          destinations[index],
+                                          enableIncomes,
+                                        ),
                                         maxLines: 1,
                                         softWrap: false,
                                         overflow: TextOverflow.ellipsis,
@@ -195,46 +206,6 @@ class MainBottomNavigationBar extends ConsumerWidget {
                         ),
                       ),
                   ],
-                )
-              : GNav(
-                  rippleColor: theme.colorScheme.primary.withAlpha(
-                    (255 * 0.1).round(),
-                  ),
-                  hoverColor: theme.colorScheme.primary.withAlpha(
-                    (255 * 0.05).round(),
-                  ),
-                  gap: 8,
-                  activeColor: theme.colorScheme.primary,
-                  iconSize: 24,
-                  padding: EdgeInsets.symmetric(
-                    horizontal: AppTheme.spaceS,
-                    vertical: AppTheme.spaceS + 2,
-                  ),
-                  duration: AppAnimations.durationFor(
-                    context,
-                    const Duration(milliseconds: 200),
-                  ),
-                  tabBackgroundColor: theme.colorScheme.primary.withAlpha(
-                    (255 * 0.1).round(),
-                  ),
-                  color: theme.colorScheme.onSurfaceVariant,
-                  tabs: destinations
-                      .map(
-                        (destination) => GButton(
-                          icon: destination.icon,
-                          text:
-                              destination == AppDestination.expenses &&
-                                  !enableIncomes
-                              ? 'Despesas'
-                              : destination.label,
-                        ),
-                      )
-                      .toList(),
-                  selectedIndex: activeTabIndex,
-                  onTabChange: (index) {
-                    HapticFeedback.selectionClick();
-                    navigationViewModel.navigateTo(destinations[index]);
-                  },
                 ),
         ),
       ),

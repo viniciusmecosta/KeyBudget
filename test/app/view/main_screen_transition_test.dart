@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:google_nav_bar/google_nav_bar.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:key_budget/app/config/app_theme.dart';
 import 'package:key_budget/app/navigation/app_destination.dart';
@@ -563,23 +562,23 @@ void main() {
         );
         expect(transitionState.controller.isAnimating, isFalse);
 
-        expect(find.byType(GButton), findsNWidgets(6));
+        expect(find.bySemanticsLabel('Fornecedores'), findsOneWidget);
 
-        await tester.tap(find.byType(GButton).at(4));
+        await tester.tap(find.bySemanticsLabel('Fornecedores'));
         await tester.pump();
         expect(transitionState.controller.isAnimating, isTrue);
         await tester.pumpAndSettle();
         expect(navVM.currentDestination, AppDestination.suppliers);
         expect(transitionState.controller.isAnimating, isFalse);
 
-        await tester.tap(find.byType(GButton).at(5));
+        await tester.tap(find.bySemanticsLabel('Perfil'));
         await tester.pump();
         expect(transitionState.controller.isAnimating, isTrue);
         await tester.pumpAndSettle();
         expect(navVM.currentDestination, AppDestination.profile);
         expect(transitionState.controller.isAnimating, isFalse);
 
-        await tester.tap(find.byType(GButton).at(4));
+        await tester.tap(find.bySemanticsLabel('Fornecedores'));
         await tester.pump();
         expect(transitionState.controller.isAnimating, isTrue);
         await tester.pumpAndSettle();

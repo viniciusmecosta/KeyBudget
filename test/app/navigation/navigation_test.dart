@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:google_nav_bar/google_nav_bar.dart';
 import 'package:key_budget/app/config/app_theme.dart';
 import 'package:key_budget/app/navigation/app_destination.dart';
 import 'package:key_budget/app/viewmodel/navigation_viewmodel.dart';
@@ -215,10 +214,21 @@ void main() {
         ),
       );
 
-      expect(find.byType(GButton), findsNWidgets(5));
+      for (final destination in AppDestination.getAvailable(
+        enableSuppliers: false,
+      )) {
+        expect(
+          find.bySemanticsLabel(
+            destination == AppDestination.expenses
+                ? 'Despesas'
+                : destination.label,
+          ),
+          findsOneWidget,
+        );
+      }
       expect(find.text('Painel'), findsOneWidget);
 
-      await tester.tap(find.byType(GButton).at(1));
+      await tester.tap(find.bySemanticsLabel('Despesas'));
       await tester.pumpAndSettle();
       expect(navVM.currentDestination, AppDestination.expenses);
     });
@@ -246,10 +256,18 @@ void main() {
         ),
       );
 
-      expect(find.byType(GButton), findsNWidgets(6));
-      expect(find.text('Fornecedores'), findsOneWidget);
+      for (final destination in AppDestination.values) {
+        expect(
+          find.bySemanticsLabel(
+            destination == AppDestination.expenses
+                ? 'Despesas'
+                : destination.label,
+          ),
+          findsOneWidget,
+        );
+      }
 
-      await tester.tap(find.byType(GButton).at(4));
+      await tester.tap(find.bySemanticsLabel('Fornecedores'));
       await tester.pumpAndSettle();
 
       expect(navVM.currentDestination, AppDestination.suppliers);
