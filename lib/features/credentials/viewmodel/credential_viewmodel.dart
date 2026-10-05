@@ -34,17 +34,18 @@ class CredentialViewModel extends ChangeNotifier {
     PdfService? pdfService,
     DataImportService? dataImportService,
     ImportService? importService,
-  })  : _repository = repository ?? CredentialRepository(),
-        _csvService = csvService ?? CsvService(),
-        _pdfService = pdfService ?? PdfService(),
-        _dataImportService = dataImportService ?? DataImportService(),
-        _importService = importService ??
-            ImportService(
-              expenseRepository: ExpenseRepository(),
-              credentialRepository: repository ?? CredentialRepository(),
-              recurringRepository: RecurringExpenseRepository(),
-              encryptionService: encryptionService,
-            );
+  }) : _repository = repository ?? CredentialRepository(),
+       _csvService = csvService ?? CsvService(),
+       _pdfService = pdfService ?? PdfService(),
+       _dataImportService = dataImportService ?? DataImportService(),
+       _importService =
+           importService ??
+           ImportService(
+             expenseRepository: ExpenseRepository(),
+             credentialRepository: repository ?? CredentialRepository(),
+             recurringRepository: RecurringExpenseRepository(),
+             encryptionService: encryptionService,
+           );
 
   EncryptionService get _activeEncryptionService =>
       encryptionService ?? EncryptionService();
@@ -54,6 +55,8 @@ class CredentialViewModel extends ChangeNotifier {
   List<dynamic> _currentDisplayItems = [];
 
   bool _isLoading = false;
+  String? _loadErrorMessage;
+  String? _listeningUserId;
   bool _isExportingCsv = false;
   bool _isExportingPdf = false;
   String _searchQuery = '';
@@ -97,6 +100,7 @@ class CredentialViewModel extends ChangeNotifier {
       .toList();
 
   bool get isLoading => _isLoading;
+  String? get loadErrorMessage => _loadErrorMessage;
 
   bool get isExportingCsv => _isExportingCsv;
 
@@ -139,7 +143,17 @@ class CredentialViewModel extends ChangeNotifier {
   }
 
   void listenToCredentials(String userId) {
-    if (_isListening) return;
+    if (_isListening && _listeningUserId == userId) return;
+
+    if (_listeningUserId != userId) {
+      _allCredentials = [];
+      _allFolders = [];
+      _currentDisplayItems = [];
+      _currentFolderId = null;
+      _searchQuery = '';
+    }
+    _listeningUserId = userId;
+    _loadErrorMessage = null;
 
     _setLoading(true);
     _credentialsSubscription?.cancel();
@@ -148,19 +162,36 @@ class CredentialViewModel extends ChangeNotifier {
     _foldersSubscription = _repository.getFoldersStreamForUser(userId).listen((
       folders,
     ) {
+      if (_listeningUserId != userId) return;
       _allFolders = folders;
       _updateDisplayList(animate: true);
-    });
+    }, onError: (Object error) => _handleLoadError(userId));
 
     _credentialsSubscription = _repository
         .getCredentialsStreamForUser(userId)
         .listen((newCredentials) {
+          if (_listeningUserId != userId) return;
           _allCredentials = newCredentials;
+          _loadErrorMessage = null;
           _updateDisplayList(animate: true);
           if (_isLoading) _setLoading(false);
-        });
+        }, onError: (Object error) => _handleLoadError(userId));
 
     _isListening = true;
+  }
+
+  void _handleLoadError(String userId) {
+    if (_listeningUserId != userId) return;
+    _loadErrorMessage =
+        'Não foi possível carregar o cofre. Confira sua conexão e tente novamente.';
+    _isListening = false;
+    _setLoading(false);
+    notifyListeners();
+  }
+
+  void retryListenToCredentials(String userId) {
+    _isListening = false;
+    listenToCredentials(userId);
   }
 
   void _updateDisplayList({bool animate = true}) {
@@ -316,7 +347,9 @@ class CredentialViewModel extends ChangeNotifier {
     String? logoPath,
     String? folderId,
   }) async {
-    final encryptedPassword = _activeEncryptionService.encryptData(plainPassword);
+    final encryptedPassword = _activeEncryptionService.encryptData(
+      plainPassword,
+    );
     final newCredential = Credential(
       location: location,
       login: login,
@@ -458,7 +491,10 @@ class CredentialViewModel extends ChangeNotifier {
       }
     } catch (e) {
       if (context != null && context.mounted) {
-        SnackbarService.showError(context, 'Não foi possível importar as credenciais. Verifique o arquivo e tente novamente.');
+        SnackbarService.showError(
+          context,
+          'Não foi possível importar as credenciais. Verifique o arquivo e tente novamente.',
+        );
       }
       return 0;
     }
@@ -482,6 +518,9 @@ class CredentialViewModel extends ChangeNotifier {
     _allFolders = [];
     _currentDisplayItems = [];
     _isListening = false;
+    _listeningUserId = null;
+    _loadErrorMessage = null;
+    _isLoading = false;
     _currentFolderId = null;
     notifyListeners();
   }
