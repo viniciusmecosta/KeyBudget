@@ -1,9 +1,34 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:flutter/material.dart';
+import 'package:key_budget/core/models/expense_category_model.dart';
 import 'package:key_budget/core/models/expense_model.dart';
 import 'package:key_budget/core/money/money.dart';
 import 'package:key_budget/features/category/repository/category_budget_repository.dart';
 
 void main() {
+  test('archived category remains readable with its historical identity', () {
+    final category = ExpenseCategory(
+      id: 'food',
+      name: 'Alimentação',
+      iconCodePoint: Icons.restaurant.codePoint,
+      colorValue: Colors.blue.toARGB32(),
+    );
+    final archived = ExpenseCategory.fromMap(
+      category.copyWith(isArchived: true).toMap(),
+      'food',
+    );
+
+    expect(archived.isArchived, isTrue);
+    expect(archived.name, 'Alimentação');
+    expect(archived.copyWith(isArchived: false).isArchived, isFalse);
+    expect(
+      ExpenseCategory.fromMap(
+        category.toMap()..remove('archived'),
+        'food',
+      ).isArchived,
+      isFalse,
+    );
+  });
   test(
     'monthly category budget uses exact cents and excludes future expenses',
     () {

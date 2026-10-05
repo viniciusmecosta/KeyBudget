@@ -13,7 +13,24 @@ import 'package:key_budget/features/category/view/categories_screen.dart';
 import 'package:key_budget/features/category/viewmodel/category_viewmodel.dart';
 import 'package:key_budget/features/expenses/viewmodel/expense_viewmodel.dart';
 
-const _kInstallmentOptions = [2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 18, 24, 36, 48, 60];
+const _kInstallmentOptions = [
+  2,
+  3,
+  4,
+  5,
+  6,
+  7,
+  8,
+  9,
+  10,
+  11,
+  12,
+  18,
+  24,
+  36,
+  48,
+  60,
+];
 
 class ExpenseForm extends ConsumerWidget {
   final GlobalKey<FormState> formKey;
@@ -71,11 +88,17 @@ class ExpenseForm extends ConsumerWidget {
     final remainder = totalCents % count;
 
     if (remainder == 0) {
-      final baseMoney = Money.fromCents(baseCents, currency: totalMoney.currency);
+      final baseMoney = Money.fromCents(
+        baseCents,
+        currency: totalMoney.currency,
+      );
       return '$count de ${baseMoney.formatBrl()}';
     }
 
-    final higherMoney = Money.fromCents(baseCents + 1, currency: totalMoney.currency);
+    final higherMoney = Money.fromCents(
+      baseCents + 1,
+      currency: totalMoney.currency,
+    );
     final baseMoney = Money.fromCents(baseCents, currency: totalMoney.currency);
     final restCount = count - remainder;
 
@@ -194,7 +217,10 @@ class ExpenseForm extends ConsumerWidget {
     }
 
     final money = MoneyParser.fromMaskedText(amountController.text);
-    final distributionText = formatInstallmentDistribution(money, installmentsValue);
+    final distributionText = formatInstallmentDistribution(
+      money,
+      installmentsValue,
+    );
 
     return AbsorbPointer(
       absorbing: !isEditing,
@@ -234,7 +260,11 @@ class ExpenseForm extends ConsumerWidget {
           const SizedBox(height: AppSpacing.sm),
           _buildAmountWidget(context),
           const SizedBox(height: AppSpacing.md),
-          _buildSectionHeader(context, Icons.info_outline, isIncome ? 'DADOS DA RECEITA' : 'DADOS DA DESPESA'),
+          _buildSectionHeader(
+            context,
+            Icons.info_outline,
+            isIncome ? 'DADOS DA RECEITA' : 'DADOS DA DESPESA',
+          ),
           const SizedBox(height: AppSpacing.sm),
           if (!isIncome) ...[
             const SizedBox(height: AppSpacing.md),
@@ -242,7 +272,7 @@ class ExpenseForm extends ConsumerWidget {
               label: 'Categoria',
               prefixIcon: Icons.category_outlined,
               value: selectedCategory,
-              categories: categoryViewModel.categories,
+              categories: categoryViewModel.activeCategories,
               isEnabled: isEditing && !categoryViewModel.isLoading,
               onChanged: onCategoryChanged,
               onManageCategories: () async {
@@ -251,8 +281,12 @@ class ExpenseForm extends ConsumerWidget {
                   MaterialPageRoute(builder: (_) => const CategoriesScreen()),
                 );
                 if (userId != null && context.mounted) {
-                  await ref.read(categoryViewModelProvider).fetchCategories(userId);
-                  final categories = ref.read(categoryViewModelProvider).categories;
+                  await ref
+                      .read(categoryViewModelProvider)
+                      .fetchCategories(userId);
+                  final categories = ref
+                      .read(categoryViewModelProvider)
+                      .categories;
                   if (selectedCategory != null &&
                       !categories.any((c) => c.id == selectedCategory!.id)) {
                     onCategoryChanged(null);
@@ -276,7 +310,10 @@ class ExpenseForm extends ConsumerWidget {
               ),
               TextButton(
                 onPressed: () {
-                  final userId = ref.read(authViewModelProvider).currentUser?.id;
+                  final userId = ref
+                      .read(authViewModelProvider)
+                      .currentUser
+                      ?.id;
                   if (userId != null) {
                     ref.read(categoryViewModelProvider).fetchCategories(userId);
                   }
@@ -300,7 +337,9 @@ class ExpenseForm extends ConsumerWidget {
                   return const Iterable<String>.empty();
                 }
                 if (isIncome) {
-                  return expenseViewModel.getUniqueLocationsForIncome(textEditingValue.text);
+                  return expenseViewModel.getUniqueLocationsForIncome(
+                    textEditingValue.text,
+                  );
                 } else {
                   return expenseViewModel.getUniqueLocationsForCategory(
                     selectedCategory?.id,
@@ -334,7 +373,9 @@ class ExpenseForm extends ConsumerWidget {
                   return const Iterable<String>.empty();
                 }
                 if (isIncome) {
-                  return expenseViewModel.getUniqueMotivationsForIncome(textEditingValue.text);
+                  return expenseViewModel.getUniqueMotivationsForIncome(
+                    textEditingValue.text,
+                  );
                 } else {
                   return expenseViewModel.getUniqueMotivationsForCategory(
                     selectedCategory?.id,
@@ -356,14 +397,23 @@ class ExpenseForm extends ConsumerWidget {
           ),
           if (onInstallmentChanged != null) ...[
             const SizedBox(height: AppSpacing.md),
-            _buildSectionHeader(context, Icons.credit_card_outlined, 'PARCELAMENTO'),
+            _buildSectionHeader(
+              context,
+              Icons.credit_card_outlined,
+              'PARCELAMENTO',
+            ),
             const SizedBox(height: AppSpacing.sm),
             AbsorbPointer(
               absorbing: !isEditing,
               child: SwitchListTile(
                 title: const Text('Parcelar Despesa'),
-                subtitle: const Text('O valor será dividido em parcelas mensais'),
-                secondary: Icon(Icons.credit_card_outlined, color: theme.colorScheme.primary),
+                subtitle: const Text(
+                  'O valor será dividido em parcelas mensais',
+                ),
+                secondary: Icon(
+                  Icons.credit_card_outlined,
+                  color: theme.colorScheme.primary,
+                ),
                 value: isInstallment,
                 onChanged: onInstallmentChanged,
                 contentPadding: EdgeInsets.zero,
@@ -377,8 +427,13 @@ class ExpenseForm extends ConsumerWidget {
                 absorbing: !isEditing,
                 child: SwitchListTile(
                   title: const Text('Começar no próximo mês'),
-                  subtitle: const Text('A primeira parcela será gerada no próximo mês'),
-                  secondary: Icon(Icons.calendar_month_outlined, color: theme.colorScheme.primary),
+                  subtitle: const Text(
+                    'A primeira parcela será gerada no próximo mês',
+                  ),
+                  secondary: Icon(
+                    Icons.calendar_month_outlined,
+                    color: theme.colorScheme.primary,
+                  ),
                   value: startNextMonth,
                   onChanged: onStartNextMonthChanged,
                   contentPadding: EdgeInsets.zero,
@@ -392,7 +447,11 @@ class ExpenseForm extends ConsumerWidget {
     );
   }
 
-  Widget _buildSectionHeader(BuildContext context, IconData icon, String title) {
+  Widget _buildSectionHeader(
+    BuildContext context,
+    IconData icon,
+    String title,
+  ) {
     final theme = Theme.of(context);
     return Row(
       children: [

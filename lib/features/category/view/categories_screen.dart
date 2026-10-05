@@ -190,12 +190,11 @@ class _CategoriesScreenState extends ConsumerState<CategoriesScreen> {
                             },
                           ),
                         )
-                      else if (viewModel.categories.isEmpty)
-                        const SliverFillRemaining(
-                          hasScrollBody: false,
+                      else if (viewModel.activeCategories.isEmpty)
+                        const SliverToBoxAdapter(
                           child: EmptyStateWidget(
                             icon: Icons.category_rounded,
-                            message: 'Nenhuma categoria cadastrada.',
+                            message: 'Nenhuma categoria ativa.',
                           ),
                         )
                       else
@@ -203,7 +202,7 @@ class _CategoriesScreenState extends ConsumerState<CategoriesScreen> {
                           padding: const EdgeInsets.all(AppSpacing.md),
                           sliver: SliverList(
                             delegate: SliverChildListDelegate(
-                              viewModel.categories.map((category) {
+                              viewModel.activeCategories.map((category) {
                                 return AnimatedListItem(
                                   key: ValueKey(category.id),
                                   animation: const AlwaysStoppedAnimation(1.0),
@@ -357,6 +356,53 @@ class _CategoriesScreenState extends ConsumerState<CategoriesScreen> {
                                   ),
                                 );
                               }).toList(),
+                            ),
+                          ),
+                        ),
+                      if (viewModel.categories.any(
+                        (category) => category.isArchived,
+                      ))
+                        SliverToBoxAdapter(
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: AppSpacing.md,
+                            ),
+                            child: ExpansionTile(
+                              title: const Text('Categorias arquivadas'),
+                              children: [
+                                for (final category
+                                    in viewModel.categories.where(
+                                      (item) => item.isArchived,
+                                    ))
+                                  ListTile(
+                                    title: Text(category.name),
+                                    subtitle: const Text(
+                                      'Histórico preservado',
+                                    ),
+                                    trailing: TextButton(
+                                      onPressed: userId == null
+                                          ? null
+                                          : () async {
+                                              try {
+                                                await viewModel.restoreCategory(
+                                                  userId,
+                                                  category.copyWith(
+                                                    isArchived: false,
+                                                  ),
+                                                );
+                                              } catch (_) {
+                                                if (context.mounted) {
+                                                  SnackbarService.showError(
+                                                    context,
+                                                    'Não foi possível reativar a categoria.',
+                                                  );
+                                                }
+                                              }
+                                            },
+                                      child: const Text('Reativar'),
+                                    ),
+                                  ),
+                              ],
                             ),
                           ),
                         ),

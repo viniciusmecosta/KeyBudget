@@ -42,9 +42,9 @@ class _AddEditCategoryScreenState extends ConsumerState<AddEditCategoryScreen> {
     final shouldDelete = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Excluir categoria?'),
+        title: const Text('Arquivar categoria?'),
         content: const Text(
-          'Deseja excluir esta categoria? As despesas vinculadas serão mantidas e classificadas como "Categoria removida".',
+          'A categoria deixará de aparecer nos novos lançamentos. Despesas antigas e orçamento continuam vinculados a ela.',
         ),
         actions: [
           TextButton(
@@ -56,7 +56,7 @@ class _AddEditCategoryScreenState extends ConsumerState<AddEditCategoryScreen> {
             style: TextButton.styleFrom(
               foregroundColor: Theme.of(context).colorScheme.error,
             ),
-            child: const Text('Excluir'),
+            child: const Text('Arquivar'),
           ),
         ],
       ),
@@ -75,7 +75,7 @@ class _AddEditCategoryScreenState extends ConsumerState<AddEditCategoryScreen> {
       if (scaffoldContext.mounted) {
         SnackbarService.showUndoSnackbar(
           scaffoldContext,
-          message: 'Categoria excluída.',
+          message: 'Categoria arquivada.',
           onUndo: () async {
             await viewModel.restoreCategory(userId, widget.category!);
           },

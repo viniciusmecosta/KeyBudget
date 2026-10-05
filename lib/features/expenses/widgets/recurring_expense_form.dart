@@ -111,7 +111,11 @@ class RecurringExpenseForm extends ConsumerWidget {
     );
   }
 
-  Widget _buildSectionHeader(BuildContext context, IconData icon, String title) {
+  Widget _buildSectionHeader(
+    BuildContext context,
+    IconData icon,
+    String title,
+  ) {
     final theme = Theme.of(context);
     return Row(
       children: [
@@ -149,14 +153,16 @@ class RecurringExpenseForm extends ConsumerWidget {
                 label: 'Categoria',
                 prefixIcon: Icons.category_outlined,
                 value: currentCategory,
-                categories: categoryViewModel.categories,
+                categories: categoryViewModel.activeCategories,
                 isEnabled: true,
                 onChanged: (cat) {
                   selectedCategory.value = cat;
                 },
                 onManageCategories: () async {
-                  final userId =
-                      ref.read(authViewModelProvider).currentUser?.id;
+                  final userId = ref
+                      .read(authViewModelProvider)
+                      .currentUser
+                      ?.id;
                   await Navigator.of(context).push(
                     MaterialPageRoute(builder: (_) => const CategoriesScreen()),
                   );
@@ -164,11 +170,13 @@ class RecurringExpenseForm extends ConsumerWidget {
                     await ref
                         .read(categoryViewModelProvider)
                         .fetchCategories(userId);
-                    final categories =
-                        ref.read(categoryViewModelProvider).categories;
+                    final categories = ref
+                        .read(categoryViewModelProvider)
+                        .categories;
                     if (selectedCategory.value != null &&
-                        !categories
-                            .any((c) => c.id == selectedCategory.value!.id)) {
+                        !categories.any(
+                          (c) => c.id == selectedCategory.value!.id,
+                        )) {
                       selectedCategory.value = null;
                     }
                   }
@@ -192,7 +200,9 @@ class RecurringExpenseForm extends ConsumerWidget {
                   if (textEditingValue.text == '') {
                     return const Iterable<String>.empty();
                   }
-                  return ref.read(expenseViewModelProvider).getUniqueLocationsForCategory(
+                  return ref
+                      .read(expenseViewModelProvider)
+                      .getUniqueLocationsForCategory(
                         currentCategory?.id,
                         textEditingValue.text,
                       );
@@ -224,7 +234,9 @@ class RecurringExpenseForm extends ConsumerWidget {
                   if (textEditingValue.text == '') {
                     return const Iterable<String>.empty();
                   }
-                  return ref.read(expenseViewModelProvider).getUniqueMotivationsForCategory(
+                  return ref
+                      .read(expenseViewModelProvider)
+                      .getUniqueMotivationsForCategory(
                         currentCategory?.id,
                         textEditingValue.text,
                       );
@@ -283,7 +295,8 @@ class RecurringExpenseForm extends ConsumerWidget {
                             label: 'Data de Término',
                             selectedDate: date,
                             isEditing: true,
-                            onDateSelected: (newDate) => endDate.value = newDate,
+                            onDateSelected: (newDate) =>
+                                endDate.value = newDate,
                           ),
                         ],
                       )
@@ -309,16 +322,27 @@ class RecurringExpenseForm extends ConsumerWidget {
           amount: 0,
           frequency: frequency.value,
           startDate: startDate.value,
-          dayOfMonth: frequency.value == RecurrenceFrequency.monthly ? dayOfMonth.value : null,
+          dayOfMonth: frequency.value == RecurrenceFrequency.monthly
+              ? dayOfMonth.value
+              : null,
           endDate: endDate.value,
           scheduleVersion: 1,
         );
 
         DateTime? cursor;
         for (int i = 0; i < 3; i++) {
-          final next = RecurrenceSchedule.getNextCandidateDate(rule: tempRule, cursor: cursor);
+          final next = RecurrenceSchedule.getNextCandidateDate(
+            rule: tempRule,
+            cursor: cursor,
+          );
           if (next == null) break;
-          if (RecurrenceSchedule.isPastEndDate(next, endDate.value, scheduleVersion: 1)) break;
+          if (RecurrenceSchedule.isPastEndDate(
+            next,
+            endDate.value,
+            scheduleVersion: 1,
+          )) {
+            break;
+          }
           candidateDates.add(next);
           cursor = next;
         }
@@ -332,7 +356,9 @@ class RecurringExpenseForm extends ConsumerWidget {
           margin: const EdgeInsets.only(top: AppSpacing.lg),
           padding: const EdgeInsets.all(AppSpacing.md),
           decoration: BoxDecoration(
-            color: theme.colorScheme.surfaceContainerHighest.withAlpha((255 * 0.4).round()),
+            color: theme.colorScheme.surfaceContainerHighest.withAlpha(
+              (255 * 0.4).round(),
+            ),
             borderRadius: AppBorders.borderRadiusL,
             border: Border.all(color: theme.colorScheme.outlineVariant),
           ),
@@ -341,7 +367,11 @@ class RecurringExpenseForm extends ConsumerWidget {
             children: [
               Row(
                 children: [
-                  Icon(Icons.preview_rounded, size: 18, color: theme.colorScheme.primary),
+                  Icon(
+                    Icons.preview_rounded,
+                    size: 18,
+                    color: theme.colorScheme.primary,
+                  ),
                   const SizedBox(width: AppSpacing.xs),
                   Text(
                     'Prévia dos próximos 3 lançamentos',
@@ -356,7 +386,10 @@ class RecurringExpenseForm extends ConsumerWidget {
               ...candidateDates.asMap().entries.map((entry) {
                 final idx = entry.key + 1;
                 final date = entry.value;
-                final dateStr = DateFormat("EEEE, dd 'de' MMMM 'de' yyyy", 'pt_BR').format(date);
+                final dateStr = DateFormat(
+                  "EEEE, dd 'de' MMMM 'de' yyyy",
+                  'pt_BR',
+                ).format(date);
                 final capitalized = dateStr.isNotEmpty
                     ? '${dateStr[0].toUpperCase()}${dateStr.substring(1)}'
                     : dateStr;
@@ -365,9 +398,14 @@ class RecurringExpenseForm extends ConsumerWidget {
                   child: Row(
                     children: [
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 6,
+                          vertical: 2,
+                        ),
                         decoration: BoxDecoration(
-                          color: theme.colorScheme.primary.withAlpha((255 * 0.12).round()),
+                          color: theme.colorScheme.primary.withAlpha(
+                            (255 * 0.12).round(),
+                          ),
                           borderRadius: AppBorders.borderRadiusS,
                         ),
                         child: Text(
@@ -424,8 +462,12 @@ class RecurringExpenseForm extends ConsumerWidget {
               frequency.value = newSelection.first;
             },
             style: SegmentedButton.styleFrom(
-              selectedBackgroundColor: Theme.of(context).colorScheme.primaryContainer,
-              selectedForegroundColor: Theme.of(context).colorScheme.onPrimaryContainer,
+              selectedBackgroundColor: Theme.of(
+                context,
+              ).colorScheme.primaryContainer,
+              selectedForegroundColor: Theme.of(
+                context,
+              ).colorScheme.onPrimaryContainer,
               visualDensity: VisualDensity.comfortable,
             ),
           ),
@@ -440,7 +482,9 @@ class RecurringExpenseForm extends ConsumerWidget {
       children: [
         Text(
           'Dia do Vencimento',
-          style: Theme.of(context).textTheme.bodyLarge?.copyWith(fontWeight: FontWeight.w500),
+          style: Theme.of(
+            context,
+          ).textTheme.bodyLarge?.copyWith(fontWeight: FontWeight.w500),
         ),
         const SizedBox(height: AppSpacing.sm),
         ValueListenableBuilder<int>(
@@ -463,10 +507,14 @@ class RecurringExpenseForm extends ConsumerWidget {
                     decoration: BoxDecoration(
                       color: isSelected
                           ? Theme.of(context).colorScheme.primary
-                          : Theme.of(context).colorScheme.surfaceContainerHighest,
+                          : Theme.of(
+                              context,
+                            ).colorScheme.surfaceContainerHighest,
                       borderRadius: AppBorders.borderRadiusMD,
                       border: Border.all(
-                        color: isSelected ? Theme.of(context).colorScheme.primary : Colors.transparent,
+                        color: isSelected
+                            ? Theme.of(context).colorScheme.primary
+                            : Colors.transparent,
                         width: 2,
                       ),
                     ),
@@ -477,7 +525,9 @@ class RecurringExpenseForm extends ConsumerWidget {
                         color: isSelected
                             ? Theme.of(context).colorScheme.onPrimary
                             : Theme.of(context).colorScheme.onSurface,
-                        fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
+                        fontWeight: isSelected
+                            ? FontWeight.bold
+                            : FontWeight.w500,
                       ),
                     ),
                   ),
@@ -521,13 +571,17 @@ class RecurringExpenseForm extends ConsumerWidget {
                         children: [
                           Text(
                             'Gerar antecipadamente',
-                            style: Theme.of(context).textTheme.bodyLarge?.copyWith(fontWeight: FontWeight.w500),
+                            style: Theme.of(context).textTheme.bodyLarge
+                                ?.copyWith(fontWeight: FontWeight.w500),
                           ),
                           Text(
                             'Cria as próximas recorrências antes da data',
-                            style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                              color: Theme.of(context).colorScheme.onSurfaceVariant,
-                            ),
+                            style: Theme.of(context).textTheme.bodySmall
+                                ?.copyWith(
+                                  color: Theme.of(
+                                    context,
+                                  ).colorScheme.onSurfaceVariant,
+                                ),
                           ),
                         ],
                       ),
@@ -584,7 +638,9 @@ class RecurringExpenseForm extends ConsumerWidget {
             Expanded(
               child: Text(
                 'Data de Término',
-                style: Theme.of(context).textTheme.bodyLarge?.copyWith(fontWeight: FontWeight.w500),
+                style: Theme.of(
+                  context,
+                ).textTheme.bodyLarge?.copyWith(fontWeight: FontWeight.w500),
               ),
             ),
             Text(
@@ -597,7 +653,9 @@ class RecurringExpenseForm extends ConsumerWidget {
             Switch(
               value: date != null,
               onChanged: (value) {
-                endDate.value = value ? startDate.value.add(const Duration(days: 365)) : null;
+                endDate.value = value
+                    ? startDate.value.add(const Duration(days: 365))
+                    : null;
               },
             ),
           ],

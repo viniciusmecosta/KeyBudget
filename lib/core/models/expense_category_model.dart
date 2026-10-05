@@ -6,12 +6,14 @@ class ExpenseCategory {
   final String name;
   final int iconCodePoint;
   final int colorValue;
+  final bool isArchived;
 
   ExpenseCategory({
     this.id,
     required this.name,
     required this.iconCodePoint,
     required this.colorValue,
+    this.isArchived = false,
   });
 
   IconData get icon {
@@ -28,6 +30,7 @@ class ExpenseCategory {
       'name': name,
       'iconCodePoint': iconCodePoint,
       'colorValue': colorValue,
+      'archived': isArchived,
     };
   }
 
@@ -37,6 +40,7 @@ class ExpenseCategory {
       name: map['name'],
       iconCodePoint: map['iconCodePoint'],
       colorValue: map['colorValue'],
+      isArchived: map['archived'] == true,
     );
   }
 
@@ -66,12 +70,14 @@ class ExpenseCategory {
     String? name,
     int? iconCodePoint,
     int? colorValue,
+    bool? isArchived,
   }) {
     return ExpenseCategory(
       id: id ?? this.id,
       name: name ?? this.name,
       iconCodePoint: iconCodePoint ?? this.iconCodePoint,
       colorValue: colorValue ?? this.colorValue,
+      isArchived: isArchived ?? this.isArchived,
     );
   }
 
