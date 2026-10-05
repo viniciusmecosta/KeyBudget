@@ -22,6 +22,9 @@ class MainBottomNavigationBar extends ConsumerWidget {
     final currentDest = navigationViewModel.currentDestination;
     final destinations = AppDestination.getAvailable(
       enableSuppliers: enableSuppliers,
+      hiddenIds:
+          authViewModel.currentUser?.hiddenNavigationDestinations ?? const [],
+      order: authViewModel.currentUser?.navigationOrder ?? const [],
     );
     final width = MediaQuery.sizeOf(context).width;
     final largeText = MediaQuery.textScalerOf(context).scale(14) > 18;

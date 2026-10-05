@@ -77,6 +77,11 @@ class _MainScreenState extends ConsumerState<MainScreen> {
     final navigationViewModel = ref.watch(navigationViewModelProvider);
     final authViewModel = ref.watch(authViewModelProvider);
     final enableSuppliers = authViewModel.currentUser?.enableSuppliers ?? false;
+    final hiddenIds =
+        authViewModel.currentUser?.hiddenNavigationDestinations ??
+        const <String>[];
+    final order =
+        authViewModel.currentUser?.navigationOrder ?? const <String>[];
     final currentUserId = authViewModel.currentUser?.id ?? 'anonymous';
 
     if (_lastUserId != currentUserId) {
@@ -84,23 +89,30 @@ class _MainScreenState extends ConsumerState<MainScreen> {
       _loadedDestinations.clear();
     }
 
-    final currentDestination = navigationViewModel.currentDestination;
+    final availableDestinations = AppDestination.getAvailable(
+      enableSuppliers: enableSuppliers,
+      hiddenIds: hiddenIds,
+      order: order,
+    );
+    final currentDestination =
+        availableDestinations.contains(navigationViewModel.currentDestination)
+        ? navigationViewModel.currentDestination
+        : availableDestinations.first;
     _loadedDestinations.add(currentDestination);
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      navigationViewModel.updateSuppliersAvailability(enableSuppliers);
+      if (mounted) {
+        navigationViewModel.updateAvailability(
+          enableSuppliers: enableSuppliers,
+          hiddenIds: hiddenIds,
+          order: order,
+        );
+      }
     });
-
-    final availableDestinations = AppDestination.getAvailable(
-      enableSuppliers: enableSuppliers,
-    );
 
     final activeIndex = availableDestinations.indexOf(currentDestination);
     final navigationIndex = activeIndex >= 0 ? activeIndex : 0;
-    final stackIndex = currentDestination == AppDestination.suppliers &&
-            !enableSuppliers
-        ? 0
-        : AppDestination.values.indexOf(currentDestination);
+    final stackIndex = AppDestination.values.indexOf(currentDestination);
 
     final theme = Theme.of(context);
     final screenWidth = MediaQuery.of(context).size.width;
@@ -120,7 +132,9 @@ class _MainScreenState extends ConsumerState<MainScreen> {
           children: AppDestination.values.map((dest) {
             final isSelected = dest == currentDestination;
             final isLoaded = _loadedDestinations.contains(dest);
-            final child = isLoaded ? _buildDestinationWidget(dest) : const SizedBox.shrink();
+            final child = isLoaded
+                ? _buildDestinationWidget(dest)
+                : const SizedBox.shrink();
             return TickerMode(
               key: ValueKey(dest),
               enabled: isSelected,
@@ -132,51 +146,65 @@ class _MainScreenState extends ConsumerState<MainScreen> {
     );
 
     return Scaffold(
+      appBar: hiddenIds.contains(AppDestination.profile.id)
+          ? AppBar(
+              title: Text(currentDestination.label),
+              actions: [
+                IconButton(
+                  tooltip: 'Abrir perfil e configurações',
+                  icon: const Icon(Icons.settings_outlined),
+                  onPressed: () => Navigator.of(context).push(
+                    MaterialPageRoute<void>(builder: (_) => const UserScreen()),
+                  ),
+                ),
+              ],
+            )
+          : null,
       body: Row(
         children: [
-          if (!isCompact) NavigationRail(
-            backgroundColor: theme.colorScheme.surface,
-            selectedIndex: navigationIndex,
-            onDestinationSelected: (int index) {
-              if (index >= 0 && index < availableDestinations.length) {
-                navigationViewModel.navigateTo(availableDestinations[index]);
-              }
-            },
-            labelType: isExpanded
-                ? NavigationRailLabelType.all
-                : NavigationRailLabelType.selected,
-            selectedIconTheme: IconThemeData(
-              color: theme.colorScheme.primary,
+          if (!isCompact)
+            NavigationRail(
+              backgroundColor: theme.colorScheme.surface,
+              selectedIndex: navigationIndex,
+              onDestinationSelected: (int index) {
+                if (index >= 0 && index < availableDestinations.length) {
+                  navigationViewModel.navigateTo(availableDestinations[index]);
+                }
+              },
+              labelType: isExpanded
+                  ? NavigationRailLabelType.all
+                  : NavigationRailLabelType.selected,
+              selectedIconTheme: IconThemeData(
+                color: theme.colorScheme.primary,
+              ),
+              selectedLabelTextStyle: TextStyle(
+                color: theme.colorScheme.primary,
+                fontWeight: FontWeight.w600,
+              ),
+              unselectedIconTheme: IconThemeData(
+                color: theme.colorScheme.onSurfaceVariant,
+              ),
+              unselectedLabelTextStyle: TextStyle(
+                color: theme.colorScheme.onSurfaceVariant,
+              ),
+              destinations: availableDestinations.map((dest) {
+                return NavigationRailDestination(
+                  icon: Icon(dest.icon),
+                  selectedIcon: Icon(dest.selectedIcon),
+                  label: Text(dest.label),
+                );
+              }).toList(),
             ),
-            selectedLabelTextStyle: TextStyle(
-              color: theme.colorScheme.primary,
-              fontWeight: FontWeight.w600,
+          if (!isCompact)
+            VerticalDivider(
+              thickness: 1,
+              width: 1,
+              color: theme.dividerTheme.color,
             ),
-            unselectedIconTheme: IconThemeData(
-              color: theme.colorScheme.onSurfaceVariant,
-            ),
-            unselectedLabelTextStyle: TextStyle(
-              color: theme.colorScheme.onSurfaceVariant,
-            ),
-            destinations: availableDestinations.map((dest) {
-              return NavigationRailDestination(
-                icon: Icon(dest.icon),
-                selectedIcon: Icon(dest.selectedIcon),
-                label: Text(dest.label),
-              );
-            }).toList(),
-          ),
-          if (!isCompact) VerticalDivider(
-            thickness: 1,
-            width: 1,
-            color: theme.dividerTheme.color,
-          ),
           Expanded(child: stack),
         ],
       ),
-      bottomNavigationBar: isCompact
-          ? const MainBottomNavigationBar()
-          : null,
+      bottomNavigationBar: isCompact ? const MainBottomNavigationBar() : null,
     );
   }
 }

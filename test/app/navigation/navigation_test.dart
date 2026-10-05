@@ -15,21 +15,23 @@ class FakeAuthRepo extends Fake implements AuthRepository {}
 class FakeAuthVM extends AuthViewModel {
   final bool suppliersEnabled;
   FakeAuthVM({this.suppliersEnabled = false})
-      : super(authRepository: FakeAuthRepo(), listenToAuthChanges: false);
+    : super(authRepository: FakeAuthRepo(), listenToAuthChanges: false);
 
   @override
   User? get currentUser => User(
-        id: 'user_123',
-        name: 'User Test',
-        email: 'user@test.com',
-        enableSuppliers: suppliersEnabled,
-      );
+    id: 'user_123',
+    name: 'User Test',
+    email: 'user@test.com',
+    enableSuppliers: suppliersEnabled,
+  );
 }
 
 void main() {
   group('AppDestination & NavigationViewModel', () {
     test('available destinations count depends on enableSuppliers', () {
-      final withoutSuppliers = AppDestination.getAvailable(enableSuppliers: false);
+      final withoutSuppliers = AppDestination.getAvailable(
+        enableSuppliers: false,
+      );
       expect(withoutSuppliers.length, 5);
       expect(withoutSuppliers.contains(AppDestination.suppliers), isFalse);
       expect(withoutSuppliers.last, AppDestination.profile);
@@ -38,6 +40,60 @@ void main() {
       expect(withSuppliers.length, 6);
       expect(withSuppliers.contains(AppDestination.suppliers), isTrue);
     });
+
+    test('saved order and hidden sections preserve required destinations', () {
+      final user = User.fromMap({
+        'id': 'u1',
+        'name': 'Teste',
+        'email': 'teste@exemplo.com',
+        'enable_suppliers': true,
+        'hidden_navigation_destinations': [
+          'dashboard',
+          'documents',
+          'profile',
+          'expenses',
+        ],
+        'navigation_order': ['credentials', 'suppliers', 'expenses'],
+      });
+      final available = AppDestination.getAvailable(
+        enableSuppliers: user.enableSuppliers ?? false,
+        hiddenIds: user.hiddenNavigationDestinations,
+        order: user.navigationOrder,
+      );
+
+      expect(available, [
+        AppDestination.credentials,
+        AppDestination.suppliers,
+        AppDestination.expenses,
+      ]);
+      expect(user.copyWith(name: 'Novo').navigationOrder, user.navigationOrder);
+      expect(
+        User.fromMap(user.toMap()).hiddenNavigationDestinations,
+        user.hiddenNavigationDestinations,
+      );
+    });
+
+    test(
+      'disabling the selected section moves to an available destination',
+      () {
+        final vm = NavigationViewModel();
+        vm.navigateTo(AppDestination.documents);
+        vm.updateAvailability(
+          enableSuppliers: false,
+          hiddenIds: ['dashboard', 'documents', 'profile'],
+          order: ['credentials', 'expenses'],
+        );
+
+        expect(vm.availableDestinations, [
+          AppDestination.credentials,
+          AppDestination.expenses,
+        ]);
+        expect(vm.currentDestination, AppDestination.credentials);
+        expect(vm.selectedIndex, 0);
+        vm.navigateTo(AppDestination.documents);
+        expect(vm.currentDestination, AppDestination.credentials);
+      },
+    );
 
     test('navigateTo updates current and previous destinations', () {
       final vm = NavigationViewModel();
@@ -52,21 +108,24 @@ void main() {
       expect(vm.previousDestination, AppDestination.expenses);
     });
 
-    test('changing suppliers availability preserves profile or redirects suppliers', () {
-      final vm = NavigationViewModel();
-      vm.updateSuppliersAvailability(true);
+    test(
+      'changing suppliers availability preserves profile or redirects suppliers',
+      () {
+        final vm = NavigationViewModel();
+        vm.updateSuppliersAvailability(true);
 
-      vm.navigateTo(AppDestination.profile);
-      vm.updateSuppliersAvailability(false);
-      expect(vm.currentDestination, AppDestination.profile);
+        vm.navigateTo(AppDestination.profile);
+        vm.updateSuppliersAvailability(false);
+        expect(vm.currentDestination, AppDestination.profile);
 
-      vm.updateSuppliersAvailability(true);
-      vm.navigateTo(AppDestination.suppliers);
-      expect(vm.currentDestination, AppDestination.suppliers);
+        vm.updateSuppliersAvailability(true);
+        vm.navigateTo(AppDestination.suppliers);
+        expect(vm.currentDestination, AppDestination.suppliers);
 
-      vm.updateSuppliersAvailability(false);
-      expect(vm.currentDestination, AppDestination.dashboard);
-    });
+        vm.updateSuppliersAvailability(false);
+        expect(vm.currentDestination, AppDestination.dashboard);
+      },
+    );
 
     test('selectedIndex delegates accurately to destination list', () {
       final vm = NavigationViewModel();
@@ -80,42 +139,48 @@ void main() {
       expect(vm.currentDestination, AppDestination.profile);
     });
 
-    test('selectionRevision increments only on effective destination change', () {
-      final vm = NavigationViewModel();
-      expect(vm.selectionRevision, 0);
+    test(
+      'selectionRevision increments only on effective destination change',
+      () {
+        final vm = NavigationViewModel();
+        expect(vm.selectionRevision, 0);
 
-      vm.navigateTo(AppDestination.expenses);
-      expect(vm.selectionRevision, 1);
+        vm.navigateTo(AppDestination.expenses);
+        expect(vm.selectionRevision, 1);
 
-      vm.navigateTo(AppDestination.expenses);
-      expect(vm.selectionRevision, 1);
+        vm.navigateTo(AppDestination.expenses);
+        expect(vm.selectionRevision, 1);
 
-      vm.navigateTo(AppDestination.dashboard);
-      expect(vm.selectionRevision, 2);
-    });
+        vm.navigateTo(AppDestination.dashboard);
+        expect(vm.selectionRevision, 2);
+      },
+    );
 
-    test('suppliers availability toggle handles selectionRevision accurately', () {
-      final vm = NavigationViewModel();
-      vm.updateSuppliersAvailability(true);
-      expect(vm.selectionRevision, 0);
+    test(
+      'suppliers availability toggle handles selectionRevision accurately',
+      () {
+        final vm = NavigationViewModel();
+        vm.updateSuppliersAvailability(true);
+        expect(vm.selectionRevision, 0);
 
-      vm.navigateTo(AppDestination.profile);
-      expect(vm.selectionRevision, 1);
+        vm.navigateTo(AppDestination.profile);
+        expect(vm.selectionRevision, 1);
 
-      vm.updateSuppliersAvailability(false);
-      expect(vm.currentDestination, AppDestination.profile);
-      expect(vm.selectionRevision, 1);
+        vm.updateSuppliersAvailability(false);
+        expect(vm.currentDestination, AppDestination.profile);
+        expect(vm.selectionRevision, 1);
 
-      vm.updateSuppliersAvailability(true);
-      expect(vm.selectionRevision, 1);
+        vm.updateSuppliersAvailability(true);
+        expect(vm.selectionRevision, 1);
 
-      vm.navigateTo(AppDestination.suppliers);
-      expect(vm.selectionRevision, 2);
+        vm.navigateTo(AppDestination.suppliers);
+        expect(vm.selectionRevision, 2);
 
-      vm.updateSuppliersAvailability(false);
-      expect(vm.currentDestination, AppDestination.dashboard);
-      expect(vm.selectionRevision, 3);
-    });
+        vm.updateSuppliersAvailability(false);
+        expect(vm.currentDestination, AppDestination.dashboard);
+        expect(vm.selectionRevision, 3);
+      },
+    );
 
     test('clearData resets selectionRevision to zero', () {
       final vm = NavigationViewModel();
@@ -129,12 +194,16 @@ void main() {
   });
 
   group('MainBottomNavigationBar', () {
-    testWidgets('renders 5 buttons and updates destination on tap', (tester) async {
+    testWidgets('renders 5 buttons and updates destination on tap', (
+      tester,
+    ) async {
       final navVM = NavigationViewModel();
       await tester.pumpWidget(
         ProviderScope(
           overrides: [
-            authViewModelProvider.overrideWith((ref) => FakeAuthVM(suppliersEnabled: false)),
+            authViewModelProvider.overrideWith(
+              (ref) => FakeAuthVM(suppliersEnabled: false),
+            ),
             navigationViewModelProvider.overrideWith((ref) => navVM),
           ],
           child: MaterialApp(
@@ -154,14 +223,18 @@ void main() {
       expect(navVM.currentDestination, AppDestination.expenses);
     });
 
-    testWidgets('shows suppliers as a direct tab when suppliers are enabled', (tester) async {
+    testWidgets('shows suppliers as a direct tab when suppliers are enabled', (
+      tester,
+    ) async {
       final navVM = NavigationViewModel();
       navVM.updateSuppliersAvailability(true);
 
       await tester.pumpWidget(
         ProviderScope(
           overrides: [
-            authViewModelProvider.overrideWith((ref) => FakeAuthVM(suppliersEnabled: true)),
+            authViewModelProvider.overrideWith(
+              (ref) => FakeAuthVM(suppliersEnabled: true),
+            ),
             navigationViewModelProvider.overrideWith((ref) => navVM),
           ],
           child: MaterialApp(

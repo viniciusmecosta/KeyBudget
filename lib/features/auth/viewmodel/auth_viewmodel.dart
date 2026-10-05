@@ -332,6 +332,8 @@ class AuthViewModel extends ChangeNotifier {
     bool? enableSuppliers,
     int? themeColor,
     String? themeMode,
+    List<String>? hiddenNavigationDestinations,
+    List<String>? navigationOrder,
   }) async {
     if (_currentUser == null) {
       return const UpdateUserResult(
@@ -377,6 +379,8 @@ class AuthViewModel extends ChangeNotifier {
         enableSuppliers: enableSuppliers,
         themeColor: themeColor,
         themeMode: themeMode,
+        hiddenNavigationDestinations: hiddenNavigationDestinations,
+        navigationOrder: navigationOrder,
       );
       AppSecurityService.setSecure(updatedUser.effectiveProtectScreenCapture);
       await _authRepository.updateUserProfile(updatedUser);
