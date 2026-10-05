@@ -3,8 +3,6 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/legacy.dart';
 import 'package:key_budget/app/widgets/animated_list_item.dart';
-import 'package:key_budget/core/import_export/csv_import_parser.dart';
-import 'package:key_budget/core/import_export/import_preview_screen.dart';
 import 'package:key_budget/core/import_export/import_service.dart';
 import 'package:key_budget/core/models/credential_model.dart';
 import 'package:key_budget/core/models/folder_model.dart';
@@ -12,7 +10,7 @@ import 'package:key_budget/core/services/csv_service.dart';
 import 'package:key_budget/core/services/data_import_service.dart';
 import 'package:key_budget/core/services/encryption_service.dart';
 import 'package:key_budget/core/services/pdf_service.dart';
-import 'package:key_budget/core/services/snackbar_service.dart';
+import 'package:key_budget/features/credentials/application/credential_transfer_service.dart';
 import 'package:key_budget/features/credentials/repository/credential_repository.dart';
 import 'package:key_budget/features/credentials/widgets/credential_list_tile.dart';
 import 'package:key_budget/features/credentials/widgets/folder_list_tile.dart';
@@ -26,6 +24,7 @@ class CredentialViewModel extends ChangeNotifier {
   final PdfService _pdfService;
   final DataImportService _dataImportService;
   final ImportService _importService;
+  late final CredentialTransferService _transferService;
 
   CredentialViewModel({
     CredentialRepository? repository,
@@ -45,7 +44,14 @@ class CredentialViewModel extends ChangeNotifier {
              credentialRepository: repository ?? CredentialRepository(),
              recurringRepository: RecurringExpenseRepository(),
              encryptionService: encryptionService,
-           );
+           ) {
+    _transferService = CredentialTransferService(
+      csvService: _csvService,
+      pdfService: _pdfService,
+      dataImportService: _dataImportService,
+      importService: _importService,
+    );
+  }
 
   EncryptionService get _activeEncryptionService =>
       encryptionService ?? EncryptionService();
@@ -411,7 +417,7 @@ class CredentialViewModel extends ChangeNotifier {
   Future<bool> exportCredentialsToCsv(BuildContext context) async {
     _setExportingCsv(true);
     try {
-      return await _csvService.exportCredentials(
+      return await _transferService.exportCsv(
         context,
         _allCredentials,
         decryptPassword,
@@ -424,7 +430,11 @@ class CredentialViewModel extends ChangeNotifier {
   Future<void> exportCredentialsToPdf(BuildContext context) async {
     _setExportingPdf(true);
     try {
-      await _pdfService.exportCredentialsPdf(context, this);
+      await _transferService.exportPdf(
+        context,
+        _allCredentials,
+        decryptPassword,
+      );
     } finally {
       _setExportingPdf(false);
     }
@@ -438,71 +448,19 @@ class CredentialViewModel extends ChangeNotifier {
     String? rawCsvContent,
     String? fileName,
   }) async {
-    try {
-      String? content = rawCsvContent;
-      String name = fileName ?? 'credentials.csv';
-
-      if (content == null) {
-        final file = await _csvService.pickCsvFile();
-        if (file == null) return 0;
-        name = file.path.split('/').last;
-        content = await file.readAsString();
-      }
-
-      final plan = await _importService.preparePlan(
-        userId: userId,
-        fileContent: content,
-        fileName: name,
-        forcedType: CsvImportType.credentials,
-        existingCredentials: _allCredentials,
-        defaultFolderId: _currentFolderId,
-      );
-
-      if (!plan.canProceed) {
-        if (context != null && context.mounted) {
-          SnackbarService.showError(
-            context,
-            plan.globalErrors.isNotEmpty
-                ? plan.globalErrors.first
-                : 'O arquivo CSV não possui credenciais válidas para importar.',
-          );
-        }
-        return 0;
-      }
-
-      if (context != null && context.mounted) {
-        final resultCount = await Navigator.of(context).push<int>(
-          MaterialPageRoute(
-            builder: (_) => ImportPreviewScreen(
-              userId: userId,
-              plan: plan,
-              importService: _importService,
-            ),
-          ),
-        );
-        return resultCount ?? 0;
-      } else {
-        final result = await _importService.applyPlan(
-          userId: userId,
-          plan: plan,
-          importOnlyValid: true,
-        );
-        return result.data?.createdCount ?? 0;
-      }
-    } catch (e) {
-      if (context != null && context.mounted) {
-        SnackbarService.showError(
-          context,
-          'Não foi possível importar as credenciais. Verifique o arquivo e tente novamente.',
-        );
-      }
-      return 0;
-    }
+    return _transferService.importCsv(
+      userId,
+      _allCredentials,
+      _currentFolderId,
+      context: context,
+      rawCsvContent: rawCsvContent,
+      fileName: fileName,
+    );
   }
 
   Future<int> importCredentialsFromJson(String userId) async {
     _setLoading(true);
-    final count = await _dataImportService.importCredentialsFromJson(userId);
+    final count = await _transferService.importLegacyJson(userId);
     _setLoading(false);
     return count;
   }
