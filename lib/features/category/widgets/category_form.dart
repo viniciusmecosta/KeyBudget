@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:key_budget/app/utils/app_animations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:key_budget/core/design_system/spacing/app_spacing.dart';
 import 'package:key_budget/core/design_system/widgets/app_text_field.dart';
@@ -38,7 +39,11 @@ class CategoryForm extends ConsumerWidget {
         children: [
           Row(
             children: [
-              Icon(Icons.category_outlined, color: theme.colorScheme.onSurface, size: 20),
+              Icon(
+                Icons.category_outlined,
+                color: theme.colorScheme.onSurface,
+                size: 20,
+              ),
               const SizedBox(width: AppSpacing.sm),
               Text(
                 'DADOS DA CATEGORIA',
@@ -57,12 +62,17 @@ class CategoryForm extends ConsumerWidget {
             prefixIcon: Icons.label_outline,
             textCapitalization: TextCapitalization.sentences,
             textInputAction: TextInputAction.done,
-            validator: (value) => (value == null || value.isEmpty) ? 'Insira um nome' : null,
+            validator: (value) =>
+                (value == null || value.isEmpty) ? 'Insira um nome' : null,
           ),
           const SizedBox(height: AppSpacing.md),
           Row(
             children: [
-              Icon(Icons.style_outlined, color: theme.colorScheme.onSurface, size: 20),
+              Icon(
+                Icons.style_outlined,
+                color: theme.colorScheme.onSurface,
+                size: 20,
+              ),
               const SizedBox(width: AppSpacing.sm),
               Text(
                 'PERSONALIZAÇÃO',
@@ -86,41 +96,58 @@ class CategoryForm extends ConsumerWidget {
             spacing: 12,
             runSpacing: 12,
             alignment: WrapAlignment.center,
-            children: [
-              0xFF3B82F6, // Blue
-              0xFF10B981, // Emerald
-              0xFFF59E0B, // Amber
-              0xFFEF4444, // Red
-              0xFF8B5CF6, // Violet
-              0xFFEC4899, // Pink
-              0xFF14B8A6, // Teal
-              0xFF64748B, // Slate
-            ].map((colorValue) {
-              final isSelected = displayColor.toARGB32() == colorValue;
-              return GestureDetector(
-                onTap: () => onColorChanged(Color(colorValue)),
-                child: AnimatedContainer(
-                  duration: const Duration(milliseconds: 200),
-                  width: isSelected ? 36 : 32,
-                  height: isSelected ? 36 : 32,
-                  decoration: BoxDecoration(
-                    color: Color(colorValue),
-                    shape: BoxShape.circle,
-                    boxShadow: isSelected
-                        ? [
-                            BoxShadow(
-                              color: Color(colorValue).withValues(alpha: 0.4),
-                              blurRadius: 8,
-                              offset: const Offset(0, 2),
+            children:
+                [
+                  0xFF3B82F6, // Blue
+                  0xFF10B981, // Emerald
+                  0xFFF59E0B, // Amber
+                  0xFFEF4444, // Red
+                  0xFF8B5CF6, // Violet
+                  0xFFEC4899, // Pink
+                  0xFF14B8A6, // Teal
+                  0xFF64748B, // Slate
+                ].map((colorValue) {
+                  final isSelected = displayColor.toARGB32() == colorValue;
+                  return GestureDetector(
+                    onTap: () => onColorChanged(Color(colorValue)),
+                    child: AnimatedContainer(
+                      duration: AppAnimations.durationFor(
+                        context,
+                        const Duration(milliseconds: 200),
+                      ),
+                      width: isSelected ? 36 : 32,
+                      height: isSelected ? 36 : 32,
+                      decoration: BoxDecoration(
+                        color: Color(colorValue),
+                        shape: BoxShape.circle,
+                        boxShadow: isSelected
+                            ? [
+                                BoxShadow(
+                                  color: Color(
+                                    colorValue,
+                                  ).withValues(alpha: 0.4),
+                                  blurRadius: 8,
+                                  offset: const Offset(0, 2),
+                                ),
+                              ]
+                            : null,
+                        border: isSelected
+                            ? Border.all(
+                                color: theme.colorScheme.surface,
+                                width: 2,
+                              )
+                            : null,
+                      ),
+                      child: isSelected
+                          ? const Icon(
+                              Icons.check,
+                              size: 18,
+                              color: Colors.white,
                             )
-                          ]
-                        : null,
-                    border: isSelected ? Border.all(color: theme.colorScheme.surface, width: 2) : null,
-                  ),
-                  child: isSelected ? const Icon(Icons.check, size: 18, color: Colors.white) : null,
-                ),
-              );
-            }).toList(),
+                          : null,
+                    ),
+                  );
+                }).toList(),
           ),
           const SizedBox(height: AppSpacing.lg),
           Row(
@@ -147,7 +174,8 @@ class CategoryForm extends ConsumerWidget {
                       context: context,
                       isScrollControlled: true,
                       backgroundColor: Colors.transparent,
-                      builder: (_) => IconPickerWidget(selectedColor: displayColor),
+                      builder: (_) =>
+                          IconPickerWidget(selectedColor: displayColor),
                     );
                     if (icon != null) {
                       onIconChanged(icon);
@@ -179,7 +207,8 @@ class CategoryForm extends ConsumerWidget {
                   onTap: () async {
                     final color = await showDialog<Color>(
                       context: context,
-                      builder: (_) => ColorPickerWidget(initialColor: displayColor),
+                      builder: (_) =>
+                          ColorPickerWidget(initialColor: displayColor),
                     );
                     if (color != null) {
                       onColorChanged(color);
@@ -223,7 +252,11 @@ class CategoryForm extends ConsumerWidget {
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   if (icon != null) ...[
-                    Icon(icon, size: 16, color: theme.colorScheme.onSurfaceVariant),
+                    Icon(
+                      icon,
+                      size: 16,
+                      color: theme.colorScheme.onSurfaceVariant,
+                    ),
                     const SizedBox(width: AppSpacing.xs),
                   ],
                   Text(
@@ -243,5 +276,4 @@ class CategoryForm extends ConsumerWidget {
       ),
     );
   }
-
 }

@@ -282,7 +282,10 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen> {
                           ? expenseViewModel.currentMonthBalance
                           : expenseViewModel.currentMonthTotal,
                     ),
-                    duration: AppAnimations.durationSlow,
+                    duration: AppAnimations.durationFor(
+                      context,
+                      AppAnimations.durationSlow,
+                    ),
                     curve: AppAnimations.curve,
                     builder: (context, value, child) {
                       final primaryHue = HSLColor.fromColor(
@@ -472,7 +475,10 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen> {
                 )
               : null,
           title: AnimatedSwitcher(
-            duration: const Duration(milliseconds: 300),
+            duration: AppAnimations.durationFor(
+              context,
+              const Duration(milliseconds: 300),
+            ),
             transitionBuilder: (child, animation) =>
                 FadeTransition(opacity: animation, child: child),
             child: _isSearching

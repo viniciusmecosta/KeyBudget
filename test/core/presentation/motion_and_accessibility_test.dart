@@ -8,7 +8,32 @@ import 'package:key_budget/core/presentation/state_view.dart';
 
 void main() {
   group('AppAnimations Reduced Motion & Tokens', () {
-    testWidgets('respects disableAnimations and returns child directly', (tester) async {
+    testWidgets('shared durations become immediate under reduced motion', (
+      tester,
+    ) async {
+      Duration? duration;
+      await tester.pumpWidget(
+        MaterialApp(
+          home: MediaQuery(
+            data: const MediaQueryData(disableAnimations: true),
+            child: Builder(
+              builder: (context) {
+                duration = AppAnimations.durationFor(
+                  context,
+                  AppAnimations.major,
+                );
+                return const SizedBox();
+              },
+            ),
+          ),
+        ),
+      );
+      expect(duration, Duration.zero);
+    });
+
+    testWidgets('respects disableAnimations and returns child directly', (
+      tester,
+    ) async {
       await tester.pumpWidget(
         MaterialApp(
           theme: AppTheme.lightTheme,
@@ -30,7 +55,9 @@ void main() {
       expect(find.byType(Animate), findsNothing);
     });
 
-    testWidgets('animates child when disableAnimations is false', (tester) async {
+    testWidgets('animates child when disableAnimations is false', (
+      tester,
+    ) async {
       await tester.pumpWidget(
         MaterialApp(
           theme: AppTheme.lightTheme,
@@ -91,7 +118,9 @@ void main() {
       expect(actionFired, isTrue);
     });
 
-    testWidgets('renders emptyFilter with clear filters action', (tester) async {
+    testWidgets('renders emptyFilter with clear filters action', (
+      tester,
+    ) async {
       bool cleared = false;
       await tester.pumpWidget(
         MaterialApp(
@@ -110,7 +139,9 @@ void main() {
       expect(cleared, isTrue);
     });
 
-    testWidgets('renders errorWithData banner preserving existing content', (tester) async {
+    testWidgets('renders errorWithData banner preserving existing content', (
+      tester,
+    ) async {
       bool reloaded = false;
       await tester.pumpWidget(
         MaterialApp(
@@ -126,7 +157,10 @@ void main() {
       );
 
       expect(find.text('Preserved Data List'), findsOneWidget);
-      expect(find.text('Dados desatualizados. Toque para recarregar.'), findsOneWidget);
+      expect(
+        find.text('Dados desatualizados. Toque para recarregar.'),
+        findsOneWidget,
+      );
       expect(find.text('Recarregar'), findsOneWidget);
       await tester.tap(find.text('Recarregar'));
       expect(reloaded, isTrue);
@@ -136,9 +170,7 @@ void main() {
       await tester.pumpWidget(
         MaterialApp(
           theme: AppTheme.lightTheme,
-          home: const Scaffold(
-            body: StateView(state: ViewStateKind.offline),
-          ),
+          home: const Scaffold(body: StateView(state: ViewStateKind.offline)),
         ),
       );
 

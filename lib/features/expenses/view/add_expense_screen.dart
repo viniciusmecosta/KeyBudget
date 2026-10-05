@@ -208,7 +208,10 @@ class _AddExpenseScreenState extends ConsumerState<AddExpenseScreen> {
                                 }
                               },
                               child: AnimatedContainer(
-                                duration: const Duration(milliseconds: 200),
+                                duration: AppAnimations.durationFor(
+                                  context,
+                                  const Duration(milliseconds: 200),
+                                ),
                                 curve: Curves.easeInOut,
                                 alignment: Alignment.center,
                                 decoration: BoxDecoration(
@@ -261,7 +264,10 @@ class _AddExpenseScreenState extends ConsumerState<AddExpenseScreen> {
                                 }
                               },
                               child: AnimatedContainer(
-                                duration: const Duration(milliseconds: 200),
+                                duration: AppAnimations.durationFor(
+                                  context,
+                                  const Duration(milliseconds: 200),
+                                ),
                                 curve: Curves.easeInOut,
                                 alignment: Alignment.center,
                                 decoration: BoxDecoration(

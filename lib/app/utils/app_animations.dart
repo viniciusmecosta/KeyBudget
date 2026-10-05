@@ -17,6 +17,9 @@ class AppAnimations {
     return MediaQuery.maybeDisableAnimationsOf(context) ?? false;
   }
 
+  static Duration durationFor(BuildContext context, Duration duration) =>
+      isReducedMotion(context) ? Duration.zero : duration;
+
   static Widget fadeInFromBottom(
     Widget child, {
     Key? key,
@@ -68,7 +71,9 @@ class AppAnimations {
     BuildContext? context,
   }) {
     if (isReducedMotion(context)) return child;
-    final cappedDelay = Duration(milliseconds: (index.clamp(0, 10)) * delayStep);
+    final cappedDelay = Duration(
+      milliseconds: (index.clamp(0, 10)) * delayStep,
+    );
     return child
         .animate(key: key, delay: cappedDelay)
         .fadeIn(duration: transition, curve: curve)

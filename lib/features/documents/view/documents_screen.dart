@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:key_budget/app/utils/app_animations.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:key_budget/app/config/app_theme.dart';
@@ -89,7 +90,10 @@ class _DocumentsScreenState extends ConsumerState<DocumentsScreen> {
                 )
               : null,
           title: AnimatedSwitcher(
-            duration: const Duration(milliseconds: 300),
+            duration: AppAnimations.durationFor(
+              context,
+              const Duration(milliseconds: 300),
+            ),
             transitionBuilder: (child, animation) =>
                 FadeTransition(opacity: animation, child: child),
             child: _isSearching
@@ -118,105 +122,104 @@ class _DocumentsScreenState extends ConsumerState<DocumentsScreen> {
         ),
         body: SafeArea(
           child: RefreshIndicator(
-              onRefresh: _handleRefresh,
-              color: theme.colorScheme.primary,
-              backgroundColor: theme.colorScheme.surface,
-              child: ResponsiveCenter(
-                child: CustomScrollView(
-                  physics: const BouncingScrollPhysics(
-                    parent: AlwaysScrollableScrollPhysics(),
-                  ),
-                  slivers: [
-                    if (viewModel.isLoading)
-                      const DocumentsListSkeleton()
-                    else if (viewModel.errorMessage != null &&
-                        !viewModel.hasDocuments)
-                      SliverFillRemaining(
-                        hasScrollBody: false,
-                        child: AppFeedbackPanel(
-                          title: 'Falha ao carregar documentos',
-                          message: 'Confira sua conexão e tente novamente.',
-                          type: AppFeedbackType.error,
-                          actionLabel: 'Tentar novamente',
-                          onAction: () {
-                            final user = ref
-                                .read(authViewModelProvider)
-                                .currentUser;
-                            if (user != null) {
-                              viewModel.retryListenToDocuments(user.id);
+            onRefresh: _handleRefresh,
+            color: theme.colorScheme.primary,
+            backgroundColor: theme.colorScheme.surface,
+            child: ResponsiveCenter(
+              child: CustomScrollView(
+                physics: const BouncingScrollPhysics(
+                  parent: AlwaysScrollableScrollPhysics(),
+                ),
+                slivers: [
+                  if (viewModel.isLoading)
+                    const DocumentsListSkeleton()
+                  else if (viewModel.errorMessage != null &&
+                      !viewModel.hasDocuments)
+                    SliverFillRemaining(
+                      hasScrollBody: false,
+                      child: AppFeedbackPanel(
+                        title: 'Falha ao carregar documentos',
+                        message: 'Confira sua conexão e tente novamente.',
+                        type: AppFeedbackType.error,
+                        actionLabel: 'Tentar novamente',
+                        onAction: () {
+                          final user = ref
+                              .read(authViewModelProvider)
+                              .currentUser;
+                          if (user != null) {
+                            viewModel.retryListenToDocuments(user.id);
+                          }
+                        },
+                      ),
+                    )
+                  else if (viewModel.currentDisplayItems.isEmpty)
+                    SliverFillRemaining(
+                      hasScrollBody: false,
+                      child: SingleChildScrollView(
+                        physics: const AlwaysScrollableScrollPhysics(),
+                        child: EmptyStateWidget(
+                          icon: viewModel.searchQuery.isNotEmpty
+                              ? Icons.search_off_rounded
+                              : Icons.folder_off_outlined,
+                          message: viewModel.searchQuery.isNotEmpty
+                              ? 'Nenhum documento encontrado para a busca.'
+                              : 'Nenhum documento cadastrado.',
+                          buttonText: viewModel.searchQuery.isNotEmpty
+                              ? 'Limpar busca'
+                              : 'Adicionar documento',
+                          onButtonPressed: () {
+                            if (viewModel.searchQuery.isNotEmpty) {
+                              _searchController.clear();
+                              viewModel.setSearchQuery('');
+                            } else {
+                              NavigationUtils.push(
+                                context,
+                                const AddDocumentScreen(),
+                              );
                             }
-                          },
-                        ),
-                      )
-                    else if (viewModel.currentDisplayItems.isEmpty)
-                      SliverFillRemaining(
-                        hasScrollBody: false,
-                        child: SingleChildScrollView(
-                          physics: const AlwaysScrollableScrollPhysics(),
-                          child: EmptyStateWidget(
-                            icon: viewModel.searchQuery.isNotEmpty
-                                ? Icons.search_off_rounded
-                                : Icons.folder_off_outlined,
-                            message: viewModel.searchQuery.isNotEmpty
-                                ? 'Nenhum documento encontrado para a busca.'
-                                : 'Nenhum documento cadastrado.',
-                            buttonText: viewModel.searchQuery.isNotEmpty
-                                ? 'Limpar busca'
-                                : 'Adicionar documento',
-                            onButtonPressed: () {
-                              if (viewModel.searchQuery.isNotEmpty) {
-                                _searchController.clear();
-                                viewModel.setSearchQuery('');
-                              } else {
-                                NavigationUtils.push(
-                                  context,
-                                  const AddDocumentScreen(),
-                                );
-                              }
-                            },
-                          ),
-                        ),
-                      )
-                    else
-                      SliverPadding(
-                        padding: const EdgeInsets.fromLTRB(
-                          AppSpacing.md,
-                          AppSpacing.lg,
-                          AppSpacing.md,
-                          96.0,
-                        ),
-                        sliver: SliverAnimatedList(
-                          key: _listKey,
-                          initialItemCount:
-                              viewModel.currentDisplayItems.length,
-                          itemBuilder: (context, index, animation) {
-                            if (index >= viewModel.currentDisplayItems.length) {
-                              return const SizedBox.shrink();
-                            }
-                            final doc = viewModel.currentDisplayItems[index];
-                            return AnimatedListItem(
-                              animation: animation,
-                              child: DocumentListTile(
-                                key: ValueKey(doc.id),
-                                doc: doc,
-                              ),
-                            );
                           },
                         ),
                       ),
-                  ],
-                ),
+                    )
+                  else
+                    SliverPadding(
+                      padding: const EdgeInsets.fromLTRB(
+                        AppSpacing.md,
+                        AppSpacing.lg,
+                        AppSpacing.md,
+                        96.0,
+                      ),
+                      sliver: SliverAnimatedList(
+                        key: _listKey,
+                        initialItemCount: viewModel.currentDisplayItems.length,
+                        itemBuilder: (context, index, animation) {
+                          if (index >= viewModel.currentDisplayItems.length) {
+                            return const SizedBox.shrink();
+                          }
+                          final doc = viewModel.currentDisplayItems[index];
+                          return AnimatedListItem(
+                            animation: animation,
+                            child: DocumentListTile(
+                              key: ValueKey(doc.id),
+                              doc: doc,
+                            ),
+                          );
+                        },
+                      ),
+                    ),
+                ],
               ),
             ),
+          ),
         ),
         floatingActionButton: FloatingActionButton.extended(
-            onPressed: () =>
-                NavigationUtils.push(context, const AddDocumentScreen()),
-            label: const Text('Novo Documento'),
-            icon: const Icon(Icons.add),
-            shape: RoundedRectangleBorder(
-              borderRadius: AppBorders.borderRadiusXXL,
-            ),
+          onPressed: () =>
+              NavigationUtils.push(context, const AddDocumentScreen()),
+          label: const Text('Novo Documento'),
+          icon: const Icon(Icons.add),
+          shape: RoundedRectangleBorder(
+            borderRadius: AppBorders.borderRadiusXXL,
+          ),
         ),
       ),
     );

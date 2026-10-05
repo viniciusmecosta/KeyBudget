@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:key_budget/app/utils/navigation_utils.dart';
+import 'package:key_budget/app/utils/app_animations.dart';
 import 'package:key_budget/app/widgets/animated_list_item.dart';
 import 'package:key_budget/app/widgets/empty_state_widget.dart';
 import 'package:key_budget/app/widgets/responsive_center.dart';
@@ -206,7 +207,10 @@ class _CredentialsScreenState extends ConsumerState<CredentialsScreen> {
                                 dimension: 48,
                                 child: Center(
                                   child: AnimatedContainer(
-                                    duration: const Duration(milliseconds: 200),
+                                    duration: AppAnimations.durationFor(
+                                      context,
+                                      const Duration(milliseconds: 200),
+                                    ),
                                     width: isSelected ? 36 : 32,
                                     height: isSelected ? 36 : 32,
                                     decoration: BoxDecoration(
@@ -336,7 +340,10 @@ class _CredentialsScreenState extends ConsumerState<CredentialsScreen> {
                 )
               : null,
           title: AnimatedSwitcher(
-            duration: const Duration(milliseconds: 300),
+            duration: AppAnimations.durationFor(
+              context,
+              const Duration(milliseconds: 300),
+            ),
             transitionBuilder: (child, animation) =>
                 FadeTransition(opacity: animation, child: child),
             child: _isSearching

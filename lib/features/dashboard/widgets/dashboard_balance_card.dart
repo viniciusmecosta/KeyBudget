@@ -47,6 +47,14 @@ class _DashboardBalanceCardState extends ConsumerState<DashboardBalanceCard>
     super.dispose();
   }
 
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (AppAnimations.isReducedMotion(context)) {
+      _controller.value = 1;
+    }
+  }
+
   void _animateTo({
     required double from,
     required double to,
@@ -59,9 +67,13 @@ class _DashboardBalanceCardState extends ConsumerState<DashboardBalanceCard>
     );
 
     _animation = Tween<double>(
-      begin: from,
+      begin: AppAnimations.isReducedMotion(context) ? to : from,
       end: to,
     ).animate(CurvedAnimation(parent: _controller, curve: AppAnimations.curve));
+    if (AppAnimations.isReducedMotion(context)) {
+      _controller.value = 1;
+      return;
+    }
     _controller
       ..reset()
       ..forward();
