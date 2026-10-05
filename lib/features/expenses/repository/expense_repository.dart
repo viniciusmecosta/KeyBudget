@@ -311,6 +311,38 @@ class ExpenseRepository {
     return querySnapshot.docs.map((doc) => doc.data()).toList();
   }
 
+  Future<List<Expense>> getExpensesForInstallmentGroup(
+    String userId,
+    String groupId,
+  ) => _getLinkedExpenses(userId, 'installmentGroupId', groupId);
+
+  Future<List<Expense>> getExpensesForRecurringRule(
+    String userId,
+    String ruleId,
+  ) => _getLinkedExpenses(userId, 'recurringExpenseId', ruleId);
+
+  Future<List<Expense>> _getLinkedExpenses(
+    String userId,
+    String field,
+    String value,
+  ) async {
+    final expenses = <Expense>[];
+    final query = _getExpensesCollection(
+      userId,
+    ).where(field, isEqualTo: value).orderBy(FieldPath.documentId);
+    DocumentSnapshot<Expense>? cursor;
+    while (true) {
+      final page =
+          await (cursor == null ? query : query.startAfterDocument(cursor))
+              .limit(200)
+              .get();
+      expenses.addAll(page.docs.map((doc) => doc.data()));
+      if (page.docs.length < 200) break;
+      cursor = page.docs.last;
+    }
+    return expenses;
+  }
+
   Future<void> updateExpense(String userId, Expense expense) async {
     await _getExpensesCollection(
       userId,

@@ -501,6 +501,10 @@ class ExpenseViewModel extends ChangeNotifier {
       (e) => e.id == expenseId,
       orElse: () => Expense(id: expenseId, amount: 0, date: DateTime.now()),
     );
+    await _deleteExpenseRecord(userId, expense);
+  }
+
+  Future<void> _deleteExpenseRecord(String userId, Expense expense) async {
     if (expense.recurringExpenseId != null &&
         expense.recurringExpenseId!.isNotEmpty) {
       final result = await _recurrenceDeletionService
@@ -514,7 +518,7 @@ class ExpenseViewModel extends ChangeNotifier {
       await _trashRepository.move(
         userId,
         collection: 'expenses',
-        ids: [expenseId],
+        ids: [expense.id!],
         title: expense.motivation?.trim().isNotEmpty == true
             ? expense.motivation!
             : 'Lançamento',
@@ -523,13 +527,14 @@ class ExpenseViewModel extends ChangeNotifier {
   }
 
   Future<void> deleteInstallmentGroup(String userId, String groupId) async {
-    final expensesToDelete = _allExpenses
-        .where((expense) => expense.installmentGroupId == groupId)
-        .toList();
+    final expensesToDelete = await _repository.getExpensesForInstallmentGroup(
+      userId,
+      groupId,
+    );
 
     final futures = expensesToDelete.map((expense) {
       if (expense.id != null) {
-        return deleteExpense(userId, expense.id!);
+        return _deleteExpenseRecord(userId, expense);
       }
       return Future.value();
     });
@@ -590,11 +595,14 @@ class ExpenseViewModel extends ChangeNotifier {
       ),
     );
 
+    final linkedExpenses = effectiveMode == RecurrenceDeleteMode.onlyRule
+        ? <Expense>[]
+        : await _repository.getExpensesForRecurringRule(userId, expenseId);
     final result = await _recurrenceDeletionService.deleteRule(
       userId: userId,
       rule: rule,
       mode: effectiveMode,
-      allExpenses: _allExpenses,
+      allExpenses: linkedExpenses,
     );
 
     return result.data;
