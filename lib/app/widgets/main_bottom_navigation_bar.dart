@@ -23,10 +23,10 @@ class MainBottomNavigationBar extends ConsumerWidget {
     final destinations = AppDestination.getAvailable(
       enableSuppliers: enableSuppliers,
     );
-    final useTwoRows =
-        destinations.length >= 5 &&
-        (MediaQuery.sizeOf(context).width < 420 ||
-            MediaQuery.textScalerOf(context).scale(14) > 18);
+    final width = MediaQuery.sizeOf(context).width;
+    final largeText = MediaQuery.textScalerOf(context).scale(14) > 18;
+    final useTwoRows = destinations.length > 6;
+    final useCompactRow = !useTwoRows && (width < 420 || largeText);
     final activeTabIndex = destinations
         .indexOf(currentDest)
         .clamp(0, destinations.length - 1)
@@ -110,6 +110,86 @@ class MainBottomNavigationBar extends ConsumerWidget {
                               ),
                             ),
                         ],
+                      ),
+                  ],
+                )
+              : useCompactRow
+              ? Row(
+                  children: [
+                    for (var index = 0; index < destinations.length; index++)
+                      Flexible(
+                        flex:
+                            activeTabIndex == index &&
+                                !largeText &&
+                                width >= 320
+                            ? 2
+                            : 1,
+                        child: Semantics(
+                          button: true,
+                          selected: activeTabIndex == index,
+                          label: destinations[index].label,
+                          child: InkWell(
+                            onTap: () {
+                              HapticFeedback.selectionClick();
+                              navigationViewModel.navigateTo(
+                                destinations[index],
+                              );
+                            },
+                            borderRadius: BorderRadius.circular(
+                              AppTheme.radiusM,
+                            ),
+                            child: Container(
+                              constraints: const BoxConstraints(minHeight: 48),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 2,
+                              ),
+                              decoration: BoxDecoration(
+                                color: activeTabIndex == index
+                                    ? theme.colorScheme.primary.withAlpha(26)
+                                    : null,
+                                borderRadius: BorderRadius.circular(
+                                  AppTheme.radiusM,
+                                ),
+                              ),
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Icon(
+                                    activeTabIndex == index
+                                        ? destinations[index].selectedIcon
+                                        : destinations[index].icon,
+                                    color: activeTabIndex == index
+                                        ? theme.colorScheme.primary
+                                        : theme.colorScheme.onSurfaceVariant,
+                                    size: 22,
+                                  ),
+                                  if (activeTabIndex == index &&
+                                      !largeText &&
+                                      width >= 320) ...[
+                                    const SizedBox(width: 4),
+                                    Flexible(
+                                      child: Text(
+                                        destinations[index] ==
+                                                    AppDestination.expenses &&
+                                                !enableIncomes
+                                            ? 'Despesas'
+                                            : destinations[index].label,
+                                        maxLines: 1,
+                                        softWrap: false,
+                                        overflow: TextOverflow.ellipsis,
+                                        style: theme.textTheme.labelMedium
+                                            ?.copyWith(
+                                              color: theme.colorScheme.primary,
+                                              fontWeight: FontWeight.w600,
+                                            ),
+                                      ),
+                                    ),
+                                  ],
+                                ],
+                              ),
+                            ),
+                          ),
+                        ),
                       ),
                   ],
                 )

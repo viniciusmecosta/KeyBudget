@@ -624,10 +624,15 @@ void main() {
         ),
       );
       await tester.pumpAndSettle();
-      expect(find.text('Fornecedores'), findsOneWidget);
+      final supplierTab = find.bySemanticsLabel('Fornecedores');
+      expect(supplierTab, findsOneWidget);
       expect(tester.takeException(), isNull);
+      expect(
+        tester.getSize(find.byType(MainBottomNavigationBar)).height,
+        lessThan(80),
+      );
 
-      await tester.tap(find.text('Fornecedores'));
+      await tester.tap(supplierTab);
       await tester.pumpAndSettle();
       expect(navVM.currentDestination, AppDestination.suppliers);
       expect(tester.takeException(), isNull);
@@ -664,7 +669,7 @@ void main() {
       );
       await tester.pumpAndSettle();
       expect(tester.takeException(), isNull);
-      await tester.tap(find.text('Documentos'));
+      await tester.tap(find.bySemanticsLabel('Documentos'));
       await tester.pumpAndSettle();
       expect(navVM.currentDestination, AppDestination.documents);
     });
