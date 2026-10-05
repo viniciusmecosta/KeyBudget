@@ -156,7 +156,17 @@ class _CredentialDetailScreenState extends ConsumerState<CredentialDetailScreen>
     final deletedCredential = widget.credential;
 
     final userId = authViewModel.currentUser!.id;
-    await viewModel.deleteCredential(userId, deletedCredential.id!);
+    try {
+      await viewModel.deleteCredential(userId, deletedCredential.id!);
+    } catch (_) {
+      if (currentContext.mounted) {
+        SnackbarService.showError(
+          currentContext,
+          'Não foi possível mover a credencial para a lixeira.',
+        );
+      }
+      return;
+    }
 
     if (!currentContext.mounted) return;
     SnackbarService.showSuccess(

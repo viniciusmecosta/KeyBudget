@@ -137,7 +137,17 @@ class _SupplierDetailScreenState extends ConsumerState<SupplierDetailScreen> {
     final deletedSupplier = widget.supplier;
 
     final userId = authViewModel.currentUser!.id;
-    await viewModel.deleteSupplier(userId, deletedSupplier.id!);
+    try {
+      await viewModel.deleteSupplier(userId, deletedSupplier.id!);
+    } catch (_) {
+      if (currentContext.mounted) {
+        SnackbarService.showError(
+          currentContext,
+          'Não foi possível mover o fornecedor para a lixeira.',
+        );
+      }
+      return;
+    }
 
     if (!currentContext.mounted) return;
     SnackbarService.showSuccess(

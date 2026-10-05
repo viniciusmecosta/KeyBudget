@@ -503,10 +503,13 @@ class ExpenseViewModel extends ChangeNotifier {
     );
     if (expense.recurringExpenseId != null &&
         expense.recurringExpenseId!.isNotEmpty) {
-      await _recurrenceDeletionService.deleteIndividualOccurrence(
-        userId: userId,
-        expense: expense,
-      );
+      final result = await _recurrenceDeletionService
+          .deleteIndividualOccurrence(userId: userId, expense: expense);
+      if (!result.isSuccess) {
+        throw StateError(
+          result.safeError ?? 'Não foi possível excluir a ocorrência.',
+        );
+      }
     } else {
       await _trashRepository.move(
         userId,

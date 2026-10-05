@@ -183,35 +183,44 @@ class _ExpenseDetailScreenState extends ConsumerState<ExpenseDetailScreen> {
     final deletedExpense = widget.expense;
     final currentContext = context;
 
-    if (deleteGroup && deletedExpense.installmentGroupId != null) {
-      await expenseViewModel.deleteInstallmentGroup(
-        userId,
-        deletedExpense.installmentGroupId!,
-      );
-      if (currentContext.mounted) {
-        SnackbarService.showSuccess(
-          currentContext,
-          'Parcelamento excluído com sucesso!',
+    try {
+      if (deleteGroup && deletedExpense.installmentGroupId != null) {
+        await expenseViewModel.deleteInstallmentGroup(
+          userId,
+          deletedExpense.installmentGroupId!,
         );
-        Navigator.of(currentContext).pop();
+        if (currentContext.mounted) {
+          SnackbarService.showSuccess(
+            currentContext,
+            'Parcelamento movido para a lixeira.',
+          );
+          Navigator.of(currentContext).pop();
+        }
+      } else {
+        await expenseViewModel.deleteExpense(userId, deletedExpense.id!);
+        if (currentContext.mounted) {
+          SnackbarService.showSuccess(
+            currentContext,
+            deletedExpense.recurringExpenseId != null
+                ? 'Lançamento recorrente excluído.'
+                : _isIncome
+                ? 'Receita movida para a lixeira.'
+                : 'Despesa movida para a lixeira.',
+          );
+          Navigator.of(currentContext).pop();
+        }
       }
-    } else {
-      await expenseViewModel.deleteExpense(userId, deletedExpense.id!);
+    } catch (_) {
       if (currentContext.mounted) {
-        SnackbarService.showSuccess(
+        SnackbarService.showError(
           currentContext,
-          deletedExpense.recurringExpenseId != null
-              ? 'Lançamento recorrente excluído.'
-              : _isIncome
-              ? 'Receita movida para a lixeira.'
-              : 'Despesa movida para a lixeira.',
+          'Não foi possível concluir a exclusão. Tente novamente.',
         );
-        Navigator.of(currentContext).pop();
       }
-    }
-
-    if (mounted) {
-      setState(() => _isDeleting = false);
+    } finally {
+      if (mounted) {
+        setState(() => _isDeleting = false);
+      }
     }
   }
 
