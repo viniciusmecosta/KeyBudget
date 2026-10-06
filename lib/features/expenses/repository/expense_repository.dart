@@ -311,6 +311,11 @@ class ExpenseRepository {
     return querySnapshot.docs.map((doc) => doc.data()).toList();
   }
 
+  Future<Expense?> getExpenseById(String userId, String expenseId) async {
+    final snapshot = await _getExpensesCollection(userId).doc(expenseId).get();
+    return snapshot.data();
+  }
+
   Future<List<Expense>> getExpensesForInstallmentGroup(
     String userId,
     String groupId,

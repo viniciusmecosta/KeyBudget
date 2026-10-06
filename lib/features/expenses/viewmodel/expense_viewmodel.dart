@@ -497,10 +497,17 @@ class ExpenseViewModel extends ChangeNotifier {
   }
 
   Future<void> deleteExpense(String userId, String expenseId) async {
-    final expense = _allExpenses.firstWhere(
-      (e) => e.id == expenseId,
-      orElse: () => Expense(id: expenseId, amount: 0, date: DateTime.now()),
-    );
+    Expense? expense;
+    for (final item in _allExpenses) {
+      if (item.id == expenseId) {
+        expense = item;
+        break;
+      }
+    }
+    expense ??= await _repository.getExpenseById(userId, expenseId);
+    if (expense == null) {
+      throw StateError('O lançamento não foi encontrado. Atualize a lista.');
+    }
     await _deleteExpenseRecord(userId, expense);
   }
 
