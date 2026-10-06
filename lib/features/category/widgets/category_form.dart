@@ -132,8 +132,10 @@ class CategoryForm extends ConsumerWidget {
                       context: context,
                       isScrollControlled: true,
                       backgroundColor: Colors.transparent,
-                      builder: (_) =>
-                          IconPickerWidget(selectedColor: displayColor),
+                      builder: (_) => IconPickerWidget(
+                        selectedColor: displayColor,
+                        selectedIcon: selectedIcon,
+                      ),
                     );
                     if (icon != null) {
                       onIconChanged(icon);
