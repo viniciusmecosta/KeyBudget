@@ -88,6 +88,7 @@ class ExpenseRepository {
         await marker.set({'completedAt': FieldValue.serverTimestamp()});
         return true;
       } catch (_) {
+        _dateIndexTasks.remove(userId);
         return false;
       }
     },
