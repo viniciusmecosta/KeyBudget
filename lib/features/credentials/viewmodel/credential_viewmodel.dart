@@ -2,7 +2,6 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/legacy.dart';
-import 'package:key_budget/app/widgets/animated_list_item.dart';
 import 'package:key_budget/core/import_export/import_service.dart';
 import 'package:key_budget/core/models/credential_model.dart';
 import 'package:key_budget/core/models/folder_model.dart';
@@ -13,8 +12,6 @@ import 'package:key_budget/core/services/encryption_service.dart';
 import 'package:key_budget/core/services/pdf_service.dart';
 import 'package:key_budget/features/credentials/application/credential_transfer_service.dart';
 import 'package:key_budget/features/credentials/repository/credential_repository.dart';
-import 'package:key_budget/features/credentials/widgets/credential_list_tile.dart';
-import 'package:key_budget/features/credentials/widgets/folder_list_tile.dart';
 import 'package:key_budget/features/expenses/repository/expense_repository.dart';
 import 'package:key_budget/features/expenses/repository/recurring_expense_repository.dart';
 import 'package:key_budget/features/trash/repository/trash_repository.dart';
@@ -78,17 +75,12 @@ class CredentialViewModel extends ChangeNotifier {
 
   String? _currentFolderId;
 
-  GlobalKey<SliverAnimatedListState>? _listKey;
-
-  void setListKey(GlobalKey<SliverAnimatedListState> key) {
-    _listKey = key;
-  }
-
   List<Credential> get allCredentials => _allCredentials;
 
   List<Folder> get allFolders => _allFolders;
 
-  List<dynamic> get currentDisplayItems => _currentDisplayItems;
+  List<dynamic> get currentDisplayItems =>
+      List.unmodifiable(_currentDisplayItems);
 
   String? get currentFolderId => _currentFolderId;
 
@@ -144,7 +136,7 @@ class CredentialViewModel extends ChangeNotifier {
 
   void setSearchQuery(String query) {
     _searchQuery = _sanitize(query);
-    _updateDisplayList(animate: true);
+    _updateDisplayList();
   }
 
   void listenToCredentials(String userId) {
@@ -169,7 +161,7 @@ class CredentialViewModel extends ChangeNotifier {
     ) {
       if (_listeningUserId != userId) return;
       _allFolders = folders;
-      _updateDisplayList(animate: true);
+      _updateDisplayList();
     }, onError: (Object error) => _handleLoadError(userId));
 
     _credentialsSubscription = _repository
@@ -178,7 +170,7 @@ class CredentialViewModel extends ChangeNotifier {
           if (_listeningUserId != userId) return;
           _allCredentials = newCredentials;
           _loadErrorMessage = null;
-          _updateDisplayList(animate: true);
+          _updateDisplayList();
           if (_isLoading) _setLoading(false);
         }, onError: (Object error) => _handleLoadError(userId));
 
@@ -199,8 +191,7 @@ class CredentialViewModel extends ChangeNotifier {
     listenToCredentials(userId);
   }
 
-  void _updateDisplayList({bool animate = true}) {
-    final oldList = List<dynamic>.from(_currentDisplayItems);
+  void _updateDisplayList() {
     final List<dynamic> newList = [];
 
     if (_currentFolderId == null) {
@@ -238,98 +229,20 @@ class CredentialViewModel extends ChangeNotifier {
       return 0;
     });
 
-    if (!animate || _listKey?.currentState == null) {
-      _currentDisplayItems = List.from(newList);
-      notifyListeners();
-      return;
-    }
-
-    for (var i = oldList.length - 1; i >= 0; i--) {
-      final oldItem = oldList[i];
-      bool existsInNew = false;
-
-      if (oldItem is Folder) {
-        existsInNew = newList.any(
-          (newItem) => newItem is Folder && newItem.id == oldItem.id,
-        );
-      } else if (oldItem is Credential) {
-        existsInNew = newList.any(
-          (newItem) => newItem is Credential && newItem.id == oldItem.id,
-        );
-      }
-
-      if (!existsInNew) {
-        final indexToRemove = _currentDisplayItems.indexOf(oldItem);
-        if (indexToRemove != -1) {
-          final removedItem = _currentDisplayItems.removeAt(indexToRemove);
-          _listKey?.currentState?.removeItem(
-            indexToRemove,
-            (context, animation) => AnimatedListItem(
-              animation: animation,
-              child: removedItem is Folder
-                  ? FolderListTile(
-                      folder: removedItem,
-                      onTap: () {},
-                      onDelete: () {},
-                    )
-                  : CredentialListTile(credential: removedItem as Credential),
-            ),
-            duration: const Duration(milliseconds: 300),
-          );
-        }
-      }
-    }
-
-    for (var i = 0; i < newList.length; i++) {
-      final newItem = newList[i];
-      int oldIndex = -1;
-
-      if (newItem is Folder) {
-        oldIndex = _currentDisplayItems.indexWhere(
-          (item) => item is Folder && item.id == newItem.id,
-        );
-      } else if (newItem is Credential) {
-        oldIndex = _currentDisplayItems.indexWhere(
-          (item) => item is Credential && item.id == newItem.id,
-        );
-      }
-
-      if (oldIndex == -1) {
-        _currentDisplayItems.insert(i, newItem);
-        _listKey?.currentState?.insertItem(
-          i,
-          duration: const Duration(milliseconds: 300),
-        );
-      } else {
-        if (_currentDisplayItems[oldIndex] != newItem) {
-          _currentDisplayItems[oldIndex] = newItem;
-          notifyListeners();
-        }
-
-        if (oldIndex != i) {
-          final item = _currentDisplayItems.removeAt(oldIndex);
-          _currentDisplayItems.insert(i, item);
-          notifyListeners();
-        }
-      }
-    }
-
-    if (_currentDisplayItems.length != newList.length) {
-      _currentDisplayItems = List.from(newList);
-      notifyListeners();
-    }
+    _currentDisplayItems = newList;
+    notifyListeners();
   }
 
   void enterFolder(String folderId) {
     _currentFolderId = folderId;
     notifyListeners();
-    _updateDisplayList(animate: true);
+    _updateDisplayList();
   }
 
   void exitFolder() {
     _currentFolderId = null;
     notifyListeners();
-    _updateDisplayList(animate: true);
+    _updateDisplayList();
   }
 
   Future<void> createFolder(String userId, String name, {String? color}) async {

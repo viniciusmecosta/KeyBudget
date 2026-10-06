@@ -85,9 +85,6 @@ class FakeDocumentVM extends ChangeNotifier
   void listenToDocuments(String userId) {}
 
   @override
-  void setListKey(GlobalKey<SliverAnimatedListState> key) {}
-
-  @override
   bool get isLoading => false;
 
   @override

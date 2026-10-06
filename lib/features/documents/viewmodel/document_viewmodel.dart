@@ -1,16 +1,15 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
+import 'dart:ui';
 
 import 'package:file_picker/file_picker.dart';
-import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/legacy.dart';
-import 'package:key_budget/app/widgets/animated_list_item.dart';
 import 'package:key_budget/core/models/document_model.dart';
 import 'package:key_budget/core/search/search_normalizer.dart';
 import 'package:key_budget/core/services/drive_service.dart';
 import 'package:key_budget/features/documents/repository/document_repository.dart';
-import 'package:key_budget/features/documents/widgets/document_list_tile.dart';
 import 'package:key_budget/features/trash/repository/trash_repository.dart';
 import 'package:open_file/open_file.dart';
 import 'package:path/path.dart' as p;
@@ -127,12 +126,6 @@ class DocumentViewModel extends ChangeNotifier {
   double? _uploadProgress;
   String _searchQuery = '';
 
-  GlobalKey<SliverAnimatedListState>? _listKey;
-
-  void setListKey(GlobalKey<SliverAnimatedListState> key) {
-    _listKey = key;
-  }
-
   bool get isUploading => _isUploading;
 
   double? get uploadProgress => _uploadProgress;
@@ -143,7 +136,8 @@ class DocumentViewModel extends ChangeNotifier {
 
   String get searchQuery => _searchQuery;
 
-  List<Document> get currentDisplayItems => _currentDisplayItems;
+  List<Document> get currentDisplayItems =>
+      List.unmodifiable(_currentDisplayItems);
   List<Document> get allDocuments => List.unmodifiable(_documents);
   bool get hasDocuments => _documents.isNotEmpty;
 
@@ -153,7 +147,7 @@ class DocumentViewModel extends ChangeNotifier {
 
   void setSearchQuery(String query) {
     _searchQuery = _sanitize(query);
-    _updateDisplayList(animate: true);
+    _updateDisplayList();
   }
 
   void listenToDocuments(String userId) {
@@ -181,7 +175,7 @@ class DocumentViewModel extends ChangeNotifier {
               if (_listeningUserId != userId) return;
               _documents = processedNewDocs;
               _setErrorMessage(null);
-              _updateDisplayList(animate: true);
+              _updateDisplayList();
               unawaited(retryPendingAttachmentCleanup(userId));
             } catch (_) {
               _setErrorMessage('Erro ao carregar os documentos.');
@@ -204,8 +198,7 @@ class DocumentViewModel extends ChangeNotifier {
     listenToDocuments(userId);
   }
 
-  void _updateDisplayList({bool animate = true}) {
-    final oldList = List<Document>.from(_currentDisplayItems);
+  void _updateDisplayList() {
     final List<Document> newList = List.from(_documents);
 
     if (_searchQuery.isNotEmpty) {
@@ -219,64 +212,8 @@ class DocumentViewModel extends ChangeNotifier {
           a.documentName.toLowerCase().compareTo(b.documentName.toLowerCase()),
     );
 
-    if (!animate || _listKey?.currentState == null) {
-      _currentDisplayItems = List.from(newList);
-      notifyListeners();
-      return;
-    }
-
-    for (var i = oldList.length - 1; i >= 0; i--) {
-      final oldItem = oldList[i];
-      if (!newList.any((newItem) => newItem.id == oldItem.id)) {
-        final indexToRemove = _currentDisplayItems.indexWhere(
-          (item) => item.id == oldItem.id,
-        );
-        if (indexToRemove != -1) {
-          final removedDoc = _currentDisplayItems.removeAt(indexToRemove);
-          _listKey?.currentState?.removeItem(
-            indexToRemove,
-            (context, animation) => AnimatedListItem(
-              animation: animation,
-              child: DocumentListTile(
-                key: ValueKey(removedDoc.id),
-                doc: removedDoc,
-              ),
-            ),
-            duration: const Duration(milliseconds: 300),
-          );
-        }
-      }
-    }
-
-    for (var i = 0; i < newList.length; i++) {
-      final newItem = newList[i];
-      final oldIndex = _currentDisplayItems.indexWhere(
-        (item) => item.id == newItem.id,
-      );
-
-      if (oldIndex == -1) {
-        _currentDisplayItems.insert(i, newItem);
-        _listKey?.currentState?.insertItem(
-          i,
-          duration: const Duration(milliseconds: 300),
-        );
-      } else {
-        if (_currentDisplayItems[oldIndex] != newItem) {
-          _currentDisplayItems[oldIndex] = newItem;
-          notifyListeners();
-        }
-        if (oldIndex != i) {
-          final item = _currentDisplayItems.removeAt(oldIndex);
-          _currentDisplayItems.insert(i, item);
-          notifyListeners();
-        }
-      }
-    }
-
-    if (_currentDisplayItems.length != newList.length) {
-      _currentDisplayItems = List.from(newList);
-      notifyListeners();
-    }
+    _currentDisplayItems = newList;
+    notifyListeners();
   }
 
   Future<void> forceRefresh(String userId) async {
@@ -286,7 +223,7 @@ class DocumentViewModel extends ChangeNotifier {
       final processedDocs = await _processDocuments(docs, userId);
       _documents = processedDocs;
       _setErrorMessage(null);
-      _updateDisplayList(animate: true);
+      _updateDisplayList();
     } catch (_) {
       _setErrorMessage('Não foi possível atualizar os documentos.');
     } finally {

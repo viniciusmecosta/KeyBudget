@@ -4,7 +4,7 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:key_budget/app/config/app_theme.dart';
 import 'package:key_budget/app/utils/navigation_utils.dart';
-import 'package:key_budget/app/widgets/animated_list_item.dart';
+import 'package:key_budget/app/widgets/animated_item_sliver.dart';
 import 'package:key_budget/app/widgets/empty_state_widget.dart';
 import 'package:key_budget/app/widgets/responsive_center.dart';
 import 'package:key_budget/core/design_system/borders/app_borders.dart';
@@ -25,8 +25,6 @@ class DocumentsScreen extends ConsumerStatefulWidget {
 }
 
 class _DocumentsScreenState extends ConsumerState<DocumentsScreen> {
-  final GlobalKey<SliverAnimatedListState> _listKey =
-      GlobalKey<SliverAnimatedListState>();
   bool _isSearching = false;
   final TextEditingController _searchController = TextEditingController();
 
@@ -37,7 +35,6 @@ class _DocumentsScreenState extends ConsumerState<DocumentsScreen> {
       final authViewModel = ref.read(authViewModelProvider);
       if (authViewModel.currentUser != null) {
         final documentViewModel = ref.read(documentViewModelProvider);
-        documentViewModel.setListKey(_listKey);
         documentViewModel.listenToDocuments(authViewModel.currentUser!.id);
       }
     });
@@ -189,20 +186,13 @@ class _DocumentsScreenState extends ConsumerState<DocumentsScreen> {
                         AppSpacing.md,
                         96.0,
                       ),
-                      sliver: SliverAnimatedList(
-                        key: _listKey,
-                        initialItemCount: viewModel.currentDisplayItems.length,
-                        itemBuilder: (context, index, animation) {
-                          if (index >= viewModel.currentDisplayItems.length) {
-                            return const SizedBox.shrink();
-                          }
-                          final doc = viewModel.currentDisplayItems[index];
-                          return AnimatedListItem(
-                            animation: animation,
-                            child: DocumentListTile(
-                              key: ValueKey(doc.id),
-                              doc: doc,
-                            ),
+                      sliver: AnimatedItemSliver(
+                        items: viewModel.currentDisplayItems,
+                        identity: (doc) => doc.id!,
+                        itemBuilder: (context, doc) {
+                          return DocumentListTile(
+                            key: ValueKey(doc.id),
+                            doc: doc,
                           );
                         },
                       ),

@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:key_budget/app/utils/navigation_utils.dart';
 import 'package:key_budget/app/utils/app_animations.dart';
-import 'package:key_budget/app/widgets/animated_list_item.dart';
+import 'package:key_budget/app/widgets/animated_item_sliver.dart';
 import 'package:key_budget/app/widgets/empty_state_widget.dart';
 import 'package:key_budget/app/widgets/responsive_center.dart';
 import 'package:key_budget/core/design_system/borders/app_borders.dart';
@@ -29,8 +29,6 @@ class CredentialsScreen extends ConsumerStatefulWidget {
 }
 
 class _CredentialsScreenState extends ConsumerState<CredentialsScreen> {
-  final GlobalKey<SliverAnimatedListState> _listKey =
-      GlobalKey<SliverAnimatedListState>();
   bool _isSearching = false;
   bool _isProcessing = false;
   final TextEditingController _searchController = TextEditingController();
@@ -42,7 +40,6 @@ class _CredentialsScreenState extends ConsumerState<CredentialsScreen> {
       final authViewModel = ref.read(authViewModelProvider);
       if (authViewModel.currentUser != null) {
         final credentialViewModel = ref.read(credentialViewModelProvider);
-        credentialViewModel.setListKey(_listKey);
         credentialViewModel.listenToCredentials(authViewModel.currentUser!.id);
       }
     });
@@ -452,36 +449,26 @@ class _CredentialsScreenState extends ConsumerState<CredentialsScreen> {
                         AppSpacing.md,
                         96.0,
                       ),
-                      sliver: SliverAnimatedList(
-                        key: _listKey,
-                        initialItemCount: vm.currentDisplayItems.length,
-                        itemBuilder: (context, index, animation) {
-                          if (index >= vm.currentDisplayItems.length) {
-                            return const SizedBox.shrink();
-                          }
-
-                          final item = vm.currentDisplayItems[index];
-
+                      sliver: AnimatedItemSliver<dynamic>(
+                        items: vm.currentDisplayItems,
+                        identity: (item) => item is Folder
+                            ? 'folder_${item.id}'
+                            : 'credential_${(item as Credential).id}',
+                        itemBuilder: (context, item) {
                           if (item is Folder) {
-                            return AnimatedListItem(
-                              animation: animation,
-                              child: FolderListTile(
-                                key: ValueKey('folder_${item.id}'),
-                                folder: item,
-                                onTap: () => vm.enterFolder(item.id!),
-                                onDelete: () => vm.deleteFolder(
-                                  authVm.currentUser!.id,
-                                  item.id!,
-                                ),
+                            return FolderListTile(
+                              key: ValueKey('folder_${item.id}'),
+                              folder: item,
+                              onTap: () => vm.enterFolder(item.id!),
+                              onDelete: () => vm.deleteFolder(
+                                authVm.currentUser!.id,
+                                item.id!,
                               ),
                             );
                           } else if (item is Credential) {
-                            return AnimatedListItem(
-                              animation: animation,
-                              child: CredentialListTile(
-                                key: ValueKey('cred_${item.id}'),
-                                credential: item,
-                              ),
+                            return CredentialListTile(
+                              key: ValueKey('cred_${item.id}'),
+                              credential: item,
                             );
                           }
                           return const SizedBox.shrink();
