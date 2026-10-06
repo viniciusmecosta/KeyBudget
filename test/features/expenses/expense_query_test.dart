@@ -5,6 +5,7 @@ import 'package:key_budget/features/expenses/repository/expense_repository.dart'
 
 class _PagedRepository extends ExpenseRepository {
   int requests = 0;
+  bool? requestedServer;
 
   @override
   Future<ExpensePage> getHistoryPage(
@@ -13,8 +14,10 @@ class _PagedRepository extends ExpenseRepository {
     DateTime? endExclusive,
     DocumentSnapshot<Expense>? after,
     int pageSize = 50,
+    bool requireServer = false,
   }) async {
     requests++;
+    requestedServer = requireServer;
     expect(userId, 'user');
     expect(pageSize, 200);
     expect(after, isNull);
@@ -57,5 +60,12 @@ void main() {
     expect(totals.expensesMinor, 30);
     expect(totals.incomesMinor, 300);
     expect(repository.requests, 1);
+  });
+
+  test('full history can require a server-backed paged read', () async {
+    final repository = _PagedRepository();
+    final expenses = await repository.getAllPaged('user', requireServer: true);
+    expect(expenses, hasLength(3));
+    expect(repository.requestedServer, isTrue);
   });
 }

@@ -686,7 +686,10 @@ class ExpenseViewModel extends ChangeNotifier {
   }) async {
     _setImportingCsv(true);
     try {
-      final existingExpenses = await _repository.getAllPaged(userId);
+      final existingExpenses = await _repository.getAllPaged(
+        userId,
+        requireServer: true,
+      );
       if (context != null && !context.mounted) return 0;
       return await _transferService.importCsv(
         userId,

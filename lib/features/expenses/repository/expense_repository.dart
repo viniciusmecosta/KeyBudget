@@ -58,41 +58,42 @@ class ExpenseRepository {
   static String _dateKey(DateTime date) =>
       '${date.year.toString().padLeft(4, '0')}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}';
 
-  Future<bool> _ensureDateIndex(String userId) => _dateIndexTasks.putIfAbsent(
-    userId,
-    () async {
-      try {
-        final user = _firestore.collection('users').doc(userId);
-        final marker = user.collection('migrations').doc('expense_date_key_v1');
-        if ((await marker.get()).exists) return true;
-        final expenses = user.collection('expenses');
-        DocumentSnapshot<Map<String, dynamic>>? cursor;
-        while (true) {
-          var query = expenses.orderBy(FieldPath.documentId).limit(200);
-          if (cursor != null) query = query.startAfterDocument(cursor);
-          final page = await query.get();
-          if (page.docs.isEmpty) break;
-          final batch = _firestore.batch();
-          var changed = false;
-          for (final doc in page.docs) {
-            final data = doc.data();
-            if (data.containsKey('dateKey')) continue;
-            final expense = Expense.fromMap(data, doc.id);
-            batch.update(doc.reference, {'dateKey': _dateKey(expense.date)});
-            changed = true;
-          }
-          if (changed) await batch.commit();
-          cursor = page.docs.last;
-          if (page.docs.length < 200) break;
-        }
-        await marker.set({'completedAt': FieldValue.serverTimestamp()});
+  Future<bool> _ensureDateIndex(
+    String userId,
+  ) => _dateIndexTasks.putIfAbsent(userId, () async {
+    try {
+      final user = _firestore.collection('users').doc(userId);
+      final marker = user.collection('migrations').doc('expense_date_key_v1');
+      if ((await marker.get(const GetOptions(source: Source.server))).exists) {
         return true;
-      } catch (_) {
-        _dateIndexTasks.remove(userId);
-        return false;
       }
-    },
-  );
+      final expenses = user.collection('expenses');
+      DocumentSnapshot<Map<String, dynamic>>? cursor;
+      while (true) {
+        var query = expenses.orderBy(FieldPath.documentId).limit(200);
+        if (cursor != null) query = query.startAfterDocument(cursor);
+        final page = await query.get(const GetOptions(source: Source.server));
+        if (page.docs.isEmpty) break;
+        final batch = _firestore.batch();
+        var changed = false;
+        for (final doc in page.docs) {
+          final data = doc.data();
+          if (data.containsKey('dateKey')) continue;
+          final expense = Expense.fromMap(data, doc.id);
+          batch.update(doc.reference, {'dateKey': _dateKey(expense.date)});
+          changed = true;
+        }
+        if (changed) await batch.commit();
+        cursor = page.docs.last;
+        if (page.docs.length < 200) break;
+      }
+      await marker.set({'completedAt': FieldValue.serverTimestamp()});
+      return true;
+    } catch (_) {
+      _dateIndexTasks.remove(userId);
+      return false;
+    }
+  });
 
   Future<void> addExpense(String userId, Expense expense) async {
     if (expense.id != null && expense.id!.isNotEmpty) {
@@ -205,6 +206,7 @@ class ExpenseRepository {
     DateTime? endExclusive,
     DocumentSnapshot<Expense>? after,
     int pageSize = 50,
+    bool requireServer = false,
   }) async {
     if (pageSize < 1 || pageSize > 200) {
       throw ArgumentError.value(pageSize, 'pageSize');
@@ -229,7 +231,9 @@ class ExpenseRepository {
       final query = scanCursor == null
           ? ordered
           : ordered.startAfterDocument(scanCursor);
-      final snapshot = await query.limit(200).get();
+      final snapshot = await query
+          .limit(200)
+          .get(requireServer ? const GetOptions(source: Source.server) : null);
       if (snapshot.docs.isEmpty) {
         return ExpensePage(expenses: visible, nextCursor: null);
       }
@@ -288,6 +292,7 @@ class ExpenseRepository {
     String userId, {
     DateTime? startInclusive,
     DateTime? endExclusive,
+    bool requireServer = false,
   }) async {
     final all = <Expense>[];
     DocumentSnapshot<Expense>? cursor;
@@ -298,6 +303,7 @@ class ExpenseRepository {
         endExclusive: endExclusive,
         after: cursor,
         pageSize: 200,
+        requireServer: requireServer,
       );
       all.addAll(page.expenses);
       cursor = page.nextCursor;
@@ -341,7 +347,7 @@ class ExpenseRepository {
       final page =
           await (cursor == null ? query : query.startAfterDocument(cursor))
               .limit(200)
-              .get();
+              .get(const GetOptions(source: Source.server));
       expenses.addAll(page.docs.map((doc) => doc.data()));
       if (page.docs.length < 200) break;
       cursor = page.docs.last;

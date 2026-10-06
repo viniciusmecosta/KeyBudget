@@ -55,6 +55,7 @@ class ExpenseTransferService {
       userId,
       startInclusive: range?.startInclusive,
       endExclusive: range?.endExclusive,
+      requireServer: true,
     );
     return selected..sort((a, b) => a.date.compareTo(b.date));
   }

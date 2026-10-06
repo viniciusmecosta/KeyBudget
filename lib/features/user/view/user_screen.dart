@@ -81,7 +81,7 @@ class UserScreen extends ConsumerWidget {
         }
         final expenses = await ref
             .read(expenseRepositoryProvider)
-            .getAllPaged(userId);
+            .getAllPaged(userId, requireServer: true);
         final csvStr = csvService.generateExpensesCsvString(expenses);
         final file = File('${dir.path}/despesas_backup.csv');
         await file.writeAsBytes(utf8.encode(csvStr));
