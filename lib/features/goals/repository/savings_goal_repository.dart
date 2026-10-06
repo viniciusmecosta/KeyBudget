@@ -36,6 +36,9 @@ class SavingsGoalRepository {
   CollectionReference<Map<String, dynamic>> _movements(String userId) =>
       _firestore.collection('users').doc(userId).collection('goal_movements');
 
+  CollectionReference<Map<String, dynamic>> _deletions(String userId) =>
+      _firestore.collection('users').doc(userId).collection('goal_deletions');
+
   Stream<List<SavingsGoal>> watchGoals(String userId) => _collection(userId)
       .orderBy('createdAt', descending: true)
       .snapshots()
@@ -111,8 +114,8 @@ class SavingsGoalRepository {
         throw StateError('Meta não encontrada.');
       }
       final goal = SavingsGoal.fromMap(goalId, snapshot.data()!);
-      if (goal.isArchived) {
-        throw StateError('A meta está arquivada.');
+      if (goal.isArchived || goal.isDeleting) {
+        throw StateError('A meta não está disponível para movimentações.');
       }
       final newSaved = goal.savedMinor + amountMinor;
       if (newSaved < 0) {
@@ -129,6 +132,62 @@ class SavingsGoalRepository {
 
   Future<void> setArchived(String userId, String goalId, bool archived) =>
       _collection(userId).doc(goalId).update({'archived': archived});
+
+  Future<void> deleteGoal(String userId, String goalId) async {
+    final goalDocument = _collection(userId).doc(goalId);
+    final deletionDocument = _deletions(userId).doc(goalId);
+    await _firestore.runTransaction((transaction) async {
+      final goal = await transaction.get(goalDocument);
+      final deletion = await transaction.get(deletionDocument);
+      if (goal.exists) {
+        transaction.update(goalDocument, {'deleting': true});
+      }
+      transaction.set(deletionDocument, {
+        'startedAt':
+            deletion.data()?['startedAt'] ?? FieldValue.serverTimestamp(),
+      });
+    });
+    await _completeDeletion(userId, goalId);
+  }
+
+  Future<void> _deleteMovements(String userId, String goalId) async {
+    while (true) {
+      final page = await _movements(userId)
+          .where('goalId', isEqualTo: goalId)
+          .limit(400)
+          .get(const GetOptions(source: Source.server));
+      if (page.docs.isEmpty) return;
+      final batch = _firestore.batch();
+      for (final document in page.docs) {
+        batch.delete(document.reference);
+      }
+      await batch.commit();
+    }
+  }
+
+  Future<void> _completeDeletion(String userId, String goalId) async {
+    await _deleteMovements(userId, goalId);
+    await _collection(userId).doc(goalId).delete();
+    await _deleteMovements(userId, goalId);
+    await _deletions(userId).doc(goalId).delete();
+  }
+
+  Future<void> resumePendingDeletions(String userId) async {
+    final jobs = await _deletions(
+      userId,
+    ).get(const GetOptions(source: Source.server));
+    var failed = false;
+    for (final job in jobs.docs) {
+      try {
+        await _completeDeletion(userId, job.id);
+      } catch (_) {
+        failed = true;
+      }
+    }
+    if (failed) {
+      throw StateError('Algumas exclusões ainda não foram concluídas.');
+    }
+  }
 }
 
 final savingsGoalRepositoryProvider = Provider<SavingsGoalRepository>(

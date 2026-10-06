@@ -14,6 +14,7 @@ void main() {
       createdAt: createdAt,
       deadline: deadline,
       isArchived: true,
+      isDeleting: true,
     );
 
     final restored = SavingsGoal.fromMap(goal.id, goal.toMap());
@@ -25,6 +26,7 @@ void main() {
     expect(restored.progress, 0.25);
     expect(restored.deadline, deadline);
     expect(restored.isArchived, isTrue);
+    expect(restored.isDeleting, isTrue);
     expect(restored.toMap()['createdAt'], isA<Timestamp>());
   });
 

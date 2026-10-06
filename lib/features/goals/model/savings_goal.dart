@@ -8,6 +8,7 @@ class SavingsGoal {
   final DateTime createdAt;
   final DateTime? deadline;
   final bool isArchived;
+  final bool isDeleting;
 
   const SavingsGoal({
     required this.id,
@@ -17,6 +18,7 @@ class SavingsGoal {
     required this.createdAt,
     this.deadline,
     this.isArchived = false,
+    this.isDeleting = false,
   });
 
   int get remainingMinor => targetMinor - savedMinor;
@@ -48,6 +50,7 @@ class SavingsGoal {
       createdAt: readDate(data['createdAt']),
       deadline: data['deadline'] == null ? null : readDate(data['deadline']),
       isArchived: data['archived'] == true,
+      isDeleting: data['deleting'] == true,
     );
   }
 
@@ -58,5 +61,6 @@ class SavingsGoal {
     'createdAt': Timestamp.fromDate(createdAt),
     'deadline': deadline == null ? null : Timestamp.fromDate(deadline!),
     'archived': isArchived,
+    'deleting': isDeleting,
   };
 }

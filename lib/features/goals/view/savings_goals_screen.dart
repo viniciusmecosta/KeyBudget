@@ -21,6 +21,67 @@ class SavingsGoalsScreen extends ConsumerStatefulWidget {
 
 class _SavingsGoalsScreenState extends ConsumerState<SavingsGoalsScreen> {
   bool _showArchived = false;
+  String? _recoveredUserId;
+  bool _cleanupFailed = false;
+  bool _resumingCleanup = false;
+  final Set<String> _deletingGoalIds = {};
+
+  Future<void> _resumePendingDeletions(String userId) async {
+    if (_resumingCleanup) return;
+    setState(() => _resumingCleanup = true);
+    try {
+      await ref
+          .read(savingsGoalRepositoryProvider)
+          .resumePendingDeletions(userId);
+      if (mounted) setState(() => _cleanupFailed = false);
+    } catch (_) {
+      if (mounted) setState(() => _cleanupFailed = true);
+    } finally {
+      if (mounted) setState(() => _resumingCleanup = false);
+    }
+  }
+
+  Future<void> _deleteGoal(String userId, SavingsGoal goal) async {
+    if (_deletingGoalIds.contains(goal.id)) return;
+    if (!goal.isDeleting) {
+      final confirmed = await showDialog<bool>(
+        context: context,
+        builder: (dialogContext) => AlertDialog(
+          title: const Text('Excluir meta e histórico?'),
+          content: Text(
+            'A meta ${goal.name} e todas as suas movimentações serão apagadas permanentemente. Esta ação não cria receita nem despesa.',
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(dialogContext).pop(false),
+              child: const Text('Cancelar'),
+            ),
+            FilledButton(
+              onPressed: () => Navigator.of(dialogContext).pop(true),
+              child: const Text('Excluir tudo'),
+            ),
+          ],
+        ),
+      );
+      if (confirmed != true || !mounted) return;
+    }
+    setState(() => _deletingGoalIds.add(goal.id));
+    try {
+      await ref.read(savingsGoalRepositoryProvider).deleteGoal(userId, goal.id);
+      if (mounted) {
+        SnackbarService.showSuccess(context, 'Meta e histórico excluídos.');
+      }
+    } catch (_) {
+      if (mounted) {
+        SnackbarService.showError(
+          context,
+          'Não foi possível concluir a exclusão. Tente novamente.',
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _deletingGoalIds.remove(goal.id));
+    }
+  }
 
   Future<void> _editGoal(String userId, [SavingsGoal? goal]) async {
     final nameController = TextEditingController(text: goal?.name ?? '');
@@ -318,86 +379,118 @@ class _SavingsGoalsScreenState extends ConsumerState<SavingsGoalsScreen> {
               Expanded(
                 child: Text(goal.name, style: theme.textTheme.titleMedium),
               ),
-              PopupMenuButton<String>(
-                tooltip: 'Opções da meta ${goal.name}',
-                onSelected: (value) async {
-                  if (value == 'edit') {
-                    await _editGoal(userId, goal);
-                  } else if (value == 'history') {
-                    _showHistory(userId, goal);
-                  } else {
-                    try {
-                      await ref
-                          .read(savingsGoalRepositoryProvider)
-                          .setArchived(userId, goal.id, value == 'archive');
-                    } catch (_) {
-                      if (mounted) {
-                        SnackbarService.showError(
-                          context,
-                          'Não foi possível atualizar a meta.',
-                        );
+              if (_deletingGoalIds.contains(goal.id))
+                const SizedBox(
+                  width: 48,
+                  height: 48,
+                  child: Center(
+                    child: SizedBox(
+                      width: 20,
+                      height: 20,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    ),
+                  ),
+                )
+              else
+                PopupMenuButton<String>(
+                  tooltip: 'Opções da meta ${goal.name}',
+                  onSelected: (value) async {
+                    if (value == 'edit') {
+                      await _editGoal(userId, goal);
+                    } else if (value == 'history') {
+                      _showHistory(userId, goal);
+                    } else if (value == 'delete') {
+                      await _deleteGoal(userId, goal);
+                    } else {
+                      try {
+                        await ref
+                            .read(savingsGoalRepositoryProvider)
+                            .setArchived(userId, goal.id, value == 'archive');
+                      } catch (_) {
+                        if (mounted) {
+                          SnackbarService.showError(
+                            context,
+                            'Não foi possível atualizar a meta.',
+                          );
+                        }
                       }
                     }
-                  }
-                },
-                itemBuilder: (context) => [
-                  if (!goal.isArchived)
-                    const PopupMenuItem(value: 'edit', child: Text('Editar')),
-                  const PopupMenuItem(
-                    value: 'history',
-                    child: Text('Histórico'),
+                  },
+                  itemBuilder: (context) => [
+                    if (!goal.isArchived && !goal.isDeleting)
+                      const PopupMenuItem(value: 'edit', child: Text('Editar')),
+                    if (!goal.isDeleting) ...[
+                      const PopupMenuItem(
+                        value: 'history',
+                        child: Text('Histórico'),
+                      ),
+                      PopupMenuItem(
+                        value: goal.isArchived ? 'restore' : 'archive',
+                        child: Text(goal.isArchived ? 'Reativar' : 'Arquivar'),
+                      ),
+                    ],
+                    PopupMenuItem(
+                      value: 'delete',
+                      child: Text(
+                        goal.isDeleting ? 'Concluir exclusão' : 'Excluir tudo',
+                        style: TextStyle(color: theme.colorScheme.error),
+                      ),
+                    ),
+                  ],
+                ),
+            ],
+          ),
+          if (goal.isDeleting) ...[
+            const SizedBox(height: AppSpacing.sm),
+            Text(
+              'Exclusão pendente. Use o menu para concluir.',
+              style: theme.textTheme.bodyMedium,
+            ),
+          ] else ...[
+            const SizedBox(height: AppSpacing.sm),
+            Text(
+              '${Money.fromCents(goal.savedMinor).formatBrl()} de ${Money.fromCents(goal.targetMinor).formatBrl()}',
+              style: theme.textTheme.bodyLarge,
+            ),
+            const SizedBox(height: AppSpacing.sm),
+            Semantics(
+              label:
+                  '${(goal.progress * 100).round()} por cento da meta ${goal.name}',
+              child: LinearProgressIndicator(
+                value: goal.progress.clamp(0.0, 1.0),
+              ),
+            ),
+            const SizedBox(height: AppSpacing.sm),
+            Text(
+              goal.isComplete
+                  ? 'Meta alcançada'
+                  : '${Money.fromCents(goal.remainingMinor).formatBrl()} restantes',
+              style: theme.textTheme.bodySmall,
+            ),
+            if (goal.deadline != null)
+              Text(
+                'Prazo: ${DateFormat('dd/MM/yyyy').format(goal.deadline!)}',
+                style: theme.textTheme.bodySmall,
+              ),
+            if (!goal.isArchived) ...[
+              const SizedBox(height: AppSpacing.sm),
+              Wrap(
+                spacing: AppSpacing.sm,
+                children: [
+                  TextButton.icon(
+                    onPressed: () => _moveAmount(userId, goal, false),
+                    icon: const Icon(Icons.add),
+                    label: const Text('Adicionar'),
                   ),
-                  PopupMenuItem(
-                    value: goal.isArchived ? 'restore' : 'archive',
-                    child: Text(goal.isArchived ? 'Reativar' : 'Arquivar'),
-                  ),
+                  if (goal.savedMinor > 0)
+                    TextButton.icon(
+                      onPressed: () => _moveAmount(userId, goal, true),
+                      icon: const Icon(Icons.remove),
+                      label: const Text('Retirar'),
+                    ),
                 ],
               ),
             ],
-          ),
-          const SizedBox(height: AppSpacing.sm),
-          Text(
-            '${Money.fromCents(goal.savedMinor).formatBrl()} de ${Money.fromCents(goal.targetMinor).formatBrl()}',
-            style: theme.textTheme.bodyLarge,
-          ),
-          const SizedBox(height: AppSpacing.sm),
-          Semantics(
-            label:
-                '${(goal.progress * 100).round()} por cento da meta ${goal.name}',
-            child: LinearProgressIndicator(
-              value: goal.progress.clamp(0.0, 1.0),
-            ),
-          ),
-          const SizedBox(height: AppSpacing.sm),
-          Text(
-            goal.isComplete
-                ? 'Meta alcançada'
-                : '${Money.fromCents(goal.remainingMinor).formatBrl()} restantes',
-            style: theme.textTheme.bodySmall,
-          ),
-          if (goal.deadline != null)
-            Text(
-              'Prazo: ${DateFormat('dd/MM/yyyy').format(goal.deadline!)}',
-              style: theme.textTheme.bodySmall,
-            ),
-          if (!goal.isArchived) ...[
-            const SizedBox(height: AppSpacing.sm),
-            Wrap(
-              spacing: AppSpacing.sm,
-              children: [
-                TextButton.icon(
-                  onPressed: () => _moveAmount(userId, goal, false),
-                  icon: const Icon(Icons.add),
-                  label: const Text('Adicionar'),
-                ),
-                if (goal.savedMinor > 0)
-                  TextButton.icon(
-                    onPressed: () => _moveAmount(userId, goal, true),
-                    icon: const Icon(Icons.remove),
-                    label: const Text('Retirar'),
-                  ),
-              ],
-            ),
           ],
         ],
       ),
@@ -407,6 +500,12 @@ class _SavingsGoalsScreenState extends ConsumerState<SavingsGoalsScreen> {
   @override
   Widget build(BuildContext context) {
     final userId = ref.watch(authViewModelProvider).currentUser?.id;
+    if (userId != null && _recoveredUserId != userId) {
+      _recoveredUserId = userId;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) _resumePendingDeletions(userId);
+      });
+    }
     final goals = userId == null
         ? null
         : ref.watch(savingsGoalsProvider(userId));
@@ -419,6 +518,14 @@ class _SavingsGoalsScreenState extends ConsumerState<SavingsGoalsScreen> {
       appBar: AppBar(
         title: const Text('Metas'),
         actions: [
+          if (userId != null && _cleanupFailed)
+            IconButton(
+              tooltip: 'Verificar exclusões de metas',
+              onPressed: _resumingCleanup
+                  ? null
+                  : () => _resumePendingDeletions(userId),
+              icon: const Icon(Icons.refresh),
+            ),
           IconButton(
             tooltip: _showArchived
                 ? 'Ver metas ativas'
