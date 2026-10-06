@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:key_budget/core/models/expense_model.dart';
+import 'package:key_budget/features/expenses/domain/recurrence_occurrence.dart';
 
 class TrashEntry {
   final String id;
@@ -83,6 +84,13 @@ class TrashRepository {
       if (snapshots.any((snapshot) => !snapshot.exists)) {
         throw StateError('Um dos itens não existe mais. Atualize a lista.');
       }
+      if (collection == 'expenses' &&
+          snapshots.any((snapshot) {
+            final recurringId = snapshot.data()?['recurringExpenseId'];
+            return recurringId is String && recurringId.isNotEmpty;
+          })) {
+        throw StateError('Use a exclusão de ocorrência recorrente.');
+      }
       final records = [
         for (final snapshot in snapshots)
           {'id': snapshot.id, 'data': snapshot.data()!},
@@ -96,6 +104,52 @@ class TrashRepository {
       for (final snapshot in snapshots) {
         transaction.delete(snapshot.reference);
       }
+    });
+  }
+
+  Future<void> moveRecurringExpense(String userId, String expenseId) async {
+    final source = _user(userId).collection('expenses').doc(expenseId);
+    final trashDocument = _trash(userId).doc();
+    await _firestore.runTransaction((transaction) async {
+      final snapshot = await transaction.get(source);
+      if (!snapshot.exists) {
+        throw StateError('O lançamento não existe mais. Atualize a lista.');
+      }
+      final expense = Expense.fromMap(snapshot.data()!, snapshot.id);
+      final occurrence = RecurrenceOccurrence.forExpense(
+        userId: userId,
+        expense: expense,
+        state: OccurrenceState.materialized,
+      );
+      if (occurrence == null) {
+        throw StateError('Este lançamento não pertence a uma recorrência.');
+      }
+      final occurrenceDocument = _user(
+        userId,
+      ).collection('recurrence_occurrences').doc(occurrence.occurrenceKey);
+      final currentOccurrence = await transaction.get(occurrenceDocument);
+      final previous = currentOccurrence.exists
+          ? RecurrenceOccurrence.fromMap(
+              currentOccurrence.data()!,
+              occurrence.occurrenceKey,
+            )
+          : null;
+      final tombstone = (previous ?? occurrence).copyWith(
+        expenseIds: {...?previous?.expenseIds, expenseId}.toList(),
+        state: OccurrenceState.suppressed,
+      );
+      transaction.set(trashDocument, {
+        'collection': 'expenses',
+        'title': expense.motivation?.trim().isNotEmpty == true
+            ? expense.motivation
+            : 'Lançamento recorrente',
+        'deletedAt': Timestamp.fromDate(DateTime.now()),
+        'records': [
+          {'id': expenseId, 'data': snapshot.data()!},
+        ],
+      });
+      transaction.set(occurrenceDocument, tombstone.toMap());
+      transaction.delete(source);
     });
   }
 
@@ -137,6 +191,53 @@ class TrashRepository {
       if (targets.any((target) => target.exists)) {
         throw StateError('Já existe um item com o mesmo identificador.');
       }
+      final occurrencesToRestore =
+          <DocumentReference<Map<String, dynamic>>, RecurrenceOccurrence>{};
+      if (entry.collection == 'expenses') {
+        for (final record in entry.records) {
+          final id = record['id'] as String;
+          final expense = Expense.fromMap(
+            Map<String, dynamic>.from(record['data'] as Map),
+            id,
+          );
+          final occurrence = RecurrenceOccurrence.forExpense(
+            userId: userId,
+            expense: expense,
+            state: OccurrenceState.materialized,
+          );
+          if (occurrence == null) continue;
+          final reference = _user(
+            userId,
+          ).collection('recurrence_occurrences').doc(occurrence.occurrenceKey);
+          final current = await transaction.get(reference);
+          if (current.exists) {
+            final existing = RecurrenceOccurrence.fromMap(
+              current.data()!,
+              occurrence.occurrenceKey,
+            );
+            if (existing.state != OccurrenceState.suppressed ||
+                !existing.expenseIds.contains(id)) {
+              throw StateError(
+                'A ocorrência já foi alterada. Atualize a lista.',
+              );
+            }
+            for (final otherId in existing.expenseIds.where(
+              (linkedId) => linkedId != id,
+            )) {
+              if (!(await transaction.get(source.doc(otherId))).exists) {
+                throw StateError(
+                  'Há outro lançamento pendente nesta recorrência.',
+                );
+              }
+            }
+            occurrencesToRestore[reference] = existing.copyWith(
+              state: OccurrenceState.materialized,
+            );
+          } else {
+            occurrencesToRestore[reference] = occurrence;
+          }
+        }
+      }
       for (var index = 0; index < targets.length; index++) {
         final data = Map<String, dynamic>.from(
           entry.records[index]['data'] as Map,
@@ -150,6 +251,9 @@ class TrashRepository {
               '${date.year.toString().padLeft(4, '0')}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}';
         }
         transaction.set(targets[index].reference, data);
+      }
+      for (final occurrence in occurrencesToRestore.entries) {
+        transaction.set(occurrence.key, occurrence.value.toMap());
       }
       transaction.delete(trashDocument);
     });

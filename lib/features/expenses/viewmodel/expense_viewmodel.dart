@@ -514,13 +514,7 @@ class ExpenseViewModel extends ChangeNotifier {
   Future<void> _deleteExpenseRecord(String userId, Expense expense) async {
     if (expense.recurringExpenseId != null &&
         expense.recurringExpenseId!.isNotEmpty) {
-      final result = await _recurrenceDeletionService
-          .deleteIndividualOccurrence(userId: userId, expense: expense);
-      if (!result.isSuccess) {
-        throw StateError(
-          result.safeError ?? 'Não foi possível excluir a ocorrência.',
-        );
-      }
+      await _trashRepository.moveRecurringExpense(userId, expense.id!);
     } else {
       await _trashRepository.move(
         userId,

@@ -202,7 +202,7 @@ class _ExpenseDetailScreenState extends ConsumerState<ExpenseDetailScreen> {
           SnackbarService.showSuccess(
             currentContext,
             deletedExpense.recurringExpenseId != null
-                ? 'Lançamento recorrente excluído.'
+                ? 'Lançamento recorrente movido para a lixeira.'
                 : _isIncome
                 ? 'Receita movida para a lixeira.'
                 : 'Despesa movida para a lixeira.',
