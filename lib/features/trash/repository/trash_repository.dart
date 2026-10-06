@@ -4,6 +4,8 @@ import 'package:key_budget/core/models/expense_model.dart';
 import 'package:key_budget/features/expenses/domain/recurrence_occurrence.dart';
 
 class TrashEntry {
+  static const retention = Duration(days: 30);
+
   final String id;
   final String collection;
   final String title;
@@ -17,6 +19,10 @@ class TrashEntry {
     required this.deletedAt,
     required this.records,
   });
+
+  DateTime get expiresAt => deletedAt.add(retention);
+
+  bool isExpiredAt(DateTime instant) => !expiresAt.isAfter(instant);
 
   factory TrashEntry.fromMap(String id, Map<String, dynamic> map) {
     return TrashEntry(
@@ -61,6 +67,25 @@ class TrashRepository {
             .map((document) => TrashEntry.fromMap(document.id, document.data()))
             .toList(),
       );
+
+  Future<int> purgeExpired(String userId, {DateTime? now}) async {
+    final cutoff = (now ?? DateTime.now()).subtract(TrashEntry.retention);
+    var removed = 0;
+    while (true) {
+      final page = await _trash(userId)
+          .where('deletedAt', isLessThanOrEqualTo: Timestamp.fromDate(cutoff))
+          .orderBy('deletedAt')
+          .limit(40)
+          .get(const GetOptions(source: Source.server));
+      if (page.docs.isEmpty) break;
+      for (final document in page.docs) {
+        await deleteForever(userId, document.id);
+        removed++;
+      }
+      if (page.docs.length < 40) break;
+    }
+    return removed;
+  }
 
   Future<void> move(
     String userId, {
@@ -159,6 +184,9 @@ class TrashRepository {
       final snapshot = await transaction.get(trashDocument);
       if (!snapshot.exists) throw StateError('Item não encontrado na lixeira.');
       final entry = TrashEntry.fromMap(trashId, snapshot.data()!);
+      if (entry.isExpiredAt(DateTime.now())) {
+        throw StateError('O prazo para restaurar este item terminou.');
+      }
       if (!supportedCollections.contains(entry.collection)) {
         throw StateError('Tipo de item não suportado.');
       }

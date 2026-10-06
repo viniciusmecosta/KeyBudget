@@ -110,7 +110,7 @@ class TrashScreen extends ConsumerWidget {
               data: (items) => items.isEmpty
                   ? const AppFeedbackPanel(
                       title: 'Lixeira vazia',
-                      message: 'Os itens removidos aparecerão aqui.',
+                      message: 'Itens excluídos ficam disponíveis por 30 dias.',
                     )
                   : ResponsiveCenter(
                       maxWidth: 760,
@@ -125,7 +125,7 @@ class TrashScreen extends ConsumerWidget {
                             child: ListTile(
                               title: Text(entry.title),
                               subtitle: Text(
-                                '${_typeName(entry.collection)} · ${DateFormat('dd/MM/yyyy').format(entry.deletedAt)}',
+                                '${_typeName(entry.collection)} · disponível até ${DateFormat('dd/MM/yyyy').format(entry.expiresAt)}',
                               ),
                               trailing: PopupMenuButton<String>(
                                 tooltip: 'Ações de ${entry.title}',

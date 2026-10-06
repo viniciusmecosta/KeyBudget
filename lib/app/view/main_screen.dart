@@ -13,8 +13,10 @@ import 'package:key_budget/features/auth/viewmodel/auth_viewmodel.dart';
 import 'package:key_budget/features/credentials/view/credentials_screen.dart';
 import 'package:key_budget/features/dashboard/view/dashboard_screen.dart';
 import 'package:key_budget/features/documents/view/documents_screen.dart';
+import 'package:key_budget/features/documents/viewmodel/document_viewmodel.dart';
 import 'package:key_budget/features/expenses/view/expenses_screen.dart';
 import 'package:key_budget/features/suppliers/view/suppliers_screen.dart';
+import 'package:key_budget/features/trash/repository/trash_repository.dart';
 import 'package:key_budget/features/user/view/user_screen.dart';
 
 class MainScreen extends ConsumerStatefulWidget {
@@ -27,8 +29,16 @@ class MainScreen extends ConsumerStatefulWidget {
 class _MainScreenState extends ConsumerState<MainScreen> {
   final Set<AppDestination> _loadedDestinations = {};
   late final AutomaticBackupService _automaticBackupService;
+  late final AppLockService _appLockService;
   Timer? _automaticBackupTimer;
+  bool _isPurgingTrash = false;
   String? _lastUserId;
+
+  void _onLockChanged() {
+    if (!_appLockService.isLocked) {
+      _purgeExpiredTrash();
+    }
+  }
 
   @override
   void initState() {
@@ -36,11 +46,43 @@ class _MainScreenState extends ConsumerState<MainScreen> {
     _automaticBackupService = AutomaticBackupService(
       currentUserId: () => ref.read(authViewModelProvider).currentUser?.id,
     );
-    WidgetsBinding.instance.addPostFrameCallback((_) => _runAutomaticBackup());
-    _automaticBackupTimer = Timer.periodic(
-      const Duration(hours: 1),
-      (_) => _runAutomaticBackup(),
-    );
+    _appLockService = ref.read(appLockServiceProvider);
+    _appLockService.addListener(_onLockChanged);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _runAutomaticBackup();
+      _purgeExpiredTrash();
+    });
+    _automaticBackupTimer = Timer.periodic(const Duration(hours: 1), (_) {
+      _runAutomaticBackup();
+      _purgeExpiredTrash();
+    });
+  }
+
+  Future<void> _purgeExpiredTrash() async {
+    if (!mounted ||
+        _isPurgingTrash ||
+        ref.read(appLockServiceProvider).isLocked) {
+      return;
+    }
+    final userId = ref.read(authViewModelProvider).currentUser?.id;
+    if (userId == null) return;
+    _isPurgingTrash = true;
+    try {
+      final removed = await ref
+          .read(trashRepositoryProvider)
+          .purgeExpired(userId);
+      if (removed > 0 &&
+          mounted &&
+          ref.read(authViewModelProvider).currentUser?.id == userId) {
+        await ref
+            .read(documentViewModelProvider)
+            .retryPendingAttachmentCleanup(userId);
+      }
+    } catch (_) {
+      return;
+    } finally {
+      _isPurgingTrash = false;
+    }
   }
 
   void _runAutomaticBackup() {
@@ -52,6 +94,7 @@ class _MainScreenState extends ConsumerState<MainScreen> {
   @override
   void dispose() {
     _automaticBackupTimer?.cancel();
+    _appLockService.removeListener(_onLockChanged);
     super.dispose();
   }
 
