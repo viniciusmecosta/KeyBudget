@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:key_budget/app/utils/app_animations.dart';
-import 'package:key_budget/core/design_system/spacing/app_spacing.dart';
 import 'package:key_budget/core/design_system/widgets/app_button.dart';
+import 'package:key_budget/core/design_system/widgets/app_form_page_body.dart';
 import 'package:key_budget/core/models/document_model.dart';
 import 'package:key_budget/core/services/snackbar_service.dart';
 import 'package:key_budget/features/auth/viewmodel/auth_viewmodel.dart';
@@ -164,32 +164,21 @@ class _EditDocumentScreenState extends ConsumerState<EditDocumentScreen> {
       child: Scaffold(
         appBar: AppBar(title: const Text('Editar Documento')),
         body: AppAnimations.fadeInFromBottom(
-          Padding(
-            padding: const EdgeInsets.all(AppSpacing.md),
-            child: Column(
-              children: [
-                Expanded(
-                  child: DocumentForm(
-                    formKey: _formKey,
-                    nameController: _nameController,
-                    numberController: _numberController,
-                    issueDate: _issueDate,
-                    expiryDate: _expiryDate,
-                    additionalFields: _additionalFields,
-                    attachments: _attachments,
-                    onChanged: _markChanged,
-                  ),
-                ),
-                const SizedBox(height: AppSpacing.md),
-                SizedBox(
-                  width: double.infinity,
-                  child: AppButton(
-                    onPressed: _submit,
-                    isLoading: _isSaving || viewModel.isLoading,
-                    label: 'Salvar Alterações',
-                  ),
-                ),
-              ],
+          AppFormPageBody(
+            form: DocumentForm(
+              formKey: _formKey,
+              nameController: _nameController,
+              numberController: _numberController,
+              issueDate: _issueDate,
+              expiryDate: _expiryDate,
+              additionalFields: _additionalFields,
+              attachments: _attachments,
+              onChanged: _markChanged,
+            ),
+            action: AppButton(
+              onPressed: _submit,
+              isLoading: _isSaving || viewModel.isLoading,
+              label: 'Salvar Alterações',
             ),
           ),
 

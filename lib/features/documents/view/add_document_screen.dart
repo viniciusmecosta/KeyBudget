@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:key_budget/app/utils/app_animations.dart';
-import 'package:key_budget/core/design_system/spacing/app_spacing.dart';
 import 'package:key_budget/core/design_system/widgets/app_button.dart';
+import 'package:key_budget/core/design_system/widgets/app_form_page_body.dart';
 import 'package:key_budget/core/models/document_model.dart';
 import 'package:key_budget/core/services/snackbar_service.dart';
 import 'package:key_budget/features/auth/viewmodel/auth_viewmodel.dart';
@@ -121,7 +121,9 @@ class _AddDocumentScreenState extends ConsumerState<AddDocumentScreen> {
           context: context,
           builder: (context) => AlertDialog(
             title: const Text('Descartar alterações?'),
-            content: const Text('Você tem alterações não salvas. Deseja sair sem salvar?'),
+            content: const Text(
+              'Você tem alterações não salvas. Deseja sair sem salvar?',
+            ),
             actions: [
               TextButton(
                 onPressed: () => Navigator.of(context).pop(false),
@@ -129,7 +131,9 @@ class _AddDocumentScreenState extends ConsumerState<AddDocumentScreen> {
               ),
               TextButton(
                 onPressed: () => Navigator.of(context).pop(true),
-                style: TextButton.styleFrom(foregroundColor: theme.colorScheme.error),
+                style: TextButton.styleFrom(
+                  foregroundColor: theme.colorScheme.error,
+                ),
                 child: const Text('Sair'),
               ),
             ],
@@ -148,42 +152,32 @@ class _AddDocumentScreenState extends ConsumerState<AddDocumentScreen> {
             widget.isNewVersion ? 'Nova Versão' : 'Adicionar Documento',
           ),
         ),
-      body: AppAnimations.fadeInFromBottom(
-        Padding(
-          padding: const EdgeInsets.all(AppSpacing.md),
-          child: Column(
-            children: [
-              Expanded(
-                child: DocumentForm(
-                  formKey: _formKey,
-                  nameController: _nameController,
-                  numberController: _numberController,
-                  issueDate: _issueDate,
-                  expiryDate: _expiryDate,
-                  additionalFields: _additionalFields,
-                  attachments: _attachments,
-                  onChanged: () {
-                    if (!_hasUnsavedChanges) {
-                      setState(() => _hasUnsavedChanges = true);
-                    }
-                  },
-                ),
-              ),
-              const SizedBox(height: AppSpacing.md),
-              SizedBox(
-                width: double.infinity,
-                child: AppButton(
-                  onPressed: _submit,
-                  isLoading: viewModel.isLoading,
-                  label: 'Salvar',
-                ),
-              ),
-            ],
+        body: AppAnimations.fadeInFromBottom(
+          AppFormPageBody(
+            form: DocumentForm(
+              formKey: _formKey,
+              nameController: _nameController,
+              numberController: _numberController,
+              issueDate: _issueDate,
+              expiryDate: _expiryDate,
+              additionalFields: _additionalFields,
+              attachments: _attachments,
+              onChanged: () {
+                if (!_hasUnsavedChanges) {
+                  setState(() => _hasUnsavedChanges = true);
+                }
+              },
+            ),
+            action: AppButton(
+              onPressed: _submit,
+              isLoading: viewModel.isLoading,
+              label: 'Salvar',
+            ),
           ),
-        ),
 
-        context: context,),
-    ),
+          context: context,
+        ),
+      ),
     );
   }
 }

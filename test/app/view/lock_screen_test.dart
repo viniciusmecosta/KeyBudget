@@ -38,6 +38,38 @@ class _CancelledLocalAuthService extends LocalAuthService {
 }
 
 void main() {
+  testWidgets('lock screen remains usable in landscape with large text', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(640, 320);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.resumed);
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          authViewModelProvider.overrideWith((ref) => _SignedInAuthViewModel()),
+        ],
+        child: MaterialApp(
+          builder: (context, child) => MediaQuery(
+            data: MediaQuery.of(
+              context,
+            ).copyWith(textScaler: const TextScaler.linear(2)),
+            child: child!,
+          ),
+          home: LockScreen(localAuthService: _CancelledLocalAuthService()),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+    await tester.ensureVisible(find.text('Desbloquear'));
+    await tester.pumpAndSettle();
+    expect(find.text('Desbloquear'), findsOneWidget);
+    expect(find.text('Sair da Conta'), findsOneWidget);
+    expect(tester.takeException(), isNull);
+  });
+
   testWidgets('cancelled prompt stays closed until unlock is tapped', (
     tester,
   ) async {
@@ -73,7 +105,9 @@ void main() {
     tester,
   ) async {
     tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.resumed);
-    final localAuth = _CancelledLocalAuthService(result: LocalAuthResult.failed);
+    final localAuth = _CancelledLocalAuthService(
+      result: LocalAuthResult.failed,
+    );
     await tester.pumpWidget(
       ProviderScope(
         overrides: [

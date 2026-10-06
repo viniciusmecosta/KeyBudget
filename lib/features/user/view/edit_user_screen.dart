@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:key_budget/app/utils/app_animations.dart';
-import 'package:key_budget/core/design_system/spacing/app_spacing.dart';
 import 'package:key_budget/core/design_system/widgets/app_button.dart';
+import 'package:key_budget/core/design_system/widgets/app_form_page_body.dart';
 import 'package:key_budget/core/services/snackbar_service.dart';
 import 'package:key_budget/features/auth/viewmodel/auth_viewmodel.dart';
 import 'package:mask_text_input_formatter/mask_text_input_formatter.dart';
@@ -104,39 +104,29 @@ class _EditUserScreenState extends ConsumerState<EditUserScreen> {
     return Scaffold(
       appBar: AppBar(title: const Text('Editar Perfil')),
       body: AppAnimations.fadeInFromBottom(
-        Padding(
-          padding: const EdgeInsets.all(AppSpacing.md),
-          child: Column(
-            children: [
-              Expanded(
-                child: UserForm(
-                  formKey: _formKey,
-                  nameController: _nameController,
-                  phoneController: _phoneController,
-                  passwordController: _passwordController,
-                  confirmPasswordController: _confirmPasswordController,
-                  avatarPath: _avatarPath,
-                  onAvatarChanged: (path) {
-                    setState(() {
-                      _avatarPath = path;
-                    });
-                  },
-                ),
-              ),
-              const SizedBox(height: AppSpacing.xl),
-              SizedBox(
-                width: double.infinity,
-                child: AppButton(
-                  onPressed: _submit,
-                  isLoading: _isSaving,
-                  label: 'Salvar Alterações',
-                ),
-              ),
-            ],
+        AppFormPageBody(
+          form: UserForm(
+            formKey: _formKey,
+            nameController: _nameController,
+            phoneController: _phoneController,
+            passwordController: _passwordController,
+            confirmPasswordController: _confirmPasswordController,
+            avatarPath: _avatarPath,
+            onAvatarChanged: (path) {
+              setState(() {
+                _avatarPath = path;
+              });
+            },
+          ),
+          action: AppButton(
+            onPressed: _submit,
+            isLoading: _isSaving,
+            label: 'Salvar Alterações',
           ),
         ),
 
-        context: context,),
+        context: context,
+      ),
     );
   }
 }

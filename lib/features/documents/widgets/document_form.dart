@@ -4,6 +4,7 @@ import 'package:intl/intl.dart';
 import 'package:key_budget/core/design_system/borders/app_borders.dart';
 import 'package:key_budget/core/design_system/spacing/app_spacing.dart';
 import 'package:key_budget/core/design_system/widgets/app_text_field.dart';
+import 'package:key_budget/core/design_system/widgets/app_form_section_heading.dart';
 import 'package:key_budget/core/models/document_model.dart';
 import 'package:key_budget/core/services/app_lock_service.dart';
 import 'package:key_budget/features/documents/viewmodel/document_viewmodel.dart';
@@ -35,26 +36,23 @@ class DocumentForm extends ConsumerStatefulWidget {
 }
 
 class _DocumentFormState extends ConsumerState<DocumentForm> {
-  Widget _sectionHeader(BuildContext context, String title, IconData icon) {
-    final theme = Theme.of(context);
-    final color = theme.brightness == Brightness.dark
-        ? Colors.white
-        : Colors.black87;
-    return Row(
-      children: [
-        Icon(icon, color: color, size: 20),
-        const SizedBox(width: AppSpacing.sm),
-        Text(
-          title,
-          style: theme.textTheme.titleSmall?.copyWith(
-            fontWeight: FontWeight.bold,
-            color: color,
-            letterSpacing: 1.2,
+  Widget _pairedFields(Widget first, Widget second) => LayoutBuilder(
+    builder: (context, constraints) => constraints.maxWidth >= 640
+        ? Row(
+            children: [
+              Expanded(child: first),
+              const SizedBox(width: AppSpacing.md),
+              Expanded(child: second),
+            ],
+          )
+        : Column(
+            children: [
+              first,
+              const SizedBox(height: AppSpacing.md),
+              second,
+            ],
           ),
-        ),
-      ],
-    );
-  }
+  );
 
   @override
   Widget build(BuildContext context) {
@@ -67,33 +65,37 @@ class _DocumentFormState extends ConsumerState<DocumentForm> {
       child: ListView(
         padding: const EdgeInsets.all(AppSpacing.md),
         children: [
-          _sectionHeader(
-            context,
-            'INFORMAÇÕES PRINCIPAIS',
-            Icons.description_outlined,
+          const AppFormSectionHeading(
+            title: 'Informações principais',
+            icon: Icons.description_outlined,
           ),
           const SizedBox(height: AppSpacing.sm),
-          AppTextField(
-            controller: widget.nameController,
-            label: 'Nome do Documento *',
-            prefixIcon: Icons.article_outlined,
-            textInputAction: TextInputAction.next,
-            validator: (value) =>
-                value!.isEmpty ? 'Informe o nome do documento' : null,
+          _pairedFields(
+            AppTextField(
+              controller: widget.nameController,
+              label: 'Nome do Documento *',
+              prefixIcon: Icons.article_outlined,
+              textInputAction: TextInputAction.next,
+              validator: (value) =>
+                  value!.isEmpty ? 'Informe o nome do documento' : null,
+            ),
+            AppTextField(
+              controller: widget.numberController,
+              label: 'Número',
+              prefixIcon: Icons.tag_outlined,
+              textInputAction: TextInputAction.next,
+            ),
           ),
           const SizedBox(height: AppSpacing.md),
-          AppTextField(
-            controller: widget.numberController,
-            label: 'Número',
-            prefixIcon: Icons.tag_outlined,
-            textInputAction: TextInputAction.next,
+          _pairedFields(
+            _buildDatePicker(context, 'Data de Expedição', widget.issueDate),
+            _buildDatePicker(context, 'Validade', widget.expiryDate),
           ),
           const SizedBox(height: AppSpacing.md),
-          _buildDatePicker(context, 'Data de Expedição', widget.issueDate),
-          const SizedBox(height: AppSpacing.md),
-          _buildDatePicker(context, 'Validade', widget.expiryDate),
-          const SizedBox(height: AppSpacing.md),
-          _sectionHeader(context, 'CAMPOS ADICIONAIS', Icons.list_alt_outlined),
+          const AppFormSectionHeading(
+            title: 'Campos adicionais',
+            icon: Icons.list_alt_outlined,
+          ),
           const SizedBox(height: AppSpacing.sm),
           ..._buildAdditionalFields(theme),
           Align(
@@ -110,7 +112,10 @@ class _DocumentFormState extends ConsumerState<DocumentForm> {
             ),
           ),
           const SizedBox(height: AppSpacing.md),
-          _sectionHeader(context, 'ANEXOS', Icons.attach_file_outlined),
+          const AppFormSectionHeading(
+            title: 'Anexos',
+            icon: Icons.attach_file_outlined,
+          ),
           ..._buildAttachments(context),
           if (viewModel.isUploading)
             Padding(

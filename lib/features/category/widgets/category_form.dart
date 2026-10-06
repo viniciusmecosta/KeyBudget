@@ -3,6 +3,7 @@ import 'package:key_budget/core/design_system/widgets/app_color_choice.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:key_budget/core/design_system/spacing/app_spacing.dart';
 import 'package:key_budget/core/design_system/widgets/app_text_field.dart';
+import 'package:key_budget/core/design_system/widgets/app_form_section_heading.dart';
 
 import 'color_picker_widget.dart';
 import 'icon_picker_widget.dart';
@@ -37,23 +38,9 @@ class CategoryForm extends ConsumerWidget {
       onChanged: onChanged,
       child: ListView(
         children: [
-          Row(
-            children: [
-              Icon(
-                Icons.category_outlined,
-                color: theme.colorScheme.onSurface,
-                size: 20,
-              ),
-              const SizedBox(width: AppSpacing.sm),
-              Text(
-                'DADOS DA CATEGORIA',
-                style: theme.textTheme.labelMedium?.copyWith(
-                  color: theme.colorScheme.onSurface,
-                  fontWeight: FontWeight.bold,
-                  letterSpacing: 1.2,
-                ),
-              ),
-            ],
+          const AppFormSectionHeading(
+            title: 'Dados da categoria',
+            icon: Icons.category_outlined,
           ),
           const SizedBox(height: AppSpacing.sm),
           AppTextField(
@@ -66,23 +53,9 @@ class CategoryForm extends ConsumerWidget {
                 (value == null || value.isEmpty) ? 'Insira um nome' : null,
           ),
           const SizedBox(height: AppSpacing.md),
-          Row(
-            children: [
-              Icon(
-                Icons.style_outlined,
-                color: theme.colorScheme.onSurface,
-                size: 20,
-              ),
-              const SizedBox(width: AppSpacing.sm),
-              Text(
-                'PERSONALIZAÇÃO',
-                style: theme.textTheme.labelMedium?.copyWith(
-                  color: theme.colorScheme.onSurface,
-                  fontWeight: FontWeight.bold,
-                  letterSpacing: 1.2,
-                ),
-              ),
-            ],
+          const AppFormSectionHeading(
+            title: 'Personalização',
+            icon: Icons.style_outlined,
           ),
           const SizedBox(height: AppSpacing.sm),
           Text(

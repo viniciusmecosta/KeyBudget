@@ -139,7 +139,8 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
         final errorMsg = authViewModel.errorMessage ?? 'Erro ao cadastrar.';
         setState(() {
           _inlineError = errorMsg;
-          _isEmailAlreadyInUse = errorMsg.contains('já existe') ||
+          _isEmailAlreadyInUse =
+              errorMsg.contains('já existe') ||
               errorMsg.contains('already-in-use');
         });
       }
@@ -192,8 +193,9 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
         title: 'Crie sua conta',
         subtitle: 'Comece com seus dados essenciais.',
         showBackButton: true,
-        footer: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
+        footer: Wrap(
+          alignment: WrapAlignment.center,
+          crossAxisAlignment: WrapCrossAlignment.center,
           children: [
             Text(
               'Já tem uma conta?',
@@ -442,7 +444,8 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                               ),
                               if (_hasOptionalData && !_isOptionalExpanded)
                                 AppStatusBadge(
-                                  label: _avatarPath != null &&
+                                  label:
+                                      _avatarPath != null &&
                                           _phoneController.text.isNotEmpty
                                       ? '2 adicionados'
                                       : '1 adicionado',
@@ -534,8 +537,8 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                               if (value == null || value.trim().isEmpty) {
                                 return null;
                               }
-                              final unmasked =
-                                  _phoneMaskFormatter.getUnmaskedText();
+                              final unmasked = _phoneMaskFormatter
+                                  .getUnmaskedText();
                               if (unmasked.isNotEmpty && unmasked.length < 10) {
                                 return 'Informe o DDD e o número completo';
                               }

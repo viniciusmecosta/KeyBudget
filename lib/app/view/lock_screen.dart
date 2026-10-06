@@ -5,6 +5,7 @@ import 'package:key_budget/core/services/app_lock_service.dart';
 import 'package:key_budget/core/services/local_auth_service.dart';
 import 'package:key_budget/features/auth/viewmodel/auth_viewmodel.dart';
 import 'package:key_budget/core/design_system/widgets/app_button.dart';
+import 'package:key_budget/core/design_system/widgets/app_centered_scroll.dart';
 
 class LockScreen extends ConsumerStatefulWidget {
   final LocalAuthService? localAuthService;
@@ -169,92 +170,86 @@ class _LockScreenState extends ConsumerState<LockScreen>
         ),
         child: SafeArea(
           child: AppAnimations.fadeIn(
-            Center(
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 32.0),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    const Spacer(),
-                    Container(
-                      padding: const EdgeInsets.all(22),
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        color: theme.colorScheme.primary.withValues(
-                          alpha: 0.12,
-                        ),
-                      ),
-                      child: Icon(
-                        Icons.lock_person_outlined,
-                        size: 60,
-                        color: theme.colorScheme.primary,
-                      ),
+            AppCenteredScroll(
+              padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 24),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(22),
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: theme.colorScheme.primary.withValues(alpha: 0.12),
                     ),
-                    const SizedBox(height: 28),
+                    child: Icon(
+                      Icons.lock_person_outlined,
+                      size: 60,
+                      color: theme.colorScheme.primary,
+                    ),
+                  ),
+                  const SizedBox(height: 28),
+                  Text(
+                    'KeyBudget bloqueado',
+                    style: theme.textTheme.headlineMedium?.copyWith(
+                      fontWeight: FontWeight.bold,
+                      letterSpacing: -0.5,
+                    ),
+                  ),
+                  if (_availability == LocalAuthAvailability.notSupported) ...[
+                    const SizedBox(height: 12),
                     Text(
-                      'KeyBudget bloqueado',
-                      style: theme.textTheme.headlineMedium?.copyWith(
-                        fontWeight: FontWeight.bold,
-                        letterSpacing: -0.5,
+                      'Desbloqueio indisponível neste dispositivo. Entre novamente na sua conta.',
+                      textAlign: TextAlign.center,
+                      style: theme.textTheme.bodyMedium?.copyWith(
+                        color: theme.colorScheme.onSurfaceVariant,
                       ),
                     ),
-                    if (_availability == LocalAuthAvailability.notSupported) ...[
-                      const SizedBox(height: 12),
-                      Text(
-                        'Desbloqueio indisponível neste dispositivo. Entre novamente na sua conta.',
-                        textAlign: TextAlign.center,
-                        style: theme.textTheme.bodyMedium?.copyWith(
-                          color: theme.colorScheme.onSurfaceVariant,
-                        ),
-                      ),
-                    ],
-                    if (_statusFeedback != null) ...[
-                      const SizedBox(height: 16),
-                      Text(
-                        _statusFeedback!,
-                        textAlign: TextAlign.center,
-                        style: theme.textTheme.bodySmall?.copyWith(
-                          color: theme.colorScheme.error,
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
-                    ],
-                    const SizedBox(height: 28),
-                    if (_availability != LocalAuthAvailability.notSupported)
-                      SizedBox(
-                        width: double.infinity,
-                        height: 56,
-                        child: AppButton(
-                          onPressed: _isAuthenticating ? null : _authenticate,
-                          isLoading: _isAuthenticating,
-                          label: 'Desbloquear',
-                          icon: Icons.fingerprint,
-                        ),
-                      ),
-                    const SizedBox(height: 16),
-                    TextButton.icon(
-                      onPressed: () async {
-                        final authViewModel = ref.read(authViewModelProvider);
-                        final appLockService = ref.read(appLockServiceProvider);
-                        await authViewModel.logout(context, ref);
-                        appLockService.unlockApp();
-                      },
-                      icon: Icon(
-                        Icons.logout,
-                        size: 20,
-                        color: theme.colorScheme.error.withValues(alpha: 0.8),
-                      ),
-                      label: Text(
-                        'Sair da Conta',
-                        style: TextStyle(
-                          color: theme.colorScheme.error.withValues(alpha: 0.8),
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                    ),
-                    const Spacer(),
                   ],
-                ),
+                  if (_statusFeedback != null) ...[
+                    const SizedBox(height: 16),
+                    Text(
+                      _statusFeedback!,
+                      textAlign: TextAlign.center,
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: theme.colorScheme.error,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ],
+                  const SizedBox(height: 28),
+                  if (_availability != LocalAuthAvailability.notSupported)
+                    SizedBox(
+                      width: double.infinity,
+                      height: 56,
+                      child: AppButton(
+                        onPressed: _isAuthenticating ? null : _authenticate,
+                        isLoading: _isAuthenticating,
+                        label: 'Desbloquear',
+                        icon: Icons.fingerprint,
+                      ),
+                    ),
+                  const SizedBox(height: 16),
+                  TextButton.icon(
+                    onPressed: () async {
+                      final authViewModel = ref.read(authViewModelProvider);
+                      final appLockService = ref.read(appLockServiceProvider);
+                      await authViewModel.logout(context, ref);
+                      appLockService.unlockApp();
+                    },
+                    icon: Icon(
+                      Icons.logout,
+                      size: 20,
+                      color: theme.colorScheme.error.withValues(alpha: 0.8),
+                    ),
+                    label: Text(
+                      'Sair da Conta',
+                      style: TextStyle(
+                        color: theme.colorScheme.error.withValues(alpha: 0.8),
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                ],
               ),
             ),
 
