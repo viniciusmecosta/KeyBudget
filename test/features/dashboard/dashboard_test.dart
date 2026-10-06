@@ -93,6 +93,15 @@ class FakeDashboardVM extends DashboardViewModel {
   double get totalIncomeForMonth => testTotalIncome;
 
   @override
+  double get realizedAmountForMonth => testTotalAmount;
+
+  @override
+  double get realizedBalanceForMonth => testBalance;
+
+  @override
+  double get realizedIncomeForMonth => testTotalIncome;
+
+  @override
   int get credentialCount => testCredentialCount;
 
   @override
@@ -133,6 +142,40 @@ void main() {
           isIncome: true,
         ),
         3000,
+      );
+    });
+
+    test('realized amount excludes future dates in the current month', () {
+      final expenses = [
+        Expense(amount: 10, date: DateTime(2026, 10, 5)),
+        Expense(amount: 20, date: DateTime(2026, 10, 6)),
+        Expense(amount: 30, date: DateTime(2026, 10, 7)),
+        Expense(amount: 40, date: DateTime(2026, 11, 1)),
+      ];
+      expect(
+        DashboardViewModel.realizedMinorForMonth(
+          expenses,
+          now: DateTime(2026, 10, 6, 12),
+          isIncome: false,
+        ),
+        3000,
+      );
+    });
+
+    test('historical average compares the same elapsed days', () {
+      final expenses = [
+        Expense(amount: 10, date: DateTime(2026, 8, 4)),
+        Expense(amount: 90, date: DateTime(2026, 8, 20)),
+        Expense(amount: 30, date: DateTime(2026, 9, 5)),
+        Expense(amount: 70, date: DateTime(2026, 9, 20)),
+      ];
+      expect(
+        DashboardViewModel.averageOfEquivalentPreviousMonths(
+          expenses,
+          now: DateTime(2026, 10, 6),
+          enableIncomes: false,
+        ),
+        20,
       );
     });
 
@@ -204,7 +247,7 @@ void main() {
         );
         await tester.pumpAndSettle();
 
-        expect(find.text('Despesas do mês'), findsOneWidget);
+        expect(find.text('Despesas realizadas'), findsOneWidget);
         expect(find.textContaining(r'R$'), findsWidgets);
         expect(find.textContaining('Receitas:'), findsNothing);
       },
@@ -253,7 +296,7 @@ void main() {
         greaterThanOrEqualTo(4.5),
       );
       final titleColor = tester
-          .widget<Text>(find.text('Despesas do mês'))
+          .widget<Text>(find.text('Despesas realizadas'))
           .style!
           .color!;
       expect(
@@ -290,7 +333,7 @@ void main() {
         );
         await tester.pumpAndSettle();
 
-        expect(find.text('Saldo do período'), findsOneWidget);
+        expect(find.text('Saldo realizado'), findsOneWidget);
         expect(find.textContaining('Receitas:'), findsOneWidget);
         expect(find.textContaining('Despesas:'), findsOneWidget);
       },

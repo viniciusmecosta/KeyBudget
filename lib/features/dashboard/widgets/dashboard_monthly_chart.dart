@@ -31,12 +31,14 @@ class DashboardMonthlyChart extends ConsumerWidget {
       isDark: theme.brightness == Brightness.dark,
     );
     final now = DateTime.now();
+    final firstFutureDay = DateTime(now.year, now.month, now.day + 1);
 
     final Map<int, double> expensesByMonth = {};
     final Map<int, double> incomesByMonth = {};
 
     int maxMonthIndexWithData = -1;
     for (var exp in viewModel.allExpenses) {
+      if (!exp.date.isBefore(firstFutureDay)) continue;
       if (!enableIncomes && exp.isIncome == true) continue;
       final monthsDifference =
           (now.year - exp.date.year) * 12 + now.month - exp.date.month;
@@ -57,6 +59,7 @@ class DashboardMonthlyChart extends ConsumerWidget {
     }
 
     for (var exp in viewModel.allExpenses) {
+      if (!exp.date.isBefore(firstFutureDay)) continue;
       if (!enableIncomes && exp.isIncome == true) continue;
       final monthsDifference =
           (now.year - exp.date.year) * 12 + now.month - exp.date.month;
@@ -78,7 +81,7 @@ class DashboardMonthlyChart extends ConsumerWidget {
       symbol: 'R\$',
     );
     final chartDescription = validMonths.isEmpty
-        ? 'Gráfico de gastos mensais sem lançamentos nos últimos quatro meses.'
+        ? 'Gráfico de lançamentos realizados sem dados nos últimos quatro meses.'
         : validMonths
               .map((monthKey) {
                 final month = DateFormat.yMMMM(
@@ -87,11 +90,13 @@ class DashboardMonthlyChart extends ConsumerWidget {
                 final expense = currencyFormatter.format(
                   expensesByMonth[monthKey],
                 );
-                if (!enableIncomes) return '$month: gastos de $expense';
+                if (!enableIncomes) {
+                  return '$month: gastos realizados de $expense';
+                }
                 final income = currencyFormatter.format(
                   incomesByMonth[monthKey],
                 );
-                return '$month: entradas de $income e saídas de $expense';
+                return '$month: entradas realizadas de $income e saídas realizadas de $expense';
               })
               .join('. ');
 
@@ -150,7 +155,7 @@ class DashboardMonthlyChart extends ConsumerWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           AppSectionHeader(
-            title: enableIncomes ? 'Entradas vs Saídas' : 'Gastos Mensais',
+            title: enableIncomes ? 'Entradas vs Saídas' : 'Gastos realizados',
             keepActionInline: true,
             subtitle: monthsToShow <= 1
                 ? 'Último mês'
