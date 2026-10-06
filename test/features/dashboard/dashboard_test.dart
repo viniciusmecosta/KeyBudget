@@ -62,7 +62,10 @@ class FakeDashboardVM extends DashboardViewModel {
   final double testTotalAmount;
   final double testBalance;
   final double testTotalIncome;
+  final double? testRealizedAmount;
   final int testCredentialCount;
+  final int testScheduledExpenses;
+  final int testScheduledIncomes;
 
   FakeDashboardVM({
     this.testExpenses = const [],
@@ -70,7 +73,10 @@ class FakeDashboardVM extends DashboardViewModel {
     this.testTotalAmount = 1500.50,
     this.testBalance = 2500.75,
     this.testTotalIncome = 4000.0,
+    this.testRealizedAmount,
     this.testCredentialCount = 12,
+    this.testScheduledExpenses = 0,
+    this.testScheduledIncomes = 0,
   }) : super(
          categoryViewModel: FakeCategoryVM(),
          expenseViewModel: FakeExpenseVM(),
@@ -93,13 +99,19 @@ class FakeDashboardVM extends DashboardViewModel {
   double get totalIncomeForMonth => testTotalIncome;
 
   @override
-  double get realizedAmountForMonth => testTotalAmount;
+  double get realizedAmountForMonth => testRealizedAmount ?? testTotalAmount;
 
   @override
   double get realizedBalanceForMonth => testBalance;
 
   @override
   double get realizedIncomeForMonth => testTotalIncome;
+
+  @override
+  int get scheduledExpensesMinorForMonth => testScheduledExpenses;
+
+  @override
+  int get scheduledIncomesMinorForMonth => testScheduledIncomes;
 
   @override
   int get credentialCount => testCredentialCount;
@@ -218,7 +230,7 @@ void main() {
     );
 
     testWidgets(
-      'DashboardBalanceCard displays expenses when enableIncomes is false',
+      'DashboardBalanceCard includes future expenses in the monthly total',
       (tester) async {
         final navVM = NavigationViewModel();
         final authVMIncomesDisabled = FakeAuthVM(
@@ -229,7 +241,11 @@ void main() {
             enableIncomes: false,
           ),
         );
-        final dashboardVM = FakeDashboardVM();
+        final dashboardVM = FakeDashboardVM(
+          testTotalAmount: 1750.50,
+          testRealizedAmount: 1500.50,
+          testScheduledExpenses: 25000,
+        );
 
         await tester.pumpWidget(
           ProviderScope(
@@ -247,9 +263,15 @@ void main() {
         );
         await tester.pumpAndSettle();
 
-        expect(find.text('Despesas realizadas'), findsOneWidget);
+        expect(find.text('Despesas do mês'), findsOneWidget);
         expect(find.textContaining(r'R$'), findsWidgets);
         expect(find.textContaining('Receitas:'), findsNothing);
+        expect(find.textContaining('Previsto'), findsNothing);
+        expect(find.textContaining('vs.'), findsOneWidget);
+        expect(
+          tester.widget<BalanceCard>(find.byType(BalanceCard)).totalValue,
+          1750.50,
+        );
       },
     );
 
@@ -296,7 +318,7 @@ void main() {
         greaterThanOrEqualTo(4.5),
       );
       final titleColor = tester
-          .widget<Text>(find.text('Despesas realizadas'))
+          .widget<Text>(find.text('Despesas do mês'))
           .style!
           .color!;
       expect(

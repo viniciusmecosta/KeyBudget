@@ -60,7 +60,7 @@ class DashboardViewModel extends ChangeNotifier {
   double get lastAnimatedBalanceForMonth => _lastAnimatedBalanceForMonth;
 
   Future<void> _updateWidget() async {
-    await HomeWidgetService.updateWidgetData(realizedAmountForMonth);
+    await HomeWidgetService.updateWidgetData(totalAmountForMonth);
   }
 
   void updateDependencies({

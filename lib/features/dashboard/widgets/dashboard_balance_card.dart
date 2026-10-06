@@ -89,7 +89,7 @@ class _DashboardBalanceCardState extends ConsumerState<DashboardBalanceCard>
 
     final currentValue = enableIncomes
         ? viewModel.realizedBalanceForMonth
-        : viewModel.realizedAmountForMonth;
+        : viewModel.totalAmountForMonth;
 
     final fromValue = enableIncomes
         ? viewModel.lastAnimatedBalanceForMonth
@@ -99,7 +99,7 @@ class _DashboardBalanceCardState extends ConsumerState<DashboardBalanceCard>
 
     if (isNewRefresh) {
       _lastSeenRefreshCount = viewModel.refreshCount;
-      _scheduledTargetTotal = viewModel.realizedAmountForMonth;
+      _scheduledTargetTotal = viewModel.totalAmountForMonth;
       _scheduledTargetBalance = viewModel.realizedBalanceForMonth;
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (!mounted) return;
@@ -115,7 +115,7 @@ class _DashboardBalanceCardState extends ConsumerState<DashboardBalanceCard>
           ? _scheduledTargetBalance
           : _scheduledTargetTotal;
       if (currentValue != scheduledTarget) {
-        _scheduledTargetTotal = viewModel.realizedAmountForMonth;
+        _scheduledTargetTotal = viewModel.totalAmountForMonth;
         _scheduledTargetBalance = viewModel.realizedBalanceForMonth;
         WidgetsBinding.instance.addPostFrameCallback((_) {
           if (!mounted) return;
@@ -147,10 +147,6 @@ class _DashboardBalanceCardState extends ConsumerState<DashboardBalanceCard>
       filledPrimary,
       isDark: true,
     );
-    final scheduledExpenses = viewModel.scheduledExpensesMinorForMonth;
-    final scheduledIncomes = viewModel.scheduledIncomesMinorForMonth;
-    final hasScheduled = scheduledExpenses != 0 || scheduledIncomes != 0;
-
     final currencyFormatter = NumberFormat.currency(
       locale: 'pt_BR',
       symbol: 'R\$',
@@ -211,20 +207,7 @@ class _DashboardBalanceCardState extends ConsumerState<DashboardBalanceCard>
 
     final valueSubtitle = Column(
       crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        if (hasScheduled) ...[
-          Text(
-            enableIncomes
-                ? 'Saldo previsto no mês: ${currencyFormatter.format(viewModel.balanceForMonth)}'
-                : 'Previsto no mês: ${currencyFormatter.format(viewModel.totalAmountForMonth)}',
-            style: theme.textTheme.bodySmall?.copyWith(
-              color: cardTextColor.withAlpha((255 * 0.88).round()),
-            ),
-          ),
-          const SizedBox(height: AppSpacing.xs),
-        ],
-        comparison,
-      ],
+      children: [comparison],
     );
 
     return AnimatedBuilder(
@@ -248,7 +231,7 @@ class _DashboardBalanceCardState extends ConsumerState<DashboardBalanceCard>
                 isDark: true,
               );
         return BalanceCard(
-          title: enableIncomes ? 'Saldo realizado' : 'Despesas realizadas',
+          title: enableIncomes ? 'Saldo realizado' : 'Despesas do mês',
           totalValue: _animation.value,
           foregroundColor: cardTextColor,
           backgroundColor: filledPrimary,
