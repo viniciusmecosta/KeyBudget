@@ -11,6 +11,18 @@ import 'package:path_provider/path_provider.dart';
 
 enum AutomaticBackupInterval { off, daily, weekly }
 
+enum AutomaticBackupRunStatus {
+  completed,
+  localCopyPending,
+  authorizationRequired,
+  alreadyRunning,
+  passwordMissing,
+  incomplete,
+  accountChanged,
+  notDue,
+  failed,
+}
+
 class AutomaticBackupSettings {
   final AutomaticBackupInterval interval;
   final int retention;
@@ -84,11 +96,9 @@ class AutomaticBackupService {
       rawReader: FirestoreRawStorage(),
       sessionContext: SessionContext(userId: userId, sessionGeneration: 1),
       encryptionService: EncryptionService(),
-      driveService: DriveService(),
+      driveService: DriveService(allowInteractiveByDefault: false),
     ).createBackup(password: password);
-    if (!result.isSuccess || result.data?.completeness.isComplete != true) {
-      return null;
-    }
+    if (!result.isSuccess) return null;
     return result.data;
   }
 
@@ -181,28 +191,75 @@ class AutomaticBackupService {
     String userId, {
     bool allowInteractive = false,
     bool force = false,
+  }) async =>
+      (await runDetailed(
+        userId,
+        allowInteractive: allowInteractive,
+        force: force,
+      )) ==
+      AutomaticBackupRunStatus.completed;
+
+  Future<AutomaticBackupRunStatus> runDetailed(
+    String userId, {
+    bool allowInteractive = false,
+    bool force = false,
   }) async {
-    if (_currentUserId() != userId || !_running.add(userId)) return false;
+    if (_currentUserId() != userId) {
+      return AutomaticBackupRunStatus.accountChanged;
+    }
+    if (!_running.add(userId)) return AutomaticBackupRunStatus.alreadyRunning;
+    File? latestFile;
     try {
       final settings = await readSettings(userId);
-      if (settings.interval == AutomaticBackupInterval.off) return false;
+      if (settings.interval == AutomaticBackupInterval.off) {
+        return AutomaticBackupRunStatus.notDue;
+      }
       final now = _now();
-      File? latestFile;
-      if (force || settings.isDue(now)) {
+      if (allowInteractive &&
+          (force || settings.isDue(now)) &&
+          !await _driveService.ensureAuthorized(allowInteractive: true)) {
+        return AutomaticBackupRunStatus.authorizationRequired;
+      }
+      final localUploadPending =
+          settings.lastLocalCompletion != null &&
+          (settings.lastDriveCompletion == null ||
+              settings.lastDriveCompletion!.isBefore(
+                settings.lastLocalCompletion!,
+              ));
+      final createNewCopy =
+          settings.lastLocalCompletion == null ||
+          (force && !localUploadPending) ||
+          (!force && settings.isDue(now));
+      if (createNewCopy) {
         final password = await _storage.read(key: _key(userId, 'password'));
-        if (password == null) return false;
+        if (password == null) return AutomaticBackupRunStatus.passwordMissing;
         final result = await _createBackup(userId, password);
-        if (result == null || _currentUserId() != userId) {
+        if (_currentUserId() != userId) {
+          return AutomaticBackupRunStatus.accountChanged;
+        }
+        if (result == null) {
           await _storage.write(
             key: _key(userId, 'last_error'),
             value: 'Não foi possível concluir e verificar o backup.',
           );
-          return false;
+          return AutomaticBackupRunStatus.incomplete;
+        }
+        if (!result.completeness.isComplete) {
+          final missingCount =
+              result.completeness.missingAttachments.length +
+              result.completeness.undecryptableCredentials.length;
+          await _storage.write(
+            key: _key(userId, 'last_error'),
+            value: missingCount == 0
+                ? 'O backup não passou pela verificação de integridade.'
+                : 'Backup incompleto: $missingCount anexo(s) ou credencial(is) não puderam ser incluídos. Autorize o Drive e tente novamente.',
+          );
+          return AutomaticBackupRunStatus.incomplete;
         }
         final directory = await _backupDirectory(userId);
         await directory.create(recursive: true);
         latestFile = File(
-          '${directory.path}/auto_${now.millisecondsSinceEpoch}_${result.manifest.backupId}.kbudget',
+          '${directory.path}/auto_${userId}_${now.millisecondsSinceEpoch}_${result.manifest.backupId}.kbudget',
         );
         await latestFile.writeAsBytes(result.envelopeBytes, flush: true);
         await _storage.write(
@@ -219,7 +276,10 @@ class AutomaticBackupService {
         if (history.isNotEmpty) latestFile = history.first.file;
       }
 
-      if (latestFile == null || _currentUserId() != userId) return false;
+      if (latestFile == null) return AutomaticBackupRunStatus.notDue;
+      if (_currentUserId() != userId) {
+        return AutomaticBackupRunStatus.accountChanged;
+      }
       final uploaded = await _driveService.uploadFile(
         latestFile,
         (_, _) {},
@@ -229,25 +289,35 @@ class AutomaticBackupService {
       if (uploaded?.id == null) {
         await _storage.write(
           key: _key(userId, 'last_error'),
-          value: 'Cópia local concluída; envio ao Drive pendente.',
+          value: allowInteractive
+              ? 'Cópia local concluída; envio ao Drive pendente.'
+              : 'Cópia local concluída; autorização do Drive necessária para enviar.',
         );
-        return false;
+        return allowInteractive
+            ? AutomaticBackupRunStatus.localCopyPending
+            : AutomaticBackupRunStatus.authorizationRequired;
       }
       await _storage.write(
         key: _key(userId, 'last_drive'),
         value: _now().toIso8601String(),
       );
       await _storage.delete(key: _key(userId, 'last_error'));
-      await _pruneDrive(settings.retention);
-      return true;
+      try {
+        await _pruneDrive(userId, settings.retention);
+      } catch (_) {}
+      return AutomaticBackupRunStatus.completed;
     } on DriveAuthorizationCancelled {
-      return false;
+      return AutomaticBackupRunStatus.authorizationRequired;
     } catch (_) {
       await _storage.write(
         key: _key(userId, 'last_error'),
-        value: 'Falha no backup automático. Tente novamente.',
+        value: latestFile == null
+            ? 'Falha ao gerar o backup. Tente novamente.'
+            : 'Cópia local concluída; o envio ao Drive falhou. Tente enviar novamente.',
       );
-      return false;
+      return latestFile == null
+          ? AutomaticBackupRunStatus.failed
+          : AutomaticBackupRunStatus.localCopyPending;
     } finally {
       _running.remove(userId);
     }
@@ -260,17 +330,18 @@ class AutomaticBackupService {
     }
   }
 
-  Future<void> _pruneDrive(int retention) async {
+  Future<void> _pruneDrive(String userId, int retention) async {
     final files = await _driveService.listBackupFiles(allowInteractive: false);
     final automatic =
-        files.where((file) => file.name.startsWith('auto_')).toList()..sort(
-          (first, second) =>
-              (second.modifiedTime ?? DateTime.fromMillisecondsSinceEpoch(0))
-                  .compareTo(
-                    first.modifiedTime ??
-                        DateTime.fromMillisecondsSinceEpoch(0),
-                  ),
-        );
+        files.where((file) => file.name.startsWith('auto_${userId}_')).toList()
+          ..sort(
+            (first, second) =>
+                (second.modifiedTime ?? DateTime.fromMillisecondsSinceEpoch(0))
+                    .compareTo(
+                      first.modifiedTime ??
+                          DateTime.fromMillisecondsSinceEpoch(0),
+                    ),
+          );
     for (final file in automatic.skip(retention)) {
       await _driveService.deleteFile(file.id, allowInteractive: false);
     }

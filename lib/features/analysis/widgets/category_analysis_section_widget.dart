@@ -2,6 +2,7 @@ import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
+import 'package:key_budget/app/utils/app_animations.dart';
 import 'package:key_budget/core/design_system/borders/app_borders.dart';
 import 'package:key_budget/core/design_system/spacing/app_spacing.dart';
 import 'package:key_budget/core/design_system/widgets/app_card.dart';
@@ -69,13 +70,14 @@ class _CategoryAnalysisSectionWidgetState
     );
 
     final bool hasMoreThan5 = groups.length > 5;
-    final List<AnalysisCategoryGroup> top5 =
-        hasMoreThan5 ? groups.sublist(0, 5) : groups;
+    final List<AnalysisCategoryGroup> top5 = hasMoreThan5
+        ? groups.sublist(0, 5)
+        : groups;
 
     final int othersCents = hasMoreThan5
         ? groups
-            .sublist(5)
-            .fold<int>(0, (sum, g) => sum + g.totalAmount.amountMinor)
+              .sublist(5)
+              .fold<int>(0, (sum, g) => sum + g.totalAmount.amountMinor)
         : 0;
     final double othersPercentage = hasMoreThan5
         ? groups.sublist(5).fold<double>(0.0, (sum, g) => sum + g.percentage)
@@ -133,8 +135,7 @@ class _CategoryAnalysisSectionWidgetState
       );
     }
 
-    final displayedGroups =
-        (_isExpanded || !hasMoreThan5) ? groups : top5;
+    final displayedGroups = (_isExpanded || !hasMoreThan5) ? groups : top5;
 
     return AppCard(
       padding: const EdgeInsets.all(AppSpacing.lg),
@@ -240,7 +241,8 @@ class _CategoryAnalysisSectionWidgetState
               percentage: group.percentage,
               itemsCount: group.itemsCount,
               isHighlighted: isHighlighted,
-              showDivider: index < displayedGroups.length - 1 ||
+              showDivider:
+                  index < displayedGroups.length - 1 ||
                   (!_isExpanded && hasMoreThan5),
             );
           }),
@@ -251,7 +253,9 @@ class _CategoryAnalysisSectionWidgetState
               name: 'Outras categorias (${groups.length - 5})',
               valueText: Money.fromCents(othersCents).formatBrl(),
               percentage: othersPercentage,
-              itemsCount: groups.sublist(5).fold<int>(0, (s, g) => s + g.itemsCount),
+              itemsCount: groups
+                  .sublist(5)
+                  .fold<int>(0, (s, g) => s + g.itemsCount),
               isHighlighted: top5.length == _touchedPieIndex,
               showDivider: false,
             ),
@@ -306,7 +310,10 @@ class _CategoryAnalysisSectionWidgetState
     return Column(
       children: [
         AnimatedContainer(
-          duration: const Duration(milliseconds: 200),
+          duration: AppAnimations.durationFor(
+            context,
+            const Duration(milliseconds: 200),
+          ),
           padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 8),
           decoration: BoxDecoration(
             color: isHighlighted
@@ -345,7 +352,9 @@ class _CategoryAnalysisSectionWidgetState
                         fontWeight: isHighlighted
                             ? FontWeight.bold
                             : FontWeight.w500,
-                        color: isHighlighted ? color : theme.colorScheme.onSurface,
+                        color: isHighlighted
+                            ? color
+                            : theme.colorScheme.onSurface,
                       ),
                       overflow: TextOverflow.ellipsis,
                     ),

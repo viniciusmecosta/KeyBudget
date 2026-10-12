@@ -5,6 +5,7 @@ import 'package:key_budget/features/expenses/repository/expense_repository.dart'
 
 class _PagedRepository extends ExpenseRepository {
   int requests = 0;
+  bool? requestedServer;
 
   @override
   Future<ExpensePage> getHistoryPage(
@@ -13,8 +14,10 @@ class _PagedRepository extends ExpenseRepository {
     DateTime? endExclusive,
     DocumentSnapshot<Expense>? after,
     int pageSize = 50,
+    bool requireServer = false,
   }) async {
     requests++;
+    requestedServer = requireServer;
     expect(userId, 'user');
     expect(pageSize, 200);
     expect(after, isNull);
@@ -35,6 +38,18 @@ class _PagedRepository extends ExpenseRepository {
 }
 
 void main() {
+  test('expense dates expose a stable calendar key for period queries', () {
+    final expense = Expense(amount: 12.5, date: DateTime(2026, 2, 9, 23, 45));
+    expect(expense.toMap()['dateKey'], '2026-02-09');
+    expect(
+      Expense.fromMap({
+        ...expense.toMap(),
+        'unknown': 1,
+      }, 'expense').unmappedData,
+      {'unknown': 1},
+    );
+  });
+
   test('period totals sum legacy amounts in cents', () async {
     final repository = _PagedRepository();
     final totals = await repository.getPeriodTotals(
@@ -45,5 +60,12 @@ void main() {
     expect(totals.expensesMinor, 30);
     expect(totals.incomesMinor, 300);
     expect(repository.requests, 1);
+  });
+
+  test('full history can require a server-backed paged read', () async {
+    final repository = _PagedRepository();
+    final expenses = await repository.getAllPaged('user', requireServer: true);
+    expect(expenses, hasLength(3));
+    expect(repository.requestedServer, isTrue);
   });
 }

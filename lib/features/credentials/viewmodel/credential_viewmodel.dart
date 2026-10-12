@@ -2,22 +2,19 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/legacy.dart';
-import 'package:key_budget/app/widgets/animated_list_item.dart';
-import 'package:key_budget/core/import_export/csv_import_parser.dart';
-import 'package:key_budget/core/import_export/import_preview_screen.dart';
 import 'package:key_budget/core/import_export/import_service.dart';
 import 'package:key_budget/core/models/credential_model.dart';
 import 'package:key_budget/core/models/folder_model.dart';
+import 'package:key_budget/core/search/search_normalizer.dart';
 import 'package:key_budget/core/services/csv_service.dart';
 import 'package:key_budget/core/services/data_import_service.dart';
 import 'package:key_budget/core/services/encryption_service.dart';
 import 'package:key_budget/core/services/pdf_service.dart';
-import 'package:key_budget/core/services/snackbar_service.dart';
+import 'package:key_budget/features/credentials/application/credential_transfer_service.dart';
 import 'package:key_budget/features/credentials/repository/credential_repository.dart';
-import 'package:key_budget/features/credentials/widgets/credential_list_tile.dart';
-import 'package:key_budget/features/credentials/widgets/folder_list_tile.dart';
 import 'package:key_budget/features/expenses/repository/expense_repository.dart';
 import 'package:key_budget/features/expenses/repository/recurring_expense_repository.dart';
+import 'package:key_budget/features/trash/repository/trash_repository.dart';
 
 class CredentialViewModel extends ChangeNotifier {
   final CredentialRepository _repository;
@@ -26,6 +23,8 @@ class CredentialViewModel extends ChangeNotifier {
   final PdfService _pdfService;
   final DataImportService _dataImportService;
   final ImportService _importService;
+  final TrashRepository _trashRepository;
+  late final CredentialTransferService _transferService;
 
   CredentialViewModel({
     CredentialRepository? repository,
@@ -34,17 +33,27 @@ class CredentialViewModel extends ChangeNotifier {
     PdfService? pdfService,
     DataImportService? dataImportService,
     ImportService? importService,
-  })  : _repository = repository ?? CredentialRepository(),
-        _csvService = csvService ?? CsvService(),
-        _pdfService = pdfService ?? PdfService(),
-        _dataImportService = dataImportService ?? DataImportService(),
-        _importService = importService ??
-            ImportService(
-              expenseRepository: ExpenseRepository(),
-              credentialRepository: repository ?? CredentialRepository(),
-              recurringRepository: RecurringExpenseRepository(),
-              encryptionService: encryptionService,
-            );
+    TrashRepository? trashRepository,
+  }) : _repository = repository ?? CredentialRepository(),
+       _csvService = csvService ?? CsvService(),
+       _pdfService = pdfService ?? PdfService(),
+       _dataImportService = dataImportService ?? DataImportService(),
+       _trashRepository = trashRepository ?? TrashRepository(),
+       _importService =
+           importService ??
+           ImportService(
+             expenseRepository: ExpenseRepository(),
+             credentialRepository: repository ?? CredentialRepository(),
+             recurringRepository: RecurringExpenseRepository(),
+             encryptionService: encryptionService,
+           ) {
+    _transferService = CredentialTransferService(
+      csvService: _csvService,
+      pdfService: _pdfService,
+      dataImportService: _dataImportService,
+      importService: _importService,
+    );
+  }
 
   EncryptionService get _activeEncryptionService =>
       encryptionService ?? EncryptionService();
@@ -54,6 +63,8 @@ class CredentialViewModel extends ChangeNotifier {
   List<dynamic> _currentDisplayItems = [];
 
   bool _isLoading = false;
+  String? _loadErrorMessage;
+  String? _listeningUserId;
   bool _isExportingCsv = false;
   bool _isExportingPdf = false;
   String _searchQuery = '';
@@ -64,17 +75,12 @@ class CredentialViewModel extends ChangeNotifier {
 
   String? _currentFolderId;
 
-  GlobalKey<SliverAnimatedListState>? _listKey;
-
-  void setListKey(GlobalKey<SliverAnimatedListState> key) {
-    _listKey = key;
-  }
-
   List<Credential> get allCredentials => _allCredentials;
 
   List<Folder> get allFolders => _allFolders;
 
-  List<dynamic> get currentDisplayItems => _currentDisplayItems;
+  List<dynamic> get currentDisplayItems =>
+      List.unmodifiable(_currentDisplayItems);
 
   String? get currentFolderId => _currentFolderId;
 
@@ -97,6 +103,7 @@ class CredentialViewModel extends ChangeNotifier {
       .toList();
 
   bool get isLoading => _isLoading;
+  String? get loadErrorMessage => _loadErrorMessage;
 
   bool get isExportingCsv => _isExportingCsv;
 
@@ -124,22 +131,26 @@ class CredentialViewModel extends ChangeNotifier {
   }
 
   String _sanitize(String input) {
-    var text = input.toLowerCase().replaceAll(RegExp(r'\s+'), ' ').trim();
-    const withDia = 'áàãâäéèêëíìîïóòõôöúùûüçñ';
-    const withoutDia = 'aaaaaeeeeiiiiooooouuuucn';
-    for (int i = 0; i < withDia.length; i++) {
-      text = text.replaceAll(withDia[i], withoutDia[i]);
-    }
-    return text;
+    return SearchNormalizer.normalize(input);
   }
 
   void setSearchQuery(String query) {
     _searchQuery = _sanitize(query);
-    _updateDisplayList(animate: true);
+    _updateDisplayList();
   }
 
   void listenToCredentials(String userId) {
-    if (_isListening) return;
+    if (_isListening && _listeningUserId == userId) return;
+
+    if (_listeningUserId != userId) {
+      _allCredentials = [];
+      _allFolders = [];
+      _currentDisplayItems = [];
+      _currentFolderId = null;
+      _searchQuery = '';
+    }
+    _listeningUserId = userId;
+    _loadErrorMessage = null;
 
     _setLoading(true);
     _credentialsSubscription?.cancel();
@@ -148,23 +159,39 @@ class CredentialViewModel extends ChangeNotifier {
     _foldersSubscription = _repository.getFoldersStreamForUser(userId).listen((
       folders,
     ) {
+      if (_listeningUserId != userId) return;
       _allFolders = folders;
-      _updateDisplayList(animate: true);
-    });
+      _updateDisplayList();
+    }, onError: (Object error) => _handleLoadError(userId));
 
     _credentialsSubscription = _repository
         .getCredentialsStreamForUser(userId)
         .listen((newCredentials) {
+          if (_listeningUserId != userId) return;
           _allCredentials = newCredentials;
-          _updateDisplayList(animate: true);
+          _loadErrorMessage = null;
+          _updateDisplayList();
           if (_isLoading) _setLoading(false);
-        });
+        }, onError: (Object error) => _handleLoadError(userId));
 
     _isListening = true;
   }
 
-  void _updateDisplayList({bool animate = true}) {
-    final oldList = List<dynamic>.from(_currentDisplayItems);
+  void _handleLoadError(String userId) {
+    if (_listeningUserId != userId) return;
+    _loadErrorMessage =
+        'Não foi possível carregar o cofre. Confira sua conexão e tente novamente.';
+    _isListening = false;
+    _setLoading(false);
+    notifyListeners();
+  }
+
+  void retryListenToCredentials(String userId) {
+    _isListening = false;
+    listenToCredentials(userId);
+  }
+
+  void _updateDisplayList() {
     final List<dynamic> newList = [];
 
     if (_currentFolderId == null) {
@@ -202,98 +229,20 @@ class CredentialViewModel extends ChangeNotifier {
       return 0;
     });
 
-    if (!animate || _listKey?.currentState == null) {
-      _currentDisplayItems = List.from(newList);
-      notifyListeners();
-      return;
-    }
-
-    for (var i = oldList.length - 1; i >= 0; i--) {
-      final oldItem = oldList[i];
-      bool existsInNew = false;
-
-      if (oldItem is Folder) {
-        existsInNew = newList.any(
-          (newItem) => newItem is Folder && newItem.id == oldItem.id,
-        );
-      } else if (oldItem is Credential) {
-        existsInNew = newList.any(
-          (newItem) => newItem is Credential && newItem.id == oldItem.id,
-        );
-      }
-
-      if (!existsInNew) {
-        final indexToRemove = _currentDisplayItems.indexOf(oldItem);
-        if (indexToRemove != -1) {
-          final removedItem = _currentDisplayItems.removeAt(indexToRemove);
-          _listKey?.currentState?.removeItem(
-            indexToRemove,
-            (context, animation) => AnimatedListItem(
-              animation: animation,
-              child: removedItem is Folder
-                  ? FolderListTile(
-                      folder: removedItem,
-                      onTap: () {},
-                      onDelete: () {},
-                    )
-                  : CredentialListTile(credential: removedItem as Credential),
-            ),
-            duration: const Duration(milliseconds: 300),
-          );
-        }
-      }
-    }
-
-    for (var i = 0; i < newList.length; i++) {
-      final newItem = newList[i];
-      int oldIndex = -1;
-
-      if (newItem is Folder) {
-        oldIndex = _currentDisplayItems.indexWhere(
-          (item) => item is Folder && item.id == newItem.id,
-        );
-      } else if (newItem is Credential) {
-        oldIndex = _currentDisplayItems.indexWhere(
-          (item) => item is Credential && item.id == newItem.id,
-        );
-      }
-
-      if (oldIndex == -1) {
-        _currentDisplayItems.insert(i, newItem);
-        _listKey?.currentState?.insertItem(
-          i,
-          duration: const Duration(milliseconds: 300),
-        );
-      } else {
-        if (_currentDisplayItems[oldIndex] != newItem) {
-          _currentDisplayItems[oldIndex] = newItem;
-          notifyListeners();
-        }
-
-        if (oldIndex != i) {
-          final item = _currentDisplayItems.removeAt(oldIndex);
-          _currentDisplayItems.insert(i, item);
-          notifyListeners();
-        }
-      }
-    }
-
-    if (_currentDisplayItems.length != newList.length) {
-      _currentDisplayItems = List.from(newList);
-      notifyListeners();
-    }
+    _currentDisplayItems = newList;
+    notifyListeners();
   }
 
   void enterFolder(String folderId) {
     _currentFolderId = folderId;
     notifyListeners();
-    _updateDisplayList(animate: true);
+    _updateDisplayList();
   }
 
   void exitFolder() {
     _currentFolderId = null;
     notifyListeners();
-    _updateDisplayList(animate: true);
+    _updateDisplayList();
   }
 
   Future<void> createFolder(String userId, String name, {String? color}) async {
@@ -316,7 +265,9 @@ class CredentialViewModel extends ChangeNotifier {
     String? logoPath,
     String? folderId,
   }) async {
-    final encryptedPassword = _activeEncryptionService.encryptData(plainPassword);
+    final encryptedPassword = _activeEncryptionService.encryptData(
+      plainPassword,
+    );
     final newCredential = Credential(
       location: location,
       login: login,
@@ -368,7 +319,15 @@ class CredentialViewModel extends ChangeNotifier {
   }
 
   Future<void> deleteCredential(String userId, String credentialId) async {
-    await _repository.deleteCredential(userId, credentialId);
+    final credential = _allCredentials
+        .where((item) => item.id == credentialId)
+        .firstOrNull;
+    await _trashRepository.move(
+      userId,
+      collection: 'credentials',
+      ids: [credentialId],
+      title: credential?.location ?? 'Credencial',
+    );
   }
 
   Future<void> restoreCredential(String userId, Credential credential) async {
@@ -378,7 +337,7 @@ class CredentialViewModel extends ChangeNotifier {
   Future<bool> exportCredentialsToCsv(BuildContext context) async {
     _setExportingCsv(true);
     try {
-      return await _csvService.exportCredentials(
+      return await _transferService.exportCsv(
         context,
         _allCredentials,
         decryptPassword,
@@ -391,7 +350,11 @@ class CredentialViewModel extends ChangeNotifier {
   Future<void> exportCredentialsToPdf(BuildContext context) async {
     _setExportingPdf(true);
     try {
-      await _pdfService.exportCredentialsPdf(context, this);
+      await _transferService.exportPdf(
+        context,
+        _allCredentials,
+        decryptPassword,
+      );
     } finally {
       _setExportingPdf(false);
     }
@@ -405,68 +368,19 @@ class CredentialViewModel extends ChangeNotifier {
     String? rawCsvContent,
     String? fileName,
   }) async {
-    try {
-      String? content = rawCsvContent;
-      String name = fileName ?? 'credentials.csv';
-
-      if (content == null) {
-        final file = await _csvService.pickCsvFile();
-        if (file == null) return 0;
-        name = file.path.split('/').last;
-        content = await file.readAsString();
-      }
-
-      final plan = await _importService.preparePlan(
-        userId: userId,
-        fileContent: content,
-        fileName: name,
-        forcedType: CsvImportType.credentials,
-        existingCredentials: _allCredentials,
-        defaultFolderId: _currentFolderId,
-      );
-
-      if (!plan.canProceed) {
-        if (context != null && context.mounted) {
-          SnackbarService.showError(
-            context,
-            plan.globalErrors.isNotEmpty
-                ? plan.globalErrors.first
-                : 'O arquivo CSV não possui credenciais válidas para importar.',
-          );
-        }
-        return 0;
-      }
-
-      if (context != null && context.mounted) {
-        final resultCount = await Navigator.of(context).push<int>(
-          MaterialPageRoute(
-            builder: (_) => ImportPreviewScreen(
-              userId: userId,
-              plan: plan,
-              importService: _importService,
-            ),
-          ),
-        );
-        return resultCount ?? 0;
-      } else {
-        final result = await _importService.applyPlan(
-          userId: userId,
-          plan: plan,
-          importOnlyValid: true,
-        );
-        return result.data?.createdCount ?? 0;
-      }
-    } catch (e) {
-      if (context != null && context.mounted) {
-        SnackbarService.showError(context, 'Não foi possível importar as credenciais. Verifique o arquivo e tente novamente.');
-      }
-      return 0;
-    }
+    return _transferService.importCsv(
+      userId,
+      _allCredentials,
+      _currentFolderId,
+      context: context,
+      rawCsvContent: rawCsvContent,
+      fileName: fileName,
+    );
   }
 
   Future<int> importCredentialsFromJson(String userId) async {
     _setLoading(true);
-    final count = await _dataImportService.importCredentialsFromJson(userId);
+    final count = await _transferService.importLegacyJson(userId);
     _setLoading(false);
     return count;
   }
@@ -482,6 +396,9 @@ class CredentialViewModel extends ChangeNotifier {
     _allFolders = [];
     _currentDisplayItems = [];
     _isListening = false;
+    _listeningUserId = null;
+    _loadErrorMessage = null;
+    _isLoading = false;
     _currentFolderId = null;
     notifyListeners();
   }

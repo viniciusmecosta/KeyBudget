@@ -11,6 +11,7 @@ import 'package:key_budget/core/import_export/operation_journal.dart';
 import 'package:key_budget/core/import_export/raw_storage.dart';
 import 'package:key_budget/core/import_export/restore_service.dart';
 import 'package:key_budget/core/operations/session_context.dart';
+import 'package:key_budget/core/services/drive_service.dart';
 import 'package:key_budget/core/services/encryption_service.dart';
 import 'package:key_budget/core/time/app_clock.dart';
 
@@ -28,8 +29,7 @@ class FakeSecureStorage extends Fake implements FlutterSecureStorage {
     WebOptions? webOptions,
     AppleOptions? mOptions,
     WindowsOptions? wOptions,
-  }) async =>
-      store[key];
+  }) async => store[key];
 
   @override
   Future<void> write({
@@ -70,8 +70,7 @@ class FakeSecureStorage extends Fake implements FlutterSecureStorage {
     WebOptions? webOptions,
     AppleOptions? mOptions,
     WindowsOptions? wOptions,
-  }) async =>
-      Map.from(store);
+  }) async => Map.from(store);
 }
 
 class _CredentialCipher extends Fake implements EncryptionService {
@@ -82,47 +81,78 @@ class _CredentialCipher extends Fake implements EncryptionService {
   @override
   String decryptData(String encryptedText) =>
       encryptedText.startsWith('$prefix:')
-          ? encryptedText.substring(prefix.length + 1)
-          : 'ERRO_DECRIPT';
+      ? encryptedText.substring(prefix.length + 1)
+      : 'ERRO_DECRIPT';
 
   @override
   String encryptData(String plainText) => '$prefix:$plainText';
+}
+
+class _AttachmentDrive extends DriveService {
+  int downloadCount = 0;
+
+  @override
+  Future<List<int>?> downloadFile(
+    String fileId, {
+    String? serverClientId,
+  }) async {
+    downloadCount++;
+    return [1, 2, 3];
+  }
 }
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
   group('BackupCodec & Fixtures Round-trip', () {
-    test('L11: Round-trip preserves unknown fields, maps, lists, and nanosecond timestamps', () {
-      final rawDoc = LegacyFixtures.l11['rawDoc'] as Map<String, dynamic>;
-      final record = BackupRecord(
-        id: rawDoc['id'].toString(),
-        data: Map<String, dynamic>.from(rawDoc),
-      );
+    test(
+      'L11: Round-trip preserves unknown fields, maps, lists, and nanosecond timestamps',
+      () {
+        final rawDoc = LegacyFixtures.l11['rawDoc'] as Map<String, dynamic>;
+        final record = BackupRecord(
+          id: rawDoc['id'].toString(),
+          data: Map<String, dynamic>.from(rawDoc),
+        );
 
-      final encodedJson = BackupCodec.encodeRecords([record]);
-      final decodedList = BackupCodec.decodeRecords(encodedJson);
+        final encodedJson = BackupCodec.encodeRecords([record]);
+        final decodedList = BackupCodec.decodeRecords(encodedJson);
 
-      expect(decodedList.length, equals(1));
-      final decoded = decodedList.first;
-      expect(decoded.id, equals('doc_unknown_fields'));
-      expect(decoded.data['legacyExtraFlag'], isTrue);
-      expect(decoded.data['nestedMetadata']['importedFrom'], equals('old_app_v1'));
-      expect(decoded.data['nestedMetadata']['tags'], equals(['sync', 'imported']));
-      expect(decoded.data['amount'], equals(123.45));
+        expect(decodedList.length, equals(1));
+        final decoded = decodedList.first;
+        expect(decoded.id, equals('doc_unknown_fields'));
+        expect(decoded.data['legacyExtraFlag'], isTrue);
+        expect(
+          decoded.data['nestedMetadata']['importedFrom'],
+          equals('old_app_v1'),
+        );
+        expect(
+          decoded.data['nestedMetadata']['tags'],
+          equals(['sync', 'imported']),
+        );
+        expect(decoded.data['amount'], equals(123.45));
 
-      final exactCreated = decoded.data['exactCreated'] as Map<String, dynamic>;
-      expect(exactCreated['_seconds'], equals(1711966830));
-      expect(exactCreated['_nanoseconds'], equals(987654321));
+        final exactCreated =
+            decoded.data['exactCreated'] as Map<String, dynamic>;
+        expect(exactCreated['_seconds'], equals(1711966830));
+        expect(exactCreated['_nanoseconds'], equals(987654321));
 
-      final digest1 = BackupCodec.computeCanonicalDigest(rawDoc);
-      final digest2 = BackupCodec.computeCanonicalDigest(decoded.data);
-      expect(digest1, equals(digest2));
-    });
+        final digest1 = BackupCodec.computeCanonicalDigest(rawDoc);
+        final digest2 = BackupCodec.computeCanonicalDigest(decoded.data);
+        expect(digest1, equals(digest2));
+      },
+    );
 
     test('Canonicalizes maps with deterministic key ordering', () {
-      final map1 = {'z': 1, 'a': 2, 'm': {'k': 10, 'b': 20}};
-      final map2 = {'a': 2, 'm': {'b': 20, 'k': 10}, 'z': 1};
+      final map1 = {
+        'z': 1,
+        'a': 2,
+        'm': {'k': 10, 'b': 20},
+      };
+      final map2 = {
+        'a': 2,
+        'm': {'b': 20, 'k': 10},
+        'z': 1,
+      };
 
       final digest1 = BackupCodec.computeCanonicalDigest(map1);
       final digest2 = BackupCodec.computeCanonicalDigest(map2);
@@ -131,10 +161,7 @@ void main() {
     });
 
     test('Rejects unsupported types with descriptive exception', () {
-      final invalidMap = {
-        'id': 'bad_doc',
-        'invalidObject': Stopwatch(),
-      };
+      final invalidMap = {'id': 'bad_doc', 'invalidObject': Stopwatch()};
 
       expect(
         () => BackupCodec.canonicalizeValue(invalidMap, recordId: 'bad_doc'),
@@ -166,6 +193,41 @@ void main() {
       );
 
       expect(decrypted, equals(sampleZipPayload));
+    });
+
+    test('New envelopes preserve Unicode passwords without truncation', () {
+      final envelope = BackupCrypto.encryptEnvelope(
+        payload: sampleZipPayload,
+        password: 'senha🔐é',
+        iterations: 10000,
+      );
+      expect(ByteData.sublistView(envelope).getUint16(4, Endian.big), 2);
+      expect(
+        BackupCrypto.decryptEnvelope(envelope: envelope, password: 'senha🔐é'),
+        sampleZipPayload,
+      );
+      expect(
+        () => BackupCrypto.decryptEnvelope(
+          envelope: envelope,
+          password: 'senha=\u0010é',
+        ),
+        throwsA(isA<BackupCryptoException>()),
+      );
+    });
+
+    test('Version 1 envelopes still accept the original password encoding', () {
+      final legacyEnvelope = base64Decode(
+        'S0JHMQABAAAnEBB3mKxsVhyHdTWIAdM6u6zTDOkdkDD+4VFAgxTlzFAc+ubLdKjV7Zd5tYaPklqq8zsS2t3w35WoHk53XQ==',
+      );
+      expect(
+        utf8.decode(
+          BackupCrypto.decryptEnvelope(
+            envelope: legacyEnvelope,
+            password: 'senh🔐é',
+          ),
+        ),
+        'legacy payload',
+      );
     });
 
     test('Rejects wrong password without decrypting', () {
@@ -222,9 +284,7 @@ void main() {
     });
 
     test('Zip unpack rejects path traversal and dangerous paths', () {
-      final files = {
-        '../../evil.sh': utf8.encode('echo hack'),
-      };
+      final files = {'../../evil.sh': utf8.encode('echo hack')};
       final zipBytes = BackupCrypto.packArchive(files);
 
       expect(
@@ -241,6 +301,16 @@ void main() {
 
       expect(
         () => BackupCrypto.unpackArchive(zipBytes),
+        throwsA(isA<BackupSecurityException>()),
+      );
+    });
+
+    test('Archive creation rejects cumulative input before encoding', () {
+      expect(
+        () => BackupCrypto.packArchive({
+          'first': [1, 2, 3],
+          'second': [4, 5, 6],
+        }, maxTotalBytes: 5),
         throwsA(isA<BackupSecurityException>()),
       );
     });
@@ -325,46 +395,72 @@ void main() {
       };
     });
 
-    test('restores a legacy credential using the destination encryption key', () async {
-      sourceStorage.documents['users/$testUid/credentials/legacy'] = {
-        'id': 'legacy',
-        'location': 'example.org',
-        'login': 'user',
-        'encrypted_password': 'old-key:secret',
+    test('Shared attachment is downloaded once in a verified backup', () async {
+      sourceStorage.documents['users/$testUid/documents/doc_1'] = {
+        'id': 'doc_1',
+        'documentName': 'Documento',
+        'attachments': [
+          {'driveId': 'same-file', 'name': 'anexo.pdf'},
+          {'driveId': 'same-file', 'name': 'anexo.pdf'},
+        ],
       };
+      final driveService = _AttachmentDrive();
       final backup = await BackupService(
         rawReader: sourceStorage,
         sessionContext: sessionContext,
         clock: testClock,
-        encryptionService: _CredentialCipher('old-key'),
+        driveService: driveService,
       ).createBackup(password: backupPassword);
-      expect(backup.isSuccess, isTrue);
-      expect(backup.data?.completeness.isComplete, isTrue);
 
-      final restore = RestoreService(
-        rawReader: targetStorage,
-        rawWriter: targetStorage,
-        sessionContext: sessionContext,
-        encryptionService: _CredentialCipher('new-key'),
-        clock: testClock,
-        secureStorage: fakeSecureStorage,
-      );
-      final preview = await restore.previewRestore(
-        backupBytes: backup.data!.envelopeBytes,
-        password: backupPassword,
-      );
-      expect(preview.isSuccess, isTrue);
-      final result = await restore.executeRestore(
-        plan: preview.data!,
-        backupBytes: backup.data!.envelopeBytes,
-        password: backupPassword,
-      );
-      expect(result.isSuccess, isTrue);
-      expect(
-        targetStorage.documents['users/$testUid/credentials/legacy']?['encrypted_password'],
-        'new-key:secret',
-      );
+      expect(backup.isSuccess, isTrue);
+      expect(driveService.downloadCount, 1);
+      expect(backup.data!.manifest.attachments.length, 1);
     });
+
+    test(
+      'restores a legacy credential using the destination encryption key',
+      () async {
+        sourceStorage.documents['users/$testUid/credentials/legacy'] = {
+          'id': 'legacy',
+          'location': 'example.org',
+          'login': 'user',
+          'encrypted_password': 'old-key:secret',
+        };
+        final backup = await BackupService(
+          rawReader: sourceStorage,
+          sessionContext: sessionContext,
+          clock: testClock,
+          encryptionService: _CredentialCipher('old-key'),
+        ).createBackup(password: backupPassword);
+        expect(backup.isSuccess, isTrue);
+        expect(backup.data?.completeness.isComplete, isTrue);
+
+        final restore = RestoreService(
+          rawReader: targetStorage,
+          rawWriter: targetStorage,
+          sessionContext: sessionContext,
+          encryptionService: _CredentialCipher('new-key'),
+          clock: testClock,
+          secureStorage: fakeSecureStorage,
+        );
+        final preview = await restore.previewRestore(
+          backupBytes: backup.data!.envelopeBytes,
+          password: backupPassword,
+        );
+        expect(preview.isSuccess, isTrue);
+        final result = await restore.executeRestore(
+          plan: preview.data!,
+          backupBytes: backup.data!.envelopeBytes,
+          password: backupPassword,
+        );
+        expect(result.isSuccess, isTrue);
+        expect(
+          targetStorage
+              .documents['users/$testUid/credentials/legacy']?['encrypted_password'],
+          'new-key:secret',
+        );
+      },
+    );
 
     test('Creates verifiable backup with self-verification', () async {
       final backupService = BackupService(
@@ -373,15 +469,13 @@ void main() {
         clock: testClock,
       );
 
-      final result = await backupService.createBackup(
-        password: backupPassword,
-      );
+      final result = await backupService.createBackup(password: backupPassword);
 
       expect(result.isSuccess, isTrue);
       expect(result.data, isNotNull);
       final backupData = result.data!;
 
-      expect(backupData.manifest.formatVersion, equals(1));
+      expect(backupData.manifest.formatVersion, equals(2));
       expect(backupData.manifest.originUid, equals(testUid));
       expect(backupData.manifest.counts['categories'], equals(2));
       expect(backupData.manifest.counts['folders'], equals(1));
@@ -426,153 +520,180 @@ void main() {
       expect(targetStorage.documents.isEmpty, isTrue);
     });
 
-    test('Full restore reproduces all records identically and supports idempotency', () async {
-      final backupService = BackupService(
-        rawReader: sourceStorage,
-        sessionContext: sessionContext,
-        clock: testClock,
-      );
-      final backupRes = await backupService.createBackup(
-        password: backupPassword,
-      );
-      final backupBytes = backupRes.data!.envelopeBytes;
+    test(
+      'Full restore reproduces all records identically and supports idempotency',
+      () async {
+        final backupService = BackupService(
+          rawReader: sourceStorage,
+          sessionContext: sessionContext,
+          clock: testClock,
+        );
+        final backupRes = await backupService.createBackup(
+          password: backupPassword,
+        );
+        final backupBytes = backupRes.data!.envelopeBytes;
 
-      final restoreService = RestoreService(
-        rawReader: targetStorage,
-        rawWriter: targetStorage,
-        sessionContext: sessionContext,
-        clock: testClock,
-        secureStorage: fakeSecureStorage,
-      );
+        final restoreService = RestoreService(
+          rawReader: targetStorage,
+          rawWriter: targetStorage,
+          sessionContext: sessionContext,
+          clock: testClock,
+          secureStorage: fakeSecureStorage,
+        );
 
-      final previewRes = await restoreService.previewRestore(
-        backupBytes: backupBytes,
-        password: backupPassword,
-      );
-      final plan = previewRes.data!;
+        final previewRes = await restoreService.previewRestore(
+          backupBytes: backupBytes,
+          password: backupPassword,
+        );
+        final plan = previewRes.data!;
 
-      final execRes = await restoreService.executeRestore(
-        plan: plan,
-        backupBytes: backupBytes,
-        password: backupPassword,
-      );
+        final execRes = await restoreService.executeRestore(
+          plan: plan,
+          backupBytes: backupBytes,
+          password: backupPassword,
+        );
 
-      expect(execRes.isSuccess, isTrue);
-      final summary = execRes.data!;
-      expect(summary.createdCount, equals(7));
-      expect(summary.replacedCount, equals(0));
+        expect(execRes.isSuccess, isTrue);
+        final summary = execRes.data!;
+        expect(summary.createdCount, equals(7));
+        expect(summary.replacedCount, equals(0));
 
-      expect(targetStorage.documents.containsKey('users/$testUid/categories/cat_food'), isTrue);
-      expect(targetStorage.documents.containsKey('users/$testUid/expenses/exp_001'), isTrue);
-      final expDoc = targetStorage.documents['users/$testUid/expenses/exp_001']!;
-      expect(expDoc['amount'], equals(150.0));
-      expect(expDoc['recurringExpenseId'], equals('rec_001'));
+        expect(
+          targetStorage.documents.containsKey(
+            'users/$testUid/categories/cat_food',
+          ),
+          isTrue,
+        );
+        expect(
+          targetStorage.documents.containsKey(
+            'users/$testUid/expenses/exp_001',
+          ),
+          isTrue,
+        );
+        final expDoc =
+            targetStorage.documents['users/$testUid/expenses/exp_001']!;
+        expect(expDoc['amount'], equals(150.0));
+        expect(expDoc['recurringExpenseId'], equals('rec_001'));
 
-      final instDoc = targetStorage.documents['users/$testUid/expenses/exp_inst_1']!;
-      expect(instDoc['amount'], equals(33.333333333333336));
+        final instDoc =
+            targetStorage.documents['users/$testUid/expenses/exp_inst_1']!;
+        expect(instDoc['amount'], equals(33.333333333333336));
 
-      final secondPreview = await restoreService.previewRestore(
-        backupBytes: backupBytes,
-        password: backupPassword,
-      );
-      final plan2 = secondPreview.data!;
-      expect(plan2.createCount, equals(0));
-      expect(plan2.conflictCount, equals(0));
-      expect(plan2.skipCount, equals(7));
+        final secondPreview = await restoreService.previewRestore(
+          backupBytes: backupBytes,
+          password: backupPassword,
+        );
+        final plan2 = secondPreview.data!;
+        expect(plan2.createCount, equals(0));
+        expect(plan2.conflictCount, equals(0));
+        expect(plan2.skipCount, equals(7));
 
-      final secondExec = await restoreService.executeRestore(
-        plan: plan2,
-        backupBytes: backupBytes,
-        password: backupPassword,
-      );
-      expect(secondExec.isSuccess, isTrue);
-      expect(secondExec.data!.createdCount, equals(0));
-      expect(secondExec.data!.skippedCount, equals(7));
-    });
+        final secondExec = await restoreService.executeRestore(
+          plan: plan2,
+          backupBytes: backupBytes,
+          password: backupPassword,
+        );
+        expect(secondExec.isSuccess, isTrue);
+        expect(secondExec.data!.createdCount, equals(0));
+        expect(secondExec.data!.skippedCount, equals(7));
+      },
+    );
 
-    test('Conflict detection detects differences and default keepTarget protects data', () async {
+    test(
+      'Conflict detection detects differences and default keepTarget protects data',
+      () async {
+        final backupService = BackupService(
+          rawReader: sourceStorage,
+          sessionContext: sessionContext,
+          clock: testClock,
+        );
+        final backupRes = await backupService.createBackup(
+          password: backupPassword,
+        );
+        final backupBytes = backupRes.data!.envelopeBytes;
 
-      final backupService = BackupService(
-        rawReader: sourceStorage,
-        sessionContext: sessionContext,
-        clock: testClock,
-      );
-      final backupRes = await backupService.createBackup(
-        password: backupPassword,
-      );
-      final backupBytes = backupRes.data!.envelopeBytes;
+        targetStorage.documents['users/$testUid/expenses/exp_001'] = {
+          'id': 'exp_001',
+          'amount': 200.0,
+          'date': '2026-09-20T12:00:00.000',
+          'categoryId': 'cat_bills',
+        };
 
-      targetStorage.documents['users/$testUid/expenses/exp_001'] = {
-        'id': 'exp_001',
-        'amount': 200.0,
-        'date': '2026-09-20T12:00:00.000',
-        'categoryId': 'cat_bills',
-      };
+        final restoreService = RestoreService(
+          rawReader: targetStorage,
+          rawWriter: targetStorage,
+          sessionContext: sessionContext,
+          clock: testClock,
+          secureStorage: fakeSecureStorage,
+        );
 
-      final restoreService = RestoreService(
-        rawReader: targetStorage,
-        rawWriter: targetStorage,
-        sessionContext: sessionContext,
-        clock: testClock,
-        secureStorage: fakeSecureStorage,
-      );
+        final previewRes = await restoreService.previewRestore(
+          backupBytes: backupBytes,
+          password: backupPassword,
+        );
 
-      final previewRes = await restoreService.previewRestore(
-        backupBytes: backupBytes,
-        password: backupPassword,
-      );
+        final plan = previewRes.data!;
+        expect(plan.conflictCount, equals(1));
+        final conflictItem = plan.items.firstWhere(
+          (i) => i.action == ImportAction.conflict,
+        );
+        expect(conflictItem.documentId, equals('exp_001'));
 
-      final plan = previewRes.data!;
-      expect(plan.conflictCount, equals(1));
-      final conflictItem = plan.items.firstWhere((i) => i.action == ImportAction.conflict);
-      expect(conflictItem.documentId, equals('exp_001'));
+        expect(conflictItem.resolution, equals(ConflictResolution.keepTarget));
+        expect(conflictItem.willWrite, isFalse);
 
-      expect(conflictItem.resolution, equals(ConflictResolution.keepTarget));
-      expect(conflictItem.willWrite, isFalse);
+        await restoreService.executeRestore(
+          plan: plan,
+          backupBytes: backupBytes,
+          password: backupPassword,
+        );
 
-      await restoreService.executeRestore(
-        plan: plan,
-        backupBytes: backupBytes,
-        password: backupPassword,
-      );
+        expect(
+          targetStorage.documents['users/$testUid/expenses/exp_001']!['amount'],
+          equals(200.0),
+        );
+      },
+    );
 
-      expect(
-        targetStorage.documents['users/$testUid/expenses/exp_001']!['amount'],
-        equals(200.0),
-      );
-    });
+    test(
+      'Rejects restore if originUid does not match destination sessionContext',
+      () async {
+        final backupService = BackupService(
+          rawReader: sourceStorage,
+          sessionContext: sessionContext,
+          clock: testClock,
+        );
+        final backupRes = await backupService.createBackup(
+          password: backupPassword,
+        );
+        final backupBytes = backupRes.data!.envelopeBytes;
 
-    test('Rejects restore if originUid does not match destination sessionContext', () async {
-      final backupService = BackupService(
-        rawReader: sourceStorage,
-        sessionContext: sessionContext,
-        clock: testClock,
-      );
-      final backupRes = await backupService.createBackup(
-        password: backupPassword,
-      );
-      final backupBytes = backupRes.data!.envelopeBytes;
+        final differentSession = const SessionContext(
+          userId: 'other_hacker_user_456',
+          sessionGeneration: 1,
+        );
+        final restoreService = RestoreService(
+          rawReader: targetStorage,
+          rawWriter: targetStorage,
+          sessionContext: differentSession,
+          clock: testClock,
+          secureStorage: fakeSecureStorage,
+        );
 
-      final differentSession = const SessionContext(
-        userId: 'other_hacker_user_456',
-        sessionGeneration: 1,
-      );
-      final restoreService = RestoreService(
-        rawReader: targetStorage,
-        rawWriter: targetStorage,
-        sessionContext: differentSession,
-        clock: testClock,
-        secureStorage: fakeSecureStorage,
-      );
+        final previewRes = await restoreService.previewRestore(
+          backupBytes: backupBytes,
+          password: backupPassword,
+        );
 
-      final previewRes = await restoreService.previewRestore(
-        backupBytes: backupBytes,
-        password: backupPassword,
-      );
-
-      expect(previewRes.isSuccess, isFalse);
-      expect(previewRes.safeError, contains('A restauração na v1 só é permitida na mesma conta de origem'));
-    });
+        expect(previewRes.isSuccess, isFalse);
+        expect(
+          previewRes.safeError,
+          contains(
+            'A restauração na v1 só é permitida na mesma conta de origem',
+          ),
+        );
+      },
+    );
 
     test('Rollback compensation removes created documents safely', () async {
       final journal = OperationJournal(
@@ -594,10 +715,17 @@ void main() {
         secureStorage: fakeSecureStorage,
       );
 
-      final rollbackRes = await restoreService.rollbackOperation(journal: journal);
+      final rollbackRes = await restoreService.rollbackOperation(
+        journal: journal,
+      );
       expect(rollbackRes.isSuccess, isTrue);
       expect(rollbackRes.data, equals(1));
-      expect(targetStorage.documents.containsKey('users/$testUid/categories/temp_cat'), isFalse);
+      expect(
+        targetStorage.documents.containsKey(
+          'users/$testUid/categories/temp_cat',
+        ),
+        isFalse,
+      );
     });
   });
 }

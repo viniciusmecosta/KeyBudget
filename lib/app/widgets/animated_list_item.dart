@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:key_budget/app/utils/app_animations.dart';
 import 'package:key_budget/core/design_system/borders/app_borders.dart';
 import 'package:key_budget/core/design_system/spacing/app_spacing.dart';
 
@@ -133,6 +134,16 @@ class _AnimatedListItemState extends ConsumerState<AnimatedListItem>
   }
 
   @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (AppAnimations.isReducedMotion(context)) {
+      _highlightController.value = 1;
+      _editController.value = 1;
+      _shakeController.value = 1;
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     _highlightAnimation =
@@ -176,10 +187,14 @@ class _AnimatedListItemState extends ConsumerState<AnimatedListItem>
           child: Padding(
             padding: const EdgeInsets.only(bottom: AppSpacing.sm),
             child: FadeTransition(
-              opacity: widget.animation,
+              opacity: AppAnimations.isReducedMotion(context)
+                  ? const AlwaysStoppedAnimation<double>(1)
+                  : widget.animation,
               child: SizeTransition(
                 sizeFactor: CurvedAnimation(
-                  parent: widget.animation,
+                  parent: AppAnimations.isReducedMotion(context)
+                      ? const AlwaysStoppedAnimation<double>(1)
+                      : widget.animation,
                   curve: Curves.easeOut,
                 ),
                 child: widget.child,

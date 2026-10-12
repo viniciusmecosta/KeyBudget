@@ -35,6 +35,7 @@ class ExpensePeriodTotals {
 
 class ExpenseRepository {
   final FirebaseFirestore? _customFirestore;
+  final Map<String, Future<bool>> _dateIndexTasks = {};
 
   ExpenseRepository({FirebaseFirestore? firestore})
     : _customFirestore = firestore;
@@ -53,6 +54,46 @@ class ExpenseRepository {
           toFirestore: (expense, _) => expense.toMap(),
         );
   }
+
+  static String _dateKey(DateTime date) =>
+      '${date.year.toString().padLeft(4, '0')}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}';
+
+  Future<bool> _ensureDateIndex(
+    String userId,
+  ) => _dateIndexTasks.putIfAbsent(userId, () async {
+    try {
+      final user = _firestore.collection('users').doc(userId);
+      final marker = user.collection('migrations').doc('expense_date_key_v1');
+      if ((await marker.get(const GetOptions(source: Source.server))).exists) {
+        return true;
+      }
+      final expenses = user.collection('expenses');
+      DocumentSnapshot<Map<String, dynamic>>? cursor;
+      while (true) {
+        var query = expenses.orderBy(FieldPath.documentId).limit(200);
+        if (cursor != null) query = query.startAfterDocument(cursor);
+        final page = await query.get(const GetOptions(source: Source.server));
+        if (page.docs.isEmpty) break;
+        final batch = _firestore.batch();
+        var changed = false;
+        for (final doc in page.docs) {
+          final data = doc.data();
+          if (data.containsKey('dateKey')) continue;
+          final expense = Expense.fromMap(data, doc.id);
+          batch.update(doc.reference, {'dateKey': _dateKey(expense.date)});
+          changed = true;
+        }
+        if (changed) await batch.commit();
+        cursor = page.docs.last;
+        if (page.docs.length < 200) break;
+      }
+      await marker.set({'completedAt': FieldValue.serverTimestamp()});
+      return true;
+    } catch (_) {
+      _dateIndexTasks.remove(userId);
+      return false;
+    }
+  });
 
   Future<void> addExpense(String userId, Expense expense) async {
     if (expense.id != null && expense.id!.isNotEmpty) {
@@ -114,7 +155,37 @@ class ExpenseRepository {
     if (!startInclusive.isBefore(endExclusive)) {
       throw ArgumentError('O período deve ter início anterior ao fim.');
     }
-    return getExpensesWithMetadataStream(userId).map(
+    return _watchIndexedPeriod(userId, startInclusive, endExclusive);
+  }
+
+  Stream<ExpenseStreamSnapshot> _watchIndexedPeriod(
+    String userId,
+    DateTime startInclusive,
+    DateTime endExclusive,
+  ) async* {
+    if (await _ensureDateIndex(userId)) {
+      yield* _getExpensesCollection(userId)
+          .where('dateKey', isGreaterThanOrEqualTo: _dateKey(startInclusive))
+          .where('dateKey', isLessThanOrEqualTo: _dateKey(endExclusive))
+          .orderBy('dateKey', descending: true)
+          .snapshots(includeMetadataChanges: true)
+          .map(
+            (snapshot) => ExpenseStreamSnapshot(
+              expenses: snapshot.docs
+                  .map((doc) => doc.data())
+                  .where(
+                    (expense) =>
+                        !expense.date.isBefore(startInclusive) &&
+                        expense.date.isBefore(endExclusive),
+                  )
+                  .toList(),
+              isFromCache: snapshot.metadata.isFromCache,
+              hasPendingWrites: snapshot.metadata.hasPendingWrites,
+            ),
+          );
+      return;
+    }
+    yield* getExpensesWithMetadataStream(userId).map(
       (snapshot) => ExpenseStreamSnapshot(
         expenses: snapshot.expenses
             .where(
@@ -135,6 +206,7 @@ class ExpenseRepository {
     DateTime? endExclusive,
     DocumentSnapshot<Expense>? after,
     int pageSize = 50,
+    bool requireServer = false,
   }) async {
     if (pageSize < 1 || pageSize > 200) {
       throw ArgumentError.value(pageSize, 'pageSize');
@@ -143,9 +215,15 @@ class ExpenseRepository {
         (startInclusive != null && !startInclusive.isBefore(endExclusive!))) {
       throw ArgumentError('Informe um período válido.');
     }
-    final ordered = _getExpensesCollection(
+    Query<Expense> ordered = _getExpensesCollection(
       userId,
     ).orderBy('date', descending: true);
+    if (startInclusive != null && await _ensureDateIndex(userId)) {
+      ordered = _getExpensesCollection(userId)
+          .where('dateKey', isGreaterThanOrEqualTo: _dateKey(startInclusive))
+          .where('dateKey', isLessThanOrEqualTo: _dateKey(endExclusive!))
+          .orderBy('dateKey', descending: true);
+    }
     final visible = <Expense>[];
     DocumentSnapshot<Expense>? lastIncluded;
     DocumentSnapshot<Expense>? scanCursor = after;
@@ -153,7 +231,9 @@ class ExpenseRepository {
       final query = scanCursor == null
           ? ordered
           : ordered.startAfterDocument(scanCursor);
-      final snapshot = await query.limit(200).get();
+      final snapshot = await query
+          .limit(200)
+          .get(requireServer ? const GetOptions(source: Source.server) : null);
       if (snapshot.docs.isEmpty) {
         return ExpensePage(expenses: visible, nextCursor: null);
       }
@@ -208,11 +288,71 @@ class ExpenseRepository {
     );
   }
 
+  Future<List<Expense>> getAllPaged(
+    String userId, {
+    DateTime? startInclusive,
+    DateTime? endExclusive,
+    bool requireServer = false,
+  }) async {
+    final all = <Expense>[];
+    DocumentSnapshot<Expense>? cursor;
+    do {
+      final page = await getHistoryPage(
+        userId,
+        startInclusive: startInclusive,
+        endExclusive: endExclusive,
+        after: cursor,
+        pageSize: 200,
+        requireServer: requireServer,
+      );
+      all.addAll(page.expenses);
+      cursor = page.nextCursor;
+    } while (cursor != null);
+    return all;
+  }
+
   Future<List<Expense>> getExpensesForUser(String userId) async {
     final querySnapshot = await _getExpensesCollection(
       userId,
     ).orderBy('date', descending: true).get();
     return querySnapshot.docs.map((doc) => doc.data()).toList();
+  }
+
+  Future<Expense?> getExpenseById(String userId, String expenseId) async {
+    final snapshot = await _getExpensesCollection(userId).doc(expenseId).get();
+    return snapshot.data();
+  }
+
+  Future<List<Expense>> getExpensesForInstallmentGroup(
+    String userId,
+    String groupId,
+  ) => _getLinkedExpenses(userId, 'installmentGroupId', groupId);
+
+  Future<List<Expense>> getExpensesForRecurringRule(
+    String userId,
+    String ruleId,
+  ) => _getLinkedExpenses(userId, 'recurringExpenseId', ruleId);
+
+  Future<List<Expense>> _getLinkedExpenses(
+    String userId,
+    String field,
+    String value,
+  ) async {
+    final expenses = <Expense>[];
+    final query = _getExpensesCollection(
+      userId,
+    ).where(field, isEqualTo: value).orderBy(FieldPath.documentId);
+    DocumentSnapshot<Expense>? cursor;
+    while (true) {
+      final page =
+          await (cursor == null ? query : query.startAfterDocument(cursor))
+              .limit(200)
+              .get(const GetOptions(source: Source.server));
+      expenses.addAll(page.docs.map((doc) => doc.data()));
+      if (page.docs.length < 200) break;
+      cursor = page.docs.last;
+    }
+    return expenses;
   }
 
   Future<void> updateExpense(String userId, Expense expense) async {

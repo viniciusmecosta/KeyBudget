@@ -28,7 +28,8 @@ class MockAuthRepository extends Fake implements AuthRepository {
 
 class FakeDashboardLayoutRepository extends DashboardLayoutRepository {
   @override
-  Stream<DashboardLayout> watch(String userId) => Stream.value(const DashboardLayout());
+  Stream<DashboardLayout> watch(String userId) =>
+      Stream.value(const DashboardLayout());
 }
 
 class MockSupplierRepository extends Fake implements SupplierRepository {
@@ -44,7 +45,9 @@ class RecoveringSupplierRepository extends Fake implements SupplierRepository {
   Stream<List<Supplier>> getSuppliersStreamForUser(String userId) {
     attempts++;
     if (attempts == 1) {
-      return Stream.error(FirebaseException(plugin: 'cloud_firestore', code: 'unavailable'));
+      return Stream.error(
+        FirebaseException(plugin: 'cloud_firestore', code: 'unavailable'),
+      );
     }
     return Stream.value([Supplier(id: '1', name: 'Mercado')]);
   }
@@ -54,10 +57,7 @@ class TestAuthViewModel extends AuthViewModel {
   final MockAuthRepository mockRepo;
 
   TestAuthViewModel({required this.mockRepo, User? initialUser})
-      : super(
-          authRepository: mockRepo,
-          listenToAuthChanges: false,
-        ) {
+    : super(authRepository: mockRepo, listenToAuthChanges: false) {
     if (initialUser != null) {
       currentUser = initialUser;
     }
@@ -66,7 +66,7 @@ class TestAuthViewModel extends AuthViewModel {
 
 class FakeSupplierViewModel extends SupplierViewModel {
   FakeSupplierViewModel({List<Supplier> suppliers = const []})
-      : super(repository: MockSupplierRepository()) {
+    : super(repository: MockSupplierRepository()) {
     setSuppliersForTesting(suppliers);
   }
 
@@ -123,48 +123,50 @@ void main() {
       );
       expect(userWithoutLock.effectiveProtectScreenCapture, isFalse);
 
-      final userDefault = User(
-        id: 'u3',
-        name: 'User 3',
-        email: 'u3@test.com',
-      );
+      final userDefault = User(id: 'u3', name: 'User 3', email: 'u3@test.com');
       expect(userDefault.effectiveProtectScreenCapture, isTrue);
     });
 
-    test('effectiveProtectScreenCapture prioritizes explicit protectScreenCapture value', () {
-      final lockedButNoCapture = User(
-        id: 'u1',
-        name: 'User 1',
-        email: 'u1@test.com',
-        appLocked: true,
-        protectScreenCapture: false,
-      );
-      expect(lockedButNoCapture.effectiveProtectScreenCapture, isFalse);
+    test(
+      'effectiveProtectScreenCapture prioritizes explicit protectScreenCapture value',
+      () {
+        final lockedButNoCapture = User(
+          id: 'u1',
+          name: 'User 1',
+          email: 'u1@test.com',
+          appLocked: true,
+          protectScreenCapture: false,
+        );
+        expect(lockedButNoCapture.effectiveProtectScreenCapture, isFalse);
 
-      final unlockedWithCapture = User(
-        id: 'u2',
-        name: 'User 2',
-        email: 'u2@test.com',
-        appLocked: false,
-        protectScreenCapture: true,
-      );
-      expect(unlockedWithCapture.effectiveProtectScreenCapture, isTrue);
-    });
+        final unlockedWithCapture = User(
+          id: 'u2',
+          name: 'User 2',
+          email: 'u2@test.com',
+          appLocked: false,
+          protectScreenCapture: true,
+        );
+        expect(unlockedWithCapture.effectiveProtectScreenCapture, isTrue);
+      },
+    );
 
-    test('copyWith handles protectScreenCapture and clearProtectScreenCapture', () {
-      final original = User(
-        id: 'u1',
-        name: 'User 1',
-        email: 'u1@test.com',
-        protectScreenCapture: true,
-      );
+    test(
+      'copyWith handles protectScreenCapture and clearProtectScreenCapture',
+      () {
+        final original = User(
+          id: 'u1',
+          name: 'User 1',
+          email: 'u1@test.com',
+          protectScreenCapture: true,
+        );
 
-      final updated = original.copyWith(protectScreenCapture: false);
-      expect(updated.protectScreenCapture, isFalse);
+        final updated = original.copyWith(protectScreenCapture: false);
+        expect(updated.protectScreenCapture, isFalse);
 
-      final cleared = updated.copyWith(clearProtectScreenCapture: true);
-      expect(cleared.protectScreenCapture, isNull);
-    });
+        final cleared = updated.copyWith(clearProtectScreenCapture: true);
+        expect(cleared.protectScreenCapture, isNull);
+      },
+    );
 
     test('toMap and fromMap roundtrip protect_screen_capture correctly', () {
       final user = User(
@@ -185,42 +187,57 @@ void main() {
   });
 
   group('AuthViewModel independent preference updating', () {
-    test('updating appLocked when protectScreenCapture is null materializes prior effective value', () async {
-      final mockRepo = MockAuthRepository();
-      final initialUser = User(
-        id: 'u1',
-        name: 'User 1',
-        email: 'u1@test.com',
-        appLocked: true,
-        protectScreenCapture: null,
-      );
-      final vm = TestAuthViewModel(mockRepo: mockRepo, initialUser: initialUser);
+    test(
+      'updating appLocked when protectScreenCapture is null materializes prior effective value',
+      () async {
+        final mockRepo = MockAuthRepository();
+        final initialUser = User(
+          id: 'u1',
+          name: 'User 1',
+          email: 'u1@test.com',
+          appLocked: true,
+          protectScreenCapture: null,
+        );
+        final vm = TestAuthViewModel(
+          mockRepo: mockRepo,
+          initialUser: initialUser,
+        );
 
-      await vm.updateUser(name: 'User 1', appLocked: false);
+        await vm.updateUser(name: 'User 1', appLocked: false);
 
-      expect(mockRepo.lastUpdatedUser, isNotNull);
-      expect(mockRepo.lastUpdatedUser!.appLocked, isFalse);
-      expect(mockRepo.lastUpdatedUser!.protectScreenCapture, isTrue);
-      expect(mockRepo.lastUpdatedUser!.effectiveProtectScreenCapture, isTrue);
-    });
+        expect(mockRepo.lastUpdatedUser, isNotNull);
+        expect(mockRepo.lastUpdatedUser!.appLocked, isFalse);
+        expect(mockRepo.lastUpdatedUser!.protectScreenCapture, isTrue);
+        expect(mockRepo.lastUpdatedUser!.effectiveProtectScreenCapture, isTrue);
+      },
+    );
 
-    test('explicitly updating protectScreenCapture updates independently', () async {
-      final mockRepo = MockAuthRepository();
-      final initialUser = User(
-        id: 'u1',
-        name: 'User 1',
-        email: 'u1@test.com',
-        appLocked: true,
-        protectScreenCapture: true,
-      );
-      final vm = TestAuthViewModel(mockRepo: mockRepo, initialUser: initialUser);
+    test(
+      'explicitly updating protectScreenCapture updates independently',
+      () async {
+        final mockRepo = MockAuthRepository();
+        final initialUser = User(
+          id: 'u1',
+          name: 'User 1',
+          email: 'u1@test.com',
+          appLocked: true,
+          protectScreenCapture: true,
+        );
+        final vm = TestAuthViewModel(
+          mockRepo: mockRepo,
+          initialUser: initialUser,
+        );
 
-      await vm.updateUser(name: 'User 1', protectScreenCapture: false);
+        await vm.updateUser(name: 'User 1', protectScreenCapture: false);
 
-      expect(mockRepo.lastUpdatedUser!.appLocked, isTrue);
-      expect(mockRepo.lastUpdatedUser!.protectScreenCapture, isFalse);
-      expect(mockRepo.lastUpdatedUser!.effectiveProtectScreenCapture, isFalse);
-    });
+        expect(mockRepo.lastUpdatedUser!.appLocked, isTrue);
+        expect(mockRepo.lastUpdatedUser!.protectScreenCapture, isFalse);
+        expect(
+          mockRepo.lastUpdatedUser!.effectiveProtectScreenCapture,
+          isFalse,
+        );
+      },
+    );
   });
 
   group('SupplierViewModel search filtering', () {
@@ -233,7 +250,7 @@ void main() {
       expect(vm.hasLoadError, isTrue);
       expect(vm.isOffline, isTrue);
 
-      vm.retryListenToSuppliers('u1');
+      await vm.retryListenToSuppliers('u1');
       await Future<void>.delayed(Duration.zero);
       expect(repository.attempts, 2);
       expect(vm.hasLoadError, isFalse);
@@ -241,167 +258,198 @@ void main() {
       vm.dispose();
     });
 
-    test('filteredSuppliers filters by name, rep, phone, and email case-insensitively', () {
-      final vm = SupplierViewModel(repository: MockSupplierRepository());
-      final suppliers = [
-        Supplier(
-          id: '1',
-          name: 'Supermercado Central',
-          representativeName: 'Carlos Silva',
-          phoneNumber: '11999998888',
-          email: 'contato@central.com',
-        ),
-        Supplier(
-          id: '2',
-          name: 'Auto Peças Silva',
-          representativeName: 'Marcos Oliveira',
-          phoneNumber: '21988887777',
-          email: 'pecas@silva.com',
-        ),
-        Supplier(
-          id: '3',
-          name: 'Farmácia Popular',
-          representativeName: 'Juliana Costa',
-          phoneNumber: '31977776666',
-          email: 'contato@farmacia.com',
-        ),
-      ];
+    test(
+      'filteredSuppliers filters by name, rep, phone, and email case-insensitively',
+      () {
+        final vm = SupplierViewModel(repository: MockSupplierRepository());
+        final suppliers = [
+          Supplier(
+            id: '1',
+            name: 'Supermercado Central',
+            representativeName: 'Carlos Silva',
+            phoneNumber: '11999998888',
+            email: 'contato@central.com',
+          ),
+          Supplier(
+            id: '2',
+            name: 'Auto Peças Silva',
+            representativeName: 'Marcos Oliveira',
+            phoneNumber: '21988887777',
+            email: 'pecas@silva.com',
+          ),
+          Supplier(
+            id: '3',
+            name: 'Farmácia Popular',
+            representativeName: 'Juliana Costa',
+            phoneNumber: '31977776666',
+            email: 'contato@farmacia.com',
+          ),
+        ];
 
-      vm.setSuppliersForTesting(suppliers);
+        vm.setSuppliersForTesting(suppliers);
 
-      expect(vm.filteredSuppliers.length, 3);
+        expect(vm.filteredSuppliers.length, 3);
 
-      vm.setSearchQuery('central');
-      expect(vm.filteredSuppliers.length, 1);
-      expect(vm.filteredSuppliers.first.name, 'Supermercado Central');
+        vm.setSearchQuery('central');
+        expect(vm.filteredSuppliers.length, 1);
+        expect(vm.filteredSuppliers.first.name, 'Supermercado Central');
 
-      vm.setSearchQuery('silva');
-      expect(vm.filteredSuppliers.length, 2);
+        vm.setSearchQuery('silva');
+        expect(vm.filteredSuppliers.length, 2);
 
-      vm.setSearchQuery('97777');
-      expect(vm.filteredSuppliers.length, 1);
-      expect(vm.filteredSuppliers.first.name, 'Farmácia Popular');
+        vm.setSearchQuery('97777');
+        expect(vm.filteredSuppliers.length, 1);
+        expect(vm.filteredSuppliers.first.name, 'Farmácia Popular');
 
-      vm.setSearchQuery('pecas@');
-      expect(vm.filteredSuppliers.length, 1);
-      expect(vm.filteredSuppliers.first.name, 'Auto Peças Silva');
+        vm.setSearchQuery('pecas@');
+        expect(vm.filteredSuppliers.length, 1);
+        expect(vm.filteredSuppliers.first.name, 'Auto Peças Silva');
 
-      vm.setSearchQuery('inexistente');
-      expect(vm.filteredSuppliers, isEmpty);
-    });
+        vm.setSearchQuery(' FARMACIA  popular ');
+        expect(vm.filteredSuppliers.length, 1);
+        expect(vm.filteredSuppliers.first.name, 'Farmácia Popular');
+
+        vm.setSearchQuery('inexistente');
+        expect(vm.filteredSuppliers, isEmpty);
+      },
+    );
   });
 
   group('SuppliersScreen search interaction widgets', () {
-    testWidgets('SuppliersScreen toggles search bar and renders empty state on no match', (tester) async {
-      final mockRepo = MockAuthRepository();
-      final user = User(id: 'u1', name: 'Tester', email: 'tester@test.com');
-      final authVm = TestAuthViewModel(mockRepo: mockRepo, initialUser: user);
-      final supplierVm = FakeSupplierViewModel(
-        suppliers: [
-          Supplier(id: '1', name: 'Padaria Alfa'),
-          Supplier(id: '2', name: 'Açougue Beta'),
-        ],
-      );
-
-      await tester.pumpWidget(
-        ProviderScope(
-          overrides: [
-            authViewModelProvider.overrideWith((ref) => authVm),
-            supplierViewModelProvider.overrideWith((ref) => supplierVm),
+    testWidgets(
+      'SuppliersScreen toggles search bar and renders empty state on no match',
+      (tester) async {
+        final mockRepo = MockAuthRepository();
+        final user = User(id: 'u1', name: 'Tester', email: 'tester@test.com');
+        final authVm = TestAuthViewModel(mockRepo: mockRepo, initialUser: user);
+        final supplierVm = FakeSupplierViewModel(
+          suppliers: [
+            Supplier(id: '1', name: 'Padaria Alfa'),
+            Supplier(id: '2', name: 'Açougue Beta'),
           ],
-          child: const MaterialApp(home: SuppliersScreen()),
-        ),
-      );
-      await tester.pumpAndSettle();
+        );
 
-      expect(find.text('Padaria Alfa'), findsOneWidget);
-      expect(find.text('Açougue Beta'), findsOneWidget);
+        await tester.pumpWidget(
+          ProviderScope(
+            overrides: [
+              authViewModelProvider.overrideWith((ref) => authVm),
+              supplierViewModelProvider.overrideWith((ref) => supplierVm),
+            ],
+            child: const MaterialApp(home: SuppliersScreen()),
+          ),
+        );
+        await tester.pumpAndSettle();
 
-      await tester.tap(find.byIcon(Icons.search));
-      await tester.pumpAndSettle();
+        expect(find.text('Padaria Alfa'), findsOneWidget);
+        expect(find.text('Açougue Beta'), findsOneWidget);
 
-      expect(find.byType(TextField), findsOneWidget);
+        await tester.tap(find.byIcon(Icons.search));
+        await tester.pumpAndSettle();
 
-      await tester.enterText(find.byType(TextField), 'Farmacia');
-      await tester.pumpAndSettle();
+        expect(find.byType(TextField), findsOneWidget);
 
-      expect(find.text('Nenhum fornecedor encontrado para a busca.'), findsOneWidget);
-      expect(find.text('Limpar busca'), findsOneWidget);
+        await tester.enterText(find.byType(TextField), 'Farmacia');
+        await tester.pumpAndSettle();
 
-      await tester.tap(find.text('Limpar busca'));
-      await tester.pumpAndSettle();
+        expect(
+          find.text('Nenhum fornecedor encontrado para a busca.'),
+          findsOneWidget,
+        );
+        expect(find.text('Limpar busca'), findsOneWidget);
 
-      expect(find.text('Padaria Alfa'), findsOneWidget);
-      expect(find.text('Açougue Beta'), findsOneWidget);
-    });
+        await tester.tap(find.text('Limpar busca'));
+        await tester.pumpAndSettle();
+
+        expect(find.text('Padaria Alfa'), findsOneWidget);
+        expect(find.text('Açougue Beta'), findsOneWidget);
+      },
+    );
   });
 
   group('UserScreen structured sections and independent toggles', () {
-    testWidgets('renders all 6 sections and handles switches with single gesture arbitration', (tester) async {
-      tester.view.physicalSize = const Size(1080, 2400);
-      tester.view.devicePixelRatio = 1.0;
-      addTearDown(() => tester.view.resetPhysicalSize());
+    testWidgets(
+      'renders all 6 sections and handles switches with single gesture arbitration',
+      (tester) async {
+        tester.view.physicalSize = const Size(1080, 2400);
+        tester.view.devicePixelRatio = 1.0;
+        addTearDown(() => tester.view.resetPhysicalSize());
 
-      final mockRepo = MockAuthRepository();
-      final user = User(
-        id: 'u1',
-        name: 'Tester da Silva',
-        email: 'tester@test.com',
-        appLocked: true,
-        protectScreenCapture: true,
-        enableIncomes: false,
-        enableSuppliers: true,
-      );
-      final authVm = TestAuthViewModel(mockRepo: mockRepo, initialUser: user);
+        final mockRepo = MockAuthRepository();
+        final user = User(
+          id: 'u1',
+          name: 'Tester da Silva',
+          email: 'tester@test.com',
+          appLocked: true,
+          protectScreenCapture: true,
+          enableIncomes: false,
+          enableSuppliers: true,
+        );
+        final authVm = TestAuthViewModel(mockRepo: mockRepo, initialUser: user);
 
-      await tester.pumpWidget(
-        ProviderScope(
-          overrides: [
-            authViewModelProvider.overrideWith((ref) => authVm),
-            expenseViewModelProvider.overrideWith((ref) => FakeExpenseViewModel()),
-            categoryViewModelProvider.overrideWith((ref) => FakeCategoryViewModel()),
-            credentialViewModelProvider.overrideWith((ref) => FakeCredentialViewModel()),
-            dashboardLayoutRepositoryProvider.overrideWithValue(FakeDashboardLayoutRepository()),
-          ],
-          child: const MaterialApp(home: UserScreen()),
-        ),
-      );
-      await tester.pumpAndSettle();
+        await tester.pumpWidget(
+          ProviderScope(
+            overrides: [
+              authViewModelProvider.overrideWith((ref) => authVm),
+              expenseViewModelProvider.overrideWith(
+                (ref) => FakeExpenseViewModel(),
+              ),
+              categoryViewModelProvider.overrideWith(
+                (ref) => FakeCategoryViewModel(),
+              ),
+              credentialViewModelProvider.overrideWith(
+                (ref) => FakeCredentialViewModel(),
+              ),
+              dashboardLayoutRepositoryProvider.overrideWithValue(
+                FakeDashboardLayoutRepository(),
+              ),
+            ],
+            child: const MaterialApp(home: UserScreen()),
+          ),
+        );
+        await tester.pumpAndSettle();
 
-      expect(find.text('CONTA'), findsOneWidget);
-      expect(find.text('APARÊNCIA'), findsOneWidget);
-      expect(find.text('RECURSOS'), findsOneWidget);
-      expect(find.text('SEGURANÇA E PRIVACIDADE'), findsOneWidget);
-      expect(find.text('DADOS E RECUPERAÇÃO'), findsOneWidget);
-      expect(find.text('SESSÃO'), findsOneWidget);
-      expect(find.text('Personalizar painel'), findsOneWidget);
-      expect(find.text('Backup'), findsOneWidget);
-      expect(find.text('Criar backup manual'), findsNothing);
-      expect(find.text('Backup automático'), findsNothing);
-      expect(find.text('Restaurar backup'), findsNothing);
+        expect(find.text('CONTA'), findsOneWidget);
+        expect(find.text('APARÊNCIA'), findsOneWidget);
+        expect(find.text('RECURSOS'), findsOneWidget);
+        expect(find.text('SEGURANÇA E PRIVACIDADE'), findsOneWidget);
+        expect(find.text('DADOS E RECUPERAÇÃO'), findsOneWidget);
+        expect(find.text('SESSÃO'), findsOneWidget);
+        expect(find.text('Personalizar painel'), findsOneWidget);
+        expect(find.text('Backup'), findsOneWidget);
+        expect(find.text('Criar backup manual'), findsNothing);
+        expect(find.text('Backup automático'), findsNothing);
+        expect(find.text('Restaurar backup'), findsNothing);
 
-      expect(find.text('Bloquear ao sair do aplicativo'), findsOneWidget);
-      expect(find.text('Proteger captura de tela'), findsOneWidget);
+        expect(find.text('Bloquear ao sair do aplicativo'), findsOneWidget);
+        expect(find.text('Proteger captura de tela'), findsOneWidget);
 
-      final switchTiles = find.byType(SettingsSwitchTile);
-      expect(switchTiles, findsNWidgets(4));
+        final switchTiles = find.byType(SettingsSwitchTile);
+        expect(switchTiles, findsNWidgets(4));
 
-      await tester.tap(find.text('Bloquear ao sair do aplicativo'));
-      await tester.pumpAndSettle();
+        await tester.tap(find.text('Bloquear ao sair do aplicativo'));
+        await tester.pumpAndSettle();
 
-      expect(mockRepo.lastUpdatedUser, isNotNull);
-      expect(mockRepo.lastUpdatedUser!.appLocked, isFalse);
-    });
+        expect(mockRepo.lastUpdatedUser, isNotNull);
+        expect(mockRepo.lastUpdatedUser!.appLocked, isFalse);
+      },
+    );
 
-    testWidgets('opens panel customization from profile settings', (tester) async {
+    testWidgets('opens panel customization from profile settings', (
+      tester,
+    ) async {
       final user = User(id: 'u1', name: 'Tester', email: 'tester@test.com');
       await tester.pumpWidget(
         ProviderScope(
           overrides: [
-            authViewModelProvider.overrideWith((ref) => TestAuthViewModel(
-              mockRepo: MockAuthRepository(), initialUser: user,
-            )),
-            dashboardLayoutRepositoryProvider.overrideWithValue(FakeDashboardLayoutRepository()),
+            authViewModelProvider.overrideWith(
+              (ref) => TestAuthViewModel(
+                mockRepo: MockAuthRepository(),
+                initialUser: user,
+              ),
+            ),
+            dashboardLayoutRepositoryProvider.overrideWithValue(
+              FakeDashboardLayoutRepository(),
+            ),
           ],
           child: const MaterialApp(home: UserScreen()),
         ),

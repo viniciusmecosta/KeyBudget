@@ -31,41 +31,67 @@ void main() {
 
     test('returns Vencido for past dates', () {
       final pastDate = DateTime(2026, 9, 20);
-      final info = DocumentExpiryHelper.calculate(pastDate, referenceDate: refDate);
+      final info = DocumentExpiryHelper.calculate(
+        pastDate,
+        referenceDate: refDate,
+      );
       expect(info.label, 'Vencido');
       expect(info.variant, AppBadgeVariant.error);
     });
 
     test('returns Vence hoje for current civil date', () {
       final todayDate = DateTime(2026, 9, 21, 23, 59);
-      final info = DocumentExpiryHelper.calculate(todayDate, referenceDate: refDate);
+      final info = DocumentExpiryHelper.calculate(
+        todayDate,
+        referenceDate: refDate,
+      );
       expect(info.label, 'Vence hoje');
       expect(info.variant, AppBadgeVariant.warning);
     });
 
     test('returns singular Vence em 1 dia for tomorrow', () {
       final tomorrow = DateTime(2026, 9, 22);
-      final info = DocumentExpiryHelper.calculate(tomorrow, referenceDate: refDate);
+      final info = DocumentExpiryHelper.calculate(
+        tomorrow,
+        referenceDate: refDate,
+      );
       expect(info.label, 'Vence em 1 dia');
       expect(info.variant, AppBadgeVariant.warning);
     });
 
     test('returns plural Vence em N dias for upcoming within 30 days', () {
       final future15 = DateTime(2026, 10, 6);
-      final info = DocumentExpiryHelper.calculate(future15, referenceDate: refDate);
+      final info = DocumentExpiryHelper.calculate(
+        future15,
+        referenceDate: refDate,
+      );
       expect(info.label, 'Vence em 15 dias');
       expect(info.variant, AppBadgeVariant.warning);
     });
 
     test('returns formatted date for dates beyond 30 days', () {
       final future60 = DateTime(2026, 11, 25);
-      final info = DocumentExpiryHelper.calculate(future60, referenceDate: refDate);
+      final info = DocumentExpiryHelper.calculate(
+        future60,
+        referenceDate: refDate,
+      );
       expect(info.label, 'Validade: 25/11/2026');
       expect(info.variant, AppBadgeVariant.neutral);
     });
   });
 
   group('Domain model copyWith nullification', () {
+    test('editing an attachment copy leaves the saved document untouched', () {
+      final original = Attachment(
+        name: 'Original',
+        type: 'pdf',
+        driveId: 'drive',
+      );
+      final draft = original.copy()..name = 'Rascunho';
+      expect(original.name, 'Original');
+      expect(draft.driveId, original.driveId);
+    });
+
     test('Document copyWith supports clearing optional fields to null', () {
       final initialDoc = Document(
         id: 'doc_1',
@@ -121,7 +147,9 @@ void main() {
   });
 
   group('CredentialListTile widget presentation', () {
-    testWidgets('never exposes password in list preview and has chevron', (tester) async {
+    testWidgets('never exposes password in list preview and has chevron', (
+      tester,
+    ) async {
       final cred = Credential(
         id: 'cred_preview',
         location: 'GitHub',
@@ -132,9 +160,7 @@ void main() {
       await tester.pumpWidget(
         ProviderScope(
           child: MaterialApp(
-            home: Scaffold(
-              body: CredentialListTile(credential: cred),
-            ),
+            home: Scaffold(body: CredentialListTile(credential: cred)),
           ),
         ),
       );
@@ -148,7 +174,9 @@ void main() {
   });
 
   group('DocumentListTile widget presentation', () {
-    testWidgets('shows identity without attachment and expiry badges', (tester) async {
+    testWidgets('shows identity without attachment and expiry badges', (
+      tester,
+    ) async {
       final doc = Document(
         id: 'doc_1',
         documentName: 'Certidão',
@@ -163,9 +191,7 @@ void main() {
       await tester.pumpWidget(
         ProviderScope(
           child: MaterialApp(
-            home: Scaffold(
-              body: DocumentListTile(doc: doc),
-            ),
+            home: Scaffold(body: DocumentListTile(doc: doc)),
           ),
         ),
       );
@@ -179,40 +205,43 @@ void main() {
   });
 
   group('CredentialDetailScreen security safeguards', () {
-    testWidgets('starts with masked password, reveals on demand, and auto-hides', (tester) async {
-      final encrypted = EncryptionService().encryptData('myPlainTextPassword');
-      final cred = Credential(
-        id: 'cred_detail',
-        location: 'Portal Corporativo',
-        login: 'colaborador',
-        encryptedPassword: encrypted,
-      );
+    testWidgets(
+      'starts with masked password, reveals on demand, and auto-hides',
+      (tester) async {
+        final encrypted = EncryptionService().encryptData(
+          'myPlainTextPassword',
+        );
+        final cred = Credential(
+          id: 'cred_detail',
+          location: 'Portal Corporativo',
+          login: 'colaborador',
+          encryptedPassword: encrypted,
+        );
 
-      await tester.pumpWidget(
-        ProviderScope(
-          child: MaterialApp(
-            home: CredentialDetailScreen(credential: cred),
+        await tester.pumpWidget(
+          ProviderScope(
+            child: MaterialApp(home: CredentialDetailScreen(credential: cred)),
           ),
-        ),
-      );
+        );
 
-      expect(find.text('Portal Corporativo'), findsWidgets);
-      expect(find.text('colaborador'), findsOneWidget);
-      expect(find.text('••••••••••••'), findsOneWidget);
-      expect(find.byTooltip('Mostrar senha'), findsOneWidget);
-      expect(find.byTooltip('Copiar senha'), findsOneWidget);
+        expect(find.text('Portal Corporativo'), findsWidgets);
+        expect(find.text('colaborador'), findsOneWidget);
+        expect(find.text('••••••••••••'), findsOneWidget);
+        expect(find.byTooltip('Mostrar senha'), findsOneWidget);
+        expect(find.byTooltip('Copiar senha'), findsOneWidget);
 
-      await tester.tap(find.byTooltip('Mostrar senha'));
-      await tester.pumpAndSettle();
+        await tester.tap(find.byTooltip('Mostrar senha'));
+        await tester.pumpAndSettle();
 
-      expect(find.text('myPlainTextPassword'), findsOneWidget);
-      expect(find.byTooltip('Ocultar senha'), findsOneWidget);
+        expect(find.text('myPlainTextPassword'), findsOneWidget);
+        expect(find.byTooltip('Ocultar senha'), findsOneWidget);
 
-      await tester.tap(find.byTooltip('Ocultar senha'));
-      await tester.pumpAndSettle();
+        await tester.tap(find.byTooltip('Ocultar senha'));
+        await tester.pumpAndSettle();
 
-      expect(find.text('••••••••••••'), findsOneWidget);
-      expect(find.text('myPlainTextPassword'), findsNothing);
-    });
+        expect(find.text('••••••••••••'), findsOneWidget);
+        expect(find.text('myPlainTextPassword'), findsNothing);
+      },
+    );
   });
 }

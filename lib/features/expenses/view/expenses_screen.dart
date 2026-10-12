@@ -274,92 +274,100 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen> {
                     horizontal: AppSpacing.md,
                   ),
                   child: TweenAnimationBuilder<double>(
-                      tween: Tween<double>(
-                        begin: enableIncomes
-                            ? expenseViewModel.currentMonthBalance
-                            : expenseViewModel.currentMonthTotal,
-                        end: enableIncomes
-                            ? expenseViewModel.currentMonthBalance
-                            : expenseViewModel.currentMonthTotal,
-                      ),
-                      duration: AppAnimations.durationSlow,
-                      curve: AppAnimations.curve,
-                      builder: (context, value, child) {
-                        final primaryHue = HSLColor.fromColor(
-                          theme.colorScheme.primary,
-                        ).hue;
-                        final isGreenish =
-                            primaryHue >= 70 && primaryHue <= 160;
-                        final isReddish = primaryHue >= 330 || primaryHue <= 20;
-                        final incomeIconColor = isGreenish
-                            ? Colors.white
-                            : Colors.greenAccent[400]!;
-                        final expenseIconColor = isReddish
-                            ? Colors.white
-                            : theme.colorScheme.error;
+                    tween: Tween<double>(
+                      begin: enableIncomes
+                          ? expenseViewModel.currentMonthBalance
+                          : expenseViewModel.currentMonthTotal,
+                      end: enableIncomes
+                          ? expenseViewModel.currentMonthBalance
+                          : expenseViewModel.currentMonthTotal,
+                    ),
+                    duration: AppAnimations.durationFor(
+                      context,
+                      AppAnimations.durationSlow,
+                    ),
+                    curve: AppAnimations.curve,
+                    builder: (context, value, child) {
+                      final primaryHue = HSLColor.fromColor(
+                        theme.colorScheme.primary,
+                      ).hue;
+                      final isGreenish = primaryHue >= 70 && primaryHue <= 160;
+                      final isReddish = primaryHue >= 330 || primaryHue <= 20;
+                      final incomeIconColor = isGreenish
+                          ? Colors.white
+                          : AppContrast.accentOnSurface(
+                              Colors.greenAccent[400]!,
+                              filledPrimary,
+                              isDark: true,
+                            );
+                      final expenseIconColor = isReddish
+                          ? Colors.white
+                          : AppContrast.accentOnSurface(
+                              theme.colorScheme.error,
+                              filledPrimary,
+                              isDark: true,
+                            );
 
-                        return BalanceCard(
-                          title: isFiltered
-                              ? (enableIncomes
-                                    ? 'Saldo filtrado'
-                                    : 'Total filtrado')
-                              : (enableIncomes
-                                    ? 'Saldo do mês'
-                                    : 'Total do mês'),
-                          period: expenseViewModel.searchAllPeriods
-                              ? 'Todo o período'
-                              : formattedPeriod,
-                          totalValue: value,
-                          backgroundColor: filledPrimary,
-                          foregroundColor: Colors.white,
-                          isCompact: enableIncomes,
-                          subtitle: enableIncomes
-                              ? Padding(
-                                  padding: const EdgeInsets.only(
-                                    top: AppSpacing.xs,
-                                  ),
-                                  child: Row(
-                                    children: [
-                                      Icon(
-                                        Icons.arrow_circle_up_rounded,
-                                        color: incomeIconColor,
-                                        size: 18,
+                      return BalanceCard(
+                        title: isFiltered
+                            ? (enableIncomes
+                                  ? 'Saldo filtrado'
+                                  : 'Total filtrado')
+                            : (enableIncomes ? 'Saldo do mês' : 'Total do mês'),
+                        period: expenseViewModel.searchAllPeriods
+                            ? 'Todo o período'
+                            : formattedPeriod,
+                        totalValue: value,
+                        backgroundColor: filledPrimary,
+                        foregroundColor: Colors.white,
+                        isCompact: enableIncomes,
+                        subtitle: enableIncomes
+                            ? Padding(
+                                padding: const EdgeInsets.only(
+                                  top: AppSpacing.xs,
+                                ),
+                                child: Row(
+                                  children: [
+                                    Icon(
+                                      Icons.arrow_circle_up_rounded,
+                                      color: incomeIconColor,
+                                      size: 18,
+                                    ),
+                                    const SizedBox(width: 6),
+                                    Text(
+                                      currencyFormatter.format(
+                                        expenseViewModel
+                                            .currentMonthIncomeTotal,
                                       ),
-                                      const SizedBox(width: 6),
-                                      Text(
-                                        currencyFormatter.format(
-                                          expenseViewModel
-                                              .currentMonthIncomeTotal,
-                                        ),
-                                        style: theme.textTheme.bodyMedium
-                                            ?.copyWith(
-                                              color: Colors.white,
-                                              fontWeight: FontWeight.w600,
-                                            ),
+                                      style: theme.textTheme.bodyMedium
+                                          ?.copyWith(
+                                            color: Colors.white,
+                                            fontWeight: FontWeight.w600,
+                                          ),
+                                    ),
+                                    const SizedBox(width: AppSpacing.lg),
+                                    Icon(
+                                      Icons.arrow_circle_down_rounded,
+                                      color: expenseIconColor,
+                                      size: 18,
+                                    ),
+                                    const SizedBox(width: 6),
+                                    Text(
+                                      currencyFormatter.format(
+                                        expenseViewModel.currentMonthTotal,
                                       ),
-                                      const SizedBox(width: AppSpacing.lg),
-                                      Icon(
-                                        Icons.arrow_circle_down_rounded,
-                                        color: expenseIconColor,
-                                        size: 18,
-                                      ),
-                                      const SizedBox(width: 6),
-                                      Text(
-                                        currencyFormatter.format(
-                                          expenseViewModel.currentMonthTotal,
-                                        ),
-                                        style: theme.textTheme.bodyMedium
-                                            ?.copyWith(
-                                              color: Colors.white,
-                                              fontWeight: FontWeight.w600,
-                                            ),
-                                      ),
-                                    ],
-                                  ),
-                                )
-                              : null,
-                        );
-                      },
+                                      style: theme.textTheme.bodyMedium
+                                          ?.copyWith(
+                                            color: Colors.white,
+                                            fontWeight: FontWeight.w600,
+                                          ),
+                                    ),
+                                  ],
+                                ),
+                              )
+                            : null,
+                      );
+                    },
                   ),
                 ),
                 _buildActiveFilterChips(
@@ -467,7 +475,10 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen> {
                 )
               : null,
           title: AnimatedSwitcher(
-            duration: const Duration(milliseconds: 300),
+            duration: AppAnimations.durationFor(
+              context,
+              const Duration(milliseconds: 300),
+            ),
             transitionBuilder: (child, animation) =>
                 FadeTransition(opacity: animation, child: child),
             child: _isSearching
@@ -641,19 +652,19 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen> {
         ),
         body: SafeArea(child: body),
         floatingActionButton: FloatingActionButton.extended(
-            heroTag: 'fab_expenses',
-            onPressed: () {
-              HapticFeedback.lightImpact();
-              NavigationUtils.push(context, const AddExpenseScreen());
-            },
-            icon: const Icon(Icons.add_rounded),
-            label: Text(enableIncomes ? "Novo Lançamento" : "Nova Despesa"),
-            shape: RoundedRectangleBorder(
-              borderRadius: AppBorders.borderRadiusXXL,
-            ),
-            backgroundColor: filledPrimary,
-            foregroundColor: Colors.white,
-            elevation: 0,
+          heroTag: 'fab_expenses',
+          onPressed: () {
+            HapticFeedback.lightImpact();
+            NavigationUtils.push(context, const AddExpenseScreen());
+          },
+          icon: const Icon(Icons.add_rounded),
+          label: Text(enableIncomes ? "Novo Lançamento" : "Nova Despesa"),
+          shape: RoundedRectangleBorder(
+            borderRadius: AppBorders.borderRadiusXXL,
+          ),
+          backgroundColor: filledPrimary,
+          foregroundColor: Colors.white,
+          elevation: 0,
         ),
       ),
     );

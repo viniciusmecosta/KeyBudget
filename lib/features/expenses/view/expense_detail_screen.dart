@@ -93,12 +93,15 @@ class _ExpenseDetailScreenState extends ConsumerState<ExpenseDetailScreen> {
       moneyVersion: amountChanged ? 1 : null,
       date: _selectedDate,
       categoryId: _selectedCategory?.id,
+      clearCategoryId: _selectedCategory == null,
       motivation: _motivationController.text.isNotEmpty
           ? _motivationController.text
           : null,
+      clearMotivation: _motivationController.text.isEmpty,
       location: _locationController.text.isNotEmpty
           ? _locationController.text
           : null,
+      clearLocation: _locationController.text.isEmpty,
       isIncome: _isIncome,
     );
 
@@ -112,7 +115,10 @@ class _ExpenseDetailScreenState extends ConsumerState<ExpenseDetailScreen> {
       }
     } catch (e) {
       if (mounted) {
-        SnackbarService.showError(context, 'Erro ao salvar alterações da despesa.');
+        SnackbarService.showError(
+          context,
+          'Erro ao salvar alterações da despesa.',
+        );
       }
     } finally {
       if (mounted) {
@@ -177,34 +183,44 @@ class _ExpenseDetailScreenState extends ConsumerState<ExpenseDetailScreen> {
     final deletedExpense = widget.expense;
     final currentContext = context;
 
-    if (deleteGroup && deletedExpense.installmentGroupId != null) {
-      await expenseViewModel.deleteInstallmentGroup(
-        userId,
-        deletedExpense.installmentGroupId!,
-      );
-      if (currentContext.mounted) {
-        SnackbarService.showSuccess(
-          currentContext,
-          'Parcelamento excluído com sucesso!',
+    try {
+      if (deleteGroup && deletedExpense.installmentGroupId != null) {
+        await expenseViewModel.deleteInstallmentGroup(
+          userId,
+          deletedExpense.installmentGroupId!,
         );
-        Navigator.of(currentContext).pop();
+        if (currentContext.mounted) {
+          SnackbarService.showSuccess(
+            currentContext,
+            'Parcelamento movido para a lixeira.',
+          );
+          Navigator.of(currentContext).pop();
+        }
+      } else {
+        await expenseViewModel.deleteExpense(userId, deletedExpense.id!);
+        if (currentContext.mounted) {
+          SnackbarService.showSuccess(
+            currentContext,
+            deletedExpense.recurringExpenseId != null
+                ? 'Lançamento recorrente movido para a lixeira.'
+                : _isIncome
+                ? 'Receita movida para a lixeira.'
+                : 'Despesa movida para a lixeira.',
+          );
+          Navigator.of(currentContext).pop();
+        }
       }
-    } else {
-      await expenseViewModel.deleteExpense(userId, deletedExpense.id!);
+    } catch (_) {
       if (currentContext.mounted) {
-        SnackbarService.showUndoSnackbar(
+        SnackbarService.showError(
           currentContext,
-          message: _isIncome ? 'Receita excluída.' : 'Despesa excluída.',
-          onUndo: () async {
-            await expenseViewModel.restoreExpense(userId, deletedExpense);
-          },
+          'Não foi possível concluir a exclusão. Tente novamente.',
         );
-        Navigator.of(currentContext).pop();
       }
-    }
-
-    if (mounted) {
-      setState(() => _isDeleting = false);
+    } finally {
+      if (mounted) {
+        setState(() => _isDeleting = false);
+      }
     }
   }
 
@@ -251,7 +267,10 @@ class _ExpenseDetailScreenState extends ConsumerState<ExpenseDetailScreen> {
                     ),
                   )
                 : IconButton(
-                    icon: Icon(Icons.delete_outline, color: theme.colorScheme.error),
+                    icon: Icon(
+                      Icons.delete_outline,
+                      color: theme.colorScheme.error,
+                    ),
                     tooltip: 'Excluir',
                     onPressed: _deleteExpense,
                   ),
@@ -324,7 +343,8 @@ class _ExpenseDetailScreenState extends ConsumerState<ExpenseDetailScreen> {
                   },
                   isEditing: _isEditing,
                   isIncome: _isIncome,
-                  isSingleInstallmentEdit: widget.expense.installmentGroupId != null ||
+                  isSingleInstallmentEdit:
+                      widget.expense.installmentGroupId != null ||
                       widget.expense.currentInstallment != null,
                   bottomWidgets: related.isEmpty
                       ? null
@@ -401,7 +421,8 @@ class _ExpenseDetailScreenState extends ConsumerState<ExpenseDetailScreen> {
           ),
         ),
 
-        context: context,),
+        context: context,
+      ),
     );
   }
 }

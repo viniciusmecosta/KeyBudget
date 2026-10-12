@@ -138,6 +138,31 @@ class FakeOccurrenceRepository implements RecurrenceOccurrenceRepository {
 }
 
 void main() {
+  test('restoring an edited recurrence keeps its scheduled identity', () {
+    final expense = Expense(
+      id: 'expense-1',
+      amount: 25,
+      date: DateTime(2026, 10, 5),
+      recurringExpenseId: 'rule-1',
+      scheduledDateKey: '2026-09-05',
+    );
+    final occurrence = RecurrenceOccurrence.forExpense(
+      userId: 'user-1',
+      expense: expense,
+      state: OccurrenceState.materialized,
+    )!;
+
+    expect(occurrence.scheduledDateKey, '2026-09-05');
+    expect(
+      occurrence.occurrenceKey,
+      RecurrenceOccurrence.generateKey(
+        uid: 'user-1',
+        recurringExpenseId: 'rule-1',
+        scheduledDateKey: '2026-09-05',
+      ),
+    );
+    expect(occurrence.expenseIds, ['expense-1']);
+  });
   group('RecurringExpense generation snapshot', () {
     final rule = RecurringExpense.withMoney(
       id: 'rule',

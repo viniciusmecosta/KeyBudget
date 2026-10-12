@@ -68,7 +68,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
         );
       } else {
         setState(() {
-          _inlineError = authViewModel.errorMessage ??
+          _inlineError =
+              authViewModel.errorMessage ??
               'Erro ao fazer login. Verifique suas credenciais.';
         });
       }
@@ -85,10 +86,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     if (mounted && !success) {
       if (authViewModel.errorMessage != null &&
           !authViewModel.errorMessage!.contains('cancelado')) {
-        SnackbarService.showError(
-          context,
-          authViewModel.errorMessage!,
-        );
+        SnackbarService.showError(context, authViewModel.errorMessage!);
       }
     }
   }
@@ -107,19 +105,23 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
           Row(
             children: [
               Expanded(
-                child: Divider(color: Theme.of(context).colorScheme.outlineVariant),
+                child: Divider(
+                  color: Theme.of(context).colorScheme.outlineVariant,
+                ),
               ),
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
                 child: Text(
                   'ou',
                   style: Theme.of(context).textTheme.labelMedium?.copyWith(
-                        color: Theme.of(context).colorScheme.onSurfaceVariant,
-                      ),
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  ),
                 ),
               ),
               Expanded(
-                child: Divider(color: Theme.of(context).colorScheme.outlineVariant),
+                child: Divider(
+                  color: Theme.of(context).colorScheme.outlineVariant,
+                ),
               ),
             ],
           ),
@@ -129,30 +131,33 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
             onPressed: viewModel.isLoading ? null : _submitGoogle,
           ),
           const SizedBox(height: AppSpacing.xl),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
+          Wrap(
+            alignment: WrapAlignment.center,
+            crossAxisAlignment: WrapCrossAlignment.center,
             children: [
               Text(
                 'Ainda não tem conta?',
                 style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      color: Theme.of(context).colorScheme.onSurfaceVariant,
-                    ),
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                ),
               ),
               const SizedBox(width: AppSpacing.xs),
               TextButton(
                 onPressed: () =>
                     NavigationUtils.push(context, const RegisterScreen()),
                 style: TextButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xs),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: AppSpacing.xs,
+                  ),
                   minimumSize: Size.zero,
                   tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                 ),
                 child: Text(
                   'Criar conta',
                   style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                        color: Theme.of(context).colorScheme.primary,
-                        fontWeight: FontWeight.bold,
-                      ),
+                    color: Theme.of(context).colorScheme.primary,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
               ),
             ],
@@ -170,7 +175,10 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 label: 'E-mail',
                 prefixIcon: Icons.email_outlined,
                 keyboardType: TextInputType.emailAddress,
-                autofillHints: const [AutofillHints.email, AutofillHints.username],
+                autofillHints: const [
+                  AutofillHints.email,
+                  AutofillHints.username,
+                ],
                 textInputAction: TextInputAction.next,
                 textCapitalization: TextCapitalization.none,
                 onFieldSubmitted: (_) {
@@ -194,9 +202,13 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 onFieldSubmitted: (_) => _submit(),
                 suffixIcon: IconButton(
                   icon: Icon(
-                    _isPasswordVisible ? Icons.visibility_off : Icons.visibility,
+                    _isPasswordVisible
+                        ? Icons.visibility_off
+                        : Icons.visibility,
                   ),
-                  tooltip: _isPasswordVisible ? 'Ocultar senha' : 'Mostrar senha',
+                  tooltip: _isPasswordVisible
+                      ? 'Ocultar senha'
+                      : 'Mostrar senha',
                   onPressed: () {
                     setState(() {
                       _isPasswordVisible = !_isPasswordVisible;
@@ -231,9 +243,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   child: Text(
                     'Esqueceu sua senha?',
                     style: Theme.of(context).textTheme.labelMedium?.copyWith(
-                          color: Theme.of(context).colorScheme.primary,
-                          fontWeight: FontWeight.bold,
-                        ),
+                      color: Theme.of(context).colorScheme.primary,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                 ),
               ),
@@ -256,8 +268,11 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                       Expanded(
                         child: Text(
                           _inlineError!,
-                          style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                                color: Theme.of(context).colorScheme.onErrorContainer,
+                          style: Theme.of(context).textTheme.bodySmall
+                              ?.copyWith(
+                                color: Theme.of(
+                                  context,
+                                ).colorScheme.onErrorContainer,
                               ),
                         ),
                       ),
@@ -301,7 +316,9 @@ class _GoogleSignInButton extends StatelessWidget {
             horizontal: AppSpacing.lg,
             vertical: AppSpacing.md,
           ),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
           side: BorderSide(
             color: isDark
                 ? Colors.white.withValues(alpha: 0.15)
@@ -326,14 +343,21 @@ class _GoogleSignInButton extends StatelessWidget {
             : Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  FaIcon(FontAwesomeIcons.google, size: 18, color: const Color(0xFF4285F4)),
+                  FaIcon(
+                    FontAwesomeIcons.google,
+                    size: 18,
+                    color: const Color(0xFF4285F4),
+                  ),
                   const SizedBox(width: AppSpacing.sm),
-                  Text(
-                    'Continuar com Google',
-                    style: theme.textTheme.titleMedium?.copyWith(
-                      color: isDark ? Colors.white : Colors.black87,
-                      fontWeight: FontWeight.w600,
-                      letterSpacing: 0.3,
+                  Flexible(
+                    child: Text(
+                      'Continuar com Google',
+                      textAlign: TextAlign.center,
+                      style: theme.textTheme.titleMedium?.copyWith(
+                        color: isDark ? Colors.white : Colors.black87,
+                        fontWeight: FontWeight.w600,
+                        letterSpacing: 0.3,
+                      ),
                     ),
                   ),
                 ],

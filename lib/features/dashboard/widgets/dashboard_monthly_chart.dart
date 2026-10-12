@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'package:key_budget/app/utils/navigation_utils.dart';
+import 'package:key_budget/core/design_system/colors/app_contrast.dart';
 import 'package:key_budget/core/design_system/spacing/app_spacing.dart';
 import 'package:key_budget/core/design_system/widgets/app_card.dart';
 import 'package:key_budget/core/design_system/widgets/app_section_header.dart';
@@ -19,13 +20,25 @@ class DashboardMonthlyChart extends ConsumerWidget {
     final authViewModel = ref.watch(authViewModelProvider);
     final enableIncomes = authViewModel.currentUser?.enableIncomes ?? false;
     final theme = Theme.of(context);
+    final incomeChartColor = AppContrast.accentOnSurface(
+      Colors.greenAccent[400]!,
+      theme.colorScheme.surface,
+      isDark: theme.brightness == Brightness.dark,
+    );
+    final expenseChartColor = AppContrast.accentOnSurface(
+      theme.colorScheme.error,
+      theme.colorScheme.surface,
+      isDark: theme.brightness == Brightness.dark,
+    );
     final now = DateTime.now();
+    final firstFutureDay = DateTime(now.year, now.month, now.day + 1);
 
     final Map<int, double> expensesByMonth = {};
     final Map<int, double> incomesByMonth = {};
 
     int maxMonthIndexWithData = -1;
     for (var exp in viewModel.allExpenses) {
+      if (!exp.date.isBefore(firstFutureDay)) continue;
       if (!enableIncomes && exp.isIncome == true) continue;
       final monthsDifference =
           (now.year - exp.date.year) * 12 + now.month - exp.date.month;
@@ -46,6 +59,7 @@ class DashboardMonthlyChart extends ConsumerWidget {
     }
 
     for (var exp in viewModel.allExpenses) {
+      if (!exp.date.isBefore(firstFutureDay)) continue;
       if (!enableIncomes && exp.isIncome == true) continue;
       final monthsDifference =
           (now.year - exp.date.year) * 12 + now.month - exp.date.month;
@@ -67,7 +81,7 @@ class DashboardMonthlyChart extends ConsumerWidget {
       symbol: 'R\$',
     );
     final chartDescription = validMonths.isEmpty
-        ? 'Gráfico de gastos mensais sem lançamentos nos últimos quatro meses.'
+        ? 'Gráfico de lançamentos realizados sem dados nos últimos quatro meses.'
         : validMonths
               .map((monthKey) {
                 final month = DateFormat.yMMMM(
@@ -76,11 +90,13 @@ class DashboardMonthlyChart extends ConsumerWidget {
                 final expense = currencyFormatter.format(
                   expensesByMonth[monthKey],
                 );
-                if (!enableIncomes) return '$month: gastos de $expense';
+                if (!enableIncomes) {
+                  return '$month: gastos realizados de $expense';
+                }
                 final income = currencyFormatter.format(
                   incomesByMonth[monthKey],
                 );
-                return '$month: entradas de $income e saídas de $expense';
+                return '$month: entradas realizadas de $income e saídas realizadas de $expense';
               })
               .join('. ');
 
@@ -119,7 +135,7 @@ class DashboardMonthlyChart extends ConsumerWidget {
 
       final incomeRod = BarChartRodData(
         toY: incVal,
-        color: Colors.greenAccent[400],
+        color: incomeChartColor,
         width: 16,
         borderRadius: BorderRadius.circular(6),
       );
@@ -139,7 +155,7 @@ class DashboardMonthlyChart extends ConsumerWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           AppSectionHeader(
-            title: enableIncomes ? 'Entradas vs Saídas' : 'Gastos Mensais',
+            title: enableIncomes ? 'Entradas vs Saídas' : 'Gastos realizados',
             keepActionInline: true,
             subtitle: monthsToShow <= 1
                 ? 'Último mês'
@@ -164,7 +180,7 @@ class DashboardMonthlyChart extends ConsumerWidget {
                   width: 8,
                   height: 8,
                   decoration: BoxDecoration(
-                    color: Colors.greenAccent[400],
+                    color: incomeChartColor,
                     shape: BoxShape.circle,
                   ),
                 ),
@@ -175,7 +191,7 @@ class DashboardMonthlyChart extends ConsumerWidget {
                   width: 8,
                   height: 8,
                   decoration: BoxDecoration(
-                    color: theme.colorScheme.error,
+                    color: expenseChartColor,
                     shape: BoxShape.circle,
                   ),
                 ),
@@ -230,9 +246,9 @@ class DashboardMonthlyChart extends ConsumerWidget {
                                       ).format(rod.toY),
                                       TextStyle(
                                         color: isIncomeRod
-                                            ? Colors.greenAccent[400]
+                                            ? incomeChartColor
                                             : (enableIncomes
-                                                  ? theme.colorScheme.error
+                                                  ? expenseChartColor
                                                   : theme.colorScheme.primary),
                                         fontWeight: FontWeight.bold,
                                         fontSize: 13,

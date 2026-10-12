@@ -11,6 +11,7 @@ import 'package:key_budget/core/design_system/borders/app_borders.dart';
 import 'package:key_budget/core/design_system/spacing/app_spacing.dart';
 import 'package:key_budget/core/design_system/widgets/app_button.dart';
 import 'package:key_budget/core/design_system/widgets/app_text_field.dart';
+import 'package:key_budget/core/import_export/backup_crypto.dart';
 import 'package:key_budget/core/import_export/backup_service.dart';
 import 'package:key_budget/core/import_export/automatic_backup_service.dart';
 import 'package:key_budget/core/import_export/import_plan.dart';
@@ -43,8 +44,10 @@ class _BackupRestoreScreenState extends ConsumerState<BackupRestoreScreen>
   String _createProgressStatus = '';
   double _createProgressValue = 0.0;
   BackupResultData? _lastBackupResult;
-  final AutomaticBackupService _automaticBackupService = AutomaticBackupService();
-  final TextEditingController _automaticPasswordController = TextEditingController();
+  final AutomaticBackupService _automaticBackupService =
+      AutomaticBackupService();
+  final TextEditingController _automaticPasswordController =
+      TextEditingController();
   AutomaticBackupSettings? _automaticSettings;
   List<AutomaticBackupFile> _automaticHistory = [];
   AutomaticBackupInterval _automaticInterval = AutomaticBackupInterval.off;
@@ -112,52 +115,112 @@ class _BackupRestoreScreenState extends ConsumerState<BackupRestoreScreen>
     if (userId == null) return;
     setState(() => _isSavingAutomaticBackup = true);
     try {
-      bool? uploaded;
-      if (!force) {
-        await _automaticBackupService.saveSettings(
-          userId: userId,
-          interval: _automaticInterval,
-          retention: _automaticRetention,
-          password: _automaticPasswordController.text.isEmpty
-              ? null
-              : _automaticPasswordController.text,
-        );
+      if (force && _automaticInterval == AutomaticBackupInterval.off) {
+        throw ArgumentError('Ative o backup automático para criar uma cópia.');
       }
+      await _automaticBackupService.saveSettings(
+        userId: userId,
+        interval: _automaticInterval,
+        retention: _automaticRetention,
+        password: _automaticPasswordController.text.isEmpty
+            ? null
+            : _automaticPasswordController.text,
+      );
       _automaticPasswordController.clear();
-      if (_automaticInterval != AutomaticBackupInterval.off) {
-        uploaded = await _automaticBackupService.runIfDue(
+      var driveAuthorized = true;
+      var driveAuthorizationCancelled = false;
+      if (!force && _automaticInterval != AutomaticBackupInterval.off) {
+        try {
+          driveAuthorized = await DriveService().ensureAuthorized(
+            allowInteractive: true,
+          );
+        } on DriveAuthorizationCancelled {
+          driveAuthorized = false;
+          driveAuthorizationCancelled = true;
+        }
+      }
+      AutomaticBackupRunStatus? result;
+      if (force) {
+        result = await _automaticBackupService.runDetailed(
           userId,
           allowInteractive: true,
-          force: force,
+          force: true,
         );
       }
       await _loadAutomaticBackup();
       if (mounted) {
-        if (force && uploaded != true) {
-          SnackbarService.showError(
-            context,
-            _automaticSettings?.lastError ??
-                'Não foi possível concluir a cópia. Tente novamente.',
-          );
+        if (!force) {
+          if (_automaticInterval == AutomaticBackupInterval.off ||
+              driveAuthorized) {
+            SnackbarService.showSuccess(
+              context,
+              'Configuração de backup atualizada.',
+            );
+          } else {
+            SnackbarService.showInfo(
+              context,
+              driveAuthorizationCancelled
+                  ? 'Configuração salva. Conecte o Google Drive quando quiser ativar o envio automático.'
+                  : 'Configuração salva. Não foi possível autorizar o Drive; tente novamente.',
+            );
+          }
+        } else if (result == AutomaticBackupRunStatus.completed) {
+          SnackbarService.showSuccess(context, 'Cópia enviada ao Drive.');
         } else {
-          SnackbarService.showSuccess(
-            context,
-            force
-                ? 'Cópia criada e enviada ao Drive.'
-                : 'Configuração de backup atualizada.',
-          );
+          final message = switch (result) {
+            AutomaticBackupRunStatus.authorizationRequired =>
+              'Conecte ou autorize uma conta Google para enviar o backup.',
+            AutomaticBackupRunStatus.alreadyRunning =>
+              'Já há uma cópia em andamento. Aguarde a conclusão.',
+            AutomaticBackupRunStatus.passwordMissing =>
+              'Salve uma senha para o backup automático antes de continuar.',
+            AutomaticBackupRunStatus.incomplete =>
+              _automaticSettings?.lastError ??
+                  'A cópia ficou incompleta. Verifique os anexos e tente novamente.',
+            AutomaticBackupRunStatus.localCopyPending =>
+              'Cópia local concluída; o envio ao Drive ficou pendente. Tente novamente.',
+            AutomaticBackupRunStatus.accountChanged =>
+              'A conta mudou durante a operação. Entre novamente e tente outra vez.',
+            AutomaticBackupRunStatus.failed =>
+              _automaticSettings?.lastError ??
+                  'Falha ao criar ou enviar a cópia. Tente novamente.',
+            AutomaticBackupRunStatus.notDue =>
+              'Não foi possível iniciar a cópia. Confira a configuração e tente novamente.',
+            AutomaticBackupRunStatus.completed => 'Cópia enviada ao Drive.',
+            null => 'Não foi possível iniciar a cópia. Tente novamente.',
+          };
+          SnackbarService.showError(context, message);
         }
       }
     } on ArgumentError catch (error) {
-      if (mounted) SnackbarService.showError(context, error.message?.toString() ?? 'Configuração inválida.');
+      if (mounted) {
+        SnackbarService.showError(
+          context,
+          error.message?.toString() ?? 'Configuração inválida.',
+        );
+      }
     } catch (_) {
-      if (mounted) SnackbarService.showError(context, 'Não foi possível configurar o backup automático.');
+      if (mounted) {
+        SnackbarService.showError(
+          context,
+          'Não foi possível configurar o backup automático.',
+        );
+      }
     } finally {
       if (mounted) setState(() => _isSavingAutomaticBackup = false);
     }
   }
 
   Future<void> _selectAutomaticBackup(AutomaticBackupFile item) async {
+    if (await item.file.length() > BackupCrypto.maxBackupBytesLimit) {
+      if (mounted) {
+        SnackbarService.showError(
+          context,
+          'O backup excede o limite de 200 MB.',
+        );
+      }
+      return;
+    }
     final bytes = await item.file.readAsBytes();
     if (!mounted) return;
     setState(() {
@@ -282,7 +345,10 @@ class _BackupRestoreScreenState extends ConsumerState<BackupRestoreScreen>
         setState(() {
           _isCreatingBackup = false;
         });
-        SnackbarService.showError(context, 'Não foi possível gerar o backup. Tente novamente.');
+        SnackbarService.showError(
+          context,
+          'Não foi possível gerar o backup. Tente novamente.',
+        );
       }
     }
   }
@@ -324,27 +390,49 @@ class _BackupRestoreScreenState extends ConsumerState<BackupRestoreScreen>
       return;
     } catch (e) {
       if (mounted) {
-        SnackbarService.showError(context, 'Não foi possível enviar o backup. Tente novamente.');
+        SnackbarService.showError(
+          context,
+          'Não foi possível enviar o backup. Tente novamente.',
+        );
       }
     }
   }
 
   Future<void> _pickRestoreFile() async {
-    final selected = await FilePicker.pickFile(
-      type: FileType.any,
-    );
+    final selected = await FilePicker.pickFile(type: FileType.any);
 
     if (selected != null) {
       final path = selected.path;
       if (path != null) {
         final file = File(path);
-        final bytes = await file.readAsBytes();
-        if (!mounted) return;
-        setState(() {
-          _selectedRestoreBytes = bytes;
-          _selectedRestoreFileName = selected.name;
-          _importPlan = null;
-        });
+        try {
+          if (!selected.name.toLowerCase().endsWith('.kbudget')) {
+            throw const FormatException('Selecione um arquivo .kbudget.');
+          }
+          if (await file.length() > BackupCrypto.maxBackupBytesLimit) {
+            throw const BackupSecurityException(
+              'O backup excede o limite de 200 MB.',
+            );
+          }
+          final bytes = await file.readAsBytes();
+          if (!mounted) return;
+          setState(() {
+            _selectedRestoreBytes = bytes;
+            _selectedRestoreFileName = selected.name;
+            _importPlan = null;
+          });
+        } on FormatException catch (error) {
+          if (mounted) SnackbarService.showError(context, error.message);
+        } on BackupSecurityException catch (error) {
+          if (mounted) SnackbarService.showError(context, error.message);
+        } catch (_) {
+          if (mounted) {
+            SnackbarService.showError(
+              context,
+              'Não foi possível abrir o backup. Tente novamente.',
+            );
+          }
+        }
       }
     }
   }
@@ -418,7 +506,10 @@ class _BackupRestoreScreenState extends ConsumerState<BackupRestoreScreen>
         setState(() {
           _isPreviewing = false;
         });
-        SnackbarService.showError(context, 'Não foi possível analisar o backup. Verifique o arquivo e tente novamente.');
+        SnackbarService.showError(
+          context,
+          'Não foi possível analisar o backup. Verifique o arquivo e tente novamente.',
+        );
       }
     }
   }
@@ -526,7 +617,10 @@ class _BackupRestoreScreenState extends ConsumerState<BackupRestoreScreen>
         setState(() {
           _isRestoring = false;
         });
-        SnackbarService.showError(context, 'Não foi possível concluir a restauração. Tente novamente.');
+        SnackbarService.showError(
+          context,
+          'Não foi possível concluir a restauração. Tente novamente.',
+        );
       }
     }
   }
@@ -583,13 +677,25 @@ class _BackupRestoreScreenState extends ConsumerState<BackupRestoreScreen>
               initialValue: _automaticInterval,
               decoration: const InputDecoration(labelText: 'Periodicidade'),
               items: const [
-                DropdownMenuItem(value: AutomaticBackupInterval.off, child: Text('Desativado')),
-                DropdownMenuItem(value: AutomaticBackupInterval.daily, child: Text('Diário')),
-                DropdownMenuItem(value: AutomaticBackupInterval.weekly, child: Text('Semanal')),
+                DropdownMenuItem(
+                  value: AutomaticBackupInterval.off,
+                  child: Text('Desativado'),
+                ),
+                DropdownMenuItem(
+                  value: AutomaticBackupInterval.daily,
+                  child: Text('Diário'),
+                ),
+                DropdownMenuItem(
+                  value: AutomaticBackupInterval.weekly,
+                  child: Text('Semanal'),
+                ),
               ],
               onChanged: _isSavingAutomaticBackup
                   ? null
-                  : (value) => setState(() => _automaticInterval = value ?? AutomaticBackupInterval.off),
+                  : (value) => setState(
+                      () => _automaticInterval =
+                          value ?? AutomaticBackupInterval.off,
+                    ),
             ),
             if (_automaticInterval != AutomaticBackupInterval.off) ...[
               const SizedBox(height: AppSpacing.sm),
@@ -604,12 +710,14 @@ class _BackupRestoreScreenState extends ConsumerState<BackupRestoreScreen>
                 ],
                 onChanged: _isSavingAutomaticBackup
                     ? null
-                    : (value) => setState(() => _automaticRetention = value ?? 7),
+                    : (value) =>
+                          setState(() => _automaticRetention = value ?? 7),
               ),
               const SizedBox(height: AppSpacing.sm),
               AppTextField(
                 controller: _automaticPasswordController,
-                label: _automaticSettings?.interval == AutomaticBackupInterval.off
+                label:
+                    _automaticSettings?.interval == AutomaticBackupInterval.off
                     ? 'Senha do backup automático'
                     : 'Nova senha (deixe em branco para manter)',
                 obscureText: true,
@@ -621,34 +729,53 @@ class _BackupRestoreScreenState extends ConsumerState<BackupRestoreScreen>
               label: 'Salvar configuração',
               isFullWidth: true,
               isLoading: _isSavingAutomaticBackup,
-              onPressed: _isSavingAutomaticBackup ? null : () => _saveAutomaticBackup(),
+              onPressed: _isSavingAutomaticBackup
+                  ? null
+                  : () => _saveAutomaticBackup(),
             ),
             if ((_automaticSettings?.interval ?? AutomaticBackupInterval.off) !=
                 AutomaticBackupInterval.off) ...[
               const SizedBox(height: AppSpacing.sm),
               OutlinedButton.icon(
-                onPressed: _isSavingAutomaticBackup ? null : () => _saveAutomaticBackup(force: true),
+                onPressed: _isSavingAutomaticBackup
+                    ? null
+                    : () => _saveAutomaticBackup(force: true),
                 icon: const Icon(Icons.backup_outlined),
-                label: const Text('Criar cópia agora'),
+                label: const Text('Iniciar backup'),
               ),
             ],
             const SizedBox(height: AppSpacing.md),
-            Text('Última cópia local: ${formatDate(_automaticSettings?.lastLocalCompletion)}', style: theme.textTheme.bodySmall),
-            Text('Último envio ao Drive: ${formatDate(_automaticSettings?.lastDriveCompletion)}', style: theme.textTheme.bodySmall),
+            Text(
+              'Última cópia local: ${formatDate(_automaticSettings?.lastLocalCompletion)}',
+              style: theme.textTheme.bodySmall,
+            ),
+            Text(
+              'Último envio ao Drive: ${formatDate(_automaticSettings?.lastDriveCompletion)}',
+              style: theme.textTheme.bodySmall,
+            ),
             if (_automaticSettings?.lastError != null) ...[
               const SizedBox(height: AppSpacing.xs),
-              Text(_automaticSettings!.lastError!, style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.error)),
+              Text(
+                _automaticSettings!.lastError!,
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color: theme.colorScheme.error,
+                ),
+              ),
             ],
             if (_automaticHistory.isNotEmpty) ...[
               const Divider(height: AppSpacing.xl),
               Text('Histórico local', style: theme.textTheme.titleSmall),
-              ..._automaticHistory.map((item) => ListTile(
-                contentPadding: EdgeInsets.zero,
-                title: Text(formatDate(item.modifiedAt)),
-                subtitle: Text('${(item.sizeBytes / 1024).toStringAsFixed(1)} KB'),
-                trailing: const Icon(Icons.settings_backup_restore_rounded),
-                onTap: () => _selectAutomaticBackup(item),
-              )),
+              ..._automaticHistory.map(
+                (item) => ListTile(
+                  contentPadding: EdgeInsets.zero,
+                  title: Text(formatDate(item.modifiedAt)),
+                  subtitle: Text(
+                    '${(item.sizeBytes / 1024).toStringAsFixed(1)} KB',
+                  ),
+                  trailing: const Icon(Icons.settings_backup_restore_rounded),
+                  onTap: () => _selectAutomaticBackup(item),
+                ),
+              ),
             ],
           ],
         ),
@@ -946,7 +1073,11 @@ class _BackupRestoreScreenState extends ConsumerState<BackupRestoreScreen>
               runSpacing: 8,
               children: [
                 Chip(
-                  avatar: const Icon(Icons.add_circle, color: Colors.green, size: 18),
+                  avatar: const Icon(
+                    Icons.add_circle,
+                    color: Colors.green,
+                    size: 18,
+                  ),
                   label: Text('Criar: ${plan.createCount}'),
                 ),
                 Chip(
@@ -954,11 +1085,19 @@ class _BackupRestoreScreenState extends ConsumerState<BackupRestoreScreen>
                   label: Text('Idênticos: ${plan.skipCount}'),
                 ),
                 Chip(
-                  avatar: const Icon(Icons.warning_amber, color: Colors.orange, size: 18),
+                  avatar: const Icon(
+                    Icons.warning_amber,
+                    color: Colors.orange,
+                    size: 18,
+                  ),
                   label: Text('Conflitos: ${plan.conflictCount}'),
                 ),
                 Chip(
-                  avatar: const Icon(Icons.attach_file, color: Colors.blue, size: 18),
+                  avatar: const Icon(
+                    Icons.attach_file,
+                    color: Colors.blue,
+                    size: 18,
+                  ),
                   label: Text('Anexos: ${plan.attachmentsToUploadCount}'),
                 ),
               ],
@@ -1003,10 +1142,12 @@ class _BackupRestoreScreenState extends ConsumerState<BackupRestoreScreen>
                   style: const TextStyle(fontSize: 13, color: Colors.orange),
                 ),
                 children: plan.orphans
-                    .map((o) => ListTile(
-                          dense: true,
-                          title: Text(o, style: const TextStyle(fontSize: 12)),
-                        ))
+                    .map(
+                      (o) => ListTile(
+                        dense: true,
+                        title: Text(o, style: const TextStyle(fontSize: 12)),
+                      ),
+                    )
                     .toList(),
               ),
             ],

@@ -46,26 +46,17 @@ class ExpenseTransferService {
     DateTime? start,
     DateTime? end,
   ) async {
-    if (start == null || end == null || userId == null) {
+    if (userId == null) {
       return selectExpenses(currentExpenses, start, end);
     }
-    final range = DateRange.fromDays(start, end);
-    final selected = <Expense>[];
-    var page = await expenseRepository.getHistoryPage(
+    if ((start == null) != (end == null)) return null;
+    final range = start == null ? null : DateRange.fromDays(start, end!);
+    final selected = await expenseRepository.getAllPaged(
       userId,
-      startInclusive: range.startInclusive,
-      endExclusive: range.endExclusive,
+      startInclusive: range?.startInclusive,
+      endExclusive: range?.endExclusive,
+      requireServer: true,
     );
-    selected.addAll(page.expenses);
-    while (page.nextCursor != null) {
-      page = await expenseRepository.getHistoryPage(
-        userId,
-        startInclusive: range.startInclusive,
-        endExclusive: range.endExclusive,
-        after: page.nextCursor,
-      );
-      selected.addAll(page.expenses);
-    }
     return selected..sort((a, b) => a.date.compareTo(b.date));
   }
 

@@ -3,6 +3,27 @@ import 'package:key_budget/core/models/document_model.dart';
 import 'package:key_budget/core/services/drive_service.dart';
 import 'package:key_budget/features/documents/repository/document_repository.dart';
 import 'package:key_budget/features/documents/viewmodel/document_viewmodel.dart';
+import 'package:key_budget/features/trash/repository/trash_repository.dart';
+
+class RecordingTrashRepository extends TrashRepository {
+  final List<String> events;
+  bool failMove = false;
+  List<String> movedIds = [];
+
+  RecordingTrashRepository(this.events);
+
+  @override
+  Future<void> move(
+    String userId, {
+    required String collection,
+    required List<String> ids,
+    required String title,
+  }) async {
+    events.add('move');
+    if (failMove) throw StateError('write failed');
+    movedIds = ids;
+  }
+}
 
 class RecordingDocumentRepository extends DocumentRepository {
   final List<String> events;
@@ -122,7 +143,7 @@ void main() {
   );
 
   test(
-    'deleting a document removes the complete version family before cleanup',
+    'moving a document to trash preserves the complete version family and attachments',
     () async {
       final events = <String>[];
       final repository = RecordingDocumentRepository(events)
@@ -138,16 +159,17 @@ void main() {
             ],
           ),
         ];
+      final trash = RecordingTrashRepository(events);
       final viewModel = DocumentViewModel(
         repository: repository,
+        trashRepository: trash,
         driveService: RecordingDriveService(events),
         clearLocalCache: (_) async => events.add('cache'),
       );
 
       expect(await viewModel.deleteDocument('u1', original), isTrue);
-      expect(repository.deletedIds, containsAll(['doc-1', 'doc-2']));
-      expect(events.first, 'persist');
-      expect(events.where((event) => event == 'drive').length, 2);
+      expect(trash.movedIds, containsAll(['doc-1', 'doc-2']));
+      expect(events, ['move']);
       expect(repository.pending, isEmpty);
       viewModel.dispose();
     },
@@ -165,31 +187,33 @@ void main() {
       );
       final repository = RecordingDocumentRepository(events)
         ..family = [original, oldVersion];
+      final trash = RecordingTrashRepository(events);
       final viewModel = DocumentViewModel(
         repository: repository,
+        trashRepository: trash,
         driveService: RecordingDriveService(events),
         clearLocalCache: (_) async {},
       );
 
       expect(await viewModel.deleteVersion('u1', oldVersion), isTrue);
-      expect(repository.deletedIds, ['doc-2']);
+      expect(trash.movedIds, ['doc-2']);
       viewModel.dispose();
     },
   );
 
   test('failed family deletion leaves Drive attachments untouched', () async {
     final events = <String>[];
-    final repository = RecordingDocumentRepository(events)
-      ..family = [original]
-      ..failDelete = true;
+    final repository = RecordingDocumentRepository(events)..family = [original];
+    final trash = RecordingTrashRepository(events)..failMove = true;
     final viewModel = DocumentViewModel(
       repository: repository,
+      trashRepository: trash,
       driveService: RecordingDriveService(events),
       clearLocalCache: (_) async {},
     );
 
     expect(await viewModel.deleteDocument('u1', original), isFalse);
-    expect(events, ['persist']);
+    expect(events, ['move']);
     viewModel.dispose();
   });
 }

@@ -124,19 +124,85 @@ class DashboardViewModel extends ChangeNotifier {
     return Money.fromCents(totalMinor).toDouble();
   }
 
+  static int scheduledMinorForMonth(
+    List<Expense> expenses, {
+    required DateTime now,
+    required bool isIncome,
+  }) {
+    final tomorrow = DateTime(now.year, now.month, now.day + 1);
+    return expenses
+        .where(
+          (expense) =>
+              expense.date.year == now.year &&
+              expense.date.month == now.month &&
+              !expense.date.isBefore(tomorrow) &&
+              (expense.isIncome == true) == isIncome,
+        )
+        .fold<int>(0, (total, expense) => total + expense.money.amountMinor);
+  }
+
+  int get scheduledExpensesMinorForMonth =>
+      scheduledMinorForMonth(allExpenses, now: DateTime.now(), isIncome: false);
+
+  int get scheduledIncomesMinorForMonth =>
+      scheduledMinorForMonth(allExpenses, now: DateTime.now(), isIncome: true);
+
+  static int realizedMinorForMonth(
+    List<Expense> expenses, {
+    required DateTime now,
+    required bool isIncome,
+  }) {
+    final tomorrow = DateTime(now.year, now.month, now.day + 1);
+    return expenses
+        .where(
+          (expense) =>
+              expense.date.year == now.year &&
+              expense.date.month == now.month &&
+              expense.date.isBefore(tomorrow) &&
+              (expense.isIncome == true) == isIncome,
+        )
+        .fold<int>(0, (total, expense) => total + expense.money.amountMinor);
+  }
+
+  double get realizedAmountForMonth => Money.fromCents(
+    realizedMinorForMonth(allExpenses, now: DateTime.now(), isIncome: false),
+  ).toDouble();
+
+  double get realizedIncomeForMonth => Money.fromCents(
+    realizedMinorForMonth(allExpenses, now: DateTime.now(), isIncome: true),
+  ).toDouble();
+
+  double get realizedBalanceForMonth =>
+      realizedIncomeForMonth - realizedAmountForMonth;
+
   double get balanceForMonth {
     return totalIncomeForMonth - totalAmountForMonth;
   }
 
   double averageOfPreviousMonths(bool enableIncomes) {
     final now = DateTime.now();
+    return averageOfEquivalentPreviousMonths(
+      allExpenses,
+      now: now,
+      enableIncomes: enableIncomes,
+    );
+  }
+
+  static double averageOfEquivalentPreviousMonths(
+    List<Expense> expenses, {
+    required DateTime now,
+    required bool enableIncomes,
+  }) {
     final firstDayOfCurrentMonth = DateTime(now.year, now.month, 1);
     final Map<String, double> monthlyTotals = {};
-    for (var expense in allExpenses) {
+    for (final expense in expenses) {
       if (expense.date.isBefore(firstDayOfCurrentMonth)) {
         if (!enableIncomes && expense.isIncome == true) continue;
 
         final monthKey = '${expense.date.year}-${expense.date.month}';
+
+        monthlyTotals.putIfAbsent(monthKey, () => 0);
+        if (expense.date.day > now.day) continue;
 
         double amount = expense.amount;
         if (enableIncomes) {
@@ -161,9 +227,9 @@ class DashboardViewModel extends ChangeNotifier {
     if (average == 0) return 0.0;
 
     if (enableIncomes) {
-      return ((balanceForMonth - average) / average.abs()) * 100;
+      return ((realizedBalanceForMonth - average) / average.abs()) * 100;
     } else {
-      return ((totalAmountForMonth - average) / average.abs()) * 100;
+      return ((realizedAmountForMonth - average) / average.abs()) * 100;
     }
   }
 

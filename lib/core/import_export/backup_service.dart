@@ -54,6 +54,10 @@ class BackupService {
     'credentials',
     'suppliers',
     'documents',
+    'goals',
+    'goal_movements',
+    'search_favorites',
+    'trash',
     'profile',
   ];
 
@@ -127,6 +131,7 @@ class BackupService {
     onProgress?.call('Processando anexos e arquivos...', 0.4);
     final attachmentMetas = <BackupAttachmentMeta>[];
     final attachmentFiles = <String, List<int>>{};
+    var attachmentBytes = 0;
 
     final rawDocuments = capturedData['documents'] ?? [];
     for (final doc in rawDocuments) {
@@ -140,7 +145,7 @@ class BackupService {
           if (driveId != null && driveId.isNotEmpty) {
             final internalId =
                 'att_${sha256.convert(utf8.encode(driveId)).toString().substring(0, 12)}';
-            if (!attachmentFiles.containsKey(internalId)) {
+            if (!attachmentFiles.containsKey('attachments/$internalId')) {
               List<int>? bytes;
               if (driveService != null) {
                 try {
@@ -153,6 +158,13 @@ class BackupService {
               }
 
               if (bytes != null) {
+                attachmentBytes += bytes.length;
+                if (attachmentBytes > BackupCrypto.maxDecompressedBytesLimit) {
+                  return OperationResult.failed(
+                    safeError:
+                        'O backup excede o limite de 200 MB de anexos. Remova arquivos grandes e tente novamente.',
+                  );
+                }
                 final hash = sha256.convert(bytes).toString();
                 attachmentFiles['attachments/$internalId'] = bytes;
                 attachmentMetas.add(
@@ -222,7 +234,7 @@ class BackupService {
     final backupId =
         'bkp_${clock.now().millisecondsSinceEpoch}_${uid.substring(0, uid.length.clamp(0, 6))}';
     final manifest = BackupManifest(
-      formatVersion: 1,
+      formatVersion: BackupCrypto.currentFormatVersion,
       appVersion: '1.1.2',
       createdAt: clock.now().toUtc(),
       backupId: backupId,
@@ -285,6 +297,10 @@ class BackupService {
     }
     if (modules.contains('credentials')) {
       modules.add('folders');
+    }
+    if (modules.contains('goals') || modules.contains('goal_movements')) {
+      modules.add('goals');
+      modules.add('goal_movements');
     }
     return modules.toList();
   }

@@ -1,9 +1,11 @@
 import 'dart:async';
 import 'dart:io';
 
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:googleapis/drive/v3.dart' as drive;
 import 'package:http/http.dart' as http;
+import 'package:key_budget/core/services/google_sign_in_session.dart';
 import 'package:path/path.dart' as path;
 
 class GoogleAuthClient extends http.BaseClient {
@@ -41,78 +43,42 @@ class _DriveSession {
 }
 
 class DriveService {
-  static final _googleSignIn = GoogleSignIn.instance;
-  static Future<void>? _initialization;
-  static StreamSubscription<GoogleSignInAuthenticationEvent>? _authSubscription;
-  static GoogleSignInAccount? _currentUser;
+  final GoogleSignInSession _googleSession;
+  final bool allowInteractiveByDefault;
 
-  Future<void> _ensureGoogleSignInInitialized({String? serverClientId}) async {
-    if (_initialization != null) return _initialization;
-    final initialization = _initializeSignIn(serverClientId: serverClientId);
-    _initialization = initialization;
-    try {
-      await initialization;
-    } catch (_) {
-      _initialization = null;
-      rethrow;
-    }
-  }
-
-  Future<void> _initializeSignIn({String? serverClientId}) async {
-    await _googleSignIn.initialize(serverClientId: serverClientId);
-    await _authSubscription?.cancel();
-    _authSubscription = _googleSignIn.authenticationEvents.listen((event) {
-      _currentUser = event is GoogleSignInAuthenticationEventSignIn
-          ? event.user
-          : null;
-    });
-  }
+  DriveService({
+    GoogleSignInSession? googleSession,
+    this.allowInteractiveByDefault = true,
+  }) : _googleSession = googleSession ?? GoogleSignInSession.instance;
 
   Future<_DriveSession?> _getDriveApi({
     String? serverClientId,
     bool allowInteractive = true,
   }) async {
     try {
-      await _ensureGoogleSignInInitialized(serverClientId: serverClientId);
-
-      GoogleSignInAccount? googleUser = _currentUser;
-
-      if (googleUser == null) {
-        if (!allowInteractive) {
-          final lightweight = _googleSignIn.attemptLightweightAuthentication();
-          googleUser = lightweight == null ? null : await lightweight;
-          if (googleUser == null) return null;
-        }
-      }
-
-      if (googleUser == null) {
-        if (_googleSignIn.supportsAuthenticate()) {
-          googleUser = await _googleSignIn.authenticate();
-        } else {
-          throw Exception('Platform does not support authenticate method');
-        }
-      }
+      final firebaseUser = FirebaseAuth.instance.currentUser;
+      final expectedGoogleAccountIds =
+          firebaseUser?.providerData
+              .where((provider) => provider.providerId == 'google.com')
+              .map((provider) => provider.uid)
+              .whereType<String>()
+              .toList() ??
+          const <String>[];
+      final googleUser = await _googleSession.account(
+        serverClientId: serverClientId,
+        allowInteractive: allowInteractive,
+        firebaseUserId: firebaseUser?.uid,
+        expectedGoogleAccountIds: expectedGoogleAccountIds,
+      );
+      if (googleUser == null) return null;
 
       const scopes = [drive.DriveApi.driveFileScope];
-
-      final authorization = await googleUser.authorizationClient
-          .authorizationForScopes(scopes);
-
-      if (authorization == null) {
-        if (!allowInteractive) return null;
-        await googleUser.authorizationClient.authorizeScopes(scopes);
-
-        final newAuth = await googleUser.authorizationClient
-            .authorizationForScopes(scopes);
-
-        if (newAuth == null) {
-          throw Exception('Failed to get authorization for Drive API');
-        }
-
-        final headers = {'Authorization': 'Bearer ${newAuth.accessToken}'};
-        final client = GoogleAuthClient(headers);
-        return _DriveSession(drive.DriveApi(client), client);
-      }
+      final authorization = await _googleSession.authorizationFor(
+        googleUser,
+        scopes,
+        allowInteractive: allowInteractive,
+      );
+      if (authorization == null) return null;
 
       final headers = {'Authorization': 'Bearer ${authorization.accessToken}'};
 
@@ -126,6 +92,13 @@ class DriveService {
     } catch (_) {
       return null;
     }
+  }
+
+  Future<bool> ensureAuthorized({bool allowInteractive = true}) async {
+    final session = await _getDriveApi(allowInteractive: allowInteractive);
+    if (session == null) return false;
+    session.close();
+    return true;
   }
 
   Stream<List<int>> _createProgressStream(
@@ -229,6 +202,7 @@ class DriveService {
       fileId,
       maxBytes: 100 * 1024 * 1024,
       serverClientId: serverClientId,
+      allowInteractive: allowInteractiveByDefault,
     );
   }
 
@@ -342,8 +316,12 @@ class DriveService {
     String fileId, {
     int maxBytes = 100 * 1024 * 1024,
     String? serverClientId,
+    bool allowInteractive = true,
   }) async {
-    final session = await _getDriveApi(serverClientId: serverClientId);
+    final session = await _getDriveApi(
+      serverClientId: serverClientId,
+      allowInteractive: allowInteractive,
+    );
     if (session == null) return null;
     try {
       final response =

@@ -50,14 +50,33 @@ enum AppDestination {
     required this.selectedIcon,
   });
 
-  static List<AppDestination> getAvailable({required bool enableSuppliers}) {
-    return [
-      AppDestination.dashboard,
-      AppDestination.expenses,
-      AppDestination.credentials,
-      AppDestination.documents,
-      if (enableSuppliers) AppDestination.suppliers,
-      AppDestination.profile,
-    ];
+  static List<AppDestination> getAvailable({
+    required bool enableSuppliers,
+    List<String> hiddenIds = const [],
+    List<String> order = const [],
+  }) {
+    final available =
+        [
+              AppDestination.dashboard,
+              AppDestination.expenses,
+              AppDestination.credentials,
+              AppDestination.documents,
+              if (enableSuppliers) AppDestination.suppliers,
+              AppDestination.profile,
+            ]
+            .where(
+              (destination) =>
+                  destination == AppDestination.expenses ||
+                  destination == AppDestination.credentials ||
+                  !hiddenIds.contains(destination.id),
+            )
+            .toList();
+    final positions = {for (var i = 0; i < order.length; i++) order[i]: i};
+    available.sort((a, b) {
+      final aIndex = positions[a.id] ?? values.indexOf(a) + order.length;
+      final bIndex = positions[b.id] ?? values.indexOf(b) + order.length;
+      return aIndex.compareTo(bIndex);
+    });
+    return available;
   }
 }

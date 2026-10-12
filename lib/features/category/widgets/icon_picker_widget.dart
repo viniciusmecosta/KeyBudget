@@ -4,8 +4,9 @@ import 'package:key_budget/core/constants/app_icons.dart';
 
 class IconPickerWidget extends ConsumerStatefulWidget {
   final Color? selectedColor;
+  final IconData? selectedIcon;
 
-  const IconPickerWidget({super.key, this.selectedColor});
+  const IconPickerWidget({super.key, this.selectedColor, this.selectedIcon});
 
   @override
   ConsumerState<IconPickerWidget> createState() => _IconPickerWidgetState();
@@ -47,20 +48,37 @@ class _IconPickerWidgetState extends ConsumerState<IconPickerWidget> {
                 child: GridView.builder(
                   controller: controller,
                   padding: const EdgeInsets.all(16),
-                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                    crossAxisCount: 5,
-                    crossAxisSpacing: 16,
-                    mainAxisSpacing: 16,
+                  gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
+                    maxCrossAxisExtent: 64,
+                    crossAxisSpacing: 8,
+                    mainAxisSpacing: 8,
                   ),
                   itemCount: allIcons.length,
                   itemBuilder: (context, index) {
                     final icon = allIcons[index];
-                    return IconButton(
-                      icon: Icon(icon, size: 32, color: baseColor),
-                      onPressed: () => Navigator.of(context).pop(icon),
-                      style: IconButton.styleFrom(
-                        backgroundColor: baseColor.withAlpha(50),
-                        shape: const CircleBorder(),
+                    final isSelected = widget.selectedIcon == icon;
+                    final label = 'Ícone de ${AppIcons.labels[index]}';
+                    return Tooltip(
+                      message: label,
+                      excludeFromSemantics: true,
+                      child: MergeSemantics(
+                        child: Semantics(
+                          label: label,
+                          button: true,
+                          selected: isSelected,
+                          child: IconButton(
+                            icon: Icon(icon, size: 28, color: baseColor),
+                            onPressed: () => Navigator.of(context).pop(icon),
+                            style: IconButton.styleFrom(
+                              minimumSize: const Size(48, 48),
+                              backgroundColor: baseColor.withAlpha(50),
+                              shape: const CircleBorder(),
+                              side: isSelected
+                                  ? BorderSide(color: baseColor, width: 2)
+                                  : BorderSide.none,
+                            ),
+                          ),
+                        ),
                       ),
                     );
                   },

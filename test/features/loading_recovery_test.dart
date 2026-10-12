@@ -2,10 +2,14 @@ import 'dart:async';
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:key_budget/core/models/expense_category_model.dart';
+import 'package:key_budget/core/models/credential_model.dart';
 import 'package:key_budget/core/models/expense_model.dart';
+import 'package:key_budget/core/models/folder_model.dart';
 import 'package:key_budget/core/models/recurring_expense_model.dart';
 import 'package:key_budget/features/category/repository/category_repository.dart';
 import 'package:key_budget/features/category/viewmodel/category_viewmodel.dart';
+import 'package:key_budget/features/credentials/repository/credential_repository.dart';
+import 'package:key_budget/features/credentials/viewmodel/credential_viewmodel.dart';
 import 'package:key_budget/features/expenses/repository/expense_repository.dart';
 import 'package:key_budget/features/expenses/repository/recurring_expense_repository.dart';
 import 'package:key_budget/features/expenses/viewmodel/expense_viewmodel.dart';
@@ -60,8 +64,39 @@ class _RecoveringCategoryRepository extends CategoryRepository {
   }
 }
 
+class _RecoveringCredentialRepository extends CredentialRepository {
+  int calls = 0;
+
+  @override
+  Stream<List<Folder>> getFoldersStreamForUser(String userId) =>
+      Stream.value([]);
+
+  @override
+  Stream<List<Credential>> getCredentialsStreamForUser(String userId) {
+    calls++;
+    if (calls == 1) return Stream.error(StateError('offline'));
+    return Stream.value([]);
+  }
+}
+
 void main() {
   group('loading recovery', () {
+    test('credential stream failure ends loading and can be retried', () async {
+      final repository = _RecoveringCredentialRepository();
+      final viewModel = CredentialViewModel(repository: repository);
+
+      viewModel.listenToCredentials('user');
+      await Future<void>.delayed(Duration.zero);
+      expect(viewModel.isLoading, isFalse);
+      expect(viewModel.loadErrorMessage, isNotNull);
+
+      viewModel.retryListenToCredentials('user');
+      await Future<void>.delayed(Duration.zero);
+      expect(viewModel.isLoading, isFalse);
+      expect(viewModel.loadErrorMessage, isNull);
+      expect(repository.calls, 2);
+      viewModel.dispose();
+    });
     test(
       'account change clears old expenses before the next snapshot',
       () async {

@@ -47,6 +47,14 @@ class _DashboardBalanceCardState extends ConsumerState<DashboardBalanceCard>
     super.dispose();
   }
 
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (AppAnimations.isReducedMotion(context)) {
+      _controller.value = 1;
+    }
+  }
+
   void _animateTo({
     required double from,
     required double to,
@@ -59,9 +67,13 @@ class _DashboardBalanceCardState extends ConsumerState<DashboardBalanceCard>
     );
 
     _animation = Tween<double>(
-      begin: from,
+      begin: AppAnimations.isReducedMotion(context) ? to : from,
       end: to,
     ).animate(CurvedAnimation(parent: _controller, curve: AppAnimations.curve));
+    if (AppAnimations.isReducedMotion(context)) {
+      _controller.value = 1;
+      return;
+    }
     _controller
       ..reset()
       ..forward();
@@ -76,7 +88,7 @@ class _DashboardBalanceCardState extends ConsumerState<DashboardBalanceCard>
     final enableIncomes = authViewModel.currentUser?.enableIncomes ?? false;
 
     final currentValue = enableIncomes
-        ? viewModel.balanceForMonth
+        ? viewModel.realizedBalanceForMonth
         : viewModel.totalAmountForMonth;
 
     final fromValue = enableIncomes
@@ -88,7 +100,7 @@ class _DashboardBalanceCardState extends ConsumerState<DashboardBalanceCard>
     if (isNewRefresh) {
       _lastSeenRefreshCount = viewModel.refreshCount;
       _scheduledTargetTotal = viewModel.totalAmountForMonth;
-      _scheduledTargetBalance = viewModel.balanceForMonth;
+      _scheduledTargetBalance = viewModel.realizedBalanceForMonth;
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (!mounted) return;
         _animateTo(
@@ -104,7 +116,7 @@ class _DashboardBalanceCardState extends ConsumerState<DashboardBalanceCard>
           : _scheduledTargetTotal;
       if (currentValue != scheduledTarget) {
         _scheduledTargetTotal = viewModel.totalAmountForMonth;
-        _scheduledTargetBalance = viewModel.balanceForMonth;
+        _scheduledTargetBalance = viewModel.realizedBalanceForMonth;
         WidgetsBinding.instance.addPostFrameCallback((_) {
           if (!mounted) return;
           _animateTo(
@@ -127,11 +139,19 @@ class _DashboardBalanceCardState extends ConsumerState<DashboardBalanceCard>
         '${isIncrease ? '+' : ''}${percentageChange.abs().toStringAsFixed(1)}%';
 
     final isGood = enableIncomes ? isIncrease : !isIncrease;
-    final badgeTextColor = isGood
-        ? Colors.greenAccent[400]!
-        : Colors.redAccent[200]!;
-
-    final valueSubtitle = hasPreviousMonths
+    final filledPrimary = AppContrast.primaryWithWhiteText(
+      theme.colorScheme.primary,
+    );
+    final badgeTextColor = AppContrast.accentOnSurface(
+      isGood ? Colors.greenAccent[400]! : Colors.redAccent[200]!,
+      filledPrimary,
+      isDark: true,
+    );
+    final currencyFormatter = NumberFormat.currency(
+      locale: 'pt_BR',
+      symbol: 'R\$',
+    );
+    final comparison = hasPreviousMonths
         ? Row(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.center,
@@ -167,8 +187,8 @@ class _DashboardBalanceCardState extends ConsumerState<DashboardBalanceCard>
               Flexible(
                 child: Text(
                   enableIncomes
-                      ? 'em relação à média anterior'
-                      : 'em relação à média anterior de gastos',
+                      ? 'vs. média até o mesmo dia'
+                      : 'vs. média de gastos até o mesmo dia',
                   style: theme.textTheme.bodySmall?.copyWith(
                     color: cardTextColor.withAlpha((255 * 0.88).round()),
                     fontSize: 11,
@@ -185,9 +205,9 @@ class _DashboardBalanceCardState extends ConsumerState<DashboardBalanceCard>
             ),
           );
 
-    final currencyFormatter = NumberFormat.currency(
-      locale: 'pt_BR',
-      symbol: 'R\$',
+    final valueSubtitle = Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [comparison],
     );
 
     return AnimatedBuilder(
@@ -198,17 +218,23 @@ class _DashboardBalanceCardState extends ConsumerState<DashboardBalanceCard>
         final isReddish = primaryHue >= 330 || primaryHue <= 20;
         final incomeIconColor = isGreenish
             ? cardTextColor
-            : Colors.greenAccent[400]!;
+            : AppContrast.accentOnSurface(
+                Colors.greenAccent[400]!,
+                filledPrimary,
+                isDark: true,
+              );
         final expenseIconColor = isReddish
             ? cardTextColor
-            : theme.colorScheme.error;
+            : AppContrast.accentOnSurface(
+                theme.colorScheme.error,
+                filledPrimary,
+                isDark: true,
+              );
         return BalanceCard(
-          title: enableIncomes ? 'Saldo do período' : 'Despesas do mês',
+          title: enableIncomes ? 'Saldo realizado' : 'Despesas do mês',
           totalValue: _animation.value,
           foregroundColor: cardTextColor,
-          backgroundColor: AppContrast.primaryWithWhiteText(
-            theme.colorScheme.primary,
-          ),
+          backgroundColor: filledPrimary,
           onTap: () {
             ref
                 .read(navigationViewModelProvider)
@@ -232,7 +258,7 @@ class _DashboardBalanceCardState extends ConsumerState<DashboardBalanceCard>
                           ),
                           const SizedBox(width: 6),
                           Text(
-                            'Receitas: ${currencyFormatter.format(viewModel.totalIncomeForMonth)}',
+                            'Receitas: ${currencyFormatter.format(viewModel.realizedIncomeForMonth)}',
                             style: theme.textTheme.bodyMedium?.copyWith(
                               color: cardTextColor,
                               fontWeight: FontWeight.w600,
@@ -250,7 +276,7 @@ class _DashboardBalanceCardState extends ConsumerState<DashboardBalanceCard>
                           ),
                           const SizedBox(width: 6),
                           Text(
-                            'Despesas: ${currencyFormatter.format(viewModel.totalAmountForMonth)}',
+                            'Despesas: ${currencyFormatter.format(viewModel.realizedAmountForMonth)}',
                             style: theme.textTheme.bodyMedium?.copyWith(
                               color: cardTextColor,
                               fontWeight: FontWeight.w600,

@@ -4,17 +4,24 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/legacy.dart';
 import 'package:key_budget/core/models/supplier_model.dart';
+import 'package:key_budget/core/search/search_normalizer.dart';
 import 'package:key_budget/features/suppliers/repository/supplier_repository.dart';
+import 'package:key_budget/features/trash/repository/trash_repository.dart';
 
 class SupplierViewModel extends ChangeNotifier {
   final SupplierRepository _repository;
+  final TrashRepository _trashRepository;
 
-  SupplierViewModel({SupplierRepository? repository})
-    : _repository = repository ?? SupplierRepository();
+  SupplierViewModel({
+    SupplierRepository? repository,
+    TrashRepository? trashRepository,
+  }) : _repository = repository ?? SupplierRepository(),
+       _trashRepository = trashRepository ?? TrashRepository();
 
   List<Supplier> _allSuppliers = [];
   bool _isLoading = false;
   StreamSubscription? _suppliersSubscription;
+  String? _listeningUserId;
   bool _isListening = false;
   bool _hasLoadError = false;
   bool _isOffline = false;
@@ -26,17 +33,17 @@ class SupplierViewModel extends ChangeNotifier {
   String get searchQuery => _searchQuery;
 
   void setSearchQuery(String query) {
-    _searchQuery = query.trim().toLowerCase();
+    _searchQuery = SearchNormalizer.normalize(query);
     notifyListeners();
   }
 
   List<Supplier> get filteredSuppliers {
     if (_searchQuery.isEmpty) return _allSuppliers;
     return _allSuppliers.where((s) {
-      final name = s.name.toLowerCase();
-      final rep = s.representativeName?.toLowerCase() ?? '';
-      final phone = s.phoneNumber ?? '';
-      final email = s.email?.toLowerCase() ?? '';
+      final name = SearchNormalizer.normalize(s.name);
+      final rep = SearchNormalizer.normalize(s.representativeName ?? '');
+      final phone = SearchNormalizer.normalize(s.phoneNumber ?? '');
+      final email = SearchNormalizer.normalize(s.email ?? '');
       return name.contains(_searchQuery) ||
           rep.contains(_searchQuery) ||
           phone.contains(_searchQuery) ||
@@ -61,9 +68,15 @@ class SupplierViewModel extends ChangeNotifier {
   }
 
   void listenToSuppliers(String userId) {
-    if (_isListening) {
+    if (_isListening && _listeningUserId == userId) {
       return;
     }
+
+    if (_listeningUserId != userId) {
+      _allSuppliers = [];
+      _searchQuery = '';
+    }
+    _listeningUserId = userId;
 
     _setLoading(true);
     _hasLoadError = false;
@@ -73,6 +86,7 @@ class SupplierViewModel extends ChangeNotifier {
         .getSuppliersStreamForUser(userId)
         .listen(
           (suppliers) {
+            if (_listeningUserId != userId) return;
             _allSuppliers = suppliers;
             _hasLoadError = false;
             _isOffline = false;
@@ -82,6 +96,7 @@ class SupplierViewModel extends ChangeNotifier {
             _setLoading(false);
           },
           onError: (Object error) {
+            if (_listeningUserId != userId) return;
             _hasLoadError = true;
             _isOffline =
                 error is FirebaseException &&
@@ -94,7 +109,9 @@ class SupplierViewModel extends ChangeNotifier {
     _isListening = true;
   }
 
-  void retryListenToSuppliers(String userId) {
+  Future<void> retryListenToSuppliers(String userId) async {
+    await _suppliersSubscription?.cancel();
+    _suppliersSubscription = null;
     _isListening = false;
     listenToSuppliers(userId);
   }
@@ -142,7 +159,15 @@ class SupplierViewModel extends ChangeNotifier {
   }
 
   Future<void> deleteSupplier(String userId, String supplierId) async {
-    await _repository.deleteSupplier(userId, supplierId);
+    final supplier = _allSuppliers
+        .where((item) => item.id == supplierId)
+        .firstOrNull;
+    await _trashRepository.move(
+      userId,
+      collection: 'suppliers',
+      ids: [supplierId],
+      title: supplier?.name ?? 'Fornecedor',
+    );
   }
 
   Future<void> restoreSupplier(String userId, Supplier supplier) async {
@@ -153,6 +178,9 @@ class SupplierViewModel extends ChangeNotifier {
     _suppliersSubscription?.cancel();
     _allSuppliers = [];
     _isListening = false;
+    _listeningUserId = null;
+    _isLoading = false;
+    _searchQuery = '';
     _hasLoadError = false;
     _isOffline = false;
     notifyListeners();

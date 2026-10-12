@@ -15,6 +15,8 @@ class CategoryViewModel extends ChangeNotifier {
   String? _errorMessage;
 
   List<ExpenseCategory> get categories => _categories;
+  List<ExpenseCategory> get activeCategories =>
+      categories.where((category) => !category.isArchived).toList();
 
   bool get isLoading => _isLoading;
   String? get errorMessage => _errorMessage;

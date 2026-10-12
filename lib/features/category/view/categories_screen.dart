@@ -11,6 +11,7 @@ import 'package:key_budget/core/design_system/borders/app_borders.dart';
 import 'package:key_budget/core/design_system/spacing/app_spacing.dart';
 import 'package:key_budget/core/design_system/widgets/app_card.dart';
 import 'package:key_budget/core/design_system/widgets/app_feedback_panel.dart';
+import 'package:key_budget/core/models/expense_model.dart';
 import 'package:key_budget/core/money/money.dart';
 import 'package:key_budget/core/money/money_parser.dart';
 import 'package:key_budget/core/services/snackbar_service.dart';
@@ -18,7 +19,7 @@ import 'package:key_budget/features/auth/viewmodel/auth_viewmodel.dart';
 import 'package:key_budget/features/category/repository/category_budget_repository.dart';
 import 'package:key_budget/features/category/view/add_edit_category_screen.dart';
 import 'package:key_budget/features/category/viewmodel/category_viewmodel.dart';
-import 'package:key_budget/features/expenses/viewmodel/expense_viewmodel.dart';
+import 'package:key_budget/features/expenses/repository/expense_period_providers.dart';
 
 class CategoriesScreen extends ConsumerStatefulWidget {
   const CategoriesScreen({super.key});
@@ -28,6 +29,26 @@ class CategoriesScreen extends ConsumerStatefulWidget {
 }
 
 class _CategoriesScreenState extends ConsumerState<CategoriesScreen> {
+  late DateTime _selectedMonth = DateTime(
+    DateTime.now().year,
+    DateTime.now().month,
+  );
+
+  static const _monthNames = [
+    'Janeiro',
+    'Fevereiro',
+    'Março',
+    'Abril',
+    'Maio',
+    'Junho',
+    'Julho',
+    'Agosto',
+    'Setembro',
+    'Outubro',
+    'Novembro',
+    'Dezembro',
+  ];
+
   @override
   void initState() {
     super.initState();
@@ -35,7 +56,6 @@ class _CategoriesScreenState extends ConsumerState<CategoriesScreen> {
       final userId = ref.read(authViewModelProvider).currentUser?.id;
       if (userId != null) {
         ref.read(categoryViewModelProvider).fetchCategories(userId);
-        ref.read(expenseViewModelProvider).listenToExpenses(userId);
       }
     });
   }
@@ -67,7 +87,8 @@ class _CategoriesScreenState extends ConsumerState<CategoriesScreen> {
               decoration: InputDecoration(
                 labelText: 'Limite mensal',
                 prefixText: 'R\$ ',
-                helperText: 'O limite se repete a cada mês.',
+                helperText:
+                    'Vale apenas para ${_monthNames[_selectedMonth.month - 1]} de ${_selectedMonth.year}.',
                 errorText: validationMessage,
               ),
             ),
@@ -110,7 +131,12 @@ class _CategoriesScreenState extends ConsumerState<CategoriesScreen> {
     try {
       await ref
           .read(categoryBudgetRepositoryProvider)
-          .setBudget(userId, categoryId, chosenLimit < 0 ? null : chosenLimit);
+          .setMonthlyBudget(
+            userId,
+            _selectedMonth,
+            categoryId,
+            chosenLimit < 0 ? null : chosenLimit,
+          );
       if (mounted) {
         SnackbarService.showSuccess(context, 'Orçamento atualizado.');
       }
@@ -135,11 +161,24 @@ class _CategoriesScreenState extends ConsumerState<CategoriesScreen> {
             builder: (context, ref, _) {
               final viewModel = ref.watch(categoryViewModelProvider);
               final userId = ref.watch(authViewModelProvider).currentUser?.id;
-              final expenses = ref.watch(expenseViewModelProvider).allExpenses;
+              final monthExpenses = userId == null
+                  ? null
+                  : ref.watch(
+                      expensesForMonthProvider((
+                        userId: userId,
+                        month: _selectedMonth,
+                      )),
+                    );
+              final expenses = monthExpenses?.value ?? const <Expense>[];
               final budgets = userId == null
                   ? <String, int>{}
                   : ref
-                        .watch(categoryBudgetsProvider(userId))
+                        .watch(
+                          categoryBudgetsForMonthProvider((
+                            userId: userId,
+                            month: _selectedMonth,
+                          )),
+                        )
                         .when(
                           data: (value) => value,
                           loading: () => <String, int>{},
@@ -156,6 +195,12 @@ class _CategoriesScreenState extends ConsumerState<CategoriesScreen> {
                     await ref
                         .read(categoryViewModelProvider)
                         .fetchCategories(userId);
+                    ref.invalidate(
+                      expensesForMonthProvider((
+                        userId: userId,
+                        month: _selectedMonth,
+                      )),
+                    );
                   }
                 },
                 color: theme.colorScheme.primary,
@@ -167,6 +212,44 @@ class _CategoriesScreenState extends ConsumerState<CategoriesScreen> {
                       parent: AlwaysScrollableScrollPhysics(),
                     ),
                     slivers: [
+                      SliverToBoxAdapter(
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: AppSpacing.md,
+                          ),
+                          child: Row(
+                            children: [
+                              IconButton(
+                                tooltip: 'Mês anterior',
+                                onPressed: () => setState(() {
+                                  _selectedMonth = DateTime(
+                                    _selectedMonth.year,
+                                    _selectedMonth.month - 1,
+                                  );
+                                }),
+                                icon: const Icon(Icons.chevron_left),
+                              ),
+                              Expanded(
+                                child: Text(
+                                  '${_monthNames[_selectedMonth.month - 1]} de ${_selectedMonth.year}',
+                                  textAlign: TextAlign.center,
+                                  style: theme.textTheme.titleMedium,
+                                ),
+                              ),
+                              IconButton(
+                                tooltip: 'Próximo mês',
+                                onPressed: () => setState(() {
+                                  _selectedMonth = DateTime(
+                                    _selectedMonth.year,
+                                    _selectedMonth.month + 1,
+                                  );
+                                }),
+                                icon: const Icon(Icons.chevron_right),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
                       if (viewModel.isLoading)
                         const CategoriesSkeleton()
                       else if (viewModel.errorMessage != null)
@@ -190,12 +273,33 @@ class _CategoriesScreenState extends ConsumerState<CategoriesScreen> {
                             },
                           ),
                         )
-                      else if (viewModel.categories.isEmpty)
-                        const SliverFillRemaining(
+                      else if (monthExpenses?.isLoading == true)
+                        const CategoriesSkeleton()
+                      else if (monthExpenses?.hasError == true)
+                        SliverFillRemaining(
                           hasScrollBody: false,
+                          child: AppFeedbackPanel(
+                            title: 'Falha ao carregar o consumo do mês',
+                            message: 'Confira sua conexão e tente novamente.',
+                            type: AppFeedbackType.error,
+                            actionLabel: 'Tentar novamente',
+                            onAction: () {
+                              if (userId != null) {
+                                ref.invalidate(
+                                  expensesForMonthProvider((
+                                    userId: userId,
+                                    month: _selectedMonth,
+                                  )),
+                                );
+                              }
+                            },
+                          ),
+                        )
+                      else if (viewModel.activeCategories.isEmpty)
+                        const SliverToBoxAdapter(
                           child: EmptyStateWidget(
                             icon: Icons.category_rounded,
-                            message: 'Nenhuma categoria cadastrada.',
+                            message: 'Nenhuma categoria ativa.',
                           ),
                         )
                       else
@@ -203,7 +307,7 @@ class _CategoriesScreenState extends ConsumerState<CategoriesScreen> {
                           padding: const EdgeInsets.all(AppSpacing.md),
                           sliver: SliverList(
                             delegate: SliverChildListDelegate(
-                              viewModel.categories.map((category) {
+                              viewModel.activeCategories.map((category) {
                                 return AnimatedListItem(
                                   key: ValueKey(category.id),
                                   animation: const AlwaysStoppedAnimation(1.0),
@@ -278,7 +382,27 @@ class _CategoriesScreenState extends ConsumerState<CategoriesScreen> {
                                                     limitMinor:
                                                         budgets[category.id]!,
                                                     expenses: expenses,
-                                                    now: DateTime.now(),
+                                                    month: _selectedMonth,
+                                                    now: () {
+                                                      final now =
+                                                          DateTime.now();
+                                                      final monthEnd =
+                                                          DateTime(
+                                                            _selectedMonth.year,
+                                                            _selectedMonth
+                                                                    .month +
+                                                                1,
+                                                          ).subtract(
+                                                            const Duration(
+                                                              microseconds: 1,
+                                                            ),
+                                                          );
+                                                      return now.isBefore(
+                                                            monthEnd,
+                                                          )
+                                                          ? now
+                                                          : monthEnd;
+                                                    }(),
                                                   );
                                               final spent = Money.fromCents(
                                                 progress.spentMinor,
@@ -294,7 +418,7 @@ class _CategoriesScreenState extends ConsumerState<CategoriesScreen> {
                                                     CrossAxisAlignment.start,
                                                 children: [
                                                   Text(
-                                                    '$spent de $limit no mês',
+                                                    '$spent de $limit no período',
                                                     style: theme
                                                         .textTheme
                                                         .bodySmall,
@@ -357,6 +481,53 @@ class _CategoriesScreenState extends ConsumerState<CategoriesScreen> {
                                   ),
                                 );
                               }).toList(),
+                            ),
+                          ),
+                        ),
+                      if (viewModel.categories.any(
+                        (category) => category.isArchived,
+                      ))
+                        SliverToBoxAdapter(
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: AppSpacing.md,
+                            ),
+                            child: ExpansionTile(
+                              title: const Text('Categorias arquivadas'),
+                              children: [
+                                for (final category
+                                    in viewModel.categories.where(
+                                      (item) => item.isArchived,
+                                    ))
+                                  ListTile(
+                                    title: Text(category.name),
+                                    subtitle: const Text(
+                                      'Histórico preservado',
+                                    ),
+                                    trailing: TextButton(
+                                      onPressed: userId == null
+                                          ? null
+                                          : () async {
+                                              try {
+                                                await viewModel.restoreCategory(
+                                                  userId,
+                                                  category.copyWith(
+                                                    isArchived: false,
+                                                  ),
+                                                );
+                                              } catch (_) {
+                                                if (context.mounted) {
+                                                  SnackbarService.showError(
+                                                    context,
+                                                    'Não foi possível reativar a categoria.',
+                                                  );
+                                                }
+                                              }
+                                            },
+                                      child: const Text('Reativar'),
+                                    ),
+                                  ),
+                              ],
                             ),
                           ),
                         ),

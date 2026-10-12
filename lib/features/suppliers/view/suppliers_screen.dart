@@ -51,9 +51,9 @@ class _SuppliersScreenState extends ConsumerState<SuppliersScreen> {
   Future<void> _handleRefresh() async {
     final authViewModel = ref.read(authViewModelProvider);
     if (mounted && authViewModel.currentUser != null) {
-      ref
+      await ref
           .read(supplierViewModelProvider)
-          .listenToSuppliers(authViewModel.currentUser!.id);
+          .retryListenToSuppliers(authViewModel.currentUser!.id);
     }
   }
 
@@ -107,154 +107,154 @@ class _SuppliersScreenState extends ConsumerState<SuppliersScreen> {
       ),
       body: SafeArea(
         child: RefreshIndicator(
-            onRefresh: _handleRefresh,
-            color: theme.colorScheme.primary,
-            backgroundColor: theme.colorScheme.surface,
-            strokeWidth: 2.5,
-            child: ResponsiveCenter(
-              maxWidth: 1200,
-              child: LayoutBuilder(
-                builder: (context, constraints) {
-                  final showSplit =
-                      constraints.maxWidth >= 850 &&
-                      viewModel.filteredSuppliers.isNotEmpty;
-                  final selectedSupplier = showSplit
-                      ? viewModel.filteredSuppliers.firstWhere(
-                          (supplier) => supplier.id == _selectedSupplierId,
-                          orElse: () => viewModel.filteredSuppliers.first,
-                        )
-                      : null;
-                  return Row(
-                    children: [
-                      Expanded(
-                        flex: 5,
-                        child: CustomScrollView(
-                          physics: const BouncingScrollPhysics(
-                            parent: AlwaysScrollableScrollPhysics(),
-                          ),
-                          slivers: [
-                            if (viewModel.isLoading)
-                              const SuppliersSkeleton()
-                            else if (viewModel.hasLoadError &&
-                                viewModel.allSuppliers.isEmpty)
-                              SliverFillRemaining(
-                                hasScrollBody: false,
-                                child: AppFeedbackPanel(
-                                  title: viewModel.isOffline
-                                      ? 'Sem conexão'
-                                      : 'Falha ao carregar fornecedores',
-                                  message: viewModel.isOffline
-                                      ? 'Confira sua conexão e tente novamente.'
-                                      : 'Não foi possível carregar seus fornecedores agora.',
-                                  type: AppFeedbackType.error,
-                                  actionLabel: 'Tentar novamente',
-                                  onAction: () {
-                                    final user = ref
-                                        .read(authViewModelProvider)
-                                        .currentUser;
-                                    if (user != null) {
-                                      viewModel.retryListenToSuppliers(user.id);
-                                    }
-                                  },
-                                ),
-                              )
-                            else if (viewModel.allSuppliers.isEmpty)
-                              SliverFillRemaining(
-                                hasScrollBody: false,
-                                child: EmptyStateWidget(
-                                  icon: Icons.storefront_outlined,
-                                  message: 'Nenhum fornecedor cadastrado.',
-                                  buttonText: 'Adicionar Fornecedor',
-                                  onButtonPressed: () => NavigationUtils.push(
-                                    context,
-                                    const AddSupplierScreen(),
-                                  ),
-                                ),
-                              )
-                            else if (viewModel.filteredSuppliers.isEmpty)
-                              SliverFillRemaining(
-                                hasScrollBody: false,
-                                child: EmptyStateWidget(
-                                  icon: Icons.search_off_rounded,
-                                  message:
-                                      'Nenhum fornecedor encontrado para a busca.',
-                                  buttonText: 'Limpar busca',
-                                  onButtonPressed: () {
-                                    setState(() {
-                                      _searchController.clear();
-                                    });
-                                    viewModel.setSearchQuery('');
-                                  },
-                                ),
-                              )
-                            else
-                              SliverPadding(
-                                padding: const EdgeInsets.all(
-                                  AppTheme.defaultPadding,
-                                ),
-                                sliver: SliverList(
-                                  delegate: SliverChildBuilderDelegate(
-                                    (context, index) {
-                                      final supplier =
-                                          viewModel.filteredSuppliers[index];
-                                      return SupplierListTile(
-                                        supplier: supplier,
-                                        selected:
-                                            showSplit &&
-                                            selectedSupplier?.id == supplier.id,
-                                        onTap: showSplit
-                                            ? () => setState(
-                                                () => _selectedSupplierId =
-                                                    supplier.id,
-                                              )
-                                            : null,
-                                      );
-                                    },
-                                    childCount:
-                                        viewModel.filteredSuppliers.length,
-                                  ),
+          onRefresh: _handleRefresh,
+          color: theme.colorScheme.primary,
+          backgroundColor: theme.colorScheme.surface,
+          strokeWidth: 2.5,
+          child: ResponsiveCenter(
+            maxWidth: 1200,
+            child: LayoutBuilder(
+              builder: (context, constraints) {
+                final showSplit =
+                    constraints.maxWidth >= 850 &&
+                    viewModel.filteredSuppliers.isNotEmpty;
+                final selectedSupplier = showSplit
+                    ? viewModel.filteredSuppliers.firstWhere(
+                        (supplier) => supplier.id == _selectedSupplierId,
+                        orElse: () => viewModel.filteredSuppliers.first,
+                      )
+                    : null;
+                return Row(
+                  children: [
+                    Expanded(
+                      flex: 5,
+                      child: CustomScrollView(
+                        physics: const BouncingScrollPhysics(
+                          parent: AlwaysScrollableScrollPhysics(),
+                        ),
+                        slivers: [
+                          if (viewModel.isLoading)
+                            const SuppliersSkeleton()
+                          else if (viewModel.hasLoadError &&
+                              viewModel.allSuppliers.isEmpty)
+                            SliverFillRemaining(
+                              hasScrollBody: false,
+                              child: AppFeedbackPanel(
+                                title: viewModel.isOffline
+                                    ? 'Sem conexão'
+                                    : 'Falha ao carregar fornecedores',
+                                message: viewModel.isOffline
+                                    ? 'Confira sua conexão e tente novamente.'
+                                    : 'Não foi possível carregar seus fornecedores agora.',
+                                type: AppFeedbackType.error,
+                                actionLabel: 'Tentar novamente',
+                                onAction: () {
+                                  final user = ref
+                                      .read(authViewModelProvider)
+                                      .currentUser;
+                                  if (user != null) {
+                                    viewModel.retryListenToSuppliers(user.id);
+                                  }
+                                },
+                              ),
+                            )
+                          else if (viewModel.allSuppliers.isEmpty)
+                            SliverFillRemaining(
+                              hasScrollBody: false,
+                              child: EmptyStateWidget(
+                                icon: Icons.storefront_outlined,
+                                message: 'Nenhum fornecedor cadastrado.',
+                                buttonText: 'Adicionar Fornecedor',
+                                onButtonPressed: () => NavigationUtils.push(
+                                  context,
+                                  const AddSupplierScreen(),
                                 ),
                               ),
-                            const SliverPadding(
-                              padding: EdgeInsets.only(bottom: 80),
+                            )
+                          else if (viewModel.filteredSuppliers.isEmpty)
+                            SliverFillRemaining(
+                              hasScrollBody: false,
+                              child: EmptyStateWidget(
+                                icon: Icons.search_off_rounded,
+                                message:
+                                    'Nenhum fornecedor encontrado para a busca.',
+                                buttonText: 'Limpar busca',
+                                onButtonPressed: () {
+                                  setState(() {
+                                    _searchController.clear();
+                                  });
+                                  viewModel.setSearchQuery('');
+                                },
+                              ),
+                            )
+                          else
+                            SliverPadding(
+                              padding: const EdgeInsets.all(
+                                AppTheme.defaultPadding,
+                              ),
+                              sliver: SliverList(
+                                delegate: SliverChildBuilderDelegate(
+                                  (context, index) {
+                                    final supplier =
+                                        viewModel.filteredSuppliers[index];
+                                    return SupplierListTile(
+                                      supplier: supplier,
+                                      selected:
+                                          showSplit &&
+                                          selectedSupplier?.id == supplier.id,
+                                      onTap: showSplit
+                                          ? () => setState(
+                                              () => _selectedSupplierId =
+                                                  supplier.id,
+                                            )
+                                          : null,
+                                    );
+                                  },
+                                  childCount:
+                                      viewModel.filteredSuppliers.length,
+                                ),
+                              ),
                             ),
-                          ],
-                        ),
+                          const SliverPadding(
+                            padding: EdgeInsets.only(bottom: 80),
+                          ),
+                        ],
                       ),
-                      if (selectedSupplier != null) ...[
-                        VerticalDivider(
-                          width: 1,
-                          color: theme.colorScheme.outlineVariant,
-                        ),
-                        Expanded(
-                          flex: 4,
-                          child: SupplierPreviewPanel(
-                            key: ValueKey(selectedSupplier.id),
-                            supplier: selectedSupplier,
-                            onOpen: () => NavigationUtils.push(
-                              context,
-                              SupplierDetailScreen(supplier: selectedSupplier),
-                            ),
+                    ),
+                    if (selectedSupplier != null) ...[
+                      VerticalDivider(
+                        width: 1,
+                        color: theme.colorScheme.outlineVariant,
+                      ),
+                      Expanded(
+                        flex: 4,
+                        child: SupplierPreviewPanel(
+                          key: ValueKey(selectedSupplier.id),
+                          supplier: selectedSupplier,
+                          onOpen: () => NavigationUtils.push(
+                            context,
+                            SupplierDetailScreen(supplier: selectedSupplier),
                           ),
                         ),
-                      ],
+                      ),
                     ],
-                  );
-                },
-              ),
+                  ],
+                );
+              },
             ),
           ),
+        ),
       ),
       floatingActionButton: FloatingActionButton.extended(
-          heroTag: 'fab_suppliers',
-          onPressed: () {
-            HapticFeedback.lightImpact();
-            NavigationUtils.push(context, const AddSupplierScreen());
-          },
-          icon: const Icon(Icons.add_rounded),
-          label: const Text("Novo Fornecedor"),
-          shape: RoundedRectangleBorder(borderRadius: AppBorders.borderRadiusL),
-          elevation: 0,
+        heroTag: 'fab_suppliers',
+        onPressed: () {
+          HapticFeedback.lightImpact();
+          NavigationUtils.push(context, const AddSupplierScreen());
+        },
+        icon: const Icon(Icons.add_rounded),
+        label: const Text("Novo Fornecedor"),
+        shape: RoundedRectangleBorder(borderRadius: AppBorders.borderRadiusL),
+        elevation: 0,
       ),
     );
   }

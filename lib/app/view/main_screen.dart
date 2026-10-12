@@ -13,8 +13,10 @@ import 'package:key_budget/features/auth/viewmodel/auth_viewmodel.dart';
 import 'package:key_budget/features/credentials/view/credentials_screen.dart';
 import 'package:key_budget/features/dashboard/view/dashboard_screen.dart';
 import 'package:key_budget/features/documents/view/documents_screen.dart';
+import 'package:key_budget/features/documents/viewmodel/document_viewmodel.dart';
 import 'package:key_budget/features/expenses/view/expenses_screen.dart';
 import 'package:key_budget/features/suppliers/view/suppliers_screen.dart';
+import 'package:key_budget/features/trash/repository/trash_repository.dart';
 import 'package:key_budget/features/user/view/user_screen.dart';
 
 class MainScreen extends ConsumerStatefulWidget {
@@ -27,8 +29,16 @@ class MainScreen extends ConsumerStatefulWidget {
 class _MainScreenState extends ConsumerState<MainScreen> {
   final Set<AppDestination> _loadedDestinations = {};
   late final AutomaticBackupService _automaticBackupService;
+  late final AppLockService _appLockService;
   Timer? _automaticBackupTimer;
+  bool _isPurgingTrash = false;
   String? _lastUserId;
+
+  void _onLockChanged() {
+    if (!_appLockService.isLocked) {
+      _purgeExpiredTrash();
+    }
+  }
 
   @override
   void initState() {
@@ -36,11 +46,43 @@ class _MainScreenState extends ConsumerState<MainScreen> {
     _automaticBackupService = AutomaticBackupService(
       currentUserId: () => ref.read(authViewModelProvider).currentUser?.id,
     );
-    WidgetsBinding.instance.addPostFrameCallback((_) => _runAutomaticBackup());
-    _automaticBackupTimer = Timer.periodic(
-      const Duration(hours: 1),
-      (_) => _runAutomaticBackup(),
-    );
+    _appLockService = ref.read(appLockServiceProvider);
+    _appLockService.addListener(_onLockChanged);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _runAutomaticBackup();
+      _purgeExpiredTrash();
+    });
+    _automaticBackupTimer = Timer.periodic(const Duration(hours: 1), (_) {
+      _runAutomaticBackup();
+      _purgeExpiredTrash();
+    });
+  }
+
+  Future<void> _purgeExpiredTrash() async {
+    if (!mounted ||
+        _isPurgingTrash ||
+        ref.read(appLockServiceProvider).isLocked) {
+      return;
+    }
+    final userId = ref.read(authViewModelProvider).currentUser?.id;
+    if (userId == null) return;
+    _isPurgingTrash = true;
+    try {
+      final removed = await ref
+          .read(trashRepositoryProvider)
+          .purgeExpired(userId);
+      if (removed > 0 &&
+          mounted &&
+          ref.read(authViewModelProvider).currentUser?.id == userId) {
+        await ref
+            .read(documentViewModelProvider)
+            .retryPendingAttachmentCleanup(userId);
+      }
+    } catch (_) {
+      return;
+    } finally {
+      _isPurgingTrash = false;
+    }
   }
 
   void _runAutomaticBackup() {
@@ -52,6 +94,7 @@ class _MainScreenState extends ConsumerState<MainScreen> {
   @override
   void dispose() {
     _automaticBackupTimer?.cancel();
+    _appLockService.removeListener(_onLockChanged);
     super.dispose();
   }
 
@@ -77,6 +120,11 @@ class _MainScreenState extends ConsumerState<MainScreen> {
     final navigationViewModel = ref.watch(navigationViewModelProvider);
     final authViewModel = ref.watch(authViewModelProvider);
     final enableSuppliers = authViewModel.currentUser?.enableSuppliers ?? false;
+    final hiddenIds =
+        authViewModel.currentUser?.hiddenNavigationDestinations ??
+        const <String>[];
+    final order =
+        authViewModel.currentUser?.navigationOrder ?? const <String>[];
     final currentUserId = authViewModel.currentUser?.id ?? 'anonymous';
 
     if (_lastUserId != currentUserId) {
@@ -84,23 +132,30 @@ class _MainScreenState extends ConsumerState<MainScreen> {
       _loadedDestinations.clear();
     }
 
-    final currentDestination = navigationViewModel.currentDestination;
+    final availableDestinations = AppDestination.getAvailable(
+      enableSuppliers: enableSuppliers,
+      hiddenIds: hiddenIds,
+      order: order,
+    );
+    final currentDestination =
+        availableDestinations.contains(navigationViewModel.currentDestination)
+        ? navigationViewModel.currentDestination
+        : availableDestinations.first;
     _loadedDestinations.add(currentDestination);
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      navigationViewModel.updateSuppliersAvailability(enableSuppliers);
+      if (mounted) {
+        navigationViewModel.updateAvailability(
+          enableSuppliers: enableSuppliers,
+          hiddenIds: hiddenIds,
+          order: order,
+        );
+      }
     });
-
-    final availableDestinations = AppDestination.getAvailable(
-      enableSuppliers: enableSuppliers,
-    );
 
     final activeIndex = availableDestinations.indexOf(currentDestination);
     final navigationIndex = activeIndex >= 0 ? activeIndex : 0;
-    final stackIndex = currentDestination == AppDestination.suppliers &&
-            !enableSuppliers
-        ? 0
-        : AppDestination.values.indexOf(currentDestination);
+    final stackIndex = AppDestination.values.indexOf(currentDestination);
 
     final theme = Theme.of(context);
     final screenWidth = MediaQuery.of(context).size.width;
@@ -120,7 +175,9 @@ class _MainScreenState extends ConsumerState<MainScreen> {
           children: AppDestination.values.map((dest) {
             final isSelected = dest == currentDestination;
             final isLoaded = _loadedDestinations.contains(dest);
-            final child = isLoaded ? _buildDestinationWidget(dest) : const SizedBox.shrink();
+            final child = isLoaded
+                ? _buildDestinationWidget(dest)
+                : const SizedBox.shrink();
             return TickerMode(
               key: ValueKey(dest),
               enabled: isSelected,
@@ -132,51 +189,65 @@ class _MainScreenState extends ConsumerState<MainScreen> {
     );
 
     return Scaffold(
+      appBar: hiddenIds.contains(AppDestination.profile.id)
+          ? AppBar(
+              title: Text(currentDestination.label),
+              actions: [
+                IconButton(
+                  tooltip: 'Abrir perfil e configurações',
+                  icon: const Icon(Icons.settings_outlined),
+                  onPressed: () => Navigator.of(context).push(
+                    MaterialPageRoute<void>(builder: (_) => const UserScreen()),
+                  ),
+                ),
+              ],
+            )
+          : null,
       body: Row(
         children: [
-          if (!isCompact) NavigationRail(
-            backgroundColor: theme.colorScheme.surface,
-            selectedIndex: navigationIndex,
-            onDestinationSelected: (int index) {
-              if (index >= 0 && index < availableDestinations.length) {
-                navigationViewModel.navigateTo(availableDestinations[index]);
-              }
-            },
-            labelType: isExpanded
-                ? NavigationRailLabelType.all
-                : NavigationRailLabelType.selected,
-            selectedIconTheme: IconThemeData(
-              color: theme.colorScheme.primary,
+          if (!isCompact)
+            NavigationRail(
+              backgroundColor: theme.colorScheme.surface,
+              selectedIndex: navigationIndex,
+              onDestinationSelected: (int index) {
+                if (index >= 0 && index < availableDestinations.length) {
+                  navigationViewModel.navigateTo(availableDestinations[index]);
+                }
+              },
+              labelType: isExpanded
+                  ? NavigationRailLabelType.all
+                  : NavigationRailLabelType.selected,
+              selectedIconTheme: IconThemeData(
+                color: theme.colorScheme.primary,
+              ),
+              selectedLabelTextStyle: TextStyle(
+                color: theme.colorScheme.primary,
+                fontWeight: FontWeight.w600,
+              ),
+              unselectedIconTheme: IconThemeData(
+                color: theme.colorScheme.onSurfaceVariant,
+              ),
+              unselectedLabelTextStyle: TextStyle(
+                color: theme.colorScheme.onSurfaceVariant,
+              ),
+              destinations: availableDestinations.map((dest) {
+                return NavigationRailDestination(
+                  icon: Icon(dest.icon),
+                  selectedIcon: Icon(dest.selectedIcon),
+                  label: Text(dest.label),
+                );
+              }).toList(),
             ),
-            selectedLabelTextStyle: TextStyle(
-              color: theme.colorScheme.primary,
-              fontWeight: FontWeight.w600,
+          if (!isCompact)
+            VerticalDivider(
+              thickness: 1,
+              width: 1,
+              color: theme.dividerTheme.color,
             ),
-            unselectedIconTheme: IconThemeData(
-              color: theme.colorScheme.onSurfaceVariant,
-            ),
-            unselectedLabelTextStyle: TextStyle(
-              color: theme.colorScheme.onSurfaceVariant,
-            ),
-            destinations: availableDestinations.map((dest) {
-              return NavigationRailDestination(
-                icon: Icon(dest.icon),
-                selectedIcon: Icon(dest.selectedIcon),
-                label: Text(dest.label),
-              );
-            }).toList(),
-          ),
-          if (!isCompact) VerticalDivider(
-            thickness: 1,
-            width: 1,
-            color: theme.dividerTheme.color,
-          ),
           Expanded(child: stack),
         ],
       ),
-      bottomNavigationBar: isCompact
-          ? const MainBottomNavigationBar()
-          : null,
+      bottomNavigationBar: isCompact ? const MainBottomNavigationBar() : null,
     );
   }
 }

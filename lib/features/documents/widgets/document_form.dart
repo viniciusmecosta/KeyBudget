@@ -4,6 +4,7 @@ import 'package:intl/intl.dart';
 import 'package:key_budget/core/design_system/borders/app_borders.dart';
 import 'package:key_budget/core/design_system/spacing/app_spacing.dart';
 import 'package:key_budget/core/design_system/widgets/app_text_field.dart';
+import 'package:key_budget/core/design_system/widgets/app_form_section_heading.dart';
 import 'package:key_budget/core/models/document_model.dart';
 import 'package:key_budget/core/services/app_lock_service.dart';
 import 'package:key_budget/features/documents/viewmodel/document_viewmodel.dart';
@@ -35,24 +36,23 @@ class DocumentForm extends ConsumerStatefulWidget {
 }
 
 class _DocumentFormState extends ConsumerState<DocumentForm> {
-  Widget _sectionHeader(BuildContext context, String title, IconData icon) {
-    final theme = Theme.of(context);
-    final color = theme.brightness == Brightness.dark ? Colors.white : Colors.black87;
-    return Row(
-      children: [
-        Icon(icon, color: color, size: 20),
-        const SizedBox(width: AppSpacing.sm),
-        Text(
-          title,
-          style: theme.textTheme.titleSmall?.copyWith(
-            fontWeight: FontWeight.bold,
-            color: color,
-            letterSpacing: 1.2,
+  Widget _pairedFields(Widget first, Widget second) => LayoutBuilder(
+    builder: (context, constraints) => constraints.maxWidth >= 640
+        ? Row(
+            children: [
+              Expanded(child: first),
+              const SizedBox(width: AppSpacing.md),
+              Expanded(child: second),
+            ],
+          )
+        : Column(
+            children: [
+              first,
+              const SizedBox(height: AppSpacing.md),
+              second,
+            ],
           ),
-        ),
-      ],
-    );
-  }
+  );
 
   @override
   Widget build(BuildContext context) {
@@ -65,29 +65,37 @@ class _DocumentFormState extends ConsumerState<DocumentForm> {
       child: ListView(
         padding: const EdgeInsets.all(AppSpacing.md),
         children: [
-          _sectionHeader(context, 'INFORMAÇÕES PRINCIPAIS', Icons.description_outlined),
+          const AppFormSectionHeading(
+            title: 'Informações principais',
+            icon: Icons.description_outlined,
+          ),
           const SizedBox(height: AppSpacing.sm),
-          AppTextField(
-            controller: widget.nameController,
-            label: 'Nome do Documento *',
-            prefixIcon: Icons.article_outlined,
-            textInputAction: TextInputAction.next,
-            validator: (value) =>
-                value!.isEmpty ? 'Informe o nome do documento' : null,
+          _pairedFields(
+            AppTextField(
+              controller: widget.nameController,
+              label: 'Nome do Documento *',
+              prefixIcon: Icons.article_outlined,
+              textInputAction: TextInputAction.next,
+              validator: (value) =>
+                  value!.isEmpty ? 'Informe o nome do documento' : null,
+            ),
+            AppTextField(
+              controller: widget.numberController,
+              label: 'Número',
+              prefixIcon: Icons.tag_outlined,
+              textInputAction: TextInputAction.next,
+            ),
           ),
           const SizedBox(height: AppSpacing.md),
-          AppTextField(
-            controller: widget.numberController,
-            label: 'Número',
-            prefixIcon: Icons.tag_outlined,
-            textInputAction: TextInputAction.next,
+          _pairedFields(
+            _buildDatePicker(context, 'Data de Expedição', widget.issueDate),
+            _buildDatePicker(context, 'Validade', widget.expiryDate),
           ),
           const SizedBox(height: AppSpacing.md),
-          _buildDatePicker(context, 'Data de Expedição', widget.issueDate),
-          const SizedBox(height: AppSpacing.md),
-          _buildDatePicker(context, 'Validade', widget.expiryDate),
-          const SizedBox(height: AppSpacing.md),
-          _sectionHeader(context, 'CAMPOS ADICIONAIS', Icons.list_alt_outlined),
+          const AppFormSectionHeading(
+            title: 'Campos adicionais',
+            icon: Icons.list_alt_outlined,
+          ),
           const SizedBox(height: AppSpacing.sm),
           ..._buildAdditionalFields(theme),
           Align(
@@ -99,11 +107,15 @@ class _DocumentFormState extends ConsumerState<DocumentForm> {
                 setState(() {
                   widget.additionalFields.value.add({'name': '', 'value': ''});
                 });
+                widget.onChanged?.call();
               },
             ),
           ),
           const SizedBox(height: AppSpacing.md),
-          _sectionHeader(context, 'ANEXOS', Icons.attach_file_outlined),
+          const AppFormSectionHeading(
+            title: 'Anexos',
+            icon: Icons.attach_file_outlined,
+          ),
           ..._buildAttachments(context),
           if (viewModel.isUploading)
             Padding(
@@ -132,12 +144,12 @@ class _DocumentFormState extends ConsumerState<DocumentForm> {
                       final appLock = ref.read(appLockServiceProvider);
                       appLock.beginExternalPick();
                       try {
-                        final attachment =
-                            await viewModel.pickAndUploadFile();
+                        final attachment = await viewModel.pickAndUploadFile();
                         if (attachment != null) {
                           setState(() {
                             widget.attachments.value.add(attachment);
                           });
+                          widget.onChanged?.call();
                         }
                       } finally {
                         appLock.endExternalPick();
@@ -184,11 +196,15 @@ class _DocumentFormState extends ConsumerState<DocumentForm> {
               ),
             ),
             IconButton(
-              icon: Icon(Icons.remove_circle_outline, color: theme.colorScheme.error),
+              icon: Icon(
+                Icons.remove_circle_outline,
+                color: theme.colorScheme.error,
+              ),
               onPressed: () {
                 setState(() {
                   widget.additionalFields.value.removeAt(index);
                 });
+                widget.onChanged?.call();
               },
             ),
           ],
@@ -200,7 +216,6 @@ class _DocumentFormState extends ConsumerState<DocumentForm> {
   List<Widget> _buildAttachments(BuildContext context) {
     final theme = Theme.of(context);
     return widget.attachments.value.map((attachment) {
-      final nameController = TextEditingController(text: attachment.name);
       return Container(
         margin: const EdgeInsets.only(bottom: AppSpacing.sm),
         decoration: BoxDecoration(
@@ -208,7 +223,9 @@ class _DocumentFormState extends ConsumerState<DocumentForm> {
           border: Border.all(
             color: theme.colorScheme.outline.withValues(alpha: 0.2),
           ),
-          color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.4),
+          color: theme.colorScheme.surfaceContainerHighest.withValues(
+            alpha: 0.4,
+          ),
         ),
         child: ListTile(
           contentPadding: const EdgeInsets.symmetric(
@@ -221,10 +238,14 @@ class _DocumentFormState extends ConsumerState<DocumentForm> {
               color: theme.colorScheme.primary.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(8),
             ),
-            child: Icon(Icons.insert_drive_file_outlined, color: theme.colorScheme.primary),
+            child: Icon(
+              Icons.insert_drive_file_outlined,
+              color: theme.colorScheme.primary,
+            ),
           ),
           title: TextFormField(
-            controller: nameController,
+            key: ValueKey(attachment.driveId),
+            initialValue: attachment.name,
             decoration: const InputDecoration(
               hintText: 'Nome do anexo',
               border: InputBorder.none,
@@ -237,11 +258,15 @@ class _DocumentFormState extends ConsumerState<DocumentForm> {
             },
           ),
           trailing: IconButton(
-            icon: Icon(Icons.remove_circle_outline, color: theme.colorScheme.error),
+            icon: Icon(
+              Icons.remove_circle_outline,
+              color: theme.colorScheme.error,
+            ),
             onPressed: () {
               setState(() {
                 widget.attachments.value.remove(attachment);
               });
+              widget.onChanged?.call();
             },
           ),
         ),
@@ -268,6 +293,7 @@ class _DocumentFormState extends ConsumerState<DocumentForm> {
           setState(() {
             notifier.value = date;
           });
+          widget.onChanged?.call();
         }
       },
       borderRadius: AppBorders.borderRadiusM,
@@ -277,11 +303,15 @@ class _DocumentFormState extends ConsumerState<DocumentForm> {
           prefixIcon: const Icon(Icons.calendar_today_outlined),
           suffixIcon: notifier.value != null
               ? IconButton(
-                  icon: Icon(Icons.clear, color: theme.colorScheme.onSurfaceVariant),
+                  icon: Icon(
+                    Icons.clear,
+                    color: theme.colorScheme.onSurfaceVariant,
+                  ),
                   onPressed: () {
                     setState(() {
                       notifier.value = null;
                     });
+                    widget.onChanged?.call();
                   },
                 )
               : const Icon(Icons.chevron_right),
@@ -292,7 +322,9 @@ class _DocumentFormState extends ConsumerState<DocumentForm> {
               : DateFormat('dd/MM/yyyy').format(notifier.value!),
           style: notifier.value == null
               ? theme.textTheme.bodyMedium?.copyWith(
-                  color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.6),
+                  color: theme.colorScheme.onSurfaceVariant.withValues(
+                    alpha: 0.6,
+                  ),
                 )
               : theme.textTheme.bodyMedium,
         ),

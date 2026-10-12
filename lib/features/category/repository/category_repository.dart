@@ -6,7 +6,7 @@ class CategoryRepository {
   final FirebaseFirestore? _customFirestore;
 
   CategoryRepository({FirebaseFirestore? firestore})
-      : _customFirestore = firestore;
+    : _customFirestore = firestore;
 
   FirebaseFirestore get _firestore =>
       _customFirestore ?? FirebaseFirestore.instance;
@@ -49,7 +49,9 @@ class CategoryRepository {
   }
 
   Future<void> deleteCategory(String userId, String categoryId) async {
-    await _getCategoriesCollection(userId).doc(categoryId).delete();
+    await _getCategoriesCollection(
+      userId,
+    ).doc(categoryId).update({'archived': true});
   }
 }
 

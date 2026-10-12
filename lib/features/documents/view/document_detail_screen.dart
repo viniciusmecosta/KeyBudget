@@ -55,23 +55,23 @@ class DocumentDetailScreen extends ConsumerWidget {
           IconButton(
             icon: Icon(Icons.delete_outline, color: theme.colorScheme.error),
             tooltip: isHistoricalVersion
-                ? 'Excluir esta versão'
-                : 'Excluir documento e histórico',
+                ? 'Mover esta versão para a lixeira'
+                : 'Mover documento e histórico para a lixeira',
             onPressed: () async {
               final confirmed = await showDialog<bool>(
                 context: context,
                 builder: (ctx) => AlertDialog(
                   title: Text(
                     isHistoricalVersion
-                        ? 'Excluir esta versão'
-                        : 'Excluir documento e histórico',
+                        ? 'Mover esta versão para a lixeira'
+                        : 'Mover documento e histórico para a lixeira',
                   ),
                   content: Text(
                     isHistoricalVersion
-                        ? 'Esta versão e seus anexos serão removidos. As outras versões permanecerão disponíveis.'
+                        ? 'Esta versão e seus anexos poderão ser restaurados pela lixeira.'
                         : document.versions.isNotEmpty
-                        ? 'Esta ação removerá o documento, suas ${document.versions.length} versões anteriores e todos os anexos.'
-                        : 'Esta ação removerá este documento e todos os seus anexos permanentemente.',
+                        ? 'O documento, suas ${document.versions.length} versões anteriores e os anexos poderão ser restaurados pela lixeira.'
+                        : 'Este documento e seus anexos poderão ser restaurados pela lixeira.',
                   ),
                   actions: [
                     TextButton(
@@ -100,7 +100,7 @@ class DocumentDetailScreen extends ConsumerWidget {
               if (success) {
                 SnackbarService.showSuccess(
                   scaffoldContext,
-                  'Documento excluído!',
+                  'Documento movido para a lixeira.',
                 );
                 navigator.pop();
               } else {

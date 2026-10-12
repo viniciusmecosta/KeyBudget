@@ -7,6 +7,7 @@ import 'package:key_budget/core/design_system/widgets/app_button.dart';
 import 'package:key_budget/core/services/snackbar_service.dart';
 import 'package:key_budget/features/auth/viewmodel/auth_viewmodel.dart';
 import 'package:key_budget/features/credentials/viewmodel/credential_viewmodel.dart';
+import 'package:key_budget/features/credentials/domain/credential_login_autofill.dart';
 import 'package:mask_text_input_formatter/mask_text_input_formatter.dart';
 
 import '../widgets/credential_form.dart';
@@ -31,6 +32,8 @@ class _AddCredentialScreenState extends ConsumerState<AddCredentialScreen> {
   String? _selectedFolderId;
   bool _isSaving = false;
   bool _hasUnsavedChanges = false;
+  String? _autoEmail;
+  String? _autoPhone;
 
   @override
   void initState() {
@@ -53,21 +56,25 @@ class _AddCredentialScreenState extends ConsumerState<AddCredentialScreen> {
   }
 
   void _updateFields() {
-    final text = _loginController.text;
-    final isEmail = RegExp(r'^[^@]+@[^@]+\.[^@]+').hasMatch(text);
     final phoneMaskFormatter = MaskTextInputFormatter(mask: '(##) #####-####');
-
-    if (text.isEmpty) {
+    final email = CredentialLoginAutofill.email(_loginController.text);
+    final phone = CredentialLoginAutofill.phone(_loginController.text);
+    if (_autoEmail != null && _emailController.text == _autoEmail) {
       _emailController.clear();
+    }
+    if (_autoPhone != null && _phoneController.text == _autoPhone) {
       _phoneController.clear();
-    } else {
-      if (isEmail) {
-        _emailController.text = text;
-      }
-      final sanitizedText = text.replaceAll(RegExp(r'[^0-9]'), '');
-      if (sanitizedText.length >= 10) {
-        _phoneController.text = phoneMaskFormatter.maskText(sanitizedText);
-      }
+    }
+    _autoEmail = null;
+    _autoPhone = null;
+    if (email != null && _emailController.text.isEmpty) {
+      _emailController.text = email;
+      _autoEmail = email;
+    }
+    if (phone != null && _phoneController.text.isEmpty) {
+      final masked = phoneMaskFormatter.maskText(phone);
+      _phoneController.text = masked;
+      _autoPhone = masked;
     }
   }
 

@@ -1,15 +1,16 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
+import 'dart:ui';
 
 import 'package:file_picker/file_picker.dart';
-import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/legacy.dart';
-import 'package:key_budget/app/widgets/animated_list_item.dart';
 import 'package:key_budget/core/models/document_model.dart';
+import 'package:key_budget/core/search/search_normalizer.dart';
 import 'package:key_budget/core/services/drive_service.dart';
 import 'package:key_budget/features/documents/repository/document_repository.dart';
-import 'package:key_budget/features/documents/widgets/document_list_tile.dart';
+import 'package:key_budget/features/trash/repository/trash_repository.dart';
 import 'package:open_file/open_file.dart';
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
@@ -53,14 +54,17 @@ class DocumentViewModel extends ChangeNotifier {
 
   final DocumentRepository _repository;
   final DriveService _driveService;
+  final TrashRepository _trashRepository;
   final Future<void> Function(String) _clearLocalCache;
 
   DocumentViewModel({
     DocumentRepository? repository,
     DriveService? driveService,
+    TrashRepository? trashRepository,
     Future<void> Function(String)? clearLocalCache,
   }) : _repository = repository ?? DocumentRepository(),
        _driveService = driveService ?? DriveService(),
+       _trashRepository = trashRepository ?? TrashRepository(),
        _clearLocalCache = clearLocalCache ?? _deleteLocalAttachmentCache;
 
   static Future<void> _deleteLocalAttachmentCache(String driveId) async {
@@ -70,9 +74,49 @@ class DocumentViewModel extends ChangeNotifier {
         await entry.delete();
       }
     }
+    final cacheRoot = Directory(p.join(directory.path, 'attachment_cache'));
+    if (!await cacheRoot.exists()) return;
+    await for (final userDirectory in cacheRoot.list()) {
+      if (userDirectory is! Directory) continue;
+      await for (final entry in userDirectory.list()) {
+        if (entry is File && p.basename(entry.path).startsWith('$driveId-')) {
+          await entry.delete();
+        }
+      }
+    }
+  }
+
+  static Future<void> _clearUserAttachmentCache(
+    String userId,
+    List<Document> documents,
+  ) async {
+    try {
+      final directory = await getApplicationDocumentsDirectory();
+      final cache = Directory(
+        p.join(directory.path, 'attachment_cache', p.basename(userId)),
+      );
+      if (await cache.exists()) {
+        await cache.delete(recursive: true);
+      }
+      final driveIds = documents
+          .expand((document) => document.attachments)
+          .map((attachment) => attachment.driveId)
+          .toSet();
+      if (driveIds.isEmpty) return;
+      await for (final entry in directory.list()) {
+        if (entry is! File) continue;
+        final name = p.basename(entry.path);
+        if (driveIds.any((id) => name.startsWith('${p.basename(id)}-'))) {
+          await entry.delete();
+        }
+      }
+    } catch (_) {
+      return;
+    }
   }
 
   StreamSubscription? _documentsSubscription;
+  String? _listeningUserId;
   bool _isListening = false;
   bool _isLoading = false;
   String? _errorMessage;
@@ -81,12 +125,6 @@ class DocumentViewModel extends ChangeNotifier {
   bool _isUploading = false;
   double? _uploadProgress;
   String _searchQuery = '';
-
-  GlobalKey<SliverAnimatedListState>? _listKey;
-
-  void setListKey(GlobalKey<SliverAnimatedListState> key) {
-    _listKey = key;
-  }
 
   bool get isUploading => _isUploading;
 
@@ -98,37 +136,46 @@ class DocumentViewModel extends ChangeNotifier {
 
   String get searchQuery => _searchQuery;
 
-  List<Document> get currentDisplayItems => _currentDisplayItems;
+  List<Document> get currentDisplayItems =>
+      List.unmodifiable(_currentDisplayItems);
+  List<Document> get allDocuments => List.unmodifiable(_documents);
   bool get hasDocuments => _documents.isNotEmpty;
 
   String _sanitize(String input) {
-    var text = input.toLowerCase().replaceAll(RegExp(r'\s+'), ' ').trim();
-    const withDia = 'áàãâäéèêëíìîïóòõôöúùûüçñ';
-    const withoutDia = 'aaaaaeeeeiiiiooooouuuucn';
-    for (int i = 0; i < withDia.length; i++) {
-      text = text.replaceAll(withDia[i], withoutDia[i]);
-    }
-    return text;
+    return SearchNormalizer.normalize(input);
   }
 
   void setSearchQuery(String query) {
     _searchQuery = _sanitize(query);
-    _updateDisplayList(animate: true);
+    _updateDisplayList();
   }
 
   void listenToDocuments(String userId) {
-    if (_isListening) return;
+    if (_isListening && _listeningUserId == userId) return;
+    if (_listeningUserId != userId) {
+      final previousUserId = _listeningUserId;
+      if (previousUserId != null) {
+        unawaited(_clearUserAttachmentCache(previousUserId, _documents));
+      }
+      _documents = [];
+      _currentDisplayItems = [];
+      _searchQuery = '';
+      _errorMessage = null;
+    }
+    _listeningUserId = userId;
     _setLoading(true);
     _documentsSubscription?.cancel();
     _documentsSubscription = _repository
         .getDocumentsStream(userId)
         .listen(
           (newDocs) async {
+            if (_listeningUserId != userId) return;
             try {
               final processedNewDocs = await _processDocuments(newDocs, userId);
+              if (_listeningUserId != userId) return;
               _documents = processedNewDocs;
               _setErrorMessage(null);
-              _updateDisplayList(animate: true);
+              _updateDisplayList();
               unawaited(retryPendingAttachmentCleanup(userId));
             } catch (_) {
               _setErrorMessage('Erro ao carregar os documentos.');
@@ -137,6 +184,7 @@ class DocumentViewModel extends ChangeNotifier {
             }
           },
           onError: (error) {
+            if (_listeningUserId != userId) return;
             _setErrorMessage('Erro ao carregar os documentos.');
             _isListening = false;
             _setLoading(false);
@@ -150,8 +198,7 @@ class DocumentViewModel extends ChangeNotifier {
     listenToDocuments(userId);
   }
 
-  void _updateDisplayList({bool animate = true}) {
-    final oldList = List<Document>.from(_currentDisplayItems);
+  void _updateDisplayList() {
     final List<Document> newList = List.from(_documents);
 
     if (_searchQuery.isNotEmpty) {
@@ -165,64 +212,8 @@ class DocumentViewModel extends ChangeNotifier {
           a.documentName.toLowerCase().compareTo(b.documentName.toLowerCase()),
     );
 
-    if (!animate || _listKey?.currentState == null) {
-      _currentDisplayItems = List.from(newList);
-      notifyListeners();
-      return;
-    }
-
-    for (var i = oldList.length - 1; i >= 0; i--) {
-      final oldItem = oldList[i];
-      if (!newList.any((newItem) => newItem.id == oldItem.id)) {
-        final indexToRemove = _currentDisplayItems.indexWhere(
-          (item) => item.id == oldItem.id,
-        );
-        if (indexToRemove != -1) {
-          final removedDoc = _currentDisplayItems.removeAt(indexToRemove);
-          _listKey?.currentState?.removeItem(
-            indexToRemove,
-            (context, animation) => AnimatedListItem(
-              animation: animation,
-              child: DocumentListTile(
-                key: ValueKey(removedDoc.id),
-                doc: removedDoc,
-              ),
-            ),
-            duration: const Duration(milliseconds: 300),
-          );
-        }
-      }
-    }
-
-    for (var i = 0; i < newList.length; i++) {
-      final newItem = newList[i];
-      final oldIndex = _currentDisplayItems.indexWhere(
-        (item) => item.id == newItem.id,
-      );
-
-      if (oldIndex == -1) {
-        _currentDisplayItems.insert(i, newItem);
-        _listKey?.currentState?.insertItem(
-          i,
-          duration: const Duration(milliseconds: 300),
-        );
-      } else {
-        if (_currentDisplayItems[oldIndex] != newItem) {
-          _currentDisplayItems[oldIndex] = newItem;
-          notifyListeners();
-        }
-        if (oldIndex != i) {
-          final item = _currentDisplayItems.removeAt(oldIndex);
-          _currentDisplayItems.insert(i, item);
-          notifyListeners();
-        }
-      }
-    }
-
-    if (_currentDisplayItems.length != newList.length) {
-      _currentDisplayItems = List.from(newList);
-      notifyListeners();
-    }
+    _currentDisplayItems = newList;
+    notifyListeners();
   }
 
   Future<void> forceRefresh(String userId) async {
@@ -232,7 +223,7 @@ class DocumentViewModel extends ChangeNotifier {
       final processedDocs = await _processDocuments(docs, userId);
       _documents = processedDocs;
       _setErrorMessage(null);
-      _updateDisplayList(animate: true);
+      _updateDisplayList();
     } catch (_) {
       _setErrorMessage('Não foi possível atualizar os documentos.');
     } finally {
@@ -312,7 +303,7 @@ class DocumentViewModel extends ChangeNotifier {
             .toSet()
             .toList(),
       );
-      await retryPendingAttachmentCleanup(userId);
+      await retryPendingAttachmentCleanup(userId, allowInteractive: true);
       return true;
     } catch (e) {
       _setErrorMessage('Não foi possível atualizar o documento.');
@@ -322,7 +313,10 @@ class DocumentViewModel extends ChangeNotifier {
     }
   }
 
-  Future<void> retryPendingAttachmentCleanup(String userId) async {
+  Future<void> retryPendingAttachmentCleanup(
+    String userId, {
+    bool allowInteractive = false,
+  }) async {
     try {
       final pending = await _repository.getPendingAttachmentCleanup(userId);
       if (pending.isEmpty) return;
@@ -333,7 +327,10 @@ class DocumentViewModel extends ChangeNotifier {
             await _repository.acknowledgeAttachmentCleanup(userId, driveId);
             continue;
           }
-          final deleted = await _driveService.deleteFile(driveId);
+          final deleted = await _driveService.deleteFile(
+            driveId,
+            allowInteractive: allowInteractive,
+          );
           if (deleted) {
             await _clearLocalCache(driveId);
             await _repository.acknowledgeAttachmentCleanup(userId, driveId);
@@ -352,15 +349,12 @@ class DocumentViewModel extends ChangeNotifier {
         _setErrorMessage('O documento não foi encontrado. Atualize a lista.');
         return false;
       }
-      await _repository.deleteDocumentsWithCleanup(
+      await _trashRepository.move(
         userId,
-        family.map((version) => version.id!).toList(),
-        {
-          for (final version in family)
-            for (final attachment in version.attachments) attachment.driveId,
-        }.toList(),
+        collection: 'documents',
+        ids: family.map((version) => version.id!).toList(),
+        title: document.documentName,
       );
-      await retryPendingAttachmentCleanup(userId);
       return true;
     } catch (e) {
       _setErrorMessage('Não foi possível excluir o documento.');
@@ -390,14 +384,12 @@ class DocumentViewModel extends ChangeNotifier {
         );
         return false;
       }
-      await _repository.deleteDocumentsWithCleanup(
+      await _trashRepository.move(
         userId,
-        [current.id!],
-        {
-          for (final attachment in current.attachments) attachment.driveId,
-        }.toList(),
+        collection: 'documents',
+        ids: [current.id!],
+        title: '${current.documentName} (versão)',
       );
-      await retryPendingAttachmentCleanup(userId);
       return true;
     } catch (_) {
       _setErrorMessage(
@@ -499,8 +491,16 @@ class DocumentViewModel extends ChangeNotifier {
 
   Future<File> _getLocalFile(Attachment attachment) async {
     final dir = await getApplicationDocumentsDirectory();
+    final userId = _listeningUserId;
+    if (userId == null) {
+      throw StateError('Nenhuma conta ativa para abrir o anexo.');
+    }
+    final cache = Directory(
+      p.join(dir.path, 'attachment_cache', p.basename(userId)),
+    );
+    await cache.create(recursive: true);
     final filePath = p.join(
-      dir.path,
+      cache.path,
       '${p.basename(attachment.driveId)}-${p.basename(attachment.name)}',
     );
     return File(filePath);
@@ -610,10 +610,20 @@ class DocumentViewModel extends ChangeNotifier {
   }
 
   void clearData() {
+    final previousUserId = _listeningUserId;
+    if (previousUserId != null) {
+      unawaited(_clearUserAttachmentCache(previousUserId, _documents));
+    }
     _documentsSubscription?.cancel();
     _documents = [];
     _currentDisplayItems = [];
     _isListening = false;
+    _listeningUserId = null;
+    _isLoading = false;
+    _isUploading = false;
+    _uploadProgress = null;
+    _errorMessage = null;
+    _searchQuery = '';
     notifyListeners();
   }
 }

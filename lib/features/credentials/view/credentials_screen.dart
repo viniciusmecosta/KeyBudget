@@ -1,11 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:key_budget/app/utils/navigation_utils.dart';
-import 'package:key_budget/app/widgets/animated_list_item.dart';
+import 'package:key_budget/app/utils/app_animations.dart';
+import 'package:key_budget/app/widgets/animated_item_sliver.dart';
 import 'package:key_budget/app/widgets/empty_state_widget.dart';
 import 'package:key_budget/app/widgets/responsive_center.dart';
 import 'package:key_budget/core/design_system/borders/app_borders.dart';
 import 'package:key_budget/core/design_system/widgets/app_search_field.dart';
+import 'package:key_budget/core/design_system/widgets/app_color_choice.dart';
+import 'package:key_budget/core/design_system/widgets/app_feedback_panel.dart';
 import 'package:key_budget/core/design_system/spacing/app_spacing.dart';
 import 'package:key_budget/core/models/credential_model.dart';
 import 'package:key_budget/core/models/folder_model.dart';
@@ -26,8 +29,6 @@ class CredentialsScreen extends ConsumerStatefulWidget {
 }
 
 class _CredentialsScreenState extends ConsumerState<CredentialsScreen> {
-  final GlobalKey<SliverAnimatedListState> _listKey =
-      GlobalKey<SliverAnimatedListState>();
   bool _isSearching = false;
   bool _isProcessing = false;
   final TextEditingController _searchController = TextEditingController();
@@ -39,7 +40,6 @@ class _CredentialsScreenState extends ConsumerState<CredentialsScreen> {
       final authViewModel = ref.read(authViewModelProvider);
       if (authViewModel.currentUser != null) {
         final credentialViewModel = ref.read(credentialViewModelProvider);
-        credentialViewModel.setListKey(_listKey);
         credentialViewModel.listenToCredentials(authViewModel.currentUser!.id);
       }
     });
@@ -56,7 +56,7 @@ class _CredentialsScreenState extends ConsumerState<CredentialsScreen> {
     if (mounted && authViewModel.currentUser != null) {
       ref
           .read(credentialViewModelProvider)
-          .listenToCredentials(authViewModel.currentUser!.id);
+          .retryListenToCredentials(authViewModel.currentUser!.id);
     }
   }
 
@@ -80,18 +80,40 @@ class _CredentialsScreenState extends ConsumerState<CredentialsScreen> {
     if (mounted) setState(() => _isProcessing = false);
   }
 
-  void _export(BuildContext context, {String type = 'csv'}) async {
+  Future<void> _export(BuildContext context, {String type = 'csv'}) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('Exportar credenciais?'),
+        content: Text(
+          type == 'csv'
+              ? 'O arquivo CSV inclui as senhas em texto legível. Compartilhe somente com um destino confiável e apague a cópia quando terminar.'
+              : 'O relatório PDF pode incluir dados das suas credenciais. Compartilhe somente com um destino confiável.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(dialogContext).pop(false),
+            child: const Text('Cancelar'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.of(dialogContext).pop(true),
+            child: const Text('Continuar'),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true || !mounted || !context.mounted) return;
     setState(() => _isProcessing = true);
-
-    final viewModel = ref.read(credentialViewModelProvider);
-
-    if (type == 'csv') {
-      await viewModel.exportCredentialsToCsv(context);
-    } else if (type == 'pdf') {
-      await viewModel.exportCredentialsToPdf(context);
+    try {
+      final viewModel = ref.read(credentialViewModelProvider);
+      if (type == 'csv') {
+        await viewModel.exportCredentialsToCsv(context);
+      } else if (type == 'pdf') {
+        await viewModel.exportCredentialsToPdf(context);
+      }
+    } finally {
+      if (mounted) setState(() => _isProcessing = false);
     }
-
-    if (mounted) setState(() => _isProcessing = false);
   }
 
   void _showCreateFolderDialog(BuildContext context, String userId) {
@@ -110,9 +132,15 @@ class _CredentialsScreenState extends ConsumerState<CredentialsScreen> {
               ),
               title: Row(
                 children: [
-                  Icon(Icons.create_new_folder_outlined, color: theme.colorScheme.primary),
+                  Icon(
+                    Icons.create_new_folder_outlined,
+                    color: theme.colorScheme.primary,
+                  ),
                   const SizedBox(width: AppSpacing.sm),
-                  const Text('Nova Pasta', style: TextStyle(fontWeight: FontWeight.bold)),
+                  const Text(
+                    'Nova Pasta',
+                    style: TextStyle(fontWeight: FontWeight.bold),
+                  ),
                 ],
               ),
               content: Column(
@@ -126,7 +154,8 @@ class _CredentialsScreenState extends ConsumerState<CredentialsScreen> {
                       hintText: 'Ex: Bancos, Social',
                       prefixIcon: const Icon(Icons.folder_outlined),
                       filled: true,
-                      fillColor: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
+                      fillColor: theme.colorScheme.surfaceContainerHighest
+                          .withValues(alpha: 0.3),
                       border: OutlineInputBorder(
                         borderRadius: AppBorders.borderRadiusM,
                         borderSide: BorderSide.none,
@@ -148,61 +177,34 @@ class _CredentialsScreenState extends ConsumerState<CredentialsScreen> {
                     spacing: 12,
                     runSpacing: 12,
                     alignment: WrapAlignment.center,
-                    children:
-                        [
-                          0xFF3B82F6,
-                          0xFF10B981,
-                          0xFFF59E0B,
-                          0xFFEF4444,
-                          0xFF8B5CF6,
-                          0xFFEC4899,
-                          0xFF14B8A6,
-                          0xFF64748B,
-                        ].map((colorValue) {
-                          final isSelected = selectedColorValue == colorValue;
-                          return GestureDetector(
-                            onTap: () {
-                              setState(() {
-                                selectedColorValue = colorValue;
-                              });
-                            },
-                            child: AnimatedContainer(
-                              duration: const Duration(milliseconds: 200),
-                              width: isSelected ? 36 : 32,
-                              height: isSelected ? 36 : 32,
-                              decoration: BoxDecoration(
-                                color: Color(colorValue),
-                                shape: BoxShape.circle,
-                                boxShadow: isSelected
-                                    ? [
-                                        BoxShadow(
-                                          color: Color(colorValue).withValues(alpha: 0.4),
-                                          blurRadius: 8,
-                                          offset: const Offset(0, 2),
-                                        )
-                                      ]
-                                    : null,
-                                border: isSelected
-                                    ? Border.all(color: theme.colorScheme.surface, width: 2)
-                                    : null,
-                              ),
-                              child: isSelected
-                                  ? const Icon(Icons.check, size: 18, color: Colors.white)
-                                  : null,
-                            ),
-                          );
-                        }).toList(),
+                    children: AppColorChoice.palette.entries
+                        .map(
+                          (entry) => AppColorChoice(
+                            color: Color(entry.key),
+                            label: 'Cor ${entry.value} da pasta',
+                            selected: selectedColorValue == entry.key,
+                            onPressed: () =>
+                                setState(() => selectedColorValue = entry.key),
+                          ),
+                        )
+                        .toList(),
                   ),
                 ],
               ),
-              actionsPadding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg, vertical: AppSpacing.md),
+              actionsPadding: const EdgeInsets.symmetric(
+                horizontal: AppSpacing.lg,
+                vertical: AppSpacing.md,
+              ),
               actions: [
                 TextButton(
                   onPressed: () => Navigator.of(context).pop(),
                   style: TextButton.styleFrom(
                     foregroundColor: theme.colorScheme.onSurfaceVariant,
                   ),
-                  child: const Text('Cancelar', style: TextStyle(fontWeight: FontWeight.w600)),
+                  child: const Text(
+                    'Cancelar',
+                    style: TextStyle(fontWeight: FontWeight.w600),
+                  ),
                 ),
                 FilledButton(
                   onPressed: () {
@@ -210,16 +212,25 @@ class _CredentialsScreenState extends ConsumerState<CredentialsScreen> {
                     if (name.isNotEmpty) {
                       ref
                           .read(credentialViewModelProvider)
-                          .createFolder(userId, name, color: selectedColorValue.toString())
+                          .createFolder(
+                            userId,
+                            name,
+                            color: selectedColorValue.toString(),
+                          )
                           .then((_) {
-                        if (context.mounted) Navigator.of(context).pop();
-                      });
+                            if (context.mounted) Navigator.of(context).pop();
+                          });
                     }
                   },
                   style: FilledButton.styleFrom(
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
                   ),
-                  child: const Text('Criar Pasta', style: TextStyle(fontWeight: FontWeight.bold)),
+                  child: const Text(
+                    'Criar Pasta',
+                    style: TextStyle(fontWeight: FontWeight.bold),
+                  ),
                 ),
               ],
             );
@@ -270,7 +281,10 @@ class _CredentialsScreenState extends ConsumerState<CredentialsScreen> {
                 )
               : null,
           title: AnimatedSwitcher(
-            duration: const Duration(milliseconds: 300),
+            duration: AppAnimations.durationFor(
+              context,
+              const Duration(milliseconds: 300),
+            ),
             transitionBuilder: (child, animation) =>
                 FadeTransition(opacity: animation, child: child),
             child: _isSearching
@@ -360,151 +374,157 @@ class _CredentialsScreenState extends ConsumerState<CredentialsScreen> {
         ),
         body: SafeArea(
           child: RefreshIndicator(
-              onRefresh: _handleRefresh,
-              color: theme.colorScheme.primary,
-              backgroundColor: theme.colorScheme.surface,
-              child: ResponsiveCenter(
-                child: CustomScrollView(
-                  physics: const BouncingScrollPhysics(
-                    parent: AlwaysScrollableScrollPhysics(),
-                  ),
-                  slivers: [
-                    if (vm.isLoading)
-                      const CredentialsListSkeleton()
-                    else if (vm.currentDisplayItems.isEmpty)
-                      SliverFillRemaining(
-                        child: SingleChildScrollView(
-                          physics: const AlwaysScrollableScrollPhysics(),
-                          child: EmptyStateWidget(
-                            icon: _isSearching || vm.searchQuery.isNotEmpty
-                                ? Icons.search_off_outlined
-                                : (vm.currentFolderId != null
+            onRefresh: _handleRefresh,
+            color: theme.colorScheme.primary,
+            backgroundColor: theme.colorScheme.surface,
+            child: ResponsiveCenter(
+              child: CustomScrollView(
+                physics: const BouncingScrollPhysics(
+                  parent: AlwaysScrollableScrollPhysics(),
+                ),
+                slivers: [
+                  if (vm.isLoading)
+                    const CredentialsListSkeleton()
+                  else if (vm.loadErrorMessage != null &&
+                      vm.currentDisplayItems.isEmpty)
+                    SliverFillRemaining(
+                      hasScrollBody: false,
+                      child: AppFeedbackPanel(
+                        title: 'Falha ao carregar o cofre',
+                        message: vm.loadErrorMessage!,
+                        type: AppFeedbackType.error,
+                        actionLabel: 'Tentar novamente',
+                        onAction: () {
+                          final user = ref
+                              .read(authViewModelProvider)
+                              .currentUser;
+                          if (user != null) {
+                            vm.retryListenToCredentials(user.id);
+                          }
+                        },
+                      ),
+                    )
+                  else if (vm.currentDisplayItems.isEmpty)
+                    SliverFillRemaining(
+                      child: SingleChildScrollView(
+                        physics: const AlwaysScrollableScrollPhysics(),
+                        child: EmptyStateWidget(
+                          icon: _isSearching || vm.searchQuery.isNotEmpty
+                              ? Icons.search_off_outlined
+                              : (vm.currentFolderId != null
                                     ? Icons.folder_open_outlined
                                     : Icons.key_off_outlined),
-                            message: _isSearching || vm.searchQuery.isNotEmpty
-                                ? 'Nenhuma credencial encontrada para a busca'
-                                : (vm.currentFolderId != null
+                          message: _isSearching || vm.searchQuery.isNotEmpty
+                              ? 'Nenhuma credencial encontrada para a busca'
+                              : (vm.currentFolderId != null
                                     ? 'Esta pasta está vazia'
                                     : 'Nenhuma credencial encontrada'),
-                            buttonText: _isSearching || vm.searchQuery.isNotEmpty
-                                ? 'Limpar busca'
-                                : (vm.currentFolderId != null
+                          buttonText: _isSearching || vm.searchQuery.isNotEmpty
+                              ? 'Limpar busca'
+                              : (vm.currentFolderId != null
                                     ? 'Adicionar credencial'
                                     : 'Nova credencial'),
-                            onButtonPressed: () {
-                              if (_isSearching || vm.searchQuery.isNotEmpty) {
-                                setState(() {
-                                  _isSearching = false;
-                                  _searchController.clear();
-                                  vm.setSearchQuery('');
-                                });
-                              } else {
-                                NavigationUtils.push(
-                                  context,
-                                  const AddCredentialScreen(),
-                                );
-                              }
-                            },
-                          ),
-                        ),
-                      )
-                    else
-                      SliverPadding(
-                        padding: const EdgeInsets.fromLTRB(
-                          AppSpacing.md,
-                          AppSpacing.lg,
-                          AppSpacing.md,
-                          96.0,
-                        ),
-                        sliver: SliverAnimatedList(
-                          key: _listKey,
-                          initialItemCount: vm.currentDisplayItems.length,
-                          itemBuilder: (context, index, animation) {
-                            if (index >= vm.currentDisplayItems.length) {
-                              return const SizedBox.shrink();
-                            }
-
-                            final item = vm.currentDisplayItems[index];
-
-                            if (item is Folder) {
-                              return AnimatedListItem(
-                                animation: animation,
-                                child: FolderListTile(
-                                  key: ValueKey('folder_${item.id}'),
-                                  folder: item,
-                                  onTap: () => vm.enterFolder(item.id!),
-                                  onDelete: () => vm.deleteFolder(
-                                    authVm.currentUser!.id,
-                                    item.id!,
-                                  ),
-                                ),
-                              );
-                            } else if (item is Credential) {
-                              return AnimatedListItem(
-                                animation: animation,
-                                child: CredentialListTile(
-                                  key: ValueKey('cred_${item.id}'),
-                                  credential: item,
-                                ),
+                          onButtonPressed: () {
+                            if (_isSearching || vm.searchQuery.isNotEmpty) {
+                              setState(() {
+                                _isSearching = false;
+                                _searchController.clear();
+                                vm.setSearchQuery('');
+                              });
+                            } else {
+                              NavigationUtils.push(
+                                context,
+                                const AddCredentialScreen(),
                               );
                             }
-                            return const SizedBox.shrink();
                           },
                         ),
                       ),
-                  ],
-                ),
+                    )
+                  else
+                    SliverPadding(
+                      padding: const EdgeInsets.fromLTRB(
+                        AppSpacing.md,
+                        AppSpacing.lg,
+                        AppSpacing.md,
+                        96.0,
+                      ),
+                      sliver: AnimatedItemSliver<dynamic>(
+                        items: vm.currentDisplayItems,
+                        identity: (item) => item is Folder
+                            ? 'folder_${item.id}'
+                            : 'credential_${(item as Credential).id}',
+                        itemBuilder: (context, item) {
+                          if (item is Folder) {
+                            return FolderListTile(
+                              key: ValueKey('folder_${item.id}'),
+                              folder: item,
+                              onTap: () => vm.enterFolder(item.id!),
+                              onDelete: () => vm.deleteFolder(
+                                authVm.currentUser!.id,
+                                item.id!,
+                              ),
+                            );
+                          } else if (item is Credential) {
+                            return CredentialListTile(
+                              key: ValueKey('cred_${item.id}'),
+                              credential: item,
+                            );
+                          }
+                          return const SizedBox.shrink();
+                        },
+                      ),
+                    ),
+                ],
               ),
             ),
+          ),
         ),
         floatingActionButton: FloatingActionButton.extended(
-            heroTag: 'fab_credentials',
-            onPressed: () {
-              if (vm.currentFolderId != null) {
-                NavigationUtils.push(
-                  context,
-                  const AddCredentialScreen(),
-                );
-              } else {
-                showModalBottomSheet(
-                  context: context,
-                  builder: (ctx) => SafeArea(
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        ListTile(
-                          leading: const Icon(Icons.key),
-                          title: const Text('Nova Credencial'),
-                          onTap: () {
-                            Navigator.pop(ctx);
-                            NavigationUtils.push(
-                              context,
-                              const AddCredentialScreen(),
-                            );
-                          },
-                        ),
-                        ListTile(
-                          leading: const Icon(Icons.create_new_folder),
-                          title: const Text('Nova Pasta'),
-                          onTap: () {
-                            Navigator.pop(ctx);
-                            _showCreateFolderDialog(
-                              context,
-                              authVm.currentUser!.id,
-                            );
-                          },
-                        ),
-                      ],
-                    ),
+          heroTag: 'fab_credentials',
+          onPressed: () {
+            if (vm.currentFolderId != null) {
+              NavigationUtils.push(context, const AddCredentialScreen());
+            } else {
+              showModalBottomSheet(
+                context: context,
+                builder: (ctx) => SafeArea(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      ListTile(
+                        leading: const Icon(Icons.key),
+                        title: const Text('Nova Credencial'),
+                        onTap: () {
+                          Navigator.pop(ctx);
+                          NavigationUtils.push(
+                            context,
+                            const AddCredentialScreen(),
+                          );
+                        },
+                      ),
+                      ListTile(
+                        leading: const Icon(Icons.create_new_folder),
+                        title: const Text('Nova Pasta'),
+                        onTap: () {
+                          Navigator.pop(ctx);
+                          _showCreateFolderDialog(
+                            context,
+                            authVm.currentUser!.id,
+                          );
+                        },
+                      ),
+                    ],
                   ),
-                );
-              }
-            },
-            icon: const Icon(Icons.add),
-            label: const Text("Novo"),
-            shape: RoundedRectangleBorder(
-              borderRadius: AppBorders.borderRadiusXXL,
-            ),
+                ),
+              );
+            }
+          },
+          icon: const Icon(Icons.add),
+          label: const Text("Novo"),
+          shape: RoundedRectangleBorder(
+            borderRadius: AppBorders.borderRadiusXXL,
+          ),
         ),
       ),
     );

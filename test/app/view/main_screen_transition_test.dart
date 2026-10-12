@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:google_nav_bar/google_nav_bar.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:key_budget/app/config/app_theme.dart';
 import 'package:key_budget/app/navigation/app_destination.dart';
@@ -26,14 +25,17 @@ import 'package:key_budget/features/suppliers/viewmodel/supplier_viewmodel.dart'
 import 'package:key_budget/features/user/view/user_screen.dart';
 
 class FakeAuthRepo extends Fake implements AuthRepository {}
+
 class FakeExpenseRepo extends Fake implements ExpenseRepository {}
+
 class FakeCredentialRepo extends Fake implements CredentialRepository {}
+
 class FakeSupplierRepo extends Fake implements SupplierRepository {}
 
 class FakeAuthVM extends AuthViewModel {
   User? mockUser;
   FakeAuthVM({this.mockUser})
-      : super(authRepository: FakeAuthRepo(), listenToAuthChanges: false);
+    : super(authRepository: FakeAuthRepo(), listenToAuthChanges: false);
 
   @override
   User? get currentUser => mockUser;
@@ -76,12 +78,11 @@ class FakeSupplierVM extends SupplierViewModel {
   void listenToSuppliers(String userId) {}
 }
 
-class FakeDocumentVM extends ChangeNotifier with Fake implements DocumentViewModel {
+class FakeDocumentVM extends ChangeNotifier
+    with Fake
+    implements DocumentViewModel {
   @override
   void listenToDocuments(String userId) {}
-
-  @override
-  void setListKey(GlobalKey<SliverAnimatedListState> key) {}
 
   @override
   bool get isLoading => false;
@@ -169,7 +170,9 @@ Widget createMainScreenTestWidget({
       theme: theme ?? AppTheme.lightTheme,
       builder: (context, child) {
         return MediaQuery(
-          data: MediaQuery.of(context).copyWith(disableAnimations: disableAnimations),
+          data: MediaQuery.of(
+            context,
+          ).copyWith(disableAnimations: disableAnimations),
           child: child!,
         );
       },
@@ -184,287 +187,333 @@ void main() {
   });
 
   group('MainScreen & TabSelectionTransition', () {
-    testWidgets('MainScreen uses the same transition on first and later visits', (tester) async {
-      final navVM = NavigationViewModel();
-      final authVM = FakeAuthVM(
-        mockUser: User(id: 'u1', name: 'Tester', email: 't@t.com'),
-      );
+    testWidgets(
+      'MainScreen uses the same transition on first and later visits',
+      (tester) async {
+        final navVM = NavigationViewModel();
+        final authVM = FakeAuthVM(
+          mockUser: User(id: 'u1', name: 'Tester', email: 't@t.com'),
+        );
 
-      await tester.pumpWidget(
-        createMainScreenTestWidget(navVM: navVM, authVM: authVM),
-      );
-      await tester.pump();
-      await tester.pump(const Duration(milliseconds: 300));
+        await tester.pumpWidget(
+          createMainScreenTestWidget(navVM: navVM, authVM: authVM),
+        );
+        await tester.pump();
+        await tester.pump(const Duration(milliseconds: 300));
 
-      final transitionFinder = find.byType(TabSelectionTransition);
-      expect(transitionFinder, findsOneWidget);
-      final transitionState = tester.state<TabSelectionTransitionState>(transitionFinder);
+        final transitionFinder = find.byType(TabSelectionTransition);
+        expect(transitionFinder, findsOneWidget);
+        final transitionState = tester.state<TabSelectionTransitionState>(
+          transitionFinder,
+        );
 
-      expect(transitionState.controller.value, 1.0);
-      expect(transitionState.controller.isAnimating, isFalse);
+        expect(transitionState.controller.value, 1.0);
+        expect(transitionState.controller.isAnimating, isFalse);
 
-      navVM.navigateTo(AppDestination.expenses);
-      await tester.pump();
+        navVM.navigateTo(AppDestination.expenses);
+        await tester.pump();
 
-      expect(transitionState.controller.value, 0.0);
-      expect(transitionState.controller.isAnimating, isTrue);
-      await tester.pumpAndSettle();
-      expect(transitionState.controller.value, 1.0);
-      expect(transitionState.controller.isAnimating, isFalse);
+        expect(transitionState.controller.value, 0.0);
+        expect(transitionState.controller.isAnimating, isTrue);
+        await tester.pumpAndSettle();
+        expect(transitionState.controller.value, 1.0);
+        expect(transitionState.controller.isAnimating, isFalse);
 
-      navVM.navigateTo(AppDestination.dashboard);
-      await tester.pump();
+        navVM.navigateTo(AppDestination.dashboard);
+        await tester.pump();
 
-      expect(transitionState.controller.isAnimating, isTrue);
-      await tester.pumpAndSettle();
-      expect(transitionState.controller.value, 1.0);
-      expect(transitionState.controller.isAnimating, isFalse);
+        expect(transitionState.controller.isAnimating, isTrue);
+        await tester.pumpAndSettle();
+        expect(transitionState.controller.value, 1.0);
+        expect(transitionState.controller.isAnimating, isFalse);
 
-      navVM.navigateTo(AppDestination.expenses);
-      await tester.pump();
+        navVM.navigateTo(AppDestination.expenses);
+        await tester.pump();
 
-      expect(transitionState.controller.isAnimating, isTrue);
-      await tester.pumpAndSettle();
-      expect(transitionState.controller.value, 1.0);
-      expect(transitionState.controller.isAnimating, isFalse);
-    });
+        expect(transitionState.controller.isAnimating, isTrue);
+        await tester.pumpAndSettle();
+        expect(transitionState.controller.value, 1.0);
+        expect(transitionState.controller.isAnimating, isFalse);
+      },
+    );
 
-    testWidgets('TabSelectionTransition preserves child state across revision switches', (tester) async {
-      int activeIndex = 0;
-      int revision = 0;
+    testWidgets(
+      'TabSelectionTransition preserves child state across revision switches',
+      (tester) async {
+        int activeIndex = 0;
+        int revision = 0;
 
-      await tester.pumpWidget(
-        MaterialApp(
-          home: StatefulBuilder(
-            builder: (context, setState) {
-              return Scaffold(
-                body: TabSelectionTransition(
-                  revision: revision,
-                  child: IndexedStack(
-                    index: activeIndex,
-                    children: const [
-                      _CounterStatefulTab(),
-                      Text('Tab 2 Content'),
-                    ],
+        await tester.pumpWidget(
+          MaterialApp(
+            home: StatefulBuilder(
+              builder: (context, setState) {
+                return Scaffold(
+                  body: TabSelectionTransition(
+                    revision: revision,
+                    child: IndexedStack(
+                      index: activeIndex,
+                      children: const [
+                        _CounterStatefulTab(),
+                        Text('Tab 2 Content'),
+                      ],
+                    ),
                   ),
-                ),
-                floatingActionButton: FloatingActionButton(
-                  onPressed: () {
-                    setState(() {
-                      activeIndex = activeIndex == 0 ? 1 : 0;
-                      revision++;
-                    });
-                  },
-                  child: const Text('Toggle'),
-                ),
-              );
-            },
+                  floatingActionButton: FloatingActionButton(
+                    onPressed: () {
+                      setState(() {
+                        activeIndex = activeIndex == 0 ? 1 : 0;
+                        revision++;
+                      });
+                    },
+                    child: const Text('Toggle'),
+                  ),
+                );
+              },
+            ),
           ),
-        ),
-      );
-      await tester.pumpAndSettle();
+        );
+        await tester.pumpAndSettle();
 
-      expect(find.text('Counter: 0'), findsOneWidget);
-      await tester.tap(find.text('Increment'));
-      await tester.pumpAndSettle();
-      expect(find.text('Counter: 1'), findsOneWidget);
+        expect(find.text('Counter: 0'), findsOneWidget);
+        await tester.tap(find.text('Increment'));
+        await tester.pumpAndSettle();
+        expect(find.text('Counter: 1'), findsOneWidget);
 
-      await tester.tap(find.text('Toggle'));
-      await tester.pumpAndSettle();
-      expect(find.text('Tab 2 Content'), findsOneWidget);
+        await tester.tap(find.text('Toggle'));
+        await tester.pumpAndSettle();
+        expect(find.text('Tab 2 Content'), findsOneWidget);
 
-      await tester.tap(find.text('Toggle'));
-      await tester.pumpAndSettle();
-      expect(find.text('Counter: 1'), findsOneWidget);
-    });
+        await tester.tap(find.text('Toggle'));
+        await tester.pumpAndSettle();
+        expect(find.text('Counter: 1'), findsOneWidget);
+      },
+    );
 
-    testWidgets('transition keeps child state when enabled and reduced motion change', (tester) async {
-      bool enabled = true;
-      bool reducedMotion = false;
-      late StateSetter update;
+    testWidgets(
+      'transition keeps child state when enabled and reduced motion change',
+      (tester) async {
+        bool enabled = true;
+        bool reducedMotion = false;
+        late StateSetter update;
 
-      await tester.pumpWidget(MaterialApp(
-        home: StatefulBuilder(
-          builder: (context, setState) {
-            update = setState;
-            return MediaQuery(
-              data: MediaQuery.of(context).copyWith(disableAnimations: reducedMotion),
-              child: Scaffold(
-                body: TabSelectionTransition(
-                  revision: 0,
-                  enabled: enabled,
-                  child: const _CounterStatefulTab(),
-                ),
-              ),
-            );
-          },
-        ),
-      ));
-      await tester.tap(find.text('Increment'));
-      await tester.pump();
-
-      update(() => enabled = false);
-      await tester.pump();
-      expect(find.text('Counter: 1'), findsOneWidget);
-
-      update(() {
-        enabled = true;
-        reducedMotion = true;
-      });
-      await tester.pump();
-      expect(find.text('Counter: 1'), findsOneWidget);
-
-      update(() => reducedMotion = false);
-      await tester.pump();
-      expect(find.text('Counter: 1'), findsOneWidget);
-    });
-
-    testWidgets('reduced motion renders child immediately without transition animation', (tester) async {
-      int revision = 0;
-
-      await tester.pumpWidget(
-        MaterialApp(
-          builder: (context, child) => MediaQuery(
-            data: MediaQuery.of(context).copyWith(disableAnimations: true),
-            child: child!,
+        await tester.pumpWidget(
+          MaterialApp(
+            home: StatefulBuilder(
+              builder: (context, setState) {
+                update = setState;
+                return MediaQuery(
+                  data: MediaQuery.of(
+                    context,
+                  ).copyWith(disableAnimations: reducedMotion),
+                  child: Scaffold(
+                    body: TabSelectionTransition(
+                      revision: 0,
+                      enabled: enabled,
+                      child: const _CounterStatefulTab(),
+                    ),
+                  ),
+                );
+              },
+            ),
           ),
-          home: StatefulBuilder(
-            builder: (context, setState) {
-              return Scaffold(
-                body: TabSelectionTransition(
-                  revision: revision,
-                  child: const Text('Reduced Motion Tab Content'),
-                ),
-                floatingActionButton: FloatingActionButton(
-                  onPressed: () => setState(() => revision++),
-                  child: const Text('Next'),
-                ),
-              );
-            },
+        );
+        await tester.tap(find.text('Increment'));
+        await tester.pump();
+
+        update(() => enabled = false);
+        await tester.pump();
+        expect(find.text('Counter: 1'), findsOneWidget);
+
+        update(() {
+          enabled = true;
+          reducedMotion = true;
+        });
+        await tester.pump();
+        expect(find.text('Counter: 1'), findsOneWidget);
+
+        update(() => reducedMotion = false);
+        await tester.pump();
+        expect(find.text('Counter: 1'), findsOneWidget);
+      },
+    );
+
+    testWidgets(
+      'reduced motion renders child immediately without transition animation',
+      (tester) async {
+        int revision = 0;
+
+        await tester.pumpWidget(
+          MaterialApp(
+            builder: (context, child) => MediaQuery(
+              data: MediaQuery.of(context).copyWith(disableAnimations: true),
+              child: child!,
+            ),
+            home: StatefulBuilder(
+              builder: (context, setState) {
+                return Scaffold(
+                  body: TabSelectionTransition(
+                    revision: revision,
+                    child: const Text('Reduced Motion Tab Content'),
+                  ),
+                  floatingActionButton: FloatingActionButton(
+                    onPressed: () => setState(() => revision++),
+                    child: const Text('Next'),
+                  ),
+                );
+              },
+            ),
           ),
-        ),
-      );
-      await tester.pumpAndSettle();
+        );
+        await tester.pumpAndSettle();
 
-      final transitionFinder = find.byType(TabSelectionTransition);
-      expect(
-        find.descendant(of: transitionFinder, matching: find.byType(FadeTransition)),
-        findsOneWidget,
-      );
-      expect(
-        find.descendant(of: transitionFinder, matching: find.byType(SlideTransition)),
-        findsOneWidget,
-      );
-      expect(find.text('Reduced Motion Tab Content'), findsOneWidget);
+        final transitionFinder = find.byType(TabSelectionTransition);
+        expect(
+          find.descendant(
+            of: transitionFinder,
+            matching: find.byType(FadeTransition),
+          ),
+          findsOneWidget,
+        );
+        expect(
+          find.descendant(
+            of: transitionFinder,
+            matching: find.byType(SlideTransition),
+          ),
+          findsOneWidget,
+        );
+        expect(find.text('Reduced Motion Tab Content'), findsOneWidget);
 
-      final transitionState = tester.state<TabSelectionTransitionState>(transitionFinder);
-      expect(transitionState.controller.value, 1.0);
-      expect(transitionState.controller.isAnimating, isFalse);
+        final transitionState = tester.state<TabSelectionTransitionState>(
+          transitionFinder,
+        );
+        expect(transitionState.controller.value, 1.0);
+        expect(transitionState.controller.isAnimating, isFalse);
 
-      await tester.tap(find.text('Next'));
-      await tester.pump();
+        await tester.tap(find.text('Next'));
+        await tester.pump();
 
-      expect(transitionState.controller.isAnimating, isFalse);
-      expect(transitionState.controller.value, 1.0);
-      expect(
-        find.descendant(of: transitionFinder, matching: find.byType(FadeTransition)),
-        findsOneWidget,
-      );
-      expect(
-        find.descendant(of: transitionFinder, matching: find.byType(SlideTransition)),
-        findsOneWidget,
-      );
-      expect(find.text('Reduced Motion Tab Content'), findsOneWidget);
-    });
+        expect(transitionState.controller.isAnimating, isFalse);
+        expect(transitionState.controller.value, 1.0);
+        expect(
+          find.descendant(
+            of: transitionFinder,
+            matching: find.byType(FadeTransition),
+          ),
+          findsOneWidget,
+        );
+        expect(
+          find.descendant(
+            of: transitionFinder,
+            matching: find.byType(SlideTransition),
+          ),
+          findsOneWidget,
+        );
+        expect(find.text('Reduced Motion Tab Content'), findsOneWidget);
+      },
+    );
 
-    testWidgets('screen resize and theme rebuild do not restart transition controller', (tester) async {
-      final navVM = NavigationViewModel();
-      final authVM = FakeAuthVM(
-        mockUser: User(id: 'u1', name: 'Tester', email: 't@t.com'),
-      );
+    testWidgets(
+      'screen resize and theme rebuild do not restart transition controller',
+      (tester) async {
+        final navVM = NavigationViewModel();
+        final authVM = FakeAuthVM(
+          mockUser: User(id: 'u1', name: 'Tester', email: 't@t.com'),
+        );
 
-      tester.view.physicalSize = const Size(599, 800);
-      tester.view.devicePixelRatio = 1.0;
-      addTearDown(tester.view.resetPhysicalSize);
+        tester.view.physicalSize = const Size(599, 800);
+        tester.view.devicePixelRatio = 1.0;
+        addTearDown(tester.view.resetPhysicalSize);
 
-      ThemeData currentTheme = AppTheme.lightTheme;
+        ThemeData currentTheme = AppTheme.lightTheme;
 
-      await tester.pumpWidget(
-        createMainScreenTestWidget(
-          navVM: navVM,
-          authVM: authVM,
-          theme: currentTheme,
-        ),
-      );
-      await tester.pump();
-      await tester.pump(const Duration(milliseconds: 300));
+        await tester.pumpWidget(
+          createMainScreenTestWidget(
+            navVM: navVM,
+            authVM: authVM,
+            theme: currentTheme,
+          ),
+        );
+        await tester.pump();
+        await tester.pump(const Duration(milliseconds: 300));
 
-      final transitionFinder = find.byType(TabSelectionTransition);
-      final transitionState = tester.state<TabSelectionTransitionState>(transitionFinder);
-      expect(navVM.selectionRevision, 0);
-      expect(transitionState.controller.isAnimating, isFalse);
-      expect(transitionState.controller.value, 1.0);
+        final transitionFinder = find.byType(TabSelectionTransition);
+        final transitionState = tester.state<TabSelectionTransitionState>(
+          transitionFinder,
+        );
+        expect(navVM.selectionRevision, 0);
+        expect(transitionState.controller.isAnimating, isFalse);
+        expect(transitionState.controller.value, 1.0);
 
-      tester.view.physicalSize = const Size(600, 800);
-      await tester.pump();
-      expect(navVM.selectionRevision, 0);
-      expect(transitionState.controller.isAnimating, isFalse);
-      expect(transitionState.controller.value, 1.0);
+        tester.view.physicalSize = const Size(600, 800);
+        await tester.pump();
+        expect(navVM.selectionRevision, 0);
+        expect(transitionState.controller.isAnimating, isFalse);
+        expect(transitionState.controller.value, 1.0);
 
-      tester.view.physicalSize = const Size(840, 800);
-      await tester.pump();
-      expect(navVM.selectionRevision, 0);
-      expect(transitionState.controller.isAnimating, isFalse);
-      expect(transitionState.controller.value, 1.0);
+        tester.view.physicalSize = const Size(840, 800);
+        await tester.pump();
+        expect(navVM.selectionRevision, 0);
+        expect(transitionState.controller.isAnimating, isFalse);
+        expect(transitionState.controller.value, 1.0);
 
-      currentTheme = AppTheme.darkTheme;
-      await tester.pumpWidget(
-        createMainScreenTestWidget(
-          navVM: navVM,
-          authVM: authVM,
-          theme: currentTheme,
-        ),
-      );
-      await tester.pump();
-      expect(navVM.selectionRevision, 0);
-      expect(transitionState.controller.isAnimating, isFalse);
-      expect(transitionState.controller.value, 1.0);
-      await tester.pump(const Duration(milliseconds: 300));
-      expect(transitionState.controller.isAnimating, isFalse);
-      expect(transitionState.controller.value, 1.0);
-    });
+        currentTheme = AppTheme.darkTheme;
+        await tester.pumpWidget(
+          createMainScreenTestWidget(
+            navVM: navVM,
+            authVM: authVM,
+            theme: currentTheme,
+          ),
+        );
+        await tester.pump();
+        expect(navVM.selectionRevision, 0);
+        expect(transitionState.controller.isAnimating, isFalse);
+        expect(transitionState.controller.value, 1.0);
+        await tester.pump(const Duration(milliseconds: 300));
+        expect(transitionState.controller.isAnimating, isFalse);
+        expect(transitionState.controller.value, 1.0);
+      },
+    );
 
-    testWidgets('expense tab state survives phone and tablet breakpoint changes', (tester) async {
-      tester.view.physicalSize = const Size(599, 800);
-      tester.view.devicePixelRatio = 1;
-      addTearDown(tester.view.resetPhysicalSize);
-      addTearDown(tester.view.resetDevicePixelRatio);
+    testWidgets(
+      'expense tab state survives phone and tablet breakpoint changes',
+      (tester) async {
+        tester.view.physicalSize = const Size(599, 800);
+        tester.view.devicePixelRatio = 1;
+        addTearDown(tester.view.resetPhysicalSize);
+        addTearDown(tester.view.resetDevicePixelRatio);
 
-      final navVM = NavigationViewModel();
-      navVM.navigateTo(AppDestination.expenses);
-      final authVM = FakeAuthVM(
-        mockUser: User(id: 'u1', name: 'Tester', email: 't@t.com'),
-      );
-      await tester.pumpWidget(createMainScreenTestWidget(navVM: navVM, authVM: authVM));
-      await tester.pumpAndSettle();
-      final state = tester.state(find.byType(ExpensesScreen));
+        final navVM = NavigationViewModel();
+        navVM.navigateTo(AppDestination.expenses);
+        final authVM = FakeAuthVM(
+          mockUser: User(id: 'u1', name: 'Tester', email: 't@t.com'),
+        );
+        await tester.pumpWidget(
+          createMainScreenTestWidget(navVM: navVM, authVM: authVM),
+        );
+        await tester.pumpAndSettle();
+        final state = tester.state(find.byType(ExpensesScreen));
 
-      tester.view.physicalSize = const Size(600, 800);
-      await tester.pumpAndSettle();
-      expect(tester.state(find.byType(ExpensesScreen)), same(state));
+        tester.view.physicalSize = const Size(600, 800);
+        await tester.pumpAndSettle();
+        expect(tester.state(find.byType(ExpensesScreen)), same(state));
 
-      tester.view.physicalSize = const Size(840, 800);
-      await tester.pumpAndSettle();
-      expect(tester.state(find.byType(ExpensesScreen)), same(state));
-    });
+        tester.view.physicalSize = const Size(840, 800);
+        await tester.pumpAndSettle();
+        expect(tester.state(find.byType(ExpensesScreen)), same(state));
+      },
+    );
 
-    testWidgets('profile state survives enabling and disabling suppliers', (tester) async {
+    testWidgets('profile state survives enabling and disabling suppliers', (
+      tester,
+    ) async {
       final navVM = NavigationViewModel();
       navVM.navigateTo(AppDestination.profile);
       final authVM = FakeAuthVM(
         mockUser: User(id: 'u1', name: 'Tester', email: 't@t.com'),
       );
-      await tester.pumpWidget(createMainScreenTestWidget(navVM: navVM, authVM: authVM));
+      await tester.pumpWidget(
+        createMainScreenTestWidget(navVM: navVM, authVM: authVM),
+      );
       await tester.pumpAndSettle();
       final profileState = tester.state(find.byType(UserScreen));
 
@@ -479,56 +528,63 @@ void main() {
       expect(navVM.currentDestination, AppDestination.profile);
     });
 
-    testWidgets('tapping suppliers and profile with suppliers enabled triggers transitions and updates destination', (tester) async {
-      tester.view.physicalSize = const Size(500, 844);
-      tester.view.devicePixelRatio = 1.0;
-      addTearDown(tester.view.resetPhysicalSize);
+    testWidgets(
+      'tapping suppliers and profile with suppliers enabled triggers transitions and updates destination',
+      (tester) async {
+        tester.view.physicalSize = const Size(500, 844);
+        tester.view.devicePixelRatio = 1.0;
+        addTearDown(tester.view.resetPhysicalSize);
 
-      final navVM = NavigationViewModel();
-      navVM.updateSuppliersAvailability(true);
+        final navVM = NavigationViewModel();
+        navVM.updateSuppliersAvailability(true);
 
-      final authVM = FakeAuthVM(
-        mockUser: User(
-          id: 'u1',
-          name: 'Tester',
-          email: 't@t.com',
-          enableSuppliers: true,
-        ),
-      );
+        final authVM = FakeAuthVM(
+          mockUser: User(
+            id: 'u1',
+            name: 'Tester',
+            email: 't@t.com',
+            enableSuppliers: true,
+          ),
+        );
 
-      await tester.pumpWidget(
-        createMainScreenTestWidget(navVM: navVM, authVM: authVM),
-      );
-      await tester.pump();
-      await tester.pump(const Duration(milliseconds: 300));
+        await tester.pumpWidget(
+          createMainScreenTestWidget(navVM: navVM, authVM: authVM),
+        );
+        await tester.pump();
+        await tester.pump(const Duration(milliseconds: 300));
 
-      final transitionFinder = find.byType(TabSelectionTransition);
-      final transitionState = tester.state<TabSelectionTransitionState>(transitionFinder);
-      expect(transitionState.controller.isAnimating, isFalse);
+        final transitionFinder = find.byType(TabSelectionTransition);
+        final transitionState = tester.state<TabSelectionTransitionState>(
+          transitionFinder,
+        );
+        expect(transitionState.controller.isAnimating, isFalse);
 
-      expect(find.byType(GButton), findsNWidgets(6));
+        expect(find.bySemanticsLabel('Fornecedores'), findsOneWidget);
 
-      await tester.tap(find.byType(GButton).at(4));
-      await tester.pump();
-      expect(transitionState.controller.isAnimating, isTrue);
-      await tester.pumpAndSettle();
-      expect(navVM.currentDestination, AppDestination.suppliers);
-      expect(transitionState.controller.isAnimating, isFalse);
+        await tester.tap(find.bySemanticsLabel('Fornecedores'));
+        await tester.pump();
+        expect(transitionState.controller.isAnimating, isTrue);
+        await tester.pumpAndSettle();
+        expect(navVM.currentDestination, AppDestination.suppliers);
+        expect(transitionState.controller.isAnimating, isFalse);
 
-      await tester.tap(find.byType(GButton).at(5));
-      await tester.pump();
-      expect(transitionState.controller.isAnimating, isTrue);
-      await tester.pumpAndSettle();
-      expect(navVM.currentDestination, AppDestination.profile);
-      expect(transitionState.controller.isAnimating, isFalse);
+        await tester.tap(find.bySemanticsLabel('Perfil'));
+        await tester.pump();
+        expect(transitionState.controller.isAnimating, isTrue);
+        await tester.pumpAndSettle();
+        expect(navVM.currentDestination, AppDestination.profile);
+        expect(transitionState.controller.isAnimating, isFalse);
 
-      await tester.tap(find.byType(GButton).at(4));
-      await tester.pump();
-      expect(transitionState.controller.isAnimating, isTrue);
-      await tester.pumpAndSettle();
-    });
+        await tester.tap(find.bySemanticsLabel('Fornecedores'));
+        await tester.pump();
+        expect(transitionState.controller.isAnimating, isTrue);
+        await tester.pumpAndSettle();
+      },
+    );
 
-    testWidgets('six destinations fit on a narrow phone with large text', (tester) async {
+    testWidgets('six destinations fit on a narrow phone with large text', (
+      tester,
+    ) async {
       tester.view.physicalSize = const Size(320, 720);
       tester.view.devicePixelRatio = 1.0;
       addTearDown(tester.view.resetPhysicalSize);
@@ -552,23 +608,66 @@ void main() {
           ],
           child: MaterialApp(
             builder: (context, child) => MediaQuery(
-              data: MediaQuery.of(context).copyWith(
-                textScaler: const TextScaler.linear(2),
-              ),
+              data: MediaQuery.of(
+                context,
+              ).copyWith(textScaler: const TextScaler.linear(2)),
               child: child!,
             ),
-            home: const Scaffold(bottomNavigationBar: MainBottomNavigationBar()),
+            home: const Scaffold(
+              bottomNavigationBar: MainBottomNavigationBar(),
+            ),
           ),
         ),
       );
       await tester.pumpAndSettle();
-      expect(find.text('Fornecedores'), findsOneWidget);
+      final supplierTab = find.bySemanticsLabel('Fornecedores');
+      expect(supplierTab, findsOneWidget);
       expect(tester.takeException(), isNull);
+      expect(
+        tester.getSize(find.byType(MainBottomNavigationBar)).height,
+        lessThan(80),
+      );
 
-      await tester.tap(find.text('Fornecedores'));
+      await tester.tap(supplierTab);
       await tester.pumpAndSettle();
       expect(navVM.currentDestination, AppDestination.suppliers);
       expect(tester.takeException(), isNull);
+    });
+
+    testWidgets('five destinations remain reachable on a narrow phone', (
+      tester,
+    ) async {
+      tester.view.physicalSize = const Size(320, 720);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.resetPhysicalSize);
+      final navVM = NavigationViewModel();
+      final authVM = FakeAuthVM(
+        mockUser: User(id: 'u1', name: 'Tester', email: 't@t.com'),
+      );
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: [
+            navigationViewModelProvider.overrideWith((ref) => navVM),
+            authViewModelProvider.overrideWith((ref) => authVM),
+          ],
+          child: MaterialApp(
+            builder: (context, child) => MediaQuery(
+              data: MediaQuery.of(
+                context,
+              ).copyWith(textScaler: const TextScaler.linear(2)),
+              child: child!,
+            ),
+            home: const Scaffold(
+              bottomNavigationBar: MainBottomNavigationBar(),
+            ),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+      expect(tester.takeException(), isNull);
+      await tester.tap(find.bySemanticsLabel('Documentos'));
+      await tester.pumpAndSettle();
+      expect(navVM.currentDestination, AppDestination.documents);
     });
   });
 }

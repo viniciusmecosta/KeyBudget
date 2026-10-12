@@ -10,6 +10,8 @@ class User {
   final bool? enableSuppliers;
   final int? themeColor;
   final String? themeMode;
+  final List<String> hiddenNavigationDestinations;
+  final List<String> navigationOrder;
 
   User({
     required this.id,
@@ -23,6 +25,8 @@ class User {
     this.enableSuppliers,
     this.themeColor,
     this.themeMode,
+    this.hiddenNavigationDestinations = const [],
+    this.navigationOrder = const [],
   });
 
   bool get effectiveProtectScreenCapture =>
@@ -54,6 +58,8 @@ class User {
     bool? enableSuppliers,
     int? themeColor,
     String? themeMode,
+    List<String>? hiddenNavigationDestinations,
+    List<String>? navigationOrder,
   }) {
     return User(
       id: id ?? this.id,
@@ -69,6 +75,9 @@ class User {
       enableSuppliers: enableSuppliers ?? this.enableSuppliers,
       themeColor: themeColor ?? this.themeColor,
       themeMode: themeMode ?? this.themeMode,
+      hiddenNavigationDestinations:
+          hiddenNavigationDestinations ?? this.hiddenNavigationDestinations,
+      navigationOrder: navigationOrder ?? this.navigationOrder,
     );
   }
 
@@ -85,6 +94,8 @@ class User {
       'enable_suppliers': enableSuppliers ?? false,
       'theme_color': themeColor,
       'theme_mode': themeMode,
+      'hidden_navigation_destinations': hiddenNavigationDestinations,
+      'navigation_order': navigationOrder,
     };
   }
 
@@ -101,6 +112,16 @@ class User {
       enableSuppliers: map['enable_suppliers'] ?? false,
       themeColor: map['theme_color'],
       themeMode: map['theme_mode'] as String?,
+      hiddenNavigationDestinations:
+          (map['hidden_navigation_destinations'] as List<dynamic>?)
+              ?.whereType<String>()
+              .toList() ??
+          const [],
+      navigationOrder:
+          (map['navigation_order'] as List<dynamic>?)
+              ?.whereType<String>()
+              .toList() ??
+          const [],
     );
   }
 }

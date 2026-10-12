@@ -14,7 +14,9 @@ import 'package:key_budget/features/auth/repository/auth_repository.dart';
 import 'package:key_budget/features/category/viewmodel/category_viewmodel.dart';
 import 'package:key_budget/features/credentials/viewmodel/credential_viewmodel.dart';
 import 'package:key_budget/features/dashboard/viewmodel/dashboard_viewmodel.dart';
+import 'package:key_budget/features/documents/viewmodel/document_viewmodel.dart';
 import 'package:key_budget/features/expenses/viewmodel/expense_viewmodel.dart';
+import 'package:key_budget/features/suppliers/viewmodel/supplier_viewmodel.dart';
 
 enum AuthOperation {
   none,
@@ -47,6 +49,8 @@ class UpdateUserResult {
 class AuthViewModel extends ChangeNotifier {
   final AuthRepository _authRepository;
   final LocalAuthService _localAuthService;
+  final VoidCallback? onSessionChanged;
+  String? _authUserId;
 
   AuthOperation _currentOperation = AuthOperation.none;
   bool _isInitialized = false;
@@ -76,6 +80,7 @@ class AuthViewModel extends ChangeNotifier {
   AuthViewModel({
     AuthRepository? authRepository,
     LocalAuthService? localAuthService,
+    this.onSessionChanged,
     bool listenToAuthChanges = true,
   }) : _authRepository = authRepository ?? AuthRepository(),
        _localAuthService = localAuthService ?? LocalAuthService() {
@@ -84,6 +89,10 @@ class AuthViewModel extends ChangeNotifier {
         firebaseUser,
       ) {
         _userProfileSub?.cancel();
+        if (_authUserId != firebaseUser?.uid) {
+          _authUserId = firebaseUser?.uid;
+          onSessionChanged?.call();
+        }
 
         if (firebaseUser == null) {
           _currentUser = null;
@@ -156,7 +165,9 @@ class AuthViewModel extends ChangeNotifier {
       _justAuthenticated = true;
       return true;
     } on ProfileSetupException {
-      _setErrorMessage('A conta foi criada, mas o perfil ainda não foi salvo. Tente concluir o cadastro novamente.');
+      _setErrorMessage(
+        'A conta foi criada, mas o perfil ainda não foi salvo. Tente concluir o cadastro novamente.',
+      );
       return false;
     } on firebase.FirebaseAuthException catch (e) {
       _setErrorMessage(_mapAuthError(e.code));
@@ -184,9 +195,13 @@ class AuthViewModel extends ChangeNotifier {
         email.trim(),
         password,
       );
-      final profile = await _authRepository.getUserProfile(credential.user!.uid);
+      final profile = await _authRepository.getUserProfile(
+        credential.user!.uid,
+      );
       if (profile == null) {
-        _setErrorMessage('Seu cadastro está pendente. Abra Cadastro e preencha seus dados para concluir.');
+        _setErrorMessage(
+          'Seu cadastro está pendente. Abra Cadastro e preencha seus dados para concluir.',
+        );
         return false;
       }
       _currentUser = profile;
@@ -317,6 +332,8 @@ class AuthViewModel extends ChangeNotifier {
     bool? enableSuppliers,
     int? themeColor,
     String? themeMode,
+    List<String>? hiddenNavigationDestinations,
+    List<String>? navigationOrder,
   }) async {
     if (_currentUser == null) {
       return const UpdateUserResult(
@@ -362,6 +379,8 @@ class AuthViewModel extends ChangeNotifier {
         enableSuppliers: enableSuppliers,
         themeColor: themeColor,
         themeMode: themeMode,
+        hiddenNavigationDestinations: hiddenNavigationDestinations,
+        navigationOrder: navigationOrder,
       );
       AppSecurityService.setSecure(updatedUser.effectiveProtectScreenCapture);
       await _authRepository.updateUserProfile(updatedUser);
@@ -420,6 +439,8 @@ class AuthViewModel extends ChangeNotifier {
       ref.read(dashboardViewModelProvider).clearData();
       ref.read(expenseViewModelProvider).clearData();
       ref.read(credentialViewModelProvider).clearData();
+      ref.read(documentViewModelProvider).clearData();
+      ref.read(supplierViewModelProvider).clearData();
       ref.read(navigationViewModelProvider).clearData(notify: false);
       ref.read(categoryViewModelProvider).clearData();
 
@@ -478,5 +499,15 @@ class AuthViewModel extends ChangeNotifier {
 }
 
 final authViewModelProvider = ChangeNotifierProvider<AuthViewModel>(
-  (ref) => AuthViewModel(authRepository: ref.read(authRepositoryProvider)),
+  (ref) => AuthViewModel(
+    authRepository: ref.read(authRepositoryProvider),
+    onSessionChanged: () {
+      ref.read(expenseViewModelProvider).clearData();
+      ref.read(credentialViewModelProvider).clearData();
+      ref.read(documentViewModelProvider).clearData();
+      ref.read(supplierViewModelProvider).clearData();
+      ref.read(categoryViewModelProvider).clearData();
+      ref.read(navigationViewModelProvider).clearData(notify: false);
+    },
+  ),
 );

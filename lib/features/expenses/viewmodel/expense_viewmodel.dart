@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_riverpod/legacy.dart';
 import 'package:key_budget/core/models/expense_model.dart';
+import 'package:key_budget/core/search/search_normalizer.dart';
 import 'package:key_budget/core/models/recurring_expense_model.dart';
 import 'package:key_budget/core/services/csv_service.dart';
 import 'package:key_budget/core/services/data_import_service.dart';
@@ -23,6 +24,7 @@ import 'package:key_budget/features/expenses/application/recurrence_committer.da
 import 'package:key_budget/features/expenses/application/recurrence_service.dart';
 import 'package:key_budget/features/expenses/domain/recurrence_occurrence.dart';
 import 'package:key_budget/features/expenses/repository/expense_repository.dart';
+import 'package:key_budget/features/trash/repository/trash_repository.dart';
 import 'package:key_budget/features/expenses/repository/recurrence_occurrence_repository.dart';
 import 'package:key_budget/features/expenses/repository/recurring_expense_repository.dart';
 
@@ -39,6 +41,7 @@ class ExpenseViewModel extends ChangeNotifier {
   final PdfService _pdfService;
   final DataImportService _dataImportService;
   final AppClock _clock;
+  final TrashRepository _trashRepository;
   late final ExpenseTransferService _transferService;
   late final RecurrenceGenerationCoordinator _generationCoordinator;
 
@@ -53,6 +56,7 @@ class ExpenseViewModel extends ChangeNotifier {
     PdfService? pdfService,
     DataImportService? dataImportService,
     AppClock? clock,
+    TrashRepository? trashRepository,
   }) : _repository = repository ?? ExpenseRepository(),
        _recurringRepository =
            recurringRepository ?? RecurringExpenseRepository(),
@@ -89,7 +93,8 @@ class ExpenseViewModel extends ChangeNotifier {
        _csvService = csvService ?? CsvService(),
        _pdfService = pdfService ?? PdfService(),
        _dataImportService = dataImportService ?? DataImportService(),
-       _clock = clock ?? const SystemAppClock() {
+       _clock = clock ?? const SystemAppClock(),
+       _trashRepository = trashRepository ?? TrashRepository() {
     _transferService = ExpenseTransferService(
       importService: _importService,
       csvService: _csvService,
@@ -237,13 +242,7 @@ class ExpenseViewModel extends ChangeNotifier {
   }
 
   String _sanitize(String input) {
-    var text = input.toLowerCase().replaceAll(RegExp(r'\s+'), ' ').trim();
-    const withDia = 'áàãâäéèêëíìîïóòõôöúùûüçñ';
-    const withoutDia = 'aaaaaeeeeiiiiooooouuuucn';
-    for (int i = 0; i < withDia.length; i++) {
-      text = text.replaceAll(withDia[i], withoutDia[i]);
-    }
-    return text;
+    return SearchNormalizer.normalize(input);
   }
 
   void setSearchQuery(String query) {
@@ -498,29 +497,45 @@ class ExpenseViewModel extends ChangeNotifier {
   }
 
   Future<void> deleteExpense(String userId, String expenseId) async {
-    final expense = _allExpenses.firstWhere(
-      (e) => e.id == expenseId,
-      orElse: () => Expense(id: expenseId, amount: 0, date: DateTime.now()),
-    );
+    Expense? expense;
+    for (final item in _allExpenses) {
+      if (item.id == expenseId) {
+        expense = item;
+        break;
+      }
+    }
+    expense ??= await _repository.getExpenseById(userId, expenseId);
+    if (expense == null) {
+      throw StateError('O lançamento não foi encontrado. Atualize a lista.');
+    }
+    await _deleteExpenseRecord(userId, expense);
+  }
+
+  Future<void> _deleteExpenseRecord(String userId, Expense expense) async {
     if (expense.recurringExpenseId != null &&
         expense.recurringExpenseId!.isNotEmpty) {
-      await _recurrenceDeletionService.deleteIndividualOccurrence(
-        userId: userId,
-        expense: expense,
-      );
+      await _trashRepository.moveRecurringExpense(userId, expense.id!);
     } else {
-      await _repository.deleteExpense(userId, expenseId);
+      await _trashRepository.move(
+        userId,
+        collection: 'expenses',
+        ids: [expense.id!],
+        title: expense.motivation?.trim().isNotEmpty == true
+            ? expense.motivation!
+            : 'Lançamento',
+      );
     }
   }
 
   Future<void> deleteInstallmentGroup(String userId, String groupId) async {
-    final expensesToDelete = _allExpenses
-        .where((expense) => expense.installmentGroupId == groupId)
-        .toList();
+    final expensesToDelete = await _repository.getExpensesForInstallmentGroup(
+      userId,
+      groupId,
+    );
 
     final futures = expensesToDelete.map((expense) {
       if (expense.id != null) {
-        return deleteExpense(userId, expense.id!);
+        return _deleteExpenseRecord(userId, expense);
       }
       return Future.value();
     });
@@ -581,11 +596,14 @@ class ExpenseViewModel extends ChangeNotifier {
       ),
     );
 
+    final linkedExpenses = effectiveMode == RecurrenceDeleteMode.onlyRule
+        ? <Expense>[]
+        : await _repository.getExpensesForRecurringRule(userId, expenseId);
     final result = await _recurrenceDeletionService.deleteRule(
       userId: userId,
       rule: rule,
       mode: effectiveMode,
-      allExpenses: _allExpenses,
+      allExpenses: linkedExpenses,
     );
 
     return result.data;
@@ -662,9 +680,14 @@ class ExpenseViewModel extends ChangeNotifier {
   }) async {
     _setImportingCsv(true);
     try {
+      final existingExpenses = await _repository.getAllPaged(
+        userId,
+        requireServer: true,
+      );
+      if (context != null && !context.mounted) return 0;
       return await _transferService.importCsv(
         userId,
-        _allExpenses,
+        existingExpenses,
         context: context,
         rawCsvContent: rawCsvContent,
         fileName: fileName,

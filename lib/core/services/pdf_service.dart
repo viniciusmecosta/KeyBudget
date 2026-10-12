@@ -7,13 +7,13 @@ import 'package:intl/intl.dart';
 import 'package:key_budget/app/config/app_theme.dart';
 import 'package:key_budget/app/utils/widget_to_image.dart';
 import 'package:key_budget/core/models/expense_model.dart';
+import 'package:key_budget/core/models/credential_model.dart';
 import 'package:key_budget/core/services/snackbar_service.dart';
 import 'package:key_budget/features/analysis/domain/analysis_snapshot.dart';
 import 'package:key_budget/features/analysis/viewmodel/analysis_viewmodel.dart';
 import 'package:key_budget/features/analysis/widgets/category_analysis_section_widget.dart';
 import 'package:key_budget/features/analysis/widgets/monthly_trend_section_widget.dart';
 import 'package:key_budget/features/category/viewmodel/category_viewmodel.dart';
-import 'package:key_budget/features/credentials/viewmodel/credential_viewmodel.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:syncfusion_flutter_pdf/pdf.dart';
@@ -431,10 +431,10 @@ class PdfService {
 
   Future<void> exportCredentialsPdf(
     BuildContext context,
-    CredentialViewModel credentialViewModel,
+    List<Credential> credentials,
+    String Function(String) decryptPassword,
   ) async {
     try {
-      final credentials = credentialViewModel.allCredentials;
       final PdfDocument document = PdfDocument();
       PdfPage page = document.pages.add();
       final Size pageSize = page.getClientSize();
@@ -519,9 +519,7 @@ class PdfService {
         final PdfGridRow row = grid.rows.add();
         row.cells[0].value = credential.location;
         row.cells[1].value = credential.login;
-        row.cells[2].value = credentialViewModel.decryptPassword(
-          credential.encryptedPassword,
-        );
+        row.cells[2].value = decryptPassword(credential.encryptedPassword);
         row.cells[3].value = credential.email ?? '';
         row.cells[4].value = credential.phoneNumber ?? '';
         row.cells[5].value = credential.notes ?? '';

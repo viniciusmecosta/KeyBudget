@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'dart:math';
 import 'dart:typed_data';
 import 'package:archive/archive.dart';
@@ -21,7 +22,7 @@ class BackupSecurityException implements Exception {
 
 class BackupCrypto {
   static const List<int> magicBytes = [0x4B, 0x42, 0x47, 0x31];
-  static const int currentFormatVersion = 1;
+  static const int currentFormatVersion = 2;
   static const int defaultIterations = 50000;
   static const int minIterations = 10000;
   static const int maxIterations = 500000;
@@ -30,16 +31,32 @@ class BackupCrypto {
   static const int macBitsCount = 128;
 
   static const int maxDecompressedBytesLimit = 200 * 1024 * 1024;
+  static const int maxBackupBytesLimit = 200 * 1024 * 1024;
   static const int maxArchiveEntriesLimit = 2000;
 
-  static Uint8List packArchive(Map<String, List<int>> files) {
+  static Uint8List packArchive(
+    Map<String, List<int>> files, {
+    int maxTotalBytes = maxDecompressedBytesLimit,
+  }) {
+    var totalBytes = 0;
     final archive = Archive();
     for (final entry in files.entries) {
       final name = entry.key;
       final bytes = entry.value;
+      totalBytes += bytes.length;
+      if (totalBytes > maxTotalBytes) {
+        throw BackupSecurityException(
+          'O backup excede o limite de $maxTotalBytes bytes.',
+        );
+      }
       archive.addFile(ArchiveFile(name, bytes.length, bytes));
     }
     final zipBytes = ZipEncoder().encode(archive);
+    if (zipBytes.length > maxBackupBytesLimit - 56) {
+      throw const BackupSecurityException(
+        'O backup excede o limite de 200 MB.',
+      );
+    }
     return Uint8List.fromList(zipBytes);
   }
 
@@ -48,6 +65,11 @@ class BackupCrypto {
     int maxTotalBytes = maxDecompressedBytesLimit,
     int maxEntries = maxArchiveEntriesLimit,
   }) {
+    if (zipBytes.length > maxBackupBytesLimit) {
+      throw const BackupSecurityException(
+        'O arquivo de backup excede o limite de 200 MB.',
+      );
+    }
     final Archive archive;
     try {
       archive = ZipDecoder().decodeBytes(zipBytes);
@@ -109,6 +131,11 @@ class BackupCrypto {
     if (password.isEmpty) {
       throw BackupCryptoException('A senha do backup não pode ser vazia.');
     }
+    if (payload.length > maxBackupBytesLimit - 56) {
+      throw const BackupSecurityException(
+        'O backup excede o limite de 200 MB.',
+      );
+    }
     if (iterations < minIterations || iterations > maxIterations) {
       throw BackupCryptoException(
         'Número de iterações inválido: $iterations. Deve estar entre $minIterations e $maxIterations.',
@@ -130,7 +157,8 @@ class BackupCrypto {
     final headerBuilder = BytesBuilder();
     headerBuilder.add(magicBytes);
 
-    final versionData = ByteData(2)..setUint16(0, currentFormatVersion, Endian.big);
+    final versionData = ByteData(2)
+      ..setUint16(0, currentFormatVersion, Endian.big);
     headerBuilder.add(versionData.buffer.asUint8List());
 
     final iterData = ByteData(4)..setUint32(0, iterations, Endian.big);
@@ -146,7 +174,7 @@ class BackupCrypto {
 
     final kdf = PBKDF2KeyDerivator(HMac(SHA256Digest(), 64));
     kdf.init(Pbkdf2Parameters(salt, iterations, 32));
-    final derivedKey = kdf.process(Uint8List.fromList(password.codeUnits));
+    final derivedKey = kdf.process(Uint8List.fromList(utf8.encode(password)));
 
     final cipher = GCMBlockCipher(AESEngine());
     final aeadParams = AEADParameters(
@@ -172,6 +200,12 @@ class BackupCrypto {
   }) {
     if (password.isEmpty) {
       throw BackupCryptoException('A senha do backup não pode ser vazia.');
+    }
+
+    if (envelope.length > maxBackupBytesLimit) {
+      throw const BackupSecurityException(
+        'O arquivo de backup excede o limite de 200 MB.',
+      );
     }
 
     if (envelope.length < 56) {
@@ -226,7 +260,10 @@ class BackupCrypto {
 
     final kdf = PBKDF2KeyDerivator(HMac(SHA256Digest(), 64));
     kdf.init(Pbkdf2Parameters(salt, iterations, 32));
-    final derivedKey = kdf.process(Uint8List.fromList(password.codeUnits));
+    final passwordBytes = version == 1
+        ? password.codeUnits
+        : utf8.encode(password);
+    final derivedKey = kdf.process(Uint8List.fromList(passwordBytes));
 
     try {
       final cipher = GCMBlockCipher(AESEngine());
@@ -244,9 +281,7 @@ class BackupCrypto {
         'Senha incorreta ou arquivo de backup adulterado/corrompido.',
       );
     } catch (e) {
-      throw BackupCryptoException(
-        'Falha na descriptografia do backup: $e',
-      );
+      throw BackupCryptoException('Falha na descriptografia do backup: $e');
     }
   }
 }

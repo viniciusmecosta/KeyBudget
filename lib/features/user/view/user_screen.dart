@@ -9,6 +9,7 @@ import 'package:key_budget/app/widgets/responsive_center.dart';
 import 'package:key_budget/core/design_system/borders/app_borders.dart';
 import 'package:key_budget/core/design_system/spacing/app_spacing.dart';
 import 'package:key_budget/core/design_system/widgets/app_button.dart';
+import 'package:key_budget/core/design_system/widgets/app_color_choice.dart';
 import 'package:key_budget/core/services/csv_service.dart';
 import 'package:key_budget/core/services/drive_service.dart';
 import 'package:key_budget/core/services/snackbar_service.dart';
@@ -19,6 +20,12 @@ import 'package:key_budget/features/credentials/viewmodel/credential_viewmodel.d
 import 'package:key_budget/features/dashboard/repository/dashboard_layout_repository.dart';
 import 'package:key_budget/features/dashboard/widgets/dashboard_layout_editor.dart';
 import 'package:key_budget/features/expenses/viewmodel/expense_viewmodel.dart';
+import 'package:key_budget/features/expenses/repository/expense_repository.dart';
+import 'package:key_budget/features/goals/view/savings_goals_screen.dart';
+import 'package:key_budget/features/search/view/global_search_screen.dart';
+import 'package:key_budget/features/trash/view/trash_screen.dart';
+import 'package:key_budget/features/user/view/navigation_customization_screen.dart';
+import 'package:key_budget/features/user/view/account_center_screen.dart';
 import 'package:key_budget/features/user/view/backup_restore_screen.dart';
 import 'package:key_budget/features/user/view/edit_user_screen.dart';
 import 'package:path_provider/path_provider.dart';
@@ -68,7 +75,14 @@ class UserScreen extends ConsumerWidget {
       int successCount = 0;
 
       if (exp) {
-        final csvStr = csvService.generateExpensesCsvString(expVm.allExpenses);
+        final userId = ref.read(authViewModelProvider).currentUser?.id;
+        if (userId == null) {
+          throw StateError('Entre na sua conta para exportar os lançamentos.');
+        }
+        final expenses = await ref
+            .read(expenseRepositoryProvider)
+            .getAllPaged(userId, requireServer: true);
+        final csvStr = csvService.generateExpensesCsvString(expenses);
         final file = File('${dir.path}/despesas_backup.csv');
         await file.writeAsBytes(utf8.encode(csvStr));
         final res = await driveService.uploadFile(
@@ -330,55 +344,35 @@ class UserScreen extends ConsumerWidget {
                             isDark: isDark,
                             colorValue: colorOption.colorValue,
                           );
-                    return GestureDetector(
-                      onTap: () async {
-                        if (user != null) {
-                          await authViewModel.updateUser(
-                            name: user.name,
-                            themeColor: colorOption.colorValue,
-                          );
-                        }
-                        if (context.mounted) Navigator.pop(context);
-                      },
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Container(
-                            width: 50,
-                            height: 50,
-                            decoration: BoxDecoration(
-                              color: previewColor,
-                              shape: BoxShape.circle,
-                              border: Border.all(
-                                color: isSelected
-                                    ? sheetTheme.colorScheme.onSurface
-                                    : Colors.transparent,
-                                width: 3,
+                    return Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        AppColorChoice(
+                          color: previewColor,
+                          label: 'Escolher cor ${colorOption.name} do tema',
+                          selected: isSelected,
+                          diameter: 50,
+                          onPressed: () async {
+                            if (user != null) {
+                              await authViewModel.updateUser(
+                                name: user.name,
+                                themeColor: colorOption.colorValue,
+                              );
+                            }
+                            if (context.mounted) Navigator.pop(context);
+                          },
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          colorOption.name,
+                          style: Theme.of(context).textTheme.bodySmall
+                              ?.copyWith(
+                                fontWeight: isSelected
+                                    ? FontWeight.bold
+                                    : FontWeight.normal,
                               ),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: Colors.black.withValues(alpha: 0.1),
-                                  blurRadius: 4,
-                                  offset: const Offset(0, 2),
-                                ),
-                              ],
-                            ),
-                            child: isSelected
-                                ? const Icon(Icons.check, color: Colors.white)
-                                : null,
-                          ),
-                          const SizedBox(height: 8),
-                          Text(
-                            colorOption.name,
-                            style: Theme.of(context).textTheme.bodySmall
-                                ?.copyWith(
-                                  fontWeight: isSelected
-                                      ? FontWeight.bold
-                                      : FontWeight.normal,
-                                ),
-                          ),
-                        ],
-                      ),
+                        ),
+                      ],
                     );
                   }).toList(),
                 ),
@@ -561,277 +555,324 @@ class UserScreen extends ConsumerWidget {
             }
 
             return ResponsiveCenter(
-                child: ListView(
-                  padding: const EdgeInsets.all(AppSpacing.md),
-                  children: [
-                    const SizedBox(height: AppSpacing.sm),
-                    Row(
-                      children: [
-                        CircleAvatar(
-                          radius: 36,
-                          backgroundColor: theme.colorScheme.primaryContainer,
-                          backgroundImage: imageProvider,
-                          child: imageProvider == null
-                              ? Icon(
-                                  Icons.person,
-                                  size: 36,
-                                  color: theme.colorScheme.onPrimaryContainer,
-                                )
-                              : null,
-                        ),
-                        const SizedBox(width: AppSpacing.md),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                user?.name ?? 'Usuário',
-                                style: theme.textTheme.titleLarge?.copyWith(
-                                  fontWeight: FontWeight.bold,
-                                ),
+              child: ListView(
+                padding: const EdgeInsets.all(AppSpacing.md),
+                children: [
+                  const SizedBox(height: AppSpacing.sm),
+                  Row(
+                    children: [
+                      CircleAvatar(
+                        radius: 36,
+                        backgroundColor: theme.colorScheme.primaryContainer,
+                        backgroundImage: imageProvider,
+                        child: imageProvider == null
+                            ? Icon(
+                                Icons.person,
+                                size: 36,
+                                color: theme.colorScheme.onPrimaryContainer,
+                              )
+                            : null,
+                      ),
+                      const SizedBox(width: AppSpacing.md),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              user?.name ?? 'Usuário',
+                              style: theme.textTheme.titleLarge?.copyWith(
+                                fontWeight: FontWeight.bold,
                               ),
-                              Text(
-                                user?.email ?? '',
-                                style: theme.textTheme.bodyMedium?.copyWith(
-                                  color: theme.colorScheme.onSurfaceVariant,
-                                ),
+                            ),
+                            Text(
+                              user?.email ?? '',
+                              style: theme.textTheme.bodyMedium?.copyWith(
+                                color: theme.colorScheme.onSurfaceVariant,
                               ),
-                              if (formattedPhone != null &&
-                                  formattedPhone.isNotEmpty)
-                                Padding(
-                                  padding: const EdgeInsets.only(top: 2),
-                                  child: Text(
-                                    formattedPhone,
-                                    style: theme.textTheme.bodyMedium?.copyWith(
-                                      color: theme.colorScheme.onSurfaceVariant,
-                                    ),
+                            ),
+                            if (formattedPhone != null &&
+                                formattedPhone.isNotEmpty)
+                              Padding(
+                                padding: const EdgeInsets.only(top: 2),
+                                child: Text(
+                                  formattedPhone,
+                                  style: theme.textTheme.bodyMedium?.copyWith(
+                                    color: theme.colorScheme.onSurfaceVariant,
                                   ),
                                 ),
+                              ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: AppSpacing.xl),
+                  buildSection('Conta', [
+                    SettingsTile(
+                      icon: Icons.person_outline,
+                      title: 'Editar Perfil',
+                      subtitle: 'Atualize seu nome, telefone e senha',
+                      onTap: () {
+                        NavigationUtils.push(context, const EditUserScreen());
+                      },
+                    ),
+                  ]),
+                  buildSection('Aparência', [
+                    SettingsTile(
+                      icon: Icons.palette_outlined,
+                      title: 'Cor do Tema',
+                      subtitle: 'Personalize a cor principal',
+                      onTap: () => _showThemeColorDialog(context, ref),
+                    ),
+                    const Divider(height: 1, indent: 56, endIndent: 16),
+                    SettingsTile(
+                      icon: Icons.brightness_auto_outlined,
+                      title: 'Modo de exibição',
+                      subtitle: 'Escolha claro, escuro ou sistema',
+                      trailing: Text(
+                        switch (user?.effectiveThemeMode) {
+                          'light' => 'Claro',
+                          'dark' => 'Escuro',
+                          _ => 'Sistema',
+                        },
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          color: theme.colorScheme.onSurfaceVariant,
+                        ),
+                      ),
+                      onTap: () => _showDisplayModeSheet(context, ref),
+                    ),
+                    const Divider(height: 1, indent: 56, endIndent: 16),
+                    SettingsTile(
+                      icon: Icons.dashboard_customize_outlined,
+                      title: 'Personalizar painel',
+                      subtitle: 'Escolha e ordene cartões e atalhos',
+                      onTap: user == null
+                          ? null
+                          : () {
+                              if (dashboardLayout != null) {
+                                _showDashboardLayoutEditor(
+                                  context,
+                                  user.id,
+                                  dashboardLayout,
+                                );
+                              } else if (layoutState?.hasError == true) {
+                                ref.invalidate(
+                                  dashboardLayoutProvider(user.id),
+                                );
+                                SnackbarService.showError(
+                                  context,
+                                  'Não foi possível carregar o painel. Tentando novamente.',
+                                );
+                              } else {
+                                SnackbarService.showInfo(
+                                  context,
+                                  'Carregando as opções do painel.',
+                                );
+                              }
+                            },
+                    ),
+                  ]),
+                  buildSection('Recursos', [
+                    SettingsTile(
+                      icon: Icons.search_outlined,
+                      title: 'Busca e favoritos',
+                      subtitle: 'Encontre dados e guarde acessos rápidos',
+                      onTap: () => NavigationUtils.push(
+                        context,
+                        const GlobalSearchScreen(),
+                      ),
+                    ),
+                    const Divider(height: 1, indent: 56, endIndent: 16),
+                    SettingsTile(
+                      icon: Icons.view_week_outlined,
+                      title: 'Personalizar abas',
+                      subtitle: 'Escolha as seções e a ordem de exibição',
+                      onTap: () => NavigationUtils.push(
+                        context,
+                        const NavigationCustomizationScreen(),
+                      ),
+                    ),
+                    const Divider(height: 1, indent: 56, endIndent: 16),
+                    SettingsSwitchTile(
+                      icon: Icons.account_balance_wallet_outlined,
+                      title: 'Habilitar Receitas',
+                      subtitle: 'Exibe entradas e saldo no painel principal',
+                      value: user?.enableIncomes ?? false,
+                      onChanged: (value) async {
+                        if (user != null) {
+                          await authViewModel.updateUser(
+                            name: user.name,
+                            enableIncomes: value,
+                          );
+                        }
+                      },
+                    ),
+                    const Divider(height: 1, indent: 56, endIndent: 16),
+                    SettingsSwitchTile(
+                      icon: Icons.storefront_outlined,
+                      title: 'Habilitar Fornecedores',
+                      subtitle: 'Exibe o módulo de fornecedores',
+                      value: user?.enableSuppliers ?? false,
+                      onChanged: (value) async {
+                        if (user != null) {
+                          await authViewModel.updateUser(
+                            name: user.name,
+                            enableSuppliers: value,
+                          );
+                        }
+                      },
+                    ),
+                    const Divider(height: 1, indent: 56, endIndent: 16),
+                    SettingsTile(
+                      icon: Icons.category_outlined,
+                      title: 'Gerenciar Categorias',
+                      subtitle: 'Personalize categorias de despesas',
+                      onTap: () {
+                        NavigationUtils.push(context, const CategoriesScreen());
+                      },
+                    ),
+                    const Divider(height: 1, indent: 56, endIndent: 16),
+                    SettingsTile(
+                      icon: Icons.flag_outlined,
+                      title: 'Metas',
+                      subtitle: 'Acompanhe objetivos e valores guardados',
+                      onTap: () {
+                        NavigationUtils.push(
+                          context,
+                          const SavingsGoalsScreen(),
+                        );
+                      },
+                    ),
+                  ]),
+                  buildSection('Segurança e privacidade', [
+                    SettingsTile(
+                      icon: Icons.manage_accounts_outlined,
+                      title: 'Conta e recuperação',
+                      subtitle: 'Email, verificação e opções de acesso',
+                      onTap: () => NavigationUtils.push(
+                        context,
+                        const AccountCenterScreen(),
+                      ),
+                    ),
+                    const Divider(height: 1, indent: 56, endIndent: 16),
+                    SettingsSwitchTile(
+                      icon: Icons.lock_outline,
+                      title: 'Bloquear ao sair do aplicativo',
+                      subtitle:
+                          'Exige autenticação biométrica ou PIN ao reabrir',
+                      value: user?.appLocked ?? true,
+                      onChanged: (value) async {
+                        if (user != null) {
+                          await authViewModel.updateUser(
+                            name: user.name,
+                            appLocked: value,
+                          );
+                        }
+                      },
+                    ),
+                    const Divider(height: 1, indent: 56, endIndent: 16),
+                    SettingsSwitchTile(
+                      icon: Icons.screen_lock_portrait_outlined,
+                      title: 'Proteger captura de tela',
+                      subtitle:
+                          'Impede gravação e prints de dados confidenciais',
+                      value: user?.effectiveProtectScreenCapture ?? true,
+                      onChanged: (value) async {
+                        if (user != null) {
+                          await authViewModel.updateUser(
+                            name: user.name,
+                            protectScreenCapture: value,
+                          );
+                        }
+                      },
+                    ),
+                  ]),
+                  buildSection('Dados e recuperação', [
+                    SettingsTile(
+                      icon: Icons.delete_outline,
+                      title: 'Lixeira',
+                      subtitle: 'Restaure itens removidos',
+                      onTap: () =>
+                          NavigationUtils.push(context, const TrashScreen()),
+                    ),
+                    const Divider(height: 1, indent: 56, endIndent: 16),
+                    SettingsTile(
+                      icon: Icons.shield_outlined,
+                      title: 'Backup',
+                      subtitle: 'Criar, agendar e restaurar cópias',
+                      onTap: () {
+                        NavigationUtils.push(
+                          context,
+                          const BackupRestoreScreen(),
+                        );
+                      },
+                    ),
+                    const Divider(height: 1, indent: 56, endIndent: 16),
+                    SettingsTile(
+                      icon: Icons.cloud_upload_outlined,
+                      title: 'Exportar planilhas CSV',
+                      subtitle: 'Exportação separada do backup criptografado',
+                      onTap: () => _showBackupDialog(context, ref),
+                    ),
+                  ]),
+                  buildSection('Sessão', [
+                    SettingsTile(
+                      icon: Icons.logout,
+                      title: 'Sair do Aplicativo',
+                      subtitle: 'Encerrar a sessão com segurança',
+                      iconColor: theme.colorScheme.error,
+                      textColor: theme.colorScheme.error,
+                      trailing: const SizedBox.shrink(),
+                      onTap: () {
+                        showDialog(
+                          context: context,
+                          builder: (_) => AlertDialog(
+                            title: Text(
+                              "Confirmar Logout",
+                              style: theme.textTheme.titleMedium?.copyWith(
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            content: Text(
+                              "Deseja realmente sair do aplicativo?",
+                              style: theme.textTheme.bodyMedium,
+                            ),
+                            actions: [
+                              TextButton(
+                                onPressed: () => Navigator.of(context).pop(),
+                                child: Text(
+                                  "Cancelar",
+                                  style: theme.textTheme.labelLarge,
+                                ),
+                              ),
+                              ElevatedButton(
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: theme.colorScheme.error,
+                                  foregroundColor: theme.colorScheme.onError,
+                                ),
+                                onPressed: () {
+                                  Navigator.of(context).pop();
+                                  ref
+                                      .read(authViewModelProvider)
+                                      .logout(context, ref);
+                                },
+                                child: Text(
+                                  "Sair",
+                                  style: theme.textTheme.labelLarge?.copyWith(
+                                    color: theme.colorScheme.onError,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              ),
                             ],
                           ),
-                        ),
-                      ],
+                        );
+                      },
                     ),
-                    const SizedBox(height: AppSpacing.xl),
-                    buildSection('Conta', [
-                      SettingsTile(
-                        icon: Icons.person_outline,
-                        title: 'Editar Perfil',
-                        subtitle: 'Atualize seu nome, telefone e senha',
-                        onTap: () {
-                          NavigationUtils.push(context, const EditUserScreen());
-                        },
-                      ),
-                    ]),
-                    buildSection('Aparência', [
-                      SettingsTile(
-                        icon: Icons.palette_outlined,
-                        title: 'Cor do Tema',
-                        subtitle: 'Personalize a cor principal',
-                        onTap: () => _showThemeColorDialog(context, ref),
-                      ),
-                      const Divider(height: 1, indent: 56, endIndent: 16),
-                      SettingsTile(
-                        icon: Icons.brightness_auto_outlined,
-                        title: 'Modo de exibição',
-                        subtitle: 'Escolha claro, escuro ou sistema',
-                        trailing: Text(
-                          switch (user?.effectiveThemeMode) {
-                            'light' => 'Claro',
-                            'dark' => 'Escuro',
-                            _ => 'Sistema',
-                          },
-                          style: theme.textTheme.bodySmall?.copyWith(
-                            color: theme.colorScheme.onSurfaceVariant,
-                          ),
-                        ),
-                        onTap: () => _showDisplayModeSheet(context, ref),
-                      ),
-                      const Divider(height: 1, indent: 56, endIndent: 16),
-                      SettingsTile(
-                        icon: Icons.dashboard_customize_outlined,
-                        title: 'Personalizar painel',
-                        subtitle: 'Escolha e ordene cartões e atalhos',
-                        onTap: user == null
-                            ? null
-                            : () {
-                                if (dashboardLayout != null) {
-                                  _showDashboardLayoutEditor(
-                                    context,
-                                    user.id,
-                                    dashboardLayout,
-                                  );
-                                } else if (layoutState?.hasError == true) {
-                                  ref.invalidate(
-                                    dashboardLayoutProvider(user.id),
-                                  );
-                                  SnackbarService.showError(
-                                    context,
-                                    'Não foi possível carregar o painel. Tentando novamente.',
-                                  );
-                                } else {
-                                  SnackbarService.showInfo(
-                                    context,
-                                    'Carregando as opções do painel.',
-                                  );
-                                }
-                              },
-                      ),
-                    ]),
-                    buildSection('Recursos', [
-                      SettingsSwitchTile(
-                        icon: Icons.account_balance_wallet_outlined,
-                        title: 'Habilitar Receitas',
-                        subtitle: 'Exibe entradas e saldo no painel principal',
-                        value: user?.enableIncomes ?? false,
-                        onChanged: (value) async {
-                          if (user != null) {
-                            await authViewModel.updateUser(
-                              name: user.name,
-                              enableIncomes: value,
-                            );
-                          }
-                        },
-                      ),
-                      const Divider(height: 1, indent: 56, endIndent: 16),
-                      SettingsSwitchTile(
-                        icon: Icons.storefront_outlined,
-                        title: 'Habilitar Fornecedores',
-                        subtitle: 'Exibe o módulo de fornecedores',
-                        value: user?.enableSuppliers ?? false,
-                        onChanged: (value) async {
-                          if (user != null) {
-                            await authViewModel.updateUser(
-                              name: user.name,
-                              enableSuppliers: value,
-                            );
-                          }
-                        },
-                      ),
-                      const Divider(height: 1, indent: 56, endIndent: 16),
-                      SettingsTile(
-                        icon: Icons.category_outlined,
-                        title: 'Gerenciar Categorias',
-                        subtitle: 'Personalize categorias de despesas',
-                        onTap: () {
-                          NavigationUtils.push(
-                            context,
-                            const CategoriesScreen(),
-                          );
-                        },
-                      ),
-                    ]),
-                    buildSection('Segurança e privacidade', [
-                      SettingsSwitchTile(
-                        icon: Icons.lock_outline,
-                        title: 'Bloquear ao sair do aplicativo',
-                        subtitle:
-                            'Exige autenticação biométrica ou PIN ao reabrir',
-                        value: user?.appLocked ?? true,
-                        onChanged: (value) async {
-                          if (user != null) {
-                            await authViewModel.updateUser(
-                              name: user.name,
-                              appLocked: value,
-                            );
-                          }
-                        },
-                      ),
-                      const Divider(height: 1, indent: 56, endIndent: 16),
-                      SettingsSwitchTile(
-                        icon: Icons.screen_lock_portrait_outlined,
-                        title: 'Proteger captura de tela',
-                        subtitle:
-                            'Impede gravação e prints de dados confidenciais',
-                        value: user?.effectiveProtectScreenCapture ?? true,
-                        onChanged: (value) async {
-                          if (user != null) {
-                            await authViewModel.updateUser(
-                              name: user.name,
-                              protectScreenCapture: value,
-                            );
-                          }
-                        },
-                      ),
-                    ]),
-                    buildSection('Dados e recuperação', [
-                      SettingsTile(
-                        icon: Icons.shield_outlined,
-                        title: 'Backup',
-                        subtitle: 'Criar, agendar e restaurar cópias',
-                        onTap: () {
-                          NavigationUtils.push(
-                            context,
-                            const BackupRestoreScreen(),
-                          );
-                        },
-                      ),
-                      const Divider(height: 1, indent: 56, endIndent: 16),
-                      SettingsTile(
-                        icon: Icons.cloud_upload_outlined,
-                        title: 'Exportar planilhas CSV',
-                        subtitle: 'Exportação separada do backup criptografado',
-                        onTap: () => _showBackupDialog(context, ref),
-                      ),
-                    ]),
-                    buildSection('Sessão', [
-                      SettingsTile(
-                        icon: Icons.logout,
-                        title: 'Sair do Aplicativo',
-                        subtitle: 'Encerrar a sessão com segurança',
-                        iconColor: theme.colorScheme.error,
-                        textColor: theme.colorScheme.error,
-                        trailing: const SizedBox.shrink(),
-                        onTap: () {
-                          showDialog(
-                            context: context,
-                            builder: (_) => AlertDialog(
-                              title: Text(
-                                "Confirmar Logout",
-                                style: theme.textTheme.titleMedium?.copyWith(
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                              content: Text(
-                                "Deseja realmente sair do aplicativo?",
-                                style: theme.textTheme.bodyMedium,
-                              ),
-                              actions: [
-                                TextButton(
-                                  onPressed: () => Navigator.of(context).pop(),
-                                  child: Text(
-                                    "Cancelar",
-                                    style: theme.textTheme.labelLarge,
-                                  ),
-                                ),
-                                ElevatedButton(
-                                  style: ElevatedButton.styleFrom(
-                                    backgroundColor: theme.colorScheme.error,
-                                    foregroundColor: theme.colorScheme.onError,
-                                  ),
-                                  onPressed: () {
-                                    Navigator.of(context).pop();
-                                    ref
-                                        .read(authViewModelProvider)
-                                        .logout(context, ref);
-                                  },
-                                  child: Text(
-                                    "Sair",
-                                    style: theme.textTheme.labelLarge?.copyWith(
-                                      color: theme.colorScheme.onError,
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          );
-                        },
-                      ),
-                    ]),
-                    const SizedBox(height: AppSpacing.xxl),
-                  ],
-                ),
+                  ]),
+                  const SizedBox(height: AppSpacing.xxl),
+                ],
+              ),
             );
           },
         ),

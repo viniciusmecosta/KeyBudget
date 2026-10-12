@@ -18,7 +18,14 @@ class NavigationUtils {
             child: child,
           );
         },
-        transitionDuration: AppAnimations.duration,
+        transitionDuration: AppAnimations.durationFor(
+          context,
+          AppAnimations.duration,
+        ),
+        reverseTransitionDuration: AppAnimations.durationFor(
+          context,
+          AppAnimations.duration,
+        ),
       ),
     );
   }

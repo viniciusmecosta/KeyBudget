@@ -1,12 +1,8 @@
 import 'dart:convert';
 import 'package:crypto/crypto.dart';
+import 'package:key_budget/core/models/expense_model.dart';
 
-enum OccurrenceState {
-
-  materialized,
-
-  suppressed,
-}
+enum OccurrenceState { materialized, suppressed }
 
 class RecurrenceOccurrence {
   final String occurrenceKey;
@@ -46,17 +42,43 @@ class RecurrenceOccurrence {
     return '$y-$m-$d';
   }
 
+  static RecurrenceOccurrence? forExpense({
+    required String userId,
+    required Expense expense,
+    required OccurrenceState state,
+  }) {
+    final recurringId = expense.recurringExpenseId;
+    if (recurringId == null || recurringId.isEmpty) return null;
+    final dateKey = expense.scheduledDateKey ?? formatDateKey(expense.date);
+    final key =
+        expense.occurrenceKey ??
+        generateKey(
+          uid: userId,
+          recurringExpenseId: recurringId,
+          scheduledDateKey: dateKey,
+        );
+    return RecurrenceOccurrence(
+      occurrenceKey: key,
+      recurringExpenseId: recurringId,
+      scheduledDateKey: dateKey,
+      scheduledDateOriginal: expense.date,
+      expenseIds: [if (expense.id != null) expense.id!],
+      state: state,
+      engineVersion: 1,
+    );
+  }
+
   String get deterministicExpenseId => 'rec_$occurrenceKey';
 
   Map<String, dynamic> toMap() => {
-        'recurringExpenseId': recurringExpenseId,
-        'scheduledDateKey': scheduledDateKey,
-        'scheduledDateOriginal': scheduledDateOriginal?.toIso8601String(),
-        'expenseIds': expenseIds,
-        'state': state.name,
-        'engineVersion': engineVersion,
-        'operationId': operationId,
-      };
+    'recurringExpenseId': recurringExpenseId,
+    'scheduledDateKey': scheduledDateKey,
+    'scheduledDateOriginal': scheduledDateOriginal?.toIso8601String(),
+    'expenseIds': expenseIds,
+    'state': state.name,
+    'engineVersion': engineVersion,
+    'operationId': operationId,
+  };
 
   factory RecurrenceOccurrence.fromMap(Map<String, dynamic> map, String key) {
     final dateStr = map['scheduledDateOriginal'] as String?;

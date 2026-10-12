@@ -2,6 +2,30 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:key_budget/core/models/expense_model.dart';
 
 void main() {
+  test(
+    'editing an expense can clear optional fields without altering money',
+    () {
+      final original = Expense(
+        id: 'expense-1',
+        amount: 42,
+        amountMinor: 4200,
+        date: DateTime(2026, 10, 5),
+        categoryId: 'category-1',
+        motivation: 'Antiga',
+        location: 'Loja',
+      );
+      final updated = original.copyWith(
+        clearCategoryId: true,
+        clearMotivation: true,
+        clearLocation: true,
+      );
+
+      expect(updated.categoryId, isNull);
+      expect(updated.motivation, isNull);
+      expect(updated.location, isNull);
+      expect(updated.money.amountMinor, 4200);
+    },
+  );
   group('Expense model and recurring link preservation', () {
     test('copyWith preserves recurringExpenseId and installment details', () {
       final original = Expense(
