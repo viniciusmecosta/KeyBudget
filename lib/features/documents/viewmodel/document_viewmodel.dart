@@ -303,7 +303,7 @@ class DocumentViewModel extends ChangeNotifier {
             .toSet()
             .toList(),
       );
-      await retryPendingAttachmentCleanup(userId);
+      await retryPendingAttachmentCleanup(userId, allowInteractive: true);
       return true;
     } catch (e) {
       _setErrorMessage('Não foi possível atualizar o documento.');
@@ -313,7 +313,10 @@ class DocumentViewModel extends ChangeNotifier {
     }
   }
 
-  Future<void> retryPendingAttachmentCleanup(String userId) async {
+  Future<void> retryPendingAttachmentCleanup(
+    String userId, {
+    bool allowInteractive = false,
+  }) async {
     try {
       final pending = await _repository.getPendingAttachmentCleanup(userId);
       if (pending.isEmpty) return;
@@ -324,7 +327,10 @@ class DocumentViewModel extends ChangeNotifier {
             await _repository.acknowledgeAttachmentCleanup(userId, driveId);
             continue;
           }
-          final deleted = await _driveService.deleteFile(driveId);
+          final deleted = await _driveService.deleteFile(
+            driveId,
+            allowInteractive: allowInteractive,
+          );
           if (deleted) {
             await _clearLocalCache(driveId);
             await _repository.acknowledgeAttachmentCleanup(userId, driveId);

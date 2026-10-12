@@ -115,40 +115,81 @@ class _BackupRestoreScreenState extends ConsumerState<BackupRestoreScreen>
     if (userId == null) return;
     setState(() => _isSavingAutomaticBackup = true);
     try {
-      bool? uploaded;
-      if (!force) {
-        await _automaticBackupService.saveSettings(
-          userId: userId,
-          interval: _automaticInterval,
-          retention: _automaticRetention,
-          password: _automaticPasswordController.text.isEmpty
-              ? null
-              : _automaticPasswordController.text,
-        );
+      if (force && _automaticInterval == AutomaticBackupInterval.off) {
+        throw ArgumentError('Ative o backup automático para criar uma cópia.');
       }
+      await _automaticBackupService.saveSettings(
+        userId: userId,
+        interval: _automaticInterval,
+        retention: _automaticRetention,
+        password: _automaticPasswordController.text.isEmpty
+            ? null
+            : _automaticPasswordController.text,
+      );
       _automaticPasswordController.clear();
-      if (_automaticInterval != AutomaticBackupInterval.off) {
-        uploaded = await _automaticBackupService.runIfDue(
+      var driveAuthorized = true;
+      var driveAuthorizationCancelled = false;
+      if (!force && _automaticInterval != AutomaticBackupInterval.off) {
+        try {
+          driveAuthorized = await DriveService().ensureAuthorized(
+            allowInteractive: true,
+          );
+        } on DriveAuthorizationCancelled {
+          driveAuthorized = false;
+          driveAuthorizationCancelled = true;
+        }
+      }
+      AutomaticBackupRunStatus? result;
+      if (force) {
+        result = await _automaticBackupService.runDetailed(
           userId,
           allowInteractive: true,
-          force: force,
+          force: true,
         );
       }
       await _loadAutomaticBackup();
       if (mounted) {
-        if (force && uploaded != true) {
-          SnackbarService.showError(
-            context,
-            _automaticSettings?.lastError ??
-                'Não foi possível concluir a cópia. Tente novamente.',
-          );
+        if (!force) {
+          if (_automaticInterval == AutomaticBackupInterval.off ||
+              driveAuthorized) {
+            SnackbarService.showSuccess(
+              context,
+              'Configuração de backup atualizada.',
+            );
+          } else {
+            SnackbarService.showInfo(
+              context,
+              driveAuthorizationCancelled
+                  ? 'Configuração salva. Conecte o Google Drive quando quiser ativar o envio automático.'
+                  : 'Configuração salva. Não foi possível autorizar o Drive; tente novamente.',
+            );
+          }
+        } else if (result == AutomaticBackupRunStatus.completed) {
+          SnackbarService.showSuccess(context, 'Cópia enviada ao Drive.');
         } else {
-          SnackbarService.showSuccess(
-            context,
-            force
-                ? 'Cópia criada e enviada ao Drive.'
-                : 'Configuração de backup atualizada.',
-          );
+          final message = switch (result) {
+            AutomaticBackupRunStatus.authorizationRequired =>
+              'Conecte ou autorize uma conta Google para enviar o backup.',
+            AutomaticBackupRunStatus.alreadyRunning =>
+              'Já há uma cópia em andamento. Aguarde a conclusão.',
+            AutomaticBackupRunStatus.passwordMissing =>
+              'Salve uma senha para o backup automático antes de continuar.',
+            AutomaticBackupRunStatus.incomplete =>
+              _automaticSettings?.lastError ??
+                  'A cópia ficou incompleta. Verifique os anexos e tente novamente.',
+            AutomaticBackupRunStatus.localCopyPending =>
+              'Cópia local concluída; o envio ao Drive ficou pendente. Tente novamente.',
+            AutomaticBackupRunStatus.accountChanged =>
+              'A conta mudou durante a operação. Entre novamente e tente outra vez.',
+            AutomaticBackupRunStatus.failed =>
+              _automaticSettings?.lastError ??
+                  'Falha ao criar ou enviar a cópia. Tente novamente.',
+            AutomaticBackupRunStatus.notDue =>
+              'Não foi possível iniciar a cópia. Confira a configuração e tente novamente.',
+            AutomaticBackupRunStatus.completed => 'Cópia enviada ao Drive.',
+            null => 'Não foi possível iniciar a cópia. Tente novamente.',
+          };
+          SnackbarService.showError(context, message);
         }
       }
     } on ArgumentError catch (error) {
@@ -700,7 +741,7 @@ class _BackupRestoreScreenState extends ConsumerState<BackupRestoreScreen>
                     ? null
                     : () => _saveAutomaticBackup(force: true),
                 icon: const Icon(Icons.backup_outlined),
-                label: const Text('Criar cópia agora'),
+                label: const Text('Iniciar backup'),
               ),
             ],
             const SizedBox(height: AppSpacing.md),

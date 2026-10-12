@@ -8,6 +8,7 @@ import 'package:key_budget/app/config/app_theme.dart';
 import 'package:key_budget/core/models/expense_category_model.dart';
 import 'package:key_budget/core/utils/string_extensions.dart';
 import 'package:key_budget/core/models/user_model.dart';
+import 'package:key_budget/core/services/google_sign_in_session.dart';
 
 class ProfileSetupException implements Exception {
   const ProfileSetupException();
@@ -222,9 +223,18 @@ class AuthRepository {
 
   Future<User?> signInWithGoogle({String? serverClientId}) async {
     try {
-      await _ensureGoogleSignInInitialized(serverClientId: serverClientId);
-
-      final GoogleSignInAccount googleUser = await _googleSignIn.authenticate();
+      final GoogleSignInAccount googleUser;
+      if (_customGoogleSignIn == null) {
+        googleUser =
+            await GoogleSignInSession.instance.account(
+              allowInteractive: true,
+              serverClientId: serverClientId,
+            ) ??
+            (throw StateError('Não foi possível iniciar a sessão Google.'));
+      } else {
+        await _ensureGoogleSignInInitialized(serverClientId: serverClientId);
+        googleUser = await _googleSignIn.authenticate();
+      }
 
       final GoogleSignInAuthentication googleAuth = googleUser.authentication;
 
@@ -272,7 +282,11 @@ class AuthRepository {
 
   Future<void> signOut() async {
     try {
-      await _googleSignIn.signOut();
+      if (_customGoogleSignIn == null) {
+        await GoogleSignInSession.instance.signOut();
+      } else {
+        await _googleSignIn.signOut();
+      }
     } catch (e) {
       if (kDebugMode) {
         print("Error during Google sign-out: $e");
