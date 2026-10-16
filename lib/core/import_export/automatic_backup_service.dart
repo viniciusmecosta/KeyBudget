@@ -96,7 +96,7 @@ class AutomaticBackupService {
       rawReader: FirestoreRawStorage(),
       sessionContext: SessionContext(userId: userId, sessionGeneration: 1),
       encryptionService: EncryptionService(),
-      driveService: DriveService(allowInteractiveByDefault: false),
+      driveService: DriveService(),
     ).createBackup(password: password);
     if (!result.isSuccess) return null;
     return result.data;
@@ -291,7 +291,7 @@ class AutomaticBackupService {
           key: _key(userId, 'last_error'),
           value: allowInteractive
               ? 'Cópia local concluída; envio ao Drive pendente.'
-              : 'Cópia local concluída; autorização do Drive necessária para enviar.',
+              : 'Cópia local concluída; envio ao Drive pendente. Confira o Google Drive nos Ajustes.',
         );
         return allowInteractive
             ? AutomaticBackupRunStatus.localCopyPending

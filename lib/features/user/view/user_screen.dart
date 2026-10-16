@@ -28,6 +28,7 @@ import 'package:key_budget/features/user/view/navigation_customization_screen.da
 import 'package:key_budget/features/user/view/account_center_screen.dart';
 import 'package:key_budget/features/user/view/backup_restore_screen.dart';
 import 'package:key_budget/features/user/view/edit_user_screen.dart';
+import 'package:key_budget/features/user/view/drive_connection_screen.dart';
 import 'package:path_provider/path_provider.dart';
 
 import '../widgets/settings_tile.dart';
@@ -788,6 +789,16 @@ class UserScreen extends ConsumerWidget {
                     ),
                   ]),
                   buildSection('Dados e recuperação', [
+                    SettingsTile(
+                      icon: Icons.cloud_outlined,
+                      title: 'Google Drive',
+                      subtitle: 'Conexão para documentos e backups',
+                      onTap: () => NavigationUtils.push(
+                        context,
+                        const DriveConnectionScreen(),
+                      ),
+                    ),
+                    const Divider(height: 1, indent: 56, endIndent: 16),
                     SettingsTile(
                       icon: Icons.delete_outline,
                       title: 'Lixeira',

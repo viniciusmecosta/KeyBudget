@@ -73,7 +73,7 @@ class TrashScreen extends ConsumerWidget {
       if (entry.collection == 'documents') {
         await ref
             .read(documentViewModelProvider)
-            .retryPendingAttachmentCleanup(userId, allowInteractive: true);
+            .retryPendingAttachmentCleanup(userId);
       }
       if (context.mounted) {
         SnackbarService.showSuccess(context, 'Item excluído definitivamente.');
