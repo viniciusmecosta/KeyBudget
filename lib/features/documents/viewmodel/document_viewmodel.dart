@@ -303,7 +303,7 @@ class DocumentViewModel extends ChangeNotifier {
             .toSet()
             .toList(),
       );
-      await retryPendingAttachmentCleanup(userId, allowInteractive: true);
+      await retryPendingAttachmentCleanup(userId);
       return true;
     } catch (e) {
       _setErrorMessage('Não foi possível atualizar o documento.');
@@ -465,7 +465,7 @@ class DocumentViewModel extends ChangeNotifier {
 
         if (driveFile == null || driveFile.id == null) {
           _setErrorMessage(
-            'Falha ao fazer upload do arquivo para o Google Drive.',
+            'Não foi possível enviar o anexo. Confira a conexão e o Google Drive nos Ajustes.',
           );
           return null;
         }
@@ -533,7 +533,9 @@ class DocumentViewModel extends ChangeNotifier {
           maxBytes: maxAttachmentBytes,
         );
         if (!downloaded) {
-          _setErrorMessage('Não foi possível baixar o anexo do Google Drive.');
+          _setErrorMessage(
+            'Não foi possível baixar o anexo. Confira a conexão e o Google Drive nos Ajustes.',
+          );
           return null;
         }
         if (!await _isValidAttachmentFile(file, attachment.type)) {

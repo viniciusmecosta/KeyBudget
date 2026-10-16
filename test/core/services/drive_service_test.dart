@@ -1,6 +1,74 @@
+import 'package:firebase_auth/firebase_auth.dart' as firebase;
 import 'package:flutter_test/flutter_test.dart';
+import 'package:google_sign_in/google_sign_in.dart';
 import 'package:http/http.dart' as http;
 import 'package:key_budget/core/services/drive_service.dart';
+import 'package:key_budget/core/services/drive_connection_service.dart';
+import 'package:key_budget/core/services/google_sign_in_session.dart';
+
+class _User extends Fake implements firebase.User {
+  _User(this.uid);
+
+  @override
+  final String uid;
+
+  @override
+  List<firebase.UserInfo> get providerData => [];
+}
+
+class _FirebaseAuth extends Fake implements firebase.FirebaseAuth {
+  firebase.User? user = _User('firebase-user');
+
+  @override
+  firebase.User? get currentUser => user;
+}
+
+class _RecordingSession extends GoogleSignInSession {
+  final interactionModes = <bool>[];
+  GoogleSignInAccount? selectedAccount;
+  void Function()? onAccount;
+  int authorizationCount = 0;
+
+  @override
+  Future<GoogleSignInAccount?> account({
+    required bool allowInteractive,
+    bool refreshAuthentication = false,
+    String? firebaseUserId,
+    List<String> expectedGoogleAccountIds = const [],
+    String? serverClientId,
+  }) async {
+    interactionModes.add(allowInteractive);
+    onAccount?.call();
+    return selectedAccount;
+  }
+
+  @override
+  Future<GoogleSignInClientAuthorization?> authorizationFor(
+    GoogleSignInAccount account,
+    List<String> scopes, {
+    required bool allowInteractive,
+  }) async {
+    authorizationCount++;
+    return null;
+  }
+}
+
+class _GoogleAccount extends Fake implements GoogleSignInAccount {}
+
+class _Connections extends DriveConnectionService {
+  DriveConnection? saved;
+  GoogleSignInClientAuthorization? token;
+
+  @override
+  Future<DriveConnection?> readConnection(String userId) async => saved;
+
+  @override
+  Future<GoogleSignInClientAuthorization?> restoreAuthorization({
+    required String userId,
+    DriveConnection? fallback,
+    List<String> expectedAccountIds = const [],
+  }) async => token;
+}
 
 class _RecordingClient extends http.BaseClient {
   bool closed = false;
@@ -19,6 +87,114 @@ class _RecordingClient extends http.BaseClient {
 }
 
 void main() {
+  test(
+    'saved Drive access skips account selection after an app restart',
+    () async {
+      final session = _RecordingSession();
+      final connections = _Connections()
+        ..saved = const DriveConnection(
+          accountId: 'google',
+          email: 'drive@test.com',
+        )
+        ..token = const GoogleSignInClientAuthorization(
+          accessToken: 'restored',
+        );
+      final drive = DriveService(
+        googleSession: session,
+        connectionService: connections,
+        firebaseAuth: _FirebaseAuth(),
+      );
+
+      expect(await drive.ensureAuthorized(), isTrue);
+      expect(session.interactionModes, isEmpty);
+      expect(session.authorizationCount, 0);
+    },
+  );
+
+  test(
+    'disconnect prevents cached account use by documents and backups',
+    () async {
+      final session = _RecordingSession();
+      final connections = _Connections()
+        ..saved = const DriveConnection.disabled();
+      final drive = DriveService(
+        googleSession: session,
+        connectionService: connections,
+        firebaseAuth: _FirebaseAuth(),
+      );
+
+      expect(await drive.ensureAuthorized(), isFalse);
+      expect(session.interactionModes, isEmpty);
+    },
+  );
+
+  test(
+    'Drive is silent by default even when a caller allows interaction',
+    () async {
+      final session = _RecordingSession();
+      final drive = DriveService(
+        googleSession: session,
+        connectionService: _Connections(),
+        firebaseAuth: _FirebaseAuth(),
+      );
+
+      expect(await drive.ensureAuthorized(), isFalse);
+      expect(await drive.ensureAuthorized(allowInteractive: true), isFalse);
+      expect(session.interactionModes, [false, false]);
+    },
+  );
+
+  test(
+    'explicit settings connection can authorize while background work stays silent',
+    () async {
+      final session = _RecordingSession();
+      final drive = DriveService(
+        googleSession: session,
+        connectionService: _Connections(),
+        firebaseAuth: _FirebaseAuth(),
+        allowUserInteraction: true,
+      );
+
+      await drive.ensureAuthorized();
+      await drive.ensureAuthorized(allowInteractive: false);
+
+      expect(session.interactionModes, [true, false]);
+    },
+  );
+
+  test(
+    'Drive never requests a Google account without an app session',
+    () async {
+      final session = _RecordingSession();
+      final auth = _FirebaseAuth()..user = null;
+      final drive = DriveService(
+        googleSession: session,
+        connectionService: _Connections(),
+        firebaseAuth: auth,
+        allowUserInteraction: true,
+      );
+
+      expect(await drive.ensureAuthorized(), isFalse);
+      expect(session.interactionModes, isEmpty);
+    },
+  );
+
+  test('account switch stops Drive before requesting permission', () async {
+    final auth = _FirebaseAuth();
+    final session = _RecordingSession()
+      ..selectedAccount = _GoogleAccount()
+      ..onAccount = () => auth.user = _User('other-user');
+    final drive = DriveService(
+      googleSession: session,
+      connectionService: _Connections(),
+      firebaseAuth: auth,
+      allowUserInteraction: true,
+    );
+
+    expect(await drive.ensureAuthorized(), isFalse);
+    expect(session.authorizationCount, 0);
+  });
+
   test(
     'GoogleAuthClient forwards authorization and closes its HTTP client',
     () async {

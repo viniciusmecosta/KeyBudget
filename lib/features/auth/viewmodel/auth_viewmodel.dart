@@ -3,6 +3,7 @@ import 'package:firebase_auth/firebase_auth.dart' as firebase;
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/legacy.dart';
+import 'package:google_sign_in/google_sign_in.dart';
 import 'package:key_budget/app/viewmodel/navigation_viewmodel.dart';
 import 'package:key_budget/core/models/user_model.dart';
 import 'package:key_budget/core/operations/operation_result.dart';
@@ -237,6 +238,13 @@ class AuthViewModel extends ChangeNotifier {
       }
     } on firebase.FirebaseAuthException catch (e) {
       _setErrorMessage(_mapAuthError(e.code));
+      return false;
+    } on GoogleSignInException catch (error) {
+      if (error.code != GoogleSignInExceptionCode.canceled) {
+        _setErrorMessage(
+          'Não foi possível entrar com o Google. Tente novamente.',
+        );
+      }
       return false;
     } catch (e) {
       _setErrorMessage('Ocorreu um erro desconhecido.');

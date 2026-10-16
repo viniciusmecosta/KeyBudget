@@ -127,49 +127,23 @@ class _BackupRestoreScreenState extends ConsumerState<BackupRestoreScreen>
             : _automaticPasswordController.text,
       );
       _automaticPasswordController.clear();
-      var driveAuthorized = true;
-      var driveAuthorizationCancelled = false;
-      if (!force && _automaticInterval != AutomaticBackupInterval.off) {
-        try {
-          driveAuthorized = await DriveService().ensureAuthorized(
-            allowInteractive: true,
-          );
-        } on DriveAuthorizationCancelled {
-          driveAuthorized = false;
-          driveAuthorizationCancelled = true;
-        }
-      }
       AutomaticBackupRunStatus? result;
       if (force) {
-        result = await _automaticBackupService.runDetailed(
-          userId,
-          allowInteractive: true,
-          force: true,
-        );
+        result = await _automaticBackupService.runDetailed(userId, force: true);
       }
       await _loadAutomaticBackup();
       if (mounted) {
         if (!force) {
-          if (_automaticInterval == AutomaticBackupInterval.off ||
-              driveAuthorized) {
-            SnackbarService.showSuccess(
-              context,
-              'Configuração de backup atualizada.',
-            );
-          } else {
-            SnackbarService.showInfo(
-              context,
-              driveAuthorizationCancelled
-                  ? 'Configuração salva. Conecte o Google Drive quando quiser ativar o envio automático.'
-                  : 'Configuração salva. Não foi possível autorizar o Drive; tente novamente.',
-            );
-          }
+          SnackbarService.showSuccess(
+            context,
+            'Configuração de backup atualizada.',
+          );
         } else if (result == AutomaticBackupRunStatus.completed) {
           SnackbarService.showSuccess(context, 'Cópia enviada ao Drive.');
         } else {
           final message = switch (result) {
             AutomaticBackupRunStatus.authorizationRequired =>
-              'Conecte ou autorize uma conta Google para enviar o backup.',
+              'Conecte o Google Drive nos Ajustes e tente enviar o backup novamente.',
             AutomaticBackupRunStatus.alreadyRunning =>
               'Já há uma cópia em andamento. Aguarde a conclusão.',
             AutomaticBackupRunStatus.passwordMissing =>
@@ -382,7 +356,7 @@ class _BackupRestoreScreenState extends ConsumerState<BackupRestoreScreen>
         } else {
           SnackbarService.showError(
             context,
-            'Não foi possível realizar upload para o Google Drive.',
+            'Não foi possível enviar ao Drive. Verifique a conexão e o Google Drive nos Ajustes.',
           );
         }
       }

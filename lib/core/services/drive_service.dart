@@ -5,6 +5,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:googleapis/drive/v3.dart' as drive;
 import 'package:http/http.dart' as http;
+import 'package:key_budget/core/services/drive_connection_service.dart';
 import 'package:key_budget/core/services/google_sign_in_session.dart';
 import 'package:path/path.dart' as path;
 
@@ -44,41 +45,86 @@ class _DriveSession {
 
 class DriveService {
   final GoogleSignInSession _googleSession;
-  final bool allowInteractiveByDefault;
+  final DriveConnectionService _connectionService;
+  final FirebaseAuth? _customFirebaseAuth;
+  final bool allowUserInteraction;
 
   DriveService({
     GoogleSignInSession? googleSession,
-    this.allowInteractiveByDefault = true,
-  }) : _googleSession = googleSession ?? GoogleSignInSession.instance;
+    DriveConnectionService? connectionService,
+    FirebaseAuth? firebaseAuth,
+    this.allowUserInteraction = false,
+  }) : _googleSession = googleSession ?? GoogleSignInSession.instance,
+       _connectionService =
+           connectionService ?? DriveConnectionService.instance,
+       _customFirebaseAuth = firebaseAuth;
+
+  FirebaseAuth get _firebaseAuth =>
+      _customFirebaseAuth ?? FirebaseAuth.instance;
 
   Future<_DriveSession?> _getDriveApi({
     String? serverClientId,
     bool allowInteractive = true,
   }) async {
     try {
-      final firebaseUser = FirebaseAuth.instance.currentUser;
-      final expectedGoogleAccountIds =
-          firebaseUser?.providerData
-              .where((provider) => provider.providerId == 'google.com')
-              .map((provider) => provider.uid)
-              .whereType<String>()
-              .toList() ??
-          const <String>[];
-      final googleUser = await _googleSession.account(
-        serverClientId: serverClientId,
-        allowInteractive: allowInteractive,
-        firebaseUserId: firebaseUser?.uid,
-        expectedGoogleAccountIds: expectedGoogleAccountIds,
+      final firebaseUser = _firebaseAuth.currentUser;
+      if (firebaseUser == null) return null;
+      final canInteract = allowUserInteraction && allowInteractive;
+      final expectedGoogleAccountIds = firebaseUser.providerData
+          .where((provider) => provider.providerId == 'google.com')
+          .map((provider) => provider.uid)
+          .whereType<String>()
+          .toList();
+      final saved = await _connectionService.readConnection(firebaseUser.uid);
+      if (saved?.enabled == false && !canInteract) return null;
+      DriveConnection? fallback;
+      for (final provider in firebaseUser.providerData) {
+        if (provider.providerId == 'google.com' &&
+            provider.uid != null &&
+            provider.email != null) {
+          fallback = DriveConnection(
+            accountId: provider.uid!,
+            email: provider.email!,
+          );
+          break;
+        }
+      }
+      var authorization = await _connectionService.restoreAuthorization(
+        userId: firebaseUser.uid,
+        fallback: fallback,
+        expectedAccountIds: expectedGoogleAccountIds,
       );
-      if (googleUser == null) return null;
-
-      const scopes = [drive.DriveApi.driveFileScope];
-      final authorization = await _googleSession.authorizationFor(
-        googleUser,
-        scopes,
-        allowInteractive: allowInteractive,
-      );
+      if (authorization == null) {
+        final googleUser = await _googleSession.account(
+          serverClientId: serverClientId,
+          allowInteractive: canInteract,
+          firebaseUserId: firebaseUser.uid,
+          expectedGoogleAccountIds: expectedGoogleAccountIds.isNotEmpty
+              ? expectedGoogleAccountIds
+              : saved?.enabled == true
+              ? [saved!.accountId]
+              : const [],
+        );
+        if (googleUser == null) return null;
+        if (_firebaseAuth.currentUser?.uid != firebaseUser.uid) return null;
+        authorization = await _googleSession.authorizationFor(
+          googleUser,
+          const [drive.DriveApi.driveFileScope],
+          allowInteractive: canInteract,
+        );
+        if (authorization != null &&
+            _firebaseAuth.currentUser?.uid == firebaseUser.uid &&
+            (saved?.enabled != true ||
+                saved?.accountId != googleUser.id ||
+                saved?.email != googleUser.email)) {
+          await _connectionService.saveConnection(
+            firebaseUser.uid,
+            DriveConnection(accountId: googleUser.id, email: googleUser.email),
+          );
+        }
+      }
       if (authorization == null) return null;
+      if (_firebaseAuth.currentUser?.uid != firebaseUser.uid) return null;
 
       final headers = {'Authorization': 'Bearer ${authorization.accessToken}'};
 
@@ -202,7 +248,6 @@ class DriveService {
       fileId,
       maxBytes: 100 * 1024 * 1024,
       serverClientId: serverClientId,
-      allowInteractive: allowInteractiveByDefault,
     );
   }
 
