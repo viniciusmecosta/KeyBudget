@@ -228,6 +228,7 @@ class AuthRepository {
         googleUser =
             await GoogleSignInSession.instance.account(
               allowInteractive: true,
+              refreshAuthentication: true,
               serverClientId: serverClientId,
             ) ??
             (throw StateError('Não foi possível iniciar a sessão Google.'));
