@@ -3,11 +3,12 @@ import 'dart:async';
 import 'package:google_sign_in/google_sign_in.dart';
 
 class GoogleSignInSession {
-  GoogleSignInSession._();
+  GoogleSignInSession({GoogleSignIn? googleSignIn})
+    : _googleSignIn = googleSignIn ?? GoogleSignIn.instance;
 
-  static final GoogleSignInSession instance = GoogleSignInSession._();
+  static final GoogleSignInSession instance = GoogleSignInSession();
 
-  final GoogleSignIn _googleSignIn = GoogleSignIn.instance;
+  final GoogleSignIn _googleSignIn;
   Future<void>? _initialization;
   Future<GoogleSignInAccount?>? _restoration;
   Future<GoogleSignInAccount>? _interactiveSignIn;
@@ -82,12 +83,12 @@ class GoogleSignInSession {
       }
     }
 
+    if (!allowInteractive) return null;
+
     final restoration = _restoration ??= _restoreAccount();
     GoogleSignInAccount? restored;
     try {
       restored = await restoration;
-    } catch (_) {
-      restored = null;
     } finally {
       if (identical(_restoration, restoration)) _restoration = null;
     }
@@ -103,8 +104,6 @@ class GoogleSignInSession {
       if (firebaseUserId != null) _boundFirebaseUid = firebaseUserId;
       return restored;
     }
-    if (!allowInteractive) return null;
-
     final existing = _interactiveSignIn;
     if (existing != null) return existing;
     final operation = _googleSignIn.authenticate();
@@ -129,7 +128,9 @@ class GoogleSignInSession {
   }
 
   Future<GoogleSignInAccount?> _restoreAccount() async {
-    final attempt = _googleSignIn.attemptLightweightAuthentication();
+    final attempt = _googleSignIn.attemptLightweightAuthentication(
+      reportAllExceptions: true,
+    );
     if (attempt == null) return _account;
     return attempt;
   }
