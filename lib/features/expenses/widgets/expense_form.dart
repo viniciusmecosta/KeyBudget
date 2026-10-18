@@ -1,3 +1,4 @@
+import 'package:key_budget/core/design_system/surfaces/app_surfaces.dart';
 import 'package:key_budget/core/design_system/widgets/app_form_section_heading.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_masked_text2/flutter_masked_text2.dart';
@@ -108,7 +109,11 @@ class ExpenseForm extends ConsumerWidget {
 
   Widget _buildAmountWidget(BuildContext context) {
     final theme = Theme.of(context);
-    final accentColor = isIncome ? Colors.green[700]! : Colors.red;
+    final accentColor = isIncome
+        ? (theme.brightness == Brightness.dark
+              ? const Color(0xFF6EE7B7)
+              : const Color(0xFF146C43))
+        : theme.colorScheme.primary;
 
     final String amountLabel;
     if (isSingleInstallmentEdit) {
@@ -127,27 +132,13 @@ class ExpenseForm extends ConsumerWidget {
         horizontal: AppSpacing.lg,
         vertical: AppSpacing.lg,
       ),
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [
-            accentColor.withValues(alpha: 0.10),
-            accentColor.withValues(alpha: 0.03),
-          ],
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
-        ),
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(
-          color: accentColor.withValues(alpha: 0.18),
-          width: 1.5,
-        ),
-      ),
+      decoration: AppSurfaces.panel(context),
       child: Column(
         children: [
           Text(
             amountLabel,
             style: theme.textTheme.labelMedium?.copyWith(
-              color: accentColor.withValues(alpha: 0.8),
+              color: theme.colorScheme.onSurfaceVariant,
               fontWeight: FontWeight.w600,
               letterSpacing: 0.5,
             ),
