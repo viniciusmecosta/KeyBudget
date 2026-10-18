@@ -1,8 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="widget_bg">#FFFFFF</color>
-    <color name="widget_text_primary">#212121</color>
-    <color name="widget_text_secondary">#757575</color>
-    <color name="widget_btn_bg">#8257E5</color>
+    <color name="widget_bg">#F8FCFF</color>
+    <color name="widget_text_primary">#102B50</color>
+    <color name="widget_text_secondary">#4D6584</color>
+    <color name="widget_btn_bg">#0058D9</color>
     <color name="widget_btn_text">#FFFFFF</color>
+    <color name="widget_border">#FFFFFF</color>
 </resources>
