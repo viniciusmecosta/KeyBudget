@@ -32,7 +32,7 @@ class SettingsTile extends ConsumerWidget {
           color: (iconColor ?? theme.colorScheme.primary).withValues(
             alpha: 0.1,
           ),
-          borderRadius: BorderRadius.circular(8),
+          borderRadius: BorderRadius.circular(14),
         ),
         child: Icon(icon, color: iconColor ?? theme.colorScheme.primary),
       ),
@@ -86,7 +86,7 @@ class SettingsSwitchTile extends StatelessWidget {
           color: (iconColor ?? theme.colorScheme.primary).withValues(
             alpha: 0.1,
           ),
-          borderRadius: BorderRadius.circular(8),
+          borderRadius: BorderRadius.circular(14),
         ),
         child: Icon(icon, color: iconColor ?? theme.colorScheme.primary),
       ),

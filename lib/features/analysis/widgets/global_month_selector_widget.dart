@@ -21,11 +21,11 @@ class GlobalMonthSelectorWidget extends ConsumerWidget {
     }
 
     return Material(
-      color: theme.colorScheme.surfaceContainerHighest,
-      borderRadius: BorderRadius.circular(12),
+      color: theme.colorScheme.surface,
+      borderRadius: BorderRadius.circular(24),
       child: InkWell(
         onTap: () => _showMonthPicker(context, viewModel),
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(24),
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
           child: Row(
@@ -41,7 +41,7 @@ class GlobalMonthSelectorWidget extends ConsumerWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Filtro Global (Período)',
+                      'Período da análise',
                       style: theme.textTheme.bodySmall?.copyWith(
                         color: theme.colorScheme.onSurfaceVariant,
                         fontWeight: FontWeight.w500,
@@ -135,17 +135,17 @@ class GlobalMonthSelectorWidget extends ConsumerWidget {
                       color: isSelected
                           ? theme.colorScheme.primaryContainer
                           : theme.colorScheme.surface,
-                      borderRadius: BorderRadius.circular(12),
+                      borderRadius: BorderRadius.circular(24),
                       child: InkWell(
                         onTap: () {
                           viewModel.setSelectedMonthForCategory(month);
                           Navigator.pop(context);
                         },
-                        borderRadius: BorderRadius.circular(12),
+                        borderRadius: BorderRadius.circular(24),
                         child: Container(
                           padding: const EdgeInsets.all(16),
                           decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(12),
+                            borderRadius: BorderRadius.circular(24),
                             border: Border.all(
                               color: isSelected
                                   ? theme.colorScheme.primaryContainer

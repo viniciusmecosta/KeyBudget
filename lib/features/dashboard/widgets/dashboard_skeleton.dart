@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_animate/flutter_animate.dart';
+import 'package:key_budget/core/design_system/widgets/app_loading_shimmer.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:key_budget/core/design_system/borders/app_borders.dart';
 import 'package:key_budget/core/design_system/spacing/app_spacing.dart';
@@ -12,8 +12,6 @@ class DashboardSkeleton extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final theme = Theme.of(context);
-    final shimmerHighlightColor = theme.colorScheme.surface;
     final bool enableIncomes;
     if (enableIncomesOverride != null) {
       enableIncomes = enableIncomesOverride!;
@@ -22,38 +20,38 @@ class DashboardSkeleton extends ConsumerWidget {
           ref.watch(authViewModelProvider).currentUser?.enableIncomes ?? false;
     }
 
-    return AbsorbPointer(
-          child: CustomScrollView(
-            physics: const NeverScrollableScrollPhysics(),
-            slivers: [
-              SliverPadding(
-                padding: const EdgeInsets.fromLTRB(
-                  AppSpacing.md,
-                  AppSpacing.sm,
-                  AppSpacing.md,
-                  AppSpacing.lg,
-                ),
-                sliver: SliverList(
-                  delegate: SliverChildListDelegate([
-                    _buildBalanceCardSkeleton(context, enableIncomes),
-                    const SizedBox(height: AppSpacing.md),
-                    _buildContainer(
-                      context: context,
-                      height: enableIncomes ? 260 : 230,
-                      radius: AppBorders.borderRadiusL,
-                    ),
-                    const SizedBox(height: AppSpacing.md),
-                    _buildQuickActionsSkeleton(context),
-                    const SizedBox(height: AppSpacing.md),
-                    _buildRecentActivitySkeleton(context),
-                  ]),
-                ),
+    return AppLoadingShimmer(
+      child: AbsorbPointer(
+        child: CustomScrollView(
+          physics: const NeverScrollableScrollPhysics(),
+          slivers: [
+            SliverPadding(
+              padding: const EdgeInsets.fromLTRB(
+                AppSpacing.md,
+                AppSpacing.sm,
+                AppSpacing.md,
+                AppSpacing.lg,
               ),
-            ],
-          ),
-        )
-        .animate(onPlay: (controller) => controller.repeat())
-        .shimmer(duration: 1500.ms, color: shimmerHighlightColor);
+              sliver: SliverList(
+                delegate: SliverChildListDelegate([
+                  _buildBalanceCardSkeleton(context, enableIncomes),
+                  const SizedBox(height: AppSpacing.md),
+                  _buildContainer(
+                    context: context,
+                    height: enableIncomes ? 260 : 230,
+                    radius: AppBorders.borderRadiusL,
+                  ),
+                  const SizedBox(height: AppSpacing.md),
+                  _buildQuickActionsSkeleton(context),
+                  const SizedBox(height: AppSpacing.md),
+                  _buildRecentActivitySkeleton(context),
+                ]),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 
   Widget _buildContainer({
@@ -86,21 +84,16 @@ class DashboardSkeleton extends ConsumerWidget {
   Widget _buildQuickActionsSkeleton(BuildContext context) {
     return Row(
       children: [
-        Expanded(
-          child: _buildContainer(
-            context: context,
-            height: 140,
-            radius: AppBorders.borderRadiusL,
+        for (var index = 0; index < 3; index++) ...[
+          if (index > 0) const SizedBox(width: AppSpacing.md),
+          Expanded(
+            child: _buildContainer(
+              context: context,
+              height: 80,
+              radius: AppBorders.borderRadiusL,
+            ),
           ),
-        ),
-        const SizedBox(width: AppSpacing.md),
-        Expanded(
-          child: _buildContainer(
-            context: context,
-            height: 140,
-            radius: AppBorders.borderRadiusL,
-          ),
-        ),
+        ],
       ],
     );
   }

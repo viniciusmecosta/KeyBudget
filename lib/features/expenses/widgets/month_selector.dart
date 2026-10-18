@@ -1,3 +1,4 @@
+import 'package:key_budget/core/design_system/surfaces/app_surfaces.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:key_budget/core/design_system/borders/app_borders.dart';
@@ -52,13 +53,7 @@ class MonthSelector extends ConsumerWidget {
         horizontal: AppSpacing.sm,
         vertical: AppSpacing.xs,
       ),
-      decoration: BoxDecoration(
-        color: theme.colorScheme.surface,
-        borderRadius: AppBorders.borderRadiusL,
-        border: Border.all(
-          color: theme.colorScheme.outline.withAlpha((255 * 0.08).round()),
-        ),
-      ),
+      decoration: AppSurfaces.panel(context),
       child: isAllPeriods
           ? InkWell(
               onTap: () => _showPicker(context),
@@ -194,10 +189,7 @@ class _MonthPickerModalState extends ConsumerState<_MonthPickerModal> {
 
     return Container(
       padding: const EdgeInsets.all(AppSpacing.md),
-      decoration: BoxDecoration(
-        color: theme.colorScheme.surface,
-        borderRadius: AppBorders.borderRadiusVerticalXL,
-      ),
+      decoration: AppSurfaces.panel(context),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [

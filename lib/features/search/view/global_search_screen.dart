@@ -1,3 +1,5 @@
+import 'package:key_budget/core/design_system/widgets/app_card.dart';
+import 'package:key_budget/core/design_system/widgets/app_page_scaffold.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:key_budget/app/widgets/responsive_center.dart';
@@ -138,7 +140,7 @@ class _GlobalSearchScreenState extends ConsumerState<GlobalSearchScreen> {
         .take(100)
         .toList();
 
-    return Scaffold(
+    return AppPageScaffold(
       appBar: AppBar(title: const Text('Buscar no aplicativo')),
       body: ResponsiveCenter(
         maxWidth: 760,
@@ -204,7 +206,8 @@ class _GlobalSearchScreenState extends ConsumerState<GlobalSearchScreen> {
                           final isFavorite = favoriteIds.contains(
                             result.favoriteId,
                           );
-                          return Card(
+                          return AppCard(
+                            padding: EdgeInsets.zero,
                             child: ListTile(
                               leading: Icon(switch (result.kind) {
                                 GlobalSearchKind.expense =>

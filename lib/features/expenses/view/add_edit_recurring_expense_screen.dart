@@ -1,3 +1,4 @@
+import 'package:key_budget/core/design_system/widgets/app_page_scaffold.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_masked_text2/flutter_masked_text2.dart';
@@ -89,8 +90,8 @@ class _AddEditRecurringExpenseScreenState
 
     final RecurringExpense recurringExpense;
     if (isUpdating) {
-      final currentMinor = widget.expense!.amountMinor ??
-          widget.expense!.money.amountMinor;
+      final currentMinor =
+          widget.expense!.amountMinor ?? widget.expense!.money.amountMinor;
       final bool amountChanged = money.amountMinor != currentMinor;
 
       recurringExpense = widget.expense!.copyWith(
@@ -240,7 +241,8 @@ class _AddEditRecurringExpenseScreenState
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
+    return AppPageScaffold(
+      maxContentWidth: 760,
       appBar: AppBar(
         title: Text(
           widget.expense == null
@@ -298,7 +300,8 @@ class _AddEditRecurringExpenseScreenState
           ),
         ),
 
-        context: context,),
+        context: context,
+      ),
     );
   }
 }

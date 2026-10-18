@@ -1,3 +1,4 @@
+import 'package:key_budget/core/design_system/widgets/app_page_scaffold.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:key_budget/app/utils/navigation_utils.dart';
@@ -262,7 +263,7 @@ class _CredentialsScreenState extends ConsumerState<CredentialsScreen> {
           vm.exitFolder();
         }
       },
-      child: Scaffold(
+      child: AppPageScaffold(
         appBar: AppBar(
           leading: (_isSearching || vm.currentFolderId != null)
               ? IconButton(

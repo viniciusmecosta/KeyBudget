@@ -1,3 +1,4 @@
+import 'package:key_budget/core/design_system/widgets/app_page_scaffold.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -101,7 +102,8 @@ class _EditUserScreenState extends ConsumerState<EditUserScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
+    return AppPageScaffold(
+      maxContentWidth: 760,
       appBar: AppBar(title: const Text('Editar Perfil')),
       body: AppAnimations.fadeInFromBottom(
         AppFormPageBody(

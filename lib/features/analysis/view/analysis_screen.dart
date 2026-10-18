@@ -1,3 +1,5 @@
+import 'package:key_budget/core/design_system/widgets/app_loading_shimmer.dart';
+import 'package:key_budget/core/design_system/widgets/app_page_scaffold.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -43,7 +45,8 @@ class _AnalysisScreenState extends ConsumerState<AnalysisScreen> {
         child,
         delay: Duration(milliseconds: 100 * (index + 1)),
 
-        context: context,);
+        context: context,
+      );
     }
     return child;
   }
@@ -54,7 +57,9 @@ class _AnalysisScreenState extends ConsumerState<AnalysisScreen> {
     final dateFormat = DateFormat('dd/MM/yyyy');
     final startDateStr = dateFormat.format(snapshot.query.range.startInclusive);
     final endDateStr = dateFormat.format(
-      snapshot.query.range.endExclusive.subtract(const Duration(milliseconds: 1)),
+      snapshot.query.range.endExclusive.subtract(
+        const Duration(milliseconds: 1),
+      ),
     );
 
     showModalBottomSheet(
@@ -212,7 +217,7 @@ class _AnalysisScreenState extends ConsumerState<AnalysisScreen> {
         ref.watch(authViewModelProvider).currentUser?.enableIncomes ?? false;
     final theme = Theme.of(context);
 
-    return Scaffold(
+    return AppPageScaffold(
       appBar: AppBar(
         elevation: 0,
         scrolledUnderElevation: 0,
@@ -310,52 +315,51 @@ class AnalysisSkeleton extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
-    final shimmerColor = theme.colorScheme.surface;
 
-    return CustomScrollView(
-      physics: const NeverScrollableScrollPhysics(),
-      slivers: [
-        SliverPadding(
-          padding: const EdgeInsets.all(AppSpacing.md),
-          sliver: SliverList(
-            delegate: SliverChildListDelegate([
-              Container(
-                height: 48,
-                decoration: BoxDecoration(
-                  color: theme.colorScheme.surfaceContainerHighest,
-                  borderRadius: AppBorders.borderRadiusXL,
+    return AppLoadingShimmer(
+      child: CustomScrollView(
+        physics: const NeverScrollableScrollPhysics(),
+        slivers: [
+          SliverPadding(
+            padding: const EdgeInsets.all(AppSpacing.md),
+            sliver: SliverList(
+              delegate: SliverChildListDelegate([
+                Container(
+                  height: 48,
+                  decoration: BoxDecoration(
+                    color: theme.colorScheme.surfaceContainerHighest,
+                    borderRadius: AppBorders.borderRadiusXL,
+                  ),
                 ),
-              ),
-              const SizedBox(height: AppSpacing.xl),
-              Container(
-                height: 120,
-                decoration: BoxDecoration(
-                  color: theme.colorScheme.surfaceContainerHighest,
-                  borderRadius: AppBorders.borderRadiusXL,
+                const SizedBox(height: AppSpacing.xl),
+                Container(
+                  height: 120,
+                  decoration: BoxDecoration(
+                    color: theme.colorScheme.surfaceContainerHighest,
+                    borderRadius: AppBorders.borderRadiusXL,
+                  ),
                 ),
-              ),
-              const SizedBox(height: AppSpacing.xl),
-              Container(
-                height: 250,
-                decoration: BoxDecoration(
-                  color: theme.colorScheme.surfaceContainerHighest,
-                  borderRadius: AppBorders.borderRadiusXL,
+                const SizedBox(height: AppSpacing.xl),
+                Container(
+                  height: 250,
+                  decoration: BoxDecoration(
+                    color: theme.colorScheme.surfaceContainerHighest,
+                    borderRadius: AppBorders.borderRadiusXL,
+                  ),
                 ),
-              ),
-              const SizedBox(height: AppSpacing.xl),
-              Container(
-                height: 250,
-                decoration: BoxDecoration(
-                  color: theme.colorScheme.surfaceContainerHighest,
-                  borderRadius: AppBorders.borderRadiusXL,
+                const SizedBox(height: AppSpacing.xl),
+                Container(
+                  height: 250,
+                  decoration: BoxDecoration(
+                    color: theme.colorScheme.surfaceContainerHighest,
+                    borderRadius: AppBorders.borderRadiusXL,
+                  ),
                 ),
-              ),
-            ]),
+              ]),
+            ),
           ),
-        ),
-      ],
-    )
-        .animate(onPlay: (controller) => controller.repeat())
-        .shimmer(duration: 1500.ms, color: shimmerColor);
+        ],
+      ),
+    );
   }
 }

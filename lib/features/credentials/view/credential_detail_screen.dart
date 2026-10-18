@@ -1,3 +1,5 @@
+import 'package:key_budget/core/design_system/surfaces/app_surfaces.dart';
+import 'package:key_budget/core/design_system/widgets/app_page_scaffold.dart';
 import 'dart:convert';
 import 'dart:io';
 
@@ -371,21 +373,7 @@ class _CredentialDetailScreenState extends ConsumerState<CredentialDetailScreen>
           child: Container(
             width: 400,
             padding: const EdgeInsets.all(AppSpacing.xxl),
-            decoration: BoxDecoration(
-              color: theme.colorScheme.surface,
-              borderRadius: AppBorders.borderRadiusXL,
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.1),
-                  blurRadius: 15,
-                  offset: const Offset(0, 8),
-                ),
-              ],
-              border: Border.all(
-                color: theme.colorScheme.primary.withValues(alpha: 0.2),
-                width: 2,
-              ),
-            ),
+            decoration: AppSurfaces.panel(context),
             child: Column(
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -523,7 +511,8 @@ class _CredentialDetailScreenState extends ConsumerState<CredentialDetailScreen>
     final vm = ref.watch(credentialViewModelProvider);
     final theme = Theme.of(context);
 
-    return Scaffold(
+    return AppPageScaffold(
+      maxContentWidth: 960,
       appBar: AppBar(
         title: Text(_isEditing ? 'Editar Credencial' : 'Detalhes'),
         actions: [

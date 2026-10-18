@@ -1,3 +1,5 @@
+import 'package:key_budget/core/design_system/widgets/app_card.dart';
+import 'package:key_budget/core/design_system/widgets/app_page_scaffold.dart';
 import 'package:flutter/material.dart';
 import 'package:key_budget/app/utils/app_animations.dart';
 import 'package:key_budget/core/design_system/borders/app_borders.dart';
@@ -25,7 +27,7 @@ class AuthPageLayout extends StatelessWidget {
     final isCompact = MediaQuery.of(context).size.width < 600;
     final horizontalPadding = isCompact ? AppSpacing.md : AppSpacing.xl;
 
-    return Scaffold(
+    return AppPageScaffold(
       backgroundColor: theme.scaffoldBackgroundColor,
       appBar: showBackButton
           ? AppBar(
@@ -101,7 +103,10 @@ class AuthPageLayout extends StatelessWidget {
                       ),
                     ),
                     const SizedBox(height: AppSpacing.xl),
-                    child,
+                    AppCard(
+                      padding: const EdgeInsets.all(AppSpacing.md),
+                      child: child,
+                    ),
                     if (footer != null) ...[
                       const SizedBox(height: AppSpacing.xl),
                       footer!,

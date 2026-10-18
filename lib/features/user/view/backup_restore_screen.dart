@@ -1,3 +1,5 @@
+import 'package:key_budget/core/design_system/widgets/app_card.dart';
+import 'package:key_budget/core/design_system/widgets/app_page_scaffold.dart';
 import 'dart:io';
 import 'dart:typed_data';
 
@@ -7,7 +9,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'package:key_budget/app/widgets/responsive_center.dart';
-import 'package:key_budget/core/design_system/borders/app_borders.dart';
 import 'package:key_budget/core/design_system/spacing/app_spacing.dart';
 import 'package:key_budget/core/design_system/widgets/app_button.dart';
 import 'package:key_budget/core/design_system/widgets/app_text_field.dart';
@@ -601,7 +602,7 @@ class _BackupRestoreScreenState extends ConsumerState<BackupRestoreScreen>
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
+    return AppPageScaffold(
       appBar: AppBar(
         title: const Text('Backups'),
         bottom: TabBar(
@@ -633,7 +634,8 @@ class _BackupRestoreScreenState extends ConsumerState<BackupRestoreScreen>
         ? 'Nenhuma cópia concluída'
         : DateFormat('dd/MM/yyyy HH:mm', 'pt_BR').format(value.toLocal());
 
-    return Card(
+    return AppCard(
+      padding: EdgeInsets.zero,
       child: Padding(
         padding: const EdgeInsets.all(AppSpacing.md),
         child: Column(
@@ -780,11 +782,8 @@ class _BackupRestoreScreenState extends ConsumerState<BackupRestoreScreen>
     return ListView(
       padding: const EdgeInsets.all(AppSpacing.md),
       children: [
-        Card(
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(AppBorders.radiusM),
-          ),
-          color: Theme.of(context).colorScheme.primaryContainer.withAlpha(50),
+        AppCard(
+          padding: EdgeInsets.zero,
           child: const Padding(
             padding: EdgeInsets.all(AppSpacing.md),
             child: Row(
@@ -877,10 +876,8 @@ class _BackupRestoreScreenState extends ConsumerState<BackupRestoreScreen>
         ),
         if (_lastBackupResult != null) ...[
           const SizedBox(height: AppSpacing.lg),
-          Card(
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(AppBorders.radiusM),
-            ),
+          AppCard(
+            padding: EdgeInsets.zero,
             child: Padding(
               padding: const EdgeInsets.all(AppSpacing.md),
               child: Column(
@@ -942,10 +939,8 @@ class _BackupRestoreScreenState extends ConsumerState<BackupRestoreScreen>
           style: Theme.of(context).textTheme.bodyMedium,
         ),
         const SizedBox(height: AppSpacing.md),
-        Card(
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(AppBorders.radiusM),
-          ),
+        AppCard(
+          padding: EdgeInsets.zero,
           child: Padding(
             padding: const EdgeInsets.all(AppSpacing.md),
             child: Column(
@@ -1011,10 +1006,8 @@ class _BackupRestoreScreenState extends ConsumerState<BackupRestoreScreen>
   }
 
   Widget _buildPlanPreviewCard(ImportPlan plan) {
-    return Card(
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(AppBorders.radiusM),
-      ),
+    return AppCard(
+      padding: EdgeInsets.zero,
       child: Padding(
         padding: const EdgeInsets.all(AppSpacing.md),
         child: Column(

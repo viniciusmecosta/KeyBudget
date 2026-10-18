@@ -1,3 +1,4 @@
+import 'package:key_budget/core/design_system/widgets/app_page_scaffold.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -161,7 +162,8 @@ class _EditDocumentScreenState extends ConsumerState<EditDocumentScreen> {
           if (mounted) Navigator.of(this.context).pop(result);
         }
       },
-      child: Scaffold(
+      child: AppPageScaffold(
+        maxContentWidth: 760,
         appBar: AppBar(title: const Text('Editar Documento')),
         body: AppAnimations.fadeInFromBottom(
           AppFormPageBody(

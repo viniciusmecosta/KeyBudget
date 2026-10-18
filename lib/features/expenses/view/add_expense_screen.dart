@@ -1,3 +1,4 @@
+import 'package:key_budget/core/design_system/widgets/app_page_scaffold.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_masked_text2/flutter_masked_text2.dart';
@@ -174,7 +175,8 @@ class _AddExpenseScreenState extends ConsumerState<AddExpenseScreen> {
           }
         }
       },
-      child: Scaffold(
+      child: AppPageScaffold(
+        maxContentWidth: 760,
         appBar: AppBar(
           title: Text(_isIncome ? 'Adicionar Receita' : 'Adicionar Despesa'),
         ),

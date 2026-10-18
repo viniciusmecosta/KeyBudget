@@ -1,3 +1,4 @@
+import 'package:key_budget/core/design_system/widgets/app_page_scaffold.dart';
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
@@ -18,20 +19,16 @@ class SavedLogosScreen extends ConsumerWidget {
         return Image.network(
           imagePath,
           fit: BoxFit.cover,
-          errorBuilder: (context, error, stackTrace) => Icon(
-            Icons.broken_image_outlined,
-            color: theme.colorScheme.error,
-          ),
+          errorBuilder: (context, error, stackTrace) =>
+              Icon(Icons.broken_image_outlined, color: theme.colorScheme.error),
         );
       }
       final bytes = base64Decode(imagePath);
       return Image.memory(
         bytes,
         fit: BoxFit.cover,
-        errorBuilder: (context, error, stackTrace) => Icon(
-          Icons.broken_image_outlined,
-          color: theme.colorScheme.error,
-        ),
+        errorBuilder: (context, error, stackTrace) =>
+            Icon(Icons.broken_image_outlined, color: theme.colorScheme.error),
       );
     } catch (_) {
       return Icon(
@@ -47,12 +44,14 @@ class SavedLogosScreen extends ConsumerWidget {
         ? ref.watch(supplierViewModelProvider).userSupplierPhotos
         : ref.watch(credentialViewModelProvider).userCredentialLogos;
 
-    final List<String> logos =
-        rawLogos.where((p) => p.trim().isNotEmpty).toSet().toList();
+    final List<String> logos = rawLogos
+        .where((p) => p.trim().isNotEmpty)
+        .toSet()
+        .toList();
 
     final theme = Theme.of(context);
 
-    return Scaffold(
+    return AppPageScaffold(
       appBar: AppBar(title: const Text('Selecionar Imagem Salva')),
       body: AppAnimations.fadeInFromBottom(
         logos.isEmpty
@@ -121,7 +120,8 @@ class SavedLogosScreen extends ConsumerWidget {
                 },
               ),
 
-        context: context,),
+        context: context,
+      ),
     );
   }
 }

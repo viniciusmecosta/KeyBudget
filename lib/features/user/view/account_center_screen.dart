@@ -1,3 +1,5 @@
+import 'package:key_budget/core/design_system/widgets/app_card.dart';
+import 'package:key_budget/core/design_system/widgets/app_page_scaffold.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:key_budget/app/utils/navigation_utils.dart';
@@ -95,7 +97,7 @@ class _AccountCenterScreenState extends ConsumerState<AccountCenterScreen> {
   Widget build(BuildContext context) {
     final profile = ref.watch(authViewModelProvider).currentUser;
     if (profile == null) {
-      return Scaffold(
+      return AppPageScaffold(
         appBar: AppBar(title: const Text('Conta e recuperação')),
         body: const AppFeedbackPanel(
           title: 'Sessão encerrada',
@@ -117,14 +119,15 @@ class _AccountCenterScreenState extends ConsumerState<AccountCenterScreen> {
         : 'Email e senha';
     final theme = Theme.of(context);
 
-    return Scaffold(
+    return AppPageScaffold(
       appBar: AppBar(title: const Text('Conta e recuperação')),
       body: ResponsiveCenter(
         maxWidth: 700,
         child: ListView(
           padding: const EdgeInsets.all(AppSpacing.md),
           children: [
-            Card(
+            AppCard(
+              padding: EdgeInsets.zero,
               child: Column(
                 children: [
                   ListTile(

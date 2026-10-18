@@ -1,3 +1,4 @@
+import 'package:key_budget/core/design_system/widgets/app_page_scaffold.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -131,7 +132,8 @@ class _AddSupplierScreenState extends ConsumerState<AddSupplierScreen> {
           Navigator.of(context).pop(result);
         }
       },
-      child: Scaffold(
+      child: AppPageScaffold(
+        maxContentWidth: 760,
         appBar: AppBar(title: const Text('Adicionar Fornecedor')),
         body: AppAnimations.fadeInFromBottom(
           Padding(

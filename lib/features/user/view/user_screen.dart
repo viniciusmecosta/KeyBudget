@@ -1,3 +1,5 @@
+import 'package:key_budget/core/design_system/widgets/app_card.dart';
+import 'package:key_budget/core/design_system/widgets/app_page_scaffold.dart';
 import 'dart:convert';
 import 'dart:io';
 
@@ -485,10 +487,8 @@ class UserScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
 
-    return Scaffold(
-      appBar: AppBar(
-        title: Text('Meu Perfil', style: theme.textTheme.titleLarge),
-      ),
+    return AppPageScaffold(
+      appBar: AppBar(title: const Text('Meu perfil')),
       body: SafeArea(
         child: Consumer(
           builder: (context, ref, _) {
@@ -540,15 +540,8 @@ class UserScreen extends ConsumerWidget {
                       ),
                     ),
                   ),
-                  Card(
-                    elevation: 0,
-                    color: theme.colorScheme.surfaceContainerHighest.withValues(
-                      alpha: 0.5,
-                    ),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: AppBorders.borderRadiusL,
-                    ),
-                    clipBehavior: Clip.antiAlias,
+                  AppCard(
+                    padding: EdgeInsets.zero,
                     child: Column(children: children),
                   ),
                 ],

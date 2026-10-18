@@ -1,6 +1,7 @@
+import 'package:key_budget/core/design_system/widgets/app_loading_shimmer.dart';
+import 'package:key_budget/core/design_system/widgets/app_page_scaffold.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:key_budget/app/config/app_theme.dart';
 import 'package:key_budget/app/utils/navigation_utils.dart';
@@ -62,7 +63,7 @@ class _SuppliersScreenState extends ConsumerState<SuppliersScreen> {
     final theme = Theme.of(context);
     final viewModel = ref.watch(supplierViewModelProvider);
 
-    return Scaffold(
+    return AppPageScaffold(
       appBar: AppBar(
         leading: _isSearching
             ? IconButton(
@@ -266,59 +267,58 @@ class SuppliersSkeleton extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
-    final shimmerColor = theme.colorScheme.surface;
 
     return SliverPadding(
       padding: const EdgeInsets.all(AppTheme.defaultPadding),
       sliver: SliverList(
         delegate: SliverChildBuilderDelegate((context, index) {
-          return Container(
-                margin: const EdgeInsets.only(bottom: AppTheme.spaceS),
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: theme.colorScheme.surfaceContainerHighest,
-                  borderRadius: BorderRadius.circular(16),
-                ),
-                child: Row(
-                  children: [
-                    Container(
-                      width: 48,
-                      height: 48,
-                      decoration: BoxDecoration(
-                        color: theme.colorScheme.surface,
-                        shape: BoxShape.circle,
-                      ),
+          return AppLoadingShimmer(
+            child: Container(
+              margin: const EdgeInsets.only(bottom: AppTheme.spaceS),
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: theme.colorScheme.surfaceContainerHighest,
+                borderRadius: BorderRadius.circular(24),
+              ),
+              child: Row(
+                children: [
+                  Container(
+                    width: 48,
+                    height: 48,
+                    decoration: BoxDecoration(
+                      color: theme.colorScheme.surface,
+                      shape: BoxShape.circle,
                     ),
-                    const SizedBox(width: AppTheme.spaceM),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Container(
-                            height: 16,
-                            width: double.infinity,
-                            decoration: BoxDecoration(
-                              color: theme.colorScheme.surface,
-                              borderRadius: BorderRadius.circular(8),
-                            ),
+                  ),
+                  const SizedBox(width: AppTheme.spaceM),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Container(
+                          height: 16,
+                          width: double.infinity,
+                          decoration: BoxDecoration(
+                            color: theme.colorScheme.surface,
+                            borderRadius: BorderRadius.circular(8),
                           ),
-                          const SizedBox(height: 8),
-                          Container(
-                            height: 12,
-                            width: 120,
-                            decoration: BoxDecoration(
-                              color: theme.colorScheme.surface,
-                              borderRadius: BorderRadius.circular(8),
-                            ),
+                        ),
+                        const SizedBox(height: 8),
+                        Container(
+                          height: 12,
+                          width: 120,
+                          decoration: BoxDecoration(
+                            color: theme.colorScheme.surface,
+                            borderRadius: BorderRadius.circular(8),
                           ),
-                        ],
-                      ),
+                        ),
+                      ],
                     ),
-                  ],
-                ),
-              )
-              .animate(onPlay: (controller) => controller.repeat())
-              .shimmer(duration: 1500.ms, color: shimmerColor);
+                  ),
+                ],
+              ),
+            ),
+          );
         }, childCount: 8),
       ),
     );

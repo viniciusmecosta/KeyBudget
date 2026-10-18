@@ -1,3 +1,5 @@
+import 'package:key_budget/core/design_system/widgets/app_card.dart';
+import 'package:key_budget/core/design_system/widgets/app_page_scaffold.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:key_budget/app/navigation/app_destination.dart';
@@ -78,7 +80,7 @@ class _NavigationCustomizationScreenState
   @override
   Widget build(BuildContext context) {
     final user = ref.watch(authViewModelProvider).currentUser;
-    return Scaffold(
+    return AppPageScaffold(
       appBar: AppBar(title: const Text('Personalizar abas')),
       body: ResponsiveCenter(
         maxWidth: 700,
@@ -106,7 +108,8 @@ class _NavigationCustomizationScreenState
                     final fixed =
                         destination == AppDestination.expenses ||
                         destination == AppDestination.credentials;
-                    return Card(
+                    return AppCard(
+                      padding: EdgeInsets.zero,
                       key: ValueKey(destination.id),
                       child: SwitchListTile(
                         secondary: Icon(destination.icon),

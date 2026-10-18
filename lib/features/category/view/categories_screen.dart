@@ -1,6 +1,7 @@
+import 'package:key_budget/core/design_system/widgets/app_page_scaffold.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter_animate/flutter_animate.dart';
+import 'package:key_budget/core/design_system/widgets/app_loading_shimmer.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:key_budget/app/utils/app_animations.dart';
 import 'package:key_budget/app/utils/navigation_utils.dart';
@@ -153,7 +154,7 @@ class _CategoriesScreenState extends ConsumerState<CategoriesScreen> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    return Scaffold(
+    return AppPageScaffold(
       appBar: AppBar(title: const Text('Minhas Categorias')),
       body: SafeArea(
         child: AppAnimations.fadeInFromBottom(
@@ -568,38 +569,37 @@ class CategoriesSkeleton extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
-    final shimmerColor = theme.colorScheme.surface;
 
     return SliverPadding(
       padding: const EdgeInsets.all(AppSpacing.md),
       sliver: SliverList(
         delegate: SliverChildBuilderDelegate((context, index) {
-          return Container(
-                margin: const EdgeInsets.only(bottom: AppSpacing.sm),
-                child: AppCard(
-                  padding: const EdgeInsets.all(AppSpacing.md),
-                  child: Row(
-                    children: [
-                      CircleAvatar(
-                        backgroundColor:
-                            theme.colorScheme.surfaceContainerHighest,
-                      ),
-                      const SizedBox(width: AppSpacing.md),
-                      Expanded(
-                        child: Container(
-                          height: 16,
-                          decoration: BoxDecoration(
-                            color: theme.colorScheme.surfaceContainerHighest,
-                            borderRadius: AppBorders.borderRadiusS,
-                          ),
+          return AppLoadingShimmer(
+            child: Container(
+              margin: const EdgeInsets.only(bottom: AppSpacing.sm),
+              child: AppCard(
+                padding: const EdgeInsets.all(AppSpacing.md),
+                child: Row(
+                  children: [
+                    CircleAvatar(
+                      backgroundColor:
+                          theme.colorScheme.surfaceContainerHighest,
+                    ),
+                    const SizedBox(width: AppSpacing.md),
+                    Expanded(
+                      child: Container(
+                        height: 16,
+                        decoration: BoxDecoration(
+                          color: theme.colorScheme.surfaceContainerHighest,
+                          borderRadius: AppBorders.borderRadiusS,
                         ),
                       ),
-                    ],
-                  ),
+                    ),
+                  ],
                 ),
-              )
-              .animate(onPlay: (controller) => controller.repeat())
-              .shimmer(duration: 1500.ms, color: shimmerColor);
+              ),
+            ),
+          );
         }, childCount: 8),
       ),
     );

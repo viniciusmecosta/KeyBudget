@@ -1,6 +1,7 @@
+import 'package:key_budget/core/design_system/widgets/app_loading_shimmer.dart';
+import 'package:key_budget/core/design_system/widgets/app_page_scaffold.dart';
 import 'package:flutter/material.dart';
 import 'package:key_budget/app/utils/app_animations.dart';
-import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:key_budget/app/config/app_theme.dart';
 import 'package:key_budget/app/utils/navigation_utils.dart';
@@ -72,7 +73,7 @@ class _DocumentsScreenState extends ConsumerState<DocumentsScreen> {
           });
         }
       },
-      child: Scaffold(
+      child: AppPageScaffold(
         appBar: AppBar(
           leading: _isSearching
               ? IconButton(
@@ -222,7 +223,6 @@ class DocumentsListSkeleton extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
-    final shimmerHighlightColor = theme.colorScheme.surface;
 
     return SliverPadding(
       padding: const EdgeInsets.fromLTRB(
@@ -233,67 +233,66 @@ class DocumentsListSkeleton extends ConsumerWidget {
       ),
       sliver: SliverList(
         delegate: SliverChildBuilderDelegate(
-          (context, index) =>
-              Container(
-                    margin: const EdgeInsets.only(bottom: AppSpacing.sm),
-                    padding: const EdgeInsets.all(AppSpacing.md),
+          (context, index) => AppLoadingShimmer(
+            child: Container(
+              margin: const EdgeInsets.only(bottom: AppSpacing.sm),
+              padding: const EdgeInsets.all(AppSpacing.md),
+              decoration: BoxDecoration(
+                color: theme.colorScheme.surfaceContainerHighest,
+                borderRadius: AppBorders.borderRadiusL,
+              ),
+              child: Row(
+                children: [
+                  Container(
+                    width: 40,
+                    height: 40,
                     decoration: BoxDecoration(
-                      color: theme.colorScheme.surfaceContainerHighest,
-                      borderRadius: AppBorders.borderRadiusL,
+                      color: theme.colorScheme.surface,
+                      borderRadius: AppBorders.borderRadiusM,
                     ),
-                    child: Row(
+                  ),
+                  const SizedBox(width: AppSpacing.md),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Container(
-                          width: 40,
-                          height: 40,
+                          height: 16,
+                          width: double.infinity,
                           decoration: BoxDecoration(
                             color: theme.colorScheme.surface,
-                            borderRadius: AppBorders.borderRadiusM,
+                            borderRadius: BorderRadius.circular(
+                              AppTheme.radiusS,
+                            ),
                           ),
                         ),
-                        const SizedBox(width: AppSpacing.md),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Container(
-                                height: 16,
-                                width: double.infinity,
-                                decoration: BoxDecoration(
-                                  color: theme.colorScheme.surface,
-                                  borderRadius: BorderRadius.circular(
-                                    AppTheme.radiusS,
-                                  ),
-                                ),
-                              ),
-                              const SizedBox(height: 8),
-                              Container(
-                                height: 12,
-                                width: 100,
-                                decoration: BoxDecoration(
-                                  color: theme.colorScheme.surface,
-                                  borderRadius: BorderRadius.circular(
-                                    AppTheme.radiusS,
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                        const SizedBox(width: AppSpacing.md),
+                        const SizedBox(height: 8),
                         Container(
-                          width: 24,
-                          height: 24,
+                          height: 12,
+                          width: 100,
                           decoration: BoxDecoration(
                             color: theme.colorScheme.surface,
-                            shape: BoxShape.circle,
+                            borderRadius: BorderRadius.circular(
+                              AppTheme.radiusS,
+                            ),
                           ),
                         ),
                       ],
                     ),
-                  )
-                  .animate(onPlay: (controller) => controller.repeat())
-                  .shimmer(duration: 1500.ms, color: shimmerHighlightColor),
+                  ),
+                  const SizedBox(width: AppSpacing.md),
+                  Container(
+                    width: 24,
+                    height: 24,
+                    decoration: BoxDecoration(
+                      color: theme.colorScheme.surface,
+                      shape: BoxShape.circle,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
           childCount: 8,
         ),
       ),

@@ -1,3 +1,4 @@
+import 'package:key_budget/core/design_system/widgets/app_page_scaffold.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
@@ -91,7 +92,7 @@ class TrashScreen extends ConsumerWidget {
     final entries = userId == null
         ? null
         : ref.watch(trashEntriesProvider(userId));
-    return Scaffold(
+    return AppPageScaffold(
       appBar: AppBar(title: const Text('Lixeira')),
       body: userId == null
           ? const AppFeedbackPanel(

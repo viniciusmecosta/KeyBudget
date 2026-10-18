@@ -1,3 +1,4 @@
+import 'package:key_budget/core/design_system/widgets/app_form_section_heading.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:key_budget/app/widgets/image_picker_widget.dart';
@@ -43,21 +44,7 @@ class CredentialForm extends ConsumerWidget {
   });
 
   Widget _sectionHeader(BuildContext context, String title, IconData icon) {
-    final theme = Theme.of(context);
-    final color = theme.colorScheme.onSurface;
-    return Row(
-      children: [
-        Icon(icon, color: color, size: 20),
-        const SizedBox(width: AppSpacing.sm),
-        Text(
-          title,
-          style: theme.textTheme.titleSmall?.copyWith(
-            fontWeight: FontWeight.bold,
-            color: color,
-          ),
-        ),
-      ],
-    );
+    return AppFormSectionHeading(title: title, icon: icon);
   }
 
   @override
@@ -100,7 +87,10 @@ class CredentialForm extends ConsumerWidget {
               children: [
                 TextButton.icon(
                   onPressed: selectSavedLogo,
-                  icon: const Icon(Icons.collections_bookmark_outlined, size: 18),
+                  icon: const Icon(
+                    Icons.collections_bookmark_outlined,
+                    size: 18,
+                  ),
                   label: const Text('Escolher Salva'),
                 ),
                 if (logoPath != null) ...[
@@ -109,7 +99,9 @@ class CredentialForm extends ConsumerWidget {
                     onPressed: () => onLogoChanged(null),
                     icon: const Icon(Icons.no_photography_outlined, size: 18),
                     label: const Text('Remover'),
-                    style: TextButton.styleFrom(foregroundColor: theme.colorScheme.error),
+                    style: TextButton.styleFrom(
+                      foregroundColor: theme.colorScheme.error,
+                    ),
                   ),
                 ],
               ],
@@ -131,7 +123,10 @@ class CredentialForm extends ConsumerWidget {
                   child: Text('Nenhuma (Principal)'),
                 ),
                 ...availableFolders.map(
-                  (folder) => DropdownMenuItem(value: folder.id, child: Text(folder.name)),
+                  (folder) => DropdownMenuItem(
+                    value: folder.id,
+                    child: Text(folder.name),
+                  ),
                 ),
               ],
               onChanged: isEditing ? onFolderChanged : null,
@@ -145,7 +140,8 @@ class CredentialForm extends ConsumerWidget {
             readOnly: !isEditing,
             textCapitalization: TextCapitalization.sentences,
             textInputAction: TextInputAction.next,
-            validator: (value) => value!.isEmpty ? 'Informe o local ou serviço' : null,
+            validator: (value) =>
+                value!.isEmpty ? 'Informe o local ou serviço' : null,
           ),
           const SizedBox(height: AppSpacing.md),
           _sectionHeader(context, 'ACESSO', Icons.key_outlined),
@@ -156,7 +152,8 @@ class CredentialForm extends ConsumerWidget {
             prefixIcon: Icons.person_outline,
             readOnly: !isEditing,
             textInputAction: TextInputAction.next,
-            validator: (value) => value!.isEmpty ? 'Informe o login ou usuário' : null,
+            validator: (value) =>
+                value!.isEmpty ? 'Informe o login ou usuário' : null,
           ),
           const SizedBox(height: AppSpacing.md),
           PasswordFormField(

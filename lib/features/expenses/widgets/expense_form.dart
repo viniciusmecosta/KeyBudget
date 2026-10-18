@@ -1,3 +1,4 @@
+import 'package:key_budget/core/design_system/widgets/app_form_section_heading.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_masked_text2/flutter_masked_text2.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -452,20 +453,6 @@ class ExpenseForm extends ConsumerWidget {
     IconData icon,
     String title,
   ) {
-    final theme = Theme.of(context);
-    return Row(
-      children: [
-        Icon(icon, color: theme.colorScheme.onSurface, size: 20),
-        const SizedBox(width: AppSpacing.sm),
-        Text(
-          title,
-          style: theme.textTheme.labelMedium?.copyWith(
-            color: theme.colorScheme.onSurface,
-            fontWeight: FontWeight.bold,
-            letterSpacing: 1.2,
-          ),
-        ),
-      ],
-    );
+    return AppFormSectionHeading(title: title, icon: icon);
   }
 }
