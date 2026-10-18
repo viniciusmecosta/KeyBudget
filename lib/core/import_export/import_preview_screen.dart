@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:key_budget/core/design_system/borders/app_borders.dart';
 import 'package:key_budget/core/design_system/spacing/app_spacing.dart';
+import 'package:key_budget/core/design_system/theme/app_semantic_colors.dart';
+import 'package:key_budget/core/design_system/widgets/app_card.dart';
+import 'package:key_budget/core/design_system/widgets/app_page_scaffold.dart';
 import 'package:key_budget/core/models/credential_model.dart';
 import 'package:key_budget/core/models/expense_model.dart';
 import 'package:key_budget/core/models/recurring_expense_model.dart';
@@ -35,7 +38,9 @@ class _ImportPreviewScreenState extends State<ImportPreviewScreen> {
       case 1:
         return widget.plan.lineResults.where((l) => l.isValid).toList();
       case 2:
-        return widget.plan.lineResults.where((l) => l.hasErrors || l.hasWarnings).toList();
+        return widget.plan.lineResults
+            .where((l) => l.hasErrors || l.hasWarnings)
+            .toList();
       default:
         return widget.plan.lineResults;
     }
@@ -88,106 +93,152 @@ class _ImportPreviewScreenState extends State<ImportPreviewScreen> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final plan = widget.plan;
+    final statusColors = theme.extension<AppSemanticColors>()!;
 
-    return Scaffold(
-      appBar: AppBar(
-        title: Text('Prévia: ${plan.fileName}'),
-        elevation: 1,
-      ),
+    return AppPageScaffold(
+      maxContentWidth: 1000,
+      appBar: AppBar(title: Text('Prévia: ${plan.fileName}')),
       body: Column(
         children: [
-
-          Container(
+          Padding(
             padding: const EdgeInsets.all(AppSpacing.md),
-            color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
-            child: Column(
-              children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceAround,
-                  children: [
-                    _buildStatCard('Total', '${plan.totalLines}', theme.colorScheme.onSurface),
-                    _buildStatCard('Válidas', '${plan.validCount}', Colors.green),
-                    if (plan.warningCount > 0)
-                      _buildStatCard('Avisos', '${plan.warningCount}', Colors.orange),
-                    if (plan.invalidCount > 0)
-                      _buildStatCard('Inválidas', '${plan.invalidCount}', Colors.red),
-                  ],
-                ),
-                if (plan.detectedType == CsvImportType.expenses) ...[
-                  const SizedBox(height: AppSpacing.sm),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            child: AppCard(
+              padding: const EdgeInsets.all(AppSpacing.md),
+              child: Column(
+                children: [
+                  Wrap(
+                    alignment: WrapAlignment.spaceAround,
+                    spacing: AppSpacing.lg,
+                    runSpacing: AppSpacing.sm,
                     children: [
-                      if (plan.totalIncomeMinor > 0)
-                        Text(
-                          'Receitas: ${Money.fromCents(plan.totalIncomeMinor).formatBrl()}',
-                          style: const TextStyle(color: Colors.green, fontWeight: FontWeight.bold),
+                      _buildStatCard(
+                        'Total',
+                        '${plan.totalLines}',
+                        theme.colorScheme.onSurface,
+                      ),
+                      _buildStatCard(
+                        'Válidas',
+                        '${plan.validCount}',
+                        statusColors.onSuccessContainer,
+                      ),
+                      if (plan.warningCount > 0)
+                        _buildStatCard(
+                          'Avisos',
+                          '${plan.warningCount}',
+                          statusColors.onWarningContainer,
                         ),
-                      if (plan.totalExpenseMinor > 0)
-                        Text(
-                          'Despesas: ${Money.fromCents(plan.totalExpenseMinor).formatBrl()}',
-                          style: const TextStyle(color: Colors.redAccent, fontWeight: FontWeight.bold),
+                      if (plan.invalidCount > 0)
+                        _buildStatCard(
+                          'Inválidas',
+                          '${plan.invalidCount}',
+                          theme.colorScheme.error,
                         ),
                     ],
                   ),
+                  if (plan.detectedType == CsvImportType.expenses) ...[
+                    const SizedBox(height: AppSpacing.sm),
+                    Wrap(
+                      alignment: WrapAlignment.spaceBetween,
+                      runSpacing: AppSpacing.xs,
+                      children: [
+                        if (plan.totalIncomeMinor > 0)
+                          Text(
+                            'Receitas: ${Money.fromCents(plan.totalIncomeMinor).formatBrl()}',
+                            style: theme.textTheme.labelLarge?.copyWith(
+                              color: statusColors.onSuccessContainer,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        if (plan.totalExpenseMinor > 0)
+                          Text(
+                            'Despesas: ${Money.fromCents(plan.totalExpenseMinor).formatBrl()}',
+                            style: theme.textTheme.labelLarge?.copyWith(
+                              color: theme.colorScheme.error,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                      ],
+                    ),
+                  ],
                 ],
-              ],
+              ),
             ),
           ),
-
           Padding(
-            padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md, vertical: AppSpacing.sm),
-            child: SegmentedButton<int>(
-              segments: [
-                ButtonSegment<int>(value: 0, label: Text('Todas (${plan.totalLines})')),
-                ButtonSegment<int>(value: 1, label: Text('Válidas (${plan.validCount})')),
-                ButtonSegment<int>(
-                  value: 2,
-                  label: Text('Avisos/Erros (${plan.invalidCount + plan.warningCount})'),
+            padding: const EdgeInsets.symmetric(
+              horizontal: AppSpacing.md,
+              vertical: AppSpacing.sm,
+            ),
+            child: Wrap(
+              spacing: AppSpacing.sm,
+              runSpacing: AppSpacing.sm,
+              alignment: WrapAlignment.center,
+              children: [
+                _filterChip(0, 'Todas (${plan.totalLines})'),
+                _filterChip(1, 'Válidas (${plan.validCount})'),
+                _filterChip(
+                  2,
+                  'Avisos/Erros (${plan.invalidCount + plan.warningCount})',
                 ),
               ],
-              selected: {_selectedFilter},
-              onSelectionChanged: (set) => setState(() => _selectedFilter = set.first),
             ),
           ),
-
           Expanded(
             child: _filteredLines.isEmpty
-                ? const Center(child: Text('Nenhum registro correspondente ao filtro.'))
+                ? const Center(
+                    child: Text('Nenhum registro correspondente ao filtro.'),
+                  )
                 : ListView.builder(
                     itemCount: _filteredLines.length,
-                    itemBuilder: (context, index) {
-                      final item = _filteredLines[index];
-                      return _buildLineTile(item, theme);
-                    },
+                    itemBuilder: (context, index) =>
+                        _buildLineTile(_filteredLines[index], theme),
                   ),
           ),
-
           SafeArea(
+            top: false,
             child: Padding(
               padding: const EdgeInsets.all(AppSpacing.md),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: OutlinedButton(
-                      onPressed: _isApplying ? null : () => Navigator.of(context).pop(0),
-                      child: const Text('Cancelar'),
-                    ),
-                  ),
-                  const SizedBox(width: AppSpacing.md),
-                  Expanded(
-                    child: ElevatedButton(
-                      onPressed: (_isApplying || !plan.canProceed) ? null : _onConfirmImport,
-                      child: _isApplying
-                          ? const SizedBox(
-                              height: 20,
-                              width: 20,
-                              child: CircularProgressIndicator(strokeWidth: 2),
-                            )
-                          : Text('Importar Válidas (${plan.validCount})'),
-                    ),
-                  ),
-                ],
+              child: LayoutBuilder(
+                builder: (context, constraints) {
+                  final stackButtons =
+                      constraints.maxWidth < 420 ||
+                      MediaQuery.textScalerOf(context).scale(14) > 18;
+                  final cancel = OutlinedButton(
+                    onPressed: _isApplying
+                        ? null
+                        : () => Navigator.of(context).pop(0),
+                    child: const Text('Cancelar'),
+                  );
+                  final confirm = FilledButton(
+                    onPressed: (_isApplying || !plan.canProceed)
+                        ? null
+                        : _onConfirmImport,
+                    child: _isApplying
+                        ? const SizedBox(
+                            height: 20,
+                            width: 20,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          )
+                        : Text('Importar Válidas (${plan.validCount})'),
+                  );
+                  if (stackButtons) {
+                    return Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        cancel,
+                        const SizedBox(height: AppSpacing.sm),
+                        confirm,
+                      ],
+                    );
+                  }
+                  return Row(
+                    children: [
+                      Expanded(child: cancel),
+                      const SizedBox(width: AppSpacing.md),
+                      Expanded(child: confirm),
+                    ],
+                  );
+                },
               ),
             ),
           ),
@@ -196,12 +247,27 @@ class _ImportPreviewScreenState extends State<ImportPreviewScreen> {
     );
   }
 
+  Widget _filterChip(int value, String label) => FilterChip(
+    label: Text(label),
+    selected: _selectedFilter == value,
+    onSelected: (selected) {
+      if (selected) setState(() => _selectedFilter = value);
+    },
+  );
+
   Widget _buildStatCard(String label, String value, Color color) {
     return Column(
+      mainAxisSize: MainAxisSize.min,
       children: [
-        Text(value, style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: color)),
-        const SizedBox(height: 2),
-        Text(label, style: const TextStyle(fontSize: 12, color: Colors.grey)),
+        Text(
+          value,
+          style: Theme.of(context).textTheme.titleMedium?.copyWith(
+            fontWeight: FontWeight.bold,
+            color: color,
+          ),
+        ),
+        const SizedBox(height: AppSpacing.xs),
+        Text(label, style: Theme.of(context).textTheme.labelMedium),
       ],
     );
   }
@@ -219,11 +285,14 @@ class _ImportPreviewScreenState extends State<ImportPreviewScreen> {
       final dateFormatted =
           '${exp.date.day.toString().padLeft(2, "0")}/${exp.date.month.toString().padLeft(2, "0")}/${exp.date.year}';
       subtitle = 'Data: $dateFormatted';
+      final statusColors = theme.extension<AppSemanticColors>()!;
       trailing = Text(
         exp.money.formatBrl(),
-        style: TextStyle(
+        style: theme.textTheme.labelLarge?.copyWith(
           fontWeight: FontWeight.bold,
-          color: (exp.isIncome ?? false) ? Colors.green : Colors.redAccent,
+          color: (exp.isIncome ?? false)
+              ? statusColors.onSuccessContainer
+              : theme.colorScheme.error,
         ),
       );
     } else if (line.parsedItem is Credential) {
@@ -234,23 +303,35 @@ class _ImportPreviewScreenState extends State<ImportPreviewScreen> {
       final rec = line.parsedItem as RecurringExpense;
       title = rec.motivation ?? 'Recorrência';
       subtitle = 'Frequência: ${rec.frequency.nameInPortuguese}';
-      trailing = Text(rec.money.formatBrl(), style: const TextStyle(fontWeight: FontWeight.bold));
+      trailing = Text(
+        rec.money.formatBrl(),
+        style: theme.textTheme.labelLarge?.copyWith(
+          fontWeight: FontWeight.bold,
+        ),
+      );
     } else {
       title = 'Linha ${line.lineNumber} (inválida)';
-      subtitle = line.rawValues.entries.map((e) => '${e.key}: ${e.value}').join(', ');
+      subtitle = line.rawValues.entries
+          .map((e) => '${e.key}: ${e.value}')
+          .join(', ');
     }
 
     return Card(
-      margin: const EdgeInsets.symmetric(horizontal: AppSpacing.md, vertical: 4),
+      margin: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.md,
+        vertical: AppSpacing.xs,
+      ),
       elevation: 0,
       shape: RoundedRectangleBorder(
-        borderRadius: AppBorders.borderRadiusS,
+        borderRadius: AppBorders.borderRadiusL,
         side: BorderSide(
           color: line.hasErrors
-              ? Colors.red.withValues(alpha: 0.5)
+              ? theme.colorScheme.error.withValues(alpha: 0.5)
               : line.hasWarnings
-                  ? Colors.orange.withValues(alpha: 0.5)
-                  : theme.dividerColor.withValues(alpha: 0.2),
+              ? theme.extension<AppSemanticColors>()!.warning.withValues(
+                  alpha: 0.5,
+                )
+              : theme.dividerColor.withValues(alpha: 0.2),
         ),
       ),
       child: Padding(
@@ -261,17 +342,34 @@ class _ImportPreviewScreenState extends State<ImportPreviewScreen> {
             Row(
               children: [
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 6,
+                    vertical: 2,
+                  ),
                   decoration: BoxDecoration(
-                    color: line.hasErrors ? Colors.red.withValues(alpha: 0.1) : Colors.green.withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(4),
+                    color: line.hasErrors
+                        ? theme.colorScheme.errorContainer
+                        : line.hasWarnings
+                        ? theme.extension<AppSemanticColors>()!.warningContainer
+                        : theme
+                              .extension<AppSemanticColors>()!
+                              .successContainer,
+                    borderRadius: AppBorders.borderRadiusS,
                   ),
                   child: Text(
                     '#${line.lineNumber}',
                     style: TextStyle(
                       fontSize: 11,
                       fontWeight: FontWeight.bold,
-                      color: line.hasErrors ? Colors.red : Colors.green,
+                      color: line.hasErrors
+                          ? theme.colorScheme.error
+                          : line.hasWarnings
+                          ? theme
+                                .extension<AppSemanticColors>()!
+                                .onWarningContainer
+                          : theme
+                                .extension<AppSemanticColors>()!
+                                .onSuccessContainer,
                     ),
                   ),
                 ),
@@ -279,7 +377,9 @@ class _ImportPreviewScreenState extends State<ImportPreviewScreen> {
                 Expanded(
                   child: Text(
                     title,
-                    style: const TextStyle(fontWeight: FontWeight.w600),
+                    style: theme.textTheme.bodyMedium?.copyWith(
+                      fontWeight: FontWeight.w600,
+                    ),
                     overflow: TextOverflow.ellipsis,
                   ),
                 ),
@@ -295,7 +395,9 @@ class _ImportPreviewScreenState extends State<ImportPreviewScreen> {
               ...line.errors.map(
                 (err) => Text(
                   '• $err',
-                  style: const TextStyle(fontSize: 12, color: Colors.red),
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: theme.colorScheme.error,
+                  ),
                 ),
               ),
             ],
@@ -304,7 +406,11 @@ class _ImportPreviewScreenState extends State<ImportPreviewScreen> {
               ...line.warnings.map(
                 (warn) => Text(
                   '• $warn',
-                  style: const TextStyle(fontSize: 12, color: Colors.orange),
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: theme
+                        .extension<AppSemanticColors>()!
+                        .onWarningContainer,
+                  ),
                 ),
               ),
             ],
