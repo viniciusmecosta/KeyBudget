@@ -4,37 +4,37 @@ enum AppDestination {
   dashboard(
     id: 'dashboard',
     label: 'Painel',
-    icon: Icons.home_rounded,
+    icon: Icons.home_outlined,
     selectedIcon: Icons.home_rounded,
   ),
   expenses(
     id: 'expenses',
     label: 'Lançamentos',
-    icon: Icons.monetization_on_rounded,
-    selectedIcon: Icons.monetization_on_rounded,
+    icon: Icons.receipt_long_outlined,
+    selectedIcon: Icons.receipt_long_rounded,
   ),
   credentials(
     id: 'credentials',
     label: 'Credenciais',
-    icon: Icons.vpn_key_rounded,
+    icon: Icons.key_outlined,
     selectedIcon: Icons.vpn_key_rounded,
   ),
   documents(
     id: 'documents',
     label: 'Documentos',
-    icon: Icons.folder_copy_rounded,
+    icon: Icons.folder_outlined,
     selectedIcon: Icons.folder_copy_rounded,
   ),
   suppliers(
     id: 'suppliers',
     label: 'Fornecedores',
-    icon: Icons.storefront_rounded,
+    icon: Icons.storefront_outlined,
     selectedIcon: Icons.storefront_rounded,
   ),
   profile(
     id: 'profile',
     label: 'Perfil',
-    icon: Icons.person_rounded,
+    icon: Icons.person_outline_rounded,
     selectedIcon: Icons.person_rounded,
   );
 
