@@ -1,3 +1,4 @@
+import 'package:key_budget/core/design_system/widgets/app_card.dart';
 import 'package:key_budget/core/design_system/widgets/app_page_scaffold.dart';
 import 'dart:convert';
 
@@ -98,23 +99,13 @@ class SavedLogosScreen extends ConsumerWidget {
                 itemCount: logos.length,
                 itemBuilder: (context, index) {
                   final logoPath = logos[index];
-                  return GestureDetector(
-                    onTap: () {
-                      Navigator.of(context).pop(logoPath);
-                    },
-                    child: Card(
-                      elevation: 4,
-                      shadowColor: theme.colorScheme.shadow.withAlpha(
-                        (255 * 0.2).round(),
-                      ),
-                      shape: const CircleBorder(),
-                      clipBehavior: Clip.antiAlias,
-                      child: Container(
-                        color: theme.colorScheme.surfaceContainerHighest
-                            .withAlpha((255 * 0.3).round()),
-                        alignment: Alignment.center,
-                        child: _buildImageWidget(logoPath, theme),
-                      ),
+                  return AppCard(
+                    padding: const EdgeInsets.all(12),
+                    onTap: () => Navigator.of(context).pop(logoPath),
+                    child: Semantics(
+                      label: 'Selecionar logo ${index + 1}',
+                      image: true,
+                      child: Center(child: _buildImageWidget(logoPath, theme)),
                     ),
                   );
                 },

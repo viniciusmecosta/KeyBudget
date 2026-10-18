@@ -1,3 +1,4 @@
+import 'package:key_budget/core/design_system/colors/app_colors.dart';
 import 'package:key_budget/core/design_system/widgets/app_card.dart';
 import 'package:key_budget/core/design_system/widgets/app_page_scaffold.dart';
 import 'package:flutter/material.dart';
@@ -61,6 +62,7 @@ class AuthPageLayout extends StatelessWidget {
                           width: 64,
                           height: 64,
                           decoration: BoxDecoration(
+                            color: AppColors.surfaceLight,
                             borderRadius: AppBorders.borderRadiusL,
                             border: Border.all(
                               color: theme.colorScheme.outlineVariant,

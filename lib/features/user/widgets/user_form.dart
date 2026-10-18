@@ -1,3 +1,4 @@
+import 'package:key_budget/core/design_system/widgets/app_form_section_heading.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:key_budget/app/widgets/image_picker_widget.dart';
@@ -39,30 +40,9 @@ class _UserFormState extends ConsumerState<UserForm> {
   );
 
   Widget _sectionHeader(BuildContext context, String label, IconData icon) {
-    final theme = Theme.of(context);
-    final color = theme.brightness == Brightness.dark ? Colors.white : Colors.black87;
     return Padding(
       padding: const EdgeInsets.only(top: AppSpacing.lg, bottom: AppSpacing.sm),
-      child: Row(
-        children: [
-          Icon(icon, color: color, size: 20),
-          const SizedBox(width: AppSpacing.sm),
-          Text(
-            label,
-            style: theme.textTheme.titleSmall?.copyWith(
-              color: color,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-          const SizedBox(width: AppSpacing.sm),
-          Expanded(
-            child: Divider(
-              color: theme.colorScheme.primary.withValues(alpha: 0.25),
-              thickness: 1,
-            ),
-          ),
-        ],
-      ),
+      child: AppFormSectionHeading(title: label, icon: icon),
     );
   }
 
@@ -88,10 +68,12 @@ class _UserFormState extends ConsumerState<UserForm> {
                 onPressed: () => widget.onAvatarChanged(null),
                 icon: const Icon(Icons.no_photography_outlined, size: 18),
                 label: const Text('Remover foto'),
-                style: TextButton.styleFrom(foregroundColor: theme.colorScheme.error),
+                style: TextButton.styleFrom(
+                  foregroundColor: theme.colorScheme.error,
+                ),
               ),
             ),
-          _sectionHeader(context, 'INFORMAÇÕES PESSOAIS', Icons.person_outline),
+          _sectionHeader(context, 'Informações pessoais', Icons.person_outline),
           AppTextField(
             controller: widget.nameController,
             label: 'Nome completo *',
@@ -110,7 +92,7 @@ class _UserFormState extends ConsumerState<UserForm> {
             keyboardType: TextInputType.phone,
             textInputAction: TextInputAction.done,
           ),
-          _sectionHeader(context, 'SEGURANÇA', Icons.lock_outline),
+          _sectionHeader(context, 'Segurança', Icons.lock_outline),
           Theme(
             data: theme.copyWith(dividerColor: Colors.transparent),
             child: ExpansionTile(
@@ -122,7 +104,9 @@ class _UserFormState extends ConsumerState<UserForm> {
               ),
               title: Text(
                 'Alterar Senha',
-                style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600),
+                style: theme.textTheme.titleMedium?.copyWith(
+                  fontWeight: FontWeight.w600,
+                ),
               ),
               subtitle: Text(
                 'Toque para expandir',
@@ -153,8 +137,7 @@ class _UserFormState extends ConsumerState<UserForm> {
                 PasswordFormField(
                   controller: widget.confirmPasswordController,
                   labelText: 'Confirmar Nova Senha',
-                  validator: (value) =>
-                      value != widget.passwordController.text
+                  validator: (value) => value != widget.passwordController.text
                       ? 'As senhas não coincidem'
                       : null,
                 ),

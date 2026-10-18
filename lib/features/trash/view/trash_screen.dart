@@ -1,3 +1,4 @@
+import 'package:key_budget/core/design_system/widgets/app_card.dart';
 import 'package:key_budget/core/design_system/widgets/app_page_scaffold.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -122,7 +123,8 @@ class TrashScreen extends ConsumerWidget {
                             const SizedBox(height: AppSpacing.sm),
                         itemBuilder: (context, index) {
                           final entry = items[index];
-                          return Card(
+                          return AppCard(
+                            padding: EdgeInsets.zero,
                             child: ListTile(
                               title: Text(entry.title),
                               subtitle: Text(
