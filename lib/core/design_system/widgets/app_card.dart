@@ -1,3 +1,4 @@
+import 'package:key_budget/core/design_system/surfaces/app_surfaces.dart';
 import 'package:flutter/material.dart';
 import 'package:key_budget/core/design_system/borders/app_borders.dart';
 import 'package:key_budget/core/design_system/spacing/app_spacing.dart';
@@ -16,26 +17,10 @@ class AppCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final dark = theme.brightness == Brightness.dark;
     return Card(
       clipBehavior: Clip.antiAlias,
       child: Ink(
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [
-              theme.colorScheme.surface,
-              Color.alphaBlend(
-                theme.colorScheme.primary.withValues(
-                  alpha: dark ? 0.06 : 0.035,
-                ),
-                theme.colorScheme.surface,
-              ),
-            ],
-          ),
-        ),
+        decoration: AppSurfaces.panel(context),
         child: InkWell(
           onTap: onTap,
           borderRadius: AppBorders.borderRadiusL,

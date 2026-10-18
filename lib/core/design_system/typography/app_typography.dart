@@ -16,11 +16,9 @@ class AppTypography {
         : AppColors.onSurfaceVariantLight;
 
     final isTestEnv = Platform.environment.containsKey('FLUTTER_TEST');
-    final base = isTestEnv
-        ? baseTheme.apply(fontFamily: 'Inter')
-        : GoogleFonts.interTextTheme(baseTheme);
+    final base = baseTheme;
 
-    return base.copyWith(
+    final styled = base.copyWith(
       displayLarge: TextStyle(
         fontWeight: FontWeight.w800,
         color: textColor,
@@ -108,5 +106,8 @@ class AppTypography {
         fontWeight: FontWeight.w500,
       ),
     );
+    return isTestEnv
+        ? styled.apply(fontFamily: 'Inter')
+        : GoogleFonts.interTextTheme(styled);
   }
 }

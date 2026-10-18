@@ -105,6 +105,13 @@ class AppTheme {
         brightness: isDark ? Brightness.dark : Brightness.light,
         primary: primaryColor,
         onPrimary: onPrimaryColor,
+        primaryContainer: Color.alphaBlend(
+          primaryColor.withValues(alpha: 0.10),
+          surfaceColor,
+        ),
+        onPrimaryContainer: onSurfaceColor,
+        secondaryContainer: surfaceContainerHighestColor,
+        onSecondaryContainer: onSurfaceColor,
         secondary: AppColors.secondary,
         onSecondary: Colors.white,
         tertiary: AppColors.tertiary,
@@ -122,6 +129,29 @@ class AppTheme {
         ),
       ),
       textTheme: textTheme,
+      popupMenuTheme: PopupMenuThemeData(
+        color: surfaceColor,
+        surfaceTintColor: Colors.transparent,
+        shape: RoundedRectangleBorder(borderRadius: AppBorders.borderRadiusM),
+        elevation: 3,
+      ),
+      datePickerTheme: DatePickerThemeData(
+        backgroundColor: surfaceColor,
+        surfaceTintColor: Colors.transparent,
+        shape: RoundedRectangleBorder(borderRadius: AppBorders.borderRadiusXL),
+        headerBackgroundColor: surfaceContainerHighestColor,
+        headerForegroundColor: onSurfaceColor,
+      ),
+      navigationRailTheme: NavigationRailThemeData(
+        backgroundColor: surfaceColor,
+        indicatorColor: primaryColor.withValues(alpha: 0.12),
+        selectedIconTheme: IconThemeData(color: primaryColor),
+        unselectedIconTheme: IconThemeData(color: onSurfaceVariantColor),
+        selectedLabelTextStyle: textTheme.labelMedium?.copyWith(
+          color: primaryColor,
+        ),
+        unselectedLabelTextStyle: textTheme.labelMedium,
+      ),
       dialogTheme: DialogThemeData(
         backgroundColor: surfaceColor,
         surfaceTintColor: Colors.transparent,
