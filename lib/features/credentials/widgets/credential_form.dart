@@ -1,3 +1,4 @@
+import 'package:key_budget/app/utils/navigation_utils.dart';
 import 'package:key_budget/core/design_system/widgets/app_form_section_heading.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -56,8 +57,9 @@ class CredentialForm extends ConsumerWidget {
     );
 
     void selectSavedLogo() async {
-      final selectedLogo = await Navigator.of(context).push<String>(
-        MaterialPageRoute(builder: (_) => const SavedLogosScreen()),
+      final selectedLogo = await NavigationUtils.push<String>(
+        context,
+        const SavedLogosScreen(),
       );
       if (selectedLogo != null) {
         onLogoChanged(selectedLogo);

@@ -152,6 +152,7 @@ class _AddCredentialScreenState extends ConsumerState<AddCredentialScreen> {
               ),
             ],
           ),
+          animationStyle: AppAnimations.routeStyle(context),
         );
         if (shouldPop ?? false) {
           if (context.mounted) {

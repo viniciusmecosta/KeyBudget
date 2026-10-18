@@ -155,6 +155,7 @@ class _EditDocumentScreenState extends ConsumerState<EditDocumentScreen> {
               ),
             ],
           ),
+          animationStyle: AppAnimations.routeStyle(context),
         );
         if (shouldPop == true && mounted) {
           setState(() => _hasUnsavedChanges = false);

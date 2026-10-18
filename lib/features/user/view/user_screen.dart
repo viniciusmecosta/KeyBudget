@@ -1,3 +1,4 @@
+import 'package:key_budget/app/utils/app_animations.dart';
 import 'package:key_budget/core/design_system/widgets/app_card.dart';
 import 'package:key_budget/core/design_system/widgets/app_page_scaffold.dart';
 import 'dart:convert';
@@ -291,6 +292,7 @@ class UserScreen extends ConsumerWidget {
           );
         },
       ),
+      sheetAnimationStyle: AppAnimations.routeStyle(context),
     );
   }
 
@@ -356,13 +358,21 @@ class UserScreen extends ConsumerWidget {
                           selected: isSelected,
                           diameter: 50,
                           onPressed: () async {
-                            if (user != null) {
-                              await authViewModel.updateUser(
-                                name: user.name,
-                                themeColor: colorOption.colorValue,
+                            if (user == null) return;
+                            final result = await authViewModel.updateUser(
+                              name: user.name,
+                              themeColor: colorOption.colorValue,
+                            );
+                            if (!ctx.mounted) return;
+                            if (!result.profileUpdated) {
+                              SnackbarService.showError(
+                                ctx,
+                                result.errorMessage ??
+                                    'Não foi possível atualizar a cor do tema. Tente novamente.',
                               );
+                              return;
                             }
-                            if (context.mounted) Navigator.pop(context);
+                            Navigator.pop(ctx);
                           },
                         ),
                         const SizedBox(height: 8),
@@ -385,6 +395,7 @@ class UserScreen extends ConsumerWidget {
           ),
         );
       },
+      sheetAnimationStyle: AppAnimations.routeStyle(context),
     );
   }
 
@@ -467,6 +478,7 @@ class UserScreen extends ConsumerWidget {
           ),
         );
       },
+      sheetAnimationStyle: AppAnimations.routeStyle(context),
     );
   }
 
@@ -480,6 +492,7 @@ class UserScreen extends ConsumerWidget {
       isScrollControlled: true,
       showDragHandle: true,
       builder: (_) => DashboardLayoutEditor(userId: userId, initial: layout),
+      sheetAnimationStyle: AppAnimations.routeStyle(context),
     );
   }
 
@@ -870,6 +883,7 @@ class UserScreen extends ConsumerWidget {
                               ),
                             ],
                           ),
+                          animationStyle: AppAnimations.routeStyle(context),
                         );
                       },
                     ),

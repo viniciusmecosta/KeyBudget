@@ -259,6 +259,7 @@ class _CredentialDetailScreenState extends ConsumerState<CredentialDetailScreen>
           ),
         ),
       ),
+      sheetAnimationStyle: AppAnimations.routeStyle(context),
     );
   }
 

@@ -139,6 +139,7 @@ class _AddDocumentScreenState extends ConsumerState<AddDocumentScreen> {
               ),
             ],
           ),
+          animationStyle: AppAnimations.routeStyle(context),
         );
         if (shouldPop ?? false) {
           if (context.mounted) {

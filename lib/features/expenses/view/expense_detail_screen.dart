@@ -1,3 +1,4 @@
+import 'package:key_budget/app/utils/navigation_utils.dart';
 import 'package:key_budget/core/design_system/widgets/app_page_scaffold.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -167,6 +168,7 @@ class _ExpenseDetailScreenState extends ConsumerState<ExpenseDetailScreen> {
             ],
           ),
         ),
+        sheetAnimationStyle: AppAnimations.routeStyle(context),
       );
     } else {
       _executeDelete(deleteGroup: false);
@@ -367,11 +369,9 @@ class _ExpenseDetailScreenState extends ConsumerState<ExpenseDetailScreen> {
                                 borderRadius: BorderRadius.circular(24),
                                 onTap: () {
                                   if (!isCurrent) {
-                                    Navigator.of(context).pushReplacement(
-                                      MaterialPageRoute(
-                                        builder: (_) =>
-                                            ExpenseDetailScreen(expense: e),
-                                      ),
+                                    NavigationUtils.pushReplacement<void, void>(
+                                      context,
+                                      ExpenseDetailScreen(expense: e),
                                     );
                                   }
                                 },

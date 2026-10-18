@@ -126,6 +126,7 @@ class _AddSupplierScreenState extends ConsumerState<AddSupplierScreen> {
               ),
             ],
           ),
+          animationStyle: AppAnimations.routeStyle(context),
         );
         if (shouldPop == true && context.mounted) {
           setState(() => _hasUnsavedChanges = false);

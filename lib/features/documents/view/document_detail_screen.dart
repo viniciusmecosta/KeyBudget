@@ -1,3 +1,4 @@
+import 'package:key_budget/app/utils/app_animations.dart';
 import 'package:key_budget/core/design_system/surfaces/app_surfaces.dart';
 import 'package:key_budget/core/design_system/widgets/app_form_section_heading.dart';
 import 'package:key_budget/core/design_system/widgets/app_page_scaffold.dart';
@@ -91,6 +92,7 @@ class DocumentDetailScreen extends ConsumerWidget {
                     ),
                   ],
                 ),
+                animationStyle: AppAnimations.routeStyle(context),
               );
               if (confirmed != true || !context.mounted) return;
 
@@ -445,10 +447,9 @@ class DocumentDetailScreen extends ConsumerWidget {
                   },
                   child: const Text('Definir como principal'),
                 ),
-                onTap: () => Navigator.of(context).pushReplacement(
-                  MaterialPageRoute(
-                    builder: (_) => DocumentDetailScreen(document: v),
-                  ),
+                onTap: () => NavigationUtils.pushReplacement<void, void>(
+                  context,
+                  DocumentDetailScreen(document: v),
                 ),
               ),
               if (!isLast)

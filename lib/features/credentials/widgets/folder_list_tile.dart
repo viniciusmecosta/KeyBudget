@@ -1,3 +1,4 @@
+import 'package:key_budget/app/utils/app_animations.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:key_budget/core/design_system/borders/app_borders.dart';
@@ -72,6 +73,7 @@ class FolderListTile extends ConsumerWidget {
                     ],
                   ),
                 ),
+                sheetAnimationStyle: AppAnimations.routeStyle(context),
               );
             },
           ),

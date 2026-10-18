@@ -61,6 +61,7 @@ class _AddEditCategoryScreenState extends ConsumerState<AddEditCategoryScreen> {
           ),
         ],
       ),
+      animationStyle: AppAnimations.routeStyle(context),
     );
     if (shouldDelete != true || !mounted) return;
 
@@ -168,6 +169,7 @@ class _AddEditCategoryScreenState extends ConsumerState<AddEditCategoryScreen> {
               ),
             ],
           ),
+          animationStyle: AppAnimations.routeStyle(context),
         );
         if (shouldPop ?? false) {
           if (context.mounted) {

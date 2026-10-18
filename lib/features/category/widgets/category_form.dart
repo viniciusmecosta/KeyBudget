@@ -1,3 +1,4 @@
+import 'package:key_budget/app/utils/app_animations.dart';
 import 'package:key_budget/core/design_system/widgets/app_card.dart';
 import 'package:flutter/material.dart';
 import 'package:key_budget/core/design_system/widgets/app_color_choice.dart';
@@ -110,6 +111,7 @@ class CategoryForm extends ConsumerWidget {
                         selectedColor: displayColor,
                         selectedIcon: selectedIcon,
                       ),
+                      sheetAnimationStyle: AppAnimations.routeStyle(context),
                     );
                     if (icon != null) {
                       onIconChanged(icon);
@@ -143,6 +145,7 @@ class CategoryForm extends ConsumerWidget {
                       context: context,
                       builder: (_) =>
                           ColorPickerWidget(initialColor: displayColor),
+                      animationStyle: AppAnimations.routeStyle(context),
                     );
                     if (color != null) {
                       onColorChanged(color);

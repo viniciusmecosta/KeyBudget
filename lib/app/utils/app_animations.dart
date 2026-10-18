@@ -20,6 +20,15 @@ class AppAnimations {
   static Duration durationFor(BuildContext context, Duration duration) =>
       isReducedMotion(context) ? Duration.zero : duration;
 
+  static AnimationStyle routeStyle(BuildContext context) =>
+      isReducedMotion(context)
+      ? AnimationStyle.noAnimation
+      : AnimationStyle(
+          duration: transition,
+          reverseDuration: transition,
+          curve: curve,
+        );
+
   static Widget fadeInFromBottom(
     Widget child, {
     Key? key,

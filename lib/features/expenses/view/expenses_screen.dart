@@ -84,6 +84,7 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen> {
       builder: (context) {
         return const CategoryFilterModal();
       },
+      sheetAnimationStyle: AppAnimations.routeStyle(context),
     );
   }
 
@@ -568,7 +569,10 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen> {
               mainAxisSize: MainAxisSize.min,
               children: [
                 AnimatedSize(
-                  duration: const Duration(milliseconds: 300),
+                  duration: AppAnimations.durationFor(
+                    context,
+                    const Duration(milliseconds: 300),
+                  ),
                   child: _isSearching
                       ? Container(
                           padding: const EdgeInsets.symmetric(

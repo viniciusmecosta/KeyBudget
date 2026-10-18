@@ -1,3 +1,4 @@
+import 'package:key_budget/app/utils/app_animations.dart';
 import 'package:key_budget/core/design_system/widgets/app_card.dart';
 import 'package:key_budget/core/design_system/widgets/app_page_scaffold.dart';
 import 'package:flutter/material.dart';
@@ -68,6 +69,7 @@ class TrashScreen extends ConsumerWidget {
           ),
         ],
       ),
+      animationStyle: AppAnimations.routeStyle(context),
     );
     if (confirmed != true || !context.mounted) return;
     try {

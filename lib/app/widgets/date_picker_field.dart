@@ -1,3 +1,4 @@
+import 'package:key_budget/core/design_system/widgets/app_date_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
@@ -33,12 +34,11 @@ class DatePickerField extends ConsumerWidget {
   }
 
   Future<void> _pickDate(BuildContext context) async {
-    final pickedDate = await showDatePicker(
+    final pickedDate = await showAppDatePicker(
       context: context,
       initialDate: selectedDate,
       firstDate: DateTime(2000),
       lastDate: DateTime(2100),
-      locale: const Locale('pt', 'BR'),
     );
     if (pickedDate != null && pickedDate != selectedDate) {
       onDateSelected(pickedDate);
@@ -54,7 +54,9 @@ class DatePickerField extends ConsumerWidget {
         decoration: InputDecoration(
           labelText: label,
           prefixIcon: const Icon(Icons.calendar_today_outlined),
-          suffixIcon: isEditing ? const Icon(Icons.edit_calendar_outlined, size: 20) : null,
+          suffixIcon: isEditing
+              ? const Icon(Icons.edit_calendar_outlined, size: 20)
+              : null,
         ),
         child: Text(
           _formatDate(selectedDate),

@@ -1,3 +1,4 @@
+import 'package:key_budget/app/utils/navigation_utils.dart';
 import 'package:key_budget/core/design_system/widgets/app_card.dart';
 import 'package:key_budget/core/design_system/widgets/app_page_scaffold.dart';
 import 'package:flutter/material.dart';
@@ -78,7 +79,7 @@ class _GlobalSearchScreenState extends ConsumerState<GlobalSearchScreen> {
         supplier: result.item as Supplier,
       ),
     };
-    Navigator.of(context).push(MaterialPageRoute<void>(builder: (_) => page));
+    NavigationUtils.push<void>(context, page);
   }
 
   Future<void> _toggleFavorite(

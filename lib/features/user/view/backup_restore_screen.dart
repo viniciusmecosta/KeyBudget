@@ -1,3 +1,4 @@
+import 'package:key_budget/app/utils/app_animations.dart';
 import 'package:key_budget/core/design_system/widgets/app_card.dart';
 import 'package:key_budget/core/design_system/widgets/app_page_scaffold.dart';
 import 'dart:io';
@@ -511,6 +512,7 @@ class _BackupRestoreScreenState extends ConsumerState<BackupRestoreScreen>
           ),
         ],
       ),
+      animationStyle: AppAnimations.routeStyle(context),
     );
 
     if (confirmed != true) return;
@@ -579,6 +581,7 @@ class _BackupRestoreScreenState extends ConsumerState<BackupRestoreScreen>
                 ),
               ],
             ),
+            animationStyle: AppAnimations.routeStyle(context),
           );
         } else {
           SnackbarService.showError(

@@ -108,8 +108,8 @@ class _AnimatedListItemState extends ConsumerState<AnimatedListItem>
       ],
     ).animate(CurvedAnimation(parent: _shakeController, curve: Curves.easeOut));
 
-    _highlightController.forward();
-    _shakeController.forward();
+    _highlightController.value = 1;
+    _editController.value = 1;
   }
 
   @override
@@ -124,12 +124,21 @@ class _AnimatedListItemState extends ConsumerState<AnimatedListItem>
   void didUpdateWidget(covariant AnimatedListItem oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (widget.child.key != oldWidget.child.key) {
-      _highlightController.reset();
-      _highlightController.forward();
-      _editController.reset();
-      _editController.forward();
-      _shakeController.reset();
-      _shakeController.forward();
+      if (AppAnimations.isReducedMotion(context)) {
+        _highlightController.value = 1;
+        _editController.value = 1;
+        _shakeController.value = 1;
+        return;
+      }
+      _highlightController
+        ..reset()
+        ..forward();
+      _editController
+        ..reset()
+        ..forward();
+      _shakeController
+        ..reset()
+        ..forward();
     }
   }
 

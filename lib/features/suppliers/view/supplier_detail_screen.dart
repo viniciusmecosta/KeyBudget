@@ -186,6 +186,7 @@ class _SupplierDetailScreenState extends ConsumerState<SupplierDetailScreen> {
               ),
             ],
           ),
+          animationStyle: AppAnimations.routeStyle(context),
         );
         if (shouldPop == true && mounted) {
           setState(() => _hasUnsavedChanges = false);

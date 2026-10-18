@@ -1,7 +1,6 @@
 import 'package:key_budget/core/design_system/widgets/app_loading_shimmer.dart';
 import 'package:key_budget/core/design_system/widgets/app_page_scaffold.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'package:key_budget/app/utils/app_animations.dart';
@@ -26,7 +25,7 @@ class AnalysisScreen extends ConsumerStatefulWidget {
 }
 
 class _AnalysisScreenState extends ConsumerState<AnalysisScreen> {
-  bool _isFirstLoad = true;
+  final bool _isFirstLoad = true;
   bool _isExporting = false;
 
   @override
@@ -207,6 +206,7 @@ class _AnalysisScreenState extends ConsumerState<AnalysisScreen> {
           ),
         );
       },
+      sheetAnimationStyle: AppAnimations.routeStyle(context),
     );
   }
 
@@ -292,15 +292,6 @@ class _AnalysisScreenState extends ConsumerState<AnalysisScreen> {
                     ),
                   ],
                 ),
-              ).animate(
-                target: _isFirstLoad ? 1.0 : 0.0,
-                onComplete: (controller) {
-                  if (_isFirstLoad) {
-                    setState(() {
-                      _isFirstLoad = false;
-                    });
-                  }
-                },
               ),
       ),
     );

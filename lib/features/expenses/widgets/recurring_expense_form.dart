@@ -1,3 +1,5 @@
+import 'package:key_budget/app/utils/navigation_utils.dart';
+import 'package:key_budget/app/utils/app_animations.dart';
 import 'package:key_budget/core/design_system/surfaces/app_surfaces.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_masked_text2/flutter_masked_text2.dart';
@@ -150,9 +152,7 @@ class RecurringExpenseForm extends ConsumerWidget {
                       .read(authViewModelProvider)
                       .currentUser
                       ?.id;
-                  await Navigator.of(context).push(
-                    MaterialPageRoute(builder: (_) => const CategoriesScreen()),
-                  );
+                  await NavigationUtils.push(context, const CategoriesScreen());
                   if (userId != null && context.mounted) {
                     await ref
                         .read(categoryViewModelProvider)
@@ -242,7 +242,10 @@ class RecurringExpenseForm extends ConsumerWidget {
             valueListenable: frequency,
             builder: (context, value, child) {
               return AnimatedSize(
-                duration: const Duration(milliseconds: 300),
+                duration: AppAnimations.durationFor(
+                  context,
+                  const Duration(milliseconds: 300),
+                ),
                 curve: Curves.easeInOut,
                 alignment: Alignment.topCenter,
                 child: value == RecurrenceFrequency.monthly
@@ -271,7 +274,10 @@ class RecurringExpenseForm extends ConsumerWidget {
             valueListenable: endDate,
             builder: (context, date, child) {
               return AnimatedSize(
-                duration: const Duration(milliseconds: 300),
+                duration: AppAnimations.durationFor(
+                  context,
+                  const Duration(milliseconds: 300),
+                ),
                 curve: Curves.easeInOut,
                 alignment: Alignment.topCenter,
                 child: date != null
@@ -582,7 +588,10 @@ class RecurringExpenseForm extends ConsumerWidget {
                   ],
                 ),
                 AnimatedSize(
-                  duration: const Duration(milliseconds: 300),
+                  duration: AppAnimations.durationFor(
+                    context,
+                    const Duration(milliseconds: 300),
+                  ),
                   curve: Curves.easeInOut,
                   alignment: Alignment.topCenter,
                   child: count > 0

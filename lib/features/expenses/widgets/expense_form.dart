@@ -1,3 +1,4 @@
+import 'package:key_budget/app/utils/navigation_utils.dart';
 import 'package:key_budget/core/design_system/surfaces/app_surfaces.dart';
 import 'package:key_budget/core/design_system/widgets/app_form_section_heading.dart';
 import 'package:flutter/material.dart';
@@ -269,9 +270,7 @@ class ExpenseForm extends ConsumerWidget {
               onChanged: onCategoryChanged,
               onManageCategories: () async {
                 final userId = ref.read(authViewModelProvider).currentUser?.id;
-                await Navigator.of(context).push(
-                  MaterialPageRoute(builder: (_) => const CategoriesScreen()),
-                );
+                await NavigationUtils.push(context, const CategoriesScreen());
                 if (userId != null && context.mounted) {
                   await ref
                       .read(categoryViewModelProvider)

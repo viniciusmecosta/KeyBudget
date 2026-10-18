@@ -167,6 +167,7 @@ class _AddExpenseScreenState extends ConsumerState<AddExpenseScreen> {
               ),
             ],
           ),
+          animationStyle: AppAnimations.routeStyle(context),
         );
         if (shouldPop ?? false) {
           if (context.mounted) {

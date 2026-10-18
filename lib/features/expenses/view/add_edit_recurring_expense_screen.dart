@@ -200,6 +200,7 @@ class _AddEditRecurringExpenseScreenState
           ),
         );
       },
+      sheetAnimationStyle: AppAnimations.routeStyle(context),
     );
 
     if (result == null || !mounted) return;

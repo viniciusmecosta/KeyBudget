@@ -102,6 +102,7 @@ class _CredentialsScreenState extends ConsumerState<CredentialsScreen> {
           ),
         ],
       ),
+      animationStyle: AppAnimations.routeStyle(context),
     );
     if (confirmed != true || !mounted || !context.mounted) return;
     setState(() => _isProcessing = true);
@@ -238,6 +239,7 @@ class _CredentialsScreenState extends ConsumerState<CredentialsScreen> {
           },
         );
       },
+      animationStyle: AppAnimations.routeStyle(context),
     );
   }
 
@@ -518,6 +520,7 @@ class _CredentialsScreenState extends ConsumerState<CredentialsScreen> {
                     ],
                   ),
                 ),
+                sheetAnimationStyle: AppAnimations.routeStyle(context),
               );
             }
           },

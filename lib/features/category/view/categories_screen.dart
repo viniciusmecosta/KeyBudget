@@ -124,6 +124,7 @@ class _CategoriesScreenState extends ConsumerState<CategoriesScreen> {
           );
         },
       ),
+      animationStyle: AppAnimations.routeStyle(context),
     );
     controller.dispose();
     if (chosenLimit == null || !mounted) return;
