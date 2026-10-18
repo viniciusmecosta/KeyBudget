@@ -26,7 +26,7 @@ class AuthPageLayout extends StatelessWidget {
     final horizontalPadding = isCompact ? AppSpacing.md : AppSpacing.xl;
 
     return Scaffold(
-      backgroundColor: theme.colorScheme.surface,
+      backgroundColor: theme.scaffoldBackgroundColor,
       appBar: showBackButton
           ? AppBar(
               backgroundColor: Colors.transparent,
@@ -69,14 +69,15 @@ class AuthPageLayout extends StatelessWidget {
                           child: Image.asset(
                             'assets/icon/logov2.png',
                             fit: BoxFit.cover,
-                            errorBuilder: (context, error, stackTrace) => Container(
-                              color: theme.colorScheme.primary,
-                              child: const Icon(
-                                Icons.account_balance_wallet_rounded,
-                                size: 32,
-                                color: Colors.white,
-                              ),
-                            ),
+                            errorBuilder: (context, error, stackTrace) =>
+                                Container(
+                                  color: theme.colorScheme.primary,
+                                  child: const Icon(
+                                    Icons.account_balance_wallet_rounded,
+                                    size: 32,
+                                    color: Colors.white,
+                                  ),
+                                ),
                           ),
                         ),
                       ),
@@ -111,7 +112,8 @@ class AuthPageLayout extends StatelessWidget {
             ),
           ),
 
-          context: context,),
+          context: context,
+        ),
       ),
     );
   }

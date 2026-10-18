@@ -122,13 +122,33 @@ class AppTheme {
         ),
       ),
       textTheme: textTheme,
+      dialogTheme: DialogThemeData(
+        backgroundColor: surfaceColor,
+        surfaceTintColor: Colors.transparent,
+        shape: RoundedRectangleBorder(borderRadius: AppBorders.borderRadiusXL),
+      ),
+      bottomSheetTheme: BottomSheetThemeData(
+        backgroundColor: surfaceColor,
+        surfaceTintColor: Colors.transparent,
+        shape: RoundedRectangleBorder(
+          borderRadius: AppBorders.borderRadiusVerticalXL,
+        ),
+      ),
+      chipTheme: ChipThemeData(
+        backgroundColor: surfaceColor,
+        selectedColor: primaryColor.withValues(alpha: 0.14),
+        side: BorderSide(color: primaryColor.withValues(alpha: 0.12)),
+        shape: const StadiumBorder(),
+        labelStyle: textTheme.labelLarge,
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      ),
       appBarTheme: AppBarTheme(
         backgroundColor: Colors.transparent,
         elevation: 0,
         scrolledUnderElevation: 0.0,
-        centerTitle: true,
+        centerTitle: false,
         iconTheme: IconThemeData(color: onSurfaceColor),
-        titleTextStyle: textTheme.titleLarge,
+        titleTextStyle: textTheme.headlineLarge,
         systemOverlayStyle: isDark
             ? SystemUiOverlayStyle.light
             : SystemUiOverlayStyle.dark,
@@ -155,6 +175,8 @@ class AppTheme {
       floatingActionButtonTheme: FloatingActionButtonThemeData(
         backgroundColor: filledPrimaryColor,
         foregroundColor: Colors.white,
+        shape: const CircleBorder(),
+        elevation: 3,
       ),
       outlinedButtonTheme: OutlinedButtonThemeData(
         style: OutlinedButton.styleFrom(
@@ -219,11 +241,13 @@ class AppTheme {
         hintStyle: textTheme.bodyMedium?.copyWith(color: onSurfaceVariantColor),
       ),
       cardTheme: CardThemeData(
-        elevation: 0,
+        elevation: 1,
+        shadowColor: primaryColor.withValues(alpha: 0.08),
+        surfaceTintColor: Colors.transparent,
         shape: RoundedRectangleBorder(
           borderRadius: AppBorders.borderRadiusL,
           side: BorderSide(
-            color: onSurfaceColor.withAlpha((255 * 0.1).round()),
+            color: isDark ? primaryColor.withValues(alpha: 0.18) : Colors.white,
             width: 1,
           ),
         ),

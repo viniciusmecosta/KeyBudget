@@ -157,14 +157,14 @@ class _LockScreenState extends ConsumerState<LockScreen>
             end: Alignment.bottomRight,
             colors: isDark
                 ? [
-                    const Color(0xFF0F172A),
-                    const Color(0xFF1E293B),
-                    const Color(0xFF0F172A),
+                    theme.scaffoldBackgroundColor,
+                    theme.colorScheme.surface,
+                    theme.scaffoldBackgroundColor,
                   ]
                 : [
-                    const Color(0xFFF1F5F9),
-                    const Color(0xFFE2E8F0),
-                    const Color(0xFFF1F5F9),
+                    theme.scaffoldBackgroundColor,
+                    theme.colorScheme.surfaceContainerHighest,
+                    theme.scaffoldBackgroundColor,
                   ],
           ),
         ),

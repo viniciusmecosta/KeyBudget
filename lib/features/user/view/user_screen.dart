@@ -41,7 +41,7 @@ class ThemeColorOption {
 }
 
 const List<ThemeColorOption> _themeColors = [
-  ThemeColorOption('Roxo (Padrão)', 0xFF1E40AF),
+  ThemeColorOption('Azul vidro (Padrão)', 0xFF0058D9),
   ThemeColorOption('Azul', 0xFF2563EB),
   ThemeColorOption('Verde', 0xFF15803D),
   ThemeColorOption('Vermelho', 0xFFB91C1C),
