@@ -1,3 +1,4 @@
+import 'package:key_budget/app/utils/app_animations.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -308,7 +309,10 @@ class DashboardMonthlyChart extends ConsumerWidget {
                           borderData: FlBorderData(show: false),
                           barGroups: barGroups,
                         ),
-                        duration: const Duration(milliseconds: 300),
+                        duration: AppAnimations.durationFor(
+                          context,
+                          const Duration(milliseconds: 300),
+                        ),
                         curve: Curves.easeInOut,
                       ),
               ),

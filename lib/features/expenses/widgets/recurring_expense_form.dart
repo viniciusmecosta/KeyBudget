@@ -1,3 +1,6 @@
+import 'package:key_budget/app/utils/navigation_utils.dart';
+import 'package:key_budget/app/utils/app_animations.dart';
+import 'package:key_budget/core/design_system/surfaces/app_surfaces.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_masked_text2/flutter_masked_text2.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -43,7 +46,7 @@ class RecurringExpenseForm extends ConsumerWidget {
 
   Widget _buildAmountWidget(BuildContext context) {
     final theme = Theme.of(context);
-    final accentColor = Colors.red;
+    final accentColor = theme.colorScheme.primary;
 
     return Container(
       width: double.infinity,
@@ -51,27 +54,13 @@ class RecurringExpenseForm extends ConsumerWidget {
         horizontal: AppSpacing.lg,
         vertical: AppSpacing.lg,
       ),
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [
-            accentColor.withValues(alpha: 0.10),
-            accentColor.withValues(alpha: 0.03),
-          ],
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
-        ),
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(
-          color: accentColor.withValues(alpha: 0.18),
-          width: 1.5,
-        ),
-      ),
+      decoration: AppSurfaces.panel(context),
       child: Column(
         children: [
           Text(
             'Valor por ocorrência',
             style: theme.textTheme.labelMedium?.copyWith(
-              color: accentColor.withValues(alpha: 0.8),
+              color: theme.colorScheme.onSurfaceVariant,
               fontWeight: FontWeight.w600,
               letterSpacing: 0.5,
             ),
@@ -163,9 +152,7 @@ class RecurringExpenseForm extends ConsumerWidget {
                       .read(authViewModelProvider)
                       .currentUser
                       ?.id;
-                  await Navigator.of(context).push(
-                    MaterialPageRoute(builder: (_) => const CategoriesScreen()),
-                  );
+                  await NavigationUtils.push(context, const CategoriesScreen());
                   if (userId != null && context.mounted) {
                     await ref
                         .read(categoryViewModelProvider)
@@ -255,7 +242,10 @@ class RecurringExpenseForm extends ConsumerWidget {
             valueListenable: frequency,
             builder: (context, value, child) {
               return AnimatedSize(
-                duration: const Duration(milliseconds: 300),
+                duration: AppAnimations.durationFor(
+                  context,
+                  const Duration(milliseconds: 300),
+                ),
                 curve: Curves.easeInOut,
                 alignment: Alignment.topCenter,
                 child: value == RecurrenceFrequency.monthly
@@ -284,7 +274,10 @@ class RecurringExpenseForm extends ConsumerWidget {
             valueListenable: endDate,
             builder: (context, date, child) {
               return AnimatedSize(
-                duration: const Duration(milliseconds: 300),
+                duration: AppAnimations.durationFor(
+                  context,
+                  const Duration(milliseconds: 300),
+                ),
                 curve: Curves.easeInOut,
                 alignment: Alignment.topCenter,
                 child: date != null
@@ -595,7 +588,10 @@ class RecurringExpenseForm extends ConsumerWidget {
                   ],
                 ),
                 AnimatedSize(
-                  duration: const Duration(milliseconds: 300),
+                  duration: AppAnimations.durationFor(
+                    context,
+                    const Duration(milliseconds: 300),
+                  ),
                   curve: Curves.easeInOut,
                   alignment: Alignment.topCenter,
                   child: count > 0

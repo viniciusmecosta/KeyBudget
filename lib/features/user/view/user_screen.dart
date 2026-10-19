@@ -1,3 +1,6 @@
+import 'package:key_budget/app/utils/app_animations.dart';
+import 'package:key_budget/core/design_system/widgets/app_card.dart';
+import 'package:key_budget/core/design_system/widgets/app_page_scaffold.dart';
 import 'dart:convert';
 import 'dart:io';
 
@@ -41,7 +44,7 @@ class ThemeColorOption {
 }
 
 const List<ThemeColorOption> _themeColors = [
-  ThemeColorOption('Roxo (Padrão)', 0xFF1E40AF),
+  ThemeColorOption('Azul vidro (Padrão)', 0xFF0058D9),
   ThemeColorOption('Azul', 0xFF2563EB),
   ThemeColorOption('Verde', 0xFF15803D),
   ThemeColorOption('Vermelho', 0xFFB91C1C),
@@ -289,6 +292,7 @@ class UserScreen extends ConsumerWidget {
           );
         },
       ),
+      sheetAnimationStyle: AppAnimations.routeStyle(context),
     );
   }
 
@@ -354,13 +358,21 @@ class UserScreen extends ConsumerWidget {
                           selected: isSelected,
                           diameter: 50,
                           onPressed: () async {
-                            if (user != null) {
-                              await authViewModel.updateUser(
-                                name: user.name,
-                                themeColor: colorOption.colorValue,
+                            if (user == null) return;
+                            final result = await authViewModel.updateUser(
+                              name: user.name,
+                              themeColor: colorOption.colorValue,
+                            );
+                            if (!ctx.mounted) return;
+                            if (!result.profileUpdated) {
+                              SnackbarService.showError(
+                                ctx,
+                                result.errorMessage ??
+                                    'Não foi possível atualizar a cor do tema. Tente novamente.',
                               );
+                              return;
                             }
-                            if (context.mounted) Navigator.pop(context);
+                            Navigator.pop(ctx);
                           },
                         ),
                         const SizedBox(height: 8),
@@ -383,6 +395,7 @@ class UserScreen extends ConsumerWidget {
           ),
         );
       },
+      sheetAnimationStyle: AppAnimations.routeStyle(context),
     );
   }
 
@@ -465,6 +478,7 @@ class UserScreen extends ConsumerWidget {
           ),
         );
       },
+      sheetAnimationStyle: AppAnimations.routeStyle(context),
     );
   }
 
@@ -478,6 +492,7 @@ class UserScreen extends ConsumerWidget {
       isScrollControlled: true,
       showDragHandle: true,
       builder: (_) => DashboardLayoutEditor(userId: userId, initial: layout),
+      sheetAnimationStyle: AppAnimations.routeStyle(context),
     );
   }
 
@@ -485,10 +500,8 @@ class UserScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
 
-    return Scaffold(
-      appBar: AppBar(
-        title: Text('Meu Perfil', style: theme.textTheme.titleLarge),
-      ),
+    return AppPageScaffold(
+      appBar: AppBar(title: const Text('Meu perfil')),
       body: SafeArea(
         child: Consumer(
           builder: (context, ref, _) {
@@ -540,15 +553,8 @@ class UserScreen extends ConsumerWidget {
                       ),
                     ),
                   ),
-                  Card(
-                    elevation: 0,
-                    color: theme.colorScheme.surfaceContainerHighest.withValues(
-                      alpha: 0.5,
-                    ),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: AppBorders.borderRadiusL,
-                    ),
-                    clipBehavior: Clip.antiAlias,
+                  AppCard(
+                    padding: EdgeInsets.zero,
                     child: Column(children: children),
                   ),
                 ],
@@ -877,6 +883,7 @@ class UserScreen extends ConsumerWidget {
                               ),
                             ],
                           ),
+                          animationStyle: AppAnimations.routeStyle(context),
                         );
                       },
                     ),

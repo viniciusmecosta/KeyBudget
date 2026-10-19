@@ -1,3 +1,4 @@
+import 'package:key_budget/core/design_system/surfaces/app_surfaces.dart';
 import 'package:flutter/material.dart';
 import 'package:key_budget/core/design_system/borders/app_borders.dart';
 import 'package:key_budget/core/design_system/spacing/app_spacing.dart';
@@ -16,18 +17,16 @@ class AppCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final card = Card(
-      child: Padding(padding: padding, child: child),
+    return Card(
+      clipBehavior: Clip.antiAlias,
+      child: Ink(
+        decoration: AppSurfaces.panel(context),
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: AppBorders.borderRadiusL,
+          child: Padding(padding: padding, child: child),
+        ),
+      ),
     );
-
-    if (onTap != null) {
-      return InkWell(
-        onTap: onTap,
-        borderRadius: AppBorders.borderRadiusL,
-        child: card,
-      );
-    }
-
-    return card;
   }
 }

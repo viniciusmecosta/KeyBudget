@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'package:key_budget/core/design_system/colors/app_colors.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
@@ -8,18 +9,16 @@ class AppTypography {
         ? ThemeData.dark().textTheme
         : ThemeData.light().textTheme;
     final textColor = isDark
-        ? const Color(0xFFF8FAFC)
-        : const Color(0xFF0F172A);
+        ? AppColors.onSurfaceDark
+        : AppColors.onSurfaceLight;
     final variantColor = isDark
-        ? const Color(0xFF94A3B8)
-        : const Color(0xFF64748B);
+        ? AppColors.onSurfaceVariantDark
+        : AppColors.onSurfaceVariantLight;
 
     final isTestEnv = Platform.environment.containsKey('FLUTTER_TEST');
-    final base = isTestEnv
-        ? baseTheme.apply(fontFamily: 'Inter')
-        : GoogleFonts.interTextTheme(baseTheme);
+    final base = baseTheme;
 
-    return base.copyWith(
+    final styled = base.copyWith(
       displayLarge: TextStyle(
         fontWeight: FontWeight.w800,
         color: textColor,
@@ -107,5 +106,8 @@ class AppTypography {
         fontWeight: FontWeight.w500,
       ),
     );
+    return isTestEnv
+        ? styled.apply(fontFamily: 'Inter')
+        : GoogleFonts.interTextTheme(styled);
   }
 }

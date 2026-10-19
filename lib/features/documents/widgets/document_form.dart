@@ -1,3 +1,5 @@
+import 'package:key_budget/core/design_system/widgets/app_date_picker.dart';
+import 'package:key_budget/core/design_system/surfaces/app_surfaces.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
@@ -218,15 +220,7 @@ class _DocumentFormState extends ConsumerState<DocumentForm> {
     return widget.attachments.value.map((attachment) {
       return Container(
         margin: const EdgeInsets.only(bottom: AppSpacing.sm),
-        decoration: BoxDecoration(
-          borderRadius: AppBorders.borderRadiusM,
-          border: Border.all(
-            color: theme.colorScheme.outline.withValues(alpha: 0.2),
-          ),
-          color: theme.colorScheme.surfaceContainerHighest.withValues(
-            alpha: 0.4,
-          ),
-        ),
+        decoration: AppSurfaces.panel(context),
         child: ListTile(
           contentPadding: const EdgeInsets.symmetric(
             horizontal: AppSpacing.md,
@@ -282,12 +276,11 @@ class _DocumentFormState extends ConsumerState<DocumentForm> {
     final theme = Theme.of(context);
     return InkWell(
       onTap: () async {
-        final date = await showDatePicker(
+        final date = await showAppDatePicker(
           context: context,
           initialDate: notifier.value ?? DateTime.now(),
           firstDate: DateTime(1900),
           lastDate: DateTime(2100),
-          locale: const Locale('pt', 'BR'),
         );
         if (date != null) {
           setState(() {

@@ -16,15 +16,22 @@ class AppFormSectionHeading extends StatelessWidget {
     final theme = Theme.of(context);
     return Row(
       children: [
-        Icon(icon, color: theme.colorScheme.onSurface, size: 20),
+        Container(
+          padding: const EdgeInsets.all(AppSpacing.xs),
+          decoration: BoxDecoration(
+            color: theme.colorScheme.primary.withValues(alpha: 0.09),
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: Icon(icon, color: theme.colorScheme.primary, size: 20),
+        ),
         const SizedBox(width: AppSpacing.sm),
         Expanded(
           child: Text(
-            title.toUpperCase(),
-            style: theme.textTheme.labelMedium?.copyWith(
+            title,
+            style: theme.textTheme.titleSmall?.copyWith(
               color: theme.colorScheme.onSurface,
               fontWeight: FontWeight.bold,
-              letterSpacing: 1.2,
+              letterSpacing: 0.2,
             ),
           ),
         ),

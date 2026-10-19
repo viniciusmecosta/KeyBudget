@@ -1,3 +1,4 @@
+import 'package:key_budget/core/design_system/widgets/app_page_scaffold.dart';
 import 'package:flutter/material.dart' hide DateUtils;
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -83,6 +84,7 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen> {
       builder: (context) {
         return const CategoryFilterModal();
       },
+      sheetAnimationStyle: AppAnimations.routeStyle(context),
     );
   }
 
@@ -459,7 +461,7 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen> {
           });
         }
       },
-      child: Scaffold(
+      child: AppPageScaffold(
         backgroundColor: theme.scaffoldBackgroundColor,
         appBar: AppBar(
           leading: _isSearching
@@ -567,7 +569,10 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen> {
               mainAxisSize: MainAxisSize.min,
               children: [
                 AnimatedSize(
-                  duration: const Duration(milliseconds: 300),
+                  duration: AppAnimations.durationFor(
+                    context,
+                    const Duration(milliseconds: 300),
+                  ),
                   child: _isSearching
                       ? Container(
                           padding: const EdgeInsets.symmetric(

@@ -40,8 +40,8 @@ class QuickActionsSection extends ConsumerWidget {
         title: 'Credenciais',
         compactTitle: 'Cofre',
         subtitle: '${viewModel.credentialCount} salvas',
-        icon: Icons.security_rounded,
-        color: theme.colorScheme.secondary,
+        icon: Icons.key_rounded,
+        color: theme.colorScheme.primary,
         onTap: () => navigationViewModel.navigateTo(AppDestination.credentials),
       ),
       'analysis': _QuickActionItem(
@@ -49,7 +49,7 @@ class QuickActionsSection extends ConsumerWidget {
         compactTitle: 'Análise',
         subtitle: 'Ver relatórios',
         icon: Icons.bar_chart_rounded,
-        color: theme.colorScheme.tertiary,
+        color: theme.colorScheme.primary,
         onTap: () => NavigationUtils.push(context, const AnalysisScreen()),
       ),
       if (enableSuppliers)
@@ -58,7 +58,7 @@ class QuickActionsSection extends ConsumerWidget {
           compactTitle: 'Fornecedores',
           subtitle: 'Gerenciar',
           icon: Icons.store_rounded,
-          color: theme.colorScheme.secondary,
+          color: theme.colorScheme.primary,
           onTap: () => navigationViewModel.navigateTo(AppDestination.suppliers),
         ),
     };

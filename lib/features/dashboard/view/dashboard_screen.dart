@@ -1,3 +1,4 @@
+import 'package:key_budget/core/design_system/widgets/app_page_scaffold.dart';
 import 'package:flutter/material.dart' hide DateUtils;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:key_budget/app/widgets/responsive_center.dart';
@@ -88,7 +89,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
         : ref.watch(dashboardLayoutProvider(userId)).asData?.value ??
               const DashboardLayout();
 
-    return Scaffold(
+    return AppPageScaffold(
       backgroundColor: theme.scaffoldBackgroundColor,
       appBar: const DashboardHeader(),
       body: SafeArea(

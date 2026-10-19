@@ -1,3 +1,4 @@
+import 'package:key_budget/app/utils/navigation_utils.dart';
 import 'dart:async';
 
 import 'package:flutter/material.dart';
@@ -148,9 +149,10 @@ class _MyAppState extends ConsumerState<MyApp> with WidgetsBindingObserver {
       }
 
       _pendingWidgetUri = null;
-      navigatorKey.currentState?.push(
-        MaterialPageRoute(builder: (context) => const AddExpenseScreen()),
-      );
+      final navigationContext = navigatorKey.currentContext;
+      if (navigationContext != null) {
+        NavigationUtils.push<void>(navigationContext, const AddExpenseScreen());
+      }
     });
   }
 

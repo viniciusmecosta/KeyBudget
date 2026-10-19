@@ -1,3 +1,4 @@
+import 'package:key_budget/app/utils/navigation_utils.dart';
 import 'dart:async';
 
 import 'package:flutter/material.dart';
@@ -196,9 +197,8 @@ class _MainScreenState extends ConsumerState<MainScreen> {
                 IconButton(
                   tooltip: 'Abrir perfil e configurações',
                   icon: const Icon(Icons.settings_outlined),
-                  onPressed: () => Navigator.of(context).push(
-                    MaterialPageRoute<void>(builder: (_) => const UserScreen()),
-                  ),
+                  onPressed: () =>
+                      NavigationUtils.push<void>(context, const UserScreen()),
                 ),
               ],
             )

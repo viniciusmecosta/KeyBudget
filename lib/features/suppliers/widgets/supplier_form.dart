@@ -1,3 +1,5 @@
+import 'package:key_budget/app/utils/navigation_utils.dart';
+import 'package:key_budget/core/design_system/widgets/app_form_section_heading.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:key_budget/app/widgets/image_picker_widget.dart';
@@ -32,22 +34,7 @@ class SupplierForm extends ConsumerWidget {
   });
 
   Widget _sectionHeader(BuildContext context, String title, IconData icon) {
-    final theme = Theme.of(context);
-    final color = theme.colorScheme.onSurface;
-    return Row(
-      children: [
-        Icon(icon, color: color, size: 20),
-        const SizedBox(width: AppSpacing.sm),
-        Text(
-          title,
-          style: theme.textTheme.titleSmall?.copyWith(
-            color: color,
-            fontWeight: FontWeight.bold,
-            letterSpacing: 1.2,
-          ),
-        ),
-      ],
-    );
+    return AppFormSectionHeading(title: title, icon: icon);
   }
 
   Widget _fieldPair(Widget first, Widget second) {
@@ -83,10 +70,9 @@ class SupplierForm extends ConsumerWidget {
     );
 
     void selectSavedLogo() async {
-      final selectedLogo = await Navigator.of(context).push<String>(
-        MaterialPageRoute(
-          builder: (_) => const SavedLogosScreen(isForSuppliers: true),
-        ),
+      final selectedLogo = await NavigationUtils.push<String>(
+        context,
+        const SavedLogosScreen(isForSuppliers: true),
       );
       if (selectedLogo != null) {
         onPhotoChanged(selectedLogo);

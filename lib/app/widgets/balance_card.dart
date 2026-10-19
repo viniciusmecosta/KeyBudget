@@ -51,9 +51,20 @@ class BalanceCard extends ConsumerWidget {
     return Container(
       decoration: BoxDecoration(
         borderRadius: AppBorders.borderRadiusL,
-        gradient: gradient,
-        color: bgColor,
-        boxShadow: gradient != null ? AppShadows.soft : null,
+        gradient:
+            gradient ??
+            (backgroundColor != null
+                ? LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: [
+                      backgroundColor!,
+                      Color.lerp(backgroundColor!, Colors.black, 0.18)!,
+                    ],
+                  )
+                : null),
+        color: backgroundColor == null ? bgColor : null,
+        boxShadow: AppShadows.soft,
         border: bgColor == theme.colorScheme.surface
             ? Border.all(color: theme.colorScheme.outlineVariant)
             : null,
@@ -67,7 +78,7 @@ class BalanceCard extends ConsumerWidget {
           child: Padding(
             padding: EdgeInsets.symmetric(
               horizontal: AppSpacing.xl,
-              vertical: isCompact ? AppSpacing.md : AppSpacing.xl,
+              vertical: isCompact ? AppSpacing.md : AppSpacing.lg,
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -120,7 +131,7 @@ class BalanceCard extends ConsumerWidget {
                               fontWeight: FontWeight.w800,
                               color: textColor,
                               letterSpacing: -0.5,
-                              fontSize: isCompact ? 24 : null,
+                              fontSize: isCompact ? 26 : 32,
                             ),
                           ),
                           if (valueSubtitle != null) ...[

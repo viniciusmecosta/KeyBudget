@@ -1,3 +1,5 @@
+import 'package:key_budget/core/design_system/widgets/app_card.dart';
+import 'package:key_budget/core/design_system/widgets/app_page_scaffold.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:key_budget/app/widgets/responsive_center.dart';
@@ -136,13 +138,14 @@ class _DriveConnectionScreenState extends ConsumerState<DriveConnectionScreen> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final saved = _connection?.enabled == true;
-    return Scaffold(
+    return AppPageScaffold(
       appBar: AppBar(title: const Text('Google Drive')),
       body: ResponsiveCenter(
         child: ListView(
           padding: const EdgeInsets.all(AppSpacing.md),
           children: [
-            Card(
+            AppCard(
+              padding: EdgeInsets.zero,
               child: Padding(
                 padding: const EdgeInsets.all(AppSpacing.lg),
                 child: Column(

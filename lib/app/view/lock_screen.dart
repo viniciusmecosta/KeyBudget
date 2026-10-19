@@ -1,3 +1,4 @@
+import 'package:key_budget/core/design_system/widgets/app_page_scaffold.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:key_budget/app/utils/app_animations.dart';
@@ -147,114 +148,95 @@ class _LockScreenState extends ConsumerState<LockScreen>
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final isDark = theme.brightness == Brightness.dark;
 
-    return Scaffold(
-      body: Container(
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: isDark
-                ? [
-                    const Color(0xFF0F172A),
-                    const Color(0xFF1E293B),
-                    const Color(0xFF0F172A),
-                  ]
-                : [
-                    const Color(0xFFF1F5F9),
-                    const Color(0xFFE2E8F0),
-                    const Color(0xFFF1F5F9),
-                  ],
-          ),
-        ),
-        child: SafeArea(
-          child: AppAnimations.fadeIn(
-            AppCenteredScroll(
-              padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 24),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(22),
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      color: theme.colorScheme.primary.withValues(alpha: 0.12),
-                    ),
-                    child: Icon(
-                      Icons.lock_person_outlined,
-                      size: 60,
-                      color: theme.colorScheme.primary,
-                    ),
+    return AppPageScaffold(
+      maxContentWidth: 600,
+      body: SafeArea(
+        child: AppAnimations.fadeIn(
+          AppCenteredScroll(
+            padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 24),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(22),
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: theme.colorScheme.primary.withValues(alpha: 0.12),
                   ),
-                  const SizedBox(height: 28),
+                  child: Icon(
+                    Icons.lock_person_outlined,
+                    size: 60,
+                    color: theme.colorScheme.primary,
+                  ),
+                ),
+                const SizedBox(height: 28),
+                Text(
+                  'KeyBudget bloqueado',
+                  style: theme.textTheme.headlineMedium?.copyWith(
+                    fontWeight: FontWeight.bold,
+                    letterSpacing: -0.5,
+                  ),
+                ),
+                if (_availability == LocalAuthAvailability.notSupported) ...[
+                  const SizedBox(height: 12),
                   Text(
-                    'KeyBudget bloqueado',
-                    style: theme.textTheme.headlineMedium?.copyWith(
-                      fontWeight: FontWeight.bold,
-                      letterSpacing: -0.5,
-                    ),
-                  ),
-                  if (_availability == LocalAuthAvailability.notSupported) ...[
-                    const SizedBox(height: 12),
-                    Text(
-                      'Desbloqueio indisponível neste dispositivo. Entre novamente na sua conta.',
-                      textAlign: TextAlign.center,
-                      style: theme.textTheme.bodyMedium?.copyWith(
-                        color: theme.colorScheme.onSurfaceVariant,
-                      ),
-                    ),
-                  ],
-                  if (_statusFeedback != null) ...[
-                    const SizedBox(height: 16),
-                    Text(
-                      _statusFeedback!,
-                      textAlign: TextAlign.center,
-                      style: theme.textTheme.bodySmall?.copyWith(
-                        color: theme.colorScheme.error,
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                  ],
-                  const SizedBox(height: 28),
-                  if (_availability != LocalAuthAvailability.notSupported)
-                    SizedBox(
-                      width: double.infinity,
-                      height: 56,
-                      child: AppButton(
-                        onPressed: _isAuthenticating ? null : _authenticate,
-                        isLoading: _isAuthenticating,
-                        label: 'Desbloquear',
-                        icon: Icons.fingerprint,
-                      ),
-                    ),
-                  const SizedBox(height: 16),
-                  TextButton.icon(
-                    onPressed: () async {
-                      final authViewModel = ref.read(authViewModelProvider);
-                      final appLockService = ref.read(appLockServiceProvider);
-                      await authViewModel.logout(context, ref);
-                      appLockService.unlockApp();
-                    },
-                    icon: Icon(
-                      Icons.logout,
-                      size: 20,
-                      color: theme.colorScheme.error.withValues(alpha: 0.8),
-                    ),
-                    label: Text(
-                      'Sair da Conta',
-                      style: TextStyle(
-                        color: theme.colorScheme.error.withValues(alpha: 0.8),
-                        fontWeight: FontWeight.w600,
-                      ),
+                    'Desbloqueio indisponível neste dispositivo. Entre novamente na sua conta.',
+                    textAlign: TextAlign.center,
+                    style: theme.textTheme.bodyMedium?.copyWith(
+                      color: theme.colorScheme.onSurfaceVariant,
                     ),
                   ),
                 ],
-              ),
+                if (_statusFeedback != null) ...[
+                  const SizedBox(height: 16),
+                  Text(
+                    _statusFeedback!,
+                    textAlign: TextAlign.center,
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: theme.colorScheme.error,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ],
+                const SizedBox(height: 28),
+                if (_availability != LocalAuthAvailability.notSupported)
+                  SizedBox(
+                    width: double.infinity,
+                    height: 56,
+                    child: AppButton(
+                      onPressed: _isAuthenticating ? null : _authenticate,
+                      isLoading: _isAuthenticating,
+                      label: 'Desbloquear',
+                      icon: Icons.fingerprint,
+                    ),
+                  ),
+                const SizedBox(height: 16),
+                TextButton.icon(
+                  onPressed: () async {
+                    final authViewModel = ref.read(authViewModelProvider);
+                    final appLockService = ref.read(appLockServiceProvider);
+                    await authViewModel.logout(context, ref);
+                    appLockService.unlockApp();
+                  },
+                  icon: Icon(
+                    Icons.logout,
+                    size: 20,
+                    color: theme.colorScheme.error.withValues(alpha: 0.8),
+                  ),
+                  label: Text(
+                    'Sair da Conta',
+                    style: TextStyle(
+                      color: theme.colorScheme.error.withValues(alpha: 0.8),
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+              ],
             ),
-
-            context: context,
           ),
+
+          context: context,
         ),
       ),
     );

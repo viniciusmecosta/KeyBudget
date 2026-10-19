@@ -58,8 +58,11 @@ class _PasswordFormFieldState extends ConsumerState<PasswordFormField> {
       decoration: InputDecoration(
         labelText: widget.labelText,
         suffixIcon: IconButton(
+          tooltip: _isPasswordVisible ? 'Ocultar senha' : 'Mostrar senha',
           icon: Icon(
-            _isPasswordVisible ? Icons.visibility_off : Icons.visibility,
+            _isPasswordVisible
+                ? Icons.visibility_off_outlined
+                : Icons.visibility_outlined,
           ),
           onPressed: () {
             setState(() {

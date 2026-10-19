@@ -304,7 +304,6 @@ class _GoogleSignInButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final isDark = theme.brightness == Brightness.dark;
 
     return SizedBox(
       width: double.infinity,
@@ -317,19 +316,11 @@ class _GoogleSignInButton extends StatelessWidget {
             vertical: AppSpacing.md,
           ),
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: BorderRadius.circular(16),
           ),
-          side: BorderSide(
-            color: isDark
-                ? Colors.white.withValues(alpha: 0.15)
-                : Colors.black.withValues(alpha: 0.08),
-            width: 1.5,
-          ),
-          backgroundColor: isDark
-              ? theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.3)
-              : Colors.white,
-          elevation: isDark ? 0 : 1,
-          shadowColor: Colors.black.withValues(alpha: 0.05),
+          side: BorderSide(color: theme.colorScheme.outline, width: 1.5),
+          backgroundColor: theme.colorScheme.surface,
+          elevation: 0,
         ),
         child: isLoading
             ? SizedBox(
@@ -354,7 +345,7 @@ class _GoogleSignInButton extends StatelessWidget {
                       'Continuar com Google',
                       textAlign: TextAlign.center,
                       style: theme.textTheme.titleMedium?.copyWith(
-                        color: isDark ? Colors.white : Colors.black87,
+                        color: theme.colorScheme.onSurface,
                         fontWeight: FontWeight.w600,
                         letterSpacing: 0.3,
                       ),

@@ -1,3 +1,4 @@
+import 'package:key_budget/core/design_system/widgets/app_page_scaffold.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -185,6 +186,7 @@ class _SupplierDetailScreenState extends ConsumerState<SupplierDetailScreen> {
               ),
             ],
           ),
+          animationStyle: AppAnimations.routeStyle(context),
         );
         if (shouldPop == true && mounted) {
           setState(() => _hasUnsavedChanges = false);
@@ -192,7 +194,8 @@ class _SupplierDetailScreenState extends ConsumerState<SupplierDetailScreen> {
           if (mounted) Navigator.of(this.context).pop(result);
         }
       },
-      child: Scaffold(
+      child: AppPageScaffold(
+        maxContentWidth: 960,
         appBar: AppBar(
           title: Text(_isEditing ? 'Editar Fornecedor' : 'Detalhes'),
           actions: [

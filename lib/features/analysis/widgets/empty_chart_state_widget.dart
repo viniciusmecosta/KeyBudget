@@ -1,3 +1,4 @@
+import 'package:key_budget/core/design_system/surfaces/app_surfaces.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:key_budget/app/config/app_theme.dart';
@@ -18,13 +19,7 @@ class EmptyChartStateWidget extends ConsumerWidget {
 
     return Container(
       padding: const EdgeInsets.all(AppTheme.spaceXL),
-      decoration: BoxDecoration(
-        color: theme.colorScheme.surface,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: theme.colorScheme.outline.withAlpha((255 * 0.1).round()),
-        ),
-      ),
+      decoration: AppSurfaces.panel(context),
       child: Column(
         children: [
           Container(

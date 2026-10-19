@@ -1,3 +1,4 @@
+import 'package:key_budget/core/design_system/widgets/app_page_scaffold.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:key_budget/app/view/main_screen.dart';
@@ -56,11 +57,11 @@ class _AuthGateState extends ConsumerState<AuthGate> {
     }
 
     if (appLockService.isLocked && _status != AuthStatus.success) {
-      return const Scaffold(body: SafeArea(child: DashboardSkeleton()));
+      return const AppPageScaffold(body: SafeArea(child: DashboardSkeleton()));
     }
 
     if (!authViewModel.isInitialized) {
-      return const Scaffold(body: SafeArea(child: DashboardSkeleton()));
+      return const AppPageScaffold(body: SafeArea(child: DashboardSkeleton()));
     }
 
     if (authViewModel.currentUser == null) {
@@ -71,11 +72,13 @@ class _AuthGateState extends ConsumerState<AuthGate> {
       case AuthStatus.success:
         return MainScreen(key: ValueKey(authViewModel.currentUser!.id));
       case AuthStatus.failed:
-        return const Scaffold(
+        return const AppPageScaffold(
           body: Center(child: Text("Falha na autenticação")),
         );
       case AuthStatus.pending:
-        return const Scaffold(body: SafeArea(child: DashboardSkeleton()));
+        return const AppPageScaffold(
+          body: SafeArea(child: DashboardSkeleton()),
+        );
     }
   }
 

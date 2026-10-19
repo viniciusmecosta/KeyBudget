@@ -1,3 +1,4 @@
+import 'package:key_budget/app/utils/navigation_utils.dart';
 import 'package:flutter/material.dart';
 import 'package:key_budget/core/import_export/csv_import_parser.dart';
 import 'package:key_budget/core/import_export/import_preview_screen.dart';
@@ -129,13 +130,12 @@ class ExpenseTransferService {
     }
 
     if (context != null && context.mounted) {
-      final count = await Navigator.of(context).push<int>(
-        MaterialPageRoute(
-          builder: (_) => ImportPreviewScreen(
-            userId: userId,
-            plan: plan,
-            importService: importService,
-          ),
+      final count = await NavigationUtils.push<int>(
+        context,
+        ImportPreviewScreen(
+          userId: userId,
+          plan: plan,
+          importService: importService,
         ),
       );
       return count ?? 0;

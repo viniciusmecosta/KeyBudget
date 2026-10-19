@@ -1,3 +1,6 @@
+import 'package:key_budget/core/design_system/widgets/app_date_picker.dart';
+import 'package:key_budget/app/utils/app_animations.dart';
+import 'package:key_budget/core/design_system/widgets/app_page_scaffold.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
@@ -62,6 +65,7 @@ class _SavingsGoalsScreenState extends ConsumerState<SavingsGoalsScreen> {
             ),
           ],
         ),
+        animationStyle: AppAnimations.routeStyle(context),
       );
       if (confirmed != true || !mounted) return;
     }
@@ -131,7 +135,7 @@ class _SavingsGoalsScreenState extends ConsumerState<SavingsGoalsScreen> {
                       ),
                       trailing: const Icon(Icons.calendar_today_outlined),
                       onTap: () async {
-                        final selected = await showDatePicker(
+                        final selected = await showAppDatePicker(
                           context: dialogContext,
                           initialDate: deadline ?? DateTime.now(),
                           firstDate: DateTime(1900),
@@ -187,6 +191,7 @@ class _SavingsGoalsScreenState extends ConsumerState<SavingsGoalsScreen> {
               ],
             ),
           ),
+          animationStyle: AppAnimations.routeStyle(context),
         );
     nameController.dispose();
     targetController.dispose();
@@ -283,6 +288,7 @@ class _SavingsGoalsScreenState extends ConsumerState<SavingsGoalsScreen> {
           ],
         ),
       ),
+      animationStyle: AppAnimations.routeStyle(context),
     );
     controller.dispose();
     if (amount == null || !mounted) return;
@@ -364,6 +370,7 @@ class _SavingsGoalsScreenState extends ConsumerState<SavingsGoalsScreen> {
           ),
         ),
       ),
+      sheetAnimationStyle: AppAnimations.routeStyle(context),
     );
   }
 
@@ -514,7 +521,7 @@ class _SavingsGoalsScreenState extends ConsumerState<SavingsGoalsScreen> {
             ?.where((goal) => goal.isArchived == _showArchived)
             .toList() ??
         [];
-    return Scaffold(
+    return AppPageScaffold(
       appBar: AppBar(
         title: const Text('Metas'),
         actions: [

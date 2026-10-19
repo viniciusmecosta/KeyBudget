@@ -1,3 +1,5 @@
+import 'package:key_budget/core/design_system/widgets/app_card.dart';
+import 'package:key_budget/core/design_system/widgets/app_page_scaffold.dart';
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
@@ -18,20 +20,16 @@ class SavedLogosScreen extends ConsumerWidget {
         return Image.network(
           imagePath,
           fit: BoxFit.cover,
-          errorBuilder: (context, error, stackTrace) => Icon(
-            Icons.broken_image_outlined,
-            color: theme.colorScheme.error,
-          ),
+          errorBuilder: (context, error, stackTrace) =>
+              Icon(Icons.broken_image_outlined, color: theme.colorScheme.error),
         );
       }
       final bytes = base64Decode(imagePath);
       return Image.memory(
         bytes,
         fit: BoxFit.cover,
-        errorBuilder: (context, error, stackTrace) => Icon(
-          Icons.broken_image_outlined,
-          color: theme.colorScheme.error,
-        ),
+        errorBuilder: (context, error, stackTrace) =>
+            Icon(Icons.broken_image_outlined, color: theme.colorScheme.error),
       );
     } catch (_) {
       return Icon(
@@ -47,12 +45,14 @@ class SavedLogosScreen extends ConsumerWidget {
         ? ref.watch(supplierViewModelProvider).userSupplierPhotos
         : ref.watch(credentialViewModelProvider).userCredentialLogos;
 
-    final List<String> logos =
-        rawLogos.where((p) => p.trim().isNotEmpty).toSet().toList();
+    final List<String> logos = rawLogos
+        .where((p) => p.trim().isNotEmpty)
+        .toSet()
+        .toList();
 
     final theme = Theme.of(context);
 
-    return Scaffold(
+    return AppPageScaffold(
       appBar: AppBar(title: const Text('Selecionar Imagem Salva')),
       body: AppAnimations.fadeInFromBottom(
         logos.isEmpty
@@ -99,29 +99,20 @@ class SavedLogosScreen extends ConsumerWidget {
                 itemCount: logos.length,
                 itemBuilder: (context, index) {
                   final logoPath = logos[index];
-                  return GestureDetector(
-                    onTap: () {
-                      Navigator.of(context).pop(logoPath);
-                    },
-                    child: Card(
-                      elevation: 4,
-                      shadowColor: theme.colorScheme.shadow.withAlpha(
-                        (255 * 0.2).round(),
-                      ),
-                      shape: const CircleBorder(),
-                      clipBehavior: Clip.antiAlias,
-                      child: Container(
-                        color: theme.colorScheme.surfaceContainerHighest
-                            .withAlpha((255 * 0.3).round()),
-                        alignment: Alignment.center,
-                        child: _buildImageWidget(logoPath, theme),
-                      ),
+                  return AppCard(
+                    padding: const EdgeInsets.all(12),
+                    onTap: () => Navigator.of(context).pop(logoPath),
+                    child: Semantics(
+                      label: 'Selecionar logo ${index + 1}',
+                      image: true,
+                      child: Center(child: _buildImageWidget(logoPath, theme)),
                     ),
                   );
                 },
               ),
 
-        context: context,),
+        context: context,
+      ),
     );
   }
 }

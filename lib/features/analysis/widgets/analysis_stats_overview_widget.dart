@@ -22,50 +22,40 @@ class AnalysisStatsOverviewWidget extends ConsumerWidget {
     }
     return Column(
       children: [
-        Row(
+        _StatPair(
           children: [
-            Expanded(
-              child: _buildEnhancedStatCard(
-                context,
-                'Este Mês',
-                viewModel.totalCurrentMonth,
-                Theme.of(context).colorScheme.primary,
-                icon: Icons.calendar_today_rounded,
-              ),
+            _buildEnhancedStatCard(
+              context,
+              'Este Mês',
+              viewModel.totalCurrentMonth,
+              Theme.of(context).colorScheme.primary,
+              icon: Icons.calendar_today_rounded,
             ),
-            const SizedBox(width: AppSpacing.md),
-            Expanded(
-              child: _buildEnhancedStatCard(
-                context,
-                'Mês Passado',
-                viewModel.lastMonthExpense,
-                Theme.of(context).colorScheme.secondary,
-                icon: Icons.history_rounded,
-              ),
+            _buildEnhancedStatCard(
+              context,
+              'Mês Passado',
+              viewModel.lastMonthExpense,
+              Theme.of(context).colorScheme.secondary,
+              icon: Icons.history_rounded,
             ),
           ],
         ),
         const SizedBox(height: AppSpacing.md),
-        Row(
+        _StatPair(
           children: [
-            Expanded(
-              child: _buildEnhancedStatCard(
-                context,
-                'Gasto Total',
-                viewModel.totalOverall,
-                Theme.of(context).colorScheme.tertiary,
-                icon: Icons.account_balance_wallet_rounded,
-              ),
+            _buildEnhancedStatCard(
+              context,
+              'Gasto Total',
+              viewModel.totalOverall,
+              Theme.of(context).colorScheme.tertiary,
+              icon: Icons.account_balance_wallet_rounded,
             ),
-            const SizedBox(width: AppSpacing.md),
-            Expanded(
-              child: _buildEnhancedStatCard(
-                context,
-                'Média Mensal',
-                viewModel.averageMonthlyExpense,
-                AppTheme.chartColors[2],
-                icon: Icons.insights_rounded,
-              ),
+            _buildEnhancedStatCard(
+              context,
+              'Média Mensal',
+              viewModel.averageMonthlyExpense,
+              AppTheme.chartColors[2],
+              icon: Icons.insights_rounded,
             ),
           ],
         ),
@@ -92,37 +82,30 @@ class AnalysisStatsOverviewWidget extends ConsumerWidget {
           icon: Icons.account_balance_wallet_rounded,
           percentageChange: balanceChange,
           absoluteChange: balanceDiff,
-          isFullWidth: true,
         ),
         const SizedBox(height: AppSpacing.md),
-        Row(
+        _StatPair(
           children: [
-            Expanded(
-              child: _buildEnhancedStatCard(
-                context,
-                'Entradas',
-                viewModel.incomesCurrentMonth,
-                Colors.greenAccent[400]!,
-                icon: Icons.arrow_circle_up_rounded,
-                percentageChange:
-                    viewModel.incomesPercentageChangeFromLastMonth,
-                absoluteChange:
-                    viewModel.incomesCurrentMonth - viewModel.lastMonthIncome,
-                invertColors: true,
-              ),
+            _buildEnhancedStatCard(
+              context,
+              'Entradas',
+              viewModel.incomesCurrentMonth,
+              Colors.greenAccent[400]!,
+              icon: Icons.arrow_circle_up_rounded,
+              percentageChange: viewModel.incomesPercentageChangeFromLastMonth,
+              absoluteChange:
+                  viewModel.incomesCurrentMonth - viewModel.lastMonthIncome,
+              invertColors: true,
             ),
-            const SizedBox(width: AppSpacing.md),
-            Expanded(
-              child: _buildEnhancedStatCard(
-                context,
-                'Saídas',
-                viewModel.totalCurrentMonth,
-                theme.colorScheme.error,
-                icon: Icons.arrow_circle_down_rounded,
-                percentageChange: viewModel.percentageChangeFromLastMonth,
-                absoluteChange:
-                    viewModel.totalCurrentMonth - viewModel.lastMonthExpense,
-              ),
+            _buildEnhancedStatCard(
+              context,
+              'Saídas',
+              viewModel.totalCurrentMonth,
+              theme.colorScheme.error,
+              icon: Icons.arrow_circle_down_rounded,
+              percentageChange: viewModel.percentageChangeFromLastMonth,
+              absoluteChange:
+                  viewModel.totalCurrentMonth - viewModel.lastMonthExpense,
             ),
           ],
         ),
@@ -138,7 +121,6 @@ class AnalysisStatsOverviewWidget extends ConsumerWidget {
     IconData? icon,
     double? percentageChange,
     double? absoluteChange,
-    bool isFullWidth = false,
     bool invertColors = false,
   }) {
     final theme = Theme.of(context);
@@ -160,10 +142,7 @@ class AnalysisStatsOverviewWidget extends ConsumerWidget {
       }
     }
 
-    final String formattedValue =
-        (title == 'Gasto Total' || title == 'Saldo Líquido')
-        ? formatCurrencyFlexible(value)
-        : formatCurrencyFlexible(value);
+    final formattedValue = formatCurrencyFlexible(value);
 
     Widget? badgeWidget;
     if (percentageChange != null && absoluteChange != null) {
@@ -173,7 +152,11 @@ class AnalysisStatsOverviewWidget extends ConsumerWidget {
 
       final badgeColor = isZero
           ? theme.colorScheme.onSurfaceVariant
-          : (isGood ? Colors.greenAccent[400]! : Colors.redAccent[400]!);
+          : (isGood
+                ? (theme.brightness == Brightness.dark
+                      ? const Color(0xFF6EE7B7)
+                      : const Color(0xFF146C43))
+                : theme.colorScheme.error);
 
       final arrowIcon = isZero
           ? Icons.remove_rounded
@@ -193,11 +176,13 @@ class AnalysisStatsOverviewWidget extends ConsumerWidget {
           children: [
             Icon(arrowIcon, size: 12, color: badgeColor),
             const SizedBox(width: 4),
-            Text(
-              '${percentageChange.abs().toStringAsFixed(1)}% (${formatCurrencyFlexible(absoluteChange.abs())})',
-              style: theme.textTheme.labelSmall?.copyWith(
-                color: badgeColor,
-                fontWeight: FontWeight.bold,
+            Flexible(
+              child: Text(
+                '${percentageChange.abs().toStringAsFixed(1)}% (${formatCurrencyFlexible(absoluteChange.abs())})',
+                style: theme.textTheme.labelSmall?.copyWith(
+                  color: badgeColor,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
             ),
           ],
@@ -228,27 +213,49 @@ class AnalysisStatsOverviewWidget extends ConsumerWidget {
                     fontWeight: FontWeight.w600,
                     color: theme.colorScheme.onSurfaceVariant,
                   ),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
                 ),
               ),
             ],
           ),
           const SizedBox(height: AppSpacing.md),
-          FittedBox(
-            fit: BoxFit.scaleDown,
-            alignment: Alignment.centerLeft,
-            child: Text(
-              formattedValue,
-              style: theme.textTheme.titleLarge?.copyWith(
-                fontWeight: FontWeight.bold,
-                color: theme.colorScheme.onSurface,
-              ),
+          Text(
+            formattedValue,
+            style: theme.textTheme.titleLarge?.copyWith(
+              fontWeight: FontWeight.bold,
+              color: theme.colorScheme.onSurface,
             ),
           ),
           ?badgeWidget,
         ],
       ),
+    );
+  }
+}
+
+class _StatPair extends StatelessWidget {
+  const _StatPair({required this.children});
+
+  final List<Widget> children;
+
+  @override
+  Widget build(BuildContext context) {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final minimumWidth =
+            160 * MediaQuery.textScalerOf(context).scale(14) / 14;
+        final columns = constraints.maxWidth >= minimumWidth * 2 + AppSpacing.md
+            ? 2
+            : 1;
+        final width =
+            (constraints.maxWidth - AppSpacing.md * (columns - 1)) / columns;
+        return Wrap(
+          spacing: AppSpacing.md,
+          runSpacing: AppSpacing.md,
+          children: [
+            for (final child in children) SizedBox(width: width, child: child),
+          ],
+        );
+      },
     );
   }
 }

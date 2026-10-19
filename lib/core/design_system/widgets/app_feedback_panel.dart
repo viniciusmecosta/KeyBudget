@@ -1,3 +1,4 @@
+import 'package:key_budget/core/design_system/widgets/app_card.dart';
 import 'package:flutter/material.dart';
 import 'package:key_budget/core/design_system/borders/app_borders.dart';
 import 'package:key_budget/core/design_system/spacing/app_spacing.dart';
@@ -27,7 +28,8 @@ class AppFeedbackPanel extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final semantic = theme.extension<AppSemanticColors>() ??
+    final semantic =
+        theme.extension<AppSemanticColors>() ??
         (theme.brightness == Brightness.dark
             ? AppSemanticColors.dark()
             : AppSemanticColors.light());
@@ -55,52 +57,59 @@ class AppFeedbackPanel extends StatelessWidget {
     }
 
     return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(AppSpacing.xl),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          mainAxisAlignment: MainAxisAlignment.center,
-          crossAxisAlignment: CrossAxisAlignment.center,
-          children: [
-            Container(
-              padding: const EdgeInsets.all(AppSpacing.md),
-              decoration: BoxDecoration(
-                color: iconColor.withAlpha((255 * 0.1).round()),
-                borderRadius: AppBorders.borderRadiusCircular,
-              ),
-              child: Icon(icon ?? defaultIcon, size: 40, color: iconColor),
-            ),
-            const SizedBox(height: AppSpacing.md),
-            Text(
-              title,
-              textAlign: TextAlign.center,
-              style: theme.textTheme.titleMedium?.copyWith(
-                fontWeight: FontWeight.w600,
-                color: theme.colorScheme.onSurface,
-              ),
-            ),
-            const SizedBox(height: AppSpacing.xs),
-            ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 400),
-              child: Text(
-                message,
-                textAlign: TextAlign.center,
-                style: theme.textTheme.bodyMedium?.copyWith(
-                  color: theme.colorScheme.onSurfaceVariant,
+      child: SingleChildScrollView(
+        padding: const EdgeInsets.all(AppSpacing.md),
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 480),
+          child: AppCard(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(AppSpacing.md),
+                  decoration: BoxDecoration(
+                    color: iconColor.withAlpha((255 * 0.1).round()),
+                    borderRadius: AppBorders.borderRadiusCircular,
+                  ),
+                  child: Icon(icon ?? defaultIcon, size: 40, color: iconColor),
                 ),
-              ),
+                const SizedBox(height: AppSpacing.md),
+                Text(
+                  title,
+                  textAlign: TextAlign.center,
+                  style: theme.textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.w600,
+                    color: theme.colorScheme.onSurface,
+                  ),
+                ),
+                if (message.isNotEmpty) ...[
+                  const SizedBox(height: AppSpacing.xs),
+                  ConstrainedBox(
+                    constraints: const BoxConstraints(maxWidth: 400),
+                    child: Text(
+                      message,
+                      textAlign: TextAlign.center,
+                      style: theme.textTheme.bodyMedium?.copyWith(
+                        color: theme.colorScheme.onSurfaceVariant,
+                      ),
+                    ),
+                  ),
+                ],
+                if (actionLabel != null && onAction != null) ...[
+                  const SizedBox(height: AppSpacing.lg),
+                  AppButton(
+                    label: actionLabel!,
+                    onPressed: onAction,
+                    variant: type == AppFeedbackType.error
+                        ? AppButtonVariant.destructive
+                        : AppButtonVariant.primary,
+                  ),
+                ],
+              ],
             ),
-            if (actionLabel != null && onAction != null) ...[
-              const SizedBox(height: AppSpacing.lg),
-              AppButton(
-                label: actionLabel!,
-                onPressed: onAction,
-                variant: type == AppFeedbackType.error
-                    ? AppButtonVariant.destructive
-                    : AppButtonVariant.primary,
-              ),
-            ],
-          ],
+          ),
         ),
       ),
     );

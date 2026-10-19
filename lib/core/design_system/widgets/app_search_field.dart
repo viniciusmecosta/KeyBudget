@@ -23,7 +23,8 @@ class AppSearchField extends StatelessWidget {
       key: const ValueKey('searchBox'),
       constraints: const BoxConstraints(minHeight: 48),
       decoration: BoxDecoration(
-        color: theme.colorScheme.surfaceContainerHighest,
+        color: theme.colorScheme.surface,
+        border: Border.all(color: theme.colorScheme.outlineVariant),
         borderRadius: AppBorders.borderRadiusXL,
       ),
       child: TextField(
@@ -35,6 +36,12 @@ class AppSearchField extends StatelessWidget {
           hintText: hint,
           isDense: true,
           border: InputBorder.none,
+          enabledBorder: InputBorder.none,
+          focusedBorder: OutlineInputBorder(
+            borderRadius: AppBorders.borderRadiusXL,
+            borderSide: BorderSide(color: theme.colorScheme.primary, width: 2),
+          ),
+          prefixIcon: const Icon(Icons.search_rounded),
           contentPadding: const EdgeInsets.symmetric(
             horizontal: AppSpacing.md,
             vertical: AppSpacing.sm,

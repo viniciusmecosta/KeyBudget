@@ -1,3 +1,5 @@
+import 'package:key_budget/app/utils/navigation_utils.dart';
+import 'package:key_budget/core/design_system/widgets/app_page_scaffold.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_masked_text2/flutter_masked_text2.dart';
@@ -166,6 +168,7 @@ class _ExpenseDetailScreenState extends ConsumerState<ExpenseDetailScreen> {
             ],
           ),
         ),
+        sheetAnimationStyle: AppAnimations.routeStyle(context),
       );
     } else {
       _executeDelete(deleteGroup: false);
@@ -236,7 +239,8 @@ class _ExpenseDetailScreenState extends ConsumerState<ExpenseDetailScreen> {
     final authViewModel = ref.watch(authViewModelProvider);
     final enableIncomes = authViewModel.currentUser?.enableIncomes ?? false;
 
-    return Scaffold(
+    return AppPageScaffold(
+      maxContentWidth: 960,
       appBar: AppBar(
         title: Text(
           _isEditing
@@ -362,14 +366,12 @@ class _ExpenseDetailScreenState extends ConsumerState<ExpenseDetailScreen> {
                                 bottom: AppSpacing.sm,
                               ),
                               child: InkWell(
-                                borderRadius: BorderRadius.circular(8),
+                                borderRadius: BorderRadius.circular(24),
                                 onTap: () {
                                   if (!isCurrent) {
-                                    Navigator.of(context).pushReplacement(
-                                      MaterialPageRoute(
-                                        builder: (_) =>
-                                            ExpenseDetailScreen(expense: e),
-                                      ),
+                                    NavigationUtils.pushReplacement<void, void>(
+                                      context,
+                                      ExpenseDetailScreen(expense: e),
                                     );
                                   }
                                 },
@@ -385,7 +387,7 @@ class _ExpenseDetailScreenState extends ConsumerState<ExpenseDetailScreen> {
                                           : Theme.of(context).dividerColor,
                                       width: isCurrent ? 2 : 1,
                                     ),
-                                    borderRadius: BorderRadius.circular(8),
+                                    borderRadius: BorderRadius.circular(24),
                                   ),
                                   child: ListTile(
                                     title: Text(

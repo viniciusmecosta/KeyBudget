@@ -1,3 +1,6 @@
+import 'package:key_budget/core/design_system/colors/app_colors.dart';
+import 'package:key_budget/core/design_system/widgets/app_card.dart';
+import 'package:key_budget/core/design_system/widgets/app_page_scaffold.dart';
 import 'package:flutter/material.dart';
 import 'package:key_budget/app/utils/app_animations.dart';
 import 'package:key_budget/core/design_system/borders/app_borders.dart';
@@ -25,8 +28,8 @@ class AuthPageLayout extends StatelessWidget {
     final isCompact = MediaQuery.of(context).size.width < 600;
     final horizontalPadding = isCompact ? AppSpacing.md : AppSpacing.xl;
 
-    return Scaffold(
-      backgroundColor: theme.colorScheme.surface,
+    return AppPageScaffold(
+      backgroundColor: theme.scaffoldBackgroundColor,
       appBar: showBackButton
           ? AppBar(
               backgroundColor: Colors.transparent,
@@ -59,6 +62,7 @@ class AuthPageLayout extends StatelessWidget {
                           width: 64,
                           height: 64,
                           decoration: BoxDecoration(
+                            color: AppColors.surfaceLight,
                             borderRadius: AppBorders.borderRadiusL,
                             border: Border.all(
                               color: theme.colorScheme.outlineVariant,
@@ -69,14 +73,15 @@ class AuthPageLayout extends StatelessWidget {
                           child: Image.asset(
                             'assets/icon/logov2.png',
                             fit: BoxFit.cover,
-                            errorBuilder: (context, error, stackTrace) => Container(
-                              color: theme.colorScheme.primary,
-                              child: const Icon(
-                                Icons.account_balance_wallet_rounded,
-                                size: 32,
-                                color: Colors.white,
-                              ),
-                            ),
+                            errorBuilder: (context, error, stackTrace) =>
+                                Container(
+                                  color: theme.colorScheme.primary,
+                                  child: const Icon(
+                                    Icons.account_balance_wallet_rounded,
+                                    size: 32,
+                                    color: Colors.white,
+                                  ),
+                                ),
                           ),
                         ),
                       ),
@@ -100,7 +105,10 @@ class AuthPageLayout extends StatelessWidget {
                       ),
                     ),
                     const SizedBox(height: AppSpacing.xl),
-                    child,
+                    AppCard(
+                      padding: const EdgeInsets.all(AppSpacing.md),
+                      child: child,
+                    ),
                     if (footer != null) ...[
                       const SizedBox(height: AppSpacing.xl),
                       footer!,
@@ -111,7 +119,8 @@ class AuthPageLayout extends StatelessWidget {
             ),
           ),
 
-          context: context,),
+          context: context,
+        ),
       ),
     );
   }

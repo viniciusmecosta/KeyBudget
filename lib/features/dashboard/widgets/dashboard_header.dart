@@ -112,5 +112,5 @@ class DashboardHeader extends ConsumerWidget implements PreferredSizeWidget {
   }
 
   @override
-  Size get preferredSize => const Size.fromHeight(88.0);
+  Size get preferredSize => const Size.fromHeight(72.0);
 }

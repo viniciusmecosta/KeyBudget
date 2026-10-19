@@ -1,3 +1,7 @@
+import 'package:key_budget/app/utils/app_animations.dart';
+import 'package:key_budget/core/design_system/surfaces/app_surfaces.dart';
+import 'package:key_budget/core/design_system/widgets/app_form_section_heading.dart';
+import 'package:key_budget/core/design_system/widgets/app_page_scaffold.dart';
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
@@ -32,7 +36,8 @@ class DocumentDetailScreen extends ConsumerWidget {
         document.versions.isEmpty &&
         !document.isPrincipal;
 
-    return Scaffold(
+    return AppPageScaffold(
+      maxContentWidth: 960,
       appBar: AppBar(
         title: Text(document.documentName),
         actions: [
@@ -87,6 +92,7 @@ class DocumentDetailScreen extends ConsumerWidget {
                     ),
                   ],
                 ),
+                animationStyle: AppAnimations.routeStyle(context),
               );
               if (confirmed != true || !context.mounted) return;
 
@@ -234,23 +240,7 @@ class DocumentDetailScreen extends ConsumerWidget {
     IconData icon,
     String title,
   ) {
-    final theme = Theme.of(context);
-    final color = theme.brightness == Brightness.dark
-        ? Colors.white
-        : Colors.black87;
-    return Row(
-      children: [
-        Icon(icon, color: color, size: 20),
-        const SizedBox(width: AppSpacing.sm),
-        Text(
-          title,
-          style: theme.textTheme.titleSmall?.copyWith(
-            fontWeight: FontWeight.bold,
-            color: color,
-          ),
-        ),
-      ],
-    );
+    return AppFormSectionHeading(title: title, icon: icon);
   }
 
   Widget _buildAttachmentItem(
@@ -263,13 +253,7 @@ class DocumentDetailScreen extends ConsumerWidget {
 
     return Container(
       margin: const EdgeInsets.only(bottom: AppSpacing.md),
-      decoration: BoxDecoration(
-        color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: theme.colorScheme.outlineVariant.withValues(alpha: 0.5),
-        ),
-      ),
+      decoration: AppSurfaces.panel(context),
       clipBehavior: Clip.antiAlias,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -389,13 +373,7 @@ class DocumentDetailScreen extends ConsumerWidget {
   ) {
     final theme = Theme.of(context);
     return Container(
-      decoration: BoxDecoration(
-        color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: theme.colorScheme.outlineVariant.withValues(alpha: 0.5),
-        ),
-      ),
+      decoration: AppSurfaces.panel(context),
       child: Column(
         children: document.versions.map((v) {
           final isLast = v == document.versions.last;
@@ -469,10 +447,9 @@ class DocumentDetailScreen extends ConsumerWidget {
                   },
                   child: const Text('Definir como principal'),
                 ),
-                onTap: () => Navigator.of(context).pushReplacement(
-                  MaterialPageRoute(
-                    builder: (_) => DocumentDetailScreen(document: v),
-                  ),
+                onTap: () => NavigationUtils.pushReplacement<void, void>(
+                  context,
+                  DocumentDetailScreen(document: v),
                 ),
               ),
               if (!isLast)

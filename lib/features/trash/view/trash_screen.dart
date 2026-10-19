@@ -1,3 +1,6 @@
+import 'package:key_budget/app/utils/app_animations.dart';
+import 'package:key_budget/core/design_system/widgets/app_card.dart';
+import 'package:key_budget/core/design_system/widgets/app_page_scaffold.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
@@ -66,6 +69,7 @@ class TrashScreen extends ConsumerWidget {
           ),
         ],
       ),
+      animationStyle: AppAnimations.routeStyle(context),
     );
     if (confirmed != true || !context.mounted) return;
     try {
@@ -91,7 +95,7 @@ class TrashScreen extends ConsumerWidget {
     final entries = userId == null
         ? null
         : ref.watch(trashEntriesProvider(userId));
-    return Scaffold(
+    return AppPageScaffold(
       appBar: AppBar(title: const Text('Lixeira')),
       body: userId == null
           ? const AppFeedbackPanel(
@@ -121,7 +125,8 @@ class TrashScreen extends ConsumerWidget {
                             const SizedBox(height: AppSpacing.sm),
                         itemBuilder: (context, index) {
                           final entry = items[index];
-                          return Card(
+                          return AppCard(
+                            padding: EdgeInsets.zero,
                             child: ListTile(
                               title: Text(entry.title),
                               subtitle: Text(

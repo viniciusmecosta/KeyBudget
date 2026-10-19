@@ -1,3 +1,4 @@
+import 'package:key_budget/core/design_system/widgets/app_page_scaffold.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -151,6 +152,7 @@ class _AddCredentialScreenState extends ConsumerState<AddCredentialScreen> {
               ),
             ],
           ),
+          animationStyle: AppAnimations.routeStyle(context),
         );
         if (shouldPop ?? false) {
           if (context.mounted) {
@@ -159,7 +161,8 @@ class _AddCredentialScreenState extends ConsumerState<AddCredentialScreen> {
           }
         }
       },
-      child: Scaffold(
+      child: AppPageScaffold(
+        maxContentWidth: 760,
         appBar: AppBar(title: const Text('Adicionar Credencial')),
         body: AppAnimations.fadeInFromBottom(
           Padding(

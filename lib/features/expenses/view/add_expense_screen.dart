@@ -1,3 +1,4 @@
+import 'package:key_budget/core/design_system/widgets/app_page_scaffold.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_masked_text2/flutter_masked_text2.dart';
@@ -166,6 +167,7 @@ class _AddExpenseScreenState extends ConsumerState<AddExpenseScreen> {
               ),
             ],
           ),
+          animationStyle: AppAnimations.routeStyle(context),
         );
         if (shouldPop ?? false) {
           if (context.mounted) {
@@ -174,7 +176,8 @@ class _AddExpenseScreenState extends ConsumerState<AddExpenseScreen> {
           }
         }
       },
-      child: Scaffold(
+      child: AppPageScaffold(
+        maxContentWidth: 760,
         appBar: AppBar(
           title: Text(_isIncome ? 'Adicionar Receita' : 'Adicionar Despesa'),
         ),
@@ -186,127 +189,32 @@ class _AddExpenseScreenState extends ConsumerState<AddExpenseScreen> {
                 if (enableIncomes)
                   Padding(
                     padding: const EdgeInsets.only(bottom: AppSpacing.md),
-                    child: Container(
-                      height: 50,
-                      padding: const EdgeInsets.all(4),
-                      decoration: BoxDecoration(
-                        color: theme.brightness == Brightness.dark
-                            ? Colors.white.withValues(alpha: 0.05)
-                            : Colors.black.withValues(alpha: 0.05),
-                        borderRadius: BorderRadius.circular(16),
-                      ),
-                      child: Row(
-                        crossAxisAlignment: CrossAxisAlignment.stretch,
-                        children: [
-                          Expanded(
-                            child: GestureDetector(
-                              onTap: () {
-                                if (_isIncome) {
-                                  setState(() {
-                                    _isIncome = false;
-                                  });
-                                }
-                              },
-                              child: AnimatedContainer(
-                                duration: AppAnimations.durationFor(
-                                  context,
-                                  const Duration(milliseconds: 200),
-                                ),
-                                curve: Curves.easeInOut,
-                                alignment: Alignment.center,
-                                decoration: BoxDecoration(
-                                  color: !_isIncome
-                                      ? theme.colorScheme.error
-                                      : Colors.transparent,
-                                  borderRadius: BorderRadius.circular(12),
-                                ),
-                                child: Row(
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  children: [
-                                    Icon(
-                                      Icons.arrow_circle_down_rounded,
-                                      color: !_isIncome
-                                          ? theme.colorScheme.onError
-                                          : theme.colorScheme.onSurface
-                                                .withValues(alpha: 0.6),
-                                      size: 20,
-                                    ),
-                                    const SizedBox(width: 8),
-                                    Text(
-                                      'Despesa',
-                                      style: theme.textTheme.titleSmall
-                                          ?.copyWith(
-                                            color: !_isIncome
-                                                ? theme.colorScheme.onError
-                                                : theme.colorScheme.onSurface
-                                                      .withValues(alpha: 0.6),
-                                            fontWeight: !_isIncome
-                                                ? FontWeight.bold
-                                                : FontWeight.w500,
-                                          ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ),
+                    child: SizedBox(
+                      width: double.infinity,
+                      child: SegmentedButton<bool>(
+                        showSelectedIcon: false,
+                        segments: [
+                          ButtonSegment(
+                            value: false,
+                            icon:
+                                MediaQuery.textScalerOf(context).scale(14) <= 18
+                                ? const Icon(Icons.arrow_circle_down_rounded)
+                                : null,
+                            label: const Text('Despesa'),
                           ),
-                          Expanded(
-                            child: GestureDetector(
-                              onTap: () {
-                                if (!_isIncome) {
-                                  setState(() {
-                                    _isIncome = true;
-                                    _selectedCategory = null;
-                                    _isInstallment = false;
-                                    _installmentsValue = 2;
-                                    _startNextMonth = false;
-                                  });
-                                }
-                              },
-                              child: AnimatedContainer(
-                                duration: AppAnimations.durationFor(
-                                  context,
-                                  const Duration(milliseconds: 200),
-                                ),
-                                curve: Curves.easeInOut,
-                                alignment: Alignment.center,
-                                decoration: BoxDecoration(
-                                  color: _isIncome
-                                      ? Colors.green[700]!
-                                      : Colors.transparent,
-                                  borderRadius: BorderRadius.circular(12),
-                                ),
-                                child: Row(
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  children: [
-                                    Icon(
-                                      Icons.arrow_circle_up_rounded,
-                                      color: _isIncome
-                                          ? Colors.white
-                                          : theme.colorScheme.onSurface
-                                                .withValues(alpha: 0.6),
-                                      size: 20,
-                                    ),
-                                    const SizedBox(width: 8),
-                                    Text(
-                                      'Receita',
-                                      style: theme.textTheme.titleSmall
-                                          ?.copyWith(
-                                            color: _isIncome
-                                                ? Colors.white
-                                                : theme.colorScheme.onSurface
-                                                      .withValues(alpha: 0.6),
-                                            fontWeight: _isIncome
-                                                ? FontWeight.bold
-                                                : FontWeight.w500,
-                                          ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ),
+                          ButtonSegment(
+                            value: true,
+                            icon:
+                                MediaQuery.textScalerOf(context).scale(14) <= 18
+                                ? const Icon(Icons.arrow_circle_up_rounded)
+                                : null,
+                            label: const Text('Receita'),
                           ),
                         ],
+                        selected: {_isIncome},
+                        onSelectionChanged: (selection) {
+                          setState(() => _isIncome = selection.single);
+                        },
                       ),
                     ),
                   ),

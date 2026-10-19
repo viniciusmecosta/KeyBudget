@@ -1,3 +1,4 @@
+import 'package:key_budget/core/design_system/widgets/app_page_scaffold.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:key_budget/app/utils/app_animations.dart';
@@ -93,7 +94,8 @@ class _ExportExpensesScreenState extends ConsumerState<ExportExpensesScreen> {
     final viewModel = ref.watch(expenseViewModelProvider);
     final isExporting = viewModel.isExportingCsv || viewModel.isExportingPdf;
 
-    return Scaffold(
+    return AppPageScaffold(
+      maxContentWidth: 760,
       appBar: AppBar(title: const Text('Exportar Despesas')),
       body: AppAnimations.fadeInFromBottom(
         Padding(
@@ -154,7 +156,8 @@ class _ExportExpensesScreenState extends ConsumerState<ExportExpensesScreen> {
           ),
         ),
 
-        context: context,),
+        context: context,
+      ),
     );
   }
 }
