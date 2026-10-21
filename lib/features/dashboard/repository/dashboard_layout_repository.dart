@@ -7,8 +7,13 @@ class DashboardLayout {
 
   final List<String> cards;
   final List<String> actions;
+  final bool integratedSummary;
 
-  const DashboardLayout({this.cards = cardIds, this.actions = actionIds});
+  const DashboardLayout({
+    this.cards = cardIds,
+    this.actions = actionIds,
+    this.integratedSummary = true,
+  });
 
   factory DashboardLayout.fromMap(Object? raw) {
     if (raw is! Map) return const DashboardLayout();
@@ -28,10 +33,18 @@ class DashboardLayout {
 
     final cards = read('cards', cardIds);
     if (!cards.contains('recent')) cards.add('recent');
-    return DashboardLayout(cards: cards, actions: read('actions', actionIds));
+    return DashboardLayout(
+      cards: cards,
+      actions: read('actions', actionIds),
+      integratedSummary: raw['integrated_summary'] != false,
+    );
   }
 
-  Map<String, dynamic> toMap() => {'cards': cards, 'actions': actions};
+  Map<String, dynamic> toMap() => {
+    'cards': cards,
+    'actions': actions,
+    'integrated_summary': integratedSummary,
+  };
 }
 
 class DashboardLayoutRepository {

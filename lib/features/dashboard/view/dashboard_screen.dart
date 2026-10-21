@@ -1,5 +1,6 @@
 import 'package:key_budget/core/design_system/widgets/app_page_scaffold.dart';
 import 'package:flutter/material.dart' hide DateUtils;
+import 'package:key_budget/core/design_system/colors/app_contrast.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:key_budget/app/widgets/responsive_center.dart';
 import 'package:key_budget/core/design_system/spacing/app_spacing.dart';
@@ -89,9 +90,21 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
         : ref.watch(dashboardLayoutProvider(userId)).asData?.value ??
               const DashboardLayout();
 
+    final integrated =
+        layout.integratedSummary && layout.cards.contains('balance');
+    final cards = layout.cards
+        .where((id) => !integrated || id != 'balance')
+        .toList();
+    final headerColor = AppContrast.primaryWithWhiteText(
+      theme.colorScheme.primary,
+    );
+
     return AppPageScaffold(
       backgroundColor: theme.scaffoldBackgroundColor,
-      appBar: const DashboardHeader(),
+      appBar: DashboardHeader(
+        backgroundColor: integrated ? headerColor : null,
+        foregroundColor: integrated ? Colors.white : null,
+      ),
       body: SafeArea(
         child: viewModel.isLoading
             ? const ResponsiveCenter(maxWidth: 1200, child: DashboardSkeleton())
@@ -107,6 +120,16 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                       parent: AlwaysScrollableScrollPhysics(),
                     ),
                     slivers: [
+                      if (integrated)
+                        SliverToBoxAdapter(
+                          child: ColoredBox(
+                            color: headerColor,
+                            child: const Padding(
+                              padding: EdgeInsets.only(bottom: AppSpacing.md),
+                              child: DashboardBalanceCard(integrated: true),
+                            ),
+                          ),
+                        ),
                       SliverToBoxAdapter(
                         child: Padding(
                           padding: const EdgeInsets.symmetric(
@@ -146,16 +169,16 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                                 children: [
                                   for (
                                     var index = 0;
-                                    index < layout.cards.length;
+                                    index < cards.length;
                                     index++
                                   )
                                     SizedBox(
                                       key: ValueKey(
-                                        'dashboard_${layout.cards[index]}',
+                                        'dashboard_${cards[index]}',
                                       ),
                                       width: width,
                                       child: _cardFor(
-                                        layout.cards[index],
+                                        cards[index],
                                         layout.actions,
                                       ),
                                     ),

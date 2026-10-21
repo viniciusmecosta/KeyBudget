@@ -39,6 +39,13 @@ void main() {
   test('legacy profile uses the complete default panel', () {
     final layout = DashboardLayout.fromMap(null);
     expect(layout.cards, DashboardLayout.cardIds);
+    expect(layout.integratedSummary, isTrue);
+    expect(
+      DashboardLayout.fromMap(
+        const DashboardLayout(integratedSummary: false).toMap(),
+      ).integratedSummary,
+      isFalse,
+    );
     expect(layout.actions, DashboardLayout.actionIds);
   });
 
@@ -59,7 +66,9 @@ void main() {
     await tester.pumpWidget(
       ProviderScope(
         overrides: [
-          authViewModelProvider.overrideWith((ref) => _AuthWithSuppliers(false)),
+          authViewModelProvider.overrideWith(
+            (ref) => _AuthWithSuppliers(false),
+          ),
           dashboardLayoutRepositoryProvider.overrideWithValue(repository),
         ],
         child: MaterialApp(

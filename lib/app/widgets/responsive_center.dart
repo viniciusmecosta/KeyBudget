@@ -5,17 +5,20 @@ class ResponsiveCenter extends ConsumerWidget {
   final Widget child;
   final double maxWidth;
   final EdgeInsetsGeometry padding;
+  final AlignmentGeometry alignment;
 
   const ResponsiveCenter({
     super.key,
     required this.child,
     this.maxWidth = 800.0,
     this.padding = EdgeInsets.zero,
+    this.alignment = Alignment.center,
   });
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    return Center(
+    return Align(
+      alignment: alignment,
       child: ConstrainedBox(
         constraints: BoxConstraints(maxWidth: maxWidth),
         child: Padding(padding: padding, child: child),

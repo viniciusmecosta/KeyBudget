@@ -58,19 +58,19 @@ class AppTypography {
       titleLarge: TextStyle(
         fontWeight: FontWeight.w600,
         color: textColor,
-        fontSize: 16,
+        fontSize: 18,
         letterSpacing: -0.2,
       ),
       titleMedium: TextStyle(
         fontWeight: FontWeight.w600,
         color: textColor,
-        fontSize: 14,
+        fontSize: 16,
         letterSpacing: -0.1,
       ),
       titleSmall: TextStyle(
         fontWeight: FontWeight.w600,
         color: textColor,
-        fontSize: 12,
+        fontSize: 14,
       ),
       bodyLarge: TextStyle(
         color: textColor,
@@ -102,7 +102,7 @@ class AppTypography {
       ),
       labelSmall: TextStyle(
         color: variantColor,
-        fontSize: 10,
+        fontSize: 12,
         fontWeight: FontWeight.w500,
       ),
     );

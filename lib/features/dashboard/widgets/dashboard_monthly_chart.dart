@@ -157,7 +157,7 @@ class DashboardMonthlyChart extends ConsumerWidget {
         children: [
           AppSectionHeader(
             title: enableIncomes ? 'Entradas vs Saídas' : 'Gastos realizados',
-            keepActionInline: true,
+            keepActionInline: false,
             subtitle: monthsToShow <= 1
                 ? 'Último mês'
                 : 'Últimos $monthsToShow meses',

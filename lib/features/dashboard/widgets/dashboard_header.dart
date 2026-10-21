@@ -8,7 +8,14 @@ import 'package:key_budget/core/design_system/spacing/app_spacing.dart';
 import 'package:key_budget/features/auth/viewmodel/auth_viewmodel.dart';
 
 class DashboardHeader extends ConsumerWidget implements PreferredSizeWidget {
-  const DashboardHeader({super.key});
+  const DashboardHeader({
+    super.key,
+    this.backgroundColor,
+    this.foregroundColor,
+  });
+
+  final Color? backgroundColor;
+  final Color? foregroundColor;
 
   ImageProvider? _getAvatarProvider(String? path) {
     if (path == null || path.isEmpty) return null;
@@ -44,7 +51,7 @@ class DashboardHeader extends ConsumerWidget implements PreferredSizeWidget {
     return AppBar(
       elevation: 0,
       scrolledUnderElevation: 0,
-      backgroundColor: Colors.transparent,
+      backgroundColor: backgroundColor ?? Colors.transparent,
       toolbarHeight: 72,
       title: Padding(
         padding: const EdgeInsets.only(top: AppSpacing.xs),
@@ -60,7 +67,9 @@ class DashboardHeader extends ConsumerWidget implements PreferredSizeWidget {
                         TextSpan(
                           text: '$greeting ',
                           style: theme.textTheme.bodyLarge?.copyWith(
-                            color: theme.colorScheme.onSurfaceVariant,
+                            color:
+                                foregroundColor ??
+                                theme.colorScheme.onSurfaceVariant,
                             fontSize: 16,
                           ),
                         ),
@@ -68,7 +77,8 @@ class DashboardHeader extends ConsumerWidget implements PreferredSizeWidget {
                           text: userName,
                           style: theme.textTheme.titleLarge?.copyWith(
                             fontWeight: FontWeight.w700,
-                            color: theme.colorScheme.onSurface,
+                            color:
+                                foregroundColor ?? theme.colorScheme.onSurface,
                             fontSize: 20,
                           ),
                         ),
@@ -95,11 +105,16 @@ class DashboardHeader extends ConsumerWidget implements PreferredSizeWidget {
                   padding: const EdgeInsets.all(4.0),
                   child: CircleAvatar(
                     radius: 24,
-                    backgroundColor: theme.colorScheme.primary.withAlpha(25),
+                    backgroundColor:
+                        (foregroundColor ?? theme.colorScheme.primary)
+                            .withAlpha(25),
                     backgroundImage: _getAvatarProvider(user?.avatarPath),
                     child:
                         (user?.avatarPath == null || user!.avatarPath!.isEmpty)
-                        ? Icon(Icons.person, color: theme.colorScheme.primary)
+                        ? Icon(
+                            Icons.person,
+                            color: foregroundColor ?? theme.colorScheme.primary,
+                          )
                         : null,
                   ),
                 ),

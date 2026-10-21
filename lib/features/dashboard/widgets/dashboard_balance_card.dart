@@ -12,7 +12,9 @@ import 'package:key_budget/features/auth/viewmodel/auth_viewmodel.dart';
 import 'package:key_budget/features/dashboard/viewmodel/dashboard_viewmodel.dart';
 
 class DashboardBalanceCard extends ConsumerStatefulWidget {
-  const DashboardBalanceCard({super.key});
+  const DashboardBalanceCard({super.key, this.integrated = false});
+
+  final bool integrated;
 
   @override
   ConsumerState<DashboardBalanceCard> createState() =>
@@ -136,7 +138,7 @@ class _DashboardBalanceCardState extends ConsumerState<DashboardBalanceCard>
         viewModel.averageOfPreviousMonths(enableIncomes) != 0.0;
     final isIncrease = percentageChange >= 0;
     final formattedPercentage =
-        '${isIncrease ? '+' : ''}${percentageChange.abs().toStringAsFixed(1)}%';
+        '${isIncrease ? '+' : '−'}${percentageChange.abs().toStringAsFixed(1)}%';
 
     final isGood = enableIncomes ? isIncrease : !isIncrease;
     final filledPrimary = AppContrast.primaryWithWhiteText(
@@ -191,7 +193,7 @@ class _DashboardBalanceCardState extends ConsumerState<DashboardBalanceCard>
                       : 'vs. média de gastos até o mesmo dia',
                   style: theme.textTheme.bodySmall?.copyWith(
                     color: cardTextColor.withAlpha((255 * 0.88).round()),
-                    fontSize: 11,
+                    fontSize: 12,
                   ),
                 ),
               ),
@@ -201,7 +203,7 @@ class _DashboardBalanceCardState extends ConsumerState<DashboardBalanceCard>
             'Sem histórico anterior para comparação',
             style: theme.textTheme.bodySmall?.copyWith(
               color: cardTextColor.withAlpha((255 * 0.88).round()),
-              fontSize: 11,
+              fontSize: 12,
             ),
           );
 
@@ -231,6 +233,7 @@ class _DashboardBalanceCardState extends ConsumerState<DashboardBalanceCard>
                 isDark: true,
               );
         return BalanceCard(
+          integrated: widget.integrated,
           title: enableIncomes ? 'Saldo realizado' : 'Despesas do mês',
           totalValue: _animation.value,
           foregroundColor: cardTextColor,
@@ -257,11 +260,13 @@ class _DashboardBalanceCardState extends ConsumerState<DashboardBalanceCard>
                             size: 18,
                           ),
                           const SizedBox(width: 6),
-                          Text(
-                            'Receitas: ${currencyFormatter.format(viewModel.realizedIncomeForMonth)}',
-                            style: theme.textTheme.bodyMedium?.copyWith(
-                              color: cardTextColor,
-                              fontWeight: FontWeight.w600,
+                          Flexible(
+                            child: Text(
+                              'Receitas: ${currencyFormatter.format(viewModel.realizedIncomeForMonth)}',
+                              style: theme.textTheme.bodyMedium?.copyWith(
+                                color: cardTextColor,
+                                fontWeight: FontWeight.w600,
+                              ),
                             ),
                           ),
                         ],
@@ -275,11 +280,13 @@ class _DashboardBalanceCardState extends ConsumerState<DashboardBalanceCard>
                             size: 18,
                           ),
                           const SizedBox(width: 6),
-                          Text(
-                            'Despesas: ${currencyFormatter.format(viewModel.realizedAmountForMonth)}',
-                            style: theme.textTheme.bodyMedium?.copyWith(
-                              color: cardTextColor,
-                              fontWeight: FontWeight.w600,
+                          Flexible(
+                            child: Text(
+                              'Despesas: ${currencyFormatter.format(viewModel.realizedAmountForMonth)}',
+                              style: theme.textTheme.bodyMedium?.copyWith(
+                                color: cardTextColor,
+                                fontWeight: FontWeight.w600,
+                              ),
                             ),
                           ),
                         ],

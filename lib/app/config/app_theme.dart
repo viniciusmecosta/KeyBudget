@@ -205,7 +205,7 @@ class AppTheme {
       floatingActionButtonTheme: FloatingActionButtonThemeData(
         backgroundColor: filledPrimaryColor,
         foregroundColor: Colors.white,
-        shape: const CircleBorder(),
+        shape: RoundedRectangleBorder(borderRadius: AppBorders.borderRadiusM),
         elevation: 3,
       ),
       outlinedButtonTheme: OutlinedButtonThemeData(

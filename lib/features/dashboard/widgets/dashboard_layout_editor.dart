@@ -23,6 +23,7 @@ class _DashboardLayoutEditorState extends ConsumerState<DashboardLayoutEditor> {
   late List<String> _cards;
   late List<String> _actions;
   bool _saving = false;
+  late bool _integratedSummary = widget.initial.integratedSummary;
 
   static const _cardLabels = {
     'balance': 'Resumo do mês',
@@ -62,6 +63,7 @@ class _DashboardLayoutEditorState extends ConsumerState<DashboardLayoutEditor> {
           .save(
             widget.userId,
             DashboardLayout(
+              integratedSummary: _integratedSummary,
               cards: _cards.where((id) => _visibleCards.contains(id)).toList(),
               actions: _actions
                   .where((id) => _visibleActions.contains(id))
@@ -171,8 +173,20 @@ class _DashboardLayoutEditorState extends ConsumerState<DashboardLayoutEditor> {
               child: SingleChildScrollView(
                 child: Column(
                   children: [
+                    SwitchListTile.adaptive(
+                      title: const Text('Resumo integrado ao topo'),
+                      subtitle: const Text(
+                        'Desative para usar um cartão na ordem escolhida abaixo.',
+                      ),
+                      value: _integratedSummary,
+                      onChanged: _saving
+                          ? null
+                          : (value) =>
+                                setState(() => _integratedSummary = value),
+                    ),
+                    const SizedBox(height: AppSpacing.md),
                     _section(
-                      title: 'Cartões',
+                      title: 'Seções do painel',
                       ids: _cards,
                       labels: _cardLabels,
                       visible: _visibleCards,
