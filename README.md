@@ -9,133 +9,117 @@
 
 </div>
 
-O **KeyBudget** é um aplicativo financeiro e gerenciador de credenciais construído em Flutter. Ele fornece um ambiente unificado e seguro para o controle detalhado de despesas, categorização de gastos, relatórios analíticos e armazenamento de dados sensíveis (senhas e documentos) utilizando criptografia AES executada diretamente no dispositivo (on-device) antes de qualquer sincronização com a nuvem.
+O **KeyBudget** é um aplicativo em Flutter para controle financeiro pessoal e gerenciamento seguro de senhas e documentos. Utiliza criptografia AES no próprio dispositivo para proteger credenciais e arquivos antes de qualquer sincronização com a nuvem.
 
-## Funcionalidades Principais
+## Funcionalidades
 
-* **Controle Financeiro**: Gestão completa de despesas mensais e recorrentes, criação de categorias personalizadas e visão geral do fluxo de caixa.
-* **Cofre de Credenciais e Documentos**: Armazenamento seguro e criptografado de credenciais de login e documentos importantes, utilizando o algoritmo AES (pacote `encrypt`).
-* **Análises Gráficas**: Interface visual rica com gráficos de tendência e distribuição por categoria, operada nativamente pelo pacote `fl_chart`.
-* **Segurança e Biometria**: Integração com autenticação biométrica nativa (`local_auth`) e regras rígidas de expiração de sessão em segundo plano.
-* **Autenticação Flexível**: Gerenciamento de usuários através do Firebase Auth com suporte a e-mail/senha e Google Sign-In.
-* **Portabilidade de Dados e OCR**: Exportação nativa de relatórios (CSV/PDF) e leitura inteligente de recibos via `google_mlkit_text_recognition`.
+- **Controle financeiro**: gestão de receitas e despesas, parcelamentos, gastos fixos/recorrentes e categorização com cores e ícones.
+- **Cofre de credenciais**: armazenamento de senhas, notas e logins com criptografia AES-256 local.
+- **Cofre de documentos**: armazenamento de arquivos e comprovantes com leitor de PDF e controle de prazos de validade.
+- **Gráficos e relatórios**: saldo mensal, distribuição por categoria via `fl_chart` e exportação em PDF e CSV.
+- **Metas**: definição e acompanhamento de objetivos financeiros.
+- **Busca global**: pesquisa unificada por transações, credenciais e documentos.
+- **Lixeira com retenção de 30 dias**: recuperação de itens excluídos acidentalmente.
+- **Widgets de tela inicial**: saldo e atalhos rápidos na home do smartphone (`home_widget`).
+- **Backup e sincronização**: sincronização em tempo real com Cloud Firestore e suporte a backup no Google Drive.
+- **Segurança e biometria**: autenticação biométrica (`local_auth`) e bloqueio automático por inatividade.
 
 ## Telas do Aplicativo
 
 <div align="center">
-  <h4>Dashboard Inicial & Registro de Despesas</h4>
+
+### Dashboard e Despesas
+
+<p align="center">
   <img src="docs/images/home-light.jpg" width="23%" alt="Dashboard Claro" />
   <img src="docs/images/home-dark.jpg" width="23%" alt="Dashboard Escuro" />
   <img src="docs/images/expense-light.jpg" width="23%" alt="Despesas Claro" />
   <img src="docs/images/expense-dark.jpg" width="23%" alt="Despesas Escuro" />
-  
-  <h4>Gerenciador de Credenciais & Documentos Armazenados</h4>
+</p>
+
+### Credenciais e Documentos
+
+<p align="center">
   <img src="docs/images/credentials-light.jpg" width="23%" alt="Credenciais Claro" />
   <img src="docs/images/credentials-dark.jpg" width="23%" alt="Credenciais Escuro" />
   <img src="docs/images/documents-light.jpg" width="23%" alt="Documentos Claro" />
   <img src="docs/images/documents-dark.jpg" width="23%" alt="Documentos Escuro" />
+</p>
 
-  <h4>Análise Gráfica Mensal & Distribuição</h4>
-  <img src="docs/images/analysis1-light.jpg" width="23%" alt="Análise Claro 1" />
-  <img src="docs/images/analysis1-dark.jpg" width="23%" alt="Análise Escuro 1" />
-  <img src="docs/images/analysis2-light.jpg" width="23%" alt="Análise Claro 2" />
-  <img src="docs/images/analysis2-dark.jpg" width="23%" alt="Análise Escuro 2" />
+### Análise Financeira
 
-  <h4>Perfil e Configurações</h4>
+<p align="center">
+  <img src="docs/images/analysis1-light.jpg" width="23%" alt="Análise Geral Claro" />
+  <img src="docs/images/analysis1-dark.jpg" width="23%" alt="Análise Geral Escuro" />
+  <img src="docs/images/analysis2-light.jpg" width="23%" alt="Distribuição Claro" />
+  <img src="docs/images/analysis2-dark.jpg" width="23%" alt="Distribuição Escuro" />
+</p>
+
+### Perfil e Configurações
+
+<p align="center">
   <img src="docs/images/user-light.jpg" width="23%" alt="Perfil Claro" />
   <img src="docs/images/user-dark.jpg" width="23%" alt="Perfil Escuro" />
+</p>
+
 </div>
 
-## Estrutura do Código e Arquitetura
+## Como Executar
 
-O projeto adota uma arquitetura modular baseada em *Feature-First*, combinada com a injeção de dependências do Riverpod. Isso garante um isolamento rigoroso entre as camadas de visualização (UI), regras de negócio (ViewModels) e acesso a dados (Repositories).
+### Pré-requisitos
 
-```text
-lib/
-├── app/                  # Configurações globais, widgets base da interface raiz
-├── core/                 # Componentes compartilhados através de todo o aplicativo
-│   ├── design_system/    # Tokens de UI: Cores, tipografia, espaçamentos e componentes base
-│   ├── models/           # Classes de modelo (Entity)
-│   ├── services/         # Serviços de infraestrutura (Criptografia, Biometria, OCR, PDF)
-│   └── utils/            # Funções utilitárias e formatadores estáticos
-├── features/             # Módulos de negócio independentes (Feature-First)
-│   ├── analysis/         # Gráficos e inteligência de dados
-│   ├── auth/             # Autenticação e registro
-│   ├── category/         # Gestão de categorias de despesas
-│   ├── credentials/      # Cofre de senhas criptografadas
-│   ├── dashboard/        # Tela inicial (Overview)
-│   ├── documents/        # Gerenciamento de documentos armazenados
-│   ├── expenses/         # Fluxo de registro e acompanhamento de gastos
-│   ├── suppliers/        # Relacionamento de fornecedores
-│   └── user/             # Configurações de perfil
-└── main.dart             # Ponto de entrada (Entrypoint)
-```
+- Flutter SDK com Dart `>=3.12.0 <4.0.0` (conforme `pubspec.yaml`)
+- Projeto configurado no Firebase (Authentication e Firestore)
+  - `android/app/google-services.json`
+  - `ios/Runner/GoogleService-Info.plist`
+- Chave AES de 32 bytes para criptografia local
 
-## Pré-requisitos do Ambiente
+### Passo a passo
 
-Para compilar e executar o projeto nativamente, certifique-se de configurar o seu ambiente adequadamente:
-
-* [Flutter SDK](https://docs.flutter.dev/get-started/install) nas versões `>=3.4.3 <4.0.0`.
-* Acesso ativo ao console do Firebase com as configurações (`google-services.json` e `GoogleService-Info.plist`) prontas para Android e iOS.
-* Criação de uma chave AES estática (32 bytes) para garantir a consistência dos testes e uso local.
-
-## Guia de Instalação e Execução
-
-1. **Clone o Repositório**
-
+1. Clone o repositório:
 ```bash
 git clone https://github.com/viniciusmecosta/KeyBudget.git
 cd KeyBudget
 ```
 
-2. **Configuração Firebase e Nativa**
-
-Acesse o Firebase, crie o projeto e adicione os descritores correspondentes em:
-- `android/app/google-services.json`
-- `ios/Runner/GoogleService-Info.plist`
-
-No Firebase Console, não esqueça de ativar os métodos do **Authentication** (E-mail/Senha e Google) e inicializar seu banco de dados no **Firestore**.
-
-3. **Injeção de Variáveis de Ambiente**
-
-Dentro do diretório raiz ou em `assets/` (conforme especificado na configuração do `flutter_dotenv`), crie o arquivo `.env` contendo a chave para a camada de criptografia. 
-
+2. Crie o arquivo `assets/.env` com a chave de criptografia de 32 caracteres:
 ```env
-ENCRYPTION_KEY=SuaChaveDeSegurancaExata32Bytes!
+ENCRYPTION_KEY=<sua-chave-aleatoria-de-32-bytes>
 ```
 
-4. **Instalação das Dependências**
-
+3. Instale as dependências e execute:
 ```bash
 flutter pub get
-```
-
-5. **Compilação e Execução**
-
-Para executar o projeto em modo de desenvolvimento com hot-reload ativo:
-
-```bash
 flutter run
 ```
 
 ## Regras de Segurança do Firestore
-
-A arquitetura de dados no Firestore foi modelada visando o isolamento rigoroso por usuário. Insira e publique estas diretrizes na aba *Rules* do seu painel do Firestore antes de lançar o app.
 
 ```javascript
 rules_version = '2';
 
 service cloud.firestore {
   match /databases/{database}/documents {
-    // Isolamento de perfil por Usuário Autenticado
     match /users/{userId} {
       allow read, update: if request.auth != null && request.auth.uid == userId;
-      allow create: if request.auth != null;
+      allow create: if request.auth != null && request.auth.uid == userId;
     }
-    // Isolamento de Subcoleções (Despesas, Credenciais, etc)
-    match /users/{userId}/{collection}/{docId} {
+    match /users/{userId}/{collection}/{document=**} {
       allow read, write, create, delete: if request.auth != null && request.auth.uid == userId;
     }
   }
 }
 ```
+
+## Personalização e desenvolvimento
+
+Em **Perfil → Aparência**, escolha a cor, o modo claro/escuro e as seções do painel. O resumo mensal pode aparecer integrado ao topo ou em cartão.
+
+Para o Google Drive, habilite a Drive API e configure o login Google do projeto Firebase. Em **Perfil → Google Drive**, conecte a conta e use **Verificar conexão** para testar o acesso.
+
+```bash
+flutter analyze
+flutter test
+```
+
+Código organizado por funcionalidades em `lib/features`, com componentes compartilhados em `lib/core/design_system`. Consulte [DESIGN.md](DESIGN.md) para o padrão visual.
