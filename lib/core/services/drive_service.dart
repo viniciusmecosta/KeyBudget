@@ -48,12 +48,14 @@ class DriveService {
   final DriveConnectionService _connectionService;
   final FirebaseAuth? _customFirebaseAuth;
   final bool allowUserInteraction;
+  final http.Client Function()? httpClientFactory;
 
   DriveService({
     GoogleSignInSession? googleSession,
     DriveConnectionService? connectionService,
     FirebaseAuth? firebaseAuth,
     this.allowUserInteraction = false,
+    this.httpClientFactory,
   }) : _googleSession = googleSession ?? GoogleSignInSession.instance,
        _connectionService =
            connectionService ?? DriveConnectionService.instance,
@@ -128,7 +130,10 @@ class DriveService {
 
       final headers = {'Authorization': 'Bearer ${authorization.accessToken}'};
 
-      final client = GoogleAuthClient(headers);
+      final client = GoogleAuthClient(
+        headers,
+        client: httpClientFactory?.call(),
+      );
       return _DriveSession(drive.DriveApi(client), client);
     } on GoogleSignInException catch (error) {
       if (error.code == GoogleSignInExceptionCode.canceled) {
@@ -145,6 +150,23 @@ class DriveService {
     if (session == null) return false;
     session.close();
     return true;
+  }
+
+  /// Confirms that Drive actually responds, rather than only finding a token.
+  Future<bool> verifyConnection() async {
+    final session = await _getDriveApi(allowInteractive: false);
+    if (session == null) return false;
+    try {
+      await session.api.files
+          .list(pageSize: 1, $fields: 'files(id)')
+          .timeout(const Duration(seconds: 15));
+      return true;
+    } on drive.DetailedApiRequestError catch (error) {
+      if (error.status == 401) return false;
+      rethrow;
+    } finally {
+      session.close();
+    }
   }
 
   Stream<List<int>> _createProgressStream(

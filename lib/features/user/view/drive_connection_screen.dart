@@ -25,6 +25,7 @@ class _DriveConnectionScreenState extends ConsumerState<DriveConnectionScreen> {
   bool _isAuthorized = false;
   DriveConnection? _connection;
   String? _error;
+  String? _verification;
 
   DriveService get _drive =>
       widget.driveService ??
@@ -75,12 +76,48 @@ class _DriveConnectionScreenState extends ConsumerState<DriveConnectionScreen> {
     }
   }
 
+  Future<void> _verify() async {
+    if (_isBusy || _isLoading) return;
+    final userId = _userId;
+    if (userId == null) return;
+    setState(() {
+      _isBusy = true;
+      _verification = null;
+      _error = null;
+    });
+    try {
+      final authorized = await _drive.verifyConnection().timeout(
+        const Duration(seconds: 20),
+      );
+      if (!mounted || _userId != userId) return;
+      setState(() {
+        _isAuthorized = authorized;
+        _verification = authorized
+            ? 'Conexão verificada. Seu Google Drive está acessível.'
+            : null;
+        _error = authorized
+            ? null
+            : 'O acesso expirou. Reconecte seu Google Drive para continuar.';
+      });
+    } catch (_) {
+      if (!mounted || _userId != userId) return;
+      setState(() {
+        _isAuthorized = false;
+        _error =
+            'O Drive não respondeu. Confira sua internet e tente reconectar.';
+      });
+    } finally {
+      if (mounted) setState(() => _isBusy = false);
+    }
+  }
+
   Future<void> _connect() async {
     if (_isBusy) return;
     final userId = _userId;
     if (userId == null) return;
     setState(() {
       _isBusy = true;
+      _verification = null;
       _error = null;
     });
     try {
@@ -113,7 +150,10 @@ class _DriveConnectionScreenState extends ConsumerState<DriveConnectionScreen> {
     if (_isBusy) return;
     final userId = _userId;
     if (userId == null) return;
-    setState(() => _isBusy = true);
+    setState(() {
+      _isBusy = true;
+      _verification = null;
+    });
     try {
       await ref.read(driveConnectionServiceProvider).disconnect(userId);
       if (!mounted || _userId != userId) return;
@@ -181,6 +221,16 @@ class _DriveConnectionScreenState extends ConsumerState<DriveConnectionScreen> {
                           'Confira a internet ou reconecte para renovar o acesso.',
                         ),
                     ],
+                    if (_verification != null) ...[
+                      const SizedBox(height: AppSpacing.md),
+                      Semantics(
+                        liveRegion: true,
+                        child: Text(
+                          _verification!,
+                          style: theme.textTheme.bodyMedium,
+                        ),
+                      ),
+                    ],
                     if (_error != null) ...[
                       const SizedBox(height: AppSpacing.md),
                       Semantics(
@@ -206,7 +256,7 @@ class _DriveConnectionScreenState extends ConsumerState<DriveConnectionScreen> {
                         onPressed: _isBusy
                             ? null
                             : _isAuthorized
-                            ? _load
+                            ? _verify
                             : _connect,
                       ),
                       if (saved) ...[
