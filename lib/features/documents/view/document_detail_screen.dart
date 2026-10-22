@@ -368,7 +368,7 @@ class DocumentDetailScreen extends ConsumerWidget {
           final isLast = v == document.versions.last;
           final dateText = v.issueDate != null
               ? 'Expedição: ${DateFormat('dd/MM/yyyy').format(v.issueDate!)}'
-              : 'Data de expedição não informada';
+              : 'Versão anterior';
 
           return Column(
             children: [
@@ -404,14 +404,21 @@ class DocumentDetailScreen extends ConsumerWidget {
                 ),
                 subtitle: v.attachments.isNotEmpty
                     ? Text(
-                        '${v.attachments.length} ${v.attachments.length == 1 ? "anexo" : "anexos"}',
+                        'Ver versão • ${v.attachments.length} ${v.attachments.length == 1 ? "anexo" : "anexos"}',
                         style: theme.textTheme.bodySmall?.copyWith(
                           color: theme.colorScheme.onSurfaceVariant,
                         ),
                       )
-                    : null,
-                trailing: TextButton(
-                  onPressed: () async {
+                    : const Text('Ver versão →'),
+                trailing: PopupMenuButton<String>(
+                  tooltip: 'Ações da versão',
+                  itemBuilder: (_) => const [
+                    PopupMenuItem(
+                      value: 'principal',
+                      child: Text('Definir como principal'),
+                    ),
+                  ],
+                  onSelected: (_) async {
                     final allVersions = [document, ...document.versions];
                     final scaffoldContext = context;
                     final navigator = Navigator.of(context);
@@ -434,9 +441,8 @@ class DocumentDetailScreen extends ConsumerWidget {
                       );
                     }
                   },
-                  child: const Text('Definir como principal'),
                 ),
-                onTap: () => NavigationUtils.pushReplacement<void, void>(
+                onTap: () => NavigationUtils.push(
                   context,
                   DocumentDetailScreen(document: v),
                 ),
