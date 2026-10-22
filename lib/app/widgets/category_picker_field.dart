@@ -45,12 +45,19 @@ class CategoryPickerField extends ConsumerWidget {
           child: InputDecorator(
             decoration: InputDecoration(
               labelText: label,
+              floatingLabelBehavior: FloatingLabelBehavior.always,
+              suffixIcon: const Icon(Icons.expand_more),
               errorText: state.errorText,
               prefixIcon: prefixIcon != null ? Icon(prefixIcon) : null,
             ),
             isEmpty: value == null,
             child: value == null
-                ? const Text('')
+                ? Text(
+                    'Selecione uma categoria',
+                    style: theme.textTheme.bodyLarge?.copyWith(
+                      color: theme.colorScheme.onSurfaceVariant,
+                    ),
+                  )
                 : Row(
                     children: [
                       Icon(value!.icon, size: 24, color: value!.color),
@@ -58,7 +65,7 @@ class CategoryPickerField extends ConsumerWidget {
                       Expanded(
                         child: Text(
                           value!.name,
-                          style: theme.textTheme.titleMedium,
+                          style: theme.textTheme.bodyLarge,
                           overflow: TextOverflow.ellipsis,
                         ),
                       ),

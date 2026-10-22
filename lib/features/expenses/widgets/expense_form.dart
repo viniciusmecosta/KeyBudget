@@ -135,7 +135,7 @@ class ExpenseForm extends ConsumerWidget {
       ),
       decoration: AppSurfaces.panel(context),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.center,
         children: [
           Text(
             amountLabel,
@@ -150,9 +150,9 @@ class ExpenseForm extends ConsumerWidget {
             controller: amountController,
             readOnly: !isEditing,
             keyboardType: const TextInputType.numberWithOptions(decimal: true),
-            textAlign: TextAlign.start,
+            textAlign: TextAlign.center,
             textInputAction: TextInputAction.next,
-            style: theme.textTheme.headlineLarge?.copyWith(
+            style: theme.textTheme.displayMedium?.copyWith(
               color: accentColor,
               fontWeight: FontWeight.w700,
               letterSpacing: -0.4,

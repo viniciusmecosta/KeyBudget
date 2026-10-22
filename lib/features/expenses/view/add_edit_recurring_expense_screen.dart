@@ -47,6 +47,7 @@ class _AddEditRecurringExpenseScreenState
     final categoryViewModel = ref.read(categoryViewModelProvider);
 
     _amountController = BrlInputController(
+      allowCursorEditing: widget.expense != null,
       initialValue: widget.expense?.amount ?? 0,
     );
     _motivationController = TextEditingController(

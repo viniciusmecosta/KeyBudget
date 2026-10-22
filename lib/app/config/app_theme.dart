@@ -262,8 +262,9 @@ class AppTheme {
         ),
         contentPadding: const EdgeInsets.symmetric(
           horizontal: AppSpacing.md,
-          vertical: AppSpacing.md,
+          vertical: 20,
         ),
+        constraints: const BoxConstraints(minHeight: 60),
         labelStyle: textTheme.bodyMedium?.copyWith(
           color: onSurfaceVariantColor,
         ),

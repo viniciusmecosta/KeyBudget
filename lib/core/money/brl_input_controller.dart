@@ -4,9 +4,14 @@ import 'money.dart';
 /// Cent-based monetary entry. Keeps the cursor beside the edited digit when
 /// grouping separators change; clearing the field is always safe.
 class BrlInputController extends TextEditingController {
-  BrlInputController({double initialValue = 0}) {
+  BrlInputController({
+    double initialValue = 0,
+    this.allowCursorEditing = false,
+  }) {
     updateValue(initialValue);
   }
+
+  final bool allowCursorEditing;
 
   static final _nonDigits = RegExp(r'[^0-9]');
   int get amountMinor => int.tryParse(text.replaceAll(_nonDigits, '')) ?? 0;
@@ -35,7 +40,11 @@ class BrlInputController extends TextEditingController {
   @override
   set value(TextEditingValue next) {
     if (next.text == text) {
-      super.value = next;
+      super.value = allowCursorEditing
+          ? next
+          : next.copyWith(
+              selection: TextSelection.collapsed(offset: text.length),
+            );
       return;
     }
     final digits = next.text.replaceAll(_nonDigits, '');
@@ -43,7 +52,7 @@ class BrlInputController extends TextEditingController {
     if (digits.length > 14) return;
     final formatted = _format(int.tryParse(digits) ?? 0);
     int mapOffset(int offset) {
-      if (offset < 0) return formatted.length;
+      if (!allowCursorEditing || offset < 0) return formatted.length;
       final trailingDigits = next.text
           .substring(offset.clamp(0, next.text.length))
           .replaceAll(_nonDigits, '')

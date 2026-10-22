@@ -56,7 +56,7 @@ class RecurringExpenseForm extends ConsumerWidget {
       ),
       decoration: AppSurfaces.panel(context),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.center,
         children: [
           Text(
             'Valor por ocorrência',
@@ -70,8 +70,8 @@ class RecurringExpenseForm extends ConsumerWidget {
           TextFormField(
             controller: amountController,
             keyboardType: const TextInputType.numberWithOptions(decimal: true),
-            textAlign: TextAlign.start,
-            style: theme.textTheme.headlineLarge?.copyWith(
+            textAlign: TextAlign.center,
+            style: theme.textTheme.displayMedium?.copyWith(
               color: accentColor,
               fontWeight: FontWeight.w700,
               letterSpacing: -0.4,

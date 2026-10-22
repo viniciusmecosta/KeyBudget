@@ -21,8 +21,23 @@ void main() {
     },
   );
 
+  test('new entry always starts at cents even when tapping inside zero', () {
+    final controller = BrlInputController();
+    addTearDown(controller.dispose);
+    controller.selection = const TextSelection.collapsed(offset: 4);
+    expect(controller.selection.baseOffset, controller.text.length);
+    controller.value = TextEditingValue(
+      text: '${controller.text}2',
+      selection: TextSelection.collapsed(offset: controller.text.length + 1),
+    );
+    expect(controller.amountMinor, 2);
+  });
+
   test('editing in the middle preserves cursor relative to digits', () {
-    final controller = BrlInputController(initialValue: 1234.56);
+    final controller = BrlInputController(
+      initialValue: 1234.56,
+      allowCursorEditing: true,
+    );
     addTearDown(controller.dispose);
     controller.value = const TextEditingValue(
       text: 'R\$ 1.934,56',

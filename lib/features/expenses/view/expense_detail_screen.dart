@@ -44,7 +44,10 @@ class _ExpenseDetailScreenState extends ConsumerState<ExpenseDetailScreen> {
   @override
   void initState() {
     super.initState();
-    _amountController = BrlInputController(initialValue: widget.expense.amount);
+    _amountController = BrlInputController(
+      initialValue: widget.expense.amount,
+      allowCursorEditing: true,
+    );
     _motivationController = TextEditingController(
       text: widget.expense.motivation,
     );
