@@ -199,12 +199,12 @@ class DashboardMonthlyChart extends ConsumerWidget {
               ],
             ),
           ],
-          const SizedBox(height: AppSpacing.xl),
+          const SizedBox(height: AppSpacing.md),
           Semantics(
             label: chartDescription,
             child: ExcludeSemantics(
               child: SizedBox(
-                height: 160,
+                height: 128,
                 child: validMonths.isEmpty
                     ? Center(
                         child: Text(
@@ -316,37 +316,6 @@ class DashboardMonthlyChart extends ConsumerWidget {
               ),
             ),
           ),
-          if (validMonths.isNotEmpty) ...[
-            const SizedBox(height: AppSpacing.md),
-            Text('Valores por mês', style: theme.textTheme.labelLarge),
-            const SizedBox(height: AppSpacing.sm),
-            for (final month in validMonths)
-              Padding(
-                padding: const EdgeInsets.symmetric(vertical: 6),
-                child: Wrap(
-                  alignment: WrapAlignment.spaceBetween,
-                  spacing: 16,
-                  runSpacing: 4,
-                  children: [
-                    Text(
-                      DateFormat.yMMM(
-                        'pt_BR',
-                      ).format(DateTime(now.year, now.month - month)),
-                      style: theme.textTheme.bodySmall,
-                    ),
-                    Text(
-                      '${enableIncomes ? 'Saídas: ' : ''}${currencyFormatter.format(expensesByMonth[month]! / 100)}',
-                      style: theme.textTheme.bodyMedium,
-                    ),
-                    if (enableIncomes)
-                      Text(
-                        'Entradas: ${currencyFormatter.format(incomesByMonth[month]! / 100)}',
-                        style: theme.textTheme.bodyMedium,
-                      ),
-                  ],
-                ),
-              ),
-          ],
         ],
       ),
     );

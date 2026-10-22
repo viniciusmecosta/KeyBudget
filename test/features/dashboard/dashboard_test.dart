@@ -1,3 +1,4 @@
+import 'package:fl_chart/fl_chart.dart';
 import 'package:key_budget/features/dashboard/widgets/dashboard_category_summary.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -154,13 +155,42 @@ void main() {
     );
     await tester.pumpAndSettle();
     expect(find.textContaining('0,30'), findsOneWidget);
-    expect(find.text('100,0%'), findsOneWidget);
+    expect(find.textContaining('100,0%'), findsOneWidget);
     expect(
-      tester
-          .widget<LinearProgressIndicator>(find.byType(LinearProgressIndicator))
-          .value,
-      1,
+      tester.widget<PieChart>(find.byType(PieChart)).data.sections.single.value,
+      30,
     );
+  });
+
+  testWidgets('category chart keeps five largest and groups the rest', (
+    tester,
+  ) async {
+    final model = FakeDashboardVM(
+      testExpenses: [
+        for (var i = 1; i <= 8; i++)
+          Expense(amount: i.toDouble(), categoryId: '$i', date: DateTime.now()),
+      ],
+    );
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [dashboardViewModelProvider.overrideWith((ref) => model)],
+        child: const MaterialApp(
+          home: Scaffold(body: DashboardCategorySummary()),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+    final sections = tester
+        .widget<PieChart>(find.byType(PieChart))
+        .data
+        .sections;
+    expect(sections.length, 6);
+    expect(sections.last.value, 600);
+    expect(
+      sections.fold<double>(0, (sum, section) => sum + section.value),
+      3600,
+    );
+    expect(find.text('Demais categorias'), findsOneWidget);
   });
 
   group('Dashboard Components & Responsive Layout', () {
