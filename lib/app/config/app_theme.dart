@@ -277,7 +277,9 @@ class AppTheme {
         shape: RoundedRectangleBorder(
           borderRadius: AppBorders.borderRadiusL,
           side: BorderSide(
-            color: isDark ? primaryColor.withValues(alpha: 0.18) : Colors.white,
+            color: isDark
+                ? onSurfaceColor.withValues(alpha: 0.08)
+                : Colors.white,
             width: 1,
           ),
         ),

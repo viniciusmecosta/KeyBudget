@@ -261,9 +261,11 @@ class _DriveConnectionScreenState extends ConsumerState<DriveConnectionScreen> {
                       ),
                       if (saved) ...[
                         const SizedBox(height: AppSpacing.sm),
-                        OutlinedButton(
+                        AppButton(
+                          variant: AppButtonVariant.outline,
+                          isFullWidth: true,
                           onPressed: _isBusy ? null : _disconnect,
-                          child: const Text('Desconectar Drive'),
+                          label: 'Desconectar Drive',
                         ),
                       ],
                     ],

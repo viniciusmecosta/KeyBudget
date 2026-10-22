@@ -52,7 +52,7 @@ class DashboardHeader extends ConsumerWidget implements PreferredSizeWidget {
       elevation: 0,
       scrolledUnderElevation: 0,
       backgroundColor: backgroundColor ?? Colors.transparent,
-      toolbarHeight: 72,
+      toolbarHeight: 60,
       title: Padding(
         padding: const EdgeInsets.only(top: AppSpacing.xs),
         child: Row(
@@ -70,16 +70,16 @@ class DashboardHeader extends ConsumerWidget implements PreferredSizeWidget {
                             color:
                                 foregroundColor ??
                                 theme.colorScheme.onSurfaceVariant,
-                            fontSize: 16,
+                            fontSize: 14,
                           ),
                         ),
                         TextSpan(
-                          text: userName,
+                          text: userName.split(RegExp(r'\s+')).first,
                           style: theme.textTheme.titleLarge?.copyWith(
                             fontWeight: FontWeight.w700,
                             color:
                                 foregroundColor ?? theme.colorScheme.onSurface,
-                            fontSize: 20,
+                            fontSize: 16,
                           ),
                         ),
                       ],
@@ -102,9 +102,9 @@ class DashboardHeader extends ConsumerWidget implements PreferredSizeWidget {
                       .navigateTo(AppDestination.profile);
                 },
                 child: Padding(
-                  padding: const EdgeInsets.all(4.0),
+                  padding: const EdgeInsets.all(6.0),
                   child: CircleAvatar(
-                    radius: 24,
+                    radius: 18,
                     backgroundColor:
                         (foregroundColor ?? theme.colorScheme.primary)
                             .withAlpha(25),
@@ -127,5 +127,5 @@ class DashboardHeader extends ConsumerWidget implements PreferredSizeWidget {
   }
 
   @override
-  Size get preferredSize => const Size.fromHeight(72.0);
+  Size get preferredSize => const Size.fromHeight(60.0);
 }

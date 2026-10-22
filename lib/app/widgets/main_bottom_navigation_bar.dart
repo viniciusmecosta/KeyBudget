@@ -65,7 +65,7 @@ class MainBottomNavigationBar extends ConsumerWidget {
                       Icon(
                         selected ? destination.selectedIcon : destination.icon,
                         color: color,
-                        size: 24,
+                        size: 22,
                       ),
                       if (!largeText) ...[
                         const SizedBox(height: 4),
@@ -75,21 +75,13 @@ class MainBottomNavigationBar extends ConsumerWidget {
                           overflow: TextOverflow.ellipsis,
                           style: theme.textTheme.labelSmall?.copyWith(
                             color: color,
+                            fontSize: 11,
                             fontWeight: selected
                                 ? FontWeight.w700
                                 : FontWeight.w500,
                           ),
                         ),
                       ],
-                      const SizedBox(height: 4),
-                      Container(
-                        width: 4,
-                        height: 4,
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          color: selected ? color : Colors.transparent,
-                        ),
-                      ),
                     ],
                   ),
                 ),

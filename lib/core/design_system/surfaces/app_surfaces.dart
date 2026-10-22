@@ -9,7 +9,7 @@ class AppSurfaces {
       borderRadius: AppBorders.borderRadiusL,
       border: Border.all(
         color: dark
-            ? theme.colorScheme.primary.withValues(alpha: 0.18)
+            ? theme.colorScheme.onSurface.withValues(alpha: 0.08)
             : Colors.white,
       ),
       gradient: LinearGradient(
@@ -18,7 +18,7 @@ class AppSurfaces {
         colors: [
           theme.colorScheme.surface,
           Color.alphaBlend(
-            theme.colorScheme.primary.withValues(alpha: dark ? 0.06 : 0.035),
+            theme.colorScheme.onSurface.withValues(alpha: dark ? 0.02 : 0.015),
             theme.colorScheme.surface,
           ),
         ],
