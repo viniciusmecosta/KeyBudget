@@ -1,3 +1,4 @@
+import 'package:key_budget/app/widgets/balance_card.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -79,6 +80,9 @@ class FakeExpenseVM extends ExpenseViewModel {
 
   @override
   void listenToExpenses(String userId) {}
+
+  @override
+  Future<void> retryListenToExpenses(String userId) async {}
 }
 
 void main() {
@@ -126,6 +130,39 @@ void main() {
       ),
     );
   }
+
+  testWidgets('monthly amount animates again after refresh', (tester) async {
+    await tester.pumpWidget(
+      createTestApp(
+        child: const ExpensesScreen(),
+        expenseVM: FakeExpenseVM(
+          initialExpenses: [Expense(amount: 100, date: DateTime.now())],
+        ),
+        categoryVM: FakeCategoryVM(testCategories),
+        authVM: FakeAuthVM(mockUser: testUser),
+      ),
+    );
+    await tester.pumpAndSettle();
+    final finalValue = tester
+        .widget<BalanceCard>(find.byType(BalanceCard))
+        .totalValue;
+    expect(finalValue.abs(), 100);
+    await tester
+        .widget<RefreshIndicator>(find.byType(RefreshIndicator))
+        .onRefresh();
+    await tester.pump();
+    expect(tester.widget<BalanceCard>(find.byType(BalanceCard)).totalValue, 0);
+    await tester.pump(const Duration(milliseconds: 100));
+    expect(
+      tester.widget<BalanceCard>(find.byType(BalanceCard)).totalValue.abs(),
+      lessThan(100),
+    );
+    await tester.pumpAndSettle();
+    expect(
+      tester.widget<BalanceCard>(find.byType(BalanceCard)).totalValue,
+      finalValue,
+    );
+  });
 
   testWidgets('direct expense launch loads categories before selection', (tester) async {
     final categories = ColdStartCategoryVM(testCategories);

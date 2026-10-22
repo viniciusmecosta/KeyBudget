@@ -33,6 +33,7 @@ class ExpensesScreen extends ConsumerStatefulWidget {
 
 class _ExpensesScreenState extends ConsumerState<ExpensesScreen> {
   bool _isSearching = false;
+  int _summaryRefresh = 0;
   final TextEditingController _searchController = TextEditingController();
 
   @override
@@ -70,6 +71,7 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen> {
         ref.read(expenseViewModelProvider).retryListenToExpenses(userId),
         ref.read(categoryViewModelProvider).fetchCategories(userId),
       ]);
+      if (mounted) setState(() => _summaryRefresh++);
     }
   }
 
@@ -276,10 +278,11 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen> {
                     horizontal: AppSpacing.md,
                   ),
                   child: TweenAnimationBuilder<double>(
+                    key: ValueKey(
+                      'summary_${expenseViewModel.selectedMonth}_${expenseViewModel.searchAllPeriods}_$_summaryRefresh',
+                    ),
                     tween: Tween<double>(
-                      begin: enableIncomes
-                          ? expenseViewModel.currentMonthBalance
-                          : expenseViewModel.currentMonthTotal,
+                      begin: 0,
                       end: enableIncomes
                           ? expenseViewModel.currentMonthBalance
                           : expenseViewModel.currentMonthTotal,
