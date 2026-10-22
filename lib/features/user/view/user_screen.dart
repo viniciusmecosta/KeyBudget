@@ -1,18 +1,18 @@
-import 'package:key_budget/app/utils/app_animations.dart';
-import 'package:key_budget/core/design_system/widgets/app_card.dart';
-import 'package:key_budget/core/design_system/widgets/app_page_scaffold.dart';
 import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:key_budget/app/config/app_theme.dart';
+import 'package:key_budget/app/utils/app_animations.dart';
 import 'package:key_budget/app/utils/navigation_utils.dart';
 import 'package:key_budget/app/widgets/responsive_center.dart';
 import 'package:key_budget/core/design_system/borders/app_borders.dart';
 import 'package:key_budget/core/design_system/spacing/app_spacing.dart';
 import 'package:key_budget/core/design_system/widgets/app_button.dart';
+import 'package:key_budget/core/design_system/widgets/app_card.dart';
 import 'package:key_budget/core/design_system/widgets/app_color_choice.dart';
+import 'package:key_budget/core/design_system/widgets/app_page_scaffold.dart';
 import 'package:key_budget/core/services/csv_service.dart';
 import 'package:key_budget/core/services/drive_service.dart';
 import 'package:key_budget/core/services/snackbar_service.dart';
@@ -22,16 +22,16 @@ import 'package:key_budget/features/category/viewmodel/category_viewmodel.dart';
 import 'package:key_budget/features/credentials/viewmodel/credential_viewmodel.dart';
 import 'package:key_budget/features/dashboard/repository/dashboard_layout_repository.dart';
 import 'package:key_budget/features/dashboard/widgets/dashboard_layout_editor.dart';
-import 'package:key_budget/features/expenses/viewmodel/expense_viewmodel.dart';
 import 'package:key_budget/features/expenses/repository/expense_repository.dart';
+import 'package:key_budget/features/expenses/viewmodel/expense_viewmodel.dart';
 import 'package:key_budget/features/goals/view/savings_goals_screen.dart';
 import 'package:key_budget/features/search/view/global_search_screen.dart';
 import 'package:key_budget/features/trash/view/trash_screen.dart';
-import 'package:key_budget/features/user/view/navigation_customization_screen.dart';
 import 'package:key_budget/features/user/view/account_center_screen.dart';
 import 'package:key_budget/features/user/view/backup_restore_screen.dart';
-import 'package:key_budget/features/user/view/edit_user_screen.dart';
 import 'package:key_budget/features/user/view/drive_connection_screen.dart';
+import 'package:key_budget/features/user/view/edit_user_screen.dart';
+import 'package:key_budget/features/user/view/navigation_customization_screen.dart';
 import 'package:path_provider/path_provider.dart';
 
 import '../widgets/settings_tile.dart';
@@ -49,7 +49,7 @@ const List<ThemeColorOption> _themeColors = [
   ThemeColorOption('Âmbar', 0xFFB45309),
   ThemeColorOption('Grafite', 0xFF475569),
   ThemeColorOption('Marrom', 0xFF795548),
-  ThemeColorOption('Azul vidro (Padrão)', 0xFF0058D9),
+  ThemeColorOption('Azul vidro', 0xFF0058D9),
   ThemeColorOption('Azul', 0xFF2563EB),
   ThemeColorOption('Verde', 0xFF15803D),
   ThemeColorOption('Vermelho', 0xFFB91C1C),
@@ -304,7 +304,7 @@ class UserScreen extends ConsumerWidget {
   void _showThemeColorDialog(BuildContext context, WidgetRef ref) {
     final authViewModel = ref.read(authViewModelProvider);
     final user = authViewModel.currentUser;
-    final currentThemeColor = user?.themeColor ?? _themeColors.first.colorValue;
+    final currentThemeColor = user?.themeColor ?? 0xFF0058D9;
 
     showModalBottomSheet(
       context: context,
@@ -315,87 +315,94 @@ class UserScreen extends ConsumerWidget {
         final sheetTheme = Theme.of(ctx);
         final isDark = sheetTheme.brightness == Brightness.dark;
         return SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.symmetric(
-              horizontal: 24.0,
-              vertical: 16.0,
-            ),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Container(
-                  width: 40,
-                  height: 4,
-                  margin: const EdgeInsets.only(bottom: 24),
-                  decoration: BoxDecoration(
-                    color: Theme.of(
-                      context,
-                    ).colorScheme.onSurface.withValues(alpha: 0.2),
-                    borderRadius: BorderRadius.circular(2),
+          child: SingleChildScrollView(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(
+                horizontal: 24.0,
+                vertical: 16.0,
+              ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Container(
+                    width: 40,
+                    height: 4,
+                    margin: const EdgeInsets.only(bottom: 24),
+                    decoration: BoxDecoration(
+                      color: Theme.of(
+                        context,
+                      ).colorScheme.onSurface.withValues(alpha: 0.2),
+                      borderRadius: BorderRadius.circular(2),
+                    ),
                   ),
-                ),
-                Text(
-                  'Cor do Tema',
-                  style: Theme.of(
-                    context,
-                  ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
-                ),
-                const SizedBox(height: 24),
-                Wrap(
-                  spacing: 16,
-                  runSpacing: 16,
-                  alignment: WrapAlignment.center,
-                  children: _themeColors.map((colorOption) {
-                    final isSelected =
-                        colorOption.colorValue == currentThemeColor;
-                    final previewColor = user?.themeColor == null && isSelected
-                        ? sheetTheme.colorScheme.primary
-                        : AppTheme.effectivePrimary(
-                            isDark: isDark,
-                            colorValue: colorOption.colorValue,
-                          );
-                    return Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        AppColorChoice(
-                          color: previewColor,
-                          label: 'Escolher cor ${colorOption.name} do tema',
-                          selected: isSelected,
-                          diameter: 50,
-                          onPressed: () async {
-                            if (user == null) return;
-                            final result = await authViewModel.updateUser(
-                              name: user.name,
-                              themeColor: colorOption.colorValue,
+                  Text(
+                    'Cor do Tema',
+                    style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  const SizedBox(height: 24),
+                  Wrap(
+                    spacing: 16,
+                    runSpacing: 16,
+                    alignment: WrapAlignment.center,
+                    children: _themeColors.map((colorOption) {
+                      final isSelected =
+                          colorOption.colorValue == currentThemeColor;
+                      final previewColor =
+                          user?.themeColor == null && isSelected
+                          ? sheetTheme.colorScheme.primary
+                          : AppTheme.effectivePrimary(
+                              isDark: isDark,
+                              colorValue: colorOption.colorValue,
                             );
-                            if (!ctx.mounted) return;
-                            if (!result.profileUpdated) {
-                              SnackbarService.showError(
-                                ctx,
-                                result.errorMessage ??
-                                    'Não foi possível atualizar a cor do tema. Tente novamente.',
-                              );
-                              return;
-                            }
-                            Navigator.pop(ctx);
-                          },
+                      return SizedBox(
+                        width: 92,
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            AppColorChoice(
+                              color: previewColor,
+                              label: 'Escolher cor ${colorOption.name} do tema',
+                              selected: isSelected,
+                              diameter: 50,
+                              onPressed: () async {
+                                if (user == null) return;
+                                final result = await authViewModel.updateUser(
+                                  name: user.name,
+                                  themeColor: colorOption.colorValue,
+                                );
+                                if (!ctx.mounted) return;
+                                if (!result.profileUpdated) {
+                                  SnackbarService.showError(
+                                    ctx,
+                                    result.errorMessage ??
+                                        'Não foi possível atualizar a cor do tema. Tente novamente.',
+                                  );
+                                  return;
+                                }
+                                Navigator.pop(ctx);
+                              },
+                            ),
+                            const SizedBox(height: 8),
+                            Text(
+                              colorOption.name,
+                              textAlign: TextAlign.center,
+                              style: Theme.of(context).textTheme.bodySmall
+                                  ?.copyWith(
+                                    fontWeight: isSelected
+                                        ? FontWeight.bold
+                                        : FontWeight.normal,
+                                  ),
+                            ),
+                          ],
                         ),
-                        const SizedBox(height: 8),
-                        Text(
-                          colorOption.name,
-                          style: Theme.of(context).textTheme.bodySmall
-                              ?.copyWith(
-                                fontWeight: isSelected
-                                    ? FontWeight.bold
-                                    : FontWeight.normal,
-                              ),
-                        ),
-                      ],
-                    );
-                  }).toList(),
-                ),
-                const SizedBox(height: 24),
-              ],
+                      );
+                    }).toList(),
+                  ),
+                  const SizedBox(height: 24),
+                ],
+              ),
             ),
           ),
         );

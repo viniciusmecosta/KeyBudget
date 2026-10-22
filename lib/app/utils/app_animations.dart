@@ -10,6 +10,22 @@ class AppAnimations {
   static const Duration durationSlow = major;
   static const Duration durationFast = feedback;
 
+  static AnimationStyle themeStyle(BuildContext context) {
+    final reduced =
+        MediaQuery.maybeDisableAnimationsOf(context) ??
+        WidgetsBinding
+            .instance
+            .platformDispatcher
+            .accessibilityFeatures
+            .disableAnimations;
+    return reduced
+        ? AnimationStyle.noAnimation
+        : const AnimationStyle(
+            duration: Duration(milliseconds: 550),
+            curve: Curves.easeInOutCubic,
+          );
+  }
+
   static const Curve curve = Curves.easeOutCubic;
 
   static bool isReducedMotion(BuildContext? context) {
