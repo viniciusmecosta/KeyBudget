@@ -28,6 +28,7 @@ class _DashboardLayoutEditorState extends ConsumerState<DashboardLayoutEditor> {
   static const _cardLabels = {
     'balance': 'Resumo do mês',
     'chart': 'Gastos mensais',
+    'categories': 'Gastos por categoria',
     'quick_actions': 'Atalhos',
     'recent': 'Atividades recentes',
   };
@@ -43,7 +44,7 @@ class _DashboardLayoutEditorState extends ConsumerState<DashboardLayoutEditor> {
     super.initState();
     _cards = [
       ...widget.initial.cards,
-      ...DashboardLayout.cardIds.where(
+      ...DashboardLayout.availableCardIds.where(
         (id) => !widget.initial.cards.contains(id),
       ),
     ];

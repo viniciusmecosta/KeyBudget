@@ -49,6 +49,20 @@ void main() {
     expect(layout.actions, DashboardLayout.actionIds);
   });
 
+  test(
+    'optional category chart survives persistence without changing defaults',
+    () {
+      final layout = DashboardLayout.fromMap({
+        'cards': ['categories', 'recent'],
+      });
+      expect(DashboardLayout.fromMap(layout.toMap()).cards, [
+        'categories',
+        'recent',
+      ]);
+      expect(const DashboardLayout().cards, isNot(contains('categories')));
+    },
+  );
+
   test('saved order is kept while invalid ids and duplicates are removed', () {
     final layout = DashboardLayout.fromMap({
       'cards': ['chart', 'chart', 'unknown', 'balance'],

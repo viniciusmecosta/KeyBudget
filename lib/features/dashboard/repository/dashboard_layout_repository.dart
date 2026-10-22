@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 class DashboardLayout {
   static const cardIds = ['balance', 'chart', 'quick_actions', 'recent'];
+  static const availableCardIds = [...cardIds, 'categories'];
   static const actionIds = ['expense', 'credentials', 'analysis', 'suppliers'];
 
   final List<String> cards;
@@ -31,7 +32,9 @@ class DashboardLayout {
       return selected;
     }
 
-    final cards = read('cards', cardIds);
+    final cards = raw['cards'] is List
+        ? read('cards', availableCardIds)
+        : List<String>.of(cardIds);
     if (!cards.contains('recent')) cards.add('recent');
     return DashboardLayout(
       cards: cards,

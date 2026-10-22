@@ -1,3 +1,4 @@
+import 'package:key_budget/features/dashboard/widgets/dashboard_category_summary.dart';
 import 'package:flutter/material.dart' hide DateUtils;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:key_budget/app/widgets/responsive_center.dart';
@@ -70,6 +71,8 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
     switch (id) {
       case 'balance':
         return const DashboardBalanceCard();
+      case 'categories':
+        return const DashboardCategorySummary();
       case 'chart':
         return const DashboardMonthlyChart();
       case 'quick_actions':

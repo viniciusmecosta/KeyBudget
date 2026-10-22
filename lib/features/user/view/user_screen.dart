@@ -44,6 +44,11 @@ class ThemeColorOption {
 }
 
 const List<ThemeColorOption> _themeColors = [
+  ThemeColorOption('Violeta', 0xFF7C3AED),
+  ThemeColorOption('Rosa', 0xFFBE185D),
+  ThemeColorOption('Âmbar', 0xFFB45309),
+  ThemeColorOption('Grafite', 0xFF475569),
+  ThemeColorOption('Marrom', 0xFF795548),
   ThemeColorOption('Azul vidro (Padrão)', 0xFF0058D9),
   ThemeColorOption('Azul', 0xFF2563EB),
   ThemeColorOption('Verde', 0xFF15803D),

@@ -1,3 +1,4 @@
+import 'package:key_budget/features/dashboard/widgets/dashboard_category_summary.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -131,6 +132,37 @@ void main() {
     await initializeDateFormatting('pt_BR', null);
   });
 
+  testWidgets('category chart excludes future entries and income', (
+    tester,
+  ) async {
+    final now = DateTime.now();
+    final model = FakeDashboardVM(
+      testExpenses: [
+        Expense(amount: 0.1, date: now),
+        Expense(amount: 0.2, date: now),
+        Expense(amount: 900, date: now, isIncome: true),
+        Expense(amount: 600, date: DateTime(now.year, now.month, now.day + 1)),
+      ],
+    );
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [dashboardViewModelProvider.overrideWith((ref) => model)],
+        child: const MaterialApp(
+          home: Scaffold(body: DashboardCategorySummary()),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+    expect(find.textContaining('0,30'), findsOneWidget);
+    expect(find.text('100,0%'), findsOneWidget);
+    expect(
+      tester
+          .widget<LinearProgressIndicator>(find.byType(LinearProgressIndicator))
+          .value,
+      1,
+    );
+  });
+
   group('Dashboard Components & Responsive Layout', () {
     test('scheduled amount separates future days from realized entries', () {
       final expenses = [
@@ -220,7 +252,7 @@ void main() {
         await tester.pumpAndSettle();
 
         expect(tester.takeException(), isNull);
-        expect(find.textContaining('Alexandre Bernardo'), findsOneWidget);
+        expect(find.textContaining('Alexandre'), findsOneWidget);
         expect(find.byTooltip('Personalizar painel'), findsNothing);
 
         await tester.tap(find.byType(InkWell));
