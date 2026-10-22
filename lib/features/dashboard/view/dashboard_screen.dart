@@ -122,6 +122,9 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                 child: ResponsiveCenter(
                   maxWidth: 1200,
                   child: CustomScrollView(
+                    scrollBehavior: ScrollConfiguration.of(
+                      context,
+                    ).copyWith(overscroll: false),
                     physics: const ClampingScrollPhysics(
                       parent: AlwaysScrollableScrollPhysics(),
                     ),
