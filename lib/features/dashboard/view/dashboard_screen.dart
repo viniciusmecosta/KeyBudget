@@ -29,6 +29,7 @@ class DashboardScreen extends ConsumerStatefulWidget {
 
 class _DashboardScreenState extends ConsumerState<DashboardScreen> {
   bool _isRefreshing = false;
+  bool _hasRenderedContent = false;
 
   @override
   void initState() {
@@ -98,6 +99,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
     final cards = layout.cards
         .where((id) => !integrated || id != 'balance')
         .toList();
+    if (!viewModel.isLoading) _hasRenderedContent = true;
     return AppPageScaffold(
       backgroundColor: theme.scaffoldBackgroundColor,
       appBar: DashboardHeader(
@@ -110,7 +112,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
         foregroundColor: integrated ? Colors.white : null,
       ),
       body: SafeArea(
-        child: viewModel.isLoading
+        child: viewModel.isLoading && !_hasRenderedContent
             ? const ResponsiveCenter(maxWidth: 1200, child: DashboardSkeleton())
             : RefreshIndicator(
                 onRefresh: _fetchInitialData,
@@ -120,7 +122,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                 child: ResponsiveCenter(
                   maxWidth: 1200,
                   child: CustomScrollView(
-                    physics: const BouncingScrollPhysics(
+                    physics: const ClampingScrollPhysics(
                       parent: AlwaysScrollableScrollPhysics(),
                     ),
                     slivers: [

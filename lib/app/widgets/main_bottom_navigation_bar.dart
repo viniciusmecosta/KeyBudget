@@ -92,27 +92,38 @@ class MainBottomNavigationBar extends ConsumerWidget {
       );
     }
 
-    return Material(
-      color: theme.colorScheme.surface,
-      child: SafeArea(
-        top: false,
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-          child: destinations.length <= 6
-              ? Row(children: destinations.map(destinationButton).toList())
-              : Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    for (var i = 0; i < destinations.length; i += 4)
-                      Row(
-                        children: destinations
-                            .skip(i)
-                            .take(4)
-                            .map(destinationButton)
-                            .toList(),
-                      ),
-                  ],
-                ),
+    return AnnotatedRegion<SystemUiOverlayStyle>(
+      value: SystemUiOverlayStyle(
+        systemNavigationBarColor: theme.colorScheme.surface,
+        systemNavigationBarDividerColor: Colors.transparent,
+        systemNavigationBarIconBrightness: theme.brightness == Brightness.dark
+            ? Brightness.light
+            : Brightness.dark,
+      ),
+      child: Material(
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+        clipBehavior: Clip.antiAlias,
+        color: theme.colorScheme.surface,
+        child: SafeArea(
+          top: false,
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+            child: destinations.length <= 6
+                ? Row(children: destinations.map(destinationButton).toList())
+                : Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      for (var i = 0; i < destinations.length; i += 4)
+                        Row(
+                          children: destinations
+                              .skip(i)
+                              .take(4)
+                              .map(destinationButton)
+                              .toList(),
+                        ),
+                    ],
+                  ),
+          ),
         ),
       ),
     );

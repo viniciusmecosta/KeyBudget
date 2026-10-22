@@ -1,3 +1,4 @@
+import 'package:flutter/services.dart';
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
@@ -49,6 +50,13 @@ class DashboardHeader extends ConsumerWidget implements PreferredSizeWidget {
         : 'Usuário';
 
     return AppBar(
+      systemOverlayStyle:
+          (foregroundColor == Colors.white ||
+                      (foregroundColor == null &&
+                          theme.brightness == Brightness.dark)
+                  ? SystemUiOverlayStyle.light
+                  : SystemUiOverlayStyle.dark)
+              .copyWith(statusBarColor: Colors.transparent),
       elevation: 0,
       scrolledUnderElevation: 0,
       backgroundColor: backgroundColor ?? Colors.transparent,
