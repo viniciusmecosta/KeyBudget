@@ -1,7 +1,7 @@
 import 'package:key_budget/core/design_system/widgets/app_page_scaffold.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter_masked_text2/flutter_masked_text2.dart';
+import 'package:key_budget/core/money/brl_input_controller.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:key_budget/app/utils/app_animations.dart';
 import 'package:key_budget/core/design_system/spacing/app_spacing.dart';
@@ -25,11 +25,7 @@ class AddExpenseScreen extends ConsumerStatefulWidget {
 
 class _AddExpenseScreenState extends ConsumerState<AddExpenseScreen> {
   final _formKey = GlobalKey<FormState>();
-  final _amountController = MoneyMaskedTextController(
-    decimalSeparator: ',',
-    thousandSeparator: '.',
-    leftSymbol: 'R\$ ',
-  );
+  final _amountController = BrlInputController();
   final _motivationController = TextEditingController();
   final _locationController = TextEditingController();
   DateTime _selectedDate = DateTime.now();
