@@ -1,8 +1,8 @@
-import 'package:key_budget/app/utils/app_animations.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
+import 'package:key_budget/app/utils/app_animations.dart';
 import 'package:key_budget/app/utils/navigation_utils.dart';
 import 'package:key_budget/core/design_system/colors/app_contrast.dart';
 import 'package:key_budget/core/design_system/spacing/app_spacing.dart';
@@ -157,20 +157,16 @@ class DashboardMonthlyChart extends ConsumerWidget {
         children: [
           AppSectionHeader(
             title: enableIncomes ? 'Entradas vs Saídas' : 'Gastos realizados',
-            keepActionInline: false,
+            keepActionInline: true,
             subtitle: monthsToShow <= 1
                 ? 'Último mês'
                 : 'Últimos $monthsToShow meses',
-            action: TextButton.icon(
+            action: AppSectionAction(
+              label: 'Abrir análise financeira',
+              icon: Icons.insights_rounded,
               onPressed: () {
                 NavigationUtils.push(context, const AnalysisScreen());
               },
-              style: TextButton.styleFrom(
-                padding: const EdgeInsets.symmetric(horizontal: 4),
-                minimumSize: const Size(48, 48),
-              ),
-              label: const Text('Ver análise', maxLines: 1, softWrap: false),
-              icon: const Icon(Icons.arrow_forward_ios_rounded, size: 14),
             ),
           ),
           if (enableIncomes) ...[

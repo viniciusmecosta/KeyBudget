@@ -12,7 +12,12 @@ Interface financeira calma, legível e organizada. A saudação e o resumo mensa
 - Marinho suave (#142B45): superfícies escuras.
 - Tinta azul (#102B50) e branco azulado (#EAF4FF): texto principal conforme o tema.
 
-As cores personalizadas passam pelos ajustes de contraste existentes. O topo usa o mesmo azul ajustado dos botões com texto branco.
+As cores personalizadas passam pelos ajustes de contraste existentes. O resumo integrado preserva a
+cor escolhida no tema, ajustada para contraste mínimo de 7:1 com texto branco, mantendo pelo menos
+4,5:1 nas legendas e na cápsula do período. A saudação compartilha o fundo com o resumo; um
+gradiente suave aprofunda a cor na base, com cantos inferiores de 28 pontos. O valor principal usa
+40 pontos e peso 700. O período aparece em uma cápsula discreta; receitas e despesas ficam em
+colunas, empilhadas quando o texto ampliado exige.
 
 ## 3. Typography Rules
 Inter, com texto corrente de 14–16 pontos e legendas a partir de 12 pontos. Pesos médios identificam ações; títulos e valores recebem maior peso. Respeitar a escala de texto do sistema e permitir quebra de linhas.
@@ -21,6 +26,8 @@ Inter, com texto corrente de 14–16 pontos e legendas a partir de 12 pontos. Pe
 - **Buttons:** cantos suavemente arredondados (16 pontos), rótulos claros e estado de carregamento. Botões flutuantes estendidos não recebem máscara circular.
 - **Cards/Containers:** cantos moderadamente arredondados (20 pontos), com elevação discreta. Modais mantêm cantos amplos (24 pontos).
 - **Inputs/Forms:** contorno suave, foco explícito e mensagens próximas do campo.
+- **Section actions:** ícones de navegação em alvos de 48 pontos, alinhados ao título. Análise e
+  lista completa têm tooltips e nomes acessíveis; não ocupam uma linha separada.
 - **Feedback:** operações remotas devem informar sucesso, ausência de autorização ou falha. Verificar o Drive consulta a API sem abrir login automaticamente.
 
 ## 5. Layout Principles

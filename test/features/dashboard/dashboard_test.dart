@@ -4,10 +4,10 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:key_budget/app/navigation/app_destination.dart';
 import 'package:key_budget/app/viewmodel/navigation_viewmodel.dart';
-import 'package:key_budget/core/models/expense_model.dart';
-import 'package:key_budget/core/models/user_model.dart';
 import 'package:key_budget/app/widgets/balance_card.dart';
 import 'package:key_budget/core/design_system/colors/app_contrast.dart';
+import 'package:key_budget/core/models/expense_model.dart';
+import 'package:key_budget/core/models/user_model.dart';
 import 'package:key_budget/features/auth/repository/auth_repository.dart';
 import 'package:key_budget/features/auth/viewmodel/auth_viewmodel.dart';
 import 'package:key_budget/features/category/viewmodel/category_viewmodel.dart';
@@ -474,7 +474,7 @@ void main() {
         await tester.pumpAndSettle();
 
         expect(tester.takeException(), isNull);
-        expect(find.text('Ver todas'), findsOneWidget);
+        expect(find.byTooltip('Ver todos os lançamentos'), findsOneWidget);
       },
     );
 

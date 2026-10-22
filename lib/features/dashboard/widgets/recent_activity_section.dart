@@ -58,14 +58,15 @@ class RecentActivitySection extends ConsumerWidget {
   ) {
     return AppSectionHeader(
       title: title,
-      action: TextButton.icon(
+      keepActionInline: true,
+      action: AppSectionAction(
+        label: 'Ver todos os lançamentos',
+        icon: Icons.arrow_forward_rounded,
         onPressed: () {
           ref
               .read(navigationViewModelProvider)
               .navigateTo(AppDestination.expenses);
         },
-        label: const Text('Ver todas'),
-        icon: const Icon(Icons.arrow_forward_ios_rounded, size: 14),
       ),
     );
   }

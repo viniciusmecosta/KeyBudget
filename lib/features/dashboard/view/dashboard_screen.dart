@@ -1,9 +1,9 @@
-import 'package:key_budget/core/design_system/widgets/app_page_scaffold.dart';
 import 'package:flutter/material.dart' hide DateUtils;
-import 'package:key_budget/core/design_system/colors/app_contrast.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:key_budget/app/widgets/responsive_center.dart';
+import 'package:key_budget/core/design_system/colors/app_contrast.dart';
 import 'package:key_budget/core/design_system/spacing/app_spacing.dart';
+import 'package:key_budget/core/design_system/widgets/app_page_scaffold.dart';
 import 'package:key_budget/features/auth/viewmodel/auth_viewmodel.dart';
 import 'package:key_budget/features/category/viewmodel/category_viewmodel.dart';
 import 'package:key_budget/features/credentials/viewmodel/credential_viewmodel.dart';
@@ -95,14 +95,15 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
     final cards = layout.cards
         .where((id) => !integrated || id != 'balance')
         .toList();
-    final headerColor = AppContrast.primaryWithWhiteText(
-      theme.colorScheme.primary,
-    );
-
     return AppPageScaffold(
       backgroundColor: theme.scaffoldBackgroundColor,
       appBar: DashboardHeader(
-        backgroundColor: integrated ? headerColor : null,
+        backgroundColor: integrated
+            ? AppContrast.primaryWithWhiteText(
+                theme.colorScheme.primary,
+                minimumRatio: 7,
+              )
+            : null,
         foregroundColor: integrated ? Colors.white : null,
       ),
       body: SafeArea(
@@ -122,13 +123,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                     slivers: [
                       if (integrated)
                         SliverToBoxAdapter(
-                          child: ColoredBox(
-                            color: headerColor,
-                            child: const Padding(
-                              padding: EdgeInsets.only(bottom: AppSpacing.md),
-                              child: DashboardBalanceCard(integrated: true),
-                            ),
-                          ),
+                          child: DashboardBalanceCard(integrated: true),
                         ),
                       SliverToBoxAdapter(
                         child: Padding(

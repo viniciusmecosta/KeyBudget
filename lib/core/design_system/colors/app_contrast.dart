@@ -19,11 +19,14 @@ class AppContrast {
         : Colors.white;
   }
 
-  static Color primaryWithWhiteText(Color primary) {
+  static Color primaryWithWhiteText(
+    Color primary, {
+    double minimumRatio = 4.5,
+  }) {
     var adjusted = primary.withAlpha(255);
     for (
       var step = 0;
-      step < 24 && ratio(Colors.white, adjusted) < 4.5;
+      step < 24 && ratio(Colors.white, adjusted) < minimumRatio;
       step++
     ) {
       adjusted = Color.lerp(adjusted, Colors.black, 0.08)!;

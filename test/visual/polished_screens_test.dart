@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'dart:ui' as ui;
+
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
@@ -18,6 +19,7 @@ import 'package:key_budget/features/expenses/viewmodel/expense_viewmodel.dart';
 import 'package:key_budget/features/goals/model/savings_goal.dart';
 import 'package:key_budget/features/goals/repository/savings_goal_repository.dart';
 import 'package:key_budget/features/goals/view/savings_goals_screen.dart';
+
 import '../features/dashboard/dashboard_test.dart' as fakes;
 
 class _Goals extends SavingsGoalRepository {
@@ -59,6 +61,7 @@ void main() {
         testWidgets(
           '${goals ? "goals" : "dashboard"} ${dark ? "dark" : "light"} $width',
           (tester) async {
+            final semantics = tester.ensureSemantics();
             tester.view.physicalSize = Size(width, 844);
             tester.view.devicePixelRatio = 1;
             addTearDown(tester.view.resetPhysicalSize);
@@ -113,6 +116,30 @@ void main() {
             );
             await tester.pumpAndSettle();
             expect(tester.takeException(), isNull);
+            if (!goals) {
+              final action = tester.getRect(
+                find.byTooltip('Abrir análise financeira'),
+              );
+              final heading = tester.getRect(
+                find.text(
+                  width == 320 ? 'Entradas vs Saídas' : 'Gastos realizados',
+                ),
+              );
+              expect(action.width, greaterThanOrEqualTo(48));
+              expect(action.height, greaterThanOrEqualTo(48));
+              expect(action.top, lessThan(heading.bottom));
+              expect(action.bottom, greaterThan(heading.top));
+              final summary = find.bySemanticsLabel(
+                RegExp(r'^Ver lançamentos\.'),
+              );
+              expect(
+                tester
+                    .getSemantics(summary)
+                    .getSemanticsData()
+                    .hasAction(ui.SemanticsAction.tap),
+                isTrue,
+              );
+            }
             if (goals) {
               final fab = find.byType(FloatingActionButton);
               expect(tester.getRect(fab).right, lessThanOrEqualTo(width));
@@ -138,6 +165,7 @@ void main() {
                 image.dispose();
               });
             }
+            semantics.dispose();
             await tester.pumpWidget(const SizedBox.shrink());
             await tester.pumpAndSettle();
           },

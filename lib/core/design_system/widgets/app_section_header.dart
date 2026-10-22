@@ -81,3 +81,33 @@ class AppSectionHeader extends StatelessWidget {
     );
   }
 }
+
+/// Compact section navigation with an accessible name and a 48-point target.
+class AppSectionAction extends StatelessWidget {
+  const AppSectionAction({
+    super.key,
+    required this.label,
+    required this.icon,
+    required this.onPressed,
+  });
+
+  final String label;
+  final IconData icon;
+  final VoidCallback onPressed;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = Theme.of(context).colorScheme;
+    return IconButton.filledTonal(
+      tooltip: label,
+      onPressed: onPressed,
+      icon: Icon(icon, size: 22),
+      style: IconButton.styleFrom(
+        minimumSize: const Size(48, 48),
+        foregroundColor: colors.primary,
+        backgroundColor: colors.primary.withValues(alpha: 0.08),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+      ),
+    );
+  }
+}
