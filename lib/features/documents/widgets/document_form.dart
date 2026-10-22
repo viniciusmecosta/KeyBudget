@@ -39,7 +39,9 @@ class DocumentForm extends ConsumerStatefulWidget {
 
 class _DocumentFormState extends ConsumerState<DocumentForm> {
   Widget _pairedFields(Widget first, Widget second) => LayoutBuilder(
-    builder: (context, constraints) => constraints.maxWidth >= 640
+    builder: (context, constraints) =>
+        constraints.maxWidth >= 640 &&
+            MediaQuery.textScalerOf(context).scale(14) <= 21
         ? Row(
             children: [
               Expanded(child: first),
@@ -76,7 +78,6 @@ class _DocumentFormState extends ConsumerState<DocumentForm> {
             AppTextField(
               controller: widget.nameController,
               label: 'Nome do Documento *',
-              prefixIcon: Icons.article_outlined,
               textInputAction: TextInputAction.next,
               validator: (value) =>
                   value!.isEmpty ? 'Informe o nome do documento' : null,
@@ -84,7 +85,6 @@ class _DocumentFormState extends ConsumerState<DocumentForm> {
             AppTextField(
               controller: widget.numberController,
               label: 'Número',
-              prefixIcon: Icons.tag_outlined,
               textInputAction: TextInputAction.next,
             ),
           ),
@@ -147,11 +147,21 @@ class _DocumentFormState extends ConsumerState<DocumentForm> {
                       appLock.beginExternalPick();
                       try {
                         final attachment = await viewModel.pickAndUploadFile();
-                        if (attachment != null) {
+                        if (mounted && attachment != null) {
                           setState(() {
                             widget.attachments.value.add(attachment);
                           });
                           widget.onChanged?.call();
+                        }
+                      } catch (_) {
+                        if (context.mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text(
+                                'Não foi possível anexar o arquivo. Confira a conexão e tente novamente.',
+                              ),
+                            ),
+                          );
                         }
                       } finally {
                         appLock.endExternalPick();
@@ -167,47 +177,36 @@ class _DocumentFormState extends ConsumerState<DocumentForm> {
 
   List<Widget> _buildAdditionalFields(ThemeData theme) {
     return widget.additionalFields.value.map((field) {
-      final index = widget.additionalFields.value.indexOf(field);
       return Padding(
-        padding: const EdgeInsets.only(bottom: AppSpacing.sm),
-        child: Row(
+        key: ObjectKey(field),
+        padding: const EdgeInsets.only(bottom: AppSpacing.md),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Expanded(
-              child: TextFormField(
+            _pairedFields(
+              TextFormField(
                 initialValue: field['name'],
-                decoration: const InputDecoration(
-                  labelText: 'Campo',
-                  prefixIcon: Icon(Icons.label_outline),
-                ),
-                onChanged: (value) {
-                  widget.additionalFields.value[index]['name'] = value;
-                },
+                decoration: const InputDecoration(labelText: 'Campo'),
+                textInputAction: TextInputAction.next,
+                onChanged: (value) => field['name'] = value,
               ),
-            ),
-            const SizedBox(width: AppSpacing.sm),
-            Expanded(
-              child: TextFormField(
+              TextFormField(
                 initialValue: field['value'],
-                decoration: const InputDecoration(
-                  labelText: 'Valor',
-                  prefixIcon: Icon(Icons.short_text),
-                ),
-                onChanged: (value) {
-                  widget.additionalFields.value[index]['value'] = value;
-                },
+                minLines: 1,
+                maxLines: 4,
+                decoration: const InputDecoration(labelText: 'Valor'),
+                onChanged: (value) => field['value'] = value,
               ),
             ),
-            IconButton(
-              icon: Icon(
-                Icons.remove_circle_outline,
-                color: theme.colorScheme.error,
+            Align(
+              alignment: Alignment.centerRight,
+              child: TextButton(
+                onPressed: () {
+                  setState(() => widget.additionalFields.value.remove(field));
+                  widget.onChanged?.call();
+                },
+                child: const Text('Remover campo'),
               ),
-              onPressed: () {
-                setState(() {
-                  widget.additionalFields.value.removeAt(index);
-                });
-                widget.onChanged?.call();
-              },
             ),
           ],
         ),
@@ -252,6 +251,7 @@ class _DocumentFormState extends ConsumerState<DocumentForm> {
             },
           ),
           trailing: IconButton(
+            tooltip: 'Remover anexo',
             icon: Icon(
               Icons.remove_circle_outline,
               color: theme.colorScheme.error,
@@ -282,7 +282,7 @@ class _DocumentFormState extends ConsumerState<DocumentForm> {
           firstDate: DateTime(1900),
           lastDate: DateTime(2100),
         );
-        if (date != null) {
+        if (mounted && date != null) {
           setState(() {
             notifier.value = date;
           });
@@ -293,9 +293,10 @@ class _DocumentFormState extends ConsumerState<DocumentForm> {
       child: InputDecorator(
         decoration: InputDecoration(
           labelText: label,
-          prefixIcon: const Icon(Icons.calendar_today_outlined),
+          floatingLabelBehavior: FloatingLabelBehavior.always,
           suffixIcon: notifier.value != null
               ? IconButton(
+                  tooltip: 'Limpar $label',
                   icon: Icon(
                     Icons.clear,
                     color: theme.colorScheme.onSurfaceVariant,
@@ -315,9 +316,7 @@ class _DocumentFormState extends ConsumerState<DocumentForm> {
               : DateFormat('dd/MM/yyyy').format(notifier.value!),
           style: notifier.value == null
               ? theme.textTheme.bodyMedium?.copyWith(
-                  color: theme.colorScheme.onSurfaceVariant.withValues(
-                    alpha: 0.6,
-                  ),
+                  color: theme.colorScheme.onSurfaceVariant,
                 )
               : theme.textTheme.bodyMedium,
         ),

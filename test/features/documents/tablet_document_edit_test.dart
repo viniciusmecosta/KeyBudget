@@ -7,6 +7,37 @@ import 'package:key_budget/features/documents/view/edit_document_screen.dart';
 import 'package:key_budget/features/documents/widgets/document_form.dart';
 
 void main() {
+  testWidgets('removing an additional field preserves the next field values', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(800, 1400);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    await tester.pumpWidget(
+      ProviderScope(
+        child: MaterialApp(
+          home: EditDocumentScreen(
+            document: Document(
+              id: 'document',
+              documentName: 'CNH',
+              additionalFields: {
+                'Órgão': 'Detran',
+                'Observação': 'Valor preservado',
+              },
+            ),
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Remover campo').first);
+    await tester.pumpAndSettle();
+    expect(find.text('Detran'), findsNothing);
+    expect(find.text('Valor preservado'), findsOneWidget);
+    expect(tester.takeException(), isNull);
+  });
+
   testWidgets(
     'document edit uses two columns on tablet and keeps input on resize',
     (tester) async {
