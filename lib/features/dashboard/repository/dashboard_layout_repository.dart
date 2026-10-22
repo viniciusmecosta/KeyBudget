@@ -3,7 +3,13 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 class DashboardLayout {
   static const cardIds = ['balance', 'chart', 'quick_actions', 'recent'];
-  static const availableCardIds = [...cardIds, 'categories'];
+  static const availableCardIds = [
+    ...cardIds,
+    'categories',
+    'accumulated',
+    'periods',
+    'upcoming',
+  ];
   static const actionIds = ['expense', 'credentials', 'analysis', 'suppliers'];
 
   final List<String> cards;
