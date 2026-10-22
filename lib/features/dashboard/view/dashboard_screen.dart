@@ -1,3 +1,5 @@
+import 'package:key_budget/features/dashboard/widgets/dashboard_insight_chart.dart';
+import 'package:key_budget/features/dashboard/widgets/dashboard_layout_editor.dart';
 import 'package:key_budget/features/dashboard/widgets/dashboard_category_summary.dart';
 import 'package:flutter/material.dart' hide DateUtils;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -44,7 +46,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
     final userId = authViewModel.currentUser?.id;
     if (userId == null) return;
 
-    if (!mounted) return;
+    if (!mounted || _isRefreshing) return;
     if (!isRefresh) {
       if (_isRefreshing) return;
       setState(() => _isRefreshing = true);
@@ -56,10 +58,35 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
     try {
       if (authViewModel.currentUser != null && mounted) {
         await ref.read(categoryViewModelProvider).fetchCategories(userId);
-        if (!mounted) return;
-        ref.read(expenseViewModelProvider).listenToExpenses(userId);
-        if (!mounted) return;
-        ref.read(credentialViewModelProvider).listenToCredentials(userId);
+        if (!mounted ||
+            ref.read(authViewModelProvider).currentUser?.id != userId) {
+          return;
+        }
+        if (isRefresh) {
+          await ref
+              .read(expenseViewModelProvider)
+              .retryListenToExpenses(userId);
+          if (!mounted ||
+              ref.read(authViewModelProvider).currentUser?.id != userId) {
+            return;
+          }
+          ref
+              .read(credentialViewModelProvider)
+              .retryListenToCredentials(userId);
+        } else {
+          ref.read(expenseViewModelProvider).listenToExpenses(userId);
+          ref.read(credentialViewModelProvider).listenToCredentials(userId);
+        }
+      }
+    } catch (_) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text(
+              'Não foi possível atualizar o painel. Confira a conexão e tente novamente.',
+            ),
+          ),
+        );
       }
     } finally {
       if (mounted) {
@@ -72,6 +99,14 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
     switch (id) {
       case 'balance':
         return const DashboardBalanceCard();
+      case 'accumulated':
+        return const DashboardInsightChart(
+          insight: DashboardInsight.accumulated,
+        );
+      case 'periods':
+        return const DashboardInsightChart(insight: DashboardInsight.periods);
+      case 'upcoming':
+        return const DashboardInsightChart(insight: DashboardInsight.upcoming);
       case 'categories':
         return const DashboardCategorySummary();
       case 'chart':
@@ -89,10 +124,12 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
     final expenseViewModel = ref.watch(expenseViewModelProvider);
     final theme = Theme.of(context);
     final userId = ref.watch(authViewModelProvider).currentUser?.id;
+    final layoutState = userId == null
+        ? null
+        : ref.watch(dashboardLayoutProvider(userId));
     final layout = userId == null
         ? const DashboardLayout()
-        : ref.watch(dashboardLayoutProvider(userId)).asData?.value ??
-              const DashboardLayout();
+        : layoutState?.asData?.value ?? const DashboardLayout();
 
     final integrated =
         layout.integratedSummary && layout.cards.contains('balance');
@@ -191,6 +228,37 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                           ),
                         ),
                       ),
+                      if (userId != null)
+                        SliverToBoxAdapter(
+                          child: Padding(
+                            padding: const EdgeInsets.only(bottom: 24),
+                            child: Center(
+                              child: TextButton.icon(
+                                icon: const Icon(Icons.tune_rounded),
+                                label: Text(
+                                  layoutState?.hasError == true
+                                      ? 'Recarregar personalização'
+                                      : 'Personalizar painel',
+                                ),
+                                onPressed: layoutState?.hasError == true
+                                    ? () => ref.invalidate(
+                                        dashboardLayoutProvider(userId),
+                                      )
+                                    : layoutState?.hasValue == true
+                                    ? () => showModalBottomSheet<void>(
+                                        context: context,
+                                        isScrollControlled: true,
+                                        showDragHandle: true,
+                                        builder: (_) => DashboardLayoutEditor(
+                                          userId: userId,
+                                          initial: layout,
+                                        ),
+                                      )
+                                    : null,
+                              ),
+                            ),
+                          ),
+                        ),
                     ],
                   ),
                 ),

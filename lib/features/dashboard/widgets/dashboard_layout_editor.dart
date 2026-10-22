@@ -29,9 +29,20 @@ class _DashboardLayoutEditorState extends ConsumerState<DashboardLayoutEditor> {
     'balance': 'Resumo do mês',
     'chart': 'Gastos mensais',
     'categories': 'Gastos por categoria',
+    'accumulated': 'Evolução do mês',
+    'periods': 'Gastos por período',
+    'upcoming': 'Próximos sete dias',
     'quick_actions': 'Atalhos',
     'recent': 'Atividades recentes',
   };
+  static const _descriptions = {
+    'chart': 'Compare os últimos meses em barras.',
+    'categories': 'Rosca com as cinco maiores e demais categorias.',
+    'accumulated': 'Linha com o total acumulado de despesas até hoje.',
+    'periods': 'Compare os gastos dos dias 1–7, 8–14 e seguintes.',
+    'upcoming': 'Veja as despesas já cadastradas para os próximos dias.',
+  };
+
   static const _actionLabels = {
     'expense': 'Nova despesa',
     'credentials': 'Cofre',
@@ -110,6 +121,7 @@ class _DashboardLayoutEditorState extends ConsumerState<DashboardLayoutEditor> {
           buildDefaultDragHandles: false,
           itemCount: displayIds.length,
           onReorderItem: (oldIndex, newIndex) {
+            if (_saving) return;
             setState(() {
               displayIds.insert(newIndex, displayIds.removeAt(oldIndex));
               ids
@@ -128,9 +140,11 @@ class _DashboardLayoutEditorState extends ConsumerState<DashboardLayoutEditor> {
               title: Text(labels[id] ?? id),
               subtitle: id == mandatoryId
                   ? const Text('Sempre disponível')
-                  : null,
+                  : _descriptions[id] == null
+                  ? null
+                  : Text(_descriptions[id]!),
               value: visible.contains(id),
-              onChanged: id == mandatoryId
+              onChanged: _saving || id == mandatoryId
                   ? null
                   : (enabled) => setState(() {
                       if (enabled == true) {
@@ -168,6 +182,11 @@ class _DashboardLayoutEditorState extends ConsumerState<DashboardLayoutEditor> {
             Text(
               'Personalizar painel',
               style: Theme.of(context).textTheme.titleLarge,
+            ),
+            const SizedBox(height: AppSpacing.sm),
+            const Text(
+              'Escolha o que aparece e arraste para organizar.',
+              textAlign: TextAlign.center,
             ),
             const SizedBox(height: AppSpacing.md),
             Flexible(
