@@ -6,11 +6,20 @@ import 'package:key_budget/core/design_system/widgets/app_card.dart';
 import 'package:key_budget/features/dashboard/viewmodel/dashboard_viewmodel.dart';
 
 /// Uses the dashboard's existing data, without another database subscription.
-class DashboardCategorySummary extends ConsumerWidget {
+class DashboardCategorySummary extends ConsumerStatefulWidget {
   const DashboardCategorySummary({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<DashboardCategorySummary> createState() =>
+      _DashboardCategorySummaryState();
+}
+
+class _DashboardCategorySummaryState
+    extends ConsumerState<DashboardCategorySummary> {
+  int? _selected;
+
+  @override
+  Widget build(BuildContext context) {
     final model = ref.watch(dashboardViewModelProvider);
     final theme = Theme.of(context);
     final now = DateTime.now();
@@ -62,10 +71,7 @@ class DashboardCategorySummary extends ConsumerWidget {
         children: [
           Text('Gastos por categoria', style: theme.textTheme.titleMedium),
           const SizedBox(height: 4),
-          Text(
-            'Realizados neste mês • participação no total',
-            style: theme.textTheme.bodySmall,
-          ),
+          Text('Realizados neste mês', style: theme.textTheme.bodySmall),
           const SizedBox(height: 16),
           if (total == 0)
             const Text(
@@ -80,14 +86,29 @@ class DashboardCategorySummary extends ConsumerWidget {
                   height: 148,
                   child: PieChart(
                     PieChartData(
-                      centerSpaceRadius: 42,
+                      pieTouchData: PieTouchData(
+                        touchCallback: (event, response) {
+                          if (event is! FlTapUpEvent) return;
+                          final index =
+                              response?.touchedSection?.touchedSectionIndex;
+                          setState(
+                            () => _selected =
+                                index != null &&
+                                    index >= 0 &&
+                                    index < slices.length
+                                ? index
+                                : null,
+                          );
+                        },
+                      ),
+                      centerSpaceRadius: 40,
                       sectionsSpace: 3,
                       sections: [
                         for (var index = 0; index < slices.length; index++)
                           PieChartSectionData(
                             value: slices[index].value.toDouble(),
                             color: colors[index],
-                            radius: 27,
+                            radius: _selected == index ? 34 : 26,
                             showTitle: false,
                           ),
                       ],
@@ -96,7 +117,49 @@ class DashboardCategorySummary extends ConsumerWidget {
                 ),
               ),
             ),
-            const SizedBox(height: 12),
+            if (_selected != null && _selected! < slices.length)
+              Semantics(
+                liveRegion: true,
+                child: Padding(
+                  padding: const EdgeInsets.only(top: 8),
+                  child: Text(
+                    '${name(_selected!)} · ${currency.format(slices[_selected!].value / 100)}',
+                    style: theme.textTheme.labelLarge,
+                  ),
+                ),
+              ),
+            TextButton(
+              onPressed: () => showModalBottomSheet<void>(
+                context: context,
+                isScrollControlled: true,
+                builder: (context) => SafeArea(
+                  child: SingleChildScrollView(
+                    child: Padding(
+                      padding: const EdgeInsets.all(24),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          Text(
+                            'Gastos por categoria',
+                            style: theme.textTheme.titleMedium,
+                          ),
+                          const SizedBox(height: 16),
+                          for (var index = 0; index < slices.length; index++)
+                            Padding(
+                              padding: const EdgeInsets.symmetric(vertical: 8),
+                              child: Text(
+                                '${name(index)}: ${currency.format(slices[index].value / 100)}',
+                              ),
+                            ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+              child: const Text('Ver valores'),
+            ),
             for (var index = 0; index < slices.length; index++)
               Padding(
                 padding: const EdgeInsets.symmetric(vertical: 5),
@@ -123,7 +186,7 @@ class DashboardCategorySummary extends ConsumerWidget {
                     const SizedBox(width: 8),
                     Flexible(
                       child: Text(
-                        '${currency.format(slices[index].value / 100)} · ${(slices[index].value * 100 / total).toStringAsFixed(1).replaceAll('.', ',')}%',
+                        '${(slices[index].value * 100 / total).toStringAsFixed(1).replaceAll('.', ',')}%',
                         textAlign: TextAlign.end,
                         style: theme.textTheme.bodySmall,
                       ),

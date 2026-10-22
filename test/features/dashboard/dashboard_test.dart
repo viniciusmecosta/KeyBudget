@@ -1,5 +1,4 @@
 import 'package:fl_chart/fl_chart.dart';
-import 'package:key_budget/features/dashboard/widgets/dashboard_category_summary.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -18,6 +17,7 @@ import 'package:key_budget/features/credentials/viewmodel/credential_viewmodel.d
 import 'package:key_budget/features/dashboard/view/dashboard_screen.dart';
 import 'package:key_budget/features/dashboard/viewmodel/dashboard_viewmodel.dart';
 import 'package:key_budget/features/dashboard/widgets/dashboard_balance_card.dart';
+import 'package:key_budget/features/dashboard/widgets/dashboard_category_summary.dart';
 import 'package:key_budget/features/dashboard/widgets/dashboard_header.dart';
 import 'package:key_budget/features/dashboard/widgets/quick_actions_section.dart';
 import 'package:key_budget/features/dashboard/widgets/recent_activity_section.dart';
@@ -51,6 +51,7 @@ class FakeCredentialVM extends CredentialViewModel {
 
 class FakeAuthVM extends AuthViewModel {
   final User? mockUser;
+
   FakeAuthVM({this.mockUser})
     : super(authRepository: FakeAuthRepo(), listenToAuthChanges: false);
 
@@ -153,6 +154,9 @@ void main() {
         ),
       ),
     );
+    await tester.pumpAndSettle();
+    expect(find.textContaining('0,30'), findsNothing);
+    await tester.tap(find.text('Ver valores'));
     await tester.pumpAndSettle();
     expect(find.textContaining('0,30'), findsOneWidget);
     expect(find.textContaining('100,0%'), findsOneWidget);
