@@ -11,6 +11,7 @@ class _FakeAuthRepository extends Fake implements AuthRepository {}
 
 class _SignedInAuthViewModel extends AuthViewModel {
   int logoutAttempts = 0;
+
   @override
   Future<void> logout(BuildContext context, dynamic ref) async {
     logoutAttempts++;

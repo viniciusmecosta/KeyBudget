@@ -3,8 +3,8 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:http/http.dart' as http;
 import 'package:http/testing.dart';
-import 'package:key_budget/core/services/drive_service.dart';
 import 'package:key_budget/core/services/drive_connection_service.dart';
+import 'package:key_budget/core/services/drive_service.dart';
 import 'package:key_budget/core/services/google_sign_in_session.dart';
 
 class _User extends Fake implements firebase.User {

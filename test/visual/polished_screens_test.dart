@@ -25,6 +25,7 @@ import '../features/dashboard/dashboard_test.dart' as fakes;
 class _Goals extends SavingsGoalRepository {
   @override
   Future<void> resumePendingDeletions(String userId) async {}
+
   @override
   Stream<List<SavingsGoal>> watchGoals(String userId) => Stream.value([
     SavingsGoal(

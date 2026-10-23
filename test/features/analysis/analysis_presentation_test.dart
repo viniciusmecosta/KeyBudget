@@ -6,20 +6,22 @@ import 'package:key_budget/core/models/expense_category_model.dart';
 import 'package:key_budget/core/models/expense_model.dart';
 import 'package:key_budget/core/models/user_model.dart';
 import 'package:key_budget/features/analysis/view/analysis_screen.dart';
+import 'package:key_budget/features/analysis/viewmodel/analysis_viewmodel.dart';
 import 'package:key_budget/features/analysis/widgets/category_analysis_section_widget.dart';
 import 'package:key_budget/features/analysis/widgets/monthly_trend_section_widget.dart';
 import 'package:key_budget/features/auth/repository/auth_repository.dart';
 import 'package:key_budget/features/auth/viewmodel/auth_viewmodel.dart';
 import 'package:key_budget/features/category/viewmodel/category_viewmodel.dart';
-import 'package:key_budget/features/analysis/viewmodel/analysis_viewmodel.dart';
 import 'package:key_budget/features/expenses/repository/expense_repository.dart';
 import 'package:key_budget/features/expenses/viewmodel/expense_viewmodel.dart';
 
 class FakeAuthRepo extends Fake implements AuthRepository {}
+
 class FakeExpenseRepo extends Fake implements ExpenseRepository {}
 
 class FakeCategoryVM extends CategoryViewModel {
   final List<ExpenseCategory> mockCategories;
+
   FakeCategoryVM(this.mockCategories);
 
   @override
@@ -44,8 +46,9 @@ class FakeCategoryVM extends CategoryViewModel {
 
 class FakeAuthVM extends AuthViewModel {
   final User? mockUser;
+
   FakeAuthVM({this.mockUser})
-      : super(authRepository: FakeAuthRepo(), listenToAuthChanges: false);
+    : super(authRepository: FakeAuthRepo(), listenToAuthChanges: false);
 
   @override
   User? get currentUser => mockUser;
@@ -53,8 +56,9 @@ class FakeAuthVM extends AuthViewModel {
 
 class FakeExpenseVM extends ExpenseViewModel {
   final List<Expense> initialExpenses;
+
   FakeExpenseVM({this.initialExpenses = const []})
-      : super(repository: FakeExpenseRepo()) {
+    : super(repository: FakeExpenseRepo()) {
     allExpenses = initialExpenses;
   }
 
@@ -94,15 +98,18 @@ void main() {
       expect(scale2.max, 10000.0);
     });
 
-    test('handles zero and negative ranges stably without division by zero', () {
-      final zeroScale = ChartScaleHelper.calculateNiceScale(
-        minVal: 0,
-        maxVal: 0,
-      );
-      expect(zeroScale.min, 0.0);
-      expect(zeroScale.max, 100.0);
-      expect(zeroScale.interval, 25.0);
-    });
+    test(
+      'handles zero and negative ranges stably without division by zero',
+      () {
+        final zeroScale = ChartScaleHelper.calculateNiceScale(
+          minVal: 0,
+          maxVal: 0,
+        );
+        expect(zeroScale.min, 0.0);
+        expect(zeroScale.max, 100.0);
+        expect(zeroScale.interval, 25.0);
+      },
+    );
 
     test('formats compact axis values cleanly', () {
       expect(ChartScaleHelper.formatCompactValue(0), '0');
@@ -113,20 +120,25 @@ void main() {
       expect(ChartScaleHelper.formatCompactValue(-2500), '-2.5k');
     });
 
-    test('limits visible horizontal labels to at most 6 simultaneously preserving ends', () {
-      final shortIndices = ChartScaleHelper.calculateVisibleLabelIndices(4);
-      expect(shortIndices, {0, 1, 2, 3});
+    test(
+      'limits visible horizontal labels to at most 6 simultaneously preserving ends',
+      () {
+        final shortIndices = ChartScaleHelper.calculateVisibleLabelIndices(4);
+        expect(shortIndices, {0, 1, 2, 3});
 
-      final yearIndices = ChartScaleHelper.calculateVisibleLabelIndices(12);
-      expect(yearIndices.length, lessThanOrEqualTo(6));
-      expect(yearIndices.contains(0), isTrue);
-      expect(yearIndices.contains(11), isTrue);
+        final yearIndices = ChartScaleHelper.calculateVisibleLabelIndices(12);
+        expect(yearIndices.length, lessThanOrEqualTo(6));
+        expect(yearIndices.contains(0), isTrue);
+        expect(yearIndices.contains(11), isTrue);
 
-      final twoYearIndices = ChartScaleHelper.calculateVisibleLabelIndices(24);
-      expect(twoYearIndices.length, lessThanOrEqualTo(6));
-      expect(twoYearIndices.contains(0), isTrue);
-      expect(twoYearIndices.contains(23), isTrue);
-    });
+        final twoYearIndices = ChartScaleHelper.calculateVisibleLabelIndices(
+          24,
+        );
+        expect(twoYearIndices.length, lessThanOrEqualTo(6));
+        expect(twoYearIndices.contains(0), isTrue);
+        expect(twoYearIndices.contains(23), isTrue);
+      },
+    );
   });
 
   final testCategories = List.generate(8, (i) {
@@ -165,51 +177,56 @@ void main() {
   }
 
   group('CategoryAnalysisSectionWidget Presentation', () {
-    testWidgets('groups categories exceeding 5 into Outras with expand toggle', (tester) async {
-      tester.view.physicalSize = const Size(1080, 1920);
-      tester.view.devicePixelRatio = 1.0;
-      addTearDown(tester.view.resetPhysicalSize);
-      addTearDown(tester.view.resetDevicePixelRatio);
+    testWidgets(
+      'groups categories exceeding 5 into Outras with expand toggle',
+      (tester) async {
+        tester.view.physicalSize = const Size(1080, 1920);
+        tester.view.devicePixelRatio = 1.0;
+        addTearDown(tester.view.resetPhysicalSize);
+        addTearDown(tester.view.resetDevicePixelRatio);
 
-      final now = DateTime.now();
-      final expenses = List.generate(8, (i) {
-        return Expense(
-          id: 'exp_$i',
-          amount: (100.0 - i * 10),
-          date: DateTime(now.year, now.month, 5),
-          categoryId: 'cat_$i',
-          location: 'Despesa $i',
-        );
-      });
+        final now = DateTime.now();
+        final expenses = List.generate(8, (i) {
+          return Expense(
+            id: 'exp_$i',
+            amount: (100.0 - i * 10),
+            date: DateTime(now.year, now.month, 5),
+            categoryId: 'cat_$i',
+            location: 'Despesa $i',
+          );
+        });
 
-      final expenseVM = FakeExpenseVM(initialExpenses: expenses);
-      final categoryVM = FakeCategoryVM(testCategories);
-      final authVM = FakeAuthVM(mockUser: testUser);
+        final expenseVM = FakeExpenseVM(initialExpenses: expenses);
+        final categoryVM = FakeCategoryVM(testCategories);
+        final authVM = FakeAuthVM(mockUser: testUser);
 
-      await tester.pumpWidget(
-        createTestApp(
-          child: const SingleChildScrollView(
-            child: CategoryAnalysisSectionWidget(),
+        await tester.pumpWidget(
+          createTestApp(
+            child: const SingleChildScrollView(
+              child: CategoryAnalysisSectionWidget(),
+            ),
+            expenseVM: expenseVM,
+            categoryVM: categoryVM,
+            authVM: authVM,
           ),
-          expenseVM: expenseVM,
-          categoryVM: categoryVM,
-          authVM: authVM,
-        ),
-      );
-      await tester.pumpAndSettle();
+        );
+        await tester.pumpAndSettle();
 
-      expect(find.text('Composição de Gastos'), findsOneWidget);
-      expect(find.text('Ver todas (8)'), findsOneWidget);
-      expect(find.text('Outras categorias (3)'), findsOneWidget);
+        expect(find.text('Composição de Gastos'), findsOneWidget);
+        expect(find.text('Ver todas (8)'), findsOneWidget);
+        expect(find.text('Outras categorias (3)'), findsOneWidget);
 
-      await tester.tap(find.text('Ver todas (8)'));
-      await tester.pumpAndSettle();
+        await tester.tap(find.text('Ver todas (8)'));
+        await tester.pumpAndSettle();
 
-      expect(find.text('Mostrar top 5'), findsOneWidget);
-      expect(find.text('Categoria 7'), findsOneWidget);
-    });
+        expect(find.text('Mostrar top 5'), findsOneWidget);
+        expect(find.text('Categoria 7'), findsOneWidget);
+      },
+    );
 
-    testWidgets('displays empty chart state when total expenses are zero', (tester) async {
+    testWidgets('displays empty chart state when total expenses are zero', (
+      tester,
+    ) async {
       final expenseVM = FakeExpenseVM(initialExpenses: []);
       final categoryVM = FakeCategoryVM(testCategories);
       final authVM = FakeAuthVM(mockUser: testUser);
@@ -224,144 +241,156 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      expect(find.text('Nenhuma despesa para exibir no período'), findsOneWidget);
+      expect(
+        find.text('Nenhuma despesa para exibir no período'),
+        findsOneWidget,
+      );
     });
   });
 
   group('MonthlyTrendSectionWidget Presentation & Data Table Alternative', () {
-    testWidgets('toggles accessible data table alternative with exact currency points', (tester) async {
-      tester.view.physicalSize = const Size(1080, 1920);
-      tester.view.devicePixelRatio = 1.0;
-      addTearDown(tester.view.resetPhysicalSize);
-      addTearDown(tester.view.resetDevicePixelRatio);
+    testWidgets(
+      'toggles accessible data table alternative with exact currency points',
+      (tester) async {
+        tester.view.physicalSize = const Size(1080, 1920);
+        tester.view.devicePixelRatio = 1.0;
+        addTearDown(tester.view.resetPhysicalSize);
+        addTearDown(tester.view.resetDevicePixelRatio);
 
-      final now = DateTime.now();
-      final expenses = [
-        Expense(
-          id: 'e1',
-          amount: 250.0,
-          date: DateTime(now.year, now.month - 1, 10),
-          categoryId: 'cat_0',
-          location: 'Despesa Anterior',
-        ),
-        Expense(
-          id: 'e2',
-          amount: 500.0,
-          date: DateTime(now.year, now.month, 12),
-          categoryId: 'cat_1',
-          location: 'Despesa Atual',
-        ),
-      ];
-
-      final expenseVM = FakeExpenseVM(initialExpenses: expenses);
-      final categoryVM = FakeCategoryVM(testCategories);
-      final authVM = FakeAuthVM(mockUser: testUser);
-
-      await tester.pumpWidget(
-        createTestApp(
-          child: const SingleChildScrollView(
-            child: MonthlyTrendSectionWidget(),
+        final now = DateTime.now();
+        final expenses = [
+          Expense(
+            id: 'e1',
+            amount: 250.0,
+            date: DateTime(now.year, now.month - 1, 10),
+            categoryId: 'cat_0',
+            location: 'Despesa Anterior',
           ),
-          expenseVM: expenseVM,
-          categoryVM: categoryVM,
-          authVM: authVM,
-        ),
-      );
-      await tester.pumpAndSettle();
+          Expense(
+            id: 'e2',
+            amount: 500.0,
+            date: DateTime(now.year, now.month, 12),
+            categoryId: 'cat_1',
+            location: 'Despesa Atual',
+          ),
+        ];
 
-      final toggleButton = find.text('Ver dados em tabela');
-      expect(toggleButton, findsOneWidget);
+        final expenseVM = FakeExpenseVM(initialExpenses: expenses);
+        final categoryVM = FakeCategoryVM(testCategories);
+        final authVM = FakeAuthVM(mockUser: testUser);
 
-      await tester.tap(toggleButton);
-      await tester.pumpAndSettle();
+        await tester.pumpWidget(
+          createTestApp(
+            child: const SingleChildScrollView(
+              child: MonthlyTrendSectionWidget(),
+            ),
+            expenseVM: expenseVM,
+            categoryVM: categoryVM,
+            authVM: authVM,
+          ),
+        );
+        await tester.pumpAndSettle();
 
-      expect(find.text('Ocultar tabela'), findsOneWidget);
-      expect(find.byType(DataTable), findsOneWidget);
-      expect(find.text('Receitas'), findsWidgets);
-      expect(find.text('Despesas'), findsWidgets);
-      expect(find.text('Saldo'), findsWidgets);
-    });
+        final toggleButton = find.text('Ver dados em tabela');
+        expect(toggleButton, findsOneWidget);
+
+        await tester.tap(toggleButton);
+        await tester.pumpAndSettle();
+
+        expect(find.text('Ocultar tabela'), findsOneWidget);
+        expect(find.byType(DataTable), findsOneWidget);
+        expect(find.text('Receitas'), findsWidgets);
+        expect(find.text('Despesas'), findsWidgets);
+        expect(find.text('Saldo'), findsWidgets);
+      },
+    );
   });
 
   group('AnalysisScreen Export Modal Integration', () {
-    testWidgets('opens export options bottom sheet showing PDF and CSV choices for all users', (tester) async {
-      tester.view.physicalSize = const Size(1080, 1920);
-      tester.view.devicePixelRatio = 1.0;
-      addTearDown(tester.view.resetPhysicalSize);
-      addTearDown(tester.view.resetDevicePixelRatio);
+    testWidgets(
+      'opens export options bottom sheet showing PDF and CSV choices for all users',
+      (tester) async {
+        tester.view.physicalSize = const Size(1080, 1920);
+        tester.view.devicePixelRatio = 1.0;
+        addTearDown(tester.view.resetPhysicalSize);
+        addTearDown(tester.view.resetDevicePixelRatio);
 
-      final expenseVM = FakeExpenseVM(initialExpenses: []);
-      final categoryVM = FakeCategoryVM(testCategories);
-      final authVM = FakeAuthVM(mockUser: testUser);
+        final expenseVM = FakeExpenseVM(initialExpenses: []);
+        final categoryVM = FakeCategoryVM(testCategories);
+        final authVM = FakeAuthVM(mockUser: testUser);
 
-      await tester.pumpWidget(
-        createTestApp(
-          child: const AnalysisScreen(),
-          expenseVM: expenseVM,
-          categoryVM: categoryVM,
-          authVM: authVM,
-        ),
-      );
-      await tester.pumpAndSettle();
-
-      final exportButton = find.byIcon(Icons.share_outlined);
-      expect(exportButton, findsOneWidget);
-
-      await tester.tap(exportButton);
-      await tester.pumpAndSettle();
-
-      expect(find.text('Exportar Análise'), findsOneWidget);
-      expect(find.text('Relatório em PDF'), findsOneWidget);
-      expect(find.text('Planilha em CSV'), findsOneWidget);
-    });
-
-    testWidgets('AnalysisScreen resets selectedMonthForCategory to current month on entry', (tester) async {
-      tester.view.physicalSize = const Size(1080, 1920);
-      tester.view.devicePixelRatio = 1.0;
-      addTearDown(tester.view.resetPhysicalSize);
-      addTearDown(tester.view.resetDevicePixelRatio);
-
-      final expenseVM = FakeExpenseVM(initialExpenses: [
-        Expense(
-          id: 'e_past',
-          amount: 100.0,
-          date: DateTime(2025, 1, 1),
-          categoryId: 'cat_1',
-          location: 'Passado',
-        ),
-      ]);
-      final categoryVM = FakeCategoryVM(testCategories);
-      final authVM = FakeAuthVM(mockUser: testUser);
-
-      final analysisVM = AnalysisViewModel(
-        categoryViewModel: categoryVM,
-        expenseViewModel: expenseVM,
-      );
-      analysisVM.setSelectedMonthForCategory(DateTime(2025, 1));
-      expect(analysisVM.selectedMonthForCategory, equals(DateTime(2025, 1)));
-
-      await tester.pumpWidget(
-        ProviderScope(
-          overrides: [
-            expenseViewModelProvider.overrideWith((ref) => expenseVM),
-            categoryViewModelProvider.overrideWith((ref) => categoryVM),
-            authViewModelProvider.overrideWith((ref) => authVM),
-            analysisViewModelProvider.overrideWith((ref) => analysisVM),
-          ],
-          child: const MaterialApp(
-            home: AnalysisScreen(),
+        await tester.pumpWidget(
+          createTestApp(
+            child: const AnalysisScreen(),
+            expenseVM: expenseVM,
+            categoryVM: categoryVM,
+            authVM: authVM,
           ),
-        ),
-      );
-      await tester.pump();
-      await tester.pump(const Duration(seconds: 1));
-      await tester.pumpAndSettle();
+        );
+        await tester.pumpAndSettle();
 
-      final now = DateTime.now();
-      expect(
-        analysisVM.selectedMonthForCategory,
-        equals(DateTime(now.year, now.month)),
-      );
-    });
+        final exportButton = find.byIcon(Icons.share_outlined);
+        expect(exportButton, findsOneWidget);
+
+        await tester.tap(exportButton);
+        await tester.pumpAndSettle();
+
+        expect(find.text('Exportar Análise'), findsOneWidget);
+        expect(find.text('Relatório em PDF'), findsOneWidget);
+        expect(find.text('Planilha em CSV'), findsOneWidget);
+      },
+    );
+
+    testWidgets(
+      'AnalysisScreen resets selectedMonthForCategory to current month on entry',
+      (tester) async {
+        tester.view.physicalSize = const Size(1080, 1920);
+        tester.view.devicePixelRatio = 1.0;
+        addTearDown(tester.view.resetPhysicalSize);
+        addTearDown(tester.view.resetDevicePixelRatio);
+
+        final expenseVM = FakeExpenseVM(
+          initialExpenses: [
+            Expense(
+              id: 'e_past',
+              amount: 100.0,
+              date: DateTime(2025, 1, 1),
+              categoryId: 'cat_1',
+              location: 'Passado',
+            ),
+          ],
+        );
+        final categoryVM = FakeCategoryVM(testCategories);
+        final authVM = FakeAuthVM(mockUser: testUser);
+
+        final analysisVM = AnalysisViewModel(
+          categoryViewModel: categoryVM,
+          expenseViewModel: expenseVM,
+        );
+        analysisVM.setSelectedMonthForCategory(DateTime(2025, 1));
+        expect(analysisVM.selectedMonthForCategory, equals(DateTime(2025, 1)));
+
+        await tester.pumpWidget(
+          ProviderScope(
+            overrides: [
+              expenseViewModelProvider.overrideWith((ref) => expenseVM),
+              categoryViewModelProvider.overrideWith((ref) => categoryVM),
+              authViewModelProvider.overrideWith((ref) => authVM),
+              analysisViewModelProvider.overrideWith((ref) => analysisVM),
+            ],
+            child: const MaterialApp(home: AnalysisScreen()),
+          ),
+        );
+        await tester.pump();
+        await tester.pump(const Duration(seconds: 1));
+        await tester.pumpAndSettle();
+
+        final now = DateTime.now();
+        expect(
+          analysisVM.selectedMonthForCategory,
+          equals(DateTime(now.year, now.month)),
+        );
+      },
+    );
   });
 }

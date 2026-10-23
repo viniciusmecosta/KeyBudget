@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:key_budget/features/dashboard/repository/dashboard_layout_repository.dart';
-import 'package:key_budget/features/dashboard/widgets/dashboard_layout_editor.dart';
+import 'package:key_budget/core/models/user_model.dart';
 import 'package:key_budget/features/auth/repository/auth_repository.dart';
 import 'package:key_budget/features/auth/viewmodel/auth_viewmodel.dart';
-import 'package:key_budget/core/models/user_model.dart';
+import 'package:key_budget/features/dashboard/repository/dashboard_layout_repository.dart';
+import 'package:key_budget/features/dashboard/widgets/dashboard_layout_editor.dart';
 
 class _FakeAuthRepository extends Fake implements AuthRepository {}
 

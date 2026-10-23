@@ -1,8 +1,8 @@
 import 'dart:async';
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:key_budget/core/models/expense_category_model.dart';
 import 'package:key_budget/core/models/credential_model.dart';
+import 'package:key_budget/core/models/expense_category_model.dart';
 import 'package:key_budget/core/models/expense_model.dart';
 import 'package:key_budget/core/models/folder_model.dart';
 import 'package:key_budget/core/models/recurring_expense_model.dart';

@@ -83,6 +83,7 @@ class RecordingDocumentRepository extends DocumentRepository {
 
 class RecordingDriveService extends DriveService {
   final List<String> events;
+
   RecordingDriveService(this.events);
 
   @override

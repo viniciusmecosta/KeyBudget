@@ -23,22 +23,29 @@ class FakeCredentialRepository extends Fake implements CredentialRepository {}
 class FakeAuthRepository extends Fake implements AuthRepository {}
 
 class FakeSupplierViewModel extends SupplierViewModel {
-  FakeSupplierViewModel({List<Supplier>? suppliers}) : super(repository: FakeSupplierRepository()) {
-    setSuppliersForTesting(suppliers ?? [
-    Supplier(
-      id: 's1',
-      name: 'Fornecedor A',
-      photoPath: 'photo_supplier_a',
-    ),
-    ]);
+  FakeSupplierViewModel({List<Supplier>? suppliers})
+    : super(repository: FakeSupplierRepository()) {
+    setSuppliersForTesting(
+      suppliers ??
+          [
+            Supplier(
+              id: 's1',
+              name: 'Fornecedor A',
+              photoPath: 'photo_supplier_a',
+            ),
+          ],
+    );
   }
 
   @override
   void listenToSuppliers(String userId) {}
 
   @override
-  List<String> get userSupplierPhotos =>
-      ['photo_supplier_a', 'photo_supplier_a', ''];
+  List<String> get userSupplierPhotos => [
+    'photo_supplier_a',
+    'photo_supplier_a',
+    '',
+  ];
 }
 
 class FakeCredentialViewModel extends CredentialViewModel {
@@ -50,30 +57,26 @@ class FakeCredentialViewModel extends CredentialViewModel {
 
 class FakeAuthViewModel extends AuthViewModel {
   FakeAuthViewModel()
-      : super(
-          authRepository: FakeAuthRepository(),
-          listenToAuthChanges: false,
-        );
+    : super(authRepository: FakeAuthRepository(), listenToAuthChanges: false);
 
   @override
-  User? get currentUser => User(
-        id: 'test_uid',
-        name: 'Tester',
-        email: 'tester@test.com',
-      );
+  User? get currentUser =>
+      User(id: 'test_uid', name: 'Tester', email: 'tester@test.com');
 }
 
 void main() {
-  testWidgets('AddSupplierScreen renders SupplierForm with isEditing true', (tester) async {
+  testWidgets('AddSupplierScreen renders SupplierForm with isEditing true', (
+    tester,
+  ) async {
     await tester.pumpWidget(
       ProviderScope(
         overrides: [
           authViewModelProvider.overrideWith((ref) => FakeAuthViewModel()),
-          supplierViewModelProvider.overrideWith((ref) => FakeSupplierViewModel()),
+          supplierViewModelProvider.overrideWith(
+            (ref) => FakeSupplierViewModel(),
+          ),
         ],
-        child: const MaterialApp(
-          home: AddSupplierScreen(),
-        ),
+        child: const MaterialApp(home: AddSupplierScreen()),
       ),
     );
     await tester.pumpAndSettle();
@@ -83,8 +86,10 @@ void main() {
     final formWidget = tester.widget<SupplierForm>(formFinder);
     expect(formWidget.isEditing, isTrue);
 
-    final nameField =
-        find.widgetWithText(AppTextField, 'Nome do Fornecedor / Loja *');
+    final nameField = find.widgetWithText(
+      AppTextField,
+      'Nome do Fornecedor / Loja *',
+    );
     expect(nameField, findsOneWidget);
     await tester.enterText(nameField, 'Distribuidora Silva');
     expect(find.text('Distribuidora Silva'), findsOneWidget);
@@ -102,82 +107,129 @@ void main() {
     expect(find.byType(AddSupplierScreen), findsOneWidget);
   });
 
-  testWidgets('AppTextField advances focus when keyboard action is next', (tester) async {
-    await tester.pumpWidget(const MaterialApp(
-      home: Scaffold(
-        body: Column(
-          children: [
-            AppTextField(label: 'Primeiro', textInputAction: TextInputAction.next),
-            AppTextField(label: 'Segundo', textInputAction: TextInputAction.done),
-          ],
+  testWidgets('AppTextField advances focus when keyboard action is next', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      const MaterialApp(
+        home: Scaffold(
+          body: Column(
+            children: [
+              AppTextField(
+                label: 'Primeiro',
+                textInputAction: TextInputAction.next,
+              ),
+              AppTextField(
+                label: 'Segundo',
+                textInputAction: TextInputAction.done,
+              ),
+            ],
+          ),
         ),
       ),
-    ));
+    );
 
     await tester.tap(find.widgetWithText(AppTextField, 'Primeiro'));
     await tester.testTextInput.receiveAction(TextInputAction.next);
     await tester.pump();
-    expect(tester.widget<EditableText>(find.byType(EditableText).at(1)).focusNode.hasFocus, isTrue);
+    expect(
+      tester
+          .widget<EditableText>(find.byType(EditableText).at(1))
+          .focusNode
+          .hasFocus,
+      isTrue,
+    );
   });
 
-  testWidgets('SuppliersScreen shows list and selected detail on tablet', (tester) async {
+  testWidgets('SuppliersScreen shows list and selected detail on tablet', (
+    tester,
+  ) async {
     tester.view.physicalSize = const Size(1200, 800);
     tester.view.devicePixelRatio = 1;
     addTearDown(tester.view.resetPhysicalSize);
     addTearDown(tester.view.resetDevicePixelRatio);
-    final vm = FakeSupplierViewModel(suppliers: [
-      Supplier(id: 's1', name: 'Fornecedor A'),
-      Supplier(id: 's2', name: 'Fornecedor B', email: 'b@exemplo.com'),
-    ]);
-
-    await tester.pumpWidget(ProviderScope(
-      overrides: [
-        authViewModelProvider.overrideWith((ref) => FakeAuthViewModel()),
-        supplierViewModelProvider.overrideWith((ref) => vm),
+    final vm = FakeSupplierViewModel(
+      suppliers: [
+        Supplier(id: 's1', name: 'Fornecedor A'),
+        Supplier(id: 's2', name: 'Fornecedor B', email: 'b@exemplo.com'),
       ],
-      child: const MaterialApp(home: SuppliersScreen()),
-    ));
+    );
+
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          authViewModelProvider.overrideWith((ref) => FakeAuthViewModel()),
+          supplierViewModelProvider.overrideWith((ref) => vm),
+        ],
+        child: const MaterialApp(home: SuppliersScreen()),
+      ),
+    );
     await tester.pumpAndSettle();
 
     expect(find.byType(SupplierPreviewPanel), findsOneWidget);
-    expect(tester.widget<SupplierPreviewPanel>(find.byType(SupplierPreviewPanel)).supplier.name, 'Fornecedor A');
+    expect(
+      tester
+          .widget<SupplierPreviewPanel>(find.byType(SupplierPreviewPanel))
+          .supplier
+          .name,
+      'Fornecedor A',
+    );
     await tester.tap(find.text('Fornecedor B').first);
     await tester.pumpAndSettle();
-    expect(tester.widget<SupplierPreviewPanel>(find.byType(SupplierPreviewPanel)).supplier.name, 'Fornecedor B');
+    expect(
+      tester
+          .widget<SupplierPreviewPanel>(find.byType(SupplierPreviewPanel))
+          .supplier
+          .name,
+      'Fornecedor B',
+    );
   });
 
-  testWidgets('SupplierForm places paired fields in columns on tablet', (tester) async {
+  testWidgets('SupplierForm places paired fields in columns on tablet', (
+    tester,
+  ) async {
     tester.view.physicalSize = const Size(1000, 800);
     tester.view.devicePixelRatio = 1;
     addTearDown(tester.view.resetPhysicalSize);
     addTearDown(tester.view.resetDevicePixelRatio);
 
-    await tester.pumpWidget(ProviderScope(
-      overrides: [
-        authViewModelProvider.overrideWith((ref) => FakeAuthViewModel()),
-        supplierViewModelProvider.overrideWith((ref) => FakeSupplierViewModel()),
-      ],
-      child: const MaterialApp(home: AddSupplierScreen()),
-    ));
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          authViewModelProvider.overrideWith((ref) => FakeAuthViewModel()),
+          supplierViewModelProvider.overrideWith(
+            (ref) => FakeSupplierViewModel(),
+          ),
+        ],
+        child: const MaterialApp(home: AddSupplierScreen()),
+      ),
+    );
     await tester.pumpAndSettle();
 
-    final name = tester.getTopLeft(find.widgetWithText(AppTextField, 'Nome do Fornecedor / Loja *'));
-    final representative = tester.getTopLeft(find.widgetWithText(AppTextField, 'Nome do Representante'));
+    final name = tester.getTopLeft(
+      find.widgetWithText(AppTextField, 'Nome do Fornecedor / Loja *'),
+    );
+    final representative = tester.getTopLeft(
+      find.widgetWithText(AppTextField, 'Nome do Representante'),
+    );
     expect(name.dy, representative.dy);
     expect(representative.dx, greaterThan(name.dx));
   });
 
-  testWidgets('SavedLogosScreen filters photos by module and deduplicates', (tester) async {
-
+  testWidgets('SavedLogosScreen filters photos by module and deduplicates', (
+    tester,
+  ) async {
     await tester.pumpWidget(
       ProviderScope(
         overrides: [
-          supplierViewModelProvider.overrideWith((ref) => FakeSupplierViewModel()),
-          credentialViewModelProvider.overrideWith((ref) => FakeCredentialViewModel()),
+          supplierViewModelProvider.overrideWith(
+            (ref) => FakeSupplierViewModel(),
+          ),
+          credentialViewModelProvider.overrideWith(
+            (ref) => FakeCredentialViewModel(),
+          ),
         ],
-        child: const MaterialApp(
-          home: SavedLogosScreen(isForSuppliers: true),
-        ),
+        child: const MaterialApp(home: SavedLogosScreen(isForSuppliers: true)),
       ),
     );
     await tester.pumpAndSettle();
@@ -187,12 +239,14 @@ void main() {
     await tester.pumpWidget(
       ProviderScope(
         overrides: [
-          supplierViewModelProvider.overrideWith((ref) => FakeSupplierViewModel()),
-          credentialViewModelProvider.overrideWith((ref) => FakeCredentialViewModel()),
+          supplierViewModelProvider.overrideWith(
+            (ref) => FakeSupplierViewModel(),
+          ),
+          credentialViewModelProvider.overrideWith(
+            (ref) => FakeCredentialViewModel(),
+          ),
         ],
-        child: const MaterialApp(
-          home: SavedLogosScreen(isForSuppliers: false),
-        ),
+        child: const MaterialApp(home: SavedLogosScreen(isForSuppliers: false)),
       ),
     );
     await tester.pumpAndSettle();

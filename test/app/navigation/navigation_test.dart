@@ -13,6 +13,7 @@ class FakeAuthRepo extends Fake implements AuthRepository {}
 
 class FakeAuthVM extends AuthViewModel {
   final bool suppliersEnabled;
+
   FakeAuthVM({this.suppliersEnabled = false})
     : super(authRepository: FakeAuthRepo(), listenToAuthChanges: false);
 
