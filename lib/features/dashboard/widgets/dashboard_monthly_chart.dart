@@ -13,7 +13,8 @@ import 'package:key_budget/features/auth/viewmodel/auth_viewmodel.dart';
 import 'package:key_budget/features/dashboard/viewmodel/dashboard_viewmodel.dart';
 
 class DashboardMonthlyChart extends ConsumerWidget {
-  const DashboardMonthlyChart({super.key});
+  const DashboardMonthlyChart({super.key, this.chartHeight = 128});
+  final double chartHeight;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -204,7 +205,7 @@ class DashboardMonthlyChart extends ConsumerWidget {
             label: chartDescription,
             child: ExcludeSemantics(
               child: SizedBox(
-                height: 128,
+                height: chartHeight,
                 child: validMonths.isEmpty
                     ? Center(
                         child: Text(

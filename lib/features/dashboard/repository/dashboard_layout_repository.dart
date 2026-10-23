@@ -1,6 +1,16 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+enum DashboardCardSize {
+  compact('Compacto', 104),
+  regular('Médio', 144),
+  large('Amplo', 208);
+
+  const DashboardCardSize(this.label, this.chartHeight);
+  final String label;
+  final double chartHeight;
+}
+
 class DashboardLayout {
   static const cardIds = ['balance', 'chart', 'quick_actions', 'recent'];
   static const availableCardIds = [
@@ -9,17 +19,33 @@ class DashboardLayout {
     'accumulated',
     'periods',
     'upcoming',
+    'daily',
+    'weekdays',
+  ];
+  static const resizableCardIds = [
+    'chart',
+    'categories',
+    'accumulated',
+    'periods',
+    'upcoming',
+    'daily',
+    'weekdays',
   ];
   static const actionIds = ['expense', 'credentials', 'analysis', 'suppliers'];
 
   final List<String> cards;
   final List<String> actions;
   final bool integratedSummary;
+  final Map<String, DashboardCardSize> cardSizes;
+
+  DashboardCardSize sizeFor(String id) =>
+      cardSizes[id] ?? DashboardCardSize.regular;
 
   const DashboardLayout({
     this.cards = cardIds,
     this.actions = actionIds,
     this.integratedSummary = true,
+    this.cardSizes = const {},
   });
 
   factory DashboardLayout.fromMap(Object? raw) {
@@ -42,7 +68,17 @@ class DashboardLayout {
         ? read('cards', availableCardIds)
         : List<String>.of(cardIds);
     if (!cards.contains('recent')) cards.add('recent');
+    final sizes = <String, DashboardCardSize>{};
+    final rawSizes = raw['card_sizes'];
+    if (rawSizes is Map) {
+      for (final id in resizableCardIds) {
+        for (final size in DashboardCardSize.values) {
+          if (rawSizes[id] == size.name) sizes[id] = size;
+        }
+      }
+    }
     return DashboardLayout(
+      cardSizes: sizes,
       cards: cards,
       actions: read('actions', actionIds),
       integratedSummary: raw['integrated_summary'] != false,
@@ -53,6 +89,10 @@ class DashboardLayout {
     'cards': cards,
     'actions': actions,
     'integrated_summary': integratedSummary,
+    'card_sizes': {
+      for (final entry in cardSizes.entries)
+        if (resizableCardIds.contains(entry.key)) entry.key: entry.value.name,
+    },
   };
 }
 

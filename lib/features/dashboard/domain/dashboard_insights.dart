@@ -5,12 +5,16 @@ class DashboardInsights {
   final List<int> accumulated;
   final List<int> monthPeriods;
   final List<int> upcoming;
+  final List<int> daily;
+  final List<int> weekdays;
   final DateTime today;
 
   const DashboardInsights({
     required this.accumulated,
     required this.monthPeriods,
     required this.upcoming,
+    this.daily = const [],
+    this.weekdays = const [],
     required this.today,
   });
 
@@ -18,6 +22,7 @@ class DashboardInsights {
     final today = DateTime(now.year, now.month, now.day);
     final daily = List<int>.filled(now.day, 0);
     final periods = List<int>.filled((now.day / 7).ceil(), 0);
+    final weekdays = List<int>.filled(7, 0);
     final upcoming = List<int>.filled(7, 0);
     for (final expense in expenses) {
       if (expense.isIncome == true) continue;
@@ -27,6 +32,7 @@ class DashboardInsights {
           date.month == now.month &&
           !day.isAfter(today)) {
         daily[date.day - 1] += expense.money.amountMinor;
+        weekdays[day.weekday - 1] += expense.money.amountMinor;
         periods[(date.day - 1) ~/ 7] += expense.money.amountMinor;
       }
       // UTC date ordinals avoid daylight-saving shifts in calendar distances.
@@ -45,6 +51,8 @@ class DashboardInsights {
     }
     return DashboardInsights(
       accumulated: accumulated,
+      daily: daily,
+      weekdays: weekdays,
       monthPeriods: periods,
       upcoming: upcoming,
       today: today,

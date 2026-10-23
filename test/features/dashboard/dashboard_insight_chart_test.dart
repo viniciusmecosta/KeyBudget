@@ -7,6 +7,34 @@ import 'package:key_budget/features/dashboard/domain/dashboard_insights.dart';
 import 'package:key_budget/features/dashboard/widgets/dashboard_insight_chart.dart';
 
 void main() {
+  testWidgets('daily chart shows a single day without an invalid axis', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          dashboardInsightsProvider.overrideWithValue(
+            DashboardInsights.fromExpenses([
+              Expense(amount: 10, date: DateTime(2026, 10, 1)),
+            ], DateTime(2026, 10, 1)),
+          ),
+        ],
+        child: MaterialApp(
+          theme: AppTheme.lightTheme,
+          home: const Scaffold(
+            body: DashboardInsightChart(
+              insight: DashboardInsight.daily,
+              chartHeight: 104,
+            ),
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+    expect(tester.takeException(), isNull);
+    expect(find.text('Dia 1'), findsOneWidget);
+  });
+
   for (final insight in DashboardInsight.values) {
     for (final dark in [false, true]) {
       for (final scale in [1.0, 2.0]) {
@@ -33,7 +61,10 @@ void main() {
                 ),
                 home: Scaffold(
                   body: SingleChildScrollView(
-                    child: DashboardInsightChart(insight: insight),
+                    child: DashboardInsightChart(
+                      insight: insight,
+                      chartHeight: scale == 2 ? 104 : 208,
+                    ),
                   ),
                 ),
               ),

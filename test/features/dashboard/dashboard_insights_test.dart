@@ -18,6 +18,8 @@ void main() {
     ], now);
     expect(data.accumulated, [0, 10, 10, 10, 10, 10, 10, 30, 430]);
     expect(data.monthPeriods, [30, 400]);
+    expect(data.daily, [10, 0, 0, 0, 0, 0, 20, 400]);
+    expect(data.weekdays, [0, 0, 20, 410, 0, 0, 0]);
     expect(data.upcoming, [500, 0, 0, 0, 0, 0, 600]);
   });
 
@@ -34,6 +36,25 @@ void main() {
       ).accumulated.length,
       30,
     );
+  });
+
+  test('card sizes survive persistence and reject unknown settings', () {
+    final layout = DashboardLayout.fromMap({
+      'cards': ['daily', 'weekdays', 'recent'],
+      'card_sizes': {
+        'daily': 'compact',
+        'weekdays': 'large',
+        'chart': 'huge',
+        'unknown': 'large',
+      },
+    });
+    final restored = DashboardLayout.fromMap(layout.toMap());
+    expect(restored.sizeFor('daily'), DashboardCardSize.compact);
+    expect(restored.sizeFor('weekdays'), DashboardCardSize.large);
+    expect(restored.sizeFor('chart'), DashboardCardSize.regular);
+    expect(restored.cardSizes.keys, unorderedEquals(['daily', 'weekdays']));
+    expect(DashboardLayout.fromMap({'card_sizes': []}).cardSizes, isEmpty);
+    expect(restored.cards, ['daily', 'weekdays', 'recent']);
   });
 
   test('new modules are opt-in and persist in chosen order', () {

@@ -9,7 +9,7 @@ import 'package:key_budget/core/design_system/widgets/app_section_header.dart';
 import 'package:key_budget/features/dashboard/domain/dashboard_insights.dart';
 import 'package:key_budget/features/dashboard/viewmodel/dashboard_viewmodel.dart';
 
-enum DashboardInsight { accumulated, periods, upcoming }
+enum DashboardInsight { accumulated, periods, upcoming, daily, weekdays }
 
 final dashboardInsightsProvider = Provider<DashboardInsights>(
   (ref) => DashboardInsights.fromExpenses(
@@ -19,7 +19,12 @@ final dashboardInsightsProvider = Provider<DashboardInsights>(
 );
 
 class DashboardInsightChart extends ConsumerWidget {
-  const DashboardInsightChart({super.key, required this.insight});
+  const DashboardInsightChart({
+    super.key,
+    required this.insight,
+    this.chartHeight = 144,
+  });
+  final double chartHeight;
   final DashboardInsight insight;
 
   @override
@@ -27,31 +32,49 @@ class DashboardInsightChart extends ConsumerWidget {
     final data = ref.watch(dashboardInsightsProvider);
     final theme = Theme.of(context);
     final currency = NumberFormat.currency(locale: 'pt_BR', symbol: 'R\$');
-    final line = insight == DashboardInsight.accumulated;
+    final line =
+        insight == DashboardInsight.accumulated ||
+        insight == DashboardInsight.daily;
     final values = switch (insight) {
       DashboardInsight.accumulated => data.accumulated,
       DashboardInsight.periods => data.monthPeriods,
       DashboardInsight.upcoming => data.upcoming,
+      DashboardInsight.daily => data.daily,
+      DashboardInsight.weekdays => data.weekdays,
     };
     final title = switch (insight) {
       DashboardInsight.accumulated => 'Evolução do mês',
       DashboardInsight.periods => 'Gastos por período',
       DashboardInsight.upcoming => 'Próximos sete dias',
+      DashboardInsight.daily => 'Gastos diários',
+      DashboardInsight.weekdays => 'Dias da semana',
     };
     final subtitle = switch (insight) {
       DashboardInsight.accumulated => 'Despesas acumuladas até hoje',
       DashboardInsight.periods => 'Dias 1–7, 8–14… • período atual parcial',
       DashboardInsight.upcoming => 'Despesas cadastradas para datas futuras',
+      DashboardInsight.daily => 'Despesas de cada dia deste mês',
+      DashboardInsight.weekdays => 'Total por dia da semana neste mês até hoje',
     };
     String label(int i) => switch (insight) {
       DashboardInsight.accumulated => i == 0 ? 'Início' : 'Dia $i',
+      DashboardInsight.daily => 'Dia ${i + 1}',
+      DashboardInsight.weekdays => const [
+        'Seg',
+        'Ter',
+        'Qua',
+        'Qui',
+        'Sex',
+        'Sáb',
+        'Dom',
+      ][i],
       DashboardInsight.periods =>
         '${i * 7 + 1}–${math.min((i + 1) * 7, data.today.day)}',
       DashboardInsight.upcoming => DateFormat('dd/MM').format(
         DateTime(data.today.year, data.today.month, data.today.day + i + 1),
       ),
     };
-    final total = line
+    final total = insight == DashboardInsight.accumulated
         ? values.last
         : values.fold<int>(0, (sum, value) => sum + value);
     final maximum = math.max(1, values.reduce(math.max)).toDouble() * 1.15;
@@ -100,7 +123,11 @@ class DashboardInsightChart extends ConsumerWidget {
               Text(title, style: theme.textTheme.titleLarge),
               const SizedBox(height: 8),
               Text(subtitle),
-              for (var i = line ? 1 : 0; i < values.length; i++)
+              for (
+                var i = insight == DashboardInsight.accumulated ? 1 : 0;
+                i < values.length;
+                i++
+              )
                 ListTile(
                   contentPadding: EdgeInsets.zero,
                   title: Text(label(i)),
@@ -144,12 +171,12 @@ class DashboardInsightChart extends ConsumerWidget {
                   '$title. Total ${currency.format(total / 100)}. Use Ver valores para consultar os detalhes.',
               child: ExcludeSemantics(
                 child: SizedBox(
-                  height: 144,
+                  height: chartHeight,
                   child: line
                       ? LineChart(
                           LineChartData(
                             minX: 0,
-                            maxX: (values.length - 1).toDouble(),
+                            maxX: math.max(1, values.length - 1).toDouble(),
                             minY: 0,
                             maxY: maximum,
                             titlesData: titles,
@@ -181,7 +208,7 @@ class DashboardInsightChart extends ConsumerWidget {
                                 color: theme.colorScheme.primary,
                                 barWidth: 3,
                                 isCurved: false,
-                                dotData: const FlDotData(show: false),
+                                dotData: FlDotData(show: values.length == 1),
                                 belowBarData: BarAreaData(
                                   show: true,
                                   color: theme.colorScheme.primary.withValues(
@@ -225,7 +252,10 @@ class DashboardInsightChart extends ConsumerWidget {
                                     BarChartRodData(
                                       toY: values[i].toDouble(),
                                       color: theme.colorScheme.primary,
-                                      width: 18,
+                                      width:
+                                          insight == DashboardInsight.weekdays
+                                          ? 14
+                                          : 18,
                                       borderRadius: BorderRadius.circular(4),
                                     ),
                                   ],

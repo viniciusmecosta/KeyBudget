@@ -7,7 +7,8 @@ import 'package:key_budget/features/dashboard/viewmodel/dashboard_viewmodel.dart
 
 /// Uses the dashboard's existing data, without another database subscription.
 class DashboardCategorySummary extends ConsumerStatefulWidget {
-  const DashboardCategorySummary({super.key});
+  const DashboardCategorySummary({super.key, this.chartHeight = 148});
+  final double chartHeight;
 
   @override
   ConsumerState<DashboardCategorySummary> createState() =>
@@ -83,7 +84,7 @@ class _DashboardCategorySummaryState
                   'Distribuição dos gastos por categoria. As cinco maiores e as demais agrupadas em Demais categorias.',
               child: ExcludeSemantics(
                 child: SizedBox(
-                  height: 148,
+                  height: widget.chartHeight,
                   child: PieChart(
                     PieChartData(
                       pieTouchData: PieTouchData(
@@ -101,14 +102,16 @@ class _DashboardCategorySummaryState
                           );
                         },
                       ),
-                      centerSpaceRadius: 40,
+                      centerSpaceRadius: widget.chartHeight * .27,
                       sectionsSpace: 3,
                       sections: [
                         for (var index = 0; index < slices.length; index++)
                           PieChartSectionData(
                             value: slices[index].value.toDouble(),
                             color: colors[index],
-                            radius: _selected == index ? 34 : 26,
+                            radius:
+                                widget.chartHeight *
+                                (_selected == index ? .23 : .176),
                             showTitle: false,
                           ),
                       ],

@@ -117,11 +117,60 @@ void main() {
           .onChanged,
       isNull,
     );
+    await tester.tap(find.byKey(const ValueKey('size_chart')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Compacto').last);
+    await tester.pumpAndSettle();
     await tester.tap(find.text('Gastos mensais'));
     await tester.pump();
     await tester.tap(find.text('Salvar painel'));
     await tester.pumpAndSettle();
     expect(repository.saved?.cards, ['balance', 'quick_actions', 'recent']);
+    expect(repository.saved?.sizeFor('chart'), DashboardCardSize.compact);
+  });
+
+  testWidgets('size controls remain usable at 320px and 200 percent text', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(320, 800);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    final repository = _SavingLayoutRepository();
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          authViewModelProvider.overrideWith(
+            (ref) => _AuthWithSuppliers(false),
+          ),
+          dashboardLayoutRepositoryProvider.overrideWithValue(repository),
+        ],
+        child: MaterialApp(
+          builder: (context, child) => MediaQuery(
+            data: MediaQuery.of(
+              context,
+            ).copyWith(textScaler: TextScaler.linear(2)),
+            child: child!,
+          ),
+          home: const Scaffold(
+            body: DashboardLayoutEditor(
+              userId: 'user',
+              initial: DashboardLayout(cards: ['daily', 'recent']),
+            ),
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+    await tester.ensureVisible(find.byKey(const ValueKey('size_daily')));
+    await tester.tap(find.byKey(const ValueKey('size_daily')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Amplo').last);
+    await tester.pumpAndSettle();
+    expect(tester.takeException(), isNull);
+    await tester.tap(find.text('Salvar painel'));
+    await tester.pump();
+    expect(repository.saved?.sizeFor('daily'), DashboardCardSize.large);
   });
 
   for (final enabled in [false, true]) {

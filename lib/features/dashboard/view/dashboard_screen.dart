@@ -117,24 +117,42 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
     }
   }
 
-  Widget _cardFor(String id, List<String> actions) {
+  Widget _cardFor(String id, DashboardLayout layout) {
+    final height = layout.sizeFor(id).chartHeight;
     switch (id) {
       case 'balance':
         return const DashboardBalanceCard();
       case 'accumulated':
-        return const DashboardInsightChart(
+        return DashboardInsightChart(
+          chartHeight: height,
           insight: DashboardInsight.accumulated,
         );
       case 'periods':
-        return const DashboardInsightChart(insight: DashboardInsight.periods);
+        return DashboardInsightChart(
+          chartHeight: height,
+          insight: DashboardInsight.periods,
+        );
       case 'upcoming':
-        return const DashboardInsightChart(insight: DashboardInsight.upcoming);
+        return DashboardInsightChart(
+          chartHeight: height,
+          insight: DashboardInsight.upcoming,
+        );
+      case 'daily':
+        return DashboardInsightChart(
+          insight: DashboardInsight.daily,
+          chartHeight: height,
+        );
+      case 'weekdays':
+        return DashboardInsightChart(
+          insight: DashboardInsight.weekdays,
+          chartHeight: height,
+        );
       case 'categories':
-        return const DashboardCategorySummary();
+        return DashboardCategorySummary(chartHeight: height + 4);
       case 'chart':
-        return const DashboardMonthlyChart();
+        return DashboardMonthlyChart(chartHeight: height - 16);
       case 'quick_actions':
-        return QuickActionsSection(actionIds: actions);
+        return QuickActionsSection(actionIds: layout.actions);
       default:
         return const RecentActivitySection();
     }
@@ -256,11 +274,13 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                                       key: ValueKey(
                                         'dashboard_${cards[index]}',
                                       ),
-                                      width: width,
-                                      child: _cardFor(
-                                        cards[index],
-                                        layout.actions,
-                                      ),
+                                      width:
+                                          expanded &&
+                                              layout.sizeFor(cards[index]) ==
+                                                  DashboardCardSize.large
+                                          ? constraints.maxWidth
+                                          : width,
+                                      child: _cardFor(cards[index], layout),
                                     ),
                                 ],
                               );
