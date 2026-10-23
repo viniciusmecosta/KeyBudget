@@ -190,6 +190,7 @@ class _MainScreenState extends ConsumerState<MainScreen> {
     );
 
     return Scaffold(
+      extendBody: isCompact,
       appBar: hiddenIds.contains(AppDestination.profile.id)
           ? AppBar(
               title: Text(currentDestination.label),

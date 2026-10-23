@@ -27,8 +27,12 @@ class MainBottomNavigationBar extends ConsumerWidget {
           destination == AppDestination.expenses &&
               !(user?.enableIncomes ?? false)
           ? 'Despesas'
+          : destination == AppDestination.expenses
+          ? 'Finanças'
           : destination == AppDestination.credentials
           ? 'Cofre'
+          : destination == AppDestination.documents
+          ? 'Docs'
           : destination.label;
       final color = selected
           ? theme.colorScheme.primary
@@ -42,13 +46,21 @@ class MainBottomNavigationBar extends ConsumerWidget {
         child: Semantics(
           button: true,
           selected: selected,
-          label: destination == AppDestination.credentials
+          label:
+              (destination == AppDestination.credentials ||
+                  destination == AppDestination.documents ||
+                  destination == AppDestination.expenses &&
+                      (user?.enableIncomes ?? false))
               ? destination.label
               : label,
           onTap: activate,
           excludeSemantics: true,
           child: Tooltip(
-            message: destination == AppDestination.credentials
+            message:
+                (destination == AppDestination.credentials ||
+                    destination == AppDestination.documents ||
+                    destination == AppDestination.expenses &&
+                        (user?.enableIncomes ?? false))
                 ? destination.label
                 : label,
             child: InkWell(
