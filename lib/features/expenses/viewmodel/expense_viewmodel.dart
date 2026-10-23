@@ -133,6 +133,9 @@ class ExpenseViewModel extends ChangeNotifier {
   @Deprecated('UI animation state belongs to presentation layer')
   void setListKey(GlobalKey<SliverAnimatedListState>? key) {}
 
+  String? get activeUserId => _activeUserId;
+  bool get enableIncomes => _enableIncomes;
+
   List<Expense> get allExpenses => _allExpenses;
 
   @visibleForTesting

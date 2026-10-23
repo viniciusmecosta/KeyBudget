@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/legacy.dart';
 import 'package:key_budget/core/models/expense_model.dart';
 import 'package:key_budget/core/money/money.dart';
 import 'package:key_budget/core/services/home_widget_service.dart';
+import 'package:key_budget/core/services/home_widget_snapshot.dart';
 import 'package:key_budget/features/category/viewmodel/category_viewmodel.dart';
 import 'package:key_budget/features/credentials/viewmodel/credential_viewmodel.dart';
 import 'package:key_budget/features/expenses/viewmodel/expense_viewmodel.dart';
@@ -60,7 +61,16 @@ class DashboardViewModel extends ChangeNotifier {
   double get lastAnimatedBalanceForMonth => _lastAnimatedBalanceForMonth;
 
   Future<void> _updateWidget() async {
-    await HomeWidgetService.updateWidgetData(totalAmountForMonth);
+    final uid = expenseViewModel.activeUserId;
+    if (uid == null || expenseViewModel.isLoading) return;
+    await HomeWidgetService.updateSnapshot(
+      HomeWidgetSnapshot.fromExpenses(
+        userId: uid,
+        expenses: allExpenses,
+        now: DateTime.now(),
+        showIncome: expenseViewModel.enableIncomes,
+      ),
+    );
   }
 
   void updateDependencies({
