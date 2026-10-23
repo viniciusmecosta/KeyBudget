@@ -301,12 +301,15 @@ class UserScreen extends ConsumerWidget {
     );
   }
 
-  void _showThemeColorDialog(BuildContext context, WidgetRef ref) {
+  Future<void> _showThemeColorDialog(
+    BuildContext context,
+    WidgetRef ref,
+  ) async {
     final authViewModel = ref.read(authViewModelProvider);
     final user = authViewModel.currentUser;
     final currentThemeColor = user?.themeColor ?? 0xFF0058D9;
 
-    showModalBottomSheet(
+    final selected = await showModalBottomSheet<int>(
       context: context,
       shape: RoundedRectangleBorder(
         borderRadius: AppBorders.borderRadiusVerticalXL,
@@ -366,23 +369,8 @@ class UserScreen extends ConsumerWidget {
                               label: 'Escolher cor ${colorOption.name} do tema',
                               selected: isSelected,
                               diameter: 50,
-                              onPressed: () async {
-                                if (user == null) return;
-                                final result = await authViewModel.updateUser(
-                                  name: user.name,
-                                  themeColor: colorOption.colorValue,
-                                );
-                                if (!ctx.mounted) return;
-                                if (!result.profileUpdated) {
-                                  SnackbarService.showError(
-                                    ctx,
-                                    result.errorMessage ??
-                                        'Não foi possível atualizar a cor do tema. Tente novamente.',
-                                  );
-                                  return;
-                                }
-                                Navigator.pop(ctx);
-                              },
+                              onPressed: () =>
+                                  Navigator.pop(ctx, colorOption.colorValue),
                             ),
                             const SizedBox(height: 8),
                             Text(
@@ -409,6 +397,24 @@ class UserScreen extends ConsumerWidget {
       },
       sheetAnimationStyle: AppAnimations.routeStyle(context),
     );
+    if (selected == null ||
+        selected == currentThemeColor ||
+        !context.mounted ||
+        user == null ||
+        ref.read(authViewModelProvider).currentUser?.id != user.id)
+      return;
+    final result = await authViewModel.updateUser(
+      name: user.name,
+      themeColor: selected,
+    );
+    if (!context.mounted) return;
+    if (!result.profileUpdated) {
+      SnackbarService.showError(
+        context,
+        result.errorMessage ??
+            'Não foi possível atualizar a cor do tema. Tente novamente.',
+      );
+    }
   }
 
   void _showDisplayModeSheet(BuildContext context, WidgetRef ref) {

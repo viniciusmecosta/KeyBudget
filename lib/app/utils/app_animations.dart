@@ -21,7 +21,7 @@ class AppAnimations {
     return reduced
         ? AnimationStyle.noAnimation
         : const AnimationStyle(
-            duration: Duration(milliseconds: 550),
+            duration: Duration(milliseconds: 650),
             curve: Curves.easeInOutCubic,
           );
   }

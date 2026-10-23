@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:key_budget/app/config/app_theme.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:key_budget/app/utils/app_animations.dart';
 
@@ -18,8 +19,9 @@ void main() {
               valueListenable: color,
               builder: (_, value, _) => MaterialApp(
                 themeAnimationStyle: AppAnimations.themeStyle(context),
-                theme: ThemeData(
-                  colorScheme: ColorScheme.fromSeed(seedColor: value),
+                theme: AppTheme.getTheme(
+                  isDark: false,
+                  colorValue: value.toARGB32(),
                 ),
                 home: Builder(
                   builder: (context) {
@@ -33,7 +35,10 @@ void main() {
         ),
       );
       final before = rendered;
-      final target = ColorScheme.fromSeed(seedColor: Colors.green).primary;
+      final target = AppTheme.getTheme(
+        isDark: false,
+        colorValue: Colors.green.toARGB32(),
+      ).colorScheme.primary;
       color.value = Colors.green;
       await tester.pump();
       await tester.pump(const Duration(milliseconds: 275));
