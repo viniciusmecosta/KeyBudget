@@ -401,8 +401,9 @@ class UserScreen extends ConsumerWidget {
         selected == currentThemeColor ||
         !context.mounted ||
         user == null ||
-        ref.read(authViewModelProvider).currentUser?.id != user.id)
+        ref.read(authViewModelProvider).currentUser?.id != user.id) {
       return;
+    }
     final result = await authViewModel.updateUser(
       name: user.name,
       themeColor: selected,
