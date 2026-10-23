@@ -284,7 +284,7 @@ class _CategoryAnalysisSectionWidgetState
             ),
           ),
           Text(
-            '${percentage.toStringAsFixed(1)}%',
+            '${percentage.toStringAsFixed(1).replaceAll('.', ',')}%',
             style: TextStyle(
               color: theme.colorScheme.onInverseSurface.withAlpha(200),
               fontSize: 9,
@@ -382,11 +382,10 @@ class _CategoryAnalysisSectionWidgetState
                     ),
                     const SizedBox(height: 2),
                     Text(
-                      '${percentage.toStringAsFixed(1)}%',
-                      style: TextStyle(
-                        fontSize: 11,
-                        fontWeight: FontWeight.bold,
-                        color: color,
+                      '${percentage.toStringAsFixed(1).replaceAll('.', ',')}%',
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        fontWeight: FontWeight.w600,
+                        color: theme.colorScheme.onSurfaceVariant,
                       ),
                     ),
                   ],
