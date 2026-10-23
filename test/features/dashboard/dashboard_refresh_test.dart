@@ -67,11 +67,10 @@ void main() {
     await tester.pumpAndSettle();
     expect(expenses.retries, 1);
     expect(credentials.retries, 1);
-    await tester.scrollUntilVisible(find.text('Personalizar painel'), 300);
-    expect(find.text('Personalizar painel'), findsOneWidget);
-    await tester.tap(find.text('Personalizar painel'));
+    await tester.drag(find.byType(CustomScrollView), const Offset(0, -1200));
     await tester.pumpAndSettle();
-    expect(find.text('Evolução do mês'), findsOneWidget);
+    expect(find.text('Personalizar painel'), findsNothing);
+    expect(find.text('Painel'), findsOneWidget);
     expect(tester.takeException(), isNull);
   });
 }

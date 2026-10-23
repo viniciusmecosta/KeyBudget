@@ -1,5 +1,4 @@
 import 'package:key_budget/features/dashboard/widgets/dashboard_insight_chart.dart';
-import 'package:key_budget/features/dashboard/widgets/dashboard_layout_editor.dart';
 import 'package:key_budget/features/dashboard/widgets/dashboard_category_summary.dart';
 import 'package:flutter/material.dart' hide DateUtils;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -30,15 +29,38 @@ class DashboardScreen extends ConsumerStatefulWidget {
 }
 
 class _DashboardScreenState extends ConsumerState<DashboardScreen> {
+  final _scrollController = ScrollController();
+  final _summaryKey = GlobalKey();
+  final _headerProgress = ValueNotifier<double>(0);
   bool _isRefreshing = false;
   bool _hasRenderedContent = false;
 
   @override
   void initState() {
     super.initState();
+    _scrollController.addListener(_updateHeader);
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _fetchInitialData(isRefresh: false);
     });
+  }
+
+  void _updateHeader() {
+    final summary = _summaryKey.currentContext?.findRenderObject();
+    final height = summary is RenderBox && summary.hasSize
+        ? summary.size.height
+        : 60.0;
+    final progress =
+        ((_scrollController.offset - (height - 48).clamp(0, double.infinity)) /
+                48)
+            .clamp(0.0, 1.0);
+    if (_headerProgress.value != progress) _headerProgress.value = progress;
+  }
+
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    _headerProgress.dispose();
+    super.dispose();
   }
 
   Future<void> _fetchInitialData({bool isRefresh = true}) async {
@@ -139,14 +161,28 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
     if (!viewModel.isLoading) _hasRenderedContent = true;
     return AppPageScaffold(
       backgroundColor: theme.scaffoldBackgroundColor,
-      appBar: DashboardHeader(
-        backgroundColor: integrated
-            ? AppContrast.primaryWithWhiteText(
-                theme.colorScheme.primary,
-                minimumRatio: 7,
-              )
-            : null,
-        foregroundColor: integrated ? Colors.white : null,
+      appBar: PreferredSize(
+        preferredSize: const Size.fromHeight(60),
+        child: ValueListenableBuilder<double>(
+          valueListenable: _headerProgress,
+          builder: (context, progress, _) {
+            final background = Color.lerp(
+              integrated
+                  ? AppContrast.primaryWithWhiteText(
+                      theme.colorScheme.primary,
+                      minimumRatio: 7,
+                    )
+                  : theme.colorScheme.surface,
+              theme.colorScheme.surface,
+              progress,
+            )!;
+            return DashboardHeader(
+              backgroundColor: background,
+              foregroundColor: AppContrast.foregroundOn(background),
+              collapsed: progress > .5,
+            );
+          },
+        ),
       ),
       body: SafeArea(
         child: viewModel.isLoading && !_hasRenderedContent
@@ -159,6 +195,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                 child: ResponsiveCenter(
                   maxWidth: 1200,
                   child: CustomScrollView(
+                    controller: _scrollController,
                     scrollBehavior: ScrollConfiguration.of(
                       context,
                     ).copyWith(overscroll: false),
@@ -168,7 +205,10 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                     slivers: [
                       if (integrated)
                         SliverToBoxAdapter(
-                          child: DashboardBalanceCard(integrated: true),
+                          child: SizedBox(
+                            key: _summaryKey,
+                            child: const DashboardBalanceCard(integrated: true),
+                          ),
                         ),
                       SliverToBoxAdapter(
                         child: Padding(
@@ -228,37 +268,6 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                           ),
                         ),
                       ),
-                      if (userId != null)
-                        SliverToBoxAdapter(
-                          child: Padding(
-                            padding: const EdgeInsets.only(bottom: 24),
-                            child: Center(
-                              child: TextButton.icon(
-                                icon: const Icon(Icons.tune_rounded),
-                                label: Text(
-                                  layoutState?.hasError == true
-                                      ? 'Recarregar personalização'
-                                      : 'Personalizar painel',
-                                ),
-                                onPressed: layoutState?.hasError == true
-                                    ? () => ref.invalidate(
-                                        dashboardLayoutProvider(userId),
-                                      )
-                                    : layoutState?.hasValue == true
-                                    ? () => showModalBottomSheet<void>(
-                                        context: context,
-                                        isScrollControlled: true,
-                                        showDragHandle: true,
-                                        builder: (_) => DashboardLayoutEditor(
-                                          userId: userId,
-                                          initial: layout,
-                                        ),
-                                      )
-                                    : null,
-                              ),
-                            ),
-                          ),
-                        ),
                     ],
                   ),
                 ),
