@@ -178,7 +178,9 @@ class AppTheme {
         scrolledUnderElevation: 0.0,
         centerTitle: false,
         iconTheme: IconThemeData(color: onSurfaceColor),
-        titleTextStyle: textTheme.headlineLarge,
+        titleTextStyle: textTheme.titleLarge?.copyWith(
+          fontWeight: FontWeight.w700,
+        ),
         systemOverlayStyle: isDark
             ? SystemUiOverlayStyle.light
             : SystemUiOverlayStyle.dark,
