@@ -34,6 +34,7 @@ class FakeSupplierRepo extends Fake implements SupplierRepository {}
 
 class FakeAuthVM extends AuthViewModel {
   User? mockUser;
+
   FakeAuthVM({this.mockUser})
     : super(authRepository: FakeAuthRepo(), listenToAuthChanges: false);
 

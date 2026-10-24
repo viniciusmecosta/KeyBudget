@@ -2,7 +2,7 @@ import 'package:key_budget/app/utils/navigation_utils.dart';
 import 'package:key_budget/core/design_system/surfaces/app_surfaces.dart';
 import 'package:key_budget/core/design_system/widgets/app_form_section_heading.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_masked_text2/flutter_masked_text2.dart';
+import 'package:key_budget/core/money/brl_input_controller.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:key_budget/app/widgets/category_autocomplete_field.dart';
 import 'package:key_budget/app/widgets/category_picker_field.dart';
@@ -37,7 +37,7 @@ const _kInstallmentOptions = [
 
 class ExpenseForm extends ConsumerWidget {
   final GlobalKey<FormState> formKey;
-  final MoneyMaskedTextController amountController;
+  final BrlInputController amountController;
   final TextEditingController motivationController;
   final TextEditingController locationController;
   final DateTime selectedDate;
@@ -135,6 +135,7 @@ class ExpenseForm extends ConsumerWidget {
       ),
       decoration: AppSurfaces.panel(context),
       child: Column(
+        crossAxisAlignment: CrossAxisAlignment.center,
         children: [
           Text(
             amountLabel,
@@ -150,12 +151,14 @@ class ExpenseForm extends ConsumerWidget {
             readOnly: !isEditing,
             keyboardType: const TextInputType.numberWithOptions(decimal: true),
             textAlign: TextAlign.center,
+            textInputAction: TextInputAction.next,
             style: theme.textTheme.displayMedium?.copyWith(
               color: accentColor,
-              fontWeight: FontWeight.w800,
-              letterSpacing: -1.5,
+              fontWeight: FontWeight.w700,
+              letterSpacing: -0.4,
             ),
-            decoration: const InputDecoration(
+            decoration: InputDecoration(
+              semanticCounterText: amountLabel,
               border: InputBorder.none,
               enabledBorder: InputBorder.none,
               focusedBorder: InputBorder.none,
@@ -182,7 +185,6 @@ class ExpenseForm extends ConsumerWidget {
               textAlign: TextAlign.center,
               style: theme.textTheme.bodySmall?.copyWith(
                 color: theme.colorScheme.onSurfaceVariant,
-                fontSize: 11,
               ),
             ),
           ],
@@ -191,7 +193,7 @@ class ExpenseForm extends ConsumerWidget {
             Text(
               'Toque em editar para alterar',
               style: theme.textTheme.labelSmall?.copyWith(
-                color: accentColor.withValues(alpha: 0.5),
+                color: theme.colorScheme.onSurfaceVariant,
               ),
             ),
           ],
@@ -319,7 +321,6 @@ class ExpenseForm extends ConsumerWidget {
             child: CategoryAutocompleteField(
               key: ValueKey('location_${selectedCategory?.id}_$isIncome'),
               label: 'Título *',
-              prefixIcon: Icons.title_outlined,
               controller: locationController,
               textCapitalization: TextCapitalization.sentences,
               textInputAction: TextInputAction.next,
@@ -355,7 +356,6 @@ class ExpenseForm extends ConsumerWidget {
             child: CategoryAutocompleteField(
               key: ValueKey('motivation_${selectedCategory?.id}'),
               label: 'Descrição',
-              prefixIcon: Icons.notes_outlined,
               controller: motivationController,
               textCapitalization: TextCapitalization.sentences,
               textInputAction: TextInputAction.done,

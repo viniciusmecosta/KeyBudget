@@ -1,13 +1,14 @@
+import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:key_budget/app/navigation/app_destination.dart';
 import 'package:key_budget/app/viewmodel/navigation_viewmodel.dart';
-import 'package:key_budget/core/models/expense_model.dart';
-import 'package:key_budget/core/models/user_model.dart';
 import 'package:key_budget/app/widgets/balance_card.dart';
 import 'package:key_budget/core/design_system/colors/app_contrast.dart';
+import 'package:key_budget/core/models/expense_model.dart';
+import 'package:key_budget/core/models/user_model.dart';
 import 'package:key_budget/features/auth/repository/auth_repository.dart';
 import 'package:key_budget/features/auth/viewmodel/auth_viewmodel.dart';
 import 'package:key_budget/features/category/viewmodel/category_viewmodel.dart';
@@ -16,6 +17,7 @@ import 'package:key_budget/features/credentials/viewmodel/credential_viewmodel.d
 import 'package:key_budget/features/dashboard/view/dashboard_screen.dart';
 import 'package:key_budget/features/dashboard/viewmodel/dashboard_viewmodel.dart';
 import 'package:key_budget/features/dashboard/widgets/dashboard_balance_card.dart';
+import 'package:key_budget/features/dashboard/widgets/dashboard_category_summary.dart';
 import 'package:key_budget/features/dashboard/widgets/dashboard_header.dart';
 import 'package:key_budget/features/dashboard/widgets/quick_actions_section.dart';
 import 'package:key_budget/features/dashboard/widgets/recent_activity_section.dart';
@@ -49,6 +51,7 @@ class FakeCredentialVM extends CredentialViewModel {
 
 class FakeAuthVM extends AuthViewModel {
   final User? mockUser;
+
   FakeAuthVM({this.mockUser})
     : super(authRepository: FakeAuthRepo(), listenToAuthChanges: false);
 
@@ -129,6 +132,69 @@ class FakeDashboardVM extends DashboardViewModel {
 void main() {
   setUpAll(() async {
     await initializeDateFormatting('pt_BR', null);
+  });
+
+  testWidgets('category chart excludes future entries and income', (
+    tester,
+  ) async {
+    final now = DateTime.now();
+    final model = FakeDashboardVM(
+      testExpenses: [
+        Expense(amount: 0.1, date: now),
+        Expense(amount: 0.2, date: now),
+        Expense(amount: 900, date: now, isIncome: true),
+        Expense(amount: 600, date: DateTime(now.year, now.month, now.day + 1)),
+      ],
+    );
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [dashboardViewModelProvider.overrideWith((ref) => model)],
+        child: const MaterialApp(
+          home: Scaffold(body: DashboardCategorySummary()),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+    expect(find.textContaining('0,30'), findsNothing);
+    await tester.tap(find.text('Ver valores'));
+    await tester.pumpAndSettle();
+    expect(find.textContaining('0,30'), findsOneWidget);
+    expect(find.textContaining('100,0%'), findsOneWidget);
+    expect(
+      tester.widget<PieChart>(find.byType(PieChart)).data.sections.single.value,
+      30,
+    );
+  });
+
+  testWidgets('category chart keeps five largest and groups the rest', (
+    tester,
+  ) async {
+    final model = FakeDashboardVM(
+      testExpenses: [
+        for (var i = 1; i <= 8; i++)
+          Expense(amount: i.toDouble(), categoryId: '$i', date: DateTime.now()),
+      ],
+    );
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [dashboardViewModelProvider.overrideWith((ref) => model)],
+        child: const MaterialApp(
+          home: Scaffold(body: DashboardCategorySummary()),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+    final sections = tester
+        .widget<PieChart>(find.byType(PieChart))
+        .data
+        .sections;
+    expect(sections.length, 6);
+    expect(sections.last.value, 600);
+    expect(
+      sections.fold<double>(0, (sum, section) => sum + section.value),
+      3600,
+    );
+    expect(find.text('Demais categorias'), findsOneWidget);
   });
 
   group('Dashboard Components & Responsive Layout', () {
@@ -220,7 +286,7 @@ void main() {
         await tester.pumpAndSettle();
 
         expect(tester.takeException(), isNull);
-        expect(find.textContaining('Alexandre Bernardo'), findsOneWidget);
+        expect(find.textContaining('Alexandre'), findsOneWidget);
         expect(find.byTooltip('Personalizar painel'), findsNothing);
 
         await tester.tap(find.byType(InkWell));
@@ -474,7 +540,7 @@ void main() {
         await tester.pumpAndSettle();
 
         expect(tester.takeException(), isNull);
-        expect(find.text('Ver todas'), findsOneWidget);
+        expect(find.byTooltip('Ver todos os lançamentos'), findsOneWidget);
       },
     );
 

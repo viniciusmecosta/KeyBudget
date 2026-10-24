@@ -73,7 +73,9 @@ void main() {
     });
 
     test('cancelled factory sets cancelled status', () {
-      final res = OperationResult<void>.cancelled(message: 'Cancelado pelo usuário');
+      final res = OperationResult<void>.cancelled(
+        message: 'Cancelado pelo usuário',
+      );
       expect(res.isCancelled, isTrue);
       expect(res.message, equals('Cancelado pelo usuário'));
     });

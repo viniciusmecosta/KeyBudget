@@ -178,7 +178,9 @@ class AppTheme {
         scrolledUnderElevation: 0.0,
         centerTitle: false,
         iconTheme: IconThemeData(color: onSurfaceColor),
-        titleTextStyle: textTheme.headlineLarge,
+        titleTextStyle: textTheme.titleLarge?.copyWith(
+          fontWeight: FontWeight.w700,
+        ),
         systemOverlayStyle: isDark
             ? SystemUiOverlayStyle.light
             : SystemUiOverlayStyle.dark,
@@ -205,7 +207,7 @@ class AppTheme {
       floatingActionButtonTheme: FloatingActionButtonThemeData(
         backgroundColor: filledPrimaryColor,
         foregroundColor: Colors.white,
-        shape: const CircleBorder(),
+        shape: RoundedRectangleBorder(borderRadius: AppBorders.borderRadiusM),
         elevation: 3,
       ),
       outlinedButtonTheme: OutlinedButtonThemeData(
@@ -262,8 +264,9 @@ class AppTheme {
         ),
         contentPadding: const EdgeInsets.symmetric(
           horizontal: AppSpacing.md,
-          vertical: AppSpacing.md,
+          vertical: 20,
         ),
+        constraints: const BoxConstraints(minHeight: 60),
         labelStyle: textTheme.bodyMedium?.copyWith(
           color: onSurfaceVariantColor,
         ),
@@ -277,7 +280,9 @@ class AppTheme {
         shape: RoundedRectangleBorder(
           borderRadius: AppBorders.borderRadiusL,
           side: BorderSide(
-            color: isDark ? primaryColor.withValues(alpha: 0.18) : Colors.white,
+            color: isDark
+                ? onSurfaceColor.withValues(alpha: 0.08)
+                : Colors.white,
             width: 1,
           ),
         ),

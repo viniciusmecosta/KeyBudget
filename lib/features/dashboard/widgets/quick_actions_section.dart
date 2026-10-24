@@ -70,7 +70,10 @@ class QuickActionsSection extends ConsumerWidget {
 
     return LayoutBuilder(
       builder: (context, constraints) {
-        final crossAxisCount = actions.length == 3
+        final largeText = MediaQuery.textScalerOf(context).scale(14) > 19;
+        final crossAxisCount = largeText
+            ? (constraints.maxWidth < 360 ? 1 : 2)
+            : actions.length == 3
             ? 3
             : (constraints.maxWidth < 450 ? 2 : 4);
         final itemWidth =
@@ -147,7 +150,7 @@ class QuickActionsSection extends ConsumerWidget {
                 overflow: TextOverflow.ellipsis,
                 style: theme.textTheme.bodySmall?.copyWith(
                   color: theme.colorScheme.onSurfaceVariant,
-                  fontSize: 11,
+                  fontSize: 12,
                 ),
               ),
           ],

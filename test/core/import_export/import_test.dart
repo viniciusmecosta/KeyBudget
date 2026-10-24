@@ -84,14 +84,17 @@ class FakeRecurringRepository implements RecurringExpenseRepository {
     storage.remove(expenseId);
   }
 
-  Future<List<RecurringExpense>> getRecurringExpensesForUser(String userId) async {
+  Future<List<RecurringExpense>> getRecurringExpensesForUser(
+    String userId,
+  ) async {
     return storage.values.toList();
   }
 }
 
 class FakeEncryptionService extends Fake implements EncryptionService {
   @override
-  String encryptData(String plainText) => base64Encode(utf8.encode('ciphertext_$plainText'));
+  String encryptData(String plainText) =>
+      base64Encode(utf8.encode('ciphertext_$plainText'));
 
   @override
   String decryptData(String encryptedText) =>
@@ -103,7 +106,8 @@ void main() {
     const parser = CsvImportParser();
 
     test('Strips UTF-8 BOM and sniffs comma delimiter correctly', () {
-      const csvWithBom = '\uFEFFData,Descricao,Valor\n15/05/2024,Supermercado,"50,25"';
+      const csvWithBom =
+          '\uFEFFData,Descricao,Valor\n15/05/2024,Supermercado,"50,25"';
       final result = parser.parseString(csvWithBom);
 
       expect(result.isValid, isTrue);
@@ -117,7 +121,8 @@ void main() {
     });
 
     test('Sniffs semicolon delimiter and trims whitespace', () {
-      const csvSemicolon = 'Data ; Titulo ; Valor ; Tipo\n2024-06-01 ; Salario ; 3500.00 ; Receita';
+      const csvSemicolon =
+          'Data ; Titulo ; Valor ; Tipo\n2024-06-01 ; Salario ; 3500.00 ; Receita';
       final result = parser.parseString(csvSemicolon);
 
       expect(result.isValid, isTrue);
@@ -129,7 +134,8 @@ void main() {
     });
 
     test('Parses multiline quoted values and escaped quotes', () {
-      const complexCsv = 'id,notes,amount\n1,"Linha 1\nLinha 2 com ""aspas""",100.00';
+      const complexCsv =
+          'id,notes,amount\n1,"Linha 1\nLinha 2 com ""aspas""",100.00';
       final result = parser.parseString(complexCsv);
 
       expect(result.isValid, isTrue);
@@ -139,8 +145,8 @@ void main() {
     });
 
     test('Fails gracefully when row has column mismatch', () {
-
-      const brokenCsv = 'Data,Descricao,Valor\n15/05/2024,Mercado,50.00\n16/05/2024,Padaria,10.00,ExtraCol';
+      const brokenCsv =
+          'Data,Descricao,Valor\n15/05/2024,Mercado,50.00\n16/05/2024,Padaria,10.00,ExtraCol';
       final result = parser.parseString(brokenCsv);
 
       expect(result.rows.any((r) => r.hasError), isTrue);
@@ -154,56 +160,87 @@ void main() {
   });
 
   group('Strict Validations (Date, Money, Categories, Credentials)', () {
-    test('DateParser strictly rejects impossible calendar dates (31/02, 29/02 non-leap)', () {
-      expect(ImportValidation.parseStrictDate('31/02/2024'), isNull);
-      expect(ImportValidation.parseStrictDate('29/02/2023'), isNull);
-      expect(ImportValidation.parseStrictDate('29/02/2024'), isNotNull);
-      expect(ImportValidation.parseStrictDate('30/04/2024'), isNotNull);
-      expect(ImportValidation.parseStrictDate('31/04/2024'), isNull);
-      expect(ImportValidation.parseStrictDate('00/10/2024'), isNull);
-      expect(ImportValidation.parseStrictDate('2024-02-29'), isNotNull);
-      expect(ImportValidation.parseStrictDate('2023-02-29'), isNull);
-    });
+    test(
+      'DateParser strictly rejects impossible calendar dates (31/02, 29/02 non-leap)',
+      () {
+        expect(ImportValidation.parseStrictDate('31/02/2024'), isNull);
+        expect(ImportValidation.parseStrictDate('29/02/2023'), isNull);
+        expect(ImportValidation.parseStrictDate('29/02/2024'), isNotNull);
+        expect(ImportValidation.parseStrictDate('30/04/2024'), isNotNull);
+        expect(ImportValidation.parseStrictDate('31/04/2024'), isNull);
+        expect(ImportValidation.parseStrictDate('00/10/2024'), isNull);
+        expect(ImportValidation.parseStrictDate('2024-02-29'), isNotNull);
+        expect(ImportValidation.parseStrictDate('2023-02-29'), isNull);
+      },
+    );
 
-    test('MoneyParser strictly rejects invalid strings without defaulting to zero', () {
-      expect(() => MoneyParser.parse('R\$ ABC'), throwsA(isA<FormatException>()));
-      expect(() => MoneyParser.parse(''), throwsA(isA<FormatException>()));
-      expect(() => MoneyParser.parse('12.3456'), throwsA(isA<ExtraDecimalsException>()));
+    test(
+      'MoneyParser strictly rejects invalid strings without defaulting to zero',
+      () {
+        expect(
+          () => MoneyParser.parse('R\$ ABC'),
+          throwsA(isA<FormatException>()),
+        );
+        expect(() => MoneyParser.parse(''), throwsA(isA<FormatException>()));
+        expect(
+          () => MoneyParser.parse('12.3456'),
+          throwsA(isA<ExtraDecimalsException>()),
+        );
 
-      expect(MoneyParser.parse('R\$ 1.250,50').amountMinor, equals(125050));
-      expect(MoneyParser.parse('1250.50').amountMinor, equals(125050));
-      expect(MoneyParser.parse('-45,00').amountMinor, equals(-4500));
-    });
+        expect(MoneyParser.parse('R\$ 1.250,50').amountMinor, equals(125050));
+        expect(MoneyParser.parse('1250.50').amountMinor, equals(125050));
+        expect(MoneyParser.parse('-45,00').amountMinor, equals(-4500));
+      },
+    );
 
-    test('Credential validation rejects missing location, login, or password', () {
-      const validRow = RawCsvRow(
-        lineNumber: 2,
-        values: {'location': 'Banco', 'login': 'user', 'password': 'password123'},
-        rawTokens: ['Banco', 'user', 'password123'],
-      );
-      final validRes = ImportValidation.validateCredentialRow(rawRow: validRow, occurrenceIndex: 0);
-      expect(validRes.isValid, isTrue);
-      expect(validRes.parsedItem?.location, equals('Banco'));
-      expect(validRes.parsedItem?.login, equals('user'));
-      expect(validRes.parsedItem?.encryptedPassword, equals('password123'));
+    test(
+      'Credential validation rejects missing location, login, or password',
+      () {
+        const validRow = RawCsvRow(
+          lineNumber: 2,
+          values: {
+            'location': 'Banco',
+            'login': 'user',
+            'password': 'password123',
+          },
+          rawTokens: ['Banco', 'user', 'password123'],
+        );
+        final validRes = ImportValidation.validateCredentialRow(
+          rawRow: validRow,
+          occurrenceIndex: 0,
+        );
+        expect(validRes.isValid, isTrue);
+        expect(validRes.parsedItem?.location, equals('Banco'));
+        expect(validRes.parsedItem?.login, equals('user'));
+        expect(validRes.parsedItem?.encryptedPassword, equals('password123'));
 
-      const missingPassRow = RawCsvRow(
-        lineNumber: 3,
-        values: {'location': 'Banco', 'login': 'user', 'password': ''},
-        rawTokens: ['Banco', 'user', ''],
-      );
-      final missingPassRes = ImportValidation.validateCredentialRow(rawRow: missingPassRow, occurrenceIndex: 0);
-      expect(missingPassRes.isValid, isFalse);
-      expect(missingPassRes.errors.any((e) => e.contains('Senha é obrigatória')), isTrue);
+        const missingPassRow = RawCsvRow(
+          lineNumber: 3,
+          values: {'location': 'Banco', 'login': 'user', 'password': ''},
+          rawTokens: ['Banco', 'user', ''],
+        );
+        final missingPassRes = ImportValidation.validateCredentialRow(
+          rawRow: missingPassRow,
+          occurrenceIndex: 0,
+        );
+        expect(missingPassRes.isValid, isFalse);
+        expect(
+          missingPassRes.errors.any((e) => e.contains('Senha é obrigatória')),
+          isTrue,
+        );
 
-      const missingLocRow = RawCsvRow(
-        lineNumber: 4,
-        values: {'location': '', 'login': 'user', 'password': 'secret'},
-        rawTokens: ['', 'user', 'secret'],
-      );
-      final missingLocRes = ImportValidation.validateCredentialRow(rawRow: missingLocRow, occurrenceIndex: 0);
-      expect(missingLocRes.isValid, isFalse);
-    });
+        const missingLocRow = RawCsvRow(
+          lineNumber: 4,
+          values: {'location': '', 'login': 'user', 'password': 'secret'},
+          rawTokens: ['', 'user', 'secret'],
+        );
+        final missingLocRes = ImportValidation.validateCredentialRow(
+          rawRow: missingLocRow,
+          occurrenceIndex: 0,
+        );
+        expect(missingLocRes.isValid, isFalse);
+      },
+    );
 
     test('Recurring expenses are validated and imported as paused drafts', () {
       const recRow = RawCsvRow(
@@ -217,11 +254,17 @@ void main() {
         rawTokens: ['Aluguel', '1200,00', 'mensal', '10/01/2024'],
       );
 
-      final result = ImportValidation.validateRecurringRow(rawRow: recRow, occurrenceIndex: 0);
+      final result = ImportValidation.validateRecurringRow(
+        rawRow: recRow,
+        occurrenceIndex: 0,
+      );
       expect(result.isValid, isTrue);
       expect(result.parsedItem?.generationState, equals('paused'));
       expect(result.parsedItem?.money, equals(Money.fromCents(120000)));
-      expect(result.warnings.any((w) => w.contains('rascunho pausado')), isTrue);
+      expect(
+        result.warnings.any((w) => w.contains('rascunho pausado')),
+        isTrue,
+      );
     });
   });
 
@@ -245,137 +288,160 @@ void main() {
       );
     });
 
-    test('preparePlan prepares cold preview without writing to database', () async {
-      const csv = '''Data,Descricao,Valor,Tipo
+    test(
+      'preparePlan prepares cold preview without writing to database',
+      () async {
+        const csv = '''Data,Descricao,Valor,Tipo
 15/05/2024,Supermercado,150.00,Despesa
 16/05/2024,Salario,3000.00,Receita
 31/02/2024,DataInvalida,50.00,Despesa
 18/05/2024,Farmacia,INVALIDO,Despesa''';
 
-      final plan = await importService.preparePlan(
-        userId: 'user_test',
-        fileContent: csv,
-        fileName: 'extrato.csv',
-      );
+        final plan = await importService.preparePlan(
+          userId: 'user_test',
+          fileContent: csv,
+          fileName: 'extrato.csv',
+        );
 
-      expect(plan.detectedType, equals(CsvImportType.expenses));
-      expect(plan.totalLines, equals(4));
-      expect(plan.validCount, equals(2));
-      expect(plan.invalidCount, equals(2));
-      expect(plan.totalExpenseMinor, equals(15000));
-      expect(plan.totalIncomeMinor, equals(300000));
-      expect(plan.canProceed, isTrue);
+        expect(plan.detectedType, equals(CsvImportType.expenses));
+        expect(plan.totalLines, equals(4));
+        expect(plan.validCount, equals(2));
+        expect(plan.invalidCount, equals(2));
+        expect(plan.totalExpenseMinor, equals(15000));
+        expect(plan.totalIncomeMinor, equals(300000));
+        expect(plan.canProceed, isTrue);
 
-      expect((await expenseRepo.getExpensesForUser('user_test')).isEmpty, isTrue);
-    });
+        expect(
+          (await expenseRepo.getExpensesForUser('user_test')).isEmpty,
+          isTrue,
+        );
+      },
+    );
 
-    test('Two legitimate identical lines in the same file get separate distinct keys', () async {
-
-      const csv = '''Data,Descricao,Valor
+    test(
+      'Two legitimate identical lines in the same file get separate distinct keys',
+      () async {
+        const csv = '''Data,Descricao,Valor
 10/05/2024,Cafezinho,5.00
 10/05/2024,Cafezinho,5.00''';
 
-      final plan = await importService.preparePlan(
-        userId: 'user_test',
-        fileContent: csv,
-        fileName: 'gastos.csv',
-      );
+        final plan = await importService.preparePlan(
+          userId: 'user_test',
+          fileContent: csv,
+          fileName: 'gastos.csv',
+        );
 
-      expect(plan.validCount, equals(2));
-      final line1 = plan.lineResults[0];
-      final line2 = plan.lineResults[1];
+        expect(plan.validCount, equals(2));
+        final line1 = plan.lineResults[0];
+        final line2 = plan.lineResults[1];
 
-      expect(line1.deduplicationFingerprint, isNot(equals(line2.deduplicationFingerprint)));
+        expect(
+          line1.deduplicationFingerprint,
+          isNot(equals(line2.deduplicationFingerprint)),
+        );
 
-      final result = await importService.applyPlan(
-        userId: 'user_test',
-        plan: plan,
-        importOnlyValid: true,
-      );
+        final result = await importService.applyPlan(
+          userId: 'user_test',
+          plan: plan,
+          importOnlyValid: true,
+        );
 
-      expect(result.isSuccess, isTrue);
-      expect(result.data?.createdCount, equals(2));
+        expect(result.isSuccess, isTrue);
+        expect(result.data?.createdCount, equals(2));
 
-      final stored = await expenseRepo.getExpensesForUser('user_test');
-      expect(stored.length, equals(2));
-      expect(stored.every((e) => e.motivation == 'Cafezinho'), isTrue);
-    });
+        final stored = await expenseRepo.getExpensesForUser('user_test');
+        expect(stored.length, equals(2));
+        expect(stored.every((e) => e.motivation == 'Cafezinho'), isTrue);
+      },
+    );
 
-    test('Re-importing the exact same file skips duplicates idempotently', () async {
-      const csv = '''Data,Descricao,Valor
+    test(
+      'Re-importing the exact same file skips duplicates idempotently',
+      () async {
+        const csv = '''Data,Descricao,Valor
 10/05/2024,Cafezinho,5.00''';
 
-      final plan1 = await importService.preparePlan(
-        userId: 'user_test',
-        fileContent: csv,
-        fileName: 'gastos.csv',
-      );
+        final plan1 = await importService.preparePlan(
+          userId: 'user_test',
+          fileContent: csv,
+          fileName: 'gastos.csv',
+        );
 
-      final apply1 = await importService.applyPlan(
-        userId: 'user_test',
-        plan: plan1,
-        importOnlyValid: true,
-      );
-      expect(apply1.data?.createdCount, equals(1));
+        final apply1 = await importService.applyPlan(
+          userId: 'user_test',
+          plan: plan1,
+          importOnlyValid: true,
+        );
+        expect(apply1.data?.createdCount, equals(1));
 
-      final existing = await expenseRepo.getExpensesForUser('user_test');
-      final plan2 = await importService.preparePlan(
-        userId: 'user_test',
-        fileContent: csv,
-        fileName: 'gastos.csv',
-        existingExpenses: existing,
-      );
+        final existing = await expenseRepo.getExpensesForUser('user_test');
+        final plan2 = await importService.preparePlan(
+          userId: 'user_test',
+          fileContent: csv,
+          fileName: 'gastos.csv',
+          existingExpenses: existing,
+        );
 
-      expect(plan2.lineResults.first.status, equals(ImportRowStatus.skippedDuplicate));
+        expect(
+          plan2.lineResults.first.status,
+          equals(ImportRowStatus.skippedDuplicate),
+        );
 
-      final apply2 = await importService.applyPlan(
-        userId: 'user_test',
-        plan: plan2,
-        importOnlyValid: true,
-      );
-      expect(apply2.isSuccess, isFalse);
+        final apply2 = await importService.applyPlan(
+          userId: 'user_test',
+          plan: plan2,
+          importOnlyValid: true,
+        );
+        expect(apply2.isSuccess, isFalse);
 
-      final stored = await expenseRepo.getExpensesForUser('user_test');
-      expect(stored.length, equals(1));
-    });
+        final stored = await expenseRepo.getExpensesForUser('user_test');
+        expect(stored.length, equals(1));
+      },
+    );
 
-    test('Credentials import encrypts passwords and rollback removes all created docs', () async {
-      const csv = '''Local,Login,Senha
+    test(
+      'Credentials import encrypts passwords and rollback removes all created docs',
+      () async {
+        const csv = '''Local,Login,Senha
 Banco Alfa,usuario1,segredo123
 Serviço Beta,usuario2,segredo456''';
 
-      final plan = await importService.preparePlan(
-        userId: 'user_test',
-        fileContent: csv,
-        fileName: 'senhas.csv',
-      );
+        final plan = await importService.preparePlan(
+          userId: 'user_test',
+          fileContent: csv,
+          fileName: 'senhas.csv',
+        );
 
-      expect(plan.detectedType, equals(CsvImportType.credentials));
-      expect(plan.validCount, equals(2));
+        expect(plan.detectedType, equals(CsvImportType.credentials));
+        expect(plan.validCount, equals(2));
 
-      final applyResult = await importService.applyPlan(
-        userId: 'user_test',
-        plan: plan,
-      );
+        final applyResult = await importService.applyPlan(
+          userId: 'user_test',
+          plan: plan,
+        );
 
-      expect(applyResult.isSuccess, isTrue);
-      final importReport = applyResult.data!;
-      expect(importReport.createdCount, equals(2));
+        expect(applyResult.isSuccess, isTrue);
+        final importReport = applyResult.data!;
+        expect(importReport.createdCount, equals(2));
 
-      final storedCreds = await credRepo.getCredentialsForUser('user_test');
-      expect(storedCreds.length, equals(2));
+        final storedCreds = await credRepo.getCredentialsForUser('user_test');
+        expect(storedCreds.length, equals(2));
 
-      expect(storedCreds.first.encryptedPassword, isNot(contains('segredo123')));
+        expect(
+          storedCreds.first.encryptedPassword,
+          isNot(contains('segredo123')),
+        );
 
-      final rollbackRes = await importService.rollbackImport(
-        userId: 'user_test',
-        type: CsvImportType.credentials,
-        report: importReport,
-      );
+        final rollbackRes = await importService.rollbackImport(
+          userId: 'user_test',
+          type: CsvImportType.credentials,
+          report: importReport,
+        );
 
-      expect(rollbackRes.isSuccess, isTrue);
-      final afterRollback = await credRepo.getCredentialsForUser('user_test');
-      expect(afterRollback.isEmpty, isTrue);
-    });
+        expect(rollbackRes.isSuccess, isTrue);
+        final afterRollback = await credRepo.getCredentialsForUser('user_test');
+        expect(afterRollback.isEmpty, isTrue);
+      },
+    );
   });
 }

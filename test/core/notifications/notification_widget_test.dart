@@ -1,4 +1,5 @@
 import 'dart:convert';
+
 import 'package:flutter_test/flutter_test.dart';
 import 'package:key_budget/core/models/recurring_expense_model.dart';
 import 'package:key_budget/core/notifications/notification_gateway.dart';
@@ -9,6 +10,7 @@ import 'package:key_budget/core/time/app_clock.dart';
 
 class FakeClock implements AppClock {
   DateTime _current;
+
   FakeClock(this._current);
 
   void setTime(DateTime time) {

@@ -15,6 +15,7 @@ class BalanceCard extends ConsumerWidget {
   final Color? backgroundColor;
   final Color? foregroundColor;
   final bool isCompact;
+  final bool integrated;
   final String? period;
 
   const BalanceCard({
@@ -29,6 +30,7 @@ class BalanceCard extends ConsumerWidget {
     this.backgroundColor,
     this.foregroundColor,
     this.isCompact = false,
+    this.integrated = false,
   });
 
   @override
@@ -49,26 +51,28 @@ class BalanceCard extends ConsumerWidget {
             : theme.colorScheme.onSurface);
 
     return Container(
-      decoration: BoxDecoration(
-        borderRadius: AppBorders.borderRadiusL,
-        gradient:
-            gradient ??
-            (backgroundColor != null
-                ? LinearGradient(
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                    colors: [
-                      backgroundColor!,
-                      Color.lerp(backgroundColor!, Colors.black, 0.18)!,
-                    ],
-                  )
-                : null),
-        color: backgroundColor == null ? bgColor : null,
-        boxShadow: AppShadows.soft,
-        border: bgColor == theme.colorScheme.surface
-            ? Border.all(color: theme.colorScheme.outlineVariant)
-            : null,
-      ),
+      decoration: integrated
+          ? null
+          : BoxDecoration(
+              borderRadius: AppBorders.borderRadiusL,
+              gradient:
+                  gradient ??
+                  (backgroundColor != null
+                      ? LinearGradient(
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                          colors: [
+                            backgroundColor!,
+                            Color.lerp(backgroundColor!, Colors.black, 0.18)!,
+                          ],
+                        )
+                      : null),
+              color: backgroundColor == null ? bgColor : null,
+              boxShadow: AppShadows.soft,
+              border: bgColor == theme.colorScheme.surface
+                  ? Border.all(color: theme.colorScheme.outlineVariant)
+                  : null,
+            ),
       child: Material(
         color: Colors.transparent,
         borderRadius: AppBorders.borderRadiusL,
@@ -77,7 +81,7 @@ class BalanceCard extends ConsumerWidget {
           borderRadius: AppBorders.borderRadiusL,
           child: Padding(
             padding: EdgeInsets.symmetric(
-              horizontal: AppSpacing.xl,
+              horizontal: integrated ? AppSpacing.lg : AppSpacing.xl,
               vertical: isCompact ? AppSpacing.md : AppSpacing.lg,
             ),
             child: Column(
@@ -123,15 +127,20 @@ class BalanceCard extends ConsumerWidget {
                           SizedBox(
                             height: isCompact ? AppSpacing.xs : AppSpacing.sm,
                           ),
-                          Text(
-                            totalValue < 0
-                                ? '- ${currencyFormatter.format(totalValue.abs())}'
-                                : currencyFormatter.format(totalValue),
-                            style: theme.textTheme.headlineMedium?.copyWith(
-                              fontWeight: FontWeight.w800,
-                              color: textColor,
-                              letterSpacing: -0.5,
-                              fontSize: isCompact ? 26 : 32,
+                          FittedBox(
+                            fit: BoxFit.scaleDown,
+                            alignment: Alignment.centerLeft,
+                            child: Text(
+                              maxLines: 1,
+                              totalValue < 0
+                                  ? '- ${currencyFormatter.format(totalValue.abs())}'
+                                  : currencyFormatter.format(totalValue),
+                              style: theme.textTheme.headlineMedium?.copyWith(
+                                fontWeight: FontWeight.w800,
+                                color: textColor,
+                                letterSpacing: -0.5,
+                                fontSize: isCompact ? 26 : 32,
+                              ),
                             ),
                           ),
                           if (valueSubtitle != null) ...[
@@ -141,7 +150,8 @@ class BalanceCard extends ConsumerWidget {
                         ],
                       ),
                     ),
-                    if (gradient != null || backgroundColor != null)
+                    if (!integrated &&
+                        (gradient != null || backgroundColor != null))
                       Container(
                         padding: const EdgeInsets.all(AppSpacing.sm),
                         decoration: BoxDecoration(

@@ -52,6 +52,7 @@ app.*.map.json
 .env.*
 
 .gradle/
+/android/.kotlin/
 .metadata
 
 # Agents

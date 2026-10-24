@@ -2,7 +2,7 @@ import 'package:key_budget/app/utils/navigation_utils.dart';
 import 'package:key_budget/core/design_system/widgets/app_page_scaffold.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter_masked_text2/flutter_masked_text2.dart';
+import 'package:key_budget/core/money/brl_input_controller.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'package:key_budget/app/utils/app_animations.dart';
@@ -31,7 +31,7 @@ class ExpenseDetailScreen extends ConsumerStatefulWidget {
 
 class _ExpenseDetailScreenState extends ConsumerState<ExpenseDetailScreen> {
   final _formKey = GlobalKey<FormState>();
-  late MoneyMaskedTextController _amountController;
+  late BrlInputController _amountController;
   late TextEditingController _motivationController;
   late TextEditingController _locationController;
   late DateTime _selectedDate;
@@ -44,11 +44,9 @@ class _ExpenseDetailScreenState extends ConsumerState<ExpenseDetailScreen> {
   @override
   void initState() {
     super.initState();
-    _amountController = MoneyMaskedTextController(
-      decimalSeparator: ',',
-      thousandSeparator: '.',
-      leftSymbol: 'R\$ ',
+    _amountController = BrlInputController(
       initialValue: widget.expense.amount,
+      allowCursorEditing: true,
     );
     _motivationController = TextEditingController(
       text: widget.expense.motivation,

@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:key_budget/features/dashboard/repository/dashboard_layout_repository.dart';
-import 'package:key_budget/features/dashboard/widgets/dashboard_layout_editor.dart';
+import 'package:key_budget/core/models/user_model.dart';
 import 'package:key_budget/features/auth/repository/auth_repository.dart';
 import 'package:key_budget/features/auth/viewmodel/auth_viewmodel.dart';
-import 'package:key_budget/core/models/user_model.dart';
+import 'package:key_budget/features/dashboard/repository/dashboard_layout_repository.dart';
+import 'package:key_budget/features/dashboard/widgets/dashboard_layout_editor.dart';
 
 class _FakeAuthRepository extends Fake implements AuthRepository {}
 
@@ -39,8 +39,29 @@ void main() {
   test('legacy profile uses the complete default panel', () {
     final layout = DashboardLayout.fromMap(null);
     expect(layout.cards, DashboardLayout.cardIds);
+    expect(layout.integratedSummary, isTrue);
+    expect(
+      DashboardLayout.fromMap(
+        const DashboardLayout(integratedSummary: false).toMap(),
+      ).integratedSummary,
+      isFalse,
+    );
     expect(layout.actions, DashboardLayout.actionIds);
   });
+
+  test(
+    'optional category chart survives persistence without changing defaults',
+    () {
+      final layout = DashboardLayout.fromMap({
+        'cards': ['categories', 'recent'],
+      });
+      expect(DashboardLayout.fromMap(layout.toMap()).cards, [
+        'categories',
+        'recent',
+      ]);
+      expect(const DashboardLayout().cards, isNot(contains('categories')));
+    },
+  );
 
   test('saved order is kept while invalid ids and duplicates are removed', () {
     final layout = DashboardLayout.fromMap({
@@ -59,7 +80,9 @@ void main() {
     await tester.pumpWidget(
       ProviderScope(
         overrides: [
-          authViewModelProvider.overrideWith((ref) => _AuthWithSuppliers(false)),
+          authViewModelProvider.overrideWith(
+            (ref) => _AuthWithSuppliers(false),
+          ),
           dashboardLayoutRepositoryProvider.overrideWithValue(repository),
         ],
         child: MaterialApp(
@@ -94,11 +117,60 @@ void main() {
           .onChanged,
       isNull,
     );
+    await tester.tap(find.byKey(const ValueKey('size_chart')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Compacto').last);
+    await tester.pumpAndSettle();
     await tester.tap(find.text('Gastos mensais'));
     await tester.pump();
     await tester.tap(find.text('Salvar painel'));
     await tester.pumpAndSettle();
     expect(repository.saved?.cards, ['balance', 'quick_actions', 'recent']);
+    expect(repository.saved?.sizeFor('chart'), DashboardCardSize.compact);
+  });
+
+  testWidgets('size controls remain usable at 320px and 200 percent text', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(320, 800);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    final repository = _SavingLayoutRepository();
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          authViewModelProvider.overrideWith(
+            (ref) => _AuthWithSuppliers(false),
+          ),
+          dashboardLayoutRepositoryProvider.overrideWithValue(repository),
+        ],
+        child: MaterialApp(
+          builder: (context, child) => MediaQuery(
+            data: MediaQuery.of(
+              context,
+            ).copyWith(textScaler: TextScaler.linear(2)),
+            child: child!,
+          ),
+          home: const Scaffold(
+            body: DashboardLayoutEditor(
+              userId: 'user',
+              initial: DashboardLayout(cards: ['daily', 'recent']),
+            ),
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+    await tester.ensureVisible(find.byKey(const ValueKey('size_daily')));
+    await tester.tap(find.byKey(const ValueKey('size_daily')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Amplo').last);
+    await tester.pumpAndSettle();
+    expect(tester.takeException(), isNull);
+    await tester.tap(find.text('Salvar painel'));
+    await tester.pump();
+    expect(repository.saved?.sizeFor('daily'), DashboardCardSize.large);
   });
 
   for (final enabled in [false, true]) {

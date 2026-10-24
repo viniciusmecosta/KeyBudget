@@ -2,8 +2,9 @@ import 'package:firebase_auth/firebase_auth.dart' as firebase;
 import 'package:flutter_test/flutter_test.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:http/http.dart' as http;
-import 'package:key_budget/core/services/drive_service.dart';
+import 'package:http/testing.dart';
 import 'package:key_budget/core/services/drive_connection_service.dart';
+import 'package:key_budget/core/services/drive_service.dart';
 import 'package:key_budget/core/services/google_sign_in_session.dart';
 
 class _User extends Fake implements firebase.User {
@@ -87,6 +88,48 @@ class _RecordingClient extends http.BaseClient {
 }
 
 void main() {
+  for (final status in [200, 401, 503]) {
+    test(
+      'verification checks Drive API response $status without interactive login',
+      () async {
+        final google = _RecordingSession();
+        final connections = _Connections()
+          ..token = GoogleSignInClientAuthorization(accessToken: 'test-token');
+        var requests = 0;
+        final service = DriveService(
+          firebaseAuth: _FirebaseAuth(),
+          googleSession: google,
+          connectionService: connections,
+          httpClientFactory: () => MockClient((request) async {
+            requests++;
+            expect(request.url.path, '/drive/v3/files');
+            expect(request.url.queryParameters['pageSize'], '1');
+            expect(request.headers['Authorization'], 'Bearer test-token');
+            return http.Response(
+              status == 200
+                  ? '{"files":[]}'
+                  : '{"error":{"message":"unavailable","code":$status}}',
+              status,
+              headers: {'content-type': 'application/json'},
+            );
+          }),
+        );
+        if (status == 200) {
+          expect(await service.verifyConnection(), isTrue);
+        } else if (status == 401) {
+          expect(await service.verifyConnection(), isFalse);
+        } else {
+          await expectLater(
+            service.verifyConnection(),
+            throwsA(isA<Exception>()),
+          );
+        }
+        expect(requests, 1);
+        expect(google.interactionModes, isEmpty);
+      },
+    );
+  }
+
   test(
     'saved Drive access skips account selection after an app restart',
     () async {

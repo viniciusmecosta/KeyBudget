@@ -1,4 +1,3 @@
-import 'package:key_budget/app/utils/navigation_utils.dart';
 import 'dart:async';
 
 import 'package:flutter/material.dart';
@@ -7,14 +6,16 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:home_widget/home_widget.dart';
 import 'package:key_budget/app/config/app_config.dart';
 import 'package:key_budget/app/config/app_theme.dart';
+import 'package:key_budget/app/utils/app_animations.dart';
 import 'package:key_budget/app/utils/app_scroll_behavior.dart';
+import 'package:key_budget/app/utils/navigation_utils.dart';
 import 'package:key_budget/app/view/auth_gate.dart';
 import 'package:key_budget/app/view/lock_screen.dart';
+import 'package:key_budget/core/design_system/widgets/app_feedback_panel.dart';
 import 'package:key_budget/core/services/app_lock_service.dart';
 import 'package:key_budget/core/services/home_widget_service.dart';
 import 'package:key_budget/core/services/notification_service.dart';
 import 'package:key_budget/core/services/sensitive_export_cache.dart';
-import 'package:key_budget/core/design_system/widgets/app_feedback_panel.dart';
 import 'package:key_budget/features/auth/viewmodel/auth_viewmodel.dart';
 import 'package:key_budget/features/dashboard/widgets/dashboard_skeleton.dart';
 import 'package:key_budget/features/expenses/view/add_expense_screen.dart';
@@ -204,6 +205,7 @@ class _MyAppState extends ConsumerState<MyApp> with WidgetsBindingObserver {
     return MaterialApp(
       navigatorKey: navigatorKey,
       title: 'KeyBudget',
+      themeAnimationStyle: AppAnimations.themeStyle(context),
       theme: AppTheme.getTheme(isDark: false, colorValue: themeColor),
       darkTheme: AppTheme.getTheme(isDark: true, colorValue: themeColor),
       themeMode: _resolveThemeMode(user?.effectiveThemeMode),

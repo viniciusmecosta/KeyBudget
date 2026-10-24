@@ -16,6 +16,7 @@ import 'package:key_budget/features/dashboard/view/dashboard_screen.dart';
 import 'package:key_budget/features/documents/view/documents_screen.dart';
 import 'package:key_budget/features/documents/viewmodel/document_viewmodel.dart';
 import 'package:key_budget/features/expenses/view/expenses_screen.dart';
+import 'package:key_budget/features/expenses/viewmodel/expense_viewmodel.dart';
 import 'package:key_budget/features/suppliers/view/suppliers_screen.dart';
 import 'package:key_budget/features/trash/repository/trash_repository.dart';
 import 'package:key_budget/features/user/view/user_screen.dart';
@@ -146,6 +147,12 @@ class _MainScreenState extends ConsumerState<MainScreen> {
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) {
+        final user = ref.read(authViewModelProvider).currentUser;
+        if (user != null) {
+          final expenses = ref.read(expenseViewModelProvider);
+          expenses.setEnableIncomes(user.enableIncomes ?? false);
+          expenses.listenToExpenses(user.id);
+        }
         navigationViewModel.updateAvailability(
           enableSuppliers: enableSuppliers,
           hiddenIds: hiddenIds,
@@ -190,6 +197,7 @@ class _MainScreenState extends ConsumerState<MainScreen> {
     );
 
     return Scaffold(
+      extendBody: isCompact,
       appBar: hiddenIds.contains(AppDestination.profile.id)
           ? AppBar(
               title: Text(currentDestination.label),

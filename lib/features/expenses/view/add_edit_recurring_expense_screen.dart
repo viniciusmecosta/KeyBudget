@@ -1,7 +1,7 @@
 import 'package:key_budget/core/design_system/widgets/app_page_scaffold.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter_masked_text2/flutter_masked_text2.dart';
+import 'package:key_budget/core/money/brl_input_controller.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:key_budget/app/utils/app_animations.dart';
 import 'package:key_budget/core/design_system/borders/app_borders.dart';
@@ -29,7 +29,7 @@ class AddEditRecurringExpenseScreen extends ConsumerStatefulWidget {
 class _AddEditRecurringExpenseScreenState
     extends ConsumerState<AddEditRecurringExpenseScreen> {
   final _formKey = GlobalKey<FormState>();
-  late MoneyMaskedTextController _amountController;
+  late BrlInputController _amountController;
   late TextEditingController _motivationController;
   late TextEditingController _locationController;
   late ValueNotifier<ExpenseCategory?> _selectedCategory;
@@ -46,10 +46,8 @@ class _AddEditRecurringExpenseScreenState
     super.initState();
     final categoryViewModel = ref.read(categoryViewModelProvider);
 
-    _amountController = MoneyMaskedTextController(
-      decimalSeparator: ',',
-      thousandSeparator: '.',
-      leftSymbol: 'R\$ ',
+    _amountController = BrlInputController(
+      allowCursorEditing: widget.expense != null,
       initialValue: widget.expense?.amount ?? 0,
     );
     _motivationController = TextEditingController(

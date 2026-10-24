@@ -22,25 +22,25 @@ class AppTypography {
       displayLarge: TextStyle(
         fontWeight: FontWeight.w800,
         color: textColor,
-        fontSize: 40,
+        fontSize: 36,
         letterSpacing: -1.0,
       ),
       displayMedium: TextStyle(
         fontWeight: FontWeight.w800,
         color: textColor,
-        fontSize: 32,
+        fontSize: 30,
         letterSpacing: -0.8,
       ),
       displaySmall: TextStyle(
         fontWeight: FontWeight.w700,
         color: textColor,
-        fontSize: 28,
+        fontSize: 26,
         letterSpacing: -0.6,
       ),
       headlineLarge: TextStyle(
         fontWeight: FontWeight.w700,
         color: textColor,
-        fontSize: 24,
+        fontSize: 22,
         letterSpacing: -0.5,
       ),
       headlineMedium: TextStyle(
@@ -58,19 +58,19 @@ class AppTypography {
       titleLarge: TextStyle(
         fontWeight: FontWeight.w600,
         color: textColor,
-        fontSize: 16,
+        fontSize: 18,
         letterSpacing: -0.2,
       ),
       titleMedium: TextStyle(
         fontWeight: FontWeight.w600,
         color: textColor,
-        fontSize: 14,
+        fontSize: 16,
         letterSpacing: -0.1,
       ),
       titleSmall: TextStyle(
         fontWeight: FontWeight.w600,
         color: textColor,
-        fontSize: 12,
+        fontSize: 14,
       ),
       bodyLarge: TextStyle(
         color: textColor,
@@ -102,7 +102,7 @@ class AppTypography {
       ),
       labelSmall: TextStyle(
         color: variantColor,
-        fontSize: 10,
+        fontSize: 12,
         fontWeight: FontWeight.w500,
       ),
     );

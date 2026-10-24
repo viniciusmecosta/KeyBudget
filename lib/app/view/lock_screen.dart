@@ -1,4 +1,5 @@
 import 'package:key_budget/core/design_system/widgets/app_page_scaffold.dart';
+import 'package:key_budget/core/design_system/colors/app_contrast.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:key_budget/app/utils/app_animations.dart';
@@ -20,6 +21,7 @@ class LockScreen extends ConsumerStatefulWidget {
 class _LockScreenState extends ConsumerState<LockScreen>
     with WidgetsBindingObserver {
   bool _isAuthenticating = false;
+  bool _isSigningOut = false;
   bool _didPromptAutomatically = false;
   LocalAuthAvailability? _availability;
   String? _statusFeedback;
@@ -39,7 +41,17 @@ class _LockScreenState extends ConsumerState<LockScreen>
   }
 
   Future<void> _checkAvailabilityAndPrompt() async {
-    final availability = await _localAuthService.checkAvailability();
+    LocalAuthAvailability availability;
+    try {
+      availability = await _localAuthService.checkAvailability();
+    } catch (_) {
+      if (!mounted) return;
+      setState(
+        () => _statusFeedback =
+            'Não foi possível consultar a proteção do dispositivo. Tente desbloquear novamente.',
+      );
+      return;
+    }
     if (!mounted) return;
     setState(() => _availability = availability);
 
@@ -73,7 +85,7 @@ class _LockScreenState extends ConsumerState<LockScreen>
   }
 
   Future<void> _authenticate() async {
-    if (_isAuthenticating) return;
+    if (_isAuthenticating || _isSigningOut) return;
 
     _didPromptAutomatically = true;
     final startUid = ref.read(authViewModelProvider).currentUser?.id;
@@ -145,6 +157,49 @@ class _LockScreenState extends ConsumerState<LockScreen>
     }
   }
 
+  Future<void> _signOut() async {
+    if (_isSigningOut || _isAuthenticating) return;
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Sair da conta?'),
+        content: const Text(
+          'Você precisará entrar novamente para acessar seus dados. Os dados salvos na conta serão mantidos.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Cancelar'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('Sair'),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true || !mounted) return;
+    final auth = ref.read(authViewModelProvider);
+    final lock = ref.read(appLockServiceProvider);
+    setState(() {
+      _isSigningOut = true;
+      _statusFeedback = null;
+    });
+    try {
+      await auth.logout(context, ref);
+      if (auth.currentUser == null) lock.unlockApp();
+    } catch (_) {
+      if (mounted) {
+        setState(
+          () => _statusFeedback =
+              'Não foi possível sair da conta. Tente novamente.',
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _isSigningOut = false);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -159,23 +214,34 @@ class _LockScreenState extends ConsumerState<LockScreen>
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 Container(
-                  padding: const EdgeInsets.all(22),
+                  padding: const EdgeInsets.all(20),
                   decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    color: theme.colorScheme.primary.withValues(alpha: 0.12),
+                    borderRadius: BorderRadius.circular(24),
+                    color: AppContrast.primaryWithWhiteText(
+                      theme.colorScheme.primary,
+                    ),
                   ),
                   child: Icon(
                     Icons.lock_person_outlined,
-                    size: 60,
-                    color: theme.colorScheme.primary,
+                    size: 40,
+                    color: Colors.white,
                   ),
                 ),
                 const SizedBox(height: 28),
                 Text(
                   'KeyBudget bloqueado',
+                  textAlign: TextAlign.center,
                   style: theme.textTheme.headlineMedium?.copyWith(
                     fontWeight: FontWeight.bold,
                     letterSpacing: -0.5,
+                  ),
+                ),
+                const SizedBox(height: 12),
+                Text(
+                  'Confirme sua identidade para continuar.',
+                  textAlign: TextAlign.center,
+                  style: theme.textTheme.bodyMedium?.copyWith(
+                    color: theme.colorScheme.onSurfaceVariant,
                   ),
                 ),
                 if (_availability == LocalAuthAvailability.notSupported) ...[
@@ -203,9 +269,10 @@ class _LockScreenState extends ConsumerState<LockScreen>
                 if (_availability != LocalAuthAvailability.notSupported)
                   SizedBox(
                     width: double.infinity,
-                    height: 56,
                     child: AppButton(
-                      onPressed: _isAuthenticating ? null : _authenticate,
+                      onPressed: _isAuthenticating || _isSigningOut
+                          ? null
+                          : _authenticate,
                       isLoading: _isAuthenticating,
                       label: 'Desbloquear',
                       icon: Icons.fingerprint,
@@ -213,21 +280,18 @@ class _LockScreenState extends ConsumerState<LockScreen>
                   ),
                 const SizedBox(height: 16),
                 TextButton.icon(
-                  onPressed: () async {
-                    final authViewModel = ref.read(authViewModelProvider);
-                    final appLockService = ref.read(appLockServiceProvider);
-                    await authViewModel.logout(context, ref);
-                    appLockService.unlockApp();
-                  },
+                  onPressed: _isAuthenticating || _isSigningOut
+                      ? null
+                      : _signOut,
                   icon: Icon(
                     Icons.logout,
                     size: 20,
-                    color: theme.colorScheme.error.withValues(alpha: 0.8),
+                    color: theme.colorScheme.error,
                   ),
                   label: Text(
                     'Sair da Conta',
                     style: TextStyle(
-                      color: theme.colorScheme.error.withValues(alpha: 0.8),
+                      color: theme.colorScheme.error,
                       fontWeight: FontWeight.w600,
                     ),
                   ),

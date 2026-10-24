@@ -384,7 +384,7 @@ class _SavingsGoalsScreenState extends ConsumerState<SavingsGoalsScreen> {
           Row(
             children: [
               Expanded(
-                child: Text(goal.name, style: theme.textTheme.titleMedium),
+                child: Text(goal.name, style: theme.textTheme.titleLarge),
               ),
               if (_deletingGoalIds.contains(goal.id))
                 const SizedBox(
@@ -465,6 +465,8 @@ class _SavingsGoalsScreenState extends ConsumerState<SavingsGoalsScreen> {
                   '${(goal.progress * 100).round()} por cento da meta ${goal.name}',
               child: LinearProgressIndicator(
                 value: goal.progress.clamp(0.0, 1.0),
+                minHeight: 8,
+                borderRadius: BorderRadius.circular(4),
               ),
             ),
             const SizedBox(height: AppSpacing.sm),
@@ -556,19 +558,29 @@ class _SavingsGoalsScreenState extends ConsumerState<SavingsGoalsScreen> {
                 onAction: () => ref.invalidate(savingsGoalsProvider(userId)),
               ),
               data: (_) => visible.isEmpty
-                  ? Center(
-                      child: Text(
-                        _showArchived
-                            ? 'Nenhuma meta arquivada.'
-                            : 'Crie uma meta para acompanhar seu progresso.',
-                      ),
+                  ? AppFeedbackPanel(
+                      icon: _showArchived
+                          ? Icons.archive_outlined
+                          : Icons.flag_outlined,
+                      title: _showArchived
+                          ? 'Nenhuma meta arquivada.'
+                          : 'Seu próximo objetivo começa aqui',
+                      message: _showArchived
+                          ? 'As metas arquivadas aparecerão aqui.'
+                          : 'Crie uma meta para acompanhar seu progresso.',
                     )
                   : ResponsiveCenter(
                       maxWidth: 960,
+                      alignment: Alignment.topCenter,
                       child: LayoutBuilder(
                         builder: (context, constraints) =>
                             SingleChildScrollView(
-                              padding: const EdgeInsets.all(AppSpacing.md),
+                              padding: const EdgeInsets.fromLTRB(
+                                AppSpacing.md,
+                                AppSpacing.md,
+                                AppSpacing.md,
+                                104,
+                              ),
                               child: Wrap(
                                 spacing: AppSpacing.md,
                                 runSpacing: AppSpacing.md,

@@ -1,18 +1,19 @@
-import 'package:key_budget/app/utils/app_animations.dart';
-import 'package:key_budget/core/design_system/widgets/app_card.dart';
-import 'package:key_budget/core/design_system/widgets/app_page_scaffold.dart';
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:key_budget/app/config/app_theme.dart';
+import 'package:key_budget/app/utils/app_animations.dart';
 import 'package:key_budget/app/utils/navigation_utils.dart';
 import 'package:key_budget/app/widgets/responsive_center.dart';
 import 'package:key_budget/core/design_system/borders/app_borders.dart';
 import 'package:key_budget/core/design_system/spacing/app_spacing.dart';
 import 'package:key_budget/core/design_system/widgets/app_button.dart';
+import 'package:key_budget/core/design_system/widgets/app_card.dart';
 import 'package:key_budget/core/design_system/widgets/app_color_choice.dart';
+import 'package:key_budget/core/design_system/widgets/app_page_scaffold.dart';
 import 'package:key_budget/core/services/csv_service.dart';
 import 'package:key_budget/core/services/drive_service.dart';
 import 'package:key_budget/core/services/snackbar_service.dart';
@@ -22,19 +23,20 @@ import 'package:key_budget/features/category/viewmodel/category_viewmodel.dart';
 import 'package:key_budget/features/credentials/viewmodel/credential_viewmodel.dart';
 import 'package:key_budget/features/dashboard/repository/dashboard_layout_repository.dart';
 import 'package:key_budget/features/dashboard/widgets/dashboard_layout_editor.dart';
-import 'package:key_budget/features/expenses/viewmodel/expense_viewmodel.dart';
 import 'package:key_budget/features/expenses/repository/expense_repository.dart';
+import 'package:key_budget/features/expenses/viewmodel/expense_viewmodel.dart';
 import 'package:key_budget/features/goals/view/savings_goals_screen.dart';
 import 'package:key_budget/features/search/view/global_search_screen.dart';
 import 'package:key_budget/features/trash/view/trash_screen.dart';
-import 'package:key_budget/features/user/view/navigation_customization_screen.dart';
 import 'package:key_budget/features/user/view/account_center_screen.dart';
 import 'package:key_budget/features/user/view/backup_restore_screen.dart';
-import 'package:key_budget/features/user/view/edit_user_screen.dart';
 import 'package:key_budget/features/user/view/drive_connection_screen.dart';
+import 'package:key_budget/features/user/view/edit_user_screen.dart';
+import 'package:key_budget/features/user/view/navigation_customization_screen.dart';
 import 'package:path_provider/path_provider.dart';
 
 import '../widgets/settings_tile.dart';
+import 'home_widgets_screen.dart';
 
 class ThemeColorOption {
   final String name;
@@ -44,7 +46,12 @@ class ThemeColorOption {
 }
 
 const List<ThemeColorOption> _themeColors = [
-  ThemeColorOption('Azul vidro (Padrão)', 0xFF0058D9),
+  ThemeColorOption('Violeta', 0xFF7C3AED),
+  ThemeColorOption('Rosa', 0xFFBE185D),
+  ThemeColorOption('Âmbar', 0xFFB45309),
+  ThemeColorOption('Grafite', 0xFF475569),
+  ThemeColorOption('Marrom', 0xFF795548),
+  ThemeColorOption('Azul vidro', 0xFF0058D9),
   ThemeColorOption('Azul', 0xFF2563EB),
   ThemeColorOption('Verde', 0xFF15803D),
   ThemeColorOption('Vermelho', 0xFFB91C1C),
@@ -296,12 +303,15 @@ class UserScreen extends ConsumerWidget {
     );
   }
 
-  void _showThemeColorDialog(BuildContext context, WidgetRef ref) {
+  Future<void> _showThemeColorDialog(
+    BuildContext context,
+    WidgetRef ref,
+  ) async {
     final authViewModel = ref.read(authViewModelProvider);
     final user = authViewModel.currentUser;
-    final currentThemeColor = user?.themeColor ?? _themeColors.first.colorValue;
+    final currentThemeColor = user?.themeColor ?? 0xFF0058D9;
 
-    showModalBottomSheet(
+    final selected = await showModalBottomSheet<int>(
       context: context,
       shape: RoundedRectangleBorder(
         borderRadius: AppBorders.borderRadiusVerticalXL,
@@ -310,93 +320,104 @@ class UserScreen extends ConsumerWidget {
         final sheetTheme = Theme.of(ctx);
         final isDark = sheetTheme.brightness == Brightness.dark;
         return SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.symmetric(
-              horizontal: 24.0,
-              vertical: 16.0,
-            ),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Container(
-                  width: 40,
-                  height: 4,
-                  margin: const EdgeInsets.only(bottom: 24),
-                  decoration: BoxDecoration(
-                    color: Theme.of(
-                      context,
-                    ).colorScheme.onSurface.withValues(alpha: 0.2),
-                    borderRadius: BorderRadius.circular(2),
+          child: SingleChildScrollView(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(
+                horizontal: 24.0,
+                vertical: 16.0,
+              ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Container(
+                    width: 40,
+                    height: 4,
+                    margin: const EdgeInsets.only(bottom: 24),
+                    decoration: BoxDecoration(
+                      color: Theme.of(
+                        context,
+                      ).colorScheme.onSurface.withValues(alpha: 0.2),
+                      borderRadius: BorderRadius.circular(2),
+                    ),
                   ),
-                ),
-                Text(
-                  'Cor do Tema',
-                  style: Theme.of(
-                    context,
-                  ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
-                ),
-                const SizedBox(height: 24),
-                Wrap(
-                  spacing: 16,
-                  runSpacing: 16,
-                  alignment: WrapAlignment.center,
-                  children: _themeColors.map((colorOption) {
-                    final isSelected =
-                        colorOption.colorValue == currentThemeColor;
-                    final previewColor = user?.themeColor == null && isSelected
-                        ? sheetTheme.colorScheme.primary
-                        : AppTheme.effectivePrimary(
-                            isDark: isDark,
-                            colorValue: colorOption.colorValue,
-                          );
-                    return Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        AppColorChoice(
-                          color: previewColor,
-                          label: 'Escolher cor ${colorOption.name} do tema',
-                          selected: isSelected,
-                          diameter: 50,
-                          onPressed: () async {
-                            if (user == null) return;
-                            final result = await authViewModel.updateUser(
-                              name: user.name,
-                              themeColor: colorOption.colorValue,
+                  Text(
+                    'Cor do Tema',
+                    style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  const SizedBox(height: 24),
+                  Wrap(
+                    spacing: 16,
+                    runSpacing: 16,
+                    alignment: WrapAlignment.center,
+                    children: _themeColors.map((colorOption) {
+                      final isSelected =
+                          colorOption.colorValue == currentThemeColor;
+                      final previewColor =
+                          user?.themeColor == null && isSelected
+                          ? sheetTheme.colorScheme.primary
+                          : AppTheme.effectivePrimary(
+                              isDark: isDark,
+                              colorValue: colorOption.colorValue,
                             );
-                            if (!ctx.mounted) return;
-                            if (!result.profileUpdated) {
-                              SnackbarService.showError(
-                                ctx,
-                                result.errorMessage ??
-                                    'Não foi possível atualizar a cor do tema. Tente novamente.',
-                              );
-                              return;
-                            }
-                            Navigator.pop(ctx);
-                          },
+                      return SizedBox(
+                        width: 92,
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            AppColorChoice(
+                              color: previewColor,
+                              label: 'Escolher cor ${colorOption.name} do tema',
+                              selected: isSelected,
+                              diameter: 50,
+                              onPressed: () =>
+                                  Navigator.pop(ctx, colorOption.colorValue),
+                            ),
+                            const SizedBox(height: 8),
+                            Text(
+                              colorOption.name,
+                              textAlign: TextAlign.center,
+                              style: Theme.of(context).textTheme.bodySmall
+                                  ?.copyWith(
+                                    fontWeight: isSelected
+                                        ? FontWeight.bold
+                                        : FontWeight.normal,
+                                  ),
+                            ),
+                          ],
                         ),
-                        const SizedBox(height: 8),
-                        Text(
-                          colorOption.name,
-                          style: Theme.of(context).textTheme.bodySmall
-                              ?.copyWith(
-                                fontWeight: isSelected
-                                    ? FontWeight.bold
-                                    : FontWeight.normal,
-                              ),
-                        ),
-                      ],
-                    );
-                  }).toList(),
-                ),
-                const SizedBox(height: 24),
-              ],
+                      );
+                    }).toList(),
+                  ),
+                  const SizedBox(height: 24),
+                ],
+              ),
             ),
           ),
         );
       },
       sheetAnimationStyle: AppAnimations.routeStyle(context),
     );
+    if (selected == null ||
+        selected == currentThemeColor ||
+        !context.mounted ||
+        user == null ||
+        ref.read(authViewModelProvider).currentUser?.id != user.id) {
+      return;
+    }
+    final result = await authViewModel.updateUser(
+      name: user.name,
+      themeColor: selected,
+    );
+    if (!context.mounted) return;
+    if (!result.profileUpdated) {
+      SnackbarService.showError(
+        context,
+        result.errorMessage ??
+            'Não foi possível atualizar a cor do tema. Tente novamente.',
+      );
+    }
   }
 
   void _showDisplayModeSheet(BuildContext context, WidgetRef ref) {
@@ -678,6 +699,19 @@ class UserScreen extends ConsumerWidget {
                               }
                             },
                     ),
+                    if (!kIsWeb &&
+                        defaultTargetPlatform == TargetPlatform.android) ...[
+                      const Divider(height: 1, indent: 56, endIndent: 16),
+                      SettingsTile(
+                        icon: Icons.widgets_outlined,
+                        title: 'Widgets do celular',
+                        subtitle: 'Escolha um modelo para a tela inicial',
+                        onTap: () => NavigationUtils.push(
+                          context,
+                          const HomeWidgetsScreen(),
+                        ),
+                      ),
+                    ],
                   ]),
                   buildSection('Recursos', [
                     SettingsTile(

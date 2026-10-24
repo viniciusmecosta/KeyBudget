@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/legacy.dart';
 import 'package:key_budget/core/models/expense_model.dart';
 import 'package:key_budget/core/money/money.dart';
-import 'package:key_budget/core/services/home_widget_service.dart';
 import 'package:key_budget/features/category/viewmodel/category_viewmodel.dart';
 import 'package:key_budget/features/credentials/viewmodel/credential_viewmodel.dart';
 import 'package:key_budget/features/expenses/viewmodel/expense_viewmodel.dart';
@@ -22,7 +21,6 @@ class DashboardViewModel extends ChangeNotifier {
     required this.credentialViewModel,
   }) {
     _addListeners();
-    _updateWidget();
   }
 
   void _addListeners() {
@@ -39,7 +37,6 @@ class DashboardViewModel extends ChangeNotifier {
 
   void _onExpensesChanged() {
     notifyListeners();
-    _updateWidget();
   }
 
   void onAnimationStartedTo({required double total, required double balance}) {
@@ -59,10 +56,6 @@ class DashboardViewModel extends ChangeNotifier {
   double get lastAnimatedTotalForMonth => _lastAnimatedTotalForMonth;
   double get lastAnimatedBalanceForMonth => _lastAnimatedBalanceForMonth;
 
-  Future<void> _updateWidget() async {
-    await HomeWidgetService.updateWidgetData(totalAmountForMonth);
-  }
-
   void updateDependencies({
     required CategoryViewModel categoryViewModel,
     required ExpenseViewModel expenseViewModel,
@@ -77,7 +70,6 @@ class DashboardViewModel extends ChangeNotifier {
       this.credentialViewModel = credentialViewModel;
       _addListeners();
       notifyListeners();
-      _updateWidget();
     }
   }
 

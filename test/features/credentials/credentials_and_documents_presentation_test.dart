@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:key_budget/core/design_system/widgets/app_status_badge.dart';
 import 'package:key_budget/core/models/credential_model.dart';
 import 'package:key_budget/core/models/document_model.dart';

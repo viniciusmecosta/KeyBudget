@@ -27,8 +27,12 @@ class MainBottomNavigationBar extends ConsumerWidget {
           destination == AppDestination.expenses &&
               !(user?.enableIncomes ?? false)
           ? 'Despesas'
+          : destination == AppDestination.expenses
+          ? 'Finanças'
           : destination == AppDestination.credentials
           ? 'Cofre'
+          : destination == AppDestination.documents
+          ? 'Docs'
           : destination.label;
       final color = selected
           ? theme.colorScheme.primary
@@ -42,20 +46,28 @@ class MainBottomNavigationBar extends ConsumerWidget {
         child: Semantics(
           button: true,
           selected: selected,
-          label: destination == AppDestination.credentials
+          label:
+              (destination == AppDestination.credentials ||
+                  destination == AppDestination.documents ||
+                  destination == AppDestination.expenses &&
+                      (user?.enableIncomes ?? false))
               ? destination.label
               : label,
           onTap: activate,
           excludeSemantics: true,
           child: Tooltip(
-            message: destination == AppDestination.credentials
+            message:
+                (destination == AppDestination.credentials ||
+                    destination == AppDestination.documents ||
+                    destination == AppDestination.expenses &&
+                        (user?.enableIncomes ?? false))
                 ? destination.label
                 : label,
             child: InkWell(
               onTap: activate,
               borderRadius: AppBorders.borderRadiusM,
               child: ConstrainedBox(
-                constraints: const BoxConstraints(minHeight: 56, minWidth: 48),
+                constraints: const BoxConstraints(minHeight: 68, minWidth: 48),
                 child: Padding(
                   padding: const EdgeInsets.symmetric(vertical: 6),
                   child: Column(
@@ -75,21 +87,13 @@ class MainBottomNavigationBar extends ConsumerWidget {
                           overflow: TextOverflow.ellipsis,
                           style: theme.textTheme.labelSmall?.copyWith(
                             color: color,
+                            fontSize: 12,
                             fontWeight: selected
                                 ? FontWeight.w700
                                 : FontWeight.w500,
                           ),
                         ),
                       ],
-                      const SizedBox(height: 4),
-                      Container(
-                        width: 4,
-                        height: 4,
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          color: selected ? color : Colors.transparent,
-                        ),
-                      ),
                     ],
                   ),
                 ),
@@ -100,43 +104,37 @@ class MainBottomNavigationBar extends ConsumerWidget {
       );
     }
 
-    return DecoratedBox(
-      decoration: BoxDecoration(color: theme.scaffoldBackgroundColor),
-      child: Padding(
-        padding: const EdgeInsets.fromLTRB(8, 4, 8, 0),
-        child: Material(
-          color: theme.colorScheme.surface,
-          elevation: 2,
-          shadowColor: theme.colorScheme.primary.withValues(alpha: 0.12),
-          shape: RoundedRectangleBorder(
-            borderRadius: AppBorders.borderRadiusVerticalXL,
-            side: BorderSide(
-              color: theme.brightness == Brightness.light
-                  ? Colors.white
-                  : theme.colorScheme.outline,
-            ),
-          ),
-          clipBehavior: Clip.antiAlias,
-          child: SafeArea(
-            top: false,
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 4),
-              child: destinations.length <= 6
-                  ? Row(children: destinations.map(destinationButton).toList())
-                  : Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        for (var i = 0; i < destinations.length; i += 4)
-                          Row(
-                            children: destinations
-                                .skip(i)
-                                .take(4)
-                                .map(destinationButton)
-                                .toList(),
-                          ),
-                      ],
-                    ),
-            ),
+    return AnnotatedRegion<SystemUiOverlayStyle>(
+      value: SystemUiOverlayStyle(
+        systemNavigationBarColor: theme.colorScheme.surface,
+        systemNavigationBarDividerColor: Colors.transparent,
+        systemNavigationBarIconBrightness: theme.brightness == Brightness.dark
+            ? Brightness.light
+            : Brightness.dark,
+      ),
+      child: Material(
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+        clipBehavior: Clip.antiAlias,
+        color: theme.colorScheme.surface,
+        child: SafeArea(
+          top: false,
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+            child: destinations.length <= 6
+                ? Row(children: destinations.map(destinationButton).toList())
+                : Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      for (var i = 0; i < destinations.length; i += 4)
+                        Row(
+                          children: destinations
+                              .skip(i)
+                              .take(4)
+                              .map(destinationButton)
+                              .toList(),
+                        ),
+                    ],
+                  ),
           ),
         ),
       ),

@@ -1,4 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
+
 import 'legacy/legacy_fixtures.dart';
 
 void main() {
@@ -6,7 +7,10 @@ void main() {
     test('round-trip conversion to DateTime preserves timestamp integrity', () {
       final now = DateTime(2026, 9, 20, 15, 30, 45, 123);
       final synth = SyntheticTimestamp.fromDate(now);
-      expect(synth.toDate().millisecondsSinceEpoch, equals(now.millisecondsSinceEpoch));
+      expect(
+        synth.toDate().millisecondsSinceEpoch,
+        equals(now.millisecondsSinceEpoch),
+      );
 
       final map = synth.toMap();
       final fromMap = SyntheticTimestamp.fromMap(map);

@@ -7,6 +7,8 @@ import 'package:key_budget/core/models/expense_model.dart';
 import 'package:key_budget/core/search/search_normalizer.dart';
 import 'package:key_budget/core/models/recurring_expense_model.dart';
 import 'package:key_budget/core/services/csv_service.dart';
+import 'package:key_budget/core/services/home_widget_service.dart';
+import 'package:key_budget/core/services/home_widget_snapshot.dart';
 import 'package:key_budget/core/services/data_import_service.dart';
 import 'package:key_budget/core/services/pdf_service.dart';
 import 'package:key_budget/features/analysis/viewmodel/analysis_viewmodel.dart';
@@ -42,6 +44,9 @@ class ExpenseViewModel extends ChangeNotifier {
   final DataImportService _dataImportService;
   final AppClock _clock;
   final TrashRepository _trashRepository;
+  final Future<void> Function(HomeWidgetSnapshot) _widgetSnapshotWriter;
+  bool _hasWidgetData = false;
+  bool _disposed = false;
   late final ExpenseTransferService _transferService;
   late final RecurrenceGenerationCoordinator _generationCoordinator;
 
@@ -57,7 +62,10 @@ class ExpenseViewModel extends ChangeNotifier {
     DataImportService? dataImportService,
     AppClock? clock,
     TrashRepository? trashRepository,
-  }) : _repository = repository ?? ExpenseRepository(),
+    Future<void> Function(HomeWidgetSnapshot)? widgetSnapshotWriter,
+  }) : _widgetSnapshotWriter =
+           widgetSnapshotWriter ?? HomeWidgetService.updateSnapshot,
+       _repository = repository ?? ExpenseRepository(),
        _recurringRepository =
            recurringRepository ?? RecurringExpenseRepository(),
        _occurrenceRepository =
@@ -132,6 +140,9 @@ class ExpenseViewModel extends ChangeNotifier {
 
   @Deprecated('UI animation state belongs to presentation layer')
   void setListKey(GlobalKey<SliverAnimatedListState>? key) {}
+
+  String? get activeUserId => _activeUserId;
+  bool get enableIncomes => _enableIncomes;
 
   List<Expense> get allExpenses => _allExpenses;
 
@@ -289,9 +300,27 @@ class ExpenseViewModel extends ChangeNotifier {
   void setEnableIncomes(bool value) {
     if (_enableIncomes != value) {
       _enableIncomes = value;
+      _syncHomeWidgets();
 
-      Future.microtask(() => _updateDisplayList(animate: false));
+      Future.microtask(() {
+        if (!_disposed) _updateDisplayList(animate: false);
+      });
     }
+  }
+
+  void _syncHomeWidgets() {
+    final uid = _activeUserId;
+    if (uid == null || !_hasWidgetData) return;
+    unawaited(
+      _widgetSnapshotWriter(
+        HomeWidgetSnapshot.fromExpenses(
+          userId: uid,
+          expenses: _allExpenses,
+          now: _clock.now(),
+          showIncome: _enableIncomes,
+        ),
+      ),
+    );
   }
 
   void _setLoading(bool value) {
@@ -331,6 +360,7 @@ class ExpenseViewModel extends ChangeNotifier {
       _lastServerConfirmation = null;
       notifyListeners();
     }
+    if (_activeUserId != userId) _hasWidgetData = false;
     _activeUserId = userId;
     if (!_isLoading) _setLoading(true);
     _loadErrorMessage = null;
@@ -341,6 +371,7 @@ class ExpenseViewModel extends ChangeNotifier {
         .getExpensesWithMetadataStream(userId)
         .listen(
           (snapshot) {
+            if (_activeUserId != userId) return;
             _allExpenses = snapshot.expenses;
             _syncStatus = snapshot.hasPendingWrites
                 ? ExpenseSyncStatus.pending
@@ -353,6 +384,15 @@ class ExpenseViewModel extends ChangeNotifier {
             _loadErrorMessage = null;
             _updateDisplayList(animate: true);
             if (_isLoading) _setLoading(false);
+            // An empty, unconfirmed cache must not erase a saved widget total.
+            if (!snapshot.isFromCache ||
+                snapshot.hasPendingWrites ||
+                snapshot.expenses.isNotEmpty) {
+              _hasWidgetData = true;
+              _syncHomeWidgets();
+            } else {
+              _hasWidgetData = false;
+            }
           },
           onError: (Object error) {
             _syncStatus = ExpenseSyncStatus.failed;
@@ -834,6 +874,7 @@ class ExpenseViewModel extends ChangeNotifier {
   }
 
   void clearData() {
+    _hasWidgetData = false;
     _expensesSubscription?.cancel();
     _recurringExpensesSubscription?.cancel();
     _allExpenses = [];
@@ -850,6 +891,9 @@ class ExpenseViewModel extends ChangeNotifier {
 
   @override
   void dispose() {
+    _disposed = true;
+    _activeUserId = null;
+    _hasWidgetData = false;
     _expensesSubscription?.cancel();
     _recurringExpensesSubscription?.cancel();
     super.dispose();

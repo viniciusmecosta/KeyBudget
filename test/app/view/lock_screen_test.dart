@@ -10,6 +10,14 @@ import 'package:key_budget/features/auth/viewmodel/auth_viewmodel.dart';
 class _FakeAuthRepository extends Fake implements AuthRepository {}
 
 class _SignedInAuthViewModel extends AuthViewModel {
+  int logoutAttempts = 0;
+
+  @override
+  Future<void> logout(BuildContext context, dynamic ref) async {
+    logoutAttempts++;
+    throw StateError("offline");
+  }
+
   _SignedInAuthViewModel()
     : super(authRepository: _FakeAuthRepository(), listenToAuthChanges: false);
 
@@ -38,6 +46,38 @@ class _CancelledLocalAuthService extends LocalAuthService {
 }
 
 void main() {
+  testWidgets('sign out requires confirmation and reports a failed attempt', (
+    tester,
+  ) async {
+    final auth = _SignedInAuthViewModel();
+    tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.resumed);
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [authViewModelProvider.overrideWith((ref) => auth)],
+        child: MaterialApp(
+          home: LockScreen(localAuthService: _CancelledLocalAuthService()),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Sair da Conta'));
+    await tester.pumpAndSettle();
+    expect(auth.logoutAttempts, 0);
+    await tester.tap(find.text('Cancelar'));
+    await tester.pumpAndSettle();
+    expect(auth.logoutAttempts, 0);
+    await tester.tap(find.text('Sair da Conta'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Sair'));
+    await tester.pumpAndSettle();
+    expect(auth.logoutAttempts, 1);
+    expect(
+      find.text('Não foi possível sair da conta. Tente novamente.'),
+      findsOneWidget,
+    );
+    expect(find.text('Desbloquear'), findsOneWidget);
+  });
+
   testWidgets('lock screen remains usable in landscape with large text', (
     tester,
   ) async {

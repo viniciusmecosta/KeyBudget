@@ -23,13 +23,33 @@ class _DashboardLayoutEditorState extends ConsumerState<DashboardLayoutEditor> {
   late List<String> _cards;
   late List<String> _actions;
   bool _saving = false;
+  late final Map<String, DashboardCardSize> _sizes = Map.of(
+    widget.initial.cardSizes,
+  );
+  late bool _integratedSummary = widget.initial.integratedSummary;
 
   static const _cardLabels = {
     'balance': 'Resumo do mês',
     'chart': 'Gastos mensais',
+    'categories': 'Gastos por categoria',
+    'accumulated': 'Evolução do mês',
+    'periods': 'Gastos por período',
+    'upcoming': 'Próximos sete dias',
+    'daily': 'Gastos diários',
+    'weekdays': 'Dias da semana',
     'quick_actions': 'Atalhos',
     'recent': 'Atividades recentes',
   };
+  static const _descriptions = {
+    'chart': 'Compare os últimos meses em barras.',
+    'categories': 'Rosca com as cinco maiores e demais categorias.',
+    'accumulated': 'Linha com o total acumulado de despesas até hoje.',
+    'periods': 'Compare os gastos dos dias 1–7, 8–14 e seguintes.',
+    'upcoming': 'Veja as despesas já cadastradas para os próximos dias.',
+    'daily': 'Identifique os dias com maior gasto neste mês.',
+    'weekdays': 'Compare os totais de segunda a domingo neste mês.',
+  };
+
   static const _actionLabels = {
     'expense': 'Nova despesa',
     'credentials': 'Cofre',
@@ -42,7 +62,7 @@ class _DashboardLayoutEditorState extends ConsumerState<DashboardLayoutEditor> {
     super.initState();
     _cards = [
       ...widget.initial.cards,
-      ...DashboardLayout.cardIds.where(
+      ...DashboardLayout.availableCardIds.where(
         (id) => !widget.initial.cards.contains(id),
       ),
     ];
@@ -62,6 +82,8 @@ class _DashboardLayoutEditorState extends ConsumerState<DashboardLayoutEditor> {
           .save(
             widget.userId,
             DashboardLayout(
+              integratedSummary: _integratedSummary,
+              cardSizes: Map.of(_sizes),
               cards: _cards.where((id) => _visibleCards.contains(id)).toList(),
               actions: _actions
                   .where((id) => _visibleActions.contains(id))
@@ -107,6 +129,7 @@ class _DashboardLayoutEditorState extends ConsumerState<DashboardLayoutEditor> {
           buildDefaultDragHandles: false,
           itemCount: displayIds.length,
           onReorderItem: (oldIndex, newIndex) {
+            if (_saving) return;
             setState(() {
               displayIds.insert(newIndex, displayIds.removeAt(oldIndex));
               ids
@@ -117,29 +140,70 @@ class _DashboardLayoutEditorState extends ConsumerState<DashboardLayoutEditor> {
           },
           itemBuilder: (context, index) {
             final id = displayIds[index];
-            return CheckboxListTile(
+            return Column(
               key: ValueKey(id),
-              contentPadding: const EdgeInsets.symmetric(
-                horizontal: AppSpacing.md,
-              ),
-              title: Text(labels[id] ?? id),
-              subtitle: id == mandatoryId
-                  ? const Text('Sempre disponível')
-                  : null,
-              value: visible.contains(id),
-              onChanged: id == mandatoryId
-                  ? null
-                  : (enabled) => setState(() {
-                      if (enabled == true) {
-                        visible.add(id);
-                      } else {
-                        visible.remove(id);
-                      }
-                    }),
-              secondary: ReorderableDragStartListener(
-                index: index,
-                child: const Icon(Icons.drag_handle_rounded),
-              ),
+              children: [
+                CheckboxListTile(
+                  contentPadding: const EdgeInsets.symmetric(
+                    horizontal: AppSpacing.md,
+                  ),
+                  title: Text(labels[id] ?? id),
+                  subtitle: id == mandatoryId
+                      ? const Text('Sempre disponível')
+                      : _descriptions[id] == null
+                      ? null
+                      : Text(_descriptions[id]!),
+                  value: visible.contains(id),
+                  onChanged: _saving || id == mandatoryId
+                      ? null
+                      : (enabled) => setState(() {
+                          if (enabled == true) {
+                            visible.add(id);
+                          } else {
+                            visible.remove(id);
+                          }
+                        }),
+                  secondary: ReorderableDragStartListener(
+                    index: index,
+                    child: const Icon(Icons.drag_handle_rounded),
+                  ),
+                ),
+                if (visible.contains(id) &&
+                    DashboardLayout.resizableCardIds.contains(id))
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+                    child: Row(
+                      children: [
+                        const Text('Tamanho'),
+                        const SizedBox(width: 16),
+                        Expanded(
+                          child: DropdownButton<DashboardCardSize>(
+                            key: ValueKey('size_$id'),
+                            isExpanded: true,
+                            value: _sizes[id] ?? DashboardCardSize.regular,
+                            items: [
+                              for (final size in DashboardCardSize.values)
+                                DropdownMenuItem(
+                                  value: size,
+                                  child: Text(
+                                    size.label,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                ),
+                            ],
+                            onChanged: _saving
+                                ? null
+                                : (size) {
+                                    if (size != null) {
+                                      setState(() => _sizes[id] = size);
+                                    }
+                                  },
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+              ],
             );
           },
         ),
@@ -166,13 +230,30 @@ class _DashboardLayoutEditorState extends ConsumerState<DashboardLayoutEditor> {
               'Personalizar painel',
               style: Theme.of(context).textTheme.titleLarge,
             ),
+            const SizedBox(height: AppSpacing.sm),
+            const Text(
+              'Escolha o que aparece e arraste para organizar.',
+              textAlign: TextAlign.center,
+            ),
             const SizedBox(height: AppSpacing.md),
             Flexible(
               child: SingleChildScrollView(
                 child: Column(
                   children: [
+                    SwitchListTile.adaptive(
+                      title: const Text('Resumo integrado ao topo'),
+                      subtitle: const Text(
+                        'Desative para usar um cartão na ordem escolhida abaixo.',
+                      ),
+                      value: _integratedSummary,
+                      onChanged: _saving
+                          ? null
+                          : (value) =>
+                                setState(() => _integratedSummary = value),
+                    ),
+                    const SizedBox(height: AppSpacing.md),
                     _section(
-                      title: 'Cartões',
+                      title: 'Seções do painel',
                       ids: _cards,
                       labels: _cardLabels,
                       visible: _visibleCards,

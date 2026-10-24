@@ -1,14 +1,52 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+enum DashboardCardSize {
+  compact('Compacto', 104),
+  regular('Médio', 144),
+  large('Amplo', 208);
+
+  const DashboardCardSize(this.label, this.chartHeight);
+  final String label;
+  final double chartHeight;
+}
+
 class DashboardLayout {
   static const cardIds = ['balance', 'chart', 'quick_actions', 'recent'];
+  static const availableCardIds = [
+    ...cardIds,
+    'categories',
+    'accumulated',
+    'periods',
+    'upcoming',
+    'daily',
+    'weekdays',
+  ];
+  static const resizableCardIds = [
+    'chart',
+    'categories',
+    'accumulated',
+    'periods',
+    'upcoming',
+    'daily',
+    'weekdays',
+  ];
   static const actionIds = ['expense', 'credentials', 'analysis', 'suppliers'];
 
   final List<String> cards;
   final List<String> actions;
+  final bool integratedSummary;
+  final Map<String, DashboardCardSize> cardSizes;
 
-  const DashboardLayout({this.cards = cardIds, this.actions = actionIds});
+  DashboardCardSize sizeFor(String id) =>
+      cardSizes[id] ?? DashboardCardSize.regular;
+
+  const DashboardLayout({
+    this.cards = cardIds,
+    this.actions = actionIds,
+    this.integratedSummary = true,
+    this.cardSizes = const {},
+  });
 
   factory DashboardLayout.fromMap(Object? raw) {
     if (raw is! Map) return const DashboardLayout();
@@ -26,12 +64,36 @@ class DashboardLayout {
       return selected;
     }
 
-    final cards = read('cards', cardIds);
+    final cards = raw['cards'] is List
+        ? read('cards', availableCardIds)
+        : List<String>.of(cardIds);
     if (!cards.contains('recent')) cards.add('recent');
-    return DashboardLayout(cards: cards, actions: read('actions', actionIds));
+    final sizes = <String, DashboardCardSize>{};
+    final rawSizes = raw['card_sizes'];
+    if (rawSizes is Map) {
+      for (final id in resizableCardIds) {
+        for (final size in DashboardCardSize.values) {
+          if (rawSizes[id] == size.name) sizes[id] = size;
+        }
+      }
+    }
+    return DashboardLayout(
+      cardSizes: sizes,
+      cards: cards,
+      actions: read('actions', actionIds),
+      integratedSummary: raw['integrated_summary'] != false,
+    );
   }
 
-  Map<String, dynamic> toMap() => {'cards': cards, 'actions': actions};
+  Map<String, dynamic> toMap() => {
+    'cards': cards,
+    'actions': actions,
+    'integrated_summary': integratedSummary,
+    'card_sizes': {
+      for (final entry in cardSizes.entries)
+        if (resizableCardIds.contains(entry.key)) entry.key: entry.value.name,
+    },
+  };
 }
 
 class DashboardLayoutRepository {

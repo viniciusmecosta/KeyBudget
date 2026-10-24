@@ -1,8 +1,11 @@
-import 'package:key_budget/core/design_system/widgets/app_page_scaffold.dart';
+import 'package:key_budget/features/dashboard/widgets/dashboard_insight_chart.dart';
+import 'package:key_budget/features/dashboard/widgets/dashboard_category_summary.dart';
 import 'package:flutter/material.dart' hide DateUtils;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:key_budget/app/widgets/responsive_center.dart';
+import 'package:key_budget/core/design_system/colors/app_contrast.dart';
 import 'package:key_budget/core/design_system/spacing/app_spacing.dart';
+import 'package:key_budget/core/design_system/widgets/app_page_scaffold.dart';
 import 'package:key_budget/features/auth/viewmodel/auth_viewmodel.dart';
 import 'package:key_budget/features/category/viewmodel/category_viewmodel.dart';
 import 'package:key_budget/features/credentials/viewmodel/credential_viewmodel.dart';
@@ -26,14 +29,38 @@ class DashboardScreen extends ConsumerStatefulWidget {
 }
 
 class _DashboardScreenState extends ConsumerState<DashboardScreen> {
+  final _scrollController = ScrollController();
+  final _summaryKey = GlobalKey();
+  final _headerProgress = ValueNotifier<double>(0);
   bool _isRefreshing = false;
+  bool _hasRenderedContent = false;
 
   @override
   void initState() {
     super.initState();
+    _scrollController.addListener(_updateHeader);
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _fetchInitialData(isRefresh: false);
     });
+  }
+
+  void _updateHeader() {
+    final summary = _summaryKey.currentContext?.findRenderObject();
+    final height = summary is RenderBox && summary.hasSize
+        ? summary.size.height
+        : 60.0;
+    final progress =
+        ((_scrollController.offset - (height - 48).clamp(0, double.infinity)) /
+                48)
+            .clamp(0.0, 1.0);
+    if (_headerProgress.value != progress) _headerProgress.value = progress;
+  }
+
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    _headerProgress.dispose();
+    super.dispose();
   }
 
   Future<void> _fetchInitialData({bool isRefresh = true}) async {
@@ -41,7 +68,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
     final userId = authViewModel.currentUser?.id;
     if (userId == null) return;
 
-    if (!mounted) return;
+    if (!mounted || _isRefreshing) return;
     if (!isRefresh) {
       if (_isRefreshing) return;
       setState(() => _isRefreshing = true);
@@ -53,10 +80,35 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
     try {
       if (authViewModel.currentUser != null && mounted) {
         await ref.read(categoryViewModelProvider).fetchCategories(userId);
-        if (!mounted) return;
-        ref.read(expenseViewModelProvider).listenToExpenses(userId);
-        if (!mounted) return;
-        ref.read(credentialViewModelProvider).listenToCredentials(userId);
+        if (!mounted ||
+            ref.read(authViewModelProvider).currentUser?.id != userId) {
+          return;
+        }
+        if (isRefresh) {
+          await ref
+              .read(expenseViewModelProvider)
+              .retryListenToExpenses(userId);
+          if (!mounted ||
+              ref.read(authViewModelProvider).currentUser?.id != userId) {
+            return;
+          }
+          ref
+              .read(credentialViewModelProvider)
+              .retryListenToCredentials(userId);
+        } else {
+          ref.read(expenseViewModelProvider).listenToExpenses(userId);
+          ref.read(credentialViewModelProvider).listenToCredentials(userId);
+        }
+      }
+    } catch (_) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text(
+              'Não foi possível atualizar o painel. Confira a conexão e tente novamente.',
+            ),
+          ),
+        );
       }
     } finally {
       if (mounted) {
@@ -65,14 +117,42 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
     }
   }
 
-  Widget _cardFor(String id, List<String> actions) {
+  Widget _cardFor(String id, DashboardLayout layout) {
+    final height = layout.sizeFor(id).chartHeight;
     switch (id) {
       case 'balance':
         return const DashboardBalanceCard();
+      case 'accumulated':
+        return DashboardInsightChart(
+          chartHeight: height,
+          insight: DashboardInsight.accumulated,
+        );
+      case 'periods':
+        return DashboardInsightChart(
+          chartHeight: height,
+          insight: DashboardInsight.periods,
+        );
+      case 'upcoming':
+        return DashboardInsightChart(
+          chartHeight: height,
+          insight: DashboardInsight.upcoming,
+        );
+      case 'daily':
+        return DashboardInsightChart(
+          insight: DashboardInsight.daily,
+          chartHeight: height,
+        );
+      case 'weekdays':
+        return DashboardInsightChart(
+          insight: DashboardInsight.weekdays,
+          chartHeight: height,
+        );
+      case 'categories':
+        return DashboardCategorySummary(chartHeight: height + 4);
       case 'chart':
-        return const DashboardMonthlyChart();
+        return DashboardMonthlyChart(chartHeight: height - 16);
       case 'quick_actions':
-        return QuickActionsSection(actionIds: actions);
+        return QuickActionsSection(actionIds: layout.actions);
       default:
         return const RecentActivitySection();
     }
@@ -84,16 +164,46 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
     final expenseViewModel = ref.watch(expenseViewModelProvider);
     final theme = Theme.of(context);
     final userId = ref.watch(authViewModelProvider).currentUser?.id;
+    final layoutState = userId == null
+        ? null
+        : ref.watch(dashboardLayoutProvider(userId));
     final layout = userId == null
         ? const DashboardLayout()
-        : ref.watch(dashboardLayoutProvider(userId)).asData?.value ??
-              const DashboardLayout();
+        : layoutState?.asData?.value ?? const DashboardLayout();
 
+    final integrated =
+        layout.integratedSummary && layout.cards.contains('balance');
+    final cards = layout.cards
+        .where((id) => !integrated || id != 'balance')
+        .toList();
+    if (!viewModel.isLoading) _hasRenderedContent = true;
     return AppPageScaffold(
       backgroundColor: theme.scaffoldBackgroundColor,
-      appBar: const DashboardHeader(),
+      appBar: PreferredSize(
+        preferredSize: const Size.fromHeight(60),
+        child: ValueListenableBuilder<double>(
+          valueListenable: _headerProgress,
+          builder: (context, progress, _) {
+            final background = Color.lerp(
+              integrated
+                  ? AppContrast.primaryWithWhiteText(
+                      theme.colorScheme.primary,
+                      minimumRatio: 7,
+                    )
+                  : theme.colorScheme.surface,
+              theme.colorScheme.surface,
+              progress,
+            )!;
+            return DashboardHeader(
+              backgroundColor: background,
+              foregroundColor: AppContrast.foregroundOn(background),
+              collapsed: progress > .5,
+            );
+          },
+        ),
+      ),
       body: SafeArea(
-        child: viewModel.isLoading
+        child: viewModel.isLoading && !_hasRenderedContent
             ? const ResponsiveCenter(maxWidth: 1200, child: DashboardSkeleton())
             : RefreshIndicator(
                 onRefresh: _fetchInitialData,
@@ -103,10 +213,21 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                 child: ResponsiveCenter(
                   maxWidth: 1200,
                   child: CustomScrollView(
-                    physics: const BouncingScrollPhysics(
+                    controller: _scrollController,
+                    scrollBehavior: ScrollConfiguration.of(
+                      context,
+                    ).copyWith(overscroll: false),
+                    physics: const ClampingScrollPhysics(
                       parent: AlwaysScrollableScrollPhysics(),
                     ),
                     slivers: [
+                      if (integrated)
+                        SliverToBoxAdapter(
+                          child: SizedBox(
+                            key: _summaryKey,
+                            child: const DashboardBalanceCard(integrated: true),
+                          ),
+                        ),
                       SliverToBoxAdapter(
                         child: Padding(
                           padding: const EdgeInsets.symmetric(
@@ -146,18 +267,20 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                                 children: [
                                   for (
                                     var index = 0;
-                                    index < layout.cards.length;
+                                    index < cards.length;
                                     index++
                                   )
                                     SizedBox(
                                       key: ValueKey(
-                                        'dashboard_${layout.cards[index]}',
+                                        'dashboard_${cards[index]}',
                                       ),
-                                      width: width,
-                                      child: _cardFor(
-                                        layout.cards[index],
-                                        layout.actions,
-                                      ),
+                                      width:
+                                          expanded &&
+                                              layout.sizeFor(cards[index]) ==
+                                                  DashboardCardSize.large
+                                          ? constraints.maxWidth
+                                          : width,
+                                      child: _cardFor(cards[index], layout),
                                     ),
                                 ],
                               );

@@ -1,3 +1,4 @@
+import 'package:flutter/services.dart';
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
@@ -8,7 +9,16 @@ import 'package:key_budget/core/design_system/spacing/app_spacing.dart';
 import 'package:key_budget/features/auth/viewmodel/auth_viewmodel.dart';
 
 class DashboardHeader extends ConsumerWidget implements PreferredSizeWidget {
-  const DashboardHeader({super.key});
+  const DashboardHeader({
+    super.key,
+    this.backgroundColor,
+    this.foregroundColor,
+    this.collapsed = false,
+  });
+
+  final Color? backgroundColor;
+  final Color? foregroundColor;
+  final bool collapsed;
 
   ImageProvider? _getAvatarProvider(String? path) {
     if (path == null || path.isEmpty) return null;
@@ -42,41 +52,60 @@ class DashboardHeader extends ConsumerWidget implements PreferredSizeWidget {
         : 'Usuário';
 
     return AppBar(
+      systemOverlayStyle:
+          (foregroundColor == Colors.white ||
+                      (foregroundColor == null &&
+                          theme.brightness == Brightness.dark)
+                  ? SystemUiOverlayStyle.light
+                  : SystemUiOverlayStyle.dark)
+              .copyWith(statusBarColor: Colors.transparent),
       elevation: 0,
       scrolledUnderElevation: 0,
-      backgroundColor: Colors.transparent,
-      toolbarHeight: 72,
+      backgroundColor: backgroundColor ?? Colors.transparent,
+      toolbarHeight: 60,
       title: Padding(
         padding: const EdgeInsets.only(top: AppSpacing.xs),
         child: Row(
           children: [
             Expanded(
               child: Semantics(
-                label: '$greeting $userName',
+                label: collapsed ? 'Painel' : '$greeting $userName',
                 child: ExcludeSemantics(
-                  child: Text.rich(
-                    TextSpan(
-                      children: [
-                        TextSpan(
-                          text: '$greeting ',
-                          style: theme.textTheme.bodyLarge?.copyWith(
-                            color: theme.colorScheme.onSurfaceVariant,
-                            fontSize: 16,
-                          ),
-                        ),
-                        TextSpan(
-                          text: userName,
+                  child: collapsed
+                      ? Text(
+                          'Painel',
                           style: theme.textTheme.titleLarge?.copyWith(
+                            color: foregroundColor,
                             fontWeight: FontWeight.w700,
-                            color: theme.colorScheme.onSurface,
-                            fontSize: 20,
                           ),
+                        )
+                      : Text.rich(
+                          TextSpan(
+                            children: [
+                              TextSpan(
+                                text: '$greeting ',
+                                style: theme.textTheme.bodyLarge?.copyWith(
+                                  color:
+                                      foregroundColor ??
+                                      theme.colorScheme.onSurfaceVariant,
+                                  fontSize: 14,
+                                ),
+                              ),
+                              TextSpan(
+                                text: userName.split(RegExp(r'\s+')).first,
+                                style: theme.textTheme.titleLarge?.copyWith(
+                                  fontWeight: FontWeight.w700,
+                                  color:
+                                      foregroundColor ??
+                                      theme.colorScheme.onSurface,
+                                  fontSize: 16,
+                                ),
+                              ),
+                            ],
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
                         ),
-                      ],
-                    ),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
                 ),
               ),
             ),
@@ -92,14 +121,19 @@ class DashboardHeader extends ConsumerWidget implements PreferredSizeWidget {
                       .navigateTo(AppDestination.profile);
                 },
                 child: Padding(
-                  padding: const EdgeInsets.all(4.0),
+                  padding: const EdgeInsets.all(6.0),
                   child: CircleAvatar(
-                    radius: 24,
-                    backgroundColor: theme.colorScheme.primary.withAlpha(25),
+                    radius: 18,
+                    backgroundColor:
+                        (foregroundColor ?? theme.colorScheme.primary)
+                            .withAlpha(25),
                     backgroundImage: _getAvatarProvider(user?.avatarPath),
                     child:
                         (user?.avatarPath == null || user!.avatarPath!.isEmpty)
-                        ? Icon(Icons.person, color: theme.colorScheme.primary)
+                        ? Icon(
+                            Icons.person,
+                            color: foregroundColor ?? theme.colorScheme.primary,
+                          )
                         : null,
                   ),
                 ),
@@ -112,5 +146,5 @@ class DashboardHeader extends ConsumerWidget implements PreferredSizeWidget {
   }
 
   @override
-  Size get preferredSize => const Size.fromHeight(72.0);
+  Size get preferredSize => const Size.fromHeight(60.0);
 }

@@ -2,7 +2,7 @@ import 'package:key_budget/app/utils/navigation_utils.dart';
 import 'package:key_budget/app/utils/app_animations.dart';
 import 'package:key_budget/core/design_system/surfaces/app_surfaces.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_masked_text2/flutter_masked_text2.dart';
+import 'package:key_budget/core/money/brl_input_controller.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'package:key_budget/app/widgets/category_autocomplete_field.dart';
@@ -20,7 +20,7 @@ import 'package:key_budget/features/expenses/viewmodel/expense_viewmodel.dart';
 
 class RecurringExpenseForm extends ConsumerWidget {
   final GlobalKey<FormState> formKey;
-  final MoneyMaskedTextController amountController;
+  final BrlInputController amountController;
   final TextEditingController motivationController;
   final TextEditingController locationController;
   final ValueNotifier<ExpenseCategory?> selectedCategory;
@@ -56,6 +56,7 @@ class RecurringExpenseForm extends ConsumerWidget {
       ),
       decoration: AppSurfaces.panel(context),
       child: Column(
+        crossAxisAlignment: CrossAxisAlignment.center,
         children: [
           Text(
             'Valor por ocorrência',
@@ -72,8 +73,8 @@ class RecurringExpenseForm extends ConsumerWidget {
             textAlign: TextAlign.center,
             style: theme.textTheme.displayMedium?.copyWith(
               color: accentColor,
-              fontWeight: FontWeight.w800,
-              letterSpacing: -1.5,
+              fontWeight: FontWeight.w700,
+              letterSpacing: -0.4,
             ),
             decoration: const InputDecoration(
               border: InputBorder.none,

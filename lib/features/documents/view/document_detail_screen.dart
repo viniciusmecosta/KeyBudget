@@ -11,7 +11,6 @@ import 'package:intl/intl.dart';
 import 'package:key_budget/app/utils/navigation_utils.dart';
 import 'package:key_budget/core/design_system/spacing/app_spacing.dart';
 import 'package:key_budget/core/design_system/widgets/app_status_badge.dart';
-import 'package:key_budget/core/design_system/widgets/app_text_field.dart';
 import 'package:key_budget/core/models/document_model.dart';
 import 'package:key_budget/core/services/snackbar_service.dart';
 import 'package:key_budget/features/auth/viewmodel/auth_viewmodel.dart';
@@ -131,65 +130,60 @@ class DocumentDetailScreen extends ConsumerWidget {
             ),
             const SizedBox(height: AppSpacing.md),
             if (document.number != null && document.number!.isNotEmpty) ...[
-              Stack(
-                alignment: Alignment.centerRight,
-                children: [
-                  AppTextField(
-                    controller: TextEditingController(text: document.number),
-                    label: 'Número',
-                    prefixIcon: Icons.numbers_outlined,
-                    readOnly: true,
-                  ),
-                  Positioned(
-                    right: 8,
-                    child: IconButton(
-                      icon: Icon(
-                        Icons.copy_outlined,
-                        color: theme.colorScheme.primary,
-                      ),
-                      onPressed: () {
-                        Clipboard.setData(
-                          ClipboardData(text: document.number!),
-                        );
-                        HapticFeedback.lightImpact();
-                        SnackbarService.showSuccess(context, 'Número copiado!');
-                      },
-                    ),
-                  ),
-                ],
+              _DocumentInfo(
+                label: 'Número',
+                value: document.number!,
+                action: IconButton(
+                  tooltip: 'Copiar número',
+                  icon: const Icon(Icons.copy_outlined),
+                  onPressed: () async {
+                    await Clipboard.setData(
+                      ClipboardData(text: document.number!),
+                    );
+                    if (context.mounted) {
+                      SnackbarService.showSuccess(context, 'Número copiado!');
+                    }
+                  },
+                ),
               ),
               const SizedBox(height: AppSpacing.md),
             ],
-            Row(
-              children: [
-                Expanded(
-                  child: AppTextField(
-                    controller: TextEditingController(
-                      text: document.issueDate != null
-                          ? DateFormat('dd/MM/yyyy').format(document.issueDate!)
-                          : 'Data de expedição não informada',
-                    ),
-                    label: 'Data de Expedição',
-                    prefixIcon: Icons.calendar_today_outlined,
-                    readOnly: true,
+            LayoutBuilder(
+              builder: (context, constraints) {
+                final fields = [
+                  _DocumentInfo(
+                    label: 'Data de expedição',
+                    value: document.issueDate == null
+                        ? 'Não informada'
+                        : DateFormat('dd/MM/yyyy').format(document.issueDate!),
                   ),
-                ),
-                const SizedBox(width: AppSpacing.md),
-                Expanded(
-                  child: AppTextField(
-                    controller: TextEditingController(
-                      text: document.expiryDate != null
-                          ? DateFormat(
-                              'dd/MM/yyyy',
-                            ).format(document.expiryDate!)
-                          : 'Validade não informada',
-                    ),
+                  _DocumentInfo(
                     label: 'Validade',
-                    prefixIcon: Icons.event_busy_outlined,
-                    readOnly: true,
+                    value: document.expiryDate == null
+                        ? 'Não informada'
+                        : DateFormat('dd/MM/yyyy').format(document.expiryDate!),
                   ),
-                ),
-              ],
+                ];
+                if (constraints.maxWidth < 520 ||
+                    MediaQuery.textScalerOf(context).scale(14) > 21) {
+                  return Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      fields.first,
+                      const SizedBox(height: AppSpacing.md),
+                      fields.last,
+                    ],
+                  );
+                }
+                return Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Expanded(child: fields.first),
+                    const SizedBox(width: AppSpacing.md),
+                    Expanded(child: fields.last),
+                  ],
+                );
+              },
             ),
             if (document.additionalFields.isNotEmpty) ...[
               const SizedBox(height: AppSpacing.xl),
@@ -202,12 +196,7 @@ class DocumentDetailScreen extends ConsumerWidget {
               ...document.additionalFields.entries.map(
                 (e) => Padding(
                   padding: const EdgeInsets.only(bottom: AppSpacing.md),
-                  child: AppTextField(
-                    controller: TextEditingController(text: e.value),
-                    label: e.key,
-                    prefixIcon: Icons.info_outline,
-                    readOnly: true,
-                  ),
+                  child: _DocumentInfo(label: e.key, value: e.value),
                 ),
               ),
             ],
@@ -379,7 +368,7 @@ class DocumentDetailScreen extends ConsumerWidget {
           final isLast = v == document.versions.last;
           final dateText = v.issueDate != null
               ? 'Expedição: ${DateFormat('dd/MM/yyyy').format(v.issueDate!)}'
-              : 'Data de expedição não informada';
+              : 'Versão anterior';
 
           return Column(
             children: [
@@ -415,14 +404,21 @@ class DocumentDetailScreen extends ConsumerWidget {
                 ),
                 subtitle: v.attachments.isNotEmpty
                     ? Text(
-                        '${v.attachments.length} ${v.attachments.length == 1 ? "anexo" : "anexos"}',
+                        'Ver versão • ${v.attachments.length} ${v.attachments.length == 1 ? "anexo" : "anexos"}',
                         style: theme.textTheme.bodySmall?.copyWith(
                           color: theme.colorScheme.onSurfaceVariant,
                         ),
                       )
-                    : null,
-                trailing: TextButton(
-                  onPressed: () async {
+                    : const Text('Ver versão →'),
+                trailing: PopupMenuButton<String>(
+                  tooltip: 'Ações da versão',
+                  itemBuilder: (_) => const [
+                    PopupMenuItem(
+                      value: 'principal',
+                      child: Text('Definir como principal'),
+                    ),
+                  ],
+                  onSelected: (_) async {
                     final allVersions = [document, ...document.versions];
                     final scaffoldContext = context;
                     final navigator = Navigator.of(context);
@@ -445,9 +441,8 @@ class DocumentDetailScreen extends ConsumerWidget {
                       );
                     }
                   },
-                  child: const Text('Definir como principal'),
                 ),
-                onTap: () => NavigationUtils.pushReplacement<void, void>(
+                onTap: () => NavigationUtils.push(
                   context,
                   DocumentDetailScreen(document: v),
                 ),
@@ -462,6 +457,38 @@ class DocumentDetailScreen extends ConsumerWidget {
             ],
           );
         }).toList(),
+      ),
+    );
+  }
+}
+
+class _DocumentInfo extends StatelessWidget {
+  const _DocumentInfo({required this.label, required this.value, this.action});
+  final String label;
+  final String value;
+  final Widget? action;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Container(
+      padding: const EdgeInsets.all(AppSpacing.md),
+      decoration: AppSurfaces.panel(context),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(label, style: theme.textTheme.bodySmall),
+                const SizedBox(height: 6),
+                SelectableText(value, style: theme.textTheme.bodyLarge),
+              ],
+            ),
+          ),
+          ?action,
+        ],
       ),
     );
   }

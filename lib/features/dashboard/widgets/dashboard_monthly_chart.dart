@@ -1,8 +1,8 @@
-import 'package:key_budget/app/utils/app_animations.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
+import 'package:key_budget/app/utils/app_animations.dart';
 import 'package:key_budget/app/utils/navigation_utils.dart';
 import 'package:key_budget/core/design_system/colors/app_contrast.dart';
 import 'package:key_budget/core/design_system/spacing/app_spacing.dart';
@@ -13,7 +13,8 @@ import 'package:key_budget/features/auth/viewmodel/auth_viewmodel.dart';
 import 'package:key_budget/features/dashboard/viewmodel/dashboard_viewmodel.dart';
 
 class DashboardMonthlyChart extends ConsumerWidget {
-  const DashboardMonthlyChart({super.key});
+  const DashboardMonthlyChart({super.key, this.chartHeight = 128});
+  final double chartHeight;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -34,8 +35,8 @@ class DashboardMonthlyChart extends ConsumerWidget {
     final now = DateTime.now();
     final firstFutureDay = DateTime(now.year, now.month, now.day + 1);
 
-    final Map<int, double> expensesByMonth = {};
-    final Map<int, double> incomesByMonth = {};
+    final Map<int, int> expensesByMonth = {};
+    final Map<int, int> incomesByMonth = {};
 
     int maxMonthIndexWithData = -1;
     for (var exp in viewModel.allExpenses) {
@@ -55,8 +56,8 @@ class DashboardMonthlyChart extends ConsumerWidget {
         : 0;
 
     for (int i = 0; i < monthsToShow; i++) {
-      expensesByMonth[i] = 0.0;
-      incomesByMonth[i] = 0.0;
+      expensesByMonth[i] = 0;
+      incomesByMonth[i] = 0;
     }
 
     for (var exp in viewModel.allExpenses) {
@@ -67,10 +68,12 @@ class DashboardMonthlyChart extends ConsumerWidget {
       if (monthsDifference >= 0 && monthsDifference < monthsToShow) {
         if (exp.isIncome == true) {
           incomesByMonth[monthsDifference.toInt()] =
-              (incomesByMonth[monthsDifference.toInt()] ?? 0.0) + exp.amount;
+              (incomesByMonth[monthsDifference.toInt()] ?? 0) +
+              exp.money.amountMinor;
         } else {
           expensesByMonth[monthsDifference.toInt()] =
-              (expensesByMonth[monthsDifference.toInt()] ?? 0.0) + exp.amount;
+              (expensesByMonth[monthsDifference.toInt()] ?? 0) +
+              exp.money.amountMinor;
         }
       }
     }
@@ -89,25 +92,25 @@ class DashboardMonthlyChart extends ConsumerWidget {
                   'pt_BR',
                 ).format(DateTime(now.year, now.month - monthKey));
                 final expense = currencyFormatter.format(
-                  expensesByMonth[monthKey],
+                  expensesByMonth[monthKey]! / 100,
                 );
                 if (!enableIncomes) {
                   return '$month: gastos realizados de $expense';
                 }
                 final income = currencyFormatter.format(
-                  incomesByMonth[monthKey],
+                  incomesByMonth[monthKey]! / 100,
                 );
                 return '$month: entradas realizadas de $income e saídas realizadas de $expense';
               })
               .join('. ');
 
-    double maxAmount = 0.0;
+    double maxAmount = 0;
     for (int i in validMonths) {
-      if (expensesByMonth[i]! > maxAmount) {
-        maxAmount = expensesByMonth[i]!;
+      if (expensesByMonth[i]! / 100 > maxAmount) {
+        maxAmount = expensesByMonth[i]! / 100;
       }
-      if (enableIncomes && incomesByMonth[i]! > maxAmount) {
-        maxAmount = incomesByMonth[i]!;
+      if (enableIncomes && incomesByMonth[i]! / 100 > maxAmount) {
+        maxAmount = incomesByMonth[i]! / 100;
       }
     }
 
@@ -117,12 +120,12 @@ class DashboardMonthlyChart extends ConsumerWidget {
 
     final barGroups = List.generate(validMonths.length, (index) {
       final monthKey = validMonths[index];
-      final expVal = expensesByMonth[monthKey]!;
-      final incVal = incomesByMonth[monthKey]!;
+      final expVal = expensesByMonth[monthKey]! / 100;
+      final incVal = incomesByMonth[monthKey]! / 100;
 
       final expenseRod = BarChartRodData(
         toY: expVal,
-        color: theme.colorScheme.error,
+        color: expenseChartColor,
         width: enableIncomes ? 16 : 28,
         borderRadius: BorderRadius.circular(6),
         backDrawRodData: BackgroundBarChartRodData(
@@ -161,16 +164,12 @@ class DashboardMonthlyChart extends ConsumerWidget {
             subtitle: monthsToShow <= 1
                 ? 'Último mês'
                 : 'Últimos $monthsToShow meses',
-            action: TextButton.icon(
+            action: AppSectionAction(
+              label: 'Abrir análise financeira',
+              icon: Icons.insights_rounded,
               onPressed: () {
                 NavigationUtils.push(context, const AnalysisScreen());
               },
-              style: TextButton.styleFrom(
-                padding: const EdgeInsets.symmetric(horizontal: 4),
-                minimumSize: const Size(48, 48),
-              ),
-              label: const Text('Ver análise', maxLines: 1, softWrap: false),
-              icon: const Icon(Icons.arrow_forward_ios_rounded, size: 14),
             ),
           ),
           if (enableIncomes) ...[
@@ -201,12 +200,12 @@ class DashboardMonthlyChart extends ConsumerWidget {
               ],
             ),
           ],
-          const SizedBox(height: AppSpacing.xl),
+          const SizedBox(height: AppSpacing.md),
           Semantics(
             label: chartDescription,
             child: ExcludeSemantics(
               child: SizedBox(
-                height: 100,
+                height: chartHeight,
                 child: validMonths.isEmpty
                     ? Center(
                         child: Text(
