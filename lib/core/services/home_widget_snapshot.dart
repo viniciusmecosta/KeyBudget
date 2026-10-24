@@ -11,6 +11,7 @@ class HomeWidgetSnapshot {
     required this.upcomingCents,
     required this.upcomingCount,
     required this.showIncome,
+    required this.dailyTotals,
   });
 
   final String userId;
@@ -20,6 +21,10 @@ class HomeWidgetSnapshot {
   final int upcomingCents;
   final int upcomingCount;
   final bool showIncome;
+
+  /// Day -> [expense cents, income cents, expense count]. No descriptions or IDs.
+  /// Android can roll dates forward using these already synchronized entries.
+  final Map<String, List<int>> dailyTotals;
 
   factory HomeWidgetSnapshot.fromExpenses({
     required String userId,
@@ -33,7 +38,19 @@ class HomeWidgetSnapshot {
     var income = 0;
     var upcoming = 0;
     var count = 0;
+    final daily = <String, List<int>>{};
+    final dayFormat = DateFormat('yyyy-MM-dd');
     for (final expense in expenses) {
+      final totals = daily.putIfAbsent(
+        dayFormat.format(expense.date),
+        () => [0, 0, 0],
+      );
+      if (expense.isIncome == true) {
+        totals[1] += expense.money.amountMinor;
+      } else {
+        totals[0] += expense.money.amountMinor;
+        totals[2]++;
+      }
       if (expense.date.year == now.year &&
           expense.date.month == now.month &&
           expense.date.isBefore(tomorrow)) {
@@ -58,6 +75,7 @@ class HomeWidgetSnapshot {
       upcomingCents: upcoming,
       upcomingCount: count,
       showIncome: showIncome,
+      dailyTotals: daily,
     );
   }
 
@@ -68,6 +86,8 @@ class HomeWidgetSnapshot {
       decimalDigits: 2,
     );
     return {
+      'version': 2,
+      'daily': dailyTotals,
       'uid': userId,
       'date': DateFormat('yyyy-MM-dd').format(date),
       'spent': currency.format(spentCents / 100),

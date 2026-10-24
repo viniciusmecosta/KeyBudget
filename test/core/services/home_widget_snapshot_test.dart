@@ -34,6 +34,11 @@ void main() {
       expect(data.upcomingCount, 2);
       expect(data.toMap()['balance'], contains('49,70'));
       expect(data.toMap()['date'], '2026-12-31');
+      expect(data.toMap()['version'], 2);
+      expect(data.dailyTotals['2026-12-31'], [30, 5000, 2]);
+      expect(data.dailyTotals['2027-01-01'], [1000, 0, 1]);
+      expect(data.dailyTotals['2027-01-02'], [0, 80000, 0]);
+      expect(data.toMap().toString(), isNot(contains('motivation')));
     },
   );
 
@@ -41,7 +46,9 @@ void main() {
     final stored = <String, dynamic>{};
     final refreshed = <String>[];
     const channel = MethodChannel('home_widget');
+    var failRefresh = false;
     setUp(() {
+      failRefresh = false;
       stored.clear();
       refreshed.clear();
       TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
@@ -54,6 +61,10 @@ void main() {
                 stored[args['id'] as String] = args['data'];
               case 'updateWidget':
                 refreshed.add(args['name'] as String);
+                if (failRefresh &&
+                    args['name'] == HomeWidgetService.androidWidgetName) {
+                  throw PlatformException(code: 'launcher_unavailable');
+                }
             }
             return true;
           });
@@ -75,6 +86,92 @@ void main() {
         );
         expect(data['uid'], 'user');
         expect(data['spent'], contains('0,30'));
+      },
+    );
+
+    test(
+      'color changes refresh all widgets without replacing financial data',
+      () async {
+        await HomeWidgetService.setWidgetSession('user');
+        await HomeWidgetService.updateSnapshot(snapshot('user'));
+        final financial = stored[HomeWidgetService.keySnapshot];
+        refreshed.clear();
+        await HomeWidgetService.updateAppearance(
+          'user',
+          colorValue: 0xFF0F766E,
+          mode: 'dark',
+        );
+        final appearance = stored[HomeWidgetService.keyAppearance];
+        expect(jsonDecode(appearance as String)['mode'], 'dark');
+        expect(stored[HomeWidgetService.keySnapshot], financial);
+        expect(refreshed, HomeWidgetService.androidWidgetNames);
+        refreshed.clear();
+        await HomeWidgetService.updateAppearance(
+          'user',
+          colorValue: 0xFF0F766E,
+          mode: 'dark',
+        );
+        expect(refreshed, isEmpty);
+        await HomeWidgetService.updateAppearance(
+          'old-user',
+          colorValue: 0xFF7C3AED,
+        );
+        expect(stored[HomeWidgetService.keyAppearance], appearance);
+        await HomeWidgetService.clearWidgetData();
+        await HomeWidgetService.updateAppearance(
+          'user',
+          colorValue: 0xFF7C3AED,
+        );
+        expect(stored[HomeWidgetService.keyAppearance], '');
+      },
+    );
+
+    test(
+      'session restores colors and ignores unchanged profile events',
+      () async {
+        await HomeWidgetService.setWidgetSession(
+          'user',
+          colorValue: 0xFF7C3AED,
+          mode: 'light',
+        );
+        final first = stored[HomeWidgetService.keyAppearance];
+        refreshed.clear();
+        await HomeWidgetService.setWidgetSession(
+          'user',
+          colorValue: 0xFF7C3AED,
+          mode: 'light',
+        );
+        expect(refreshed, isEmpty);
+        await HomeWidgetService.setWidgetSession(
+          'other',
+          colorValue: 0xFF0F766E,
+        );
+        expect(stored[HomeWidgetService.keyAppearance], isNot(first));
+        expect(
+          jsonDecode(stored[HomeWidgetService.keyAppearance] as String)['mode'],
+          'system',
+        );
+      },
+    );
+
+    test(
+      'failed refresh retries the same saved appearance for all providers',
+      () async {
+        await HomeWidgetService.setWidgetSession('user');
+        failRefresh = true;
+        refreshed.clear();
+        await HomeWidgetService.updateAppearance(
+          'user',
+          colorValue: 0xFF7C3AED,
+        );
+        expect(refreshed, HomeWidgetService.androidWidgetNames);
+        failRefresh = false;
+        refreshed.clear();
+        await HomeWidgetService.updateAppearance(
+          'user',
+          colorValue: 0xFF7C3AED,
+        );
+        expect(refreshed, HomeWidgetService.androidWidgetNames);
       },
     );
 

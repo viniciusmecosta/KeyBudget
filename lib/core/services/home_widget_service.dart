@@ -4,6 +4,7 @@ import 'package:flutter/foundation.dart';
 import 'package:home_widget/home_widget.dart';
 import 'package:intl/intl.dart';
 
+import 'home_widget_appearance.dart';
 import 'home_widget_snapshot.dart';
 
 class HomeWidgetService {
@@ -19,12 +20,17 @@ class HomeWidgetService {
     'KeyBudgetQuickWidgetReceiver',
   ];
   static const keySnapshot = 'widget_snapshot';
+  static const keyAppearance = 'widget_appearance';
 
   static Future<void> _refreshAll() async {
-    for (final name in androidWidgetNames) {
-      await HomeWidget.updateWidget(name: name, iOSName: iOSWidgetName);
-    }
+    // Refresh every provider even when one launcher update fails.
+    await Future.wait([
+      for (final name in androidWidgetNames)
+        HomeWidget.updateWidget(name: name, iOSName: iOSWidgetName),
+    ]);
   }
+
+  static String? _lastRefreshedProfile;
 
   static Future<void> _pendingWrite = Future.value();
 
@@ -88,17 +94,55 @@ class HomeWidgetService {
     } catch (_) {}
   }
 
-  static Future<void> setWidgetSession(String uid) => _serialize(() async {
+  static Future<void> setWidgetSession(
+    String uid, {
+    int? colorValue,
+    String mode = 'system',
+  }) => _serialize(() async {
     if (uid.isEmpty) return;
-    try {
-      final previous = await HomeWidget.getWidgetData<String>(keyUserId);
-      if (previous != uid) {
-        await HomeWidget.saveWidgetData<String>(keySnapshot, '');
-      }
-      await HomeWidget.saveWidgetData<String>(keyUserId, uid);
-      await HomeWidget.saveWidgetData<String>(keyStatus, 'active');
-      await _refreshAll();
-    } catch (_) {}
+    final appearance = jsonEncode(
+      HomeWidgetAppearance.toMap(colorValue: colorValue, mode: mode),
+    );
+    final previous = await HomeWidget.getWidgetData<String>(keyUserId);
+    final previousAppearance = await HomeWidget.getWidgetData<String>(
+      keyAppearance,
+    );
+    final status = await HomeWidget.getWidgetData<String>(keyStatus);
+    if (previous == uid &&
+        previousAppearance == appearance &&
+        status == 'active' &&
+        _lastRefreshedProfile == '$uid:$appearance') {
+      return;
+    }
+    if (previous != uid) {
+      await HomeWidget.saveWidgetData<String>(keySnapshot, '');
+    }
+    await HomeWidget.saveWidgetData<String>(keyAppearance, appearance);
+    await HomeWidget.saveWidgetData<String>(keyUserId, uid);
+    await HomeWidget.saveWidgetData<String>(keyStatus, 'active');
+    await _refreshAll();
+    _lastRefreshedProfile = '$uid:$appearance';
+  });
+
+  static Future<void> updateAppearance(
+    String uid, {
+    int? colorValue,
+    String mode = 'system',
+  }) => _serialize(() async {
+    if (uid.isEmpty ||
+        await HomeWidget.getWidgetData<String>(keyUserId) != uid) {
+      return;
+    }
+    final appearance = jsonEncode(
+      HomeWidgetAppearance.toMap(colorValue: colorValue, mode: mode),
+    );
+    if (await HomeWidget.getWidgetData<String>(keyAppearance) == appearance &&
+        _lastRefreshedProfile == '$uid:$appearance') {
+      return;
+    }
+    await HomeWidget.saveWidgetData<String>(keyAppearance, appearance);
+    await _refreshAll();
+    _lastRefreshedProfile = '$uid:$appearance';
   });
 
   static Future<void> updateWidgetData(
@@ -143,10 +187,12 @@ class HomeWidgetService {
   }
 
   static Future<void> clearWidgetData() => _serialize(() async {
+    _lastRefreshedProfile = null;
     try {
       await HomeWidget.saveWidgetData<String>(keyUserId, '');
       await HomeWidget.saveWidgetData<String>(keySnapshot, '');
       await HomeWidget.saveWidgetData<String>(keyStatus, 'logged_out');
+      await HomeWidget.saveWidgetData<String>(keyAppearance, '');
       await HomeWidget.saveWidgetData<String>(
         keyMonthlySpent,
         'Abra o KeyBudget',

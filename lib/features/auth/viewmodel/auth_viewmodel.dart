@@ -111,7 +111,13 @@ class AuthViewModel extends ChangeNotifier {
                     AppSecurityService.setSecure(
                       user.effectiveProtectScreenCapture,
                     );
-                    unawaited(HomeWidgetService.setWidgetSession(user.id));
+                    unawaited(
+                      HomeWidgetService.setWidgetSession(
+                        user.id,
+                        colorValue: user.themeColor,
+                        mode: user.effectiveThemeMode,
+                      ),
+                    );
                   }
                   if (!_isInitialized) {
                     _isInitialized = true;
@@ -394,6 +400,13 @@ class AuthViewModel extends ChangeNotifier {
       await _authRepository.updateUserProfile(updatedUser);
       _currentUser = updatedUser;
       profileSaved = true;
+      unawaited(
+        HomeWidgetService.updateAppearance(
+          updatedUser.id,
+          colorValue: updatedUser.themeColor,
+          mode: updatedUser.effectiveThemeMode,
+        ),
+      );
 
       if (newPassword != null && newPassword.isNotEmpty) {
         try {

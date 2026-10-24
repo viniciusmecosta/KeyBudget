@@ -1,21 +1,42 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:id="@+id/widget_root"
+<FrameLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:orientation="vertical"
-    android:padding="8dp"
-    android:background="@drawable/widget_background">
-    <TextView
-        android:id="@+id/btn_add_expense"
+    android:layout_height="match_parent">
+    <ImageView
+        android:id="@+id/widget_background_image"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:gravity="center"
-        android:background="@drawable/widget_button_background"
-        android:text="+&#10;Despesa"
-        android:textSize="13sp"
-        android:textStyle="bold"
-        android:textColor="@color/widget_btn_text"
-        android:maxLines="2"
-        android:ellipsize="end" />
-</LinearLayout>
+        android:src="@drawable/widget_background"
+        android:scaleType="fitXY"
+        android:importantForAccessibility="no" />
+    <LinearLayout
+        android:id="@+id/widget_root"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical"
+        android:padding="8dp">
+        <FrameLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent">
+            <ImageView
+                android:id="@+id/widget_button_image"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:src="@drawable/widget_button_background"
+                android:scaleType="fitXY"
+                android:importantForAccessibility="no" />
+            <TextView
+                android:id="@+id/btn_add_expense"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:gravity="center"
+                android:text="+&#10;Despesa"
+                android:textSize="13sp"
+                android:textStyle="bold"
+                android:textColor="@color/widget_btn_text"
+                android:maxLines="2"
+                android:ellipsize="end" />
+        </FrameLayout>
+    </LinearLayout>
+</FrameLayout>

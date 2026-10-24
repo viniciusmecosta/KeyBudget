@@ -3,6 +3,7 @@ package com.vinicius.key_budget
 import android.app.AlarmManager
 import android.app.PendingIntent
 import android.appwidget.AppWidgetManager
+import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
 import android.content.SharedPreferences
@@ -10,6 +11,7 @@ import android.content.res.Configuration
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
+import android.util.Log
 import android.util.SizeF
 import android.view.View
 import android.widget.RemoteViews
@@ -46,6 +48,14 @@ open class KeyBudgetWidgetReceiver : HomeWidgetProvider() {
 
     override fun onReceive(context: Context, intent: Intent) {
         when (intent.action) {
+            AppWidgetManager.ACTION_APPWIDGET_UPDATE -> {
+                // AppWidgetProvider skips onUpdate for an empty ID list. Still
+                // publish the chosen theme before the user adds their first widget.
+                val ids = intent.getIntArrayExtra(AppWidgetManager.EXTRA_APPWIDGET_IDS)
+                if (ids == null || ids.isEmpty()) {
+                    publishPreview(context, AppWidgetManager.getInstance(context), HomeWidgetPlugin.getData(context))
+                }
+            }
             ACTION_REVEAL_VALUE -> {
                 val widgetId = intent.getIntExtra(
                     AppWidgetManager.EXTRA_APPWIDGET_ID,
@@ -86,6 +96,31 @@ open class KeyBudgetWidgetReceiver : HomeWidgetProvider() {
     ) {
         appWidgetIds.forEach { widgetId ->
             renderWidget(context, appWidgetManager, widgetId, widgetData)
+        }
+        publishPreview(context, appWidgetManager, widgetData)
+    }
+
+    private fun publishPreview(
+        context: Context,
+        appWidgetManager: AppWidgetManager,
+        widgetData: SharedPreferences,
+    ) {
+        if (Build.VERSION.SDK_INT >= 35) {
+            val appearance = widgetData.getString("widget_appearance", "") ?: ""
+            val previewKey = "widget_preview_appearance_$kind"
+            if (widgetData.getString(previewKey, null) != appearance) {
+                val preview = createViews(context, AppWidgetManager.INVALID_APPWIDGET_ID,
+                    widgetData, 200, System.currentTimeMillis())
+                try {
+                    if (appWidgetManager.setWidgetPreview(ComponentName(context, javaClass),
+                            android.appwidget.AppWidgetProviderInfo.WIDGET_CATEGORY_HOME_SCREEN, preview)) {
+                        widgetData.edit().putString(previewKey, appearance).apply()
+                    }
+                } catch (error: RuntimeException) {
+                    // A launcher preview must never prevent installed widgets from updating.
+                    Log.w("KeyBudgetWidget", "Widget preview unavailable: ${error.javaClass.simpleName}")
+                }
+            }
         }
     }
 
@@ -128,7 +163,7 @@ open class KeyBudgetWidgetReceiver : HomeWidgetProvider() {
         appWidgetManager.updateAppWidget(widgetId, views)
     }
 
-    private fun createViews(
+    internal fun createViews(
         context: Context,
         widgetId: Int,
         widgetData: SharedPreferences,
@@ -146,11 +181,14 @@ open class KeyBudgetWidgetReceiver : HomeWidgetProvider() {
             else -> R.layout.widget_layout
         }
         val views = RemoteViews(context.packageName, layout)
-        val data = try {
+        applyAppearance(context, views, widgetData, useCompact)
+        val savedData = try {
             JSONObject(widgetData.getString("widget_snapshot", "") ?: "")
         } catch (_: Exception) {
             JSONObject()
         }
+        val data = WidgetSnapshotData.forDate(savedData, today)
+        val savedDate = savedData.optString("date")
         val state = WidgetDisplayState.resolve(
             widgetData.getString("widget_user_id", ""),
             data.optString("uid"),
@@ -195,6 +233,13 @@ open class KeyBudgetWidgetReceiver : HomeWidgetProvider() {
             views.setTextViewText(R.id.tv_subtitle, when {
                 state == WidgetDisplayState.SIGNED_OUT -> "Toque para entrar"
                 state == WidgetDisplayState.STALE -> "Toque para atualizar"
+                savedDate != today && data.optString("date") == today -> {
+                    val displayDate = try {
+                        java.time.LocalDate.parse(savedDate)
+                            .format(java.time.format.DateTimeFormatter.ofPattern("dd/MM"))
+                    } catch (_: Exception) { "—" }
+                    "Dados do app · $displayDate"
+                }
                 kind == "upcoming" && visible -> {
                     val count = data.optInt("upcoming_count")
                     if (count == 1) "1 despesa cadastrada" else "$count despesas cadastradas"
@@ -226,6 +271,57 @@ open class KeyBudgetWidgetReceiver : HomeWidgetProvider() {
         }
 
         return views
+    }
+
+    private fun applyAppearance(
+        context: Context,
+        views: RemoteViews,
+        widgetData: SharedPreferences,
+        compact: Boolean,
+    ) {
+        val appearance = try {
+            JSONObject(widgetData.getString("widget_appearance", "") ?: "")
+        } catch (_: Exception) {
+            JSONObject()
+        }
+        val systemDark = context.resources.configuration.uiMode and
+            Configuration.UI_MODE_NIGHT_MASK == Configuration.UI_MODE_NIGHT_YES
+        val dark = when (appearance.optString("mode")) {
+            "dark" -> true
+            "light" -> false
+            else -> systemDark
+        }
+        fun color(key: String, fallback: Int, isDark: Boolean): Int =
+            appearance.optJSONObject(if (isDark) "dark" else "light")
+                ?.optLong(key, context.getColor(fallback).toLong())?.toInt()
+                ?: context.getColor(fallback)
+        fun apply(view: Int, method: String, key: String, fallback: Int) {
+            if (Build.VERSION.SDK_INT >= 31 && appearance.optString("mode") == "system") {
+                // Launcher reapplies the right palette when system brightness changes.
+                views.setColorInt(view, method,
+                    color(key, fallback, false), color(key, fallback, true))
+            } else {
+                views.setInt(view, method, color(key, fallback, dark))
+            }
+        }
+        // Tintable shape images preserve rounded corners on older Android too.
+        apply(R.id.widget_background_image, "setColorFilter", "background", R.color.widget_bg)
+        if (!compact) {
+            apply(R.id.widget_button_image, "setColorFilter", "button", R.color.widget_btn_bg)
+            apply(R.id.btn_add_expense, "setTextColor", "on_button", R.color.widget_btn_text)
+        }
+        if (kind != "quick") {
+            apply(R.id.tv_title, "setTextColor", "secondary", R.color.widget_text_secondary)
+            apply(R.id.tv_subtitle, "setTextColor", "secondary", R.color.widget_text_secondary)
+            apply(R.id.tv_monthly_spent, "setTextColor", "foreground", R.color.widget_text_primary)
+            apply(R.id.btn_toggle_visibility, "setColorFilter", "secondary", R.color.widget_text_secondary)
+        }
+        if (kind == "overview") {
+            apply(R.id.tv_income, "setTextColor", "foreground", R.color.widget_text_primary)
+            apply(R.id.tv_balance, "setTextColor", "foreground", R.color.widget_text_primary)
+            apply(R.id.tv_income_label, "setTextColor", "secondary", R.color.widget_text_secondary)
+            apply(R.id.tv_balance_label, "setTextColor", "secondary", R.color.widget_text_secondary)
+        }
     }
 
     private fun scheduleMask(context: Context, widgetId: Int) {
