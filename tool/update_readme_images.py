@@ -21,6 +21,7 @@ NAMES = {
     'profile': 'user',
     'dashboard-charts': 'dashboard-charts',
     'customization': 'customization',
+    'home-widgets': 'home-widgets',
 }
 
 

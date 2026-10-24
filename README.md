@@ -84,6 +84,29 @@ Capturas da interface real, com dados fictícios. Em cada par, **tema claro à e
 
 </details>
 
+## Widgets no Android
+
+Adicione pelo **Perfil → Aparência → Widgets do celular** ou pelo seletor de widgets do Android.
+Os cinco modelos acompanham a **cor e o modo de exibição do aplicativo**, com valores ocultos por padrão.
+Usam os lançamentos salvos e recalculam os totais na virada do dia, mesmo com o app fechado; a legenda indica a data dos dados quando necessário.
+
+| Widget | Tamanho sugerido |
+| --- | --- |
+| Gastos compactos | 3 × 1 |
+| Gastos do mês | 2 × 2 |
+| Resumo financeiro | 4 × 3 |
+| Próximos gastos | 3 × 2 |
+| Nova despesa | 1 × 1 |
+
+Renderização real dos widgets no Android, com dados fictícios e tema violeta.
+Os tamanhos podem ser ajustados conforme a tela inicial do celular.
+Veja também a seleção no aplicativo: [claro](docs/images/home-widgets-light.jpg) · [escuro](docs/images/home-widgets-dark.jpg).
+
+<p align="center">
+  <a href="docs/images/widgets-light.jpg"><img src="docs/images/widgets-light.jpg" width="38%" alt="Cinco widgets Android com gastos, saldo, próximos pagamentos e nova despesa, em violeta claro" /></a>
+  <a href="docs/images/widgets-dark.jpg"><img src="docs/images/widgets-dark.jpg" width="38%" alt="Os mesmos cinco widgets acompanhando o tema violeta escuro" /></a>
+</p>
+
 ## Tecnologias
 
 | Base | Uso |

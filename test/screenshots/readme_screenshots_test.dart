@@ -29,6 +29,7 @@ import 'package:key_budget/features/goals/model/savings_goal.dart';
 import 'package:key_budget/features/goals/repository/savings_goal_repository.dart';
 import 'package:key_budget/features/goals/view/savings_goals_screen.dart';
 import 'package:key_budget/features/user/view/user_screen.dart';
+import 'package:key_budget/features/user/view/home_widgets_screen.dart';
 
 import 'demo_data.dart';
 
@@ -88,6 +89,7 @@ void main() {
     'analysis-distribution': (const AnalysisScreen(), AppDestination.dashboard),
     'goals': (const SavingsGoalsScreen(), AppDestination.profile),
     'profile': (const UserScreen(), AppDestination.profile),
+    'home-widgets': (const HomeWidgetsScreen(), AppDestination.profile),
   };
   for (final dark in [false, true]) {
     for (final entry in screens.entries) {
