@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:key_budget/app/config/app_theme.dart';
@@ -35,6 +36,7 @@ import 'package:key_budget/features/user/view/navigation_customization_screen.da
 import 'package:path_provider/path_provider.dart';
 
 import '../widgets/settings_tile.dart';
+import 'home_widgets_screen.dart';
 
 class ThemeColorOption {
   final String name;
@@ -697,6 +699,19 @@ class UserScreen extends ConsumerWidget {
                               }
                             },
                     ),
+                    if (!kIsWeb &&
+                        defaultTargetPlatform == TargetPlatform.android) ...[
+                      const Divider(height: 1, indent: 56, endIndent: 16),
+                      SettingsTile(
+                        icon: Icons.widgets_outlined,
+                        title: 'Widgets do celular',
+                        subtitle: 'Escolha um modelo para a tela inicial',
+                        onTap: () => NavigationUtils.push(
+                          context,
+                          const HomeWidgetsScreen(),
+                        ),
+                      ),
+                    ],
                   ]),
                   buildSection('Recursos', [
                     SettingsTile(
