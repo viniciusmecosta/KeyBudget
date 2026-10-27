@@ -6,7 +6,8 @@ import 'package:key_budget/core/import_export/backup_service.dart';
 import 'package:key_budget/core/import_export/raw_storage.dart';
 import 'package:key_budget/core/operations/session_context.dart';
 import 'package:key_budget/core/services/drive_service.dart';
-import 'package:key_budget/core/services/encryption_service.dart';
+import 'package:key_budget/core/security/vault_session.dart';
+import 'package:key_budget/core/security/vault_store.dart';
 import 'package:path_provider/path_provider.dart';
 
 enum AutomaticBackupInterval { off, daily, weekly }
@@ -92,14 +93,24 @@ class AutomaticBackupService {
     String userId,
     String password,
   ) async {
-    final result = await BackupService(
-      rawReader: FirestoreRawStorage(),
-      sessionContext: SessionContext(userId: userId, sessionGeneration: 1),
-      encryptionService: EncryptionService(),
-      driveService: DriveService(),
-    ).createBackup(password: password);
-    if (!result.isSuccess) return null;
-    return result.data;
+    final vault = VaultSession(store: FirestoreVaultStore());
+    await vault.open(userId);
+    if (!vault.isReady) {
+      vault.dispose();
+      return null;
+    }
+    try {
+      final result = await BackupService(
+        rawReader: FirestoreRawStorage(),
+        sessionContext: SessionContext(userId: userId, sessionGeneration: 1),
+        encryptionService: vault.encryption,
+        driveService: DriveService(),
+      ).createBackup(password: password);
+      if (!result.isSuccess) return null;
+      return result.data;
+    } finally {
+      vault.dispose();
+    }
   }
 
   Future<AutomaticBackupSettings> readSettings(String userId) async {

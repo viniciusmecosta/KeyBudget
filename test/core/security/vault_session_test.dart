@@ -1,7 +1,7 @@
 import 'dart:async';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:firebase_core/firebase_core.dart';
-import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import '../../helpers/memory_secure_storage.dart';
 import 'package:key_budget/core/security/vault_session.dart';
 import 'package:key_budget/core/security/vault_key_repository.dart';
 import 'memory_vault_store.dart';
@@ -19,53 +19,10 @@ class _OfflineStore extends MemoryVaultStore {
   bool offline = false;
   @override
   Future<Map<String, dynamic>?> read(String path) {
-    if (offline)
+    if (offline) {
       throw FirebaseException(plugin: 'cloud_firestore', code: 'unavailable');
-    return super.read(path);
-  }
-}
-
-class _Cache extends Fake implements FlutterSecureStorage {
-  final values = <String, String>{};
-  @override
-  Future<String?> read({
-    required String key,
-    dynamic iOptions,
-    dynamic aOptions,
-    dynamic lOptions,
-    dynamic wOptions,
-    dynamic mOptions,
-    dynamic webOptions,
-  }) async => values[key];
-  @override
-  Future<void> write({
-    required String key,
-    required String? value,
-    dynamic iOptions,
-    dynamic aOptions,
-    dynamic lOptions,
-    dynamic wOptions,
-    dynamic mOptions,
-    dynamic webOptions,
-  }) async {
-    if (value == null) {
-      values.remove(key);
-    } else {
-      values[key] = value;
     }
-  }
-
-  @override
-  Future<void> delete({
-    required String key,
-    dynamic iOptions,
-    dynamic aOptions,
-    dynamic lOptions,
-    dynamic wOptions,
-    dynamic mOptions,
-    dynamic webOptions,
-  }) async {
-    values.remove(key);
+    return super.read(path);
   }
 }
 
@@ -74,7 +31,7 @@ void main() {
     'verified local key opens offline but logout removes cached access',
     () async {
       final store = _OfflineStore();
-      final cache = _Cache();
+      final cache = MemorySecureStorage();
       final session = VaultSession(store: store, secureStorage: cache);
       await session.open('owner');
       final value = session.encryption.encryptData(

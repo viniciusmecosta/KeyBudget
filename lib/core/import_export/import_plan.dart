@@ -1,20 +1,8 @@
 import 'backup_manifest.dart';
 
-enum ImportAction {
+enum ImportAction { create, skip, conflict }
 
-  create,
-
-  skip,
-
-  conflict,
-}
-
-enum ConflictResolution {
-
-  keepTarget,
-
-  replaceWithSource,
-}
+enum ConflictResolution { keepTarget, replaceWithSource }
 
 class ImportItemPlan {
   final String collection;
@@ -27,6 +15,7 @@ class ImportItemPlan {
   final String? parentCollection;
   final String? parentId;
   final String? portablePassword;
+  final Map<String, String>? portablePasswords;
   final bool hasParentConflict;
   ConflictResolution resolution;
 
@@ -41,6 +30,7 @@ class ImportItemPlan {
     this.parentCollection,
     this.parentId,
     this.portablePassword,
+    this.portablePasswords,
     this.hasParentConflict = false,
     this.resolution = ConflictResolution.keepTarget,
   });
@@ -87,6 +77,7 @@ class ImportPlan {
   final List<String> validationErrors;
   final List<String> warnings;
   final List<String> orphans;
+  final bool requiresLegacyPasswordReview;
 
   ImportPlan({
     required this.backupId,
@@ -98,6 +89,7 @@ class ImportPlan {
     this.validationErrors = const [],
     this.warnings = const [],
     this.orphans = const [],
+    this.requiresLegacyPasswordReview = false,
   });
 
   bool get isUidMatched => originUid == targetUid;
@@ -107,8 +99,7 @@ class ImportPlan {
   int get createCount =>
       items.where((i) => i.action == ImportAction.create).length;
 
-  int get skipCount =>
-      items.where((i) => i.action == ImportAction.skip).length;
+  int get skipCount => items.where((i) => i.action == ImportAction.skip).length;
 
   int get conflictCount =>
       items.where((i) => i.action == ImportAction.conflict).length;
