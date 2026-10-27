@@ -1,10 +1,18 @@
-import 'package:key_budget/core/import_export/backup_codec.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:key_budget/core/security/vault_store.dart';
 
+dynamic _copyValue(dynamic value) {
+  if (value is Map)
+    return {
+      for (final entry in value.entries) entry.key: _copyValue(entry.value),
+    };
+  if (value is List) return value.map(_copyValue).toList();
+  if (value is Blob) return Blob(value.bytes);
+  return value;
+}
+
 Map<String, dynamic> copyVaultMap(Map<String, dynamic> data) =>
-    Map<String, dynamic>.from(
-      BackupCodec.restoreValue(BackupCodec.canonicalizeValue(data)) as Map,
-    );
+    Map<String, dynamic>.from(_copyValue(data) as Map);
 
 class MemoryVaultStore implements VaultStore {
   final Map<String, Map<String, dynamic>> documents = {};
