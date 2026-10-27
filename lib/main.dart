@@ -17,7 +17,7 @@ import 'package:key_budget/core/services/home_widget_service.dart';
 import 'package:key_budget/core/services/notification_service.dart';
 import 'package:key_budget/core/services/sensitive_export_cache.dart';
 import 'package:key_budget/features/auth/viewmodel/auth_viewmodel.dart';
-import 'package:key_budget/features/dashboard/widgets/dashboard_skeleton.dart';
+import 'package:key_budget/app/view/startup_screen.dart';
 import 'package:key_budget/features/expenses/view/add_expense_screen.dart';
 
 final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
@@ -68,17 +68,13 @@ class _AppInitializerState extends ConsumerState<AppInitializer> {
         }
 
         return MaterialApp(
-          title: 'KeyBudget',
+          title: 'PassFin',
           theme: AppTheme.lightTheme,
           darkTheme: AppTheme.darkTheme,
           themeMode: ThemeMode.system,
           debugShowCheckedModeBanner: false,
           scrollBehavior: const AppScrollBehavior(),
-          home: const Scaffold(
-            body: SafeArea(
-              child: DashboardSkeleton(enableIncomesOverride: false),
-            ),
-          ),
+          home: const StartupScreen(),
         );
       },
     );
@@ -204,7 +200,7 @@ class _MyAppState extends ConsumerState<MyApp> with WidgetsBindingObserver {
 
     return MaterialApp(
       navigatorKey: navigatorKey,
-      title: 'KeyBudget',
+      title: 'PassFin',
       themeAnimationStyle: AppAnimations.themeStyle(context),
       theme: AppTheme.getTheme(isDark: false, colorValue: themeColor),
       darkTheme: AppTheme.getTheme(isDark: true, colorValue: themeColor),
@@ -259,7 +255,7 @@ class ErrorScreen extends StatelessWidget {
       home: Scaffold(
         body: SafeArea(
           child: AppFeedbackPanel(
-            title: 'Não foi possível iniciar o KeyBudget',
+            title: 'Não foi possível iniciar o PassFin',
             message: 'Confira sua conexão e tente novamente.',
             type: AppFeedbackType.error,
             actionLabel: 'Tentar novamente',
