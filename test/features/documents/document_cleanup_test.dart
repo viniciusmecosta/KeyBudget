@@ -1,9 +1,9 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:key_budget/core/models/document_model.dart';
-import 'package:key_budget/core/services/drive_service.dart';
-import 'package:key_budget/features/documents/repository/document_repository.dart';
-import 'package:key_budget/features/documents/viewmodel/document_viewmodel.dart';
-import 'package:key_budget/features/trash/repository/trash_repository.dart';
+import 'package:passfin/core/models/document_model.dart';
+import 'package:passfin/core/services/drive_service.dart';
+import 'package:passfin/features/documents/repository/document_repository.dart';
+import 'package:passfin/features/documents/viewmodel/document_viewmodel.dart';
+import 'package:passfin/features/trash/repository/trash_repository.dart';
 
 class RecordingTrashRepository extends TrashRepository {
   final List<String> events;

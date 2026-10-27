@@ -1,20 +1,20 @@
-import 'package:key_budget/app/utils/app_animations.dart';
-import 'package:key_budget/core/design_system/surfaces/app_surfaces.dart';
-import 'package:key_budget/core/design_system/widgets/app_form_section_heading.dart';
-import 'package:key_budget/core/design_system/widgets/app_page_scaffold.dart';
+import 'package:passfin/app/utils/app_animations.dart';
+import 'package:passfin/core/design_system/surfaces/app_surfaces.dart';
+import 'package:passfin/core/design_system/widgets/app_form_section_heading.dart';
+import 'package:passfin/core/design_system/widgets/app_page_scaffold.dart';
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
-import 'package:key_budget/app/utils/navigation_utils.dart';
-import 'package:key_budget/core/design_system/spacing/app_spacing.dart';
-import 'package:key_budget/core/design_system/widgets/app_status_badge.dart';
-import 'package:key_budget/core/models/document_model.dart';
-import 'package:key_budget/core/services/snackbar_service.dart';
-import 'package:key_budget/features/auth/viewmodel/auth_viewmodel.dart';
-import 'package:key_budget/features/documents/viewmodel/document_viewmodel.dart';
+import 'package:passfin/app/utils/navigation_utils.dart';
+import 'package:passfin/core/design_system/spacing/app_spacing.dart';
+import 'package:passfin/core/design_system/widgets/app_status_badge.dart';
+import 'package:passfin/core/models/document_model.dart';
+import 'package:passfin/core/services/snackbar_service.dart';
+import 'package:passfin/features/auth/viewmodel/auth_viewmodel.dart';
+import 'package:passfin/features/documents/viewmodel/document_viewmodel.dart';
 import 'package:syncfusion_flutter_pdfviewer/pdfviewer.dart';
 
 import 'add_document_screen.dart';

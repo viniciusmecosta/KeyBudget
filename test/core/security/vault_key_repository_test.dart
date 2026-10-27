@@ -1,6 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:key_budget/core/security/vault_crypto.dart';
-import 'package:key_budget/core/security/vault_key_repository.dart';
+import 'package:passfin/core/security/vault_crypto.dart';
+import 'package:passfin/core/security/vault_key_repository.dart';
 import 'memory_vault_store.dart';
 
 void main() {

@@ -4,13 +4,13 @@ import 'package:auto_size_text/auto_size_text.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
-import 'package:key_budget/app/config/app_theme.dart';
-import 'package:key_budget/app/utils/navigation_utils.dart';
-import 'package:key_budget/core/design_system/widgets/app_card.dart';
-import 'package:key_budget/core/design_system/borders/app_borders.dart';
-import 'package:key_budget/core/models/supplier_model.dart';
-import 'package:key_budget/core/services/snackbar_service.dart';
-import 'package:key_budget/features/suppliers/view/supplier_detail_screen.dart';
+import 'package:passfin/app/config/app_theme.dart';
+import 'package:passfin/app/utils/navigation_utils.dart';
+import 'package:passfin/core/design_system/widgets/app_card.dart';
+import 'package:passfin/core/design_system/borders/app_borders.dart';
+import 'package:passfin/core/models/supplier_model.dart';
+import 'package:passfin/core/services/snackbar_service.dart';
+import 'package:passfin/features/suppliers/view/supplier_detail_screen.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 class SupplierListTile extends ConsumerWidget {

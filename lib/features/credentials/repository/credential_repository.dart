@@ -1,7 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:key_budget/core/models/credential_model.dart';
-import 'package:key_budget/core/models/folder_model.dart';
+import 'package:passfin/core/models/credential_model.dart';
+import 'package:passfin/core/models/folder_model.dart';
 
 class CredentialRepository {
   final FirebaseFirestore? _customFirestore;

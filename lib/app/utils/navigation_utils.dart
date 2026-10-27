@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:key_budget/app/utils/app_animations.dart';
+import 'package:passfin/app/utils/app_animations.dart';
 
 class NavigationUtils {
   static Route<T> _buildRoute<T extends Object?>(

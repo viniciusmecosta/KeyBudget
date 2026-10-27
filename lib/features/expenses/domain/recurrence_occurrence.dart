@@ -1,6 +1,6 @@
 import 'dart:convert';
 import 'package:crypto/crypto.dart';
-import 'package:key_budget/core/models/expense_model.dart';
+import 'package:passfin/core/models/expense_model.dart';
 
 enum OccurrenceState { materialized, suppressed }
 

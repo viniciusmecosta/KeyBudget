@@ -5,9 +5,9 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:encrypt/encrypt.dart' as legacy;
-import 'package:key_budget/core/security/vault_key_repository.dart';
-import 'package:key_budget/core/security/vault_store.dart';
-import 'package:key_budget/features/credentials/application/vault_migration_service.dart';
+import 'package:passfin/core/security/vault_key_repository.dart';
+import 'package:passfin/core/security/vault_store.dart';
+import 'package:passfin/features/credentials/application/vault_migration_service.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();

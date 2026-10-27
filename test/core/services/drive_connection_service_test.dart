@@ -4,8 +4,8 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:google_sign_in_platform_interface/google_sign_in_platform_interface.dart'
     as platform;
-import 'package:key_budget/core/services/drive_connection_service.dart';
-import 'package:key_budget/core/services/google_sign_in_session.dart';
+import 'package:passfin/core/services/drive_connection_service.dart';
+import 'package:passfin/core/services/google_sign_in_session.dart';
 
 class _Storage extends Fake implements FlutterSecureStorage {
   final values = <String, String>{};

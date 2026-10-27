@@ -1,12 +1,12 @@
 import 'package:auto_size_text/auto_size_text.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:key_budget/app/utils/navigation_utils.dart';
-import 'package:key_budget/core/design_system/spacing/app_spacing.dart';
-import 'package:key_budget/core/design_system/widgets/app_card.dart';
-import 'package:key_budget/core/design_system/widgets/app_status_badge.dart';
-import 'package:key_budget/core/models/document_model.dart';
-import 'package:key_budget/features/documents/view/document_detail_screen.dart';
+import 'package:passfin/app/utils/navigation_utils.dart';
+import 'package:passfin/core/design_system/spacing/app_spacing.dart';
+import 'package:passfin/core/design_system/widgets/app_card.dart';
+import 'package:passfin/core/design_system/widgets/app_status_badge.dart';
+import 'package:passfin/core/models/document_model.dart';
+import 'package:passfin/features/documents/view/document_detail_screen.dart';
 
 class DocumentListTile extends ConsumerWidget {
   const DocumentListTile({super.key, required this.doc});

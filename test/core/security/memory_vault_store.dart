@@ -1,5 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:key_budget/core/security/vault_store.dart';
+import 'package:passfin/core/security/vault_store.dart';
 
 dynamic _copyValue(dynamic value) {
   if (value is Map) {

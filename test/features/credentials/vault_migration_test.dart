@@ -4,9 +4,9 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:crypto/crypto.dart';
 import 'package:encrypt/encrypt.dart' as legacy;
 import 'package:flutter_test/flutter_test.dart';
-import 'package:key_budget/core/security/vault_crypto.dart';
-import 'package:key_budget/core/security/vault_key_repository.dart';
-import 'package:key_budget/features/credentials/application/vault_migration_service.dart';
+import 'package:passfin/core/security/vault_crypto.dart';
+import 'package:passfin/core/security/vault_key_repository.dart';
+import 'package:passfin/features/credentials/application/vault_migration_service.dart';
 import '../../core/security/memory_vault_store.dart';
 
 const _key = '12345678901234567890123456789012';

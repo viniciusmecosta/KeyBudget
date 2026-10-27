@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:key_budget/app/widgets/animated_item_sliver.dart';
+import 'package:passfin/app/widgets/animated_item_sliver.dart';
 
 void main() {
   Widget buildList(List<String> items) => MaterialApp(

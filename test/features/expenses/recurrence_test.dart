@@ -1,16 +1,16 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:key_budget/core/models/expense_model.dart';
-import 'package:key_budget/core/models/recurring_expense_model.dart';
-import 'package:key_budget/core/money/money.dart';
-import 'package:key_budget/core/time/app_clock.dart';
-import 'package:key_budget/features/expenses/application/recurrence_deletion_service.dart';
-import 'package:key_budget/features/expenses/application/recurrence_reconciliation_service.dart';
-import 'package:key_budget/features/expenses/application/recurrence_service.dart';
-import 'package:key_budget/features/expenses/domain/recurrence_occurrence.dart';
-import 'package:key_budget/features/expenses/domain/recurrence_schedule.dart';
-import 'package:key_budget/features/expenses/repository/expense_repository.dart';
-import 'package:key_budget/features/expenses/repository/recurrence_occurrence_repository.dart';
-import 'package:key_budget/features/expenses/repository/recurring_expense_repository.dart';
+import 'package:passfin/core/models/expense_model.dart';
+import 'package:passfin/core/models/recurring_expense_model.dart';
+import 'package:passfin/core/money/money.dart';
+import 'package:passfin/core/time/app_clock.dart';
+import 'package:passfin/features/expenses/application/recurrence_deletion_service.dart';
+import 'package:passfin/features/expenses/application/recurrence_reconciliation_service.dart';
+import 'package:passfin/features/expenses/application/recurrence_service.dart';
+import 'package:passfin/features/expenses/domain/recurrence_occurrence.dart';
+import 'package:passfin/features/expenses/domain/recurrence_schedule.dart';
+import 'package:passfin/features/expenses/repository/expense_repository.dart';
+import 'package:passfin/features/expenses/repository/recurrence_occurrence_repository.dart';
+import 'package:passfin/features/expenses/repository/recurring_expense_repository.dart';
 
 class FakeExpenseRepository implements ExpenseRepository {
   final Map<String, Expense> storage = {};

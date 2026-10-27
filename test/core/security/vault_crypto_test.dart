@@ -1,7 +1,7 @@
 import 'dart:convert';
 import 'package:encrypt/encrypt.dart' as legacy;
 import 'package:flutter_test/flutter_test.dart';
-import 'package:key_budget/core/security/vault_crypto.dart';
+import 'package:passfin/core/security/vault_crypto.dart';
 
 void main() {
   test('version detection requires an explicit version and separator', () {

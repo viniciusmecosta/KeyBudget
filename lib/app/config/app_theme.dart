@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:key_budget/core/design_system/borders/app_borders.dart';
-import 'package:key_budget/core/design_system/colors/app_colors.dart';
-import 'package:key_budget/core/design_system/colors/app_contrast.dart';
-import 'package:key_budget/core/design_system/spacing/app_spacing.dart';
-import 'package:key_budget/core/design_system/theme/app_semantic_colors.dart';
-import 'package:key_budget/core/design_system/typography/app_typography.dart';
+import 'package:passfin/core/design_system/borders/app_borders.dart';
+import 'package:passfin/core/design_system/colors/app_colors.dart';
+import 'package:passfin/core/design_system/colors/app_contrast.dart';
+import 'package:passfin/core/design_system/spacing/app_spacing.dart';
+import 'package:passfin/core/design_system/theme/app_semantic_colors.dart';
+import 'package:passfin/core/design_system/typography/app_typography.dart';
 
 class AppTheme {
   static const double spaceXS = AppSpacing.xxs;

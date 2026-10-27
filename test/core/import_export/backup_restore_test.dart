@@ -3,17 +3,17 @@ import 'dart:typed_data';
 
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:key_budget/core/import_export/backup_codec.dart';
-import 'package:key_budget/core/import_export/backup_crypto.dart';
-import 'package:key_budget/core/import_export/backup_service.dart';
-import 'package:key_budget/core/import_export/import_plan.dart';
-import 'package:key_budget/core/import_export/operation_journal.dart';
-import 'package:key_budget/core/import_export/raw_storage.dart';
-import 'package:key_budget/core/import_export/restore_service.dart';
-import 'package:key_budget/core/operations/session_context.dart';
-import 'package:key_budget/core/services/drive_service.dart';
-import 'package:key_budget/core/services/encryption_service.dart';
-import 'package:key_budget/core/time/app_clock.dart';
+import 'package:passfin/core/import_export/backup_codec.dart';
+import 'package:passfin/core/import_export/backup_crypto.dart';
+import 'package:passfin/core/import_export/backup_service.dart';
+import 'package:passfin/core/import_export/import_plan.dart';
+import 'package:passfin/core/import_export/operation_journal.dart';
+import 'package:passfin/core/import_export/raw_storage.dart';
+import 'package:passfin/core/import_export/restore_service.dart';
+import 'package:passfin/core/operations/session_context.dart';
+import 'package:passfin/core/services/drive_service.dart';
+import 'package:passfin/core/services/encryption_service.dart';
+import 'package:passfin/core/time/app_clock.dart';
 
 import '../../fixtures/legacy/legacy_fixtures.dart';
 

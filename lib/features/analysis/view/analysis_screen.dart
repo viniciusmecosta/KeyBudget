@@ -1,15 +1,15 @@
-import 'package:key_budget/core/design_system/widgets/app_loading_shimmer.dart';
-import 'package:key_budget/core/design_system/widgets/app_page_scaffold.dart';
+import 'package:passfin/core/design_system/widgets/app_loading_shimmer.dart';
+import 'package:passfin/core/design_system/widgets/app_page_scaffold.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
-import 'package:key_budget/app/utils/app_animations.dart';
-import 'package:key_budget/core/design_system/borders/app_borders.dart';
-import 'package:key_budget/core/design_system/spacing/app_spacing.dart';
-import 'package:key_budget/core/design_system/widgets/app_card.dart';
-import 'package:key_budget/core/services/csv_service.dart';
-import 'package:key_budget/core/services/pdf_service.dart';
-import 'package:key_budget/features/auth/viewmodel/auth_viewmodel.dart';
+import 'package:passfin/app/utils/app_animations.dart';
+import 'package:passfin/core/design_system/borders/app_borders.dart';
+import 'package:passfin/core/design_system/spacing/app_spacing.dart';
+import 'package:passfin/core/design_system/widgets/app_card.dart';
+import 'package:passfin/core/services/csv_service.dart';
+import 'package:passfin/core/services/pdf_service.dart';
+import 'package:passfin/features/auth/viewmodel/auth_viewmodel.dart';
 
 import '../viewmodel/analysis_viewmodel.dart';
 import '../widgets/analysis_stats_overview_widget.dart';

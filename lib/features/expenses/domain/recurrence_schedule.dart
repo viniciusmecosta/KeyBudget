@@ -1,4 +1,4 @@
-import 'package:key_budget/core/models/recurring_expense_model.dart';
+import 'package:passfin/core/models/recurring_expense_model.dart';
 
 class RecurrenceSchedule {
 

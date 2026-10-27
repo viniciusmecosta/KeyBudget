@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:key_budget/core/models/expense_category_model.dart';
-import 'package:key_budget/core/models/expense_model.dart';
-import 'package:key_budget/core/money/money.dart';
-import 'package:key_budget/features/category/repository/category_budget_repository.dart';
+import 'package:passfin/core/models/expense_category_model.dart';
+import 'package:passfin/core/models/expense_model.dart';
+import 'package:passfin/core/money/money.dart';
+import 'package:passfin/features/category/repository/category_budget_repository.dart';
 
 void main() {
   test('monthly overrides preserve legacy defaults and historical values', () {

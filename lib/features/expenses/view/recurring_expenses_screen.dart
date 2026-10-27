@@ -1,12 +1,12 @@
-import 'package:key_budget/app/utils/navigation_utils.dart';
-import 'package:key_budget/core/design_system/widgets/app_page_scaffold.dart';
+import 'package:passfin/app/utils/navigation_utils.dart';
+import 'package:passfin/core/design_system/widgets/app_page_scaffold.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:key_budget/app/widgets/empty_state_widget.dart';
-import 'package:key_budget/core/design_system/spacing/app_spacing.dart';
-import 'package:key_budget/features/expenses/view/add_edit_recurring_expense_screen.dart';
-import 'package:key_budget/features/expenses/viewmodel/expense_viewmodel.dart';
-import 'package:key_budget/features/expenses/widgets/recurring_expense_list_tile.dart';
+import 'package:passfin/app/widgets/empty_state_widget.dart';
+import 'package:passfin/core/design_system/spacing/app_spacing.dart';
+import 'package:passfin/features/expenses/view/add_edit_recurring_expense_screen.dart';
+import 'package:passfin/features/expenses/viewmodel/expense_viewmodel.dart';
+import 'package:passfin/features/expenses/widgets/recurring_expense_list_tile.dart';
 
 class RecurringExpensesScreen extends ConsumerWidget {
   const RecurringExpensesScreen({super.key});

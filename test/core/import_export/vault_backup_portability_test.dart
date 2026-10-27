@@ -2,12 +2,12 @@ import 'dart:convert';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:encrypt/encrypt.dart' as legacy;
 import 'package:flutter_test/flutter_test.dart';
-import 'package:key_budget/core/import_export/backup_service.dart';
-import 'package:key_budget/core/import_export/raw_storage.dart';
-import 'package:key_budget/core/import_export/restore_service.dart';
-import 'package:key_budget/core/operations/session_context.dart';
-import 'package:key_budget/core/security/vault_crypto.dart';
-import 'package:key_budget/core/services/encryption_service.dart';
+import 'package:passfin/core/import_export/backup_service.dart';
+import 'package:passfin/core/import_export/raw_storage.dart';
+import 'package:passfin/core/import_export/restore_service.dart';
+import 'package:passfin/core/operations/session_context.dart';
+import 'package:passfin/core/security/vault_crypto.dart';
+import 'package:passfin/core/services/encryption_service.dart';
 import '../../helpers/memory_secure_storage.dart';
 
 void main() {

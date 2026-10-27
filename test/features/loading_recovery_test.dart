@@ -1,18 +1,18 @@
 import 'dart:async';
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:key_budget/core/models/credential_model.dart';
-import 'package:key_budget/core/models/expense_category_model.dart';
-import 'package:key_budget/core/models/expense_model.dart';
-import 'package:key_budget/core/models/folder_model.dart';
-import 'package:key_budget/core/models/recurring_expense_model.dart';
-import 'package:key_budget/features/category/repository/category_repository.dart';
-import 'package:key_budget/features/category/viewmodel/category_viewmodel.dart';
-import 'package:key_budget/features/credentials/repository/credential_repository.dart';
-import 'package:key_budget/features/credentials/viewmodel/credential_viewmodel.dart';
-import 'package:key_budget/features/expenses/repository/expense_repository.dart';
-import 'package:key_budget/features/expenses/repository/recurring_expense_repository.dart';
-import 'package:key_budget/features/expenses/viewmodel/expense_viewmodel.dart';
+import 'package:passfin/core/models/credential_model.dart';
+import 'package:passfin/core/models/expense_category_model.dart';
+import 'package:passfin/core/models/expense_model.dart';
+import 'package:passfin/core/models/folder_model.dart';
+import 'package:passfin/core/models/recurring_expense_model.dart';
+import 'package:passfin/features/category/repository/category_repository.dart';
+import 'package:passfin/features/category/viewmodel/category_viewmodel.dart';
+import 'package:passfin/features/credentials/repository/credential_repository.dart';
+import 'package:passfin/features/credentials/viewmodel/credential_viewmodel.dart';
+import 'package:passfin/features/expenses/repository/expense_repository.dart';
+import 'package:passfin/features/expenses/repository/recurring_expense_repository.dart';
+import 'package:passfin/features/expenses/viewmodel/expense_viewmodel.dart';
 
 class _RecoveringExpenseRepository extends ExpenseRepository {
   int calls = 0;

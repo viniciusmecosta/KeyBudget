@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/legacy.dart';
-import 'package:key_budget/core/models/expense_model.dart';
-import 'package:key_budget/core/money/money.dart';
-import 'package:key_budget/features/category/viewmodel/category_viewmodel.dart';
-import 'package:key_budget/features/credentials/viewmodel/credential_viewmodel.dart';
-import 'package:key_budget/features/expenses/viewmodel/expense_viewmodel.dart';
+import 'package:passfin/core/models/expense_model.dart';
+import 'package:passfin/core/money/money.dart';
+import 'package:passfin/features/category/viewmodel/category_viewmodel.dart';
+import 'package:passfin/features/credentials/viewmodel/credential_viewmodel.dart';
+import 'package:passfin/features/expenses/viewmodel/expense_viewmodel.dart';
 
 class DashboardViewModel extends ChangeNotifier {
   CategoryViewModel categoryViewModel;

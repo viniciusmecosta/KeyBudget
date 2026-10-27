@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:key_budget/core/design_system/widgets/app_loading_shimmer.dart';
+import 'package:passfin/core/design_system/widgets/app_loading_shimmer.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:key_budget/core/design_system/borders/app_borders.dart';
-import 'package:key_budget/core/design_system/spacing/app_spacing.dart';
-import 'package:key_budget/features/auth/viewmodel/auth_viewmodel.dart';
+import 'package:passfin/core/design_system/borders/app_borders.dart';
+import 'package:passfin/core/design_system/spacing/app_spacing.dart';
+import 'package:passfin/features/auth/viewmodel/auth_viewmodel.dart';
 
 class DashboardSkeleton extends ConsumerWidget {
   final bool? enableIncomesOverride;

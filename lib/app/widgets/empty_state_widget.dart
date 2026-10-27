@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:key_budget/core/design_system/widgets/app_feedback_panel.dart';
+import 'package:passfin/core/design_system/widgets/app_feedback_panel.dart';
 
 class EmptyStateWidget extends ConsumerWidget {
   final IconData icon;

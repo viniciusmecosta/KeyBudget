@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:key_budget/core/constants/app_icons.dart';
+import 'package:passfin/core/constants/app_icons.dart';
 
 class IconPickerWidget extends ConsumerStatefulWidget {
   final Color? selectedColor;

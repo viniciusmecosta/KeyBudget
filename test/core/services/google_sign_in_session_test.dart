@@ -2,7 +2,7 @@ import 'dart:async';
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:google_sign_in/google_sign_in.dart';
-import 'package:key_budget/core/services/google_sign_in_session.dart';
+import 'package:passfin/core/services/google_sign_in_session.dart';
 
 class _RecordingGoogleSignIn extends Fake implements GoogleSignIn {
   int initializationCount = 0;

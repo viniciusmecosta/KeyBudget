@@ -1,9 +1,9 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:key_budget/core/models/credential_model.dart';
-import 'package:key_budget/core/models/document_model.dart';
-import 'package:key_budget/core/models/expense_model.dart';
-import 'package:key_budget/core/models/supplier_model.dart';
-import 'package:key_budget/features/search/domain/global_search_index.dart';
+import 'package:passfin/core/models/credential_model.dart';
+import 'package:passfin/core/models/document_model.dart';
+import 'package:passfin/core/models/expense_model.dart';
+import 'package:passfin/core/models/supplier_model.dart';
+import 'package:passfin/features/search/domain/global_search_index.dart';
 
 void main() {
   final expenses = [

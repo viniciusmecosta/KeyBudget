@@ -1,25 +1,25 @@
-import 'package:key_budget/app/utils/navigation_utils.dart';
+import 'package:passfin/app/utils/navigation_utils.dart';
 import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:key_budget/core/import_export/automatic_backup_service.dart';
-import 'package:key_budget/core/services/app_lock_service.dart';
-import 'package:key_budget/app/navigation/app_destination.dart';
-import 'package:key_budget/app/viewmodel/navigation_viewmodel.dart';
-import 'package:key_budget/app/widgets/main_bottom_navigation_bar.dart';
-import 'package:key_budget/app/widgets/responsive_center.dart';
-import 'package:key_budget/app/widgets/tab_selection_transition.dart';
-import 'package:key_budget/features/auth/viewmodel/auth_viewmodel.dart';
-import 'package:key_budget/features/credentials/view/credentials_screen.dart';
-import 'package:key_budget/features/dashboard/view/dashboard_screen.dart';
-import 'package:key_budget/features/documents/view/documents_screen.dart';
-import 'package:key_budget/features/documents/viewmodel/document_viewmodel.dart';
-import 'package:key_budget/features/expenses/view/expenses_screen.dart';
-import 'package:key_budget/features/expenses/viewmodel/expense_viewmodel.dart';
-import 'package:key_budget/features/suppliers/view/suppliers_screen.dart';
-import 'package:key_budget/features/trash/repository/trash_repository.dart';
-import 'package:key_budget/features/user/view/user_screen.dart';
+import 'package:passfin/core/import_export/automatic_backup_service.dart';
+import 'package:passfin/core/services/app_lock_service.dart';
+import 'package:passfin/app/navigation/app_destination.dart';
+import 'package:passfin/app/viewmodel/navigation_viewmodel.dart';
+import 'package:passfin/app/widgets/main_bottom_navigation_bar.dart';
+import 'package:passfin/app/widgets/responsive_center.dart';
+import 'package:passfin/app/widgets/tab_selection_transition.dart';
+import 'package:passfin/features/auth/viewmodel/auth_viewmodel.dart';
+import 'package:passfin/features/credentials/view/credentials_screen.dart';
+import 'package:passfin/features/dashboard/view/dashboard_screen.dart';
+import 'package:passfin/features/documents/view/documents_screen.dart';
+import 'package:passfin/features/documents/viewmodel/document_viewmodel.dart';
+import 'package:passfin/features/expenses/view/expenses_screen.dart';
+import 'package:passfin/features/expenses/viewmodel/expense_viewmodel.dart';
+import 'package:passfin/features/suppliers/view/suppliers_screen.dart';
+import 'package:passfin/features/trash/repository/trash_repository.dart';
+import 'package:passfin/features/user/view/user_screen.dart';
 
 class MainScreen extends ConsumerStatefulWidget {
   const MainScreen({super.key});

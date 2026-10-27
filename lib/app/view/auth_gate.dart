@@ -1,11 +1,11 @@
-import 'package:key_budget/core/design_system/widgets/app_page_scaffold.dart';
+import 'package:passfin/core/design_system/widgets/app_page_scaffold.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:key_budget/app/view/main_screen.dart';
-import 'package:key_budget/core/services/app_lock_service.dart';
-import 'package:key_budget/features/auth/view/login_screen.dart';
-import 'package:key_budget/features/auth/viewmodel/auth_viewmodel.dart';
-import 'package:key_budget/features/dashboard/widgets/dashboard_skeleton.dart';
+import 'package:passfin/app/view/main_screen.dart';
+import 'package:passfin/core/services/app_lock_service.dart';
+import 'package:passfin/features/auth/view/login_screen.dart';
+import 'package:passfin/features/auth/viewmodel/auth_viewmodel.dart';
+import 'package:passfin/features/dashboard/widgets/dashboard_skeleton.dart';
 
 enum AuthStatus { pending, success, failed }
 

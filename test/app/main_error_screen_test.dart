@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:key_budget/main.dart';
+import 'package:passfin/main.dart';
 
 void main() {
   testWidgets('startup error offers a safe retry', (tester) async {

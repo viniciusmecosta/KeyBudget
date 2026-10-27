@@ -2,8 +2,8 @@ import 'dart:async';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:firebase_core/firebase_core.dart';
 import '../../helpers/memory_secure_storage.dart';
-import 'package:key_budget/core/security/vault_session.dart';
-import 'package:key_budget/core/security/vault_key_repository.dart';
+import 'package:passfin/core/security/vault_session.dart';
+import 'package:passfin/core/security/vault_key_repository.dart';
 import 'memory_vault_store.dart';
 
 class _DelayedStore extends MemoryVaultStore {

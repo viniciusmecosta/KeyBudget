@@ -1,20 +1,20 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:key_budget/core/design_system/widgets/app_text_field.dart';
-import 'package:key_budget/core/models/supplier_model.dart';
-import 'package:key_budget/core/models/user_model.dart';
-import 'package:key_budget/features/auth/repository/auth_repository.dart';
-import 'package:key_budget/features/auth/viewmodel/auth_viewmodel.dart';
-import 'package:key_budget/features/credentials/repository/credential_repository.dart';
-import 'package:key_budget/features/credentials/viewmodel/credential_viewmodel.dart';
-import 'package:key_budget/features/credentials/widgets/saved_logos_screen.dart';
-import 'package:key_budget/features/suppliers/repository/supplier_repository.dart';
-import 'package:key_budget/features/suppliers/view/add_supplier_screen.dart';
-import 'package:key_budget/features/suppliers/view/suppliers_screen.dart';
-import 'package:key_budget/features/suppliers/viewmodel/supplier_viewmodel.dart';
-import 'package:key_budget/features/suppliers/widgets/supplier_form.dart';
-import 'package:key_budget/features/suppliers/widgets/supplier_preview_panel.dart';
+import 'package:passfin/core/design_system/widgets/app_text_field.dart';
+import 'package:passfin/core/models/supplier_model.dart';
+import 'package:passfin/core/models/user_model.dart';
+import 'package:passfin/features/auth/repository/auth_repository.dart';
+import 'package:passfin/features/auth/viewmodel/auth_viewmodel.dart';
+import 'package:passfin/features/credentials/repository/credential_repository.dart';
+import 'package:passfin/features/credentials/viewmodel/credential_viewmodel.dart';
+import 'package:passfin/features/credentials/widgets/saved_logos_screen.dart';
+import 'package:passfin/features/suppliers/repository/supplier_repository.dart';
+import 'package:passfin/features/suppliers/view/add_supplier_screen.dart';
+import 'package:passfin/features/suppliers/view/suppliers_screen.dart';
+import 'package:passfin/features/suppliers/viewmodel/supplier_viewmodel.dart';
+import 'package:passfin/features/suppliers/widgets/supplier_form.dart';
+import 'package:passfin/features/suppliers/widgets/supplier_preview_panel.dart';
 
 class FakeSupplierRepository extends Fake implements SupplierRepository {}
 

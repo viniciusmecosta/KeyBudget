@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:key_budget/app/navigation/app_destination.dart';
-import 'package:key_budget/app/viewmodel/navigation_viewmodel.dart';
-import 'package:key_budget/core/design_system/borders/app_borders.dart';
-import 'package:key_budget/features/auth/viewmodel/auth_viewmodel.dart';
+import 'package:passfin/app/navigation/app_destination.dart';
+import 'package:passfin/app/viewmodel/navigation_viewmodel.dart';
+import 'package:passfin/core/design_system/borders/app_borders.dart';
+import 'package:passfin/features/auth/viewmodel/auth_viewmodel.dart';
 
 class MainBottomNavigationBar extends ConsumerWidget {
   const MainBottomNavigationBar({super.key});

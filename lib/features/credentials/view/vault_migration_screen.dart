@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:key_budget/core/design_system/widgets/app_button.dart';
-import 'package:key_budget/core/design_system/widgets/app_page_scaffold.dart';
-import 'package:key_budget/core/security/vault_crypto.dart';
-import 'package:key_budget/core/security/vault_session.dart';
-import 'package:key_budget/features/credentials/application/vault_migration_service.dart';
+import 'package:passfin/core/design_system/widgets/app_button.dart';
+import 'package:passfin/core/design_system/widgets/app_page_scaffold.dart';
+import 'package:passfin/core/security/vault_crypto.dart';
+import 'package:passfin/core/security/vault_session.dart';
+import 'package:passfin/features/credentials/application/vault_migration_service.dart';
 
 class VaultMigrationScreen extends ConsumerStatefulWidget {
   const VaultMigrationScreen({super.key});

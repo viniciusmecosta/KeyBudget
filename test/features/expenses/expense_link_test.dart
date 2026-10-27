@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:key_budget/core/models/expense_model.dart';
+import 'package:passfin/core/models/expense_model.dart';
 
 void main() {
   test(

@@ -1,13 +1,13 @@
-import 'package:key_budget/core/design_system/widgets/app_card.dart';
-import 'package:key_budget/core/design_system/widgets/app_page_scaffold.dart';
+import 'package:passfin/core/design_system/widgets/app_card.dart';
+import 'package:passfin/core/design_system/widgets/app_page_scaffold.dart';
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:key_budget/app/utils/app_animations.dart';
-import 'package:key_budget/features/credentials/viewmodel/credential_viewmodel.dart';
+import 'package:passfin/app/utils/app_animations.dart';
+import 'package:passfin/features/credentials/viewmodel/credential_viewmodel.dart';
 
-import 'package:key_budget/features/suppliers/viewmodel/supplier_viewmodel.dart';
+import 'package:passfin/features/suppliers/viewmodel/supplier_viewmodel.dart';
 
 class SavedLogosScreen extends ConsumerWidget {
   final bool isForSuppliers;

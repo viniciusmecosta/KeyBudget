@@ -1,6 +1,6 @@
 import 'dart:convert';
 import 'package:flutter/services.dart';
-import 'package:key_budget/core/operations/operation_result.dart';
+import 'package:passfin/core/operations/operation_result.dart';
 import 'csv_import_parser.dart';
 
 class LegacyImportAdapters {

@@ -1,4 +1,4 @@
-import 'package:key_budget/core/time/date_range.dart';
+import 'package:passfin/core/time/date_range.dart';
 
 class AnalysisQuery {
   final DateRange range;

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:key_budget/core/design_system/borders/app_borders.dart';
-import 'package:key_budget/core/design_system/colors/app_contrast.dart';
-import 'package:key_budget/core/design_system/spacing/app_spacing.dart';
+import 'package:passfin/core/design_system/borders/app_borders.dart';
+import 'package:passfin/core/design_system/colors/app_contrast.dart';
+import 'package:passfin/core/design_system/spacing/app_spacing.dart';
 
 enum AppButtonVariant { primary, secondary, outline, ghost, destructive }
 

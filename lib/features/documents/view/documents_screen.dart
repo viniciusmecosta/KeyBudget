@@ -1,20 +1,20 @@
-import 'package:key_budget/core/design_system/widgets/app_loading_shimmer.dart';
-import 'package:key_budget/core/design_system/widgets/app_page_scaffold.dart';
+import 'package:passfin/core/design_system/widgets/app_loading_shimmer.dart';
+import 'package:passfin/core/design_system/widgets/app_page_scaffold.dart';
 import 'package:flutter/material.dart';
-import 'package:key_budget/app/utils/app_animations.dart';
+import 'package:passfin/app/utils/app_animations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:key_budget/app/config/app_theme.dart';
-import 'package:key_budget/app/utils/navigation_utils.dart';
-import 'package:key_budget/app/widgets/animated_item_sliver.dart';
-import 'package:key_budget/app/widgets/empty_state_widget.dart';
-import 'package:key_budget/app/widgets/responsive_center.dart';
-import 'package:key_budget/core/design_system/borders/app_borders.dart';
-import 'package:key_budget/core/design_system/spacing/app_spacing.dart';
-import 'package:key_budget/core/design_system/widgets/app_search_field.dart';
-import 'package:key_budget/core/design_system/widgets/app_feedback_panel.dart';
-import 'package:key_budget/features/auth/viewmodel/auth_viewmodel.dart';
-import 'package:key_budget/features/documents/view/add_document_screen.dart';
-import 'package:key_budget/features/documents/viewmodel/document_viewmodel.dart';
+import 'package:passfin/app/config/app_theme.dart';
+import 'package:passfin/app/utils/navigation_utils.dart';
+import 'package:passfin/app/widgets/animated_item_sliver.dart';
+import 'package:passfin/app/widgets/empty_state_widget.dart';
+import 'package:passfin/app/widgets/responsive_center.dart';
+import 'package:passfin/core/design_system/borders/app_borders.dart';
+import 'package:passfin/core/design_system/spacing/app_spacing.dart';
+import 'package:passfin/core/design_system/widgets/app_search_field.dart';
+import 'package:passfin/core/design_system/widgets/app_feedback_panel.dart';
+import 'package:passfin/features/auth/viewmodel/auth_viewmodel.dart';
+import 'package:passfin/features/documents/view/add_document_screen.dart';
+import 'package:passfin/features/documents/viewmodel/document_viewmodel.dart';
 
 import '../widgets/document_list_tile.dart';
 

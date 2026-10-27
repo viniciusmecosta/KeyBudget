@@ -1,5 +1,5 @@
-import 'package:key_budget/core/models/expense_model.dart';
-import 'package:key_budget/core/money/money.dart';
+import 'package:passfin/core/models/expense_model.dart';
+import 'package:passfin/core/money/money.dart';
 
 class InstallmentCalculationResult {
   final String groupId;

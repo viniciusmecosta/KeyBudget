@@ -1,7 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:key_budget/core/models/expense_model.dart';
-import 'package:key_budget/features/expenses/repository/expense_repository.dart';
+import 'package:passfin/core/models/expense_model.dart';
+import 'package:passfin/features/expenses/repository/expense_repository.dart';
 
 class _PagedRepository extends ExpenseRepository {
   int requests = 0;

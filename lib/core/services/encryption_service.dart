@@ -1,4 +1,4 @@
-import 'package:key_budget/core/security/vault_crypto.dart';
+import 'package:passfin/core/security/vault_crypto.dart';
 
 class EncryptionService {
   final VaultCipher? cipher;

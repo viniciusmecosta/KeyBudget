@@ -1,16 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:key_budget/core/design_system/widgets/app_status_badge.dart';
-import 'package:key_budget/core/models/credential_model.dart';
-import 'package:key_budget/core/models/document_model.dart';
-import 'package:key_budget/core/services/encryption_service.dart';
-import 'package:key_budget/core/security/vault_crypto.dart';
-import 'package:key_budget/features/credentials/viewmodel/credential_viewmodel.dart';
-import 'package:key_budget/features/credentials/view/credential_detail_screen.dart';
-import 'package:key_budget/features/credentials/widgets/credential_list_tile.dart';
-import 'package:key_budget/features/documents/utils/document_expiry_helper.dart';
-import 'package:key_budget/features/documents/widgets/document_list_tile.dart';
+import 'package:passfin/core/design_system/widgets/app_status_badge.dart';
+import 'package:passfin/core/models/credential_model.dart';
+import 'package:passfin/core/models/document_model.dart';
+import 'package:passfin/core/services/encryption_service.dart';
+import 'package:passfin/core/security/vault_crypto.dart';
+import 'package:passfin/features/credentials/viewmodel/credential_viewmodel.dart';
+import 'package:passfin/features/credentials/view/credential_detail_screen.dart';
+import 'package:passfin/features/credentials/widgets/credential_list_tile.dart';
+import 'package:passfin/features/documents/utils/document_expiry_helper.dart';
+import 'package:passfin/features/documents/widgets/document_list_tile.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();

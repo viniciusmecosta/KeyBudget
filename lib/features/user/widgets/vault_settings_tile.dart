@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:key_budget/app/utils/navigation_utils.dart';
-import 'package:key_budget/core/security/vault_session.dart';
-import 'package:key_budget/features/credentials/view/vault_migration_screen.dart';
+import 'package:passfin/app/utils/navigation_utils.dart';
+import 'package:passfin/core/security/vault_session.dart';
+import 'package:passfin/features/credentials/view/vault_migration_screen.dart';
 import 'settings_tile.dart';
 
 class VaultSettingsTile extends ConsumerWidget {

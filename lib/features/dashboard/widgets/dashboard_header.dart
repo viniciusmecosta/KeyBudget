@@ -3,10 +3,10 @@ import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:key_budget/app/navigation/app_destination.dart';
-import 'package:key_budget/app/viewmodel/navigation_viewmodel.dart';
-import 'package:key_budget/core/design_system/spacing/app_spacing.dart';
-import 'package:key_budget/features/auth/viewmodel/auth_viewmodel.dart';
+import 'package:passfin/app/navigation/app_destination.dart';
+import 'package:passfin/app/viewmodel/navigation_viewmodel.dart';
+import 'package:passfin/core/design_system/spacing/app_spacing.dart';
+import 'package:passfin/features/auth/viewmodel/auth_viewmodel.dart';
 
 class DashboardHeader extends ConsumerWidget implements PreferredSizeWidget {
   const DashboardHeader({

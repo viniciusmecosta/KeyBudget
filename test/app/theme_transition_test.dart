@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:key_budget/app/config/app_theme.dart';
+import 'package:passfin/app/config/app_theme.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:key_budget/app/utils/app_animations.dart';
+import 'package:passfin/app/utils/app_animations.dart';
 
 void main() {
   for (final reduced in [false, true]) {

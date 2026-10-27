@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:key_budget/core/design_system/widgets/app_text_field.dart';
-import 'package:key_budget/core/models/document_model.dart';
-import 'package:key_budget/features/documents/view/edit_document_screen.dart';
-import 'package:key_budget/features/documents/widgets/document_form.dart';
+import 'package:passfin/core/design_system/widgets/app_text_field.dart';
+import 'package:passfin/core/models/document_model.dart';
+import 'package:passfin/features/documents/view/edit_document_screen.dart';
+import 'package:passfin/features/documents/widgets/document_form.dart';
 
 void main() {
   testWidgets('removing an additional field preserves the next field values', (

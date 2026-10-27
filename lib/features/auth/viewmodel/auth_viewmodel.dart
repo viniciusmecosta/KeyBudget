@@ -4,21 +4,21 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/legacy.dart';
 import 'package:google_sign_in/google_sign_in.dart';
-import 'package:key_budget/app/viewmodel/navigation_viewmodel.dart';
-import 'package:key_budget/core/models/user_model.dart';
-import 'package:key_budget/core/operations/operation_result.dart';
-import 'package:key_budget/core/security/vault_session.dart';
-import 'package:key_budget/core/services/app_security_service.dart';
-import 'package:key_budget/core/services/home_widget_service.dart';
-import 'package:key_budget/core/services/local_auth_service.dart';
-import 'package:key_budget/core/services/notification_service.dart';
-import 'package:key_budget/features/auth/repository/auth_repository.dart';
-import 'package:key_budget/features/category/viewmodel/category_viewmodel.dart';
-import 'package:key_budget/features/credentials/viewmodel/credential_viewmodel.dart';
-import 'package:key_budget/features/dashboard/viewmodel/dashboard_viewmodel.dart';
-import 'package:key_budget/features/documents/viewmodel/document_viewmodel.dart';
-import 'package:key_budget/features/expenses/viewmodel/expense_viewmodel.dart';
-import 'package:key_budget/features/suppliers/viewmodel/supplier_viewmodel.dart';
+import 'package:passfin/app/viewmodel/navigation_viewmodel.dart';
+import 'package:passfin/core/models/user_model.dart';
+import 'package:passfin/core/operations/operation_result.dart';
+import 'package:passfin/core/security/vault_session.dart';
+import 'package:passfin/core/services/app_security_service.dart';
+import 'package:passfin/core/services/home_widget_service.dart';
+import 'package:passfin/core/services/local_auth_service.dart';
+import 'package:passfin/core/services/notification_service.dart';
+import 'package:passfin/features/auth/repository/auth_repository.dart';
+import 'package:passfin/features/category/viewmodel/category_viewmodel.dart';
+import 'package:passfin/features/credentials/viewmodel/credential_viewmodel.dart';
+import 'package:passfin/features/dashboard/viewmodel/dashboard_viewmodel.dart';
+import 'package:passfin/features/documents/viewmodel/document_viewmodel.dart';
+import 'package:passfin/features/expenses/viewmodel/expense_viewmodel.dart';
+import 'package:passfin/features/suppliers/viewmodel/supplier_viewmodel.dart';
 
 enum AuthOperation {
   none,

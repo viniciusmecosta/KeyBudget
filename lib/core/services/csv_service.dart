@@ -5,13 +5,13 @@ import 'package:csv/csv.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import 'package:key_budget/core/models/credential_model.dart';
-import 'package:key_budget/core/models/expense_category_model.dart';
-import 'package:key_budget/core/models/expense_model.dart';
-import 'package:key_budget/core/models/recurring_expense_model.dart';
-import 'package:key_budget/core/services/snackbar_service.dart';
-import 'package:key_budget/features/analysis/domain/analysis_snapshot.dart';
-import 'package:key_budget/features/analysis/viewmodel/analysis_viewmodel.dart';
+import 'package:passfin/core/models/credential_model.dart';
+import 'package:passfin/core/models/expense_category_model.dart';
+import 'package:passfin/core/models/expense_model.dart';
+import 'package:passfin/core/models/recurring_expense_model.dart';
+import 'package:passfin/core/services/snackbar_service.dart';
+import 'package:passfin/features/analysis/domain/analysis_snapshot.dart';
+import 'package:passfin/features/analysis/viewmodel/analysis_viewmodel.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
 
@@ -117,7 +117,7 @@ class CsvService {
     String Function(Credential) decrypt,
   ) async {
     String csvStr = generateCredentialsCsvString(credentials, decrypt);
-    return _saveCsvFile(context, 'keybudget_credentials', csvStr);
+    return _saveCsvFile(context, 'passfin_credentials', csvStr);
   }
 
   Future<bool> exportExpenses(
@@ -125,7 +125,7 @@ class CsvService {
     List<Expense> expenses,
   ) async {
     String csvStr = generateExpensesCsvString(expenses);
-    return _saveCsvFile(context, 'keybudget_expenses', csvStr);
+    return _saveCsvFile(context, 'passfin_expenses', csvStr);
   }
 
   Future<File?> pickCsvFile() => _pickCsvFile();
@@ -202,7 +202,7 @@ class CsvService {
   }) async {
     final snap = snapshot ?? viewModel.currentSnapshot;
     final csvStr = generateAnalysisCsvContent(snap);
-    return _saveCsvFile(context, 'keybudget_analise', csvStr);
+    return _saveCsvFile(context, 'passfin_analise', csvStr);
   }
 
   String generateAnalysisCsvContent(AnalysisSnapshot snap) {

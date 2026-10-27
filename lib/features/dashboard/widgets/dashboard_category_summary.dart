@@ -2,8 +2,8 @@ import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
-import 'package:key_budget/core/design_system/widgets/app_card.dart';
-import 'package:key_budget/features/dashboard/viewmodel/dashboard_viewmodel.dart';
+import 'package:passfin/core/design_system/widgets/app_card.dart';
+import 'package:passfin/features/dashboard/viewmodel/dashboard_viewmodel.dart';
 
 /// Uses the dashboard's existing data, without another database subscription.
 class DashboardCategorySummary extends ConsumerStatefulWidget {

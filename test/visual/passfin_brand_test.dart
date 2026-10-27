@@ -6,10 +6,10 @@ import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:key_budget/app/config/app_theme.dart';
-import 'package:key_budget/core/design_system/widgets/passfin_brand.dart';
-import 'package:key_budget/features/auth/view/login_screen.dart';
-import 'package:key_budget/features/auth/viewmodel/auth_viewmodel.dart';
+import 'package:passfin/app/config/app_theme.dart';
+import 'package:passfin/core/design_system/widgets/passfin_brand.dart';
+import 'package:passfin/features/auth/view/login_screen.dart';
+import 'package:passfin/features/auth/viewmodel/auth_viewmodel.dart';
 
 import '../features/auth/auth_test.dart' show FakeAuthRepository;
 

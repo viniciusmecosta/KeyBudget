@@ -2,18 +2,18 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:intl/date_symbol_data_local.dart';
-import 'package:key_budget/core/models/expense_category_model.dart';
-import 'package:key_budget/core/models/expense_model.dart';
-import 'package:key_budget/core/models/user_model.dart';
-import 'package:key_budget/features/analysis/view/analysis_screen.dart';
-import 'package:key_budget/features/analysis/viewmodel/analysis_viewmodel.dart';
-import 'package:key_budget/features/analysis/widgets/category_analysis_section_widget.dart';
-import 'package:key_budget/features/analysis/widgets/monthly_trend_section_widget.dart';
-import 'package:key_budget/features/auth/repository/auth_repository.dart';
-import 'package:key_budget/features/auth/viewmodel/auth_viewmodel.dart';
-import 'package:key_budget/features/category/viewmodel/category_viewmodel.dart';
-import 'package:key_budget/features/expenses/repository/expense_repository.dart';
-import 'package:key_budget/features/expenses/viewmodel/expense_viewmodel.dart';
+import 'package:passfin/core/models/expense_category_model.dart';
+import 'package:passfin/core/models/expense_model.dart';
+import 'package:passfin/core/models/user_model.dart';
+import 'package:passfin/features/analysis/view/analysis_screen.dart';
+import 'package:passfin/features/analysis/viewmodel/analysis_viewmodel.dart';
+import 'package:passfin/features/analysis/widgets/category_analysis_section_widget.dart';
+import 'package:passfin/features/analysis/widgets/monthly_trend_section_widget.dart';
+import 'package:passfin/features/auth/repository/auth_repository.dart';
+import 'package:passfin/features/auth/viewmodel/auth_viewmodel.dart';
+import 'package:passfin/features/category/viewmodel/category_viewmodel.dart';
+import 'package:passfin/features/expenses/repository/expense_repository.dart';
+import 'package:passfin/features/expenses/viewmodel/expense_viewmodel.dart';
 
 class FakeAuthRepo extends Fake implements AuthRepository {}
 

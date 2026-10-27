@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:key_budget/features/trash/repository/trash_repository.dart';
+import 'package:passfin/features/trash/repository/trash_repository.dart';
 
 void main() {
   test('trash entry remains restorable until the 30-day deadline', () {

@@ -1,14 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:key_budget/app/utils/navigation_utils.dart';
-import 'package:key_budget/core/design_system/borders/app_borders.dart';
-import 'package:key_budget/core/design_system/spacing/app_spacing.dart';
-import 'package:key_budget/core/services/app_lock_service.dart';
-import 'package:key_budget/core/services/snackbar_service.dart';
-import 'package:key_budget/features/auth/viewmodel/auth_viewmodel.dart';
-import 'package:key_budget/features/expenses/view/export_expenses_screen.dart';
-import 'package:key_budget/features/expenses/view/recurring_expenses_screen.dart';
-import 'package:key_budget/features/expenses/viewmodel/expense_viewmodel.dart';
+import 'package:passfin/app/utils/navigation_utils.dart';
+import 'package:passfin/core/design_system/borders/app_borders.dart';
+import 'package:passfin/core/design_system/spacing/app_spacing.dart';
+import 'package:passfin/core/services/app_lock_service.dart';
+import 'package:passfin/core/services/snackbar_service.dart';
+import 'package:passfin/features/auth/viewmodel/auth_viewmodel.dart';
+import 'package:passfin/features/expenses/view/export_expenses_screen.dart';
+import 'package:passfin/features/expenses/view/recurring_expenses_screen.dart';
+import 'package:passfin/features/expenses/viewmodel/expense_viewmodel.dart';
 
 class ExpenseActionsPopupMenu extends ConsumerWidget {
   const ExpenseActionsPopupMenu({super.key});

@@ -1,7 +1,7 @@
-import 'package:key_budget/core/design_system/surfaces/app_surfaces.dart';
+import 'package:passfin/core/design_system/surfaces/app_surfaces.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:key_budget/app/config/app_theme.dart';
+import 'package:passfin/app/config/app_theme.dart';
 
 class EmptyChartStateWidget extends ConsumerWidget {
   final String message;

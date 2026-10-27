@@ -1,11 +1,11 @@
 import 'dart:convert';
 import 'package:crypto/crypto.dart';
-import 'package:key_budget/core/models/credential_model.dart';
-import 'package:key_budget/core/models/expense_category_model.dart';
-import 'package:key_budget/core/models/expense_model.dart';
-import 'package:key_budget/core/models/recurring_expense_model.dart';
-import 'package:key_budget/core/money/money.dart';
-import 'package:key_budget/core/money/money_parser.dart';
+import 'package:passfin/core/models/credential_model.dart';
+import 'package:passfin/core/models/expense_category_model.dart';
+import 'package:passfin/core/models/expense_model.dart';
+import 'package:passfin/core/models/recurring_expense_model.dart';
+import 'package:passfin/core/money/money.dart';
+import 'package:passfin/core/money/money_parser.dart';
 import 'csv_import_parser.dart';
 
 enum ImportRowStatus {

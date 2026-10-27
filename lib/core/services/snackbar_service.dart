@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:key_budget/app/config/app_theme.dart';
+import 'package:passfin/app/config/app_theme.dart';
 
 class SnackbarService {
   static const Duration _defaultDuration = Duration(seconds: 3);

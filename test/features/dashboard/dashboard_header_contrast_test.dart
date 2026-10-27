@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:key_budget/app/config/app_theme.dart';
-import 'package:key_budget/core/design_system/colors/app_contrast.dart';
+import 'package:passfin/app/config/app_theme.dart';
+import 'package:passfin/core/design_system/colors/app_contrast.dart';
 
 void main() {
   test(

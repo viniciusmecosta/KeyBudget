@@ -1,7 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:key_budget/core/models/expense_model.dart';
-import 'package:key_budget/features/dashboard/domain/dashboard_insights.dart';
-import 'package:key_budget/features/dashboard/repository/dashboard_layout_repository.dart';
+import 'package:passfin/core/models/expense_model.dart';
+import 'package:passfin/features/dashboard/domain/dashboard_insights.dart';
+import 'package:passfin/features/dashboard/repository/dashboard_layout_repository.dart';
 
 void main() {
   test('separates realized, future and income with exact cents', () {

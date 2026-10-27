@@ -1,9 +1,9 @@
 import 'dart:convert';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:key_budget/core/models/expense_model.dart';
-import 'package:key_budget/core/services/home_widget_service.dart';
-import 'package:key_budget/core/services/home_widget_snapshot.dart';
+import 'package:passfin/core/models/expense_model.dart';
+import 'package:passfin/core/services/home_widget_service.dart';
+import 'package:passfin/core/services/home_widget_snapshot.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();

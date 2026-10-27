@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:key_budget/app/config/app_theme.dart';
-import 'package:key_budget/app/navigation/app_destination.dart';
-import 'package:key_budget/app/viewmodel/navigation_viewmodel.dart';
-import 'package:key_budget/app/widgets/main_bottom_navigation_bar.dart';
-import 'package:key_budget/core/models/user_model.dart';
-import 'package:key_budget/features/auth/repository/auth_repository.dart';
-import 'package:key_budget/features/auth/viewmodel/auth_viewmodel.dart';
+import 'package:passfin/app/config/app_theme.dart';
+import 'package:passfin/app/navigation/app_destination.dart';
+import 'package:passfin/app/viewmodel/navigation_viewmodel.dart';
+import 'package:passfin/app/widgets/main_bottom_navigation_bar.dart';
+import 'package:passfin/core/models/user_model.dart';
+import 'package:passfin/features/auth/repository/auth_repository.dart';
+import 'package:passfin/features/auth/viewmodel/auth_viewmodel.dart';
 
 class FakeAuthRepo extends Fake implements AuthRepository {}
 

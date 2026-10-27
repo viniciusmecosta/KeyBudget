@@ -1,12 +1,12 @@
 import 'dart:async';
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:key_budget/core/models/document_model.dart';
-import 'package:key_budget/core/models/supplier_model.dart';
-import 'package:key_budget/features/documents/repository/document_repository.dart';
-import 'package:key_budget/features/documents/viewmodel/document_viewmodel.dart';
-import 'package:key_budget/features/suppliers/repository/supplier_repository.dart';
-import 'package:key_budget/features/suppliers/viewmodel/supplier_viewmodel.dart';
+import 'package:passfin/core/models/document_model.dart';
+import 'package:passfin/core/models/supplier_model.dart';
+import 'package:passfin/features/documents/repository/document_repository.dart';
+import 'package:passfin/features/documents/viewmodel/document_viewmodel.dart';
+import 'package:passfin/features/suppliers/repository/supplier_repository.dart';
+import 'package:passfin/features/suppliers/viewmodel/supplier_viewmodel.dart';
 
 class _DocumentRepository extends DocumentRepository {
   final streams = <String, StreamController<List<Document>>>{};

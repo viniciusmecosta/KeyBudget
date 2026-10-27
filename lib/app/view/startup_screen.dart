@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:key_budget/core/design_system/widgets/passfin_brand.dart';
+import 'package:passfin/core/design_system/widgets/passfin_brand.dart';
 
 /// Continues the native splash while application services initialize.
 /// There is no artificial delay; startup ends as soon as the app is ready.

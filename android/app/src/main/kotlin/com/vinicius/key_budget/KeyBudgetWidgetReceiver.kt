@@ -208,12 +208,12 @@ open class KeyBudgetWidgetReceiver : HomeWidgetProvider() {
         val openApp = HomeWidgetLaunchIntent.getActivity(
             context,
             MainActivity::class.java,
-            Uri.parse("keybudget://dashboard"),
+            Uri.parse("passfin://dashboard"),
         )
         val addExpense = HomeWidgetLaunchIntent.getActivity(
             context,
             MainActivity::class.java,
-            Uri.parse("keybudget://addexpense"),
+            Uri.parse("passfin://addexpense"),
         )
         views.setOnClickPendingIntent(R.id.widget_root, openApp)
         views.setOnClickPendingIntent(R.id.btn_add_expense, addExpense)
@@ -349,7 +349,7 @@ open class KeyBudgetWidgetReceiver : HomeWidgetProvider() {
     ): PendingIntent {
         val intent = Intent(context, javaClass).apply {
             this.action = action
-            data = Uri.parse("keybudget://widget/$action/$widgetId")
+            data = Uri.parse("passfin://widget/$action/$widgetId")
             putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, widgetId)
         }
         return PendingIntent.getBroadcast(

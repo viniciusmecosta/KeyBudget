@@ -3,7 +3,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:key_budget/core/services/app_lock_service.dart';
+import 'package:passfin/core/services/app_lock_service.dart';
 
 class ImagePickerWidget extends ConsumerStatefulWidget {
   final Function(String) onImageSelected;

@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:key_budget/core/security/vault_session.dart';
-import 'package:key_budget/core/security/vault_key_repository.dart';
-import 'package:key_budget/features/user/widgets/vault_settings_tile.dart';
+import 'package:passfin/core/security/vault_session.dart';
+import 'package:passfin/core/security/vault_key_repository.dart';
+import 'package:passfin/features/user/widgets/vault_settings_tile.dart';
 import '../../core/security/memory_vault_store.dart';
 
 void main() {

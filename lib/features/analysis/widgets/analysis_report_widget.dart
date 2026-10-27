@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:key_budget/features/analysis/viewmodel/analysis_viewmodel.dart';
-import 'package:key_budget/features/analysis/widgets/category_analysis_section_widget.dart';
-import 'package:key_budget/features/analysis/widgets/monthly_trend_section_widget.dart';
+import 'package:passfin/features/analysis/viewmodel/analysis_viewmodel.dart';
+import 'package:passfin/features/analysis/widgets/category_analysis_section_widget.dart';
+import 'package:passfin/features/analysis/widgets/monthly_trend_section_widget.dart';
 
 class AnalysisReportWidget extends ConsumerWidget {
   final AnalysisViewModel analysisViewModel;

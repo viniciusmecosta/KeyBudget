@@ -4,11 +4,11 @@ import 'dart:typed_data';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:crypto/crypto.dart';
-import 'package:key_budget/core/import_export/backup_codec.dart';
-import 'package:key_budget/core/import_export/backup_crypto.dart';
-import 'package:key_budget/core/security/vault_crypto.dart';
-import 'package:key_budget/core/security/vault_key_repository.dart';
-import 'package:key_budget/core/security/vault_store.dart';
+import 'package:passfin/core/import_export/backup_codec.dart';
+import 'package:passfin/core/import_export/backup_crypto.dart';
+import 'package:passfin/core/security/vault_crypto.dart';
+import 'package:passfin/core/security/vault_key_repository.dart';
+import 'package:passfin/core/security/vault_store.dart';
 
 String vaultDigest(Map<String, dynamic> value) =>
     BackupCodec.computeCanonicalDigest(value);

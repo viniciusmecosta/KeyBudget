@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:key_budget/app/utils/app_animations.dart';
-import 'package:key_budget/core/design_system/colors/app_contrast.dart';
+import 'package:passfin/app/utils/app_animations.dart';
+import 'package:passfin/core/design_system/colors/app_contrast.dart';
 
 class AppColorChoice extends StatelessWidget {
   static const palette = <int, String>{

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:key_budget/core/design_system/spacing/app_spacing.dart';
-import 'package:key_budget/core/design_system/widgets/app_feedback_panel.dart';
+import 'package:passfin/core/design_system/spacing/app_spacing.dart';
+import 'package:passfin/core/design_system/widgets/app_feedback_panel.dart';
 
 enum ViewStateKind {
   initialLoading,

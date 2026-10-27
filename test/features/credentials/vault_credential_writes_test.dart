@@ -1,9 +1,9 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:key_budget/core/models/credential_model.dart';
-import 'package:key_budget/core/security/vault_crypto.dart';
-import 'package:key_budget/core/services/encryption_service.dart';
-import 'package:key_budget/features/credentials/repository/credential_repository.dart';
-import 'package:key_budget/features/credentials/viewmodel/credential_viewmodel.dart';
+import 'package:passfin/core/models/credential_model.dart';
+import 'package:passfin/core/security/vault_crypto.dart';
+import 'package:passfin/core/services/encryption_service.dart';
+import 'package:passfin/features/credentials/repository/credential_repository.dart';
+import 'package:passfin/features/credentials/viewmodel/credential_viewmodel.dart';
 
 class _RecordingRepository extends CredentialRepository {
   final updates = <Credential>[];

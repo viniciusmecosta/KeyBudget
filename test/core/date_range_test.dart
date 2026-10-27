@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:key_budget/core/time/date_range.dart';
+import 'package:passfin/core/time/date_range.dart';
 
 void main() {
   group('DateRange contract and acceptance tests', () {

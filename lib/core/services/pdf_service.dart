@@ -4,16 +4,16 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
-import 'package:key_budget/app/config/app_theme.dart';
-import 'package:key_budget/app/utils/widget_to_image.dart';
-import 'package:key_budget/core/models/expense_model.dart';
-import 'package:key_budget/core/models/credential_model.dart';
-import 'package:key_budget/core/services/snackbar_service.dart';
-import 'package:key_budget/features/analysis/domain/analysis_snapshot.dart';
-import 'package:key_budget/features/analysis/viewmodel/analysis_viewmodel.dart';
-import 'package:key_budget/features/analysis/widgets/category_analysis_section_widget.dart';
-import 'package:key_budget/features/analysis/widgets/monthly_trend_section_widget.dart';
-import 'package:key_budget/features/category/viewmodel/category_viewmodel.dart';
+import 'package:passfin/app/config/app_theme.dart';
+import 'package:passfin/app/utils/widget_to_image.dart';
+import 'package:passfin/core/models/expense_model.dart';
+import 'package:passfin/core/models/credential_model.dart';
+import 'package:passfin/core/services/snackbar_service.dart';
+import 'package:passfin/features/analysis/domain/analysis_snapshot.dart';
+import 'package:passfin/features/analysis/viewmodel/analysis_viewmodel.dart';
+import 'package:passfin/features/analysis/widgets/category_analysis_section_widget.dart';
+import 'package:passfin/features/analysis/widgets/monthly_trend_section_widget.dart';
+import 'package:passfin/features/category/viewmodel/category_viewmodel.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:syncfusion_flutter_pdf/pdf.dart';
@@ -408,7 +408,7 @@ class PdfService {
 
       final directory = await getTemporaryDirectory();
       final fileName =
-          'keybudget_expenses_report_${DateFormat('yyyyMMdd_HHmmss').format(DateTime.now())}.pdf';
+          'passfin_expenses_report_${DateFormat('yyyyMMdd_HHmmss').format(DateTime.now())}.pdf';
       final filePath = '${directory.path}/$fileName';
       final file = File(filePath);
       await file.writeAsBytes(Uint8List.fromList(bytes));
@@ -569,7 +569,7 @@ class PdfService {
 
       final directory = await getTemporaryDirectory();
       final fileName =
-          'keybudget_credentials_report_${DateFormat('yyyyMMdd_HHmmss').format(DateTime.now())}.pdf';
+          'passfin_credentials_report_${DateFormat('yyyyMMdd_HHmmss').format(DateTime.now())}.pdf';
       final filePath = '${directory.path}/$fileName';
       final file = File(filePath);
       await file.writeAsBytes(Uint8List.fromList(bytes));
@@ -912,7 +912,7 @@ class PdfService {
 
       final directory = await getTemporaryDirectory();
       final fileName =
-          'keybudget_analysis_report_${DateFormat('yyyyMMdd_HHmmss').format(DateTime.now())}.pdf';
+          'passfin_analysis_report_${DateFormat('yyyyMMdd_HHmmss').format(DateTime.now())}.pdf';
       final filePath = '${directory.path}/$fileName';
       final file = File(filePath);
       await file.writeAsBytes(Uint8List.fromList(bytes));

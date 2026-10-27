@@ -1,8 +1,8 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:key_budget/core/models/expense_model.dart';
-import 'package:key_budget/core/models/recurring_expense_model.dart';
-import 'package:key_budget/core/money/money.dart';
-import 'package:key_budget/core/money/money_parser.dart';
+import 'package:passfin/core/models/expense_model.dart';
+import 'package:passfin/core/models/recurring_expense_model.dart';
+import 'package:passfin/core/money/money.dart';
+import 'package:passfin/core/money/money_parser.dart';
 
 void main() {
   group('Money Value Object & Arithmetic', () {

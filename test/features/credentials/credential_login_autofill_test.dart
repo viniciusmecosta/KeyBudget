@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:key_budget/features/credentials/domain/credential_login_autofill.dart';
+import 'package:passfin/features/credentials/domain/credential_login_autofill.dart';
 
 void main() {
   test('Reconhece somente email completo', () {

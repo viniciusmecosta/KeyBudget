@@ -1,4 +1,4 @@
-import 'package:key_budget/core/design_system/widgets/app_status_badge.dart';
+import 'package:passfin/core/design_system/widgets/app_status_badge.dart';
 
 class DocumentExpiryInfo {
   final String label;

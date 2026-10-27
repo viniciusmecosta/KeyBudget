@@ -1,9 +1,9 @@
-import 'package:key_budget/core/design_system/widgets/app_card.dart';
+import 'package:passfin/core/design_system/widgets/app_card.dart';
 import 'package:flutter/material.dart';
-import 'package:key_budget/core/design_system/borders/app_borders.dart';
-import 'package:key_budget/core/design_system/spacing/app_spacing.dart';
-import 'package:key_budget/core/design_system/theme/app_semantic_colors.dart';
-import 'package:key_budget/core/design_system/widgets/app_button.dart';
+import 'package:passfin/core/design_system/borders/app_borders.dart';
+import 'package:passfin/core/design_system/spacing/app_spacing.dart';
+import 'package:passfin/core/design_system/theme/app_semantic_colors.dart';
+import 'package:passfin/core/design_system/widgets/app_button.dart';
 
 enum AppFeedbackType { empty, error, warning, info }
 

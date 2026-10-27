@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:key_budget/core/design_system/spacing/app_spacing.dart';
+import 'package:passfin/core/design_system/spacing/app_spacing.dart';
 
 class AppFormPageBody extends StatelessWidget {
   final Widget form;

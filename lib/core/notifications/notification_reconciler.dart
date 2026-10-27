@@ -1,9 +1,9 @@
 import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:intl/intl.dart';
-import 'package:key_budget/core/models/recurring_expense_model.dart';
-import 'package:key_budget/core/time/app_clock.dart';
-import 'package:key_budget/features/expenses/domain/recurrence_schedule.dart';
+import 'package:passfin/core/models/recurring_expense_model.dart';
+import 'package:passfin/core/time/app_clock.dart';
+import 'package:passfin/features/expenses/domain/recurrence_schedule.dart';
 import 'notification_gateway.dart';
 import 'notification_id_registry.dart';
 

@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:key_budget/core/design_system/spacing/app_spacing.dart';
-import 'package:key_budget/features/dashboard/repository/dashboard_layout_repository.dart';
-import 'package:key_budget/features/auth/viewmodel/auth_viewmodel.dart';
+import 'package:passfin/core/design_system/spacing/app_spacing.dart';
+import 'package:passfin/features/dashboard/repository/dashboard_layout_repository.dart';
+import 'package:passfin/features/auth/viewmodel/auth_viewmodel.dart';
 
 class DashboardLayoutEditor extends ConsumerStatefulWidget {
   final String userId;
