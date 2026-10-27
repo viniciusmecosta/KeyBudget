@@ -128,7 +128,7 @@ cd KeyBudget
 flutter pub get
 ```
 
-Configure o Firebase e `assets/.env` com sua chave de 32 bytes seguindo o
+Configure o Firebase seguindo o
 [guia de configuração](docs/configuracao.md). Para usar o Drive, configure também a API e o login Google.
 
 ```bash
@@ -143,4 +143,4 @@ flutter test
 ```
 
 Código em `lib/features`, com componentes comuns em `lib/core/design_system`.
-[Padrão visual](DESIGN.md) · [Widgets e personalização](docs/engineering/widgets.md) · [Atualizar capturas](docs/images/README.md)
+[Padrão visual](DESIGN.md) · [Widgets e personalização](docs/engineering/widgets.md)

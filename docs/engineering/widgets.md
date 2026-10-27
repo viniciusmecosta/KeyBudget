@@ -44,4 +44,4 @@ cd android
 
 Os testes cobrem precisão monetária, datas, troca de conta, logout, todos os receivers, validade da revelação, migração das preferências, tamanhos salvos e gráficos com texto a 200% em 320 px.
 
-Os testes nativos aplicam as RemoteViews reais dos cinco modelos em duas cores e dois modos, verificando transparência dos cantos, cores, valores e sessão encerrada com fonte ampliada. No Android 15+, também verificam a prévia temática antes da primeira inclusão e garantem que ela não revele valores. As capturas são produzidas por esse mesmo renderer; consulte [como regenerar as imagens](../images/README.md).
+Os testes nativos aplicam as RemoteViews reais dos cinco modelos em duas cores e dois modos, verificando transparência dos cantos, cores, valores e sessão encerrada com fonte ampliada. No Android 15+, também verificam a prévia temática antes da primeira inclusão e garantem que ela não revele valores.
