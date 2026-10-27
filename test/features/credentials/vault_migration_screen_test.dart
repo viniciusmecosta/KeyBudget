@@ -9,7 +9,7 @@ import '../../core/security/memory_vault_store.dart';
 
 void main() {
   testWidgets(
-    'profile migration requires review and clears temporary input on cancel',
+    'profile migration cancels safely and requires review before completion',
     (tester) async {
       const key = '12345678901234567890123456789012';
       final iv = legacy.IV.allZerosOfLength(16);
@@ -65,6 +65,45 @@ void main() {
             .text,
         isEmpty,
       );
+      await tester.enterText(find.byType(TextFormField), key);
+      await tester.ensureVisible(find.text('Testar chave'));
+      await tester.tap(find.text('Testar chave'));
+      for (
+        var attempt = 0;
+        attempt < 100 && find.byType(CheckboxListTile).evaluate().isEmpty;
+        attempt++
+      ) {
+        await tester.runAsync(
+          () => Future<void>.delayed(const Duration(milliseconds: 20)),
+        );
+        await tester.pump(const Duration(milliseconds: 20));
+      }
+      await tester.pumpAndSettle();
+      await tester.ensureVisible(find.byType(CheckboxListTile));
+      await tester.tap(find.byType(CheckboxListTile));
+      await tester.pump();
+      await tester.ensureVisible(apply);
+      expect(tester.widget<AppButton>(apply).onPressed, isNotNull);
+      await tester.tap(apply);
+      for (var attempt = 0; attempt < 100 && !session.isReady; attempt++) {
+        await tester.runAsync(
+          () => Future<void>.delayed(const Duration(milliseconds: 20)),
+        );
+        await tester.pump(const Duration(milliseconds: 20));
+      }
+      await tester.pumpAndSettle();
+      expect(session.isReady, isTrue);
+      expect(store.sourceWrites, 1);
+      expect(
+        session.encryption.decryptData(
+          store.documents['users/owner/credentials/one']!['encrypted_password']
+              as String,
+          recordId: 'one',
+        ),
+        'synthetic-password',
+      );
+      expect(find.text('Proteção atualizada e verificada'), findsOneWidget);
+      expect(find.text('Incluir chave legada'), findsNothing);
     },
   );
 }

@@ -97,7 +97,8 @@ class VaultInventory {
   int get passwordCount =>
       sources.fold(0, (total, source) => total + source.passwords.length);
   bool get hasLegacy => sources.any(
-    (source) => source.passwords.any((p) => !p.ciphertext.startsWith('kbv')),
+    (source) =>
+        source.passwords.any((p) => !isVersionedVaultValue(p.ciphertext)),
   );
   String get digest =>
       vaultDigest({for (final source in sources) source.path: source.data});
@@ -166,7 +167,7 @@ class VaultMigrationPreview {
   for (final source in request.sources) {
     for (final password in source.passwords) {
       try {
-        final plain = password.ciphertext.startsWith('kbv')
+        final plain = isVersionedVaultValue(password.ciphertext)
             ? request.cipher?.decrypt(
                 password.ciphertext,
                 uid: request.uid,
@@ -200,6 +201,7 @@ class VaultMigrationService {
   final VaultStore store;
   final String uid;
   final bool Function()? isSessionActive;
+  final Future<void> Function()? beforeMutation;
   VaultMigrationPreview? _preview;
   bool _running = false;
 
@@ -207,6 +209,7 @@ class VaultMigrationService {
     required this.store,
     required this.uid,
     this.isSessionActive,
+    this.beforeMutation,
   });
 
   String get _configPath => 'users/$uid/vault/config';
@@ -271,26 +274,33 @@ class VaultMigrationService {
       ).ensure(uid, migrationId: migrationId);
       try {
         _check();
-        final config = (await store.read(_configPath))!;
-        if (config['state'] == 'ready' || config['activeKeyId'] != key.id) {
-          throw _conflict();
-        }
         final now = Timestamp.now();
-        await store.set(_configPath, {
-          ...config,
-          'state': 'preparing',
-          'migrationId': migrationId,
-          'updatedAt': now,
-        });
-        await store.set(_jobPath(migrationId), {
-          'schemaVersion': 1,
-          'keyId': key.id,
-          'phase': 'preparingBackup',
-          'inventoryDigest': inventory.digest,
-          'sourceDocumentCount': inventory.sources.length,
-          'sourcePasswordCount': inventory.passwordCount,
-          'createdAt': now,
-          'updatedAt': now,
+        await store.transaction((tx) async {
+          final config = await tx.read(_configPath);
+          final job = await tx.read(_jobPath(migrationId));
+          _check();
+          if (config == null ||
+              config['state'] == 'ready' ||
+              config['activeKeyId'] != key.id ||
+              config['migrationId'] != migrationId ||
+              job?['backupVerifiedAt'] != null) {
+            throw _conflict();
+          }
+          tx.set(_configPath, {
+            ...config,
+            'state': 'preparing',
+            'updatedAt': now,
+          });
+          tx.set(_jobPath(migrationId), {
+            'schemaVersion': 1,
+            'keyId': key.id,
+            'phase': 'preparingBackup',
+            'inventoryDigest': inventory.digest,
+            'sourceDocumentCount': inventory.sources.length,
+            'sourcePasswordCount': inventory.passwordCount,
+            'createdAt': now,
+            'updatedAt': now,
+          });
         });
         onProgress?.call(
           'Criando e verificando o backup',
@@ -374,6 +384,8 @@ class VaultMigrationService {
     _check();
     _running = true;
     try {
+      await beforeMutation?.call();
+      _check();
       await action();
     } finally {
       _running = false;

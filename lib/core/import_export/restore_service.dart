@@ -224,8 +224,9 @@ class RestoreService {
             );
           }
           if (rec.portablePassword == null &&
-              !(rec.data['encrypted_password']?.toString().startsWith('kbv') ??
-                  false)) {
+              !isVersionedVaultValue(
+                rec.data['encrypted_password']?.toString() ?? '',
+              )) {
             requiresLegacyPasswordReview = true;
           }
           try {
@@ -251,10 +252,9 @@ class RestoreService {
           for (final record in rec.data['records'] as List? ?? []) {
             final id = record['id'] as String;
             if (!portablePasswords.containsKey(id) &&
-                !(record['data']['encrypted_password']?.toString().startsWith(
-                      'kbv',
-                    ) ??
-                    false)) {
+                !isVersionedVaultValue(
+                  record['data']['encrypted_password']?.toString() ?? '',
+                )) {
               requiresLegacyPasswordReview = true;
             }
             try {
@@ -355,12 +355,12 @@ class RestoreService {
         'Senha ausente no backup.',
       );
     }
-    if (!encrypted.startsWith('kbv') &&
+    if (!isVersionedVaultValue(encrypted) &&
         legacyKey != null &&
         legacyKey.trim().isNotEmpty) {
       return LegacyVaultReader(legacyKey).decrypt(encrypted);
     }
-    if (!encrypted.startsWith('kbv')) {
+    if (!isVersionedVaultValue(encrypted)) {
       throw const VaultException(
         VaultErrorCode.invalidLegacyKey,
         'Informe a chave legada para conferir as senhas antigas deste backup.',

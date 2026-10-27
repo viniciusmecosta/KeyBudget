@@ -4,6 +4,13 @@ import 'package:key_budget/core/security/vault_key_repository.dart';
 import 'memory_vault_store.dart';
 
 void main() {
+  test('disposed key material cannot create another cipher', () {
+    final key = VaultKey('key', List.filled(32, 8));
+    key.dispose();
+    expect(key.bytes, everyElement(0));
+    expect(() => key.cipher(), throwsA(isA<VaultException>()));
+  });
+
   test(
     'initialization preserves the persisted key and separates owners',
     () async {

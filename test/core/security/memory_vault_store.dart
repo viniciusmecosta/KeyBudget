@@ -22,6 +22,7 @@ class MemoryVaultStore implements VaultStore {
   int? failSourceWriteAt;
   int sourceWrites = 0;
   String? failReadPath;
+  int? failWriteAt;
 
   @override
   String newId(String collection) => 'id-${nextId++}';
@@ -43,6 +44,7 @@ class MemoryVaultStore implements VaultStore {
 
   @override
   Future<void> set(String path, Map<String, dynamic> data) async {
+    if (failWriteAt == writes) throw StateError('injected write failure');
     documents[path] = copyVaultMap(data);
     writes++;
   }
@@ -53,6 +55,11 @@ class MemoryVaultStore implements VaultStore {
   ) async {
     final tx = _MemoryTransaction(this);
     await action(tx);
+    if (failWriteAt != null &&
+        failWriteAt! >= writes &&
+        failWriteAt! < writes + tx.pending.length) {
+      throw StateError('injected transaction failure');
+    }
     for (final path in tx.pending.keys) {
       if (path.contains('/credentials/') || path.contains('/trash/')) {
         if (failSourceWriteAt == sourceWrites) {

@@ -17,9 +17,10 @@ class _DelayedStore extends MemoryVaultStore {
 
 class _OfflineStore extends MemoryVaultStore {
   bool offline = false;
+  String? unavailablePath;
   @override
   Future<Map<String, dynamic>?> read(String path) {
-    if (offline) {
+    if (offline || path == unavailablePath) {
       throw FirebaseException(plugin: 'cloud_firestore', code: 'unavailable');
     }
     return super.read(path);
@@ -27,6 +28,61 @@ class _OfflineStore extends MemoryVaultStore {
 }
 
 void main() {
+  test('recovery invalidates cached access before attempting writes', () async {
+    final store = _OfflineStore();
+    final cache = MemorySecureStorage();
+    final session = VaultSession(store: store, secureStorage: cache);
+    await session.open('owner');
+    expect(cache.values, isNotEmpty);
+    final writes = store.writes;
+    await expectLater(
+      session.migrationService().resume('missing'),
+      throwsA(isA<Exception>()),
+    );
+    expect(session.canWrite, isFalse);
+    expect(cache.values, isEmpty);
+    expect(store.writes, writes);
+    store.offline = true;
+    await session.open('owner');
+    expect(session.status, VaultStatus.unavailable);
+    session.dispose();
+  });
+
+  test('known remote recovery cannot fall back to a ready cache', () async {
+    final store = _OfflineStore();
+    final cache = MemorySecureStorage();
+    final session = VaultSession(store: store, secureStorage: cache);
+    await session.open('owner');
+    final config = store.documents['users/owner/vault/config']!;
+    config['state'] = 'rollingBack';
+    config['migrationId'] = 'operation';
+    store.unavailablePath = 'users/owner/vault_migrations/operation';
+    await session.open('owner');
+    expect(session.canWrite, isFalse);
+    expect(session.status, VaultStatus.unavailable);
+    expect(cache.values, isEmpty);
+    store.offline = true;
+    await session.open('owner');
+    expect(session.canWrite, isFalse);
+    session.dispose();
+  });
+
+  test('cache deletion failure prevents migration writes', () async {
+    final store = MemoryVaultStore();
+    final cache = MemorySecureStorage();
+    final session = VaultSession(store: store, secureStorage: cache);
+    await session.open('owner');
+    cache.failDeletes = true;
+    final writes = store.writes;
+    await expectLater(
+      session.migrationService().resume('missing'),
+      throwsStateError,
+    );
+    expect(store.writes, writes);
+    expect(cache.values, isNotEmpty);
+    session.dispose();
+  });
+
   test(
     'verified local key opens offline but logout removes cached access',
     () async {

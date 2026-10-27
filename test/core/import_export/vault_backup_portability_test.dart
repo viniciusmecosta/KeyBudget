@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:encrypt/encrypt.dart' as legacy;
 import 'package:flutter_test/flutter_test.dart';
@@ -103,7 +104,7 @@ void main() {
     'legacy backup requires temporary key and explicit password review',
     () async {
       const key = '12345678901234567890123456789012';
-      final iv = legacy.IV.allZerosOfLength(16);
+      final iv = legacy.IV(base64.decode('kbv${'A' * 19}=='));
       final encrypted = legacy.Encrypter(
         legacy.AES(legacy.Key.fromUtf8(key)),
       ).encrypt('old-secret', iv: iv);

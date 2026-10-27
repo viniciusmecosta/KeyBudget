@@ -27,6 +27,11 @@ class VaultException implements Exception {
   String toString() => message;
 }
 
+final _versionedVaultPrefix = RegExp(r'^kbv[0-9]+\.');
+
+bool isVersionedVaultValue(String value) =>
+    _versionedVaultPrefix.hasMatch(value);
+
 String normalizeLegacyKey(String input) {
   final value = input.trim();
   if (value.length != 32 || utf8.encode(value).length != 32) {
@@ -88,6 +93,7 @@ class VaultCipher {
   static const maxEnvelopeCharacters = 128 * 1024;
   final String keyId;
   final Uint8List _key;
+  bool _disposed = false;
 
   VaultCipher({required this.keyId, required List<int> key})
     : _key = Uint8List.fromList(key) {
@@ -122,6 +128,7 @@ class VaultCipher {
   }
 
   Uint8List seal(List<int> input, List<int> aad, {List<int>? nonce}) {
+    _requireActive();
     final iv = nonce == null ? vaultRandomBytes(12) : Uint8List.fromList(nonce);
     if (iv.length != 12) {
       throw const VaultException(
@@ -141,6 +148,7 @@ class VaultCipher {
   }
 
   Uint8List open(List<int> input, List<int> aad) {
+    _requireActive();
     if (input.length < 28) {
       throw const VaultException(
         VaultErrorCode.malformedEnvelope,
@@ -252,5 +260,17 @@ class VaultCipher {
     }
   }
 
-  void dispose() => _key.fillRange(0, _key.length, 0);
+  void _requireActive() {
+    if (_disposed) {
+      throw const VaultException(
+        VaultErrorCode.unavailable,
+        'A sessão do cofre foi encerrada. Abra o cofre novamente.',
+      );
+    }
+  }
+
+  void dispose() {
+    _disposed = true;
+    _key.fillRange(0, _key.length, 0);
+  }
 }

@@ -4,6 +4,13 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:key_budget/core/security/vault_crypto.dart';
 
 void main() {
+  test('version detection requires an explicit version and separator', () {
+    expect(isVersionedVaultValue('kbv2.payload'), isTrue);
+    expect(isVersionedVaultValue('kbv3.payload'), isTrue);
+    expect(isVersionedVaultValue('kbvAAAAA:ciphertext'), isFalse);
+    expect(isVersionedVaultValue('kbv2AAAA:ciphertext'), isFalse);
+  });
+
   test(
     'legacy input trims edges and preserves punctuation and internal spaces',
     () {

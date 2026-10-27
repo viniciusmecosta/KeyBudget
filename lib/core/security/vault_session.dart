@@ -89,10 +89,16 @@ class VaultSession extends ChangeNotifier {
     }
     if (uid == null || !_active(uid, generation)) return;
     VaultKey? loadedKey;
+    var allowOffline = true;
     try {
       final repository = VaultKeyRepository(store);
       var config = await store.read(repository.configPath(uid));
       if (!_active(uid, generation)) return;
+      allowOffline = false;
+      if (config?['state'] != 'ready') {
+        await secureStorage?.delete(key: 'vault.session.$uid');
+        if (!_active(uid, generation)) return;
+      }
       if (config == null) {
         final inventory = await VaultInventory.capture(store, uid);
         if (!_active(uid, generation)) return;
@@ -156,7 +162,7 @@ class VaultSession extends ChangeNotifier {
               'key': loadedKey.toMap(),
             }),
           );
-          if (!_active(uid, generation)) {
+          if (!_active(uid, generation) || status != VaultStatus.ready) {
             await secureStorage?.delete(key: 'vault.session.$uid');
           }
         } catch (_) {}
@@ -167,7 +173,8 @@ class VaultSession extends ChangeNotifier {
       _key = null;
       _cipher?.dispose();
       _cipher = null;
-      if (exception is FirebaseException &&
+      if (allowOffline &&
+          exception is FirebaseException &&
           {
             'unavailable',
             'deadline-exceeded',
@@ -219,6 +226,21 @@ class VaultSession extends ChangeNotifier {
       store: store,
       uid: uid,
       isSessionActive: () => _active(uid, generation),
+      beforeMutation: () async {
+        await secureStorage?.delete(key: 'vault.session.$uid');
+        if (!_active(uid, generation)) {
+          throw const VaultException(
+            VaultErrorCode.unavailable,
+            'A sessão mudou. Abra o cofre novamente.',
+          );
+        }
+        _cipher?.dispose();
+        _key?.dispose();
+        _cipher = null;
+        _key = null;
+        status = VaultStatus.recoveryRequired;
+        _notify();
+      },
     );
   }
 

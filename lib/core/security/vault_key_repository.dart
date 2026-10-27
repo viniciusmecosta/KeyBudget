@@ -7,6 +7,7 @@ import 'vault_store.dart';
 class VaultKey {
   final String id;
   final Uint8List bytes;
+  bool _disposed = false;
 
   VaultKey(this.id, List<int> bytes) : bytes = Uint8List.fromList(bytes);
 
@@ -35,9 +36,20 @@ class VaultKey {
     'keyMaterial': base64.encode(bytes),
   };
 
-  VaultCipher cipher() => VaultCipher(keyId: id, key: bytes);
+  VaultCipher cipher() {
+    if (_disposed) {
+      throw const VaultException(
+        VaultErrorCode.unavailable,
+        'A chave desta sessão já foi descartada.',
+      );
+    }
+    return VaultCipher(keyId: id, key: bytes);
+  }
 
-  void dispose() => bytes.fillRange(0, bytes.length, 0);
+  void dispose() {
+    _disposed = true;
+    bytes.fillRange(0, bytes.length, 0);
+  }
 }
 
 class VaultKeyRepository {

@@ -3,6 +3,7 @@ import 'package:flutter_test/flutter_test.dart';
 
 class MemorySecureStorage extends Fake implements FlutterSecureStorage {
   final values = <String, String>{};
+  bool failDeletes = false;
 
   @override
   Future<String?> read({
@@ -53,6 +54,7 @@ class MemorySecureStorage extends Fake implements FlutterSecureStorage {
     dynamic mOptions,
     dynamic webOptions,
   }) async {
+    if (failDeletes) throw StateError('injected cache deletion failure');
     values.remove(key);
   }
 }
