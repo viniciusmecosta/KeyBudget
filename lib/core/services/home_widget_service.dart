@@ -195,7 +195,7 @@ class HomeWidgetService {
       await HomeWidget.saveWidgetData<String>(keyAppearance, '');
       await HomeWidget.saveWidgetData<String>(
         keyMonthlySpent,
-        'Abra o KeyBudget',
+        'Abra o PassFin',
       );
       await HomeWidget.saveWidgetData<int>(keyMonthlySpentCents, 0);
       await HomeWidget.saveWidgetData<String>(

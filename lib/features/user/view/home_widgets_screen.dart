@@ -37,14 +37,14 @@ class _HomeWidgetsScreenState extends State<HomeWidgetsScreen> {
       } else {
         _message =
             'Para adicionar, toque e segure um espaço vazio na tela '
-            'inicial do celular e escolha Widgets → KeyBudget.';
+            'inicial do celular e escolha Widgets → PassFin.';
       }
     } catch (_) {
       if (!mounted) return;
       _isError = true;
       _message =
           'Não foi possível abrir a seleção. Tente novamente ou '
-          'adicione em Widgets → KeyBudget na tela inicial do celular.';
+          'adicione em Widgets → PassFin na tela inicial do celular.';
     } finally {
       if (mounted) setState(() => _pending = null);
     }

@@ -31,7 +31,9 @@ class PdfService {
       final Size pageSize = page.getClientSize();
       double currentY = 0;
 
-      final ByteData logoData = await rootBundle.load('assets/icon/logov2.png');
+      final ByteData logoData = await rootBundle.load(
+        'assets/brand/passfin-mark-light.png',
+      );
       final PdfBitmap logo = PdfBitmap(logoData.buffer.asUint8List());
 
       final ByteData fontData = await rootBundle.load(
@@ -440,7 +442,9 @@ class PdfService {
       final Size pageSize = page.getClientSize();
       double currentY = 0;
 
-      final ByteData logoData = await rootBundle.load('assets/icon/logov2.png');
+      final ByteData logoData = await rootBundle.load(
+        'assets/brand/passfin-mark-light.png',
+      );
       final PdfBitmap logo = PdfBitmap(logoData.buffer.asUint8List());
 
       final ByteData fontData = await rootBundle.load(
@@ -607,7 +611,9 @@ class PdfService {
 
       final PdfDocument document = PdfDocument();
 
-      final ByteData logoData = await rootBundle.load('assets/icon/logov2.png');
+      final ByteData logoData = await rootBundle.load(
+        'assets/brand/passfin-mark-light.png',
+      );
       final PdfBitmap logo = PdfBitmap(logoData.buffer.asUint8List());
       final ByteData fontData = await rootBundle.load(
         'assets/fonts/Roboto-Regular.ttf',

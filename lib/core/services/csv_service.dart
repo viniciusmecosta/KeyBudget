@@ -179,7 +179,7 @@ class CsvService {
       if (!context.mounted) return false;
       final params = ShareParams(
         files: [XFile(filePath)],
-        text: 'Exportação CSV do KeyBudget',
+        text: 'Exportação CSV do PassFin',
         sharePositionOrigin: const Rect.fromLTWH(0, 0, 100, 100),
       );
       await SharePlus.instance.share(params);

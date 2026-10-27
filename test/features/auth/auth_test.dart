@@ -491,7 +491,7 @@ void main() {
 
         expect(find.text('Entre na sua conta'), findsOneWidget);
         expect(
-          find.text('Acesse suas finanças e informações em um só lugar.'),
+          find.text('Suas senhas e finanças em um só lugar.'),
           findsOneWidget,
         );
         expect(find.text('Continuar com Google'), findsOneWidget);

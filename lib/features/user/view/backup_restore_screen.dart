@@ -342,7 +342,7 @@ class _BackupRestoreScreenState extends ConsumerState<BackupRestoreScreen>
       final file = _lastBackupResult!.localFile!;
       final params = ShareParams(
         files: [XFile(file.path)],
-        text: 'Backup KeyBudget (.kbudget)',
+        text: 'Backup PassFin (.kbudget)',
       );
       await SharePlus.instance.share(params);
     }

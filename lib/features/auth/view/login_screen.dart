@@ -99,7 +99,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
 
     return AuthPageLayout(
       title: 'Entre na sua conta',
-      subtitle: 'Acesse suas finanças e informações em um só lugar.',
+      subtitle: 'Suas senhas e finanças em um só lugar.',
       footer: Column(
         children: [
           Row(

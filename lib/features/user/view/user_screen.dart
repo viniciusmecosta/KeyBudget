@@ -12,6 +12,7 @@ import 'package:key_budget/app/widgets/responsive_center.dart';
 import 'package:key_budget/core/design_system/borders/app_borders.dart';
 import 'package:key_budget/core/design_system/spacing/app_spacing.dart';
 import 'package:key_budget/core/design_system/widgets/app_button.dart';
+import 'package:key_budget/core/design_system/widgets/passfin_brand.dart';
 import 'package:key_budget/core/design_system/widgets/app_card.dart';
 import 'package:key_budget/core/design_system/widgets/app_color_choice.dart';
 import 'package:key_budget/core/design_system/widgets/app_page_scaffold.dart';
@@ -469,7 +470,7 @@ class UserScreen extends ConsumerWidget {
                 ),
                 const SizedBox(height: AppSpacing.xs),
                 Text(
-                  'Escolha como o KeyBudget usa as cores do aplicativo.',
+                  'Escolha como o PassFin usa as cores do aplicativo.',
                   textAlign: TextAlign.center,
                   style: Theme.of(sheetContext).textTheme.bodyMedium?.copyWith(
                     color: Theme.of(sheetContext).colorScheme.onSurfaceVariant,
@@ -927,6 +928,8 @@ class UserScreen extends ConsumerWidget {
                       },
                     ),
                   ]),
+                  const SizedBox(height: AppSpacing.xl),
+                  const Center(child: PassFinBrand(showName: true, width: 148)),
                   const SizedBox(height: AppSpacing.xxl),
                 ],
               ),

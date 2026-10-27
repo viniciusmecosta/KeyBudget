@@ -6,7 +6,7 @@ void main() {
     var retries = 0;
     await tester.pumpWidget(ErrorScreen(onRetry: () => retries++));
 
-    expect(find.text('Não foi possível iniciar o KeyBudget'), findsOneWidget);
+    expect(find.text('Não foi possível iniciar o PassFin'), findsOneWidget);
     expect(find.textContaining('Exception'), findsNothing);
     await tester.tap(find.text('Tentar novamente'));
     expect(retries, 1);

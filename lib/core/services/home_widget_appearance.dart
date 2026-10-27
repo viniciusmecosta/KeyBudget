@@ -18,11 +18,7 @@ class HomeWidgetAppearance {
   }
 
   static Map<String, int> _palette(Color seed, {required bool isDark}) {
-    final background = Color.lerp(
-      seed,
-      isDark ? const Color(0xFF101114) : Colors.white,
-      isDark ? .72 : .92,
-    )!;
+    final background = isDark ? AppColors.surfaceDark : AppColors.surfaceLight;
     final foreground = AppContrast.foregroundOn(background);
     final secondary = Color.lerp(foreground, background, .24)!;
     final button = AppContrast.accentOnSurface(
