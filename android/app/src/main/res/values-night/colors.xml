@@ -1,9 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="widget_bg">#142B45</color>
+    <color name="widget_bg">#121416</color>
     <color name="widget_text_primary">#FFFFFF</color>
     <color name="widget_text_secondary">#A9BED6</color>
     <color name="widget_btn_bg">#0058D9</color>
     <color name="widget_btn_text">#FFFFFF</color>
-    <color name="widget_border">#294969</color>
+    <color name="widget_border">#23262B</color>
+    <color name="passfin_splash_background">#000000</color>
+    <color name="passfin_launcher_background">#FFFFFF</color>
 </resources>

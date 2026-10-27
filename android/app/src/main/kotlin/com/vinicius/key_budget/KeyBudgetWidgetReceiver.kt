@@ -256,7 +256,7 @@ open class KeyBudgetWidgetReceiver : HomeWidgetProvider() {
             views.setContentDescription(
                 R.id.btn_toggle_visibility,
                 when (state) {
-                    WidgetDisplayState.SIGNED_OUT -> "Entrar no KeyBudget"
+                    WidgetDisplayState.SIGNED_OUT -> "Entrar no PassFin"
                     WidgetDisplayState.STALE -> "Atualizar valores no aplicativo"
                     WidgetDisplayState.VISIBLE -> "Ocultar valores"
                     WidgetDisplayState.HIDDEN -> "Mostrar valores temporariamente"

@@ -1,13 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="widget_label">Gastos do mês</string>
-    <string name="widget_description">Gastos do mês do KeyBudget. Valores ocultos até você tocar no olho.</string>
+    <string name="widget_description">Gastos do mês do PassFin. Valores ocultos até você tocar no olho.</string>
     <string name="widget_compact_label">Gastos compactos</string>
-    <string name="widget_compact_description">Gastos compactos do KeyBudget. Valores ocultos até você tocar no olho.</string>
+    <string name="widget_compact_description">Gastos compactos do PassFin. Valores ocultos até você tocar no olho.</string>
     <string name="widget_overview_label">Resumo financeiro</string>
-    <string name="widget_overview_description">Resumo financeiro do KeyBudget. Valores ocultos até você tocar no olho.</string>
+    <string name="widget_overview_description">Resumo financeiro do PassFin. Valores ocultos até você tocar no olho.</string>
     <string name="widget_upcoming_label">Próximos gastos</string>
-    <string name="widget_upcoming_description">Próximos gastos do KeyBudget. Valores ocultos até você tocar no olho.</string>
+    <string name="widget_upcoming_description">Próximos gastos do PassFin. Valores ocultos até você tocar no olho.</string>
     <string name="widget_quick_label">Nova despesa</string>
-    <string name="widget_quick_description">Nova despesa do KeyBudget. Registre um lançamento rapidamente.</string>
+    <string name="widget_quick_description">Nova despesa do PassFin. Registre um lançamento rapidamente.</string>
 </resources>
