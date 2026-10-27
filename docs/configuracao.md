@@ -11,13 +11,15 @@ Configure os identificadores dos aplicativos e as credenciais de login Google pa
 
 ## Criptografia
 
-O aplicativo carrega `assets/.env`. Defina `ENCRYPTION_KEY` com uma chave própria de 32 bytes; o marcador abaixo deve ser substituído:
+O cofre gera automaticamente uma chave aleatória de 256 bits por usuário e a persiste em users/{uid}/vault_keys/{keyId}. O login recupera a chave, protegida pelas regras de acesso do proprietário. Não há senha adicional do cofre nem configuração de chave em .env para novas instalações.
 
-```env
-ENCRYPTION_KEY=<sua-chave-de-32-bytes>
-```
+As senhas usam AES-256-GCM com versão, identificador de chave e autenticação do UID e do ID da credencial. Login, e-mail, notas e anexos mantêm o tratamento atual.
 
-Não publique a chave. Preserve-a para continuar acessando os dados criptografados com ela.
+Para contas antigas, abra **Perfil → Incluir chave legada**. Cole somente o valor efetivo da antiga ENCRYPTION_KEY, com 32 caracteres e 32 bytes UTF-8. Espaços nas bordas são removidos; espaços internos, pontuação e maiúsculas/minúsculas são preservados. A chave antiga é temporária e não é salva.
+
+Teste a chave, confira as senhas e autorize a atualização. O aplicativo salva e relê um backup criptografado antes de substituir qualquer senha, incluindo credenciais na lixeira. A entrada inicial desaparece quando a chave versionada existe. Se houver interrupção, use **Retomar migração**; depois do backup verificado, a retomada dispensa a chave antiga. O rollback preserva o backup e a chave nova.
+
+O arquivo local assets/.env antigo deve ser preservado enquanto você ainda precisar recuperar dados legados; ele não é empacotado pelo aplicativo. Detalhes de recuperação estão no [guia do cofre](engineering/vault-encryption.md).
 
 ## Regras do Firestore
 
