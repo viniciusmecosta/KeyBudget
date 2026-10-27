@@ -93,11 +93,11 @@ class FakeRecurringRepository implements RecurringExpenseRepository {
 
 class FakeEncryptionService extends Fake implements EncryptionService {
   @override
-  String encryptData(String plainText) =>
+  String encryptData(String plainText, {String? recordId}) =>
       base64Encode(utf8.encode('ciphertext_$plainText'));
 
   @override
-  String decryptData(String encryptedText) =>
+  String decryptData(String encryptedText, {String? recordId}) =>
       utf8.decode(base64Decode(encryptedText)).replaceFirst('ciphertext_', '');
 }
 

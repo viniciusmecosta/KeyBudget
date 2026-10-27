@@ -9,6 +9,7 @@ import 'package:key_budget/core/search/search_normalizer.dart';
 import 'package:key_budget/core/services/csv_service.dart';
 import 'package:key_budget/core/services/data_import_service.dart';
 import 'package:key_budget/core/services/encryption_service.dart';
+import 'package:key_budget/core/security/vault_session.dart';
 import 'package:key_budget/core/services/pdf_service.dart';
 import 'package:key_budget/features/credentials/application/credential_transfer_service.dart';
 import 'package:key_budget/features/credentials/repository/credential_repository.dart';
@@ -19,6 +20,7 @@ import 'package:key_budget/features/trash/repository/trash_repository.dart';
 class CredentialViewModel extends ChangeNotifier {
   final CredentialRepository _repository;
   final EncryptionService? encryptionService;
+  final EncryptionService Function()? encryptionResolver;
   final CsvService _csvService;
   final PdfService _pdfService;
   final DataImportService _dataImportService;
@@ -29,6 +31,7 @@ class CredentialViewModel extends ChangeNotifier {
   CredentialViewModel({
     CredentialRepository? repository,
     this.encryptionService,
+    this.encryptionResolver,
     CsvService? csvService,
     PdfService? pdfService,
     DataImportService? dataImportService,
@@ -37,7 +40,12 @@ class CredentialViewModel extends ChangeNotifier {
   }) : _repository = repository ?? CredentialRepository(),
        _csvService = csvService ?? CsvService(),
        _pdfService = pdfService ?? PdfService(),
-       _dataImportService = dataImportService ?? DataImportService(),
+       _dataImportService =
+           dataImportService ??
+           DataImportService(
+             encryptionService: encryptionService,
+             encryptionResolver: encryptionResolver,
+           ),
        _trashRepository = trashRepository ?? TrashRepository(),
        _importService =
            importService ??
@@ -46,6 +54,7 @@ class CredentialViewModel extends ChangeNotifier {
              credentialRepository: repository ?? CredentialRepository(),
              recurringRepository: RecurringExpenseRepository(),
              encryptionService: encryptionService,
+             encryptionResolver: encryptionResolver,
            ) {
     _transferService = CredentialTransferService(
       csvService: _csvService,
@@ -56,7 +65,7 @@ class CredentialViewModel extends ChangeNotifier {
   }
 
   EncryptionService get _activeEncryptionService =>
-      encryptionService ?? EncryptionService();
+      encryptionService ?? encryptionResolver?.call() ?? EncryptionService();
 
   List<Credential> _allCredentials = [];
   List<Folder> _allFolders = [];
@@ -265,10 +274,13 @@ class CredentialViewModel extends ChangeNotifier {
     String? logoPath,
     String? folderId,
   }) async {
+    final id = _repository.reserveCredentialId(userId);
     final encryptedPassword = _activeEncryptionService.encryptData(
       plainPassword,
+      recordId: id,
     );
     final newCredential = Credential(
+      id: id,
       location: location,
       login: login,
       encryptedPassword: encryptedPassword,
@@ -298,9 +310,13 @@ class CredentialViewModel extends ChangeNotifier {
     if (newPlainPassword != null && newPlainPassword.isNotEmpty) {
       final decryptedOriginal = decryptPassword(
         originalCredential.encryptedPassword,
+        recordId: originalCredential.id,
       );
       if (newPlainPassword != decryptedOriginal) {
-        passwordToSave = _activeEncryptionService.encryptData(newPlainPassword);
+        passwordToSave = _activeEncryptionService.encryptData(
+          newPlainPassword,
+          recordId: originalCredential.id,
+        );
       }
     }
     final updatedCredential = Credential(
@@ -340,7 +356,10 @@ class CredentialViewModel extends ChangeNotifier {
       return await _transferService.exportCsv(
         context,
         _allCredentials,
-        decryptPassword,
+        (credential) => decryptPassword(
+          credential.encryptedPassword,
+          recordId: credential.id,
+        ),
       );
     } finally {
       _setExportingCsv(false);
@@ -353,7 +372,10 @@ class CredentialViewModel extends ChangeNotifier {
       await _transferService.exportPdf(
         context,
         _allCredentials,
-        decryptPassword,
+        (credential) => decryptPassword(
+          credential.encryptedPassword,
+          recordId: credential.id,
+        ),
       );
     } finally {
       _setExportingPdf(false);
@@ -385,8 +407,11 @@ class CredentialViewModel extends ChangeNotifier {
     return count;
   }
 
-  String decryptPassword(String encryptedPassword) {
-    return _activeEncryptionService.decryptData(encryptedPassword);
+  String decryptPassword(String encryptedPassword, {String? recordId}) {
+    return _activeEncryptionService.decryptData(
+      encryptedPassword,
+      recordId: recordId,
+    );
   }
 
   void clearData() {
@@ -414,6 +439,7 @@ class CredentialViewModel extends ChangeNotifier {
 final credentialViewModelProvider = ChangeNotifierProvider<CredentialViewModel>(
   (ref) => CredentialViewModel(
     repository: ref.read(credentialRepositoryProvider),
+    encryptionResolver: () => ref.read(vaultSessionProvider).encryption,
     importService: ref.read(importServiceProvider),
   ),
 );

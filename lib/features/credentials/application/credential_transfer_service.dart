@@ -25,13 +25,13 @@ class CredentialTransferService {
   Future<bool> exportCsv(
     BuildContext context,
     List<Credential> credentials,
-    String Function(String) decryptPassword,
+    String Function(Credential) decryptPassword,
   ) => csvService.exportCredentials(context, credentials, decryptPassword);
 
   Future<void> exportPdf(
     BuildContext context,
     List<Credential> credentials,
-    String Function(String) decryptPassword,
+    String Function(Credential) decryptPassword,
   ) => pdfService.exportCredentialsPdf(context, credentials, decryptPassword);
 
   Future<int> importCsv(

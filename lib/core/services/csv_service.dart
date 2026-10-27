@@ -18,7 +18,7 @@ import 'package:share_plus/share_plus.dart';
 class CsvService {
   String generateCredentialsCsvString(
     List<Credential> credentials,
-    String Function(String) decrypt,
+    String Function(Credential) decrypt,
   ) {
     List<List<dynamic>> rows = [
       [
@@ -40,7 +40,7 @@ class CsvService {
         cred.email ?? '',
         cred.phoneNumber ?? '',
         cred.notes ?? '',
-        decrypt(cred.encryptedPassword),
+        decrypt(cred),
         cred.folderId ?? '',
       ]);
     }
@@ -114,7 +114,7 @@ class CsvService {
   Future<bool> exportCredentials(
     BuildContext context,
     List<Credential> credentials,
-    String Function(String) decrypt,
+    String Function(Credential) decrypt,
   ) async {
     String csvStr = generateCredentialsCsvString(credentials, decrypt);
     return _saveCsvFile(context, 'keybudget_credentials', csvStr);
@@ -206,8 +206,10 @@ class CsvService {
   }
 
   String generateAnalysisCsvContent(AnalysisSnapshot snap) {
-    final currencyFormat =
-        NumberFormat.currency(locale: 'pt_BR', symbol: 'R\$ ');
+    final currencyFormat = NumberFormat.currency(
+      locale: 'pt_BR',
+      symbol: 'R\$ ',
+    );
     final dateFormat = DateFormat('dd/MM/yyyy');
 
     final startDateStr = dateFormat.format(snap.query.range.startInclusive);

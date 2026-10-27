@@ -7,6 +7,7 @@ import 'package:google_sign_in/google_sign_in.dart';
 import 'package:key_budget/app/viewmodel/navigation_viewmodel.dart';
 import 'package:key_budget/core/models/user_model.dart';
 import 'package:key_budget/core/operations/operation_result.dart';
+import 'package:key_budget/core/security/vault_session.dart';
 import 'package:key_budget/core/services/app_security_service.dart';
 import 'package:key_budget/core/services/home_widget_service.dart';
 import 'package:key_budget/core/services/local_auth_service.dart';
@@ -51,6 +52,7 @@ class AuthViewModel extends ChangeNotifier {
   final AuthRepository _authRepository;
   final LocalAuthService _localAuthService;
   final VoidCallback? onSessionChanged;
+  final void Function(String?)? onVaultUserChanged;
   String? _authUserId;
 
   AuthOperation _currentOperation = AuthOperation.none;
@@ -82,6 +84,7 @@ class AuthViewModel extends ChangeNotifier {
     AuthRepository? authRepository,
     LocalAuthService? localAuthService,
     this.onSessionChanged,
+    this.onVaultUserChanged,
     bool listenToAuthChanges = true,
   }) : _authRepository = authRepository ?? AuthRepository(),
        _localAuthService = localAuthService ?? LocalAuthService() {
@@ -93,6 +96,7 @@ class AuthViewModel extends ChangeNotifier {
         if (_authUserId != firebaseUser?.uid) {
           _authUserId = firebaseUser?.uid;
           onSessionChanged?.call();
+          onVaultUserChanged?.call(firebaseUser?.uid);
         }
 
         if (firebaseUser == null) {
@@ -522,6 +526,8 @@ class AuthViewModel extends ChangeNotifier {
 final authViewModelProvider = ChangeNotifierProvider<AuthViewModel>(
   (ref) => AuthViewModel(
     authRepository: ref.read(authRepositoryProvider),
+    onVaultUserChanged: (uid) =>
+        unawaited(ref.read(vaultSessionProvider).open(uid)),
     onSessionChanged: () {
       ref.read(expenseViewModelProvider).clearData();
       ref.read(credentialViewModelProvider).clearData();

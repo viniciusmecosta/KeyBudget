@@ -79,13 +79,14 @@ class _CredentialCipher extends Fake implements EncryptionService {
   _CredentialCipher(this.prefix);
 
   @override
-  String decryptData(String encryptedText) =>
+  String decryptData(String encryptedText, {String? recordId}) =>
       encryptedText.startsWith('$prefix:')
       ? encryptedText.substring(prefix.length + 1)
       : 'ERRO_DECRIPT';
 
   @override
-  String encryptData(String plainText) => '$prefix:$plainText';
+  String encryptData(String plainText, {String? recordId}) =>
+      '$prefix:$plainText';
 }
 
 class _AttachmentDrive extends DriveService {

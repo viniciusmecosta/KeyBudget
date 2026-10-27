@@ -245,11 +245,11 @@ class FakeCredentialRepository implements CredentialRepository {
 
 class FakeEncryptionService extends Fake implements EncryptionService {
   @override
-  String encryptData(String plainText) =>
+  String encryptData(String plainText, {String? recordId}) =>
       base64Encode(utf8.encode('cipher_$plainText'));
 
   @override
-  String decryptData(String encryptedText) =>
+  String decryptData(String encryptedText, {String? recordId}) =>
       utf8.decode(base64Decode(encryptedText)).replaceFirst('cipher_', '');
 }
 

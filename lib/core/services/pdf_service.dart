@@ -432,7 +432,7 @@ class PdfService {
   Future<void> exportCredentialsPdf(
     BuildContext context,
     List<Credential> credentials,
-    String Function(String) decryptPassword,
+    String Function(Credential) decryptPassword,
   ) async {
     try {
       final PdfDocument document = PdfDocument();
@@ -519,7 +519,7 @@ class PdfService {
         final PdfGridRow row = grid.rows.add();
         row.cells[0].value = credential.location;
         row.cells[1].value = credential.login;
-        row.cells[2].value = decryptPassword(credential.encryptedPassword);
+        row.cells[2].value = decryptPassword(credential);
         row.cells[3].value = credential.email ?? '';
         row.cells[4].value = credential.phoneNumber ?? '';
         row.cells[5].value = credential.notes ?? '';

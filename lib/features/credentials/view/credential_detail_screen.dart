@@ -17,6 +17,7 @@ import 'package:key_budget/core/design_system/widgets/app_status_badge.dart';
 import 'package:key_budget/core/models/credential_model.dart';
 import 'package:key_budget/core/models/folder_model.dart';
 import 'package:key_budget/core/services/snackbar_service.dart';
+import 'package:key_budget/core/security/vault_crypto.dart';
 import 'package:key_budget/core/services/sensitive_clipboard.dart';
 import 'package:key_budget/features/auth/viewmodel/auth_viewmodel.dart';
 import 'package:key_budget/features/credentials/viewmodel/credential_viewmodel.dart';
@@ -63,11 +64,17 @@ class _CredentialDetailScreenState extends ConsumerState<CredentialDetailScreen>
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
-    _decryptedPassword = ref
-        .read(credentialViewModelProvider)
-        .decryptPassword(widget.credential.encryptedPassword);
-
-    _decryptionError = _decryptedPassword == 'ERRO_DECRIPT';
+    try {
+      _decryptedPassword = ref
+          .read(credentialViewModelProvider)
+          .decryptPassword(
+            widget.credential.encryptedPassword,
+            recordId: widget.credential.id,
+          );
+    } on VaultException {
+      _decryptionError = true;
+      _decryptedPassword = '';
+    }
 
     _locationController = TextEditingController(
       text: widget.credential.location,

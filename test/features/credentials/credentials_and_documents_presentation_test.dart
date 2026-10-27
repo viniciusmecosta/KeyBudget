@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:key_budget/core/design_system/widgets/app_status_badge.dart';
 import 'package:key_budget/core/models/credential_model.dart';
 import 'package:key_budget/core/models/document_model.dart';
 import 'package:key_budget/core/services/encryption_service.dart';
+import 'package:key_budget/core/security/vault_crypto.dart';
+import 'package:key_budget/features/credentials/viewmodel/credential_viewmodel.dart';
 import 'package:key_budget/features/credentials/view/credential_detail_screen.dart';
 import 'package:key_budget/features/credentials/widgets/credential_list_tile.dart';
 import 'package:key_budget/features/documents/utils/document_expiry_helper.dart';
@@ -13,12 +14,6 @@ import 'package:key_budget/features/documents/widgets/document_list_tile.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
-
-  setUpAll(() {
-    dotenv.loadFromString(
-      envString: 'ENCRYPTION_KEY=12345678901234567890123456789012\n',
-    );
-  });
 
   group('DocumentExpiryHelper', () {
     final refDate = DateTime(2026, 9, 21);
@@ -208,9 +203,8 @@ void main() {
     testWidgets(
       'starts with masked password, reveals on demand, and auto-hides',
       (tester) async {
-        final encrypted = EncryptionService().encryptData(
-          'myPlainTextPassword',
-        );
+        final encryption = EncryptionService(userId: 'test-user', cipher: VaultCipher(keyId: 'test-key', key: List.filled(32, 3)));
+        final encrypted = encryption.encryptData('myPlainTextPassword', recordId: 'cred_detail');
         final cred = Credential(
           id: 'cred_detail',
           location: 'Portal Corporativo',
@@ -220,6 +214,7 @@ void main() {
 
         await tester.pumpWidget(
           ProviderScope(
+            overrides: [credentialViewModelProvider.overrideWith((ref) => CredentialViewModel(encryptionService: encryption))],
             child: MaterialApp(home: CredentialDetailScreen(credential: cred)),
           ),
         );

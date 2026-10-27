@@ -36,8 +36,11 @@ class CredentialRepository {
         );
   }
 
+  String reserveCredentialId(String userId) =>
+      _getCredentialsCollection(userId).doc().id;
+
   Future<void> addCredential(String userId, Credential credential) async {
-    await _getCredentialsCollection(userId).add(credential);
+    await _getCredentialsCollection(userId).doc(credential.id).set(credential);
   }
 
   Future<void> restoreCredential(String userId, Credential credential) async {

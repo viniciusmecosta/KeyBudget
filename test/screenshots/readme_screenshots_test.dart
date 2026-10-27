@@ -4,7 +4,6 @@ import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:intl/date_symbol_data_local.dart';
@@ -58,9 +57,6 @@ class _Goals extends SavingsGoalRepository {
 
 void main() {
   setUpAll(() async {
-    dotenv.loadFromString(
-      envString: 'ENCRYPTION_KEY=12345678901234567890123456789012',
-    );
     await initializeDateFormatting('pt_BR');
     final inter = FontLoader('Inter');
     for (final weight in [
