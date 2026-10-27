@@ -1,0 +1,72 @@
+import 'package:key_budget/core/import_export/backup_codec.dart';
+import 'package:key_budget/core/security/vault_store.dart';
+
+Map<String, dynamic> copyVaultMap(Map<String, dynamic> data) =>
+    Map<String, dynamic>.from(
+      BackupCodec.restoreValue(BackupCodec.canonicalizeValue(data)) as Map,
+    );
+
+class MemoryVaultStore implements VaultStore {
+  final Map<String, Map<String, dynamic>> documents = {};
+  int writes = 0;
+  int nextId = 0;
+  int? failSourceWriteAt;
+  int sourceWrites = 0;
+  String? failReadPath;
+
+  @override
+  String newId(String collection) => 'id-${nextId++}';
+
+  @override
+  Future<Map<String, dynamic>?> read(String path) async {
+    if (path == failReadPath) throw StateError('injected read failure');
+    final data = documents[path];
+    return data == null ? null : copyVaultMap(data);
+  }
+
+  @override
+  Future<Map<String, Map<String, dynamic>>> list(String collection) async => {
+    for (final entry in documents.entries)
+      if (entry.key.startsWith('$collection/') &&
+          !entry.key.substring(collection.length + 1).contains('/'))
+        entry.key.substring(collection.length + 1): copyVaultMap(entry.value),
+  };
+
+  @override
+  Future<void> set(String path, Map<String, dynamic> data) async {
+    documents[path] = copyVaultMap(data);
+    writes++;
+  }
+
+  @override
+  Future<void> transaction(
+    Future<void> Function(VaultTransaction tx) action,
+  ) async {
+    final tx = _MemoryTransaction(this);
+    await action(tx);
+    for (final path in tx.pending.keys) {
+      if (path.contains('/credentials/') || path.contains('/trash/')) {
+        if (failSourceWriteAt == sourceWrites)
+          throw StateError('injected source failure');
+        sourceWrites++;
+      }
+    }
+    for (final entry in tx.pending.entries) {
+      await set(entry.key, entry.value);
+    }
+  }
+}
+
+class _MemoryTransaction implements VaultTransaction {
+  final MemoryVaultStore store;
+  final Map<String, Map<String, dynamic>> pending = {};
+
+  _MemoryTransaction(this.store);
+
+  @override
+  Future<Map<String, dynamic>?> read(String path) => store.read(path);
+
+  @override
+  void set(String path, Map<String, dynamic> data) =>
+      pending[path] = copyVaultMap(data);
+}
