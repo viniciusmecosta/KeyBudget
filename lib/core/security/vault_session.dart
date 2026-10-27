@@ -24,6 +24,7 @@ class VaultSession extends ChangeNotifier {
   VaultStatus status = VaultStatus.idle;
   String? userId;
   String? migrationId;
+  String? migrationPhase;
   String? error;
   bool hasVerifiedBackup = false;
   bool hasVersionedKey = false;
@@ -36,6 +37,7 @@ class VaultSession extends ChangeNotifier {
 
   bool get canImportLegacy =>
       status == VaultStatus.legacyRequired && !hasVersionedKey;
+  bool get isRollingBack => migrationPhase == 'rollingBack';
   bool get needsRecovery => status == VaultStatus.recoveryRequired;
   bool get canWrite => status == VaultStatus.ready;
   bool get isReady => canWrite && _cipher != null;
@@ -68,6 +70,7 @@ class VaultSession extends ChangeNotifier {
     _key = null;
     userId = uid;
     migrationId = null;
+    migrationPhase = null;
     hasVersionedKey = false;
     hasVerifiedBackup = false;
     error = null;
@@ -123,6 +126,7 @@ class VaultSession extends ChangeNotifier {
       _cipher = loadedKey.cipher();
       hasVersionedKey = true;
       migrationId = config['migrationId'] as String?;
+      migrationPhase = config['state'] as String?;
       status = config['state'] == 'ready'
           ? VaultStatus.ready
           : VaultStatus.recoveryRequired;

@@ -1,3 +1,4 @@
+import 'package:key_budget/features/user/widgets/vault_settings_tile.dart';
 import 'dart:convert';
 import 'dart:io';
 
@@ -121,7 +122,10 @@ class UserScreen extends ConsumerWidget {
       if (cred) {
         final csvStr = csvService.generateCredentialsCsvString(
           credVm.allCredentials,
-          credVm.decryptPassword,
+          (credential) => credVm.decryptPassword(
+            credential.encryptedPassword,
+            recordId: credential.id,
+          ),
         );
         final file = File('${dir.path}/credenciais_backup.csv');
         await file.writeAsBytes(utf8.encode(csvStr));
@@ -786,6 +790,7 @@ class UserScreen extends ConsumerWidget {
                     ),
                   ]),
                   buildSection('Segurança e privacidade', [
+                    const VaultSettingsTile(),
                     SettingsTile(
                       icon: Icons.manage_accounts_outlined,
                       title: 'Conta e recuperação',
