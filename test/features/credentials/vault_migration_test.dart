@@ -196,8 +196,7 @@ void main() {
           store.documents['users/a/vault/config']!['migrationId'] as String;
       final job = store.documents['users/a/vault_migrations/$id']!;
       final generation = job['backupGeneration'];
-      final path =
-          'users/a/vault_migrations/$id/backup_chunks/$generation-000000';
+      final path = 'users/a/vault_backups/$id-$generation-000000';
       final chunk = store.documents[path]!;
       final bytes = Uint8List.fromList((chunk['bytes'] as Blob).bytes);
       bytes[bytes.length - 1] ^= 1;

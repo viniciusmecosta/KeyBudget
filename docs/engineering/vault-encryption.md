@@ -1,6 +1,6 @@
 # Proteção e recuperação do cofre
 
-Cada usuário tem uma chave aleatória de 32 bytes, persistida em users/{uid}/vault_keys/{keyId}. A configuração está em users/{uid}/vault/config. O Firebase Auth e as regras por proprietário autorizam o acesso; o login recupera a chave sem uma senha adicional. O material não é compartilhado entre contas nem regenerado a cada login.
+Cada usuário tem uma chave aleatória de 32 bytes, persistida em users/{uid}/vault_keys/{keyId}. A configuração está em users/{uid}/vault/config, os metadados da migração em users/{uid}/vault_migrations/{migrationId}, os chunks do backup em users/{uid}/vault_backups/{chunkId} e os checkpoints por item em users/{uid}/vault_items/{itemId}. O Firebase Auth e as regras por proprietário autorizam o acesso; o login recupera a chave sem uma senha adicional. O material não é compartilhado entre contas nem regenerado a cada login.
 
 A chave em cache usa flutter_secure_storage, segregada pelo UID. O cache só é utilizado quando a consulta inicial da configuração falha por indisponibilidade de rede, depois de uma abertura verificada. Chave remota ausente ou inválida não é substituída silenciosamente. Uma configuração remota de recuperação impede o fallback offline. Antes de iniciar, retomar ou desfazer uma migração, a sessão remove o cache e suspende o acesso normal ao cofre. Logout descarta o material da sessão e remove seu cache local. Material descartado não pode voltar a criptografar dados.
 

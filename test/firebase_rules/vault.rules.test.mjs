@@ -16,8 +16,8 @@ for (const path of [
   'users/owner/vault/config',
   'users/owner/vault_keys/key',
   'users/owner/vault_migrations/migration',
-  'users/owner/vault_migrations/migration/items/item',
-  'users/owner/vault_migrations/migration/backup_chunks/000000',
+  'users/owner/vault_items/migration-item',
+  'users/owner/vault_backups/migration-generation-000000',
 ]) {
   test(`only the owner can access ${path}`, async () => {
     const owner = environment.authenticatedContext('owner').firestore();
@@ -36,7 +36,7 @@ for (const path of [
 test('source replacement and checkpoint commit together', async () => {
   const owner = environment.authenticatedContext('transaction-owner').firestore();
   const source = doc(owner, 'users/transaction-owner/credentials/one');
-  const checkpoint = doc(owner, 'users/transaction-owner/vault_migrations/one/items/one');
+  const checkpoint = doc(owner, 'users/transaction-owner/vault_items/one-item');
   await setDoc(source, { encrypted_password: 'legacy' });
   await runTransaction(owner, async (transaction) => {
     await transaction.get(source);

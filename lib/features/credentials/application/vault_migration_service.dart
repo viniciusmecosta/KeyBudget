@@ -213,9 +213,12 @@ class VaultMigrationService {
   });
 
   String get _configPath => 'users/$uid/vault/config';
+  String get _backupCollection => 'users/$uid/vault_backups';
   String _jobPath(String id) => 'users/$uid/vault_migrations/$id';
+  String _chunkPath(String id, String generation, int index) =>
+      '$_backupCollection/$id-$generation-${index.toString().padLeft(6, '0')}';
   String _itemPath(String id, String source) =>
-      '${_jobPath(id)}/items/${sha256.convert(utf8.encode(source))}';
+      'users/$uid/vault_items/$id-${sha256.convert(utf8.encode(source))}';
 
   void _check() {
     if (isSessionActive != null && !isSessionActive!()) {
@@ -417,17 +420,14 @@ class VaultMigrationService {
     }, null);
     if (sealed.length > maxBackupBytes) throw _invalidBackup();
     final count = (sealed.length / chunkSize).ceil();
-    final generation = store.newId('${_jobPath(id)}/backup_chunks');
+    final generation = store.newId(_backupCollection);
     for (var i = 0; i < count; i++) {
       _check();
       final end = ((i + 1) * chunkSize).clamp(0, sealed.length);
-      await store.set(
-        '${_jobPath(id)}/backup_chunks/$generation-${i.toString().padLeft(6, '0')}',
-        {
-          'index': i,
-          'bytes': Blob(Uint8List.fromList(sealed.sublist(i * chunkSize, end))),
-        },
-      );
+      await store.set(_chunkPath(id, generation, i), {
+        'index': i,
+        'bytes': Blob(Uint8List.fromList(sealed.sublist(i * chunkSize, end))),
+      });
     }
     await _phase(
       id,
@@ -442,13 +442,14 @@ class VaultMigrationService {
 
   Future<Map<String, dynamic>> _loadBackup(String id, VaultKey key) async {
     final job = await store.read(_jobPath(id));
-    final allChunks = await store.list('${_jobPath(id)}/backup_chunks');
+    final allChunks = await store.list(_backupCollection);
     final generation = job?['backupGeneration'];
     if (generation is! String || generation.isEmpty) throw _invalidBackup();
+    final prefix = '$id-$generation-';
     final chunks = {
       for (final entry in allChunks.entries)
-        if (entry.key.startsWith('$generation-'))
-          entry.key.substring(generation.length + 1): entry.value,
+        if (entry.key.startsWith(prefix))
+          entry.key.substring(prefix.length): entry.value,
     };
     _check();
     final count = job?['backupChunkCount'];
