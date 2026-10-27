@@ -1,5 +1,5 @@
 name: key_budget
-description: "Key Budget"
+description: "PassFin"
 publish_to: 'Vinicius'
 version: 0.4.0
 
@@ -75,3 +75,4 @@ flutter:
   assets:
     - assets/fonts/
     - assets/icon/
+    - assets/brand/
