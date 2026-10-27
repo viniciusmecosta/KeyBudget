@@ -2,10 +2,11 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:key_budget/core/security/vault_store.dart';
 
 dynamic _copyValue(dynamic value) {
-  if (value is Map)
+  if (value is Map) {
     return {
       for (final entry in value.entries) entry.key: _copyValue(entry.value),
     };
+  }
   if (value is List) return value.map(_copyValue).toList();
   if (value is Blob) return Blob(value.bytes);
   return value;
@@ -54,8 +55,9 @@ class MemoryVaultStore implements VaultStore {
     await action(tx);
     for (final path in tx.pending.keys) {
       if (path.contains('/credentials/') || path.contains('/trash/')) {
-        if (failSourceWriteAt == sourceWrites)
+        if (failSourceWriteAt == sourceWrites) {
           throw StateError('injected source failure');
+        }
         sourceWrites++;
       }
     }

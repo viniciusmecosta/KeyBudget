@@ -38,6 +38,25 @@ MemoryVaultStore _store() {
 }
 
 void main() {
+  test(
+    'large vault migrates without relying on a single batch limit',
+    () async {
+      final store = MemoryVaultStore();
+      final ciphertext = _legacy('large-vault');
+      for (var i = 0; i < 650; i++) {
+        store.documents['users/a/credentials/record-$i'] = {
+          'encrypted_password': ciphertext,
+        };
+      }
+      final service = VaultMigrationService(store: store, uid: 'a');
+      final preview = await service.preview(_key);
+      expect(preview.entries.length, 650);
+      await service.start(preview, confirmed: true);
+      expect(store.sourceWrites, 650);
+      expect(store.documents['users/a/vault/config']!['state'], 'ready');
+    },
+  );
+
   test('preview and unconfirmed attempts never write', () async {
     final store = _store();
     final service = VaultMigrationService(store: store, uid: 'a');

@@ -22,6 +22,7 @@ class _VaultMigrationScreenState extends ConsumerState<VaultMigrationScreen>
   VaultMigrationService? _service;
   VaultMigrationPreview? _preview;
   bool _busy = false;
+  bool _foreground = true;
   bool _confirmed = false;
   bool _showKey = false;
   String? _error;
@@ -38,7 +39,8 @@ class _VaultMigrationScreenState extends ConsumerState<VaultMigrationScreen>
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
-    if (state != AppLifecycleState.resumed) {
+    _foreground = state == AppLifecycleState.resumed;
+    if (!_foreground) {
       _keyController.clear();
       _revealed.clear();
       _showKey = false;
@@ -75,7 +77,10 @@ class _VaultMigrationScreenState extends ConsumerState<VaultMigrationScreen>
         input,
         currentCipher: ref.read(vaultSessionProvider).recoveryCipher,
       );
-      if (!mounted) return;
+      if (!mounted || !_foreground) {
+        _service!.discardPreview();
+        return;
+      }
       setState(() {
         _preview = preview;
         if (!preview.canProceed) {

@@ -1,5 +1,5 @@
 import 'dart:convert';
-import 'dart:isolate';
+import 'package:flutter/foundation.dart';
 import 'dart:typed_data';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -95,7 +95,7 @@ class VaultInventory {
       );
 
   int get passwordCount =>
-      sources.fold(0, (count, source) => count + source.passwords.length);
+      sources.fold(0, (total, source) => total + source.passwords.length);
   bool get hasLegacy => sources.any(
     (source) => source.passwords.any((p) => !p.ciphertext.startsWith('kbv')),
   );
@@ -156,6 +156,44 @@ class VaultMigrationPreview {
       entries.length == inventory.passwordCount;
 }
 
+(List<VaultPreviewEntry>, List<String>) _readLegacyPreview(
+  ({String input, String uid, List<VaultSource> sources, VaultCipher? cipher})
+  request,
+) {
+  final reader = LegacyVaultReader(request.input);
+  final entries = <VaultPreviewEntry>[];
+  final failures = <String>[];
+  for (final source in request.sources) {
+    for (final password in source.passwords) {
+      try {
+        final plain = password.ciphertext.startsWith('kbv')
+            ? request.cipher?.decrypt(
+                password.ciphertext,
+                uid: request.uid,
+                recordId: password.id,
+              )
+            : reader.decrypt(password.ciphertext);
+        if (plain == null ||
+            utf8.encode(plain).length > VaultCipher.maxPasswordBytes) {
+          throw const FormatException();
+        }
+        entries.add(
+          VaultPreviewEntry(
+            source.path,
+            password.id,
+            password.label,
+            plain,
+            source.path.contains('/trash/'),
+          ),
+        );
+      } catch (_) {
+        failures.add(password.label);
+      }
+    }
+  }
+  return (entries, failures);
+}
+
 class VaultMigrationService {
   static const chunkSize = 128 * 1024;
   static const maxBackupBytes = 200 * 1024 * 1024;
@@ -190,39 +228,16 @@ class VaultMigrationService {
     VaultCipher? currentCipher,
   }) async {
     _check();
-    final reader = LegacyVaultReader(input);
+    final normalized = normalizeLegacyKey(input);
     final inventory = await VaultInventory.capture(store, uid);
     _check();
-    final entries = <VaultPreviewEntry>[];
-    final failures = <String>[];
-    for (final source in inventory.sources) {
-      for (final password in source.passwords) {
-        try {
-          final plain = password.ciphertext.startsWith('kbv')
-              ? currentCipher?.decrypt(
-                  password.ciphertext,
-                  uid: uid,
-                  recordId: password.id,
-                )
-              : reader.decrypt(password.ciphertext);
-          if (plain == null ||
-              utf8.encode(plain).length > VaultCipher.maxPasswordBytes) {
-            throw const FormatException();
-          }
-          entries.add(
-            VaultPreviewEntry(
-              source.path,
-              password.id,
-              password.label,
-              plain,
-              source.path.contains('/trash/'),
-            ),
-          );
-        } catch (_) {
-          failures.add(password.label);
-        }
-      }
-    }
+    final (entries, failures) = await compute(_readLegacyPreview, (
+      input: normalized,
+      uid: uid,
+      sources: inventory.sources,
+      cipher: currentCipher,
+    ));
+    _check();
     _preview = VaultMigrationPreview(uid, inventory, entries, failures);
     return _preview!;
   }
@@ -282,6 +297,11 @@ class VaultMigrationService {
           0,
           inventory.sources.length,
         );
+        final portableBySource = <String, Map<String, String>>{};
+        for (final entry in preview.entries) {
+          (portableBySource[entry.sourcePath] ??= {})[entry.credentialId] =
+              entry.plaintext;
+        }
         final payload = {
           'schemaVersion': 1,
           'uid': uid,
@@ -292,12 +312,7 @@ class VaultMigrationService {
               {
                 'path': source.path,
                 'data': source.data,
-                'passwords': {
-                  for (final entry in preview.entries.where(
-                    (e) => e.sourcePath == source.path,
-                  ))
-                    entry.credentialId: entry.plaintext,
-                },
+                'passwords': portableBySource[source.path]!,
               },
           ],
         };
@@ -376,7 +391,7 @@ class VaultMigrationService {
     final aad = _backupAad(id, key.id);
     final bytes = key.bytes.toList();
     final keyId = key.id;
-    final sealed = await Isolate.run(() {
+    final sealed = await compute((_) {
       final json = utf8.encode(
         jsonEncode(BackupCodec.canonicalizeValue(payload)),
       );
@@ -387,14 +402,15 @@ class VaultMigrationService {
       } finally {
         cipher.dispose();
       }
-    });
+    }, null);
     if (sealed.length > maxBackupBytes) throw _invalidBackup();
     final count = (sealed.length / chunkSize).ceil();
+    final generation = store.newId('${_jobPath(id)}/backup_chunks');
     for (var i = 0; i < count; i++) {
       _check();
       final end = ((i + 1) * chunkSize).clamp(0, sealed.length);
       await store.set(
-        '${_jobPath(id)}/backup_chunks/${i.toString().padLeft(6, '0')}',
+        '${_jobPath(id)}/backup_chunks/$generation-${i.toString().padLeft(6, '0')}',
         {
           'index': i,
           'bytes': Blob(Uint8List.fromList(sealed.sublist(i * chunkSize, end))),
@@ -406,6 +422,7 @@ class VaultMigrationService {
       'preparingBackup',
       extra: {
         'backupChunkCount': count,
+        'backupGeneration': generation,
         'backupDigest': sha256.convert(sealed).toString(),
       },
     );
@@ -413,7 +430,14 @@ class VaultMigrationService {
 
   Future<Map<String, dynamic>> _loadBackup(String id, VaultKey key) async {
     final job = await store.read(_jobPath(id));
-    final chunks = await store.list('${_jobPath(id)}/backup_chunks');
+    final allChunks = await store.list('${_jobPath(id)}/backup_chunks');
+    final generation = job?['backupGeneration'];
+    if (generation is! String || generation.isEmpty) throw _invalidBackup();
+    final chunks = {
+      for (final entry in allChunks.entries)
+        if (entry.key.startsWith('$generation-'))
+          entry.key.substring(generation.length + 1): entry.value,
+    };
     _check();
     final count = job?['backupChunkCount'];
     if (count is! int ||
@@ -440,7 +464,7 @@ class VaultMigrationService {
     final aad = _backupAad(id, key.id);
     final bytes = key.bytes.toList();
     final keyId = key.id;
-    final payload = await Isolate.run(() {
+    final payload = await compute((_) {
       final cipher = VaultCipher(keyId: keyId, key: bytes);
       try {
         final archive = BackupCrypto.unpackArchive(cipher.open(sealed, aad));
@@ -456,7 +480,7 @@ class VaultMigrationService {
       } finally {
         cipher.dispose();
       }
-    });
+    }, null);
     if (payload['schemaVersion'] != 1 ||
         payload['uid'] != uid ||
         payload['migrationId'] != id ||

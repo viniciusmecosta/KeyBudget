@@ -94,7 +94,7 @@ class VaultKeyRepository {
           'writeFormatVersion': 2,
           'activeKeyId': candidate.id,
           'state': migrationId == null ? 'ready' : 'preparing',
-          if (migrationId != null) 'migrationId': migrationId,
+          'migrationId': ?migrationId,
           'createdAt': now,
           'updatedAt': now,
         });

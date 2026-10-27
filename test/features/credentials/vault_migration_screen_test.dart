@@ -34,6 +34,16 @@ void main() {
       await tester.enterText(find.byType(TextFormField), '  $key\n');
       await tester.ensureVisible(find.text('Testar chave'));
       await tester.tap(find.text('Testar chave'));
+      for (
+        var attempt = 0;
+        attempt < 100 && find.text('Cancelar conferência').evaluate().isEmpty;
+        attempt++
+      ) {
+        await tester.runAsync(
+          () => Future<void>.delayed(const Duration(milliseconds: 20)),
+        );
+        await tester.pump(const Duration(milliseconds: 20));
+      }
       await tester.pumpAndSettle();
       expect(find.text('synthetic-password'), findsNothing);
       expect(store.writes, 0);
