@@ -1,4 +1,4 @@
-# Design System: KeyBudget
+# Design System: PassFin
 
 ## 1. Visual Theme & Atmosphere
 Interface financeira calma, legível e organizada. A saudação e o resumo mensal formam um topo contínuo; as demais seções usam superfícies discretas para separar ações e informações. O design deriva do aplicativo local, sem projeto Stitch associado.
@@ -6,11 +6,11 @@ Interface financeira calma, legível e organizada. A saudação e o resumo mensa
 ## 2. Color Palette & Roles
 - Azul profundo (#0058D9): identidade e ações principais no tema claro.
 - Azul luminoso (#82B7FF): destaque no tema escuro.
-- Azul quase branco (#EAF4FF): fundo claro.
-- Branco azulado (#F8FCFF): superfícies claras.
-- Marinho profundo (#091A2D): fundo escuro.
-- Marinho suave (#142B45): superfícies escuras.
-- Tinta azul (#102B50) e branco azulado (#EAF4FF): texto principal conforme o tema.
+- Branco (#FFFFFF): fundo claro.
+- Cinza quase branco (#F7F8FA): superfícies claras.
+- Preto (#000000): fundo escuro.
+- Grafite (#121416): superfícies escuras.
+- Tinta azul (#102B50) e branco suave (#F5F7FA): texto principal conforme o tema.
 
 As cores personalizadas passam pelos ajustes de contraste existentes. O resumo integrado preserva a
 cor escolhida no tema, ajustada para contraste mínimo de 7:1 com texto branco, mantendo pelo menos
@@ -44,3 +44,7 @@ Decisão: evolução incremental do sistema existente, em vez de uma substituiç
 Capturas de painel e metas inspecionadas em 320, 390 e 1024 pontos, nos dois temas. Em 320 pontos, escala de texto de 180%: valor principal em uma linha, receitas/despesas com quebra de texto e cabeçalhos sem compressão pela ação lateral. Metas começam no topo e o botão estendido mantém seu rótulo dentro da área visível. Capturas usam dados fictícios e a fonte Roboto local como substituta de Inter, sem download de fontes.
 
 381 testes passaram, incluindo regressões de contraste existentes, responsividade, abertura do formulário de metas, autorização expirada, falha de API e timeout da verificação. Análise estática de `lib`, `test/core`, `test/features` e `test/visual` sem problemas. A pasta local preexistente `test/temp_capture` não integra essa validação: contém referências a uma tela removida. OAuth real e leitura por tecnologia assistiva em dispositivo não foram verificados nesta revisão.
+
+## Identidade PassFin
+
+Carteira arredondada com uma cédula e uma chave central. Arquivos SVG editáveis, PNGs, ícones mobile e instruções de reprodução estão no [guia de marca](docs/branding/README.md). A marca mantém seu azul próprio mesmo quando o usuário personaliza a cor da interface. O tema claro usa fundo branco; o escuro, preto com superfícies grafite.

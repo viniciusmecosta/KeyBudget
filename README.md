@@ -1,19 +1,26 @@
 <div align="center">
 
-# KeyBudget
+# PassFin
+
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="assets/brand/passfin-lockup-dark.svg">
+  <img src="assets/brand/passfin-lockup-light.svg" width="320" alt="PassFin: carteira com cédula e chave">
+</picture>
 
 [![Flutter](https://img.shields.io/badge/Flutter-02569B?style=for-the-badge&logo=flutter&logoColor=white)](https://flutter.dev/)
 [![Dart](https://img.shields.io/badge/Dart-0175C2?style=for-the-badge&logo=dart&logoColor=white)](https://dart.dev/)
 [![Firebase](https://img.shields.io/badge/Firebase-FFCA28?style=for-the-badge&logo=firebase&logoColor=black)](https://firebase.google.com/)
 [![Riverpod](https://img.shields.io/badge/Riverpod-1A73E8?style=for-the-badge&logo=dart&logoColor=white)](https://riverpod.dev/)
 
-**Finanças, senhas e documentos em um só lugar.**
+**Senhas, finanças e documentos em um só lugar.**
 
 </div>
 
 Registre seus lançamentos, acompanhe metas e organize credenciais e documentos.
 O painel reúne o mês e os gráficos escolhidos por você; em **Perfil → Aparência**, ajuste cores,
 tema, navegação e seções, com resumo integrado ao topo ou em cartão.
+
+A identidade visual e os arquivos da marca estão no [guia PassFin](docs/branding/README.md).
 
 ## Funcionalidades
 

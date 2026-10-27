@@ -7,7 +7,11 @@ Use Flutter com Dart `>=3.12.0 <4.0.0`, conforme `pubspec.yaml`. No projeto Fire
 - Android: `android/app/google-services.json`.
 - iOS: `ios/Runner/GoogleService-Info.plist`.
 
-Configure os identificadores dos aplicativos e as credenciais de login Google para cada plataforma utilizada.
+O pacote Dart é `passfin`, e o nome exibido é PassFin. No Android, **mantenha `com.vinicius.key_budget`** tanto no `applicationId` quanto no namespace. Este é o identificador da instalação legada; trocá-lo instala outro aplicativo, sem acesso automático ao armazenamento privado do anterior.
+
+Use o mesmo projeto Firebase e o cliente Android correspondente a esse identificador. Não edite o `package_name` de `google-services.json` manualmente: use o arquivo gerado pelo Firebase. A mudança de marca não exige outro cadastro Android. O certificado de assinatura da atualização também precisa continuar o mesmo.
+
+A pasta existente do Drive, os formatos de backup e os contextos criptográficos continuam compatíveis. Antes de trocar de aparelho ou reinstalar, sincronize os dados e confira um backup criptografado. A nova marca não exige desinstalar o KeyBudget.
 
 ## Criptografia
 
