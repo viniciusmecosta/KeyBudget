@@ -306,14 +306,15 @@ class CredentialViewModel extends ChangeNotifier {
     String? logoPath,
     String? folderId,
   }) async {
+    final encryption = _activeEncryptionService;
+    final decryptedOriginal = encryption.decryptData(
+      originalCredential.encryptedPassword,
+      recordId: originalCredential.id,
+    );
     String passwordToSave = originalCredential.encryptedPassword;
     if (newPlainPassword != null && newPlainPassword.isNotEmpty) {
-      final decryptedOriginal = decryptPassword(
-        originalCredential.encryptedPassword,
-        recordId: originalCredential.id,
-      );
       if (newPlainPassword != decryptedOriginal) {
-        passwordToSave = _activeEncryptionService.encryptData(
+        passwordToSave = encryption.encryptData(
           newPlainPassword,
           recordId: originalCredential.id,
         );

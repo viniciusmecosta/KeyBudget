@@ -120,7 +120,7 @@ class _CredentialDetailScreenState extends ConsumerState<CredentialDetailScreen>
   }
 
   void _saveChanges() async {
-    if (!_formKey.currentState!.validate()) return;
+    if (_isSaving || !_formKey.currentState!.validate()) return;
 
     setState(() => _isSaving = true);
     HapticFeedback.mediumImpact();
@@ -129,31 +129,44 @@ class _CredentialDetailScreenState extends ConsumerState<CredentialDetailScreen>
     final viewModel = ref.read(credentialViewModelProvider);
     final scaffoldContext = context;
     final navigator = Navigator.of(context);
-    final userId = authViewModel.currentUser!.id;
-
-    await viewModel.updateCredential(
-      userId: userId,
-      originalCredential: widget.credential,
-      location: _locationController.text,
-      login: _loginController.text,
-      newPlainPassword: _passwordController.text,
-      email: _emailController.text,
-      phoneNumber: _phoneMaskFormatter.unmaskText(_phoneController.text),
-      notes: _notesController.text,
-      logoPath: _logoPath,
-      folderId: _selectedFolderId,
-    );
-
-    if (!scaffoldContext.mounted) return;
-    setState(() {
-      _isSaving = false;
-      _isEditing = false;
-    });
-    SnackbarService.showSuccess(
-      scaffoldContext,
-      'Credencial atualizada com sucesso!',
-    );
-    navigator.pop();
+    final userId = authViewModel.currentUser?.id;
+    try {
+      if (userId == null) {
+        throw const VaultException(
+          VaultErrorCode.unavailable,
+          'Entre na sua conta antes de salvar.',
+        );
+      }
+      await viewModel.updateCredential(
+        userId: userId,
+        originalCredential: widget.credential,
+        location: _locationController.text,
+        login: _loginController.text,
+        newPlainPassword: _passwordController.text,
+        email: _emailController.text,
+        phoneNumber: _phoneMaskFormatter.unmaskText(_phoneController.text),
+        notes: _notesController.text,
+        logoPath: _logoPath,
+        folderId: _selectedFolderId,
+      );
+      if (!scaffoldContext.mounted) return;
+      SnackbarService.showSuccess(
+        scaffoldContext,
+        'Credencial atualizada com sucesso!',
+      );
+      navigator.pop();
+    } catch (error) {
+      if (scaffoldContext.mounted) {
+        SnackbarService.showError(
+          scaffoldContext,
+          error is VaultException
+              ? error.message
+              : 'Não foi possível salvar a credencial. Tente novamente.',
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _isSaving = false);
+    }
   }
 
   void _deleteCredential() async {

@@ -2,7 +2,7 @@
 
 Cada usuário tem uma chave aleatória de 32 bytes, persistida em users/{uid}/vault_keys/{keyId}. A configuração está em users/{uid}/vault/config. O Firebase Auth e as regras por proprietário autorizam o acesso; o login recupera a chave sem uma senha adicional. O material não é compartilhado entre contas nem regenerado a cada login.
 
-A chave em cache usa flutter_secure_storage, segregada pelo UID. O cache só é utilizado em falhas de rede depois de uma abertura verificada. Chave remota ausente ou inválida não é substituída silenciosamente. Logout descarta o material da sessão e remove seu cache local.
+A chave em cache usa flutter_secure_storage, segregada pelo UID. O cache só é utilizado quando a consulta inicial da configuração falha por indisponibilidade de rede, depois de uma abertura verificada. Chave remota ausente ou inválida não é substituída silenciosamente. Uma configuração remota de recuperação impede o fallback offline. Antes de iniciar, retomar ou desfazer uma migração, a sessão remove o cache e suspende o acesso normal ao cofre. Logout descarta o material da sessão e remove seu cache local. Material descartado não pode voltar a criptografar dados.
 
 ## Formatos
 
@@ -33,6 +33,8 @@ Antes de verificar o backup, nenhum ciphertext original é substituído. Uma nov
 
 Após verificar o backup, somente o login e a chave nova são necessários para retomar. Checkpoints remotos evitam repetir alterações já confirmadas, inclusive se o processo terminar logo depois de uma transação.
 
+Uma nova tentativa com a chave legada não pode substituir um backup já verificado. Nesse caso, a operação existente deve ser retomada ou desfeita.
+
 Retomar migração permite continuar ou desfazer. Depois da conclusão, Perfil → Proteção do cofre mantém o acesso ao rollback da migração salva. Desfazer compara o documento com o digest gravado pela migração antes de restaurar sua imagem original. Alterações ou remoções posteriores produzem conflito e são preservadas. Rollback interrompido também é retomável.
 
 O rollback exato retorna ao ciphertext legado. Para ler esse formato, será necessário informar novamente a chave antiga. O backup verificado e a chave nova permanecem disponíveis para converter novamente sem depender da antiga.
@@ -41,7 +43,7 @@ Backups da migração e suas chaves não são excluídos automaticamente. O paco
 
 ## Testes
 
-A suíte Flutter cobre autenticação do envelope, formato legado, contas separadas, cache offline, ciclo de sessão, prévia sem gravações, interrupção, backup incompleto, rollback, lixeira, 650 credenciais e visibilidade da opção no perfil.
+A suíte Flutter cobre autenticação do envelope, formato legado, contas separadas, cache offline, ciclo de sessão, prévia sem gravações, interrupção em cada ponto de gravação da migração e do rollback, backup incompleto ou adulterado, lixeira, 650 credenciais e visibilidade da opção no perfil. Edições autenticam a senha original antes de gravar, inclusive ao alterar somente os demais campos; credenciais sem ID reservado são recusadas.
 
 Os testes de regras usam o projeto demo-keybudget no emulador, sem deploy:
 

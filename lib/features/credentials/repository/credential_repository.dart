@@ -40,17 +40,12 @@ class CredentialRepository {
       _getCredentialsCollection(userId).doc().id;
 
   Future<void> addCredential(String userId, Credential credential) async {
+    _validateId(credential);
     await _getCredentialsCollection(userId).doc(credential.id).set(credential);
   }
 
   Future<void> restoreCredential(String userId, Credential credential) async {
-    if (credential.id != null) {
-      await _getCredentialsCollection(
-        userId,
-      ).doc(credential.id).set(credential);
-    } else {
-      await addCredential(userId, credential);
-    }
+    await addCredential(userId, credential);
   }
 
   Stream<List<Credential>> getCredentialsStreamForUser(String userId) {
@@ -70,9 +65,16 @@ class CredentialRepository {
   }
 
   Future<void> updateCredential(String userId, Credential credential) async {
+    _validateId(credential);
     await _getCredentialsCollection(
       userId,
     ).doc(credential.id).update(credential.toMap());
+  }
+
+  void _validateId(Credential credential) {
+    if (credential.id == null || credential.id!.isEmpty) {
+      throw ArgumentError('Reserve o ID da credencial antes de criptografar.');
+    }
   }
 
   Future<void> deleteCredential(String userId, String credentialId) async {
