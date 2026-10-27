@@ -44,9 +44,15 @@ class VaultSession extends ChangeNotifier {
 
   EncryptionService get encryption {
     if (!isReady) {
-      throw const VaultException(
+      throw VaultException(
         VaultErrorCode.unavailable,
-        'O cofre ainda não está pronto. Abra a proteção do cofre no perfil.',
+        status == VaultStatus.loading
+            ? 'A proteção do cofre está sendo carregada. Aguarde um instante.'
+            : status == VaultStatus.legacyRequired
+            ? 'Abra Perfil → Incluir chave legada para atualizar a proteção das senhas.'
+            : status == VaultStatus.recoveryRequired
+            ? 'Abra Perfil → Retomar migração para concluir a atualização.'
+            : 'Não foi possível abrir a proteção do cofre. Tente novamente pelo perfil.',
       );
     }
     return EncryptionService(cipher: _cipher, userId: userId);

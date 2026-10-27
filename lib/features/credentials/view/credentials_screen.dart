@@ -1,3 +1,5 @@
+import 'package:key_budget/core/security/vault_session.dart';
+import 'package:key_budget/core/services/snackbar_service.dart';
 import 'package:key_budget/core/design_system/widgets/app_page_scaffold.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -246,6 +248,8 @@ class _CredentialsScreenState extends ConsumerState<CredentialsScreen> {
   @override
   Widget build(BuildContext context) {
     final vm = ref.watch(credentialViewModelProvider);
+    final vault = ref.watch(vaultSessionProvider);
+    final vaultUnavailable = vault.status != VaultStatus.idle && !vault.isReady;
     final theme = Theme.of(context);
     final authVm = ref.read(authViewModelProvider);
 
@@ -386,6 +390,30 @@ class _CredentialsScreenState extends ConsumerState<CredentialsScreen> {
                   parent: AlwaysScrollableScrollPhysics(),
                 ),
                 slivers: [
+                  if (vaultUnavailable)
+                    SliverToBoxAdapter(
+                      child: Padding(
+                        padding: const EdgeInsets.all(AppSpacing.md),
+                        child: Card(
+                          child: Padding(
+                            padding: const EdgeInsets.all(AppSpacing.md),
+                            child: Row(
+                              children: [
+                                const Icon(Icons.shield_outlined),
+                                const SizedBox(width: AppSpacing.md),
+                                Expanded(
+                                  child: Text(
+                                    vault.status == VaultStatus.loading
+                                        ? 'Carregando a proteção do cofre…'
+                                        : 'Conclua a proteção do cofre na seção Segurança e privacidade do Perfil para acessar suas senhas.',
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
                   if (vm.isLoading)
                     const CredentialsListSkeleton()
                   else if (vm.loadErrorMessage != null &&
@@ -486,6 +514,13 @@ class _CredentialsScreenState extends ConsumerState<CredentialsScreen> {
         floatingActionButton: FloatingActionButton.extended(
           heroTag: 'fab_credentials',
           onPressed: () {
+            if (vaultUnavailable) {
+              SnackbarService.showError(
+                context,
+                'Conclua a proteção do cofre pelo Perfil antes de criar uma senha.',
+              );
+              return;
+            }
             if (vm.currentFolderId != null) {
               NavigationUtils.push(context, const AddCredentialScreen());
             } else {
