@@ -33,63 +33,41 @@ A identidade visual e os arquivos da marca estão no [guia PassFin](docs/brandin
 
 ## Telas do Aplicativo
 
-Capturas da interface real, com dados fictícios. Em cada par, **tema claro à esquerda** e **escuro à direita**. Clique para ampliar.
+Capturas de telas Flutter renderizadas com dados fictícios. Em cada par, **tema claro à esquerda** e **escuro à direita**. Clique para ampliar.
 
-### Painel e despesas
+### Entrada
 
 <p align="center">
-  <a href="docs/images/home-light.jpg"><img src="docs/images/home-light.jpg" width="23%" alt="Painel com despesas do mês e gráfico mensal, tema claro" /></a>
-  <a href="docs/images/home-dark.jpg"><img src="docs/images/home-dark.jpg" width="23%" alt="Painel com despesas do mês e gráfico mensal, tema escuro" /></a>
-  <a href="docs/images/expense-light.jpg"><img src="docs/images/expense-light.jpg" width="23%" alt="Lançamentos com saldo, filtros e transações, tema claro" /></a>
-  <a href="docs/images/expense-dark.jpg"><img src="docs/images/expense-dark.jpg" width="23%" alt="Lançamentos com saldo, filtros e transações, tema escuro" /></a>
+  <a href="docs/branding/login-light.png"><img src="docs/branding/login-light.png" width="23%" alt="Entrada do PassFin, tema claro" /></a>
+  <a href="docs/branding/login-dark.png"><img src="docs/branding/login-dark.png" width="23%" alt="Entrada do PassFin, tema escuro" /></a>
+</p>
+
+### Painel e metas
+
+<p align="center">
+  <a href="docs/images/dashboard-light-current.png"><img src="docs/images/dashboard-light-current.png" width="23%" alt="Painel com despesas do mês e gráfico mensal, tema claro" /></a>
+  <a href="docs/images/dashboard-dark-current.png"><img src="docs/images/dashboard-dark-current.png" width="23%" alt="Painel com despesas do mês e gráfico mensal, tema escuro" /></a>
+  <a href="docs/images/goals-light-current.png"><img src="docs/images/goals-light-current.png" width="23%" alt="Metas com valores guardados e progresso, tema claro" /></a>
+  <a href="docs/images/goals-dark-current.png"><img src="docs/images/goals-dark-current.png" width="23%" alt="Metas com valores guardados e progresso, tema escuro" /></a>
+</p>
+
+### Lançamentos e análise financeira
+
+<p align="center">
+  <a href="docs/images/expense-light-current.png"><img src="docs/images/expense-light-current.png" width="23%" alt="Lançamentos e saldo do mês, tema claro" /></a>
+  <a href="docs/images/expense-dark-current.png"><img src="docs/images/expense-dark-current.png" width="23%" alt="Lançamentos e saldo do mês, tema escuro" /></a>
+  <a href="docs/images/analysis-light-current.png"><img src="docs/images/analysis-light-current.png" width="23%" alt="Análise financeira com resumo e composição de gastos, tema claro" /></a>
+  <a href="docs/images/analysis-dark-current.png"><img src="docs/images/analysis-dark-current.png" width="23%" alt="Análise financeira com resumo e composição de gastos, tema escuro" /></a>
 </p>
 
 ### Credenciais e documentos
 
 <p align="center">
-  <a href="docs/images/credentials-light.jpg"><img src="docs/images/credentials-light.jpg" width="23%" alt="Cofre com pastas e credenciais, tema claro" /></a>
-  <a href="docs/images/credentials-dark.jpg"><img src="docs/images/credentials-dark.jpg" width="23%" alt="Cofre com pastas e credenciais, tema escuro" /></a>
-  <a href="docs/images/documents-light.jpg"><img src="docs/images/documents-light.jpg" width="23%" alt="Documentos com identificação e validade, tema claro" /></a>
-  <a href="docs/images/documents-dark.jpg"><img src="docs/images/documents-dark.jpg" width="23%" alt="Documentos com identificação e validade, tema escuro" /></a>
+  <a href="docs/images/credentials-light-current.png"><img src="docs/images/credentials-light-current.png" width="23%" alt="Cofre com pastas e credenciais, tema claro" /></a>
+  <a href="docs/images/credentials-dark-current.png"><img src="docs/images/credentials-dark-current.png" width="23%" alt="Cofre com pastas e credenciais, tema escuro" /></a>
+  <a href="docs/images/documents-light-current.png"><img src="docs/images/documents-light-current.png" width="23%" alt="Documentos e identificações, tema claro" /></a>
+  <a href="docs/images/documents-dark-current.png"><img src="docs/images/documents-dark-current.png" width="23%" alt="Documentos e identificações, tema escuro" /></a>
 </p>
-
-### Metas e análise financeira
-
-<p align="center">
-  <a href="docs/images/goals-light.jpg"><img src="docs/images/goals-light.jpg" width="23%" alt="Metas com valores guardados e progresso, tema claro" /></a>
-  <a href="docs/images/goals-dark.jpg"><img src="docs/images/goals-dark.jpg" width="23%" alt="Metas com valores guardados e progresso, tema escuro" /></a>
-  <a href="docs/images/analysis1-light.jpg"><img src="docs/images/analysis1-light.jpg" width="23%" alt="Análise com entradas, saídas e distribuição de gastos, tema claro" /></a>
-  <a href="docs/images/analysis1-dark.jpg"><img src="docs/images/analysis1-dark.jpg" width="23%" alt="Análise com entradas, saídas e distribuição de gastos, tema escuro" /></a>
-</p>
-
-### Gráficos e personalização
-
-<p align="center">
-  <a href="docs/images/dashboard-charts-light.jpg"><img src="docs/images/dashboard-charts-light.jpg" width="23%" alt="Gráficos opcionais por categoria e evolução do mês, tema claro" /></a>
-  <a href="docs/images/dashboard-charts-dark.jpg"><img src="docs/images/dashboard-charts-dark.jpg" width="23%" alt="Gráficos opcionais por categoria e evolução do mês, tema escuro" /></a>
-  <a href="docs/images/customization-light.jpg"><img src="docs/images/customization-light.jpg" width="23%" alt="Seleção e ordenação das seções do painel, tema claro" /></a>
-  <a href="docs/images/customization-dark.jpg"><img src="docs/images/customization-dark.jpg" width="23%" alt="Seleção e ordenação das seções do painel, tema escuro" /></a>
-</p>
-
-<details>
-<summary><strong>Perfil, saldo com receitas e mais análises</strong></summary>
-
-<p align="center">
-  <a href="docs/images/user-light.jpg"><img src="docs/images/user-light.jpg" width="38%" alt="Perfil e configurações, tema claro" /></a>
-  <a href="docs/images/user-dark.jpg"><img src="docs/images/user-dark.jpg" width="38%" alt="Perfil e configurações, tema escuro" /></a>
-</p>
-
-<p align="center">
-  <a href="docs/images/home-income-light.jpg"><img src="docs/images/home-income-light.jpg" width="38%" alt="Painel com receitas e despesas, tema claro" /></a>
-  <a href="docs/images/home-income-dark.jpg"><img src="docs/images/home-income-dark.jpg" width="38%" alt="Painel com receitas e despesas, tema escuro" /></a>
-</p>
-
-<p align="center">
-  <a href="docs/images/analysis2-light.jpg"><img src="docs/images/analysis2-light.jpg" width="38%" alt="Detalhes da distribuição de gastos, tema claro" /></a>
-  <a href="docs/images/analysis2-dark.jpg"><img src="docs/images/analysis2-dark.jpg" width="38%" alt="Detalhes da distribuição de gastos, tema escuro" /></a>
-</p>
-
-</details>
 
 ## Widgets no Android
 
@@ -104,15 +82,6 @@ Usam os lançamentos salvos e recalculam os totais na virada do dia, mesmo com o
 | Resumo financeiro | 4 × 3 |
 | Próximos gastos | 3 × 2 |
 | Nova despesa | 1 × 1 |
-
-Renderização real dos widgets no Android, com dados fictícios e tema violeta.
-Os tamanhos podem ser ajustados conforme a tela inicial do celular.
-Veja também a seleção no aplicativo: [claro](docs/images/home-widgets-light.jpg) · [escuro](docs/images/home-widgets-dark.jpg).
-
-<p align="center">
-  <a href="docs/images/widgets-light.jpg"><img src="docs/images/widgets-light.jpg" width="38%" alt="Cinco widgets Android com gastos, saldo, próximos pagamentos e nova despesa, em violeta claro" /></a>
-  <a href="docs/images/widgets-dark.jpg"><img src="docs/images/widgets-dark.jpg" width="38%" alt="Os mesmos cinco widgets acompanhando o tema violeta escuro" /></a>
-</p>
 
 ## Tecnologias
 
