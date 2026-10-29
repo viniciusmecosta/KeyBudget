@@ -11,17 +11,17 @@ class AppColors {
   static const Color warning = Color(0xFFF59E0B);
   static const Color info = Color(0xFF3B82F6);
 
-  static const Color backgroundLight = Color(0xFFEAF4FF);
-  static const Color surfaceLight = Color(0xFFF8FCFF);
-  static const Color surfaceContainerHighestLight = Color(0xFFDCEEFF);
+  static const Color backgroundLight = Color(0xFFFFFFFF);
+  static const Color surfaceLight = Color(0xFFF7F8FA);
+  static const Color surfaceContainerHighestLight = Color(0xFFEAEDF2);
   static const Color onSurfaceLight = Color(0xFF102B50);
-  static const Color onSurfaceVariantLight = Color(0xFF4D6584);
+  static const Color onSurfaceVariantLight = Color(0xFF536174);
 
-  static const Color backgroundDark = Color(0xFF091A2D);
-  static const Color surfaceDark = Color(0xFF142B45);
-  static const Color surfaceContainerHighestDark = Color(0xFF203D5B);
-  static const Color onSurfaceDark = Color(0xFFEAF4FF);
-  static const Color onSurfaceVariantDark = Color(0xFFA9BED6);
+  static const Color backgroundDark = Color(0xFF000000);
+  static const Color surfaceDark = Color(0xFF121416);
+  static const Color surfaceContainerHighestDark = Color(0xFF23262B);
+  static const Color onSurfaceDark = Color(0xFFF5F7FA);
+  static const Color onSurfaceVariantDark = Color(0xFFACB4C0);
 
   static const List<Color> chartColors = [
     Color(0xFF3B82F6),

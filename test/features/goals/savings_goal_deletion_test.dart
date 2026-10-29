@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:key_budget/core/models/user_model.dart';
-import 'package:key_budget/features/auth/viewmodel/auth_viewmodel.dart';
-import 'package:key_budget/features/goals/model/savings_goal.dart';
-import 'package:key_budget/features/goals/repository/savings_goal_repository.dart';
-import 'package:key_budget/features/goals/view/savings_goals_screen.dart';
+import 'package:passfin/core/models/user_model.dart';
+import 'package:passfin/features/auth/viewmodel/auth_viewmodel.dart';
+import 'package:passfin/features/goals/model/savings_goal.dart';
+import 'package:passfin/features/goals/repository/savings_goal_repository.dart';
+import 'package:passfin/features/goals/view/savings_goals_screen.dart';
 
 class _AuthViewModel extends AuthViewModel {
   _AuthViewModel() : super(listenToAuthChanges: false);

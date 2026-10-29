@@ -5,11 +5,12 @@ import 'dart:typed_data';
 
 import 'package:crypto/crypto.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
-import 'package:key_budget/core/operations/operation_result.dart';
-import 'package:key_budget/core/operations/session_context.dart';
-import 'package:key_budget/core/services/drive_service.dart';
-import 'package:key_budget/core/services/encryption_service.dart';
-import 'package:key_budget/core/time/app_clock.dart';
+import 'package:passfin/core/operations/operation_result.dart';
+import 'package:passfin/core/operations/session_context.dart';
+import 'package:passfin/core/services/drive_service.dart';
+import 'package:passfin/core/services/encryption_service.dart';
+import 'package:passfin/core/security/vault_crypto.dart';
+import 'package:passfin/core/time/app_clock.dart';
 import 'package:path_provider/path_provider.dart';
 
 import 'backup_codec.dart';
@@ -59,6 +60,7 @@ class RestoreService {
   Future<OperationResult<ImportPlan>> previewRestore({
     required Uint8List backupBytes,
     required String password,
+    String? legacyKey,
   }) async {
     if (!sessionContext.isValid) {
       return OperationResult.failed(
@@ -148,6 +150,7 @@ class RestoreService {
     }
 
     final items = <ImportItemPlan>[];
+    var requiresLegacyPasswordReview = false;
     final existingCategories = <String>{};
     final existingFolders = <String>{};
     final plannedCategories = <String>{};
@@ -212,6 +215,60 @@ class RestoreService {
           parentId = rec.data['originalDocumentId']?.toString();
         }
 
+        String? portablePassword = rec.portablePassword;
+        Map<String, String>? portablePasswords;
+        if (mod == 'credentials') {
+          if (encryptionService == null) {
+            validationErrors.add(
+              'Conclua a proteção do cofre pelo perfil antes de restaurar credenciais.',
+            );
+          }
+          if (rec.portablePassword == null &&
+              !isVersionedVaultValue(
+                rec.data['encrypted_password']?.toString() ?? '',
+              )) {
+            requiresLegacyPasswordReview = true;
+          }
+          try {
+            portablePassword ??= _readBackupPassword(
+              rec.data,
+              docId,
+              legacyKey,
+            );
+          } on VaultException catch (error) {
+            validationErrors.add('Credencial $docId: ${error.message}');
+          }
+        } else if (mod == 'trash' && rec.data['collection'] == 'credentials') {
+          if (encryptionService == null) {
+            validationErrors.add(
+              'Conclua a proteção do cofre antes de restaurar senhas da lixeira.',
+            );
+          }
+          portablePasswords = rec.metadata?['portablePasswords'] is Map
+              ? Map<String, String>.from(
+                  rec.metadata!['portablePasswords'] as Map,
+                )
+              : <String, String>{};
+          for (final record in rec.data['records'] as List? ?? []) {
+            final id = record['id'] as String;
+            if (!portablePasswords.containsKey(id) &&
+                !isVersionedVaultValue(
+                  record['data']['encrypted_password']?.toString() ?? '',
+                )) {
+              requiresLegacyPasswordReview = true;
+            }
+            try {
+              portablePasswords[id] ??= _readBackupPassword(
+                Map<String, dynamic>.from(record['data'] as Map),
+                id,
+                legacyKey,
+              );
+            } on VaultException catch (error) {
+              validationErrors.add('Lixeira $docId: ${error.message}');
+            }
+          }
+        }
+
         items.add(
           ImportItemPlan(
             collection: mod,
@@ -223,7 +280,8 @@ class RestoreService {
             targetDigest: targetDigest,
             parentCollection: parentCol,
             parentId: parentId,
-            portablePassword: rec.portablePassword,
+            portablePassword: portablePassword,
+            portablePasswords: portablePasswords,
           ),
         );
       }
@@ -279,18 +337,53 @@ class RestoreService {
       validationErrors: validationErrors,
       warnings: warnings,
       orphans: orphans,
+      requiresLegacyPasswordReview: requiresLegacyPasswordReview,
     );
 
     return OperationResult.completed(data: plan, count: items.length);
   }
 
+  String _readBackupPassword(
+    Map<String, dynamic> data,
+    String id,
+    String? legacyKey,
+  ) {
+    final encrypted = data['encrypted_password'];
+    if (encrypted is! String) {
+      throw const VaultException(
+        VaultErrorCode.malformedEnvelope,
+        'Senha ausente no backup.',
+      );
+    }
+    if (!isVersionedVaultValue(encrypted) &&
+        legacyKey != null &&
+        legacyKey.trim().isNotEmpty) {
+      return LegacyVaultReader(legacyKey).decrypt(encrypted);
+    }
+    if (!isVersionedVaultValue(encrypted)) {
+      throw const VaultException(
+        VaultErrorCode.invalidLegacyKey,
+        'Informe a chave legada para conferir as senhas antigas deste backup.',
+      );
+    }
+    if (encryptionService == null) {
+      throw const VaultException(
+        VaultErrorCode.unavailable,
+        'Abra o cofre antes de restaurar as senhas.',
+      );
+    }
+    return encryptionService!.decryptData(encrypted, recordId: id);
+  }
+
   Future<OperationResult<RestoreSummary>> executeRestore({
     required ImportPlan plan,
     required Uint8List backupBytes,
+    bool legacyPasswordsReviewed = false,
     required String password,
     void Function(String status, double progress)? onProgress,
   }) async {
-    if (!plan.canExecute) {
+    if (!plan.canExecute ||
+        (plan.requiresLegacyPasswordReview && !legacyPasswordsReviewed)) {
       return OperationResult.failed(
         safeError:
             'O plano de importação contém erros impeditivos e não pode ser executado.',
@@ -428,10 +521,37 @@ class RestoreService {
           if (item.portablePassword != null && encryptionService != null) {
             dataToWrite['encrypted_password'] = encryptionService!.encryptData(
               item.portablePassword!,
+              recordId: item.documentId,
+            );
+          } else {
+            encryptionService!.decryptData(
+              dataToWrite['encrypted_password'] as String,
+              recordId: item.documentId,
             );
           }
         }
 
+        if (item.collection == 'trash' &&
+            dataToWrite['collection'] == 'credentials') {
+          dataToWrite['records'] = (dataToWrite['records'] as List).map((raw) {
+            final record = Map<String, dynamic>.from(raw as Map);
+            final data = Map<String, dynamic>.from(record['data'] as Map);
+            final id = record['id'] as String;
+            final portable = item.portablePasswords?[id];
+            if (portable != null && encryptionService != null) {
+              data['encrypted_password'] = encryptionService!.encryptData(
+                portable,
+                recordId: id,
+              );
+            } else {
+              encryptionService!.decryptData(
+                data['encrypted_password'] as String,
+                recordId: id,
+              );
+            }
+            return {...record, 'data': data};
+          }).toList();
+        }
         await rawWriter.setDocument(path, dataToWrite);
 
         journal.recordCommit(

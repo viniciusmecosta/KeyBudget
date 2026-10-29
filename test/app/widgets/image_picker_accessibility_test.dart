@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:key_budget/app/widgets/image_picker_widget.dart';
+import 'package:passfin/app/widgets/image_picker_widget.dart';
 
 void main() {
   testWidgets('image removal exposes a 48-pixel accessible target', (

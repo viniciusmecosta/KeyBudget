@@ -1,4 +1,4 @@
-import 'package:key_budget/core/models/expense_model.dart';
+import 'package:passfin/core/models/expense_model.dart';
 
 /// All aggregation stays in cents. Future entries never inflate realized data.
 class DashboardInsights {

@@ -1,17 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:key_budget/app/navigation/app_destination.dart';
-import 'package:key_budget/app/utils/app_animations.dart';
-import 'package:key_budget/app/utils/navigation_utils.dart';
-import 'package:key_budget/app/viewmodel/navigation_viewmodel.dart';
-import 'package:key_budget/app/widgets/activity_tile_widget.dart';
-import 'package:key_budget/core/design_system/spacing/app_spacing.dart';
-import 'package:key_budget/core/design_system/widgets/app_button.dart';
-import 'package:key_budget/core/design_system/widgets/app_card.dart';
-import 'package:key_budget/core/design_system/widgets/app_section_header.dart';
-import 'package:key_budget/features/auth/viewmodel/auth_viewmodel.dart';
-import 'package:key_budget/features/dashboard/viewmodel/dashboard_viewmodel.dart';
-import 'package:key_budget/features/expenses/view/add_expense_screen.dart';
+import 'package:passfin/app/navigation/app_destination.dart';
+import 'package:passfin/app/utils/app_animations.dart';
+import 'package:passfin/app/utils/navigation_utils.dart';
+import 'package:passfin/app/viewmodel/navigation_viewmodel.dart';
+import 'package:passfin/app/widgets/activity_tile_widget.dart';
+import 'package:passfin/core/design_system/spacing/app_spacing.dart';
+import 'package:passfin/core/design_system/widgets/app_button.dart';
+import 'package:passfin/core/design_system/widgets/app_card.dart';
+import 'package:passfin/core/design_system/widgets/app_section_header.dart';
+import 'package:passfin/features/auth/viewmodel/auth_viewmodel.dart';
+import 'package:passfin/features/dashboard/viewmodel/dashboard_viewmodel.dart';
+import 'package:passfin/features/expenses/view/add_expense_screen.dart';
 
 class RecentActivitySection extends ConsumerWidget {
   const RecentActivitySection({super.key});

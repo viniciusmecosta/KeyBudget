@@ -1,8 +1,8 @@
-import 'package:key_budget/core/models/credential_model.dart';
-import 'package:key_budget/core/models/document_model.dart';
-import 'package:key_budget/core/models/expense_model.dart';
-import 'package:key_budget/core/models/supplier_model.dart';
-import 'package:key_budget/core/search/search_normalizer.dart';
+import 'package:passfin/core/models/credential_model.dart';
+import 'package:passfin/core/models/document_model.dart';
+import 'package:passfin/core/models/expense_model.dart';
+import 'package:passfin/core/models/supplier_model.dart';
+import 'package:passfin/core/search/search_normalizer.dart';
 
 enum GlobalSearchKind { expense, credential, document, supplier }
 

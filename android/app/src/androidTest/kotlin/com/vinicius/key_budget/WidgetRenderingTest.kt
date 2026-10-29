@@ -13,10 +13,8 @@ import android.graphics.Bitmap
 import android.graphics.Canvas
 import android.graphics.Color
 import android.view.View
-import android.widget.LinearLayout
 import android.widget.TextView
 import androidx.test.platform.app.InstrumentationRegistry
-import java.io.File
 import org.json.JSONObject
 import org.junit.Assert.*
 import org.junit.Test
@@ -87,6 +85,10 @@ class WidgetRenderingTest {
                     )
                     for ((receiver, width, height) in variants) {
                         val view = render(c, receiver, appearance, width, height)
+                        val title = view.findViewById<TextView>(R.id.tv_title)
+                        if (receiver !is KeyBudgetCompactWidgetReceiver && receiver !is KeyBudgetQuickWidgetReceiver) {
+                            assertNotNull("Spacious widget heading includes the PassFin mark", title.compoundDrawablesRelative[0])
+                        }
                         val bitmap = bitmap(view)
                         assertEquals("Transparent rounded corner", 0, Color.alpha(bitmap.getPixel(0, 0)))
                         assertEquals("Theme surface", palette.getLong("background").toInt(),
@@ -152,53 +154,6 @@ class WidgetRenderingTest {
         assertEquals("2026-12-31", saved.getString("date"))
         saved.put("daily", JSONObject("""{"invalid":[1]}"""))
         assertEquals("2026-12-31", WidgetSnapshotData.forDate(saved, "2027-01-01").getString("date"))
-    }
-
-    @Test fun captureReadmeWidgetGallery() {
-        if (InstrumentationRegistry.getArguments().getString("captureWidgets") != "true") return
-        instrumentation.runOnMainSync {
-            for (dark in listOf(false, true)) {
-                val c = context(dark)
-                val appearance = JSONObject(fixtures.getJSONObject("violet").toString())
-                val density = c.resources.displayMetrics.density
-                fun dp(value: Int) = (value * density).toInt()
-                val gallery = LinearLayout(c).apply {
-                    orientation = LinearLayout.VERTICAL
-                    setPadding(dp(20), dp(24), dp(20), dp(24))
-                    setBackgroundColor(if (dark) Color.rgb(17, 18, 22) else Color.WHITE)
-                }
-                fun label(text: String, size: Float, top: Int = 0) {
-                    gallery.addView(TextView(c).apply {
-                        this.text = text; textSize = size
-                        setTextColor(if (dark) Color.WHITE else Color.rgb(25, 26, 30))
-                        setPadding(0, dp(top), 0, dp(12))
-                    })
-                }
-                fun card(receiver: KeyBudgetWidgetReceiver, width: Int, height: Int): View =
-                    render(c, receiver, appearance, width, height)
-                label("Widgets · KeyBudget", 21f)
-                label("Resumo financeiro", 13f, 8)
-                gallery.addView(card(KeyBudgetOverviewWidgetReceiver(), 372, 210),
-                    LinearLayout.LayoutParams(-1, dp(210)))
-                label("Gastos do mês e próximos gastos", 13f, 20)
-                val row = LinearLayout(c).apply { orientation = LinearLayout.HORIZONTAL }
-                row.addView(card(KeyBudgetWidgetReceiver(), 180, 180), LinearLayout.LayoutParams(0, dp(180), 1f))
-                row.addView(View(c), LinearLayout.LayoutParams(dp(12), 1))
-                row.addView(card(KeyBudgetUpcomingWidgetReceiver(), 180, 180), LinearLayout.LayoutParams(0, dp(180), 1f))
-                gallery.addView(row)
-                label("Gastos compactos", 13f, 20)
-                gallery.addView(card(KeyBudgetCompactWidgetReceiver(), 372, 80), LinearLayout.LayoutParams(-1, dp(80)))
-                label("Nova despesa", 13f, 20)
-                gallery.addView(card(KeyBudgetQuickWidgetReceiver(), 84, 84), LinearLayout.LayoutParams(dp(84), dp(84)))
-                gallery.measure(View.MeasureSpec.makeMeasureSpec(dp(412), View.MeasureSpec.EXACTLY),
-                    View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED))
-                gallery.layout(0, 0, gallery.measuredWidth, gallery.measuredHeight)
-                val output = File(target.filesDir, "widget-captures").apply { mkdirs() }
-                File(output, "widgets-${if (dark) "dark" else "light"}.png").outputStream().use {
-                    bitmap(gallery).compress(Bitmap.CompressFormat.PNG, 100, it)
-                }
-            }
-        }
     }
 
     private fun bitmap(view: View): Bitmap = Bitmap.createBitmap(

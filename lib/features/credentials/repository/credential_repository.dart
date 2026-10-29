@@ -1,7 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:key_budget/core/models/credential_model.dart';
-import 'package:key_budget/core/models/folder_model.dart';
+import 'package:passfin/core/models/credential_model.dart';
+import 'package:passfin/core/models/folder_model.dart';
 
 class CredentialRepository {
   final FirebaseFirestore? _customFirestore;
@@ -36,18 +36,16 @@ class CredentialRepository {
         );
   }
 
+  String reserveCredentialId(String userId) =>
+      _getCredentialsCollection(userId).doc().id;
+
   Future<void> addCredential(String userId, Credential credential) async {
-    await _getCredentialsCollection(userId).add(credential);
+    _validateId(credential);
+    await _getCredentialsCollection(userId).doc(credential.id).set(credential);
   }
 
   Future<void> restoreCredential(String userId, Credential credential) async {
-    if (credential.id != null) {
-      await _getCredentialsCollection(
-        userId,
-      ).doc(credential.id).set(credential);
-    } else {
-      await addCredential(userId, credential);
-    }
+    await addCredential(userId, credential);
   }
 
   Stream<List<Credential>> getCredentialsStreamForUser(String userId) {
@@ -67,9 +65,16 @@ class CredentialRepository {
   }
 
   Future<void> updateCredential(String userId, Credential credential) async {
+    _validateId(credential);
     await _getCredentialsCollection(
       userId,
     ).doc(credential.id).update(credential.toMap());
+  }
+
+  void _validateId(Credential credential) {
+    if (credential.id == null || credential.id!.isEmpty) {
+      throw ArgumentError('Reserve o ID da credencial antes de criptografar.');
+    }
   }
 
   Future<void> deleteCredential(String userId, String credentialId) async {

@@ -3,10 +3,10 @@ import 'dart:async';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/legacy.dart';
-import 'package:key_budget/core/models/supplier_model.dart';
-import 'package:key_budget/core/search/search_normalizer.dart';
-import 'package:key_budget/features/suppliers/repository/supplier_repository.dart';
-import 'package:key_budget/features/trash/repository/trash_repository.dart';
+import 'package:passfin/core/models/supplier_model.dart';
+import 'package:passfin/core/search/search_normalizer.dart';
+import 'package:passfin/features/suppliers/repository/supplier_repository.dart';
+import 'package:passfin/features/trash/repository/trash_repository.dart';
 
 class SupplierViewModel extends ChangeNotifier {
   final SupplierRepository _repository;

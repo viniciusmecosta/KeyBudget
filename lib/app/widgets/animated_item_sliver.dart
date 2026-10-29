@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:key_budget/app/utils/app_animations.dart';
-import 'package:key_budget/app/widgets/animated_list_item.dart';
+import 'package:passfin/app/utils/app_animations.dart';
+import 'package:passfin/app/widgets/animated_list_item.dart';
 
 class AnimatedItemSliver<T> extends StatefulWidget {
   final List<T> items;

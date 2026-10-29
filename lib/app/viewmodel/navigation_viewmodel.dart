@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/legacy.dart';
-import 'package:key_budget/app/navigation/app_destination.dart';
+import 'package:passfin/app/navigation/app_destination.dart';
 
 class NavigationViewModel extends ChangeNotifier {
   AppDestination _currentDestination = AppDestination.dashboard;

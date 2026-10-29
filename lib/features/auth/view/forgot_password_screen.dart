@@ -1,12 +1,12 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:key_budget/core/design_system/spacing/app_spacing.dart';
-import 'package:key_budget/core/design_system/widgets/app_button.dart';
-import 'package:key_budget/core/design_system/widgets/app_text_field.dart';
-import 'package:key_budget/core/services/snackbar_service.dart';
-import 'package:key_budget/features/auth/widgets/auth_page_layout.dart';
-import 'package:key_budget/features/auth/viewmodel/auth_viewmodel.dart';
+import 'package:passfin/core/design_system/spacing/app_spacing.dart';
+import 'package:passfin/core/design_system/widgets/app_button.dart';
+import 'package:passfin/core/design_system/widgets/app_text_field.dart';
+import 'package:passfin/core/services/snackbar_service.dart';
+import 'package:passfin/features/auth/widgets/auth_page_layout.dart';
+import 'package:passfin/features/auth/viewmodel/auth_viewmodel.dart';
 
 class ForgotPasswordScreen extends ConsumerStatefulWidget {
   final String? initialEmail;

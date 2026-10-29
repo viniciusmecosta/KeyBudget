@@ -1,7 +1,7 @@
-import 'package:key_budget/app/utils/app_animations.dart';
+import 'package:passfin/app/utils/app_animations.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:key_budget/core/models/expense_category_model.dart';
+import 'package:passfin/core/models/expense_category_model.dart';
 
 class CategoryPickerField extends ConsumerWidget {
   final String label;

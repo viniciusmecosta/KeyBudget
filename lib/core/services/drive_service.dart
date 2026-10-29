@@ -5,8 +5,8 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:googleapis/drive/v3.dart' as drive;
 import 'package:http/http.dart' as http;
-import 'package:key_budget/core/services/drive_connection_service.dart';
-import 'package:key_budget/core/services/google_sign_in_session.dart';
+import 'package:passfin/core/services/drive_connection_service.dart';
+import 'package:passfin/core/services/google_sign_in_session.dart';
 import 'package:path/path.dart' as path;
 
 class GoogleAuthClient extends http.BaseClient {

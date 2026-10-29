@@ -11,7 +11,10 @@ class SensitiveExportCache {
       await for (final entry in directory.list()) {
         if (entry is! File) continue;
         final name = p.basename(entry.path);
-        if (!name.startsWith('keybudget_credentials_')) continue;
+        if (!name.startsWith('passfin_credentials_') &&
+            !name.startsWith('keybudget_credentials_')) {
+          continue;
+        }
         if (!name.endsWith('.csv') && !name.endsWith('.pdf')) continue;
         final stat = await entry.stat();
         if (stat.modified.isBefore(threshold)) {

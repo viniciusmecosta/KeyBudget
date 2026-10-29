@@ -2,15 +2,15 @@ import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
-import 'package:key_budget/app/utils/app_animations.dart';
-import 'package:key_budget/app/utils/navigation_utils.dart';
-import 'package:key_budget/core/design_system/colors/app_contrast.dart';
-import 'package:key_budget/core/design_system/spacing/app_spacing.dart';
-import 'package:key_budget/core/design_system/widgets/app_card.dart';
-import 'package:key_budget/core/design_system/widgets/app_section_header.dart';
-import 'package:key_budget/features/analysis/view/analysis_screen.dart';
-import 'package:key_budget/features/auth/viewmodel/auth_viewmodel.dart';
-import 'package:key_budget/features/dashboard/viewmodel/dashboard_viewmodel.dart';
+import 'package:passfin/app/utils/app_animations.dart';
+import 'package:passfin/app/utils/navigation_utils.dart';
+import 'package:passfin/core/design_system/colors/app_contrast.dart';
+import 'package:passfin/core/design_system/spacing/app_spacing.dart';
+import 'package:passfin/core/design_system/widgets/app_card.dart';
+import 'package:passfin/core/design_system/widgets/app_section_header.dart';
+import 'package:passfin/features/analysis/view/analysis_screen.dart';
+import 'package:passfin/features/auth/viewmodel/auth_viewmodel.dart';
+import 'package:passfin/features/dashboard/viewmodel/dashboard_viewmodel.dart';
 
 class DashboardMonthlyChart extends ConsumerWidget {
   const DashboardMonthlyChart({super.key, this.chartHeight = 128});

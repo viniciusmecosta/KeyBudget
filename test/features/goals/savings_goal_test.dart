@@ -1,6 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:key_budget/features/goals/model/savings_goal.dart';
+import 'package:passfin/features/goals/model/savings_goal.dart';
 
 void main() {
   test('A meta preserva valores, prazo e estado ao serializar', () {

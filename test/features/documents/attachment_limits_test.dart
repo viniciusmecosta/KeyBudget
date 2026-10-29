@@ -1,8 +1,8 @@
 import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:key_budget/core/services/drive_service.dart';
-import 'package:key_budget/features/documents/viewmodel/document_viewmodel.dart';
+import 'package:passfin/core/services/drive_service.dart';
+import 'package:passfin/features/documents/viewmodel/document_viewmodel.dart';
 
 void main() {
   test('writes allowed download chunks to the final file', () async {

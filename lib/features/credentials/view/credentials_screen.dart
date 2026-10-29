@@ -1,23 +1,25 @@
-import 'package:key_budget/core/design_system/widgets/app_page_scaffold.dart';
+import 'package:passfin/core/security/vault_session.dart';
+import 'package:passfin/core/services/snackbar_service.dart';
+import 'package:passfin/core/design_system/widgets/app_page_scaffold.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:key_budget/app/utils/navigation_utils.dart';
-import 'package:key_budget/app/utils/app_animations.dart';
-import 'package:key_budget/app/widgets/animated_item_sliver.dart';
-import 'package:key_budget/app/widgets/empty_state_widget.dart';
-import 'package:key_budget/app/widgets/responsive_center.dart';
-import 'package:key_budget/core/design_system/borders/app_borders.dart';
-import 'package:key_budget/core/design_system/widgets/app_search_field.dart';
-import 'package:key_budget/core/design_system/widgets/app_color_choice.dart';
-import 'package:key_budget/core/design_system/widgets/app_feedback_panel.dart';
-import 'package:key_budget/core/design_system/spacing/app_spacing.dart';
-import 'package:key_budget/core/models/credential_model.dart';
-import 'package:key_budget/core/models/folder_model.dart';
-import 'package:key_budget/core/services/app_lock_service.dart';
-import 'package:key_budget/features/auth/viewmodel/auth_viewmodel.dart';
-import 'package:key_budget/features/credentials/view/add_credential_screen.dart';
-import 'package:key_budget/features/credentials/viewmodel/credential_viewmodel.dart';
-import 'package:key_budget/features/credentials/widgets/folder_list_tile.dart';
+import 'package:passfin/app/utils/navigation_utils.dart';
+import 'package:passfin/app/utils/app_animations.dart';
+import 'package:passfin/app/widgets/animated_item_sliver.dart';
+import 'package:passfin/app/widgets/empty_state_widget.dart';
+import 'package:passfin/app/widgets/responsive_center.dart';
+import 'package:passfin/core/design_system/borders/app_borders.dart';
+import 'package:passfin/core/design_system/widgets/app_search_field.dart';
+import 'package:passfin/core/design_system/widgets/app_color_choice.dart';
+import 'package:passfin/core/design_system/widgets/app_feedback_panel.dart';
+import 'package:passfin/core/design_system/spacing/app_spacing.dart';
+import 'package:passfin/core/models/credential_model.dart';
+import 'package:passfin/core/models/folder_model.dart';
+import 'package:passfin/core/services/app_lock_service.dart';
+import 'package:passfin/features/auth/viewmodel/auth_viewmodel.dart';
+import 'package:passfin/features/credentials/view/add_credential_screen.dart';
+import 'package:passfin/features/credentials/viewmodel/credential_viewmodel.dart';
+import 'package:passfin/features/credentials/widgets/folder_list_tile.dart';
 
 import '../widgets/credential_list_tile.dart';
 import '../widgets/credentials_list_skeleton.dart';
@@ -246,6 +248,8 @@ class _CredentialsScreenState extends ConsumerState<CredentialsScreen> {
   @override
   Widget build(BuildContext context) {
     final vm = ref.watch(credentialViewModelProvider);
+    final vault = ref.watch(vaultSessionProvider);
+    final vaultUnavailable = vault.status != VaultStatus.idle && !vault.isReady;
     final theme = Theme.of(context);
     final authVm = ref.read(authViewModelProvider);
 
@@ -386,6 +390,30 @@ class _CredentialsScreenState extends ConsumerState<CredentialsScreen> {
                   parent: AlwaysScrollableScrollPhysics(),
                 ),
                 slivers: [
+                  if (vaultUnavailable)
+                    SliverToBoxAdapter(
+                      child: Padding(
+                        padding: const EdgeInsets.all(AppSpacing.md),
+                        child: Card(
+                          child: Padding(
+                            padding: const EdgeInsets.all(AppSpacing.md),
+                            child: Row(
+                              children: [
+                                const Icon(Icons.shield_outlined),
+                                const SizedBox(width: AppSpacing.md),
+                                Expanded(
+                                  child: Text(
+                                    vault.status == VaultStatus.loading
+                                        ? 'Carregando a proteção do cofre…'
+                                        : 'Conclua a proteção do cofre na seção Segurança e privacidade do Perfil para acessar suas senhas.',
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
                   if (vm.isLoading)
                     const CredentialsListSkeleton()
                   else if (vm.loadErrorMessage != null &&
@@ -486,6 +514,13 @@ class _CredentialsScreenState extends ConsumerState<CredentialsScreen> {
         floatingActionButton: FloatingActionButton.extended(
           heroTag: 'fab_credentials',
           onPressed: () {
+            if (vaultUnavailable) {
+              SnackbarService.showError(
+                context,
+                'Conclua a proteção do cofre pelo Perfil antes de criar uma senha.',
+              );
+              return;
+            }
             if (vm.currentFolderId != null) {
               NavigationUtils.push(context, const AddCredentialScreen());
             } else {

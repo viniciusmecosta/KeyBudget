@@ -2,34 +2,34 @@
   "violet": {
     "mode": "system",
     "light": {
-      "background": 4294307838,
+      "background": 4294441210,
       "foreground": 4278190080,
-      "secondary": 4282071357,
+      "secondary": 4282072124,
       "button": 4286331629,
       "on_button": 4294967295
     },
     "dark": {
-      "background": 4281211985,
+      "background": 4279374870,
       "foreground": 4294967295,
-      "secondary": 4291676629,
-      "button": 4289298163,
+      "secondary": 4291217351,
+      "button": 4287979504,
       "on_button": 4278190080
     }
   },
   "teal": {
     "mode": "system",
     "light": {
-      "background": 4293719283,
+      "background": 4294441210,
       "foreground": 4278190080,
-      "secondary": 4281940794,
+      "secondary": 4282072124,
       "button": 4279203438,
       "on_button": 4294967295
     },
     "dark": {
-      "background": 4279250221,
+      "background": 4279374870,
       "foreground": 4294967295,
-      "secondary": 4291218893,
-      "button": 4284655008,
+      "secondary": 4291217351,
+      "button": 4282224778,
       "on_button": 4278190080
     }
   }

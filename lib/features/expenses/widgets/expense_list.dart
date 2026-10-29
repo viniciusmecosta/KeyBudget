@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:key_budget/app/widgets/activity_tile_widget.dart';
-import 'package:key_budget/core/design_system/spacing/app_spacing.dart';
-import 'package:key_budget/core/models/expense_model.dart';
-import 'package:key_budget/features/expenses/viewmodel/expense_viewmodel.dart';
+import 'package:passfin/app/widgets/activity_tile_widget.dart';
+import 'package:passfin/core/design_system/spacing/app_spacing.dart';
+import 'package:passfin/core/models/expense_model.dart';
+import 'package:passfin/features/expenses/viewmodel/expense_viewmodel.dart';
 
 class ExpenseList extends ConsumerWidget {
   final List<Expense> monthlyExpenses;

@@ -1,11 +1,11 @@
-import 'package:key_budget/app/utils/app_animations.dart';
-import 'package:key_budget/core/design_system/widgets/app_card.dart';
+import 'package:passfin/app/utils/app_animations.dart';
+import 'package:passfin/core/design_system/widgets/app_card.dart';
 import 'package:flutter/material.dart';
-import 'package:key_budget/core/design_system/widgets/app_color_choice.dart';
+import 'package:passfin/core/design_system/widgets/app_color_choice.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:key_budget/core/design_system/spacing/app_spacing.dart';
-import 'package:key_budget/core/design_system/widgets/app_text_field.dart';
-import 'package:key_budget/core/design_system/widgets/app_form_section_heading.dart';
+import 'package:passfin/core/design_system/spacing/app_spacing.dart';
+import 'package:passfin/core/design_system/widgets/app_text_field.dart';
+import 'package:passfin/core/design_system/widgets/app_form_section_heading.dart';
 
 import 'color_picker_widget.dart';
 import 'icon_picker_widget.dart';

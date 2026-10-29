@@ -1,25 +1,26 @@
-import 'package:key_budget/core/design_system/surfaces/app_surfaces.dart';
-import 'package:key_budget/core/design_system/widgets/app_page_scaffold.dart';
+import 'package:passfin/core/design_system/surfaces/app_surfaces.dart';
+import 'package:passfin/core/design_system/widgets/app_page_scaffold.dart';
 import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:key_budget/app/config/app_theme.dart';
-import 'package:key_budget/app/utils/app_animations.dart';
-import 'package:key_budget/app/utils/widget_to_image.dart';
-import 'package:key_budget/core/design_system/borders/app_borders.dart';
-import 'package:key_budget/core/design_system/spacing/app_spacing.dart';
-import 'package:key_budget/core/design_system/widgets/app_button.dart';
-import 'package:key_budget/core/design_system/widgets/app_card.dart';
-import 'package:key_budget/core/design_system/widgets/app_status_badge.dart';
-import 'package:key_budget/core/models/credential_model.dart';
-import 'package:key_budget/core/models/folder_model.dart';
-import 'package:key_budget/core/services/snackbar_service.dart';
-import 'package:key_budget/core/services/sensitive_clipboard.dart';
-import 'package:key_budget/features/auth/viewmodel/auth_viewmodel.dart';
-import 'package:key_budget/features/credentials/viewmodel/credential_viewmodel.dart';
+import 'package:passfin/app/config/app_theme.dart';
+import 'package:passfin/app/utils/app_animations.dart';
+import 'package:passfin/app/utils/widget_to_image.dart';
+import 'package:passfin/core/design_system/borders/app_borders.dart';
+import 'package:passfin/core/design_system/spacing/app_spacing.dart';
+import 'package:passfin/core/design_system/widgets/app_button.dart';
+import 'package:passfin/core/design_system/widgets/app_card.dart';
+import 'package:passfin/core/design_system/widgets/app_status_badge.dart';
+import 'package:passfin/core/models/credential_model.dart';
+import 'package:passfin/core/models/folder_model.dart';
+import 'package:passfin/core/services/snackbar_service.dart';
+import 'package:passfin/core/security/vault_crypto.dart';
+import 'package:passfin/core/services/sensitive_clipboard.dart';
+import 'package:passfin/features/auth/viewmodel/auth_viewmodel.dart';
+import 'package:passfin/features/credentials/viewmodel/credential_viewmodel.dart';
 import 'package:mask_text_input_formatter/mask_text_input_formatter.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
@@ -63,11 +64,17 @@ class _CredentialDetailScreenState extends ConsumerState<CredentialDetailScreen>
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
-    _decryptedPassword = ref
-        .read(credentialViewModelProvider)
-        .decryptPassword(widget.credential.encryptedPassword);
-
-    _decryptionError = _decryptedPassword == 'ERRO_DECRIPT';
+    try {
+      _decryptedPassword = ref
+          .read(credentialViewModelProvider)
+          .decryptPassword(
+            widget.credential.encryptedPassword,
+            recordId: widget.credential.id,
+          );
+    } on VaultException {
+      _decryptionError = true;
+      _decryptedPassword = '';
+    }
 
     _locationController = TextEditingController(
       text: widget.credential.location,
@@ -113,7 +120,7 @@ class _CredentialDetailScreenState extends ConsumerState<CredentialDetailScreen>
   }
 
   void _saveChanges() async {
-    if (!_formKey.currentState!.validate()) return;
+    if (_isSaving || !_formKey.currentState!.validate()) return;
 
     setState(() => _isSaving = true);
     HapticFeedback.mediumImpact();
@@ -122,31 +129,44 @@ class _CredentialDetailScreenState extends ConsumerState<CredentialDetailScreen>
     final viewModel = ref.read(credentialViewModelProvider);
     final scaffoldContext = context;
     final navigator = Navigator.of(context);
-    final userId = authViewModel.currentUser!.id;
-
-    await viewModel.updateCredential(
-      userId: userId,
-      originalCredential: widget.credential,
-      location: _locationController.text,
-      login: _loginController.text,
-      newPlainPassword: _passwordController.text,
-      email: _emailController.text,
-      phoneNumber: _phoneMaskFormatter.unmaskText(_phoneController.text),
-      notes: _notesController.text,
-      logoPath: _logoPath,
-      folderId: _selectedFolderId,
-    );
-
-    if (!scaffoldContext.mounted) return;
-    setState(() {
-      _isSaving = false;
-      _isEditing = false;
-    });
-    SnackbarService.showSuccess(
-      scaffoldContext,
-      'Credencial atualizada com sucesso!',
-    );
-    navigator.pop();
+    final userId = authViewModel.currentUser?.id;
+    try {
+      if (userId == null) {
+        throw const VaultException(
+          VaultErrorCode.unavailable,
+          'Entre na sua conta antes de salvar.',
+        );
+      }
+      await viewModel.updateCredential(
+        userId: userId,
+        originalCredential: widget.credential,
+        location: _locationController.text,
+        login: _loginController.text,
+        newPlainPassword: _passwordController.text,
+        email: _emailController.text,
+        phoneNumber: _phoneMaskFormatter.unmaskText(_phoneController.text),
+        notes: _notesController.text,
+        logoPath: _logoPath,
+        folderId: _selectedFolderId,
+      );
+      if (!scaffoldContext.mounted) return;
+      SnackbarService.showSuccess(
+        scaffoldContext,
+        'Credencial atualizada com sucesso!',
+      );
+      navigator.pop();
+    } catch (error) {
+      if (scaffoldContext.mounted) {
+        SnackbarService.showError(
+          scaffoldContext,
+          error is VaultException
+              ? error.message
+              : 'Não foi possível salvar a credencial. Tente novamente.',
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _isSaving = false);
+    }
   }
 
   void _deleteCredential() async {

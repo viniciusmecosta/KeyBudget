@@ -1,16 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:key_budget/core/models/expense_category_model.dart';
-import 'package:key_budget/core/models/expense_model.dart';
-import 'package:key_budget/core/money/money.dart';
-import 'package:key_budget/core/services/csv_service.dart';
-import 'package:key_budget/core/time/app_clock.dart';
-import 'package:key_budget/core/time/date_range.dart';
-import 'package:key_budget/features/analysis/domain/analysis_calculator.dart';
-import 'package:key_budget/features/analysis/domain/analysis_query.dart';
-import 'package:key_budget/features/analysis/viewmodel/analysis_viewmodel.dart';
-import 'package:key_budget/features/category/viewmodel/category_viewmodel.dart';
-import 'package:key_budget/features/expenses/viewmodel/expense_viewmodel.dart';
+import 'package:passfin/core/models/expense_category_model.dart';
+import 'package:passfin/core/models/expense_model.dart';
+import 'package:passfin/core/money/money.dart';
+import 'package:passfin/core/services/csv_service.dart';
+import 'package:passfin/core/time/app_clock.dart';
+import 'package:passfin/core/time/date_range.dart';
+import 'package:passfin/features/analysis/domain/analysis_calculator.dart';
+import 'package:passfin/features/analysis/domain/analysis_query.dart';
+import 'package:passfin/features/analysis/viewmodel/analysis_viewmodel.dart';
+import 'package:passfin/features/category/viewmodel/category_viewmodel.dart';
+import 'package:passfin/features/expenses/viewmodel/expense_viewmodel.dart';
 
 class FakeAppClock implements AppClock {
   final DateTime _fixed;

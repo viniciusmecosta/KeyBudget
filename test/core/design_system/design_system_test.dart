@@ -1,14 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:key_budget/app/config/app_theme.dart';
-import 'package:key_budget/core/design_system/colors/app_contrast.dart';
-import 'package:key_budget/core/design_system/theme/app_semantic_colors.dart';
-import 'package:key_budget/core/design_system/widgets/app_button.dart';
-import 'package:key_budget/core/design_system/widgets/app_color_choice.dart';
-import 'package:key_budget/core/design_system/widgets/app_feedback_panel.dart';
-import 'package:key_budget/core/design_system/widgets/app_section_header.dart';
-import 'package:key_budget/core/design_system/widgets/app_status_badge.dart';
-import 'package:key_budget/core/design_system/widgets/app_text_field.dart';
+import 'package:passfin/app/config/app_theme.dart';
+import 'package:passfin/core/design_system/colors/app_contrast.dart';
+import 'package:passfin/core/design_system/theme/app_semantic_colors.dart';
+import 'package:passfin/core/design_system/widgets/app_button.dart';
+import 'package:passfin/core/design_system/widgets/app_color_choice.dart';
+import 'package:passfin/core/design_system/widgets/app_feedback_panel.dart';
+import 'package:passfin/core/design_system/widgets/app_section_header.dart';
+import 'package:passfin/core/design_system/widgets/app_status_badge.dart';
+import 'package:passfin/core/design_system/widgets/app_text_field.dart';
 
 void main() {
   group('AppTheme & Semantic Colors', () {

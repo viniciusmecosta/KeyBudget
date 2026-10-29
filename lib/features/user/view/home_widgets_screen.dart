@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:home_widget/home_widget.dart';
-import 'package:key_budget/core/design_system/spacing/app_spacing.dart';
-import 'package:key_budget/core/design_system/widgets/app_button.dart';
-import 'package:key_budget/core/design_system/widgets/app_card.dart';
-import 'package:key_budget/core/design_system/widgets/app_page_scaffold.dart';
-import 'package:key_budget/core/models/home_widget_kind.dart';
+import 'package:passfin/core/design_system/spacing/app_spacing.dart';
+import 'package:passfin/core/design_system/widgets/app_button.dart';
+import 'package:passfin/core/design_system/widgets/app_card.dart';
+import 'package:passfin/core/design_system/widgets/app_page_scaffold.dart';
+import 'package:passfin/core/models/home_widget_kind.dart';
 
 class HomeWidgetsScreen extends StatefulWidget {
   const HomeWidgetsScreen({super.key});
@@ -37,14 +37,14 @@ class _HomeWidgetsScreenState extends State<HomeWidgetsScreen> {
       } else {
         _message =
             'Para adicionar, toque e segure um espaço vazio na tela '
-            'inicial do celular e escolha Widgets → KeyBudget.';
+            'inicial do celular e escolha Widgets → PassFin.';
       }
     } catch (_) {
       if (!mounted) return;
       _isError = true;
       _message =
           'Não foi possível abrir a seleção. Tente novamente ou '
-          'adicione em Widgets → KeyBudget na tela inicial do celular.';
+          'adicione em Widgets → PassFin na tela inicial do celular.';
     } finally {
       if (mounted) setState(() => _pending = null);
     }

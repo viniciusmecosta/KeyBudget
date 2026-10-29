@@ -1,10 +1,10 @@
-import 'package:key_budget/app/utils/app_animations.dart';
-import 'package:key_budget/core/design_system/surfaces/app_surfaces.dart';
+import 'package:passfin/app/utils/app_animations.dart';
+import 'package:passfin/core/design_system/surfaces/app_surfaces.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:key_budget/core/design_system/borders/app_borders.dart';
-import 'package:key_budget/core/design_system/spacing/app_spacing.dart';
-import 'package:key_budget/core/utils/date_utils.dart' as app_date_utils;
+import 'package:passfin/core/design_system/borders/app_borders.dart';
+import 'package:passfin/core/design_system/spacing/app_spacing.dart';
+import 'package:passfin/core/utils/date_utils.dart' as app_date_utils;
 
 class MonthSelector extends ConsumerWidget {
   final DateTime selectedMonth;

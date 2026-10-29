@@ -1,38 +1,40 @@
+import 'package:passfin/features/user/widgets/vault_settings_tile.dart';
 import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:key_budget/app/config/app_theme.dart';
-import 'package:key_budget/app/utils/app_animations.dart';
-import 'package:key_budget/app/utils/navigation_utils.dart';
-import 'package:key_budget/app/widgets/responsive_center.dart';
-import 'package:key_budget/core/design_system/borders/app_borders.dart';
-import 'package:key_budget/core/design_system/spacing/app_spacing.dart';
-import 'package:key_budget/core/design_system/widgets/app_button.dart';
-import 'package:key_budget/core/design_system/widgets/app_card.dart';
-import 'package:key_budget/core/design_system/widgets/app_color_choice.dart';
-import 'package:key_budget/core/design_system/widgets/app_page_scaffold.dart';
-import 'package:key_budget/core/services/csv_service.dart';
-import 'package:key_budget/core/services/drive_service.dart';
-import 'package:key_budget/core/services/snackbar_service.dart';
-import 'package:key_budget/features/auth/viewmodel/auth_viewmodel.dart';
-import 'package:key_budget/features/category/view/categories_screen.dart';
-import 'package:key_budget/features/category/viewmodel/category_viewmodel.dart';
-import 'package:key_budget/features/credentials/viewmodel/credential_viewmodel.dart';
-import 'package:key_budget/features/dashboard/repository/dashboard_layout_repository.dart';
-import 'package:key_budget/features/dashboard/widgets/dashboard_layout_editor.dart';
-import 'package:key_budget/features/expenses/repository/expense_repository.dart';
-import 'package:key_budget/features/expenses/viewmodel/expense_viewmodel.dart';
-import 'package:key_budget/features/goals/view/savings_goals_screen.dart';
-import 'package:key_budget/features/search/view/global_search_screen.dart';
-import 'package:key_budget/features/trash/view/trash_screen.dart';
-import 'package:key_budget/features/user/view/account_center_screen.dart';
-import 'package:key_budget/features/user/view/backup_restore_screen.dart';
-import 'package:key_budget/features/user/view/drive_connection_screen.dart';
-import 'package:key_budget/features/user/view/edit_user_screen.dart';
-import 'package:key_budget/features/user/view/navigation_customization_screen.dart';
+import 'package:passfin/app/config/app_theme.dart';
+import 'package:passfin/app/utils/app_animations.dart';
+import 'package:passfin/app/utils/navigation_utils.dart';
+import 'package:passfin/app/widgets/responsive_center.dart';
+import 'package:passfin/core/design_system/borders/app_borders.dart';
+import 'package:passfin/core/design_system/spacing/app_spacing.dart';
+import 'package:passfin/core/design_system/widgets/app_button.dart';
+import 'package:passfin/core/design_system/widgets/passfin_brand.dart';
+import 'package:passfin/core/design_system/widgets/app_card.dart';
+import 'package:passfin/core/design_system/widgets/app_color_choice.dart';
+import 'package:passfin/core/design_system/widgets/app_page_scaffold.dart';
+import 'package:passfin/core/services/csv_service.dart';
+import 'package:passfin/core/services/drive_service.dart';
+import 'package:passfin/core/services/snackbar_service.dart';
+import 'package:passfin/features/auth/viewmodel/auth_viewmodel.dart';
+import 'package:passfin/features/category/view/categories_screen.dart';
+import 'package:passfin/features/category/viewmodel/category_viewmodel.dart';
+import 'package:passfin/features/credentials/viewmodel/credential_viewmodel.dart';
+import 'package:passfin/features/dashboard/repository/dashboard_layout_repository.dart';
+import 'package:passfin/features/dashboard/widgets/dashboard_layout_editor.dart';
+import 'package:passfin/features/expenses/repository/expense_repository.dart';
+import 'package:passfin/features/expenses/viewmodel/expense_viewmodel.dart';
+import 'package:passfin/features/goals/view/savings_goals_screen.dart';
+import 'package:passfin/features/search/view/global_search_screen.dart';
+import 'package:passfin/features/trash/view/trash_screen.dart';
+import 'package:passfin/features/user/view/account_center_screen.dart';
+import 'package:passfin/features/user/view/backup_restore_screen.dart';
+import 'package:passfin/features/user/view/drive_connection_screen.dart';
+import 'package:passfin/features/user/view/edit_user_screen.dart';
+import 'package:passfin/features/user/view/navigation_customization_screen.dart';
 import 'package:path_provider/path_provider.dart';
 
 import '../widgets/settings_tile.dart';
@@ -121,7 +123,10 @@ class UserScreen extends ConsumerWidget {
       if (cred) {
         final csvStr = csvService.generateCredentialsCsvString(
           credVm.allCredentials,
-          credVm.decryptPassword,
+          (credential) => credVm.decryptPassword(
+            credential.encryptedPassword,
+            recordId: credential.id,
+          ),
         );
         final file = File('${dir.path}/credenciais_backup.csv');
         await file.writeAsBytes(utf8.encode(csvStr));
@@ -465,7 +470,7 @@ class UserScreen extends ConsumerWidget {
                 ),
                 const SizedBox(height: AppSpacing.xs),
                 Text(
-                  'Escolha como o KeyBudget usa as cores do aplicativo.',
+                  'Escolha como o PassFin usa as cores do aplicativo.',
                   textAlign: TextAlign.center,
                   style: Theme.of(sheetContext).textTheme.bodyMedium?.copyWith(
                     color: Theme.of(sheetContext).colorScheme.onSurfaceVariant,
@@ -786,6 +791,7 @@ class UserScreen extends ConsumerWidget {
                     ),
                   ]),
                   buildSection('Segurança e privacidade', [
+                    const VaultSettingsTile(),
                     SettingsTile(
                       icon: Icons.manage_accounts_outlined,
                       title: 'Conta e recuperação',
@@ -922,6 +928,8 @@ class UserScreen extends ConsumerWidget {
                       },
                     ),
                   ]),
+                  const SizedBox(height: AppSpacing.xl),
+                  const Center(child: PassFinBrand(showName: true, width: 148)),
                   const SizedBox(height: AppSpacing.xxl),
                 ],
               ),

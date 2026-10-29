@@ -2,26 +2,28 @@ import 'dart:convert';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
-import 'package:key_budget/core/models/credential_model.dart';
-import 'package:key_budget/core/models/expense_model.dart';
-import 'package:key_budget/core/services/encryption_service.dart';
-import 'package:key_budget/features/credentials/repository/credential_repository.dart';
-import 'package:key_budget/features/expenses/repository/expense_repository.dart';
+import 'package:passfin/core/models/credential_model.dart';
+import 'package:passfin/core/models/expense_model.dart';
+import 'package:passfin/core/services/encryption_service.dart';
+import 'package:passfin/features/credentials/repository/credential_repository.dart';
+import 'package:passfin/features/expenses/repository/expense_repository.dart';
 
 class DataImportService {
   final ExpenseRepository _expenseRepository;
   final CredentialRepository _credentialRepository;
   final EncryptionService? encryptionService;
+  final EncryptionService Function()? encryptionResolver;
 
   DataImportService({
     ExpenseRepository? expenseRepository,
     CredentialRepository? credentialRepository,
     this.encryptionService,
-  })  : _expenseRepository = expenseRepository ?? ExpenseRepository(),
-        _credentialRepository = credentialRepository ?? CredentialRepository();
+    this.encryptionResolver,
+  }) : _expenseRepository = expenseRepository ?? ExpenseRepository(),
+       _credentialRepository = credentialRepository ?? CredentialRepository();
 
   EncryptionService get _activeEncryptionService =>
-      encryptionService ?? EncryptionService();
+      encryptionService ?? encryptionResolver?.call() ?? EncryptionService();
 
   Future<int> importExpensesFromJsons(String userId) async {
     final manifestContent = await rootBundle.loadString('AssetManifest.json');
@@ -75,10 +77,14 @@ class DataImportService {
           continue;
         }
 
-        final encryptedPassword =
-            _activeEncryptionService.encryptData(plainPassword);
+        final id = _credentialRepository.reserveCredentialId(userId);
+        final encryptedPassword = _activeEncryptionService.encryptData(
+          plainPassword,
+          recordId: id,
+        );
 
         final credential = Credential(
+          id: id,
           location: item['location'],
           login: item['login'],
           encryptedPassword: encryptedPassword,

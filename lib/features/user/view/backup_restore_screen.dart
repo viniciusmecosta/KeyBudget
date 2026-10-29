@@ -1,6 +1,6 @@
-import 'package:key_budget/app/utils/app_animations.dart';
-import 'package:key_budget/core/design_system/widgets/app_card.dart';
-import 'package:key_budget/core/design_system/widgets/app_page_scaffold.dart';
+import 'package:passfin/app/utils/app_animations.dart';
+import 'package:passfin/core/design_system/widgets/app_card.dart';
+import 'package:passfin/core/design_system/widgets/app_page_scaffold.dart';
 import 'dart:io';
 import 'dart:typed_data';
 
@@ -9,20 +9,20 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
-import 'package:key_budget/app/widgets/responsive_center.dart';
-import 'package:key_budget/core/design_system/spacing/app_spacing.dart';
-import 'package:key_budget/core/design_system/widgets/app_button.dart';
-import 'package:key_budget/core/design_system/widgets/app_text_field.dart';
-import 'package:key_budget/core/import_export/backup_crypto.dart';
-import 'package:key_budget/core/import_export/backup_service.dart';
-import 'package:key_budget/core/import_export/automatic_backup_service.dart';
-import 'package:key_budget/core/import_export/import_plan.dart';
-import 'package:key_budget/core/import_export/raw_storage.dart';
-import 'package:key_budget/core/import_export/restore_service.dart';
-import 'package:key_budget/core/operations/session_context.dart';
-import 'package:key_budget/core/services/drive_service.dart';
-import 'package:key_budget/core/services/encryption_service.dart';
-import 'package:key_budget/core/services/snackbar_service.dart';
+import 'package:passfin/app/widgets/responsive_center.dart';
+import 'package:passfin/core/design_system/spacing/app_spacing.dart';
+import 'package:passfin/core/design_system/widgets/app_button.dart';
+import 'package:passfin/core/design_system/widgets/app_text_field.dart';
+import 'package:passfin/core/import_export/backup_crypto.dart';
+import 'package:passfin/core/import_export/backup_service.dart';
+import 'package:passfin/core/import_export/automatic_backup_service.dart';
+import 'package:passfin/core/import_export/import_plan.dart';
+import 'package:passfin/core/import_export/raw_storage.dart';
+import 'package:passfin/core/import_export/restore_service.dart';
+import 'package:passfin/core/operations/session_context.dart';
+import 'package:passfin/core/services/drive_service.dart';
+import 'package:passfin/core/security/vault_session.dart';
+import 'package:passfin/core/services/snackbar_service.dart';
 import 'package:share_plus/share_plus.dart';
 
 class BackupRestoreScreen extends ConsumerStatefulWidget {
@@ -36,7 +36,7 @@ class BackupRestoreScreen extends ConsumerStatefulWidget {
 }
 
 class _BackupRestoreScreenState extends ConsumerState<BackupRestoreScreen>
-    with SingleTickerProviderStateMixin {
+    with SingleTickerProviderStateMixin, WidgetsBindingObserver {
   late TabController _tabController;
 
   final _createPassController = TextEditingController();
@@ -68,6 +68,9 @@ class _BackupRestoreScreenState extends ConsumerState<BackupRestoreScreen>
   };
 
   final _restorePassController = TextEditingController();
+  final _restoreLegacyKeyController = TextEditingController();
+  bool _legacyPasswordsReviewed = false;
+  final _revealedRestorePasswords = <String>{};
   bool _obscureRestorePass = true;
   bool _isPreviewing = false;
   bool _isRestoring = false;
@@ -80,6 +83,7 @@ class _BackupRestoreScreenState extends ConsumerState<BackupRestoreScreen>
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     _tabController = TabController(
       length: 3,
       initialIndex: widget.initialTab.clamp(0, 2),
@@ -90,10 +94,12 @@ class _BackupRestoreScreenState extends ConsumerState<BackupRestoreScreen>
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     _tabController.dispose();
     _createPassController.dispose();
     _createConfirmPassController.dispose();
     _restorePassController.dispose();
+    _restoreLegacyKeyController.dispose();
     _automaticPasswordController.dispose();
     super.dispose();
   }
@@ -272,7 +278,9 @@ class _BackupRestoreScreenState extends ConsumerState<BackupRestoreScreen>
       final backupService = BackupService(
         rawReader: rawReader,
         sessionContext: sessionContext,
-        encryptionService: EncryptionService(),
+        encryptionService: ref.read(vaultSessionProvider).isReady
+            ? ref.read(vaultSessionProvider).encryption
+            : null,
         driveService: DriveService(),
       );
 
@@ -334,7 +342,7 @@ class _BackupRestoreScreenState extends ConsumerState<BackupRestoreScreen>
       final file = _lastBackupResult!.localFile!;
       final params = ShareParams(
         files: [XFile(file.path)],
-        text: 'Backup KeyBudget (.kbudget)',
+        text: 'Backup PassFin (.kbudget)',
       );
       await SharePlus.instance.share(params);
     }
@@ -413,6 +421,19 @@ class _BackupRestoreScreenState extends ConsumerState<BackupRestoreScreen>
     }
   }
 
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state != AppLifecycleState.resumed) {
+      _restoreLegacyKeyController.clear();
+      _revealedRestorePasswords.clear();
+      if (!_isRestoring) {
+        _importPlan = null;
+        _legacyPasswordsReviewed = false;
+      }
+      if (mounted) setState(() {});
+    }
+  }
+
   Future<void> _handlePreviewRestore() async {
     if (_selectedRestoreBytes == null) {
       SnackbarService.showError(
@@ -440,6 +461,8 @@ class _BackupRestoreScreenState extends ConsumerState<BackupRestoreScreen>
     setState(() {
       _isPreviewing = true;
       _importPlan = null;
+      _legacyPasswordsReviewed = false;
+      _revealedRestorePasswords.clear();
     });
 
     try {
@@ -452,14 +475,18 @@ class _BackupRestoreScreenState extends ConsumerState<BackupRestoreScreen>
         rawReader: rawStorage,
         rawWriter: rawStorage,
         sessionContext: sessionContext,
-        encryptionService: EncryptionService(),
+        encryptionService: ref.read(vaultSessionProvider).isReady
+            ? ref.read(vaultSessionProvider).encryption
+            : null,
         driveService: DriveService(),
       );
 
       final result = await restoreService.previewRestore(
         backupBytes: _selectedRestoreBytes!,
         password: password,
+        legacyKey: _restoreLegacyKeyController.text,
       );
+      _restoreLegacyKeyController.clear();
 
       if (mounted) {
         setState(() {
@@ -536,12 +563,15 @@ class _BackupRestoreScreenState extends ConsumerState<BackupRestoreScreen>
         rawReader: rawStorage,
         rawWriter: rawStorage,
         sessionContext: sessionContext,
-        encryptionService: EncryptionService(),
+        encryptionService: ref.read(vaultSessionProvider).isReady
+            ? ref.read(vaultSessionProvider).encryption
+            : null,
         driveService: DriveService(),
       );
 
       final result = await restoreService.executeRestore(
         plan: _importPlan!,
+        legacyPasswordsReviewed: _legacyPasswordsReviewed,
         backupBytes: _selectedRestoreBytes!,
         password: _restorePassController.text,
         onProgress: (status, progress) {
@@ -991,6 +1021,29 @@ class _BackupRestoreScreenState extends ConsumerState<BackupRestoreScreen>
           ),
         ),
         const SizedBox(height: AppSpacing.md),
+        ExpansionTile(
+          title: const Text('Recuperar senhas de um backup legado'),
+          subtitle: const Text(
+            'Somente quando o arquivo contém senhas na chave antiga',
+          ),
+          children: [
+            TextField(
+              controller: _restoreLegacyKeyController,
+              obscureText: true,
+              autocorrect: false,
+              enableSuggestions: false,
+              enableIMEPersonalizedLearning: false,
+              decoration: const InputDecoration(
+                labelText: 'Chave legada',
+                helperText:
+                    'O valor de 32 caracteres será usado apenas nesta análise.',
+                helperMaxLines: 2,
+              ),
+            ),
+            const SizedBox(height: AppSpacing.md),
+          ],
+        ),
+        const SizedBox(height: AppSpacing.md),
         AppButton(
           label: 'Analisar Arquivo (Prévia Segura)',
           icon: Icons.preview,
@@ -1132,12 +1185,75 @@ class _BackupRestoreScreenState extends ConsumerState<BackupRestoreScreen>
               ),
               const SizedBox(height: AppSpacing.sm),
             ],
+            if (plan.requiresLegacyPasswordReview) ...[
+              Text(
+                'Confira as senhas recuperadas com a chave antiga antes de restaurar.',
+                style: Theme.of(context).textTheme.titleSmall,
+              ),
+              for (final item in plan.items)
+                if (item.collection == 'credentials' &&
+                    item.portablePassword != null)
+                  ListTile(
+                    title: Text(
+                      item.sourceData['location']?.toString() ?? 'Credencial',
+                    ),
+                    subtitle: Text(
+                      _revealedRestorePasswords.contains(item.documentId)
+                          ? item.portablePassword!
+                          : '••••••••••••',
+                    ),
+                    trailing: IconButton(
+                      tooltip: 'Conferir senha',
+                      icon: const Icon(Icons.visibility_outlined),
+                      onPressed: () => setState(() {
+                        if (!_revealedRestorePasswords.add(item.documentId)) {
+                          _revealedRestorePasswords.remove(item.documentId);
+                        }
+                      }),
+                    ),
+                  ),
+              for (final item in plan.items)
+                if (item.portablePasswords != null)
+                  for (final password in item.portablePasswords!.entries)
+                    ListTile(
+                      title: Text('Lixeira · ${password.key}'),
+                      subtitle: Text(
+                        _revealedRestorePasswords.contains(
+                              '${item.documentId}/${password.key}',
+                            )
+                            ? password.value
+                            : '••••••••••••',
+                      ),
+                      trailing: IconButton(
+                        tooltip: 'Conferir senha',
+                        icon: const Icon(Icons.visibility_outlined),
+                        onPressed: () => setState(() {
+                          final key = '${item.documentId}/${password.key}';
+                          if (!_revealedRestorePasswords.add(key)) {
+                            _revealedRestorePasswords.remove(key);
+                          }
+                        }),
+                      ),
+                    ),
+              CheckboxListTile(
+                value: _legacyPasswordsReviewed,
+                onChanged: (value) =>
+                    setState(() => _legacyPasswordsReviewed = value ?? false),
+                title: const Text(
+                  'Conferi as senhas recuperadas com a chave antiga.',
+                ),
+              ),
+            ],
             AppButton(
               label: 'Confirmar e Restaurar Dados',
               icon: Icons.restore,
               isLoading: _isRestoring,
               isFullWidth: true,
-              onPressed: !plan.canExecute || _isRestoring
+              onPressed:
+                  !plan.canExecute ||
+                      _isRestoring ||
+                      (plan.requiresLegacyPasswordReview &&
+                          !_legacyPasswordsReviewed)
                   ? null
                   : _handleExecuteRestore,
             ),

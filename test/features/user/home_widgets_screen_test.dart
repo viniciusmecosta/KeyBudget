@@ -3,10 +3,10 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:key_budget/app/config/app_theme.dart';
-import 'package:key_budget/core/models/home_widget_kind.dart';
-import 'package:key_budget/core/services/home_widget_service.dart';
-import 'package:key_budget/features/user/view/home_widgets_screen.dart';
+import 'package:passfin/app/config/app_theme.dart';
+import 'package:passfin/core/models/home_widget_kind.dart';
+import 'package:passfin/core/services/home_widget_service.dart';
+import 'package:passfin/features/user/view/home_widgets_screen.dart';
 
 void main() {
   const channel = MethodChannel('home_widget');

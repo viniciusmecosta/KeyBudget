@@ -3,11 +3,11 @@ import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
-import 'package:key_budget/app/utils/app_animations.dart';
-import 'package:key_budget/core/design_system/widgets/app_card.dart';
-import 'package:key_budget/core/design_system/widgets/app_section_header.dart';
-import 'package:key_budget/features/dashboard/domain/dashboard_insights.dart';
-import 'package:key_budget/features/dashboard/viewmodel/dashboard_viewmodel.dart';
+import 'package:passfin/app/utils/app_animations.dart';
+import 'package:passfin/core/design_system/widgets/app_card.dart';
+import 'package:passfin/core/design_system/widgets/app_section_header.dart';
+import 'package:passfin/features/dashboard/domain/dashboard_insights.dart';
+import 'package:passfin/features/dashboard/viewmodel/dashboard_viewmodel.dart';
 
 enum DashboardInsight { accumulated, periods, upcoming, daily, weekdays }
 

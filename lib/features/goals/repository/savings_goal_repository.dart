@@ -1,6 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:key_budget/features/goals/model/savings_goal.dart';
+import 'package:passfin/features/goals/model/savings_goal.dart';
 
 class GoalMovement {
   final String id;

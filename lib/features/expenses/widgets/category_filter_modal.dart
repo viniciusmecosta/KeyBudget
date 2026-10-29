@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:key_budget/core/design_system/borders/app_borders.dart';
-import 'package:key_budget/core/design_system/spacing/app_spacing.dart';
-import 'package:key_budget/core/design_system/widgets/app_button.dart';
-import 'package:key_budget/core/design_system/widgets/app_status_badge.dart';
-import 'package:key_budget/features/auth/viewmodel/auth_viewmodel.dart';
-import 'package:key_budget/features/category/viewmodel/category_viewmodel.dart';
-import 'package:key_budget/features/expenses/viewmodel/expense_viewmodel.dart';
+import 'package:passfin/core/design_system/borders/app_borders.dart';
+import 'package:passfin/core/design_system/spacing/app_spacing.dart';
+import 'package:passfin/core/design_system/widgets/app_button.dart';
+import 'package:passfin/core/design_system/widgets/app_status_badge.dart';
+import 'package:passfin/features/auth/viewmodel/auth_viewmodel.dart';
+import 'package:passfin/features/category/viewmodel/category_viewmodel.dart';
+import 'package:passfin/features/expenses/viewmodel/expense_viewmodel.dart';
 
 class CategoryFilterModal extends ConsumerStatefulWidget {
   const CategoryFilterModal({super.key});

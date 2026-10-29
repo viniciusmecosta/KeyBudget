@@ -1,6 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:key_budget/core/models/supplier_model.dart';
+import 'package:passfin/core/models/supplier_model.dart';
 
 class SupplierRepository {
   final FirebaseFirestore? _customFirestore;

@@ -1,18 +1,18 @@
 import 'dart:convert';
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:key_budget/core/import_export/csv_import_parser.dart';
-import 'package:key_budget/core/import_export/import_service.dart';
-import 'package:key_budget/core/import_export/import_validation.dart';
-import 'package:key_budget/core/models/credential_model.dart';
-import 'package:key_budget/core/models/expense_model.dart';
-import 'package:key_budget/core/models/recurring_expense_model.dart';
-import 'package:key_budget/core/money/money.dart';
-import 'package:key_budget/core/money/money_parser.dart';
-import 'package:key_budget/core/services/encryption_service.dart';
-import 'package:key_budget/features/credentials/repository/credential_repository.dart';
-import 'package:key_budget/features/expenses/repository/expense_repository.dart';
-import 'package:key_budget/features/expenses/repository/recurring_expense_repository.dart';
+import 'package:passfin/core/import_export/csv_import_parser.dart';
+import 'package:passfin/core/import_export/import_service.dart';
+import 'package:passfin/core/import_export/import_validation.dart';
+import 'package:passfin/core/models/credential_model.dart';
+import 'package:passfin/core/models/expense_model.dart';
+import 'package:passfin/core/models/recurring_expense_model.dart';
+import 'package:passfin/core/money/money.dart';
+import 'package:passfin/core/money/money_parser.dart';
+import 'package:passfin/core/services/encryption_service.dart';
+import 'package:passfin/features/credentials/repository/credential_repository.dart';
+import 'package:passfin/features/expenses/repository/expense_repository.dart';
+import 'package:passfin/features/expenses/repository/recurring_expense_repository.dart';
 
 class FakeExpenseRepository implements ExpenseRepository {
   final Map<String, Expense> storage = {};
@@ -93,11 +93,11 @@ class FakeRecurringRepository implements RecurringExpenseRepository {
 
 class FakeEncryptionService extends Fake implements EncryptionService {
   @override
-  String encryptData(String plainText) =>
+  String encryptData(String plainText, {String? recordId}) =>
       base64Encode(utf8.encode('ciphertext_$plainText'));
 
   @override
-  String decryptData(String encryptedText) =>
+  String decryptData(String encryptedText, {String? recordId}) =>
       utf8.decode(base64Decode(encryptedText)).replaceFirst('ciphertext_', '');
 }
 

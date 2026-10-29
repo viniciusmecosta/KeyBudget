@@ -4,11 +4,11 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_sign_in/google_sign_in.dart';
-import 'package:key_budget/app/config/app_theme.dart';
-import 'package:key_budget/core/models/expense_category_model.dart';
-import 'package:key_budget/core/utils/string_extensions.dart';
-import 'package:key_budget/core/models/user_model.dart';
-import 'package:key_budget/core/services/google_sign_in_session.dart';
+import 'package:passfin/app/config/app_theme.dart';
+import 'package:passfin/core/models/expense_category_model.dart';
+import 'package:passfin/core/utils/string_extensions.dart';
+import 'package:passfin/core/models/user_model.dart';
+import 'package:passfin/core/services/google_sign_in_session.dart';
 
 class ProfileSetupException implements Exception {
   const ProfileSetupException();

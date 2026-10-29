@@ -1,5 +1,5 @@
 import 'package:intl/intl.dart';
-import 'package:key_budget/core/models/expense_model.dart';
+import 'package:passfin/core/models/expense_model.dart';
 
 /// A single, account-scoped payload avoids mixing values from different updates.
 class HomeWidgetSnapshot {

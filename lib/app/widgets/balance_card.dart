@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
-import 'package:key_budget/core/design_system/borders/app_borders.dart';
-import 'package:key_budget/core/design_system/shadows/app_shadows.dart';
-import 'package:key_budget/core/design_system/spacing/app_spacing.dart';
+import 'package:passfin/core/design_system/borders/app_borders.dart';
+import 'package:passfin/core/design_system/shadows/app_shadows.dart';
+import 'package:passfin/core/design_system/spacing/app_spacing.dart';
 
 class BalanceCard extends ConsumerWidget {
   final String title;

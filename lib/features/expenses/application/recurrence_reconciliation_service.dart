@@ -1,10 +1,10 @@
-import 'package:key_budget/core/models/expense_model.dart';
-import 'package:key_budget/core/models/recurring_expense_model.dart';
-import 'package:key_budget/core/money/money.dart';
-import 'package:key_budget/core/operations/operation_result.dart';
-import 'package:key_budget/features/expenses/domain/recurrence_occurrence.dart';
-import 'package:key_budget/features/expenses/repository/recurrence_occurrence_repository.dart';
-import 'package:key_budget/features/expenses/repository/recurring_expense_repository.dart';
+import 'package:passfin/core/models/expense_model.dart';
+import 'package:passfin/core/models/recurring_expense_model.dart';
+import 'package:passfin/core/money/money.dart';
+import 'package:passfin/core/operations/operation_result.dart';
+import 'package:passfin/features/expenses/domain/recurrence_occurrence.dart';
+import 'package:passfin/features/expenses/repository/recurrence_occurrence_repository.dart';
+import 'package:passfin/features/expenses/repository/recurring_expense_repository.dart';
 
 class RecurrenceReconciliationReport {
   final String ruleId;

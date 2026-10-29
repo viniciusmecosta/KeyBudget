@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
-import 'package:key_budget/app/config/app_theme.dart';
-import 'package:key_budget/core/design_system/spacing/app_spacing.dart';
-import 'package:key_budget/core/design_system/widgets/app_card.dart';
-import 'package:key_budget/features/auth/viewmodel/auth_viewmodel.dart';
+import 'package:passfin/app/config/app_theme.dart';
+import 'package:passfin/core/design_system/spacing/app_spacing.dart';
+import 'package:passfin/core/design_system/widgets/app_card.dart';
+import 'package:passfin/features/auth/viewmodel/auth_viewmodel.dart';
 
 import '../viewmodel/analysis_viewmodel.dart';
 

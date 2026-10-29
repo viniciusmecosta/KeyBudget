@@ -1,12 +1,12 @@
 import 'dart:convert';
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:key_budget/core/models/recurring_expense_model.dart';
-import 'package:key_budget/core/notifications/notification_gateway.dart';
-import 'package:key_budget/core/notifications/notification_id_registry.dart';
-import 'package:key_budget/core/notifications/notification_reconciler.dart';
-import 'package:key_budget/core/services/home_widget_service.dart';
-import 'package:key_budget/core/time/app_clock.dart';
+import 'package:passfin/core/models/recurring_expense_model.dart';
+import 'package:passfin/core/notifications/notification_gateway.dart';
+import 'package:passfin/core/notifications/notification_id_registry.dart';
+import 'package:passfin/core/notifications/notification_reconciler.dart';
+import 'package:passfin/core/services/home_widget_service.dart';
+import 'package:passfin/core/time/app_clock.dart';
 
 class FakeClock implements AppClock {
   DateTime _current;

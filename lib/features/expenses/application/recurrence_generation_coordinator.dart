@@ -1,6 +1,6 @@
-import 'package:key_budget/core/models/recurring_expense_model.dart';
-import 'package:key_budget/core/services/notification_service.dart';
-import 'package:key_budget/features/expenses/application/recurrence_service.dart';
+import 'package:passfin/core/models/recurring_expense_model.dart';
+import 'package:passfin/core/services/notification_service.dart';
+import 'package:passfin/features/expenses/application/recurrence_service.dart';
 
 class RecurrenceGenerationCoordinator {
   final RecurrenceService recurrenceService;

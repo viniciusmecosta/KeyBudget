@@ -4,16 +4,16 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
-import 'package:key_budget/app/config/app_theme.dart';
-import 'package:key_budget/app/utils/widget_to_image.dart';
-import 'package:key_budget/core/models/expense_model.dart';
-import 'package:key_budget/core/models/credential_model.dart';
-import 'package:key_budget/core/services/snackbar_service.dart';
-import 'package:key_budget/features/analysis/domain/analysis_snapshot.dart';
-import 'package:key_budget/features/analysis/viewmodel/analysis_viewmodel.dart';
-import 'package:key_budget/features/analysis/widgets/category_analysis_section_widget.dart';
-import 'package:key_budget/features/analysis/widgets/monthly_trend_section_widget.dart';
-import 'package:key_budget/features/category/viewmodel/category_viewmodel.dart';
+import 'package:passfin/app/config/app_theme.dart';
+import 'package:passfin/app/utils/widget_to_image.dart';
+import 'package:passfin/core/models/expense_model.dart';
+import 'package:passfin/core/models/credential_model.dart';
+import 'package:passfin/core/services/snackbar_service.dart';
+import 'package:passfin/features/analysis/domain/analysis_snapshot.dart';
+import 'package:passfin/features/analysis/viewmodel/analysis_viewmodel.dart';
+import 'package:passfin/features/analysis/widgets/category_analysis_section_widget.dart';
+import 'package:passfin/features/analysis/widgets/monthly_trend_section_widget.dart';
+import 'package:passfin/features/category/viewmodel/category_viewmodel.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:syncfusion_flutter_pdf/pdf.dart';
@@ -31,7 +31,9 @@ class PdfService {
       final Size pageSize = page.getClientSize();
       double currentY = 0;
 
-      final ByteData logoData = await rootBundle.load('assets/icon/logov2.png');
+      final ByteData logoData = await rootBundle.load(
+        'assets/brand/passfin-lockup-light.png',
+      );
       final PdfBitmap logo = PdfBitmap(logoData.buffer.asUint8List());
 
       final ByteData fontData = await rootBundle.load(
@@ -70,18 +72,18 @@ class PdfService {
         (AppTheme.surfaceContainerHighest.b * 255.0).round() & 0xff,
       );
 
-      page.graphics.drawImage(logo, const Rect.fromLTWH(0, 0, 40, 40));
+      page.graphics.drawImage(logo, const Rect.fromLTWH(0, 6, 120, 30.72));
       page.graphics.drawString(
         'Relatório de Despesas',
         titleFont,
         brush: PdfSolidBrush(primaryColor),
-        bounds: Rect.fromLTWH(50, 5, pageSize.width - 50, 30),
+        bounds: Rect.fromLTWH(136, 5, pageSize.width - 136, 30),
       );
       page.graphics.drawString(
         'Gerado em: ${DateFormat('dd/MM/yyyy HH:mm').format(DateTime.now())}',
         font,
         brush: PdfSolidBrush(onSurfaceColor),
-        bounds: Rect.fromLTWH(50, 30, pageSize.width - 50, 20),
+        bounds: Rect.fromLTWH(136, 30, pageSize.width - 136, 20),
       );
       currentY += 60;
 
@@ -406,7 +408,7 @@ class PdfService {
 
       final directory = await getTemporaryDirectory();
       final fileName =
-          'keybudget_expenses_report_${DateFormat('yyyyMMdd_HHmmss').format(DateTime.now())}.pdf';
+          'passfin_expenses_report_${DateFormat('yyyyMMdd_HHmmss').format(DateTime.now())}.pdf';
       final filePath = '${directory.path}/$fileName';
       final file = File(filePath);
       await file.writeAsBytes(Uint8List.fromList(bytes));
@@ -432,7 +434,7 @@ class PdfService {
   Future<void> exportCredentialsPdf(
     BuildContext context,
     List<Credential> credentials,
-    String Function(String) decryptPassword,
+    String Function(Credential) decryptPassword,
   ) async {
     try {
       final PdfDocument document = PdfDocument();
@@ -440,7 +442,9 @@ class PdfService {
       final Size pageSize = page.getClientSize();
       double currentY = 0;
 
-      final ByteData logoData = await rootBundle.load('assets/icon/logov2.png');
+      final ByteData logoData = await rootBundle.load(
+        'assets/brand/passfin-lockup-light.png',
+      );
       final PdfBitmap logo = PdfBitmap(logoData.buffer.asUint8List());
 
       final ByteData fontData = await rootBundle.load(
@@ -479,18 +483,18 @@ class PdfService {
         (AppTheme.surfaceContainerHighest.b * 255.0).round() & 0xff,
       );
 
-      page.graphics.drawImage(logo, const Rect.fromLTWH(0, 0, 40, 40));
+      page.graphics.drawImage(logo, const Rect.fromLTWH(0, 6, 120, 30.72));
       page.graphics.drawString(
         'Relatório de Credenciais',
         titleFont,
         brush: PdfSolidBrush(primaryColor),
-        bounds: Rect.fromLTWH(50, 5, pageSize.width - 50, 30),
+        bounds: Rect.fromLTWH(136, 5, pageSize.width - 136, 30),
       );
       page.graphics.drawString(
         'Gerado em: ${DateFormat('dd/MM/yyyy HH:mm').format(DateTime.now())}',
         font,
         brush: PdfSolidBrush(onSurfaceColor),
-        bounds: Rect.fromLTWH(50, 30, pageSize.width - 50, 20),
+        bounds: Rect.fromLTWH(136, 30, pageSize.width - 136, 20),
       );
       currentY = 60;
 
@@ -519,7 +523,7 @@ class PdfService {
         final PdfGridRow row = grid.rows.add();
         row.cells[0].value = credential.location;
         row.cells[1].value = credential.login;
-        row.cells[2].value = decryptPassword(credential.encryptedPassword);
+        row.cells[2].value = decryptPassword(credential);
         row.cells[3].value = credential.email ?? '';
         row.cells[4].value = credential.phoneNumber ?? '';
         row.cells[5].value = credential.notes ?? '';
@@ -565,7 +569,7 @@ class PdfService {
 
       final directory = await getTemporaryDirectory();
       final fileName =
-          'keybudget_credentials_report_${DateFormat('yyyyMMdd_HHmmss').format(DateTime.now())}.pdf';
+          'passfin_credentials_report_${DateFormat('yyyyMMdd_HHmmss').format(DateTime.now())}.pdf';
       final filePath = '${directory.path}/$fileName';
       final file = File(filePath);
       await file.writeAsBytes(Uint8List.fromList(bytes));
@@ -607,7 +611,9 @@ class PdfService {
 
       final PdfDocument document = PdfDocument();
 
-      final ByteData logoData = await rootBundle.load('assets/icon/logov2.png');
+      final ByteData logoData = await rootBundle.load(
+        'assets/brand/passfin-lockup-light.png',
+      );
       final PdfBitmap logo = PdfBitmap(logoData.buffer.asUint8List());
       final ByteData fontData = await rootBundle.load(
         'assets/fonts/Roboto-Regular.ttf',
@@ -654,18 +660,18 @@ class PdfService {
       final Size pageSize = page1.getClientSize();
       double currentY = 0;
 
-      page1.graphics.drawImage(logo, const Rect.fromLTWH(0, 0, 45, 45));
+      page1.graphics.drawImage(logo, const Rect.fromLTWH(0, 6, 120, 30.72));
       page1.graphics.drawString(
         'Relatório de Análise Financeira',
         titleFont,
         brush: PdfSolidBrush(primaryColor),
-        bounds: Rect.fromLTWH(55, 5, pageSize.width - 55, 26),
+        bounds: Rect.fromLTWH(136, 5, pageSize.width - 136, 26),
       );
       page1.graphics.drawString(
         'Período: $startDateStr até $endDateStr  |  Gerado em: ${DateFormat('dd/MM/yyyy HH:mm').format(snap.capturedAt)}',
         font,
         brush: PdfSolidBrush(onSurfaceColor),
-        bounds: Rect.fromLTWH(55, 32, pageSize.width - 55, 18),
+        bounds: Rect.fromLTWH(136, 32, pageSize.width - 136, 18),
       );
       currentY += 60;
 
@@ -906,7 +912,7 @@ class PdfService {
 
       final directory = await getTemporaryDirectory();
       final fileName =
-          'keybudget_analysis_report_${DateFormat('yyyyMMdd_HHmmss').format(DateTime.now())}.pdf';
+          'passfin_analysis_report_${DateFormat('yyyyMMdd_HHmmss').format(DateTime.now())}.pdf';
       final filePath = '${directory.path}/$fileName';
       final file = File(filePath);
       await file.writeAsBytes(Uint8List.fromList(bytes));

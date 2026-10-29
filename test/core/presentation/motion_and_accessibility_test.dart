@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:key_budget/app/config/app_theme.dart';
-import 'package:key_budget/app/utils/app_animations.dart';
-import 'package:key_budget/app/widgets/empty_state_widget.dart';
-import 'package:key_budget/core/presentation/state_view.dart';
+import 'package:passfin/app/config/app_theme.dart';
+import 'package:passfin/app/utils/app_animations.dart';
+import 'package:passfin/app/widgets/empty_state_widget.dart';
+import 'package:passfin/core/presentation/state_view.dart';
 
 void main() {
   group('AppAnimations Reduced Motion & Tokens', () {

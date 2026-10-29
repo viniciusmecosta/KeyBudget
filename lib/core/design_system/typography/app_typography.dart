@@ -1,5 +1,5 @@
 import 'dart:io';
-import 'package:key_budget/core/design_system/colors/app_colors.dart';
+import 'package:passfin/core/design_system/colors/app_colors.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 

@@ -4,13 +4,13 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:key_budget/core/models/user_model.dart';
-import 'package:key_budget/core/services/local_auth_service.dart';
-import 'package:key_budget/features/auth/repository/auth_repository.dart';
-import 'package:key_budget/features/auth/view/forgot_password_screen.dart';
-import 'package:key_budget/features/auth/view/login_screen.dart';
-import 'package:key_budget/features/auth/view/register_screen.dart';
-import 'package:key_budget/features/auth/viewmodel/auth_viewmodel.dart';
+import 'package:passfin/core/models/user_model.dart';
+import 'package:passfin/core/services/local_auth_service.dart';
+import 'package:passfin/features/auth/repository/auth_repository.dart';
+import 'package:passfin/features/auth/view/forgot_password_screen.dart';
+import 'package:passfin/features/auth/view/login_screen.dart';
+import 'package:passfin/features/auth/view/register_screen.dart';
+import 'package:passfin/features/auth/viewmodel/auth_viewmodel.dart';
 import 'package:local_auth/local_auth.dart';
 import 'package:local_auth_android/local_auth_android.dart';
 
@@ -491,7 +491,7 @@ void main() {
 
         expect(find.text('Entre na sua conta'), findsOneWidget);
         expect(
-          find.text('Acesse suas finanças e informações em um só lugar.'),
+          find.text('Suas senhas e finanças em um só lugar.'),
           findsOneWidget,
         );
         expect(find.text('Continuar com Google'), findsOneWidget);

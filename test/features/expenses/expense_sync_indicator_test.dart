@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:key_budget/features/expenses/viewmodel/expense_viewmodel.dart';
-import 'package:key_budget/features/expenses/widgets/expense_sync_indicator.dart';
+import 'package:passfin/features/expenses/viewmodel/expense_viewmodel.dart';
+import 'package:passfin/features/expenses/widgets/expense_sync_indicator.dart';
 
 void main() {
   testWidgets('hides the normal state and short-lived cache snapshots', (

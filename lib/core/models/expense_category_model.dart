@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:key_budget/core/constants/app_icons.dart';
+import 'package:passfin/core/constants/app_icons.dart';
 
 class ExpenseCategory {
   final String? id;

@@ -1,16 +1,16 @@
-import 'package:key_budget/app/utils/app_animations.dart';
-import 'package:key_budget/core/design_system/widgets/app_card.dart';
-import 'package:key_budget/core/design_system/widgets/app_page_scaffold.dart';
+import 'package:passfin/app/utils/app_animations.dart';
+import 'package:passfin/core/design_system/widgets/app_card.dart';
+import 'package:passfin/core/design_system/widgets/app_page_scaffold.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
-import 'package:key_budget/app/widgets/responsive_center.dart';
-import 'package:key_budget/core/design_system/spacing/app_spacing.dart';
-import 'package:key_budget/core/design_system/widgets/app_feedback_panel.dart';
-import 'package:key_budget/core/services/snackbar_service.dart';
-import 'package:key_budget/features/auth/viewmodel/auth_viewmodel.dart';
-import 'package:key_budget/features/documents/viewmodel/document_viewmodel.dart';
-import 'package:key_budget/features/trash/repository/trash_repository.dart';
+import 'package:passfin/app/widgets/responsive_center.dart';
+import 'package:passfin/core/design_system/spacing/app_spacing.dart';
+import 'package:passfin/core/design_system/widgets/app_feedback_panel.dart';
+import 'package:passfin/core/services/snackbar_service.dart';
+import 'package:passfin/features/auth/viewmodel/auth_viewmodel.dart';
+import 'package:passfin/features/documents/viewmodel/document_viewmodel.dart';
+import 'package:passfin/features/trash/repository/trash_repository.dart';
 
 class TrashScreen extends ConsumerWidget {
   const TrashScreen({super.key});

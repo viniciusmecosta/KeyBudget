@@ -2,27 +2,29 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:intl/date_symbol_data_local.dart';
-import 'package:key_budget/app/config/app_theme.dart';
-import 'package:key_budget/app/navigation/app_destination.dart';
-import 'package:key_budget/app/view/main_screen.dart';
-import 'package:key_budget/app/viewmodel/navigation_viewmodel.dart';
-import 'package:key_budget/app/widgets/main_bottom_navigation_bar.dart';
-import 'package:key_budget/app/widgets/tab_selection_transition.dart';
-import 'package:key_budget/core/models/document_model.dart';
-import 'package:key_budget/core/models/user_model.dart';
-import 'package:key_budget/features/auth/repository/auth_repository.dart';
-import 'package:key_budget/features/auth/viewmodel/auth_viewmodel.dart';
-import 'package:key_budget/features/category/viewmodel/category_viewmodel.dart';
-import 'package:key_budget/features/credentials/repository/credential_repository.dart';
-import 'package:key_budget/features/credentials/viewmodel/credential_viewmodel.dart';
-import 'package:key_budget/features/dashboard/viewmodel/dashboard_viewmodel.dart';
-import 'package:key_budget/features/documents/viewmodel/document_viewmodel.dart';
-import 'package:key_budget/features/expenses/repository/expense_repository.dart';
-import 'package:key_budget/features/expenses/view/expenses_screen.dart';
-import 'package:key_budget/features/expenses/viewmodel/expense_viewmodel.dart';
-import 'package:key_budget/features/suppliers/repository/supplier_repository.dart';
-import 'package:key_budget/features/suppliers/viewmodel/supplier_viewmodel.dart';
-import 'package:key_budget/features/user/view/user_screen.dart';
+import 'package:passfin/app/config/app_theme.dart';
+import 'package:passfin/app/navigation/app_destination.dart';
+import 'package:passfin/app/view/main_screen.dart';
+import 'package:passfin/app/viewmodel/navigation_viewmodel.dart';
+import 'package:passfin/app/widgets/main_bottom_navigation_bar.dart';
+import 'package:passfin/app/widgets/tab_selection_transition.dart';
+import 'package:passfin/core/models/document_model.dart';
+import 'package:passfin/core/models/user_model.dart';
+import 'package:passfin/core/security/vault_session.dart';
+import '../../core/security/memory_vault_store.dart';
+import 'package:passfin/features/auth/repository/auth_repository.dart';
+import 'package:passfin/features/auth/viewmodel/auth_viewmodel.dart';
+import 'package:passfin/features/category/viewmodel/category_viewmodel.dart';
+import 'package:passfin/features/credentials/repository/credential_repository.dart';
+import 'package:passfin/features/credentials/viewmodel/credential_viewmodel.dart';
+import 'package:passfin/features/dashboard/viewmodel/dashboard_viewmodel.dart';
+import 'package:passfin/features/documents/viewmodel/document_viewmodel.dart';
+import 'package:passfin/features/expenses/repository/expense_repository.dart';
+import 'package:passfin/features/expenses/view/expenses_screen.dart';
+import 'package:passfin/features/expenses/viewmodel/expense_viewmodel.dart';
+import 'package:passfin/features/suppliers/repository/supplier_repository.dart';
+import 'package:passfin/features/suppliers/viewmodel/supplier_viewmodel.dart';
+import 'package:passfin/features/user/view/user_screen.dart';
 
 class FakeAuthRepo extends Fake implements AuthRepository {}
 
@@ -90,6 +92,15 @@ class FakeDocumentVM extends ChangeNotifier
 
   @override
   List<Document> get currentDisplayItems => const [];
+
+  @override
+  String? get errorMessage => null;
+
+  @override
+  String get searchQuery => '';
+
+  @override
+  bool get hasDocuments => false;
 }
 
 class FakeDashboardVM extends DashboardViewModel {
@@ -144,6 +155,7 @@ Widget createMainScreenTestWidget({
   required AuthViewModel authVM,
   ThemeData? theme,
   bool disableAnimations = false,
+  VaultSession? vaultSession,
 }) {
   final categoryVM = FakeCategoryVM();
   final expenseVM = FakeExpenseVM();
@@ -158,6 +170,8 @@ Widget createMainScreenTestWidget({
 
   return ProviderScope(
     overrides: [
+      if (vaultSession != null)
+        vaultSessionProvider.overrideWith((ref) => vaultSession),
       authViewModelProvider.overrideWith((ref) => authVM),
       navigationViewModelProvider.overrideWith((ref) => navVM),
       categoryViewModelProvider.overrideWith((ref) => categoryVM),
@@ -188,6 +202,71 @@ void main() {
   });
 
   group('MainScreen & TabSelectionTransition', () {
+    testWidgets(
+      'add buttons are visible and tappable above mobile navigation',
+      (tester) async {
+        tester.view.physicalSize = const Size(320, 640);
+        tester.view.devicePixelRatio = 1;
+        addTearDown(tester.view.resetPhysicalSize);
+        addTearDown(tester.view.resetDevicePixelRatio);
+        final nav = NavigationViewModel();
+        final auth = FakeAuthVM(
+          mockUser: User(
+            id: 'u1',
+            name: 'Tester',
+            email: 't@t.com',
+            enableSuppliers: true,
+          ),
+        );
+        final vault = VaultSession(store: MemoryVaultStore());
+        await vault.open('u1');
+        await tester.pumpWidget(
+          createMainScreenTestWidget(
+            navVM: nav,
+            authVM: auth,
+            vaultSession: vault,
+            disableAnimations: true,
+          ),
+        );
+        await tester.pumpAndSettle();
+        for (final entry in <(AppDestination, String)>[
+          (AppDestination.expenses, 'Nova Despesa'),
+          (AppDestination.credentials, 'Novo'),
+          (AppDestination.documents, 'Novo Documento'),
+          (AppDestination.suppliers, 'Novo Fornecedor'),
+        ]) {
+          nav.navigateTo(entry.$1);
+          await tester.pumpAndSettle();
+          final fab = find.ancestor(
+            of: find.text(entry.$2),
+            matching: find.byType(FloatingActionButton),
+          );
+          expect(fab, findsOneWidget, reason: entry.$2);
+          expect(fab.hitTestable(), findsOneWidget, reason: entry.$2);
+          expect(
+            tester.getBottomLeft(fab).dy,
+            lessThanOrEqualTo(
+              tester.getTopLeft(find.byType(MainBottomNavigationBar)).dy,
+            ),
+            reason: entry.$2,
+          );
+        }
+        nav.navigateTo(AppDestination.credentials);
+        await tester.pumpAndSettle();
+        await tester.tap(find.text('Novo'));
+        await tester.pumpAndSettle();
+        expect(find.text('Nova Credencial'), findsOneWidget);
+        expect(find.text('Nova Pasta'), findsOneWidget);
+        Navigator.of(tester.element(find.text('Nova Credencial'))).pop();
+        await tester.pumpAndSettle();
+        nav.navigateTo(AppDestination.expenses);
+        await tester.pumpAndSettle();
+        await tester.tap(find.text('Nova Despesa').last);
+        await tester.pumpAndSettle();
+        expect(find.text('Adicionar Despesa'), findsOneWidget);
+      },
+    );
+
     testWidgets(
       'MainScreen uses the same transition on first and later visits',
       (tester) async {

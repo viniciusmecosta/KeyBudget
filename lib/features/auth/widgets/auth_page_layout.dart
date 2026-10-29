@@ -1,10 +1,9 @@
-import 'package:key_budget/core/design_system/colors/app_colors.dart';
-import 'package:key_budget/core/design_system/widgets/app_card.dart';
-import 'package:key_budget/core/design_system/widgets/app_page_scaffold.dart';
+import 'package:passfin/core/design_system/widgets/passfin_brand.dart';
+import 'package:passfin/core/design_system/widgets/app_card.dart';
+import 'package:passfin/core/design_system/widgets/app_page_scaffold.dart';
 import 'package:flutter/material.dart';
-import 'package:key_budget/app/utils/app_animations.dart';
-import 'package:key_budget/core/design_system/borders/app_borders.dart';
-import 'package:key_budget/core/design_system/spacing/app_spacing.dart';
+import 'package:passfin/app/utils/app_animations.dart';
+import 'package:passfin/core/design_system/spacing/app_spacing.dart';
 
 class AuthPageLayout extends StatelessWidget {
   final Widget child;
@@ -16,8 +15,8 @@ class AuthPageLayout extends StatelessWidget {
   const AuthPageLayout({
     super.key,
     required this.child,
-    this.title = 'KeyBudget',
-    this.subtitle = 'Gerencie suas finanças com segurança',
+    this.title = 'PassFin',
+    this.subtitle = 'Suas senhas e finanças em um só lugar',
     this.showBackButton = false,
     this.footer,
   });
@@ -58,32 +57,7 @@ class AuthPageLayout extends StatelessWidget {
                     Center(
                       child: Hero(
                         tag: 'auth_logo',
-                        child: Container(
-                          width: 64,
-                          height: 64,
-                          decoration: BoxDecoration(
-                            color: AppColors.surfaceLight,
-                            borderRadius: AppBorders.borderRadiusL,
-                            border: Border.all(
-                              color: theme.colorScheme.outlineVariant,
-                              width: 1,
-                            ),
-                          ),
-                          clipBehavior: Clip.antiAlias,
-                          child: Image.asset(
-                            'assets/icon/logov2.png',
-                            fit: BoxFit.cover,
-                            errorBuilder: (context, error, stackTrace) =>
-                                Container(
-                                  color: theme.colorScheme.primary,
-                                  child: const Icon(
-                                    Icons.account_balance_wallet_rounded,
-                                    size: 32,
-                                    color: Colors.white,
-                                  ),
-                                ),
-                          ),
-                        ),
+                        child: const PassFinBrand(showName: true, width: 232),
                       ),
                     ),
                     const SizedBox(height: AppSpacing.lg),

@@ -2,15 +2,16 @@ import 'dart:convert';
 import 'dart:isolate';
 import 'package:crypto/crypto.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:key_budget/core/models/credential_model.dart';
-import 'package:key_budget/core/models/expense_category_model.dart';
-import 'package:key_budget/core/models/expense_model.dart';
-import 'package:key_budget/core/models/recurring_expense_model.dart';
-import 'package:key_budget/core/operations/operation_result.dart';
-import 'package:key_budget/core/services/encryption_service.dart';
-import 'package:key_budget/features/credentials/repository/credential_repository.dart';
-import 'package:key_budget/features/expenses/repository/expense_repository.dart';
-import 'package:key_budget/features/expenses/repository/recurring_expense_repository.dart';
+import 'package:passfin/core/models/credential_model.dart';
+import 'package:passfin/core/models/expense_category_model.dart';
+import 'package:passfin/core/models/expense_model.dart';
+import 'package:passfin/core/models/recurring_expense_model.dart';
+import 'package:passfin/core/operations/operation_result.dart';
+import 'package:passfin/core/services/encryption_service.dart';
+import 'package:passfin/core/security/vault_session.dart';
+import 'package:passfin/features/credentials/repository/credential_repository.dart';
+import 'package:passfin/features/expenses/repository/expense_repository.dart';
+import 'package:passfin/features/expenses/repository/recurring_expense_repository.dart';
 import 'csv_import_parser.dart';
 import 'import_validation.dart';
 
@@ -37,11 +38,17 @@ class ImportExecutionPlan {
     this.globalWarnings = const [],
   });
 
-  int get validCount => lineResults.where((l) => l.isValid && l.status != ImportRowStatus.skippedDuplicate).length;
+  int get validCount => lineResults
+      .where((l) => l.isValid && l.status != ImportRowStatus.skippedDuplicate)
+      .length;
   int get invalidCount => lineResults.where((l) => l.hasErrors).length;
-  int get warningCount => lineResults.where((l) => l.hasWarnings && !l.hasErrors).length;
-  int get skippedCount => lineResults.where((l) => l.status == ImportRowStatus.skippedDuplicate).length;
-  int get conflictCount => lineResults.where((l) => l.status == ImportRowStatus.conflict).length;
+  int get warningCount =>
+      lineResults.where((l) => l.hasWarnings && !l.hasErrors).length;
+  int get skippedCount => lineResults
+      .where((l) => l.status == ImportRowStatus.skippedDuplicate)
+      .length;
+  int get conflictCount =>
+      lineResults.where((l) => l.status == ImportRowStatus.conflict).length;
 
   bool get hasErrors => globalErrors.isNotEmpty || invalidCount > 0;
   bool get canProceed => validCount > 0 && globalErrors.isEmpty;
@@ -70,6 +77,7 @@ class ImportService {
   final CredentialRepository credentialRepository;
   final RecurringExpenseRepository recurringRepository;
   final EncryptionService? _customEncryptionService;
+  final EncryptionService Function()? encryptionResolver;
   final CsvImportParser csvParser;
 
   ImportService({
@@ -77,11 +85,14 @@ class ImportService {
     required this.credentialRepository,
     required this.recurringRepository,
     EncryptionService? encryptionService,
+    this.encryptionResolver,
     this.csvParser = const CsvImportParser(),
   }) : _customEncryptionService = encryptionService;
 
   EncryptionService get encryptionService =>
-      _customEncryptionService ?? EncryptionService();
+      _customEncryptionService ??
+      encryptionResolver?.call() ??
+      EncryptionService();
 
   Future<ImportExecutionPlan> preparePlan({
     required String userId,
@@ -142,7 +153,9 @@ class ImportService {
     int totalExpenseMinor = 0;
 
     for (final rawRow in parseResult.rows) {
-      final rawSignature = rawRow.values.entries.map((e) => '${e.key}:${e.value}').join(';');
+      final rawSignature = rawRow.values.entries
+          .map((e) => '${e.key}:${e.value}')
+          .join(';');
       final occurrenceIndex = (contentOccurrenceCounter[rawSignature] ?? 0) + 1;
       contentOccurrenceCounter[rawSignature] = occurrenceIndex;
 
@@ -163,10 +176,18 @@ class ImportService {
               totalExpenseMinor += exp.money.amountMinor;
             }
 
-            final targetDocId = exp.id ?? 'imp_${fileHashPrefix}_${rawRow.lineNumber}_${validation.deduplicationFingerprint.substring(0, 8)}';
-            final existing = existingExpenses.where((e) => e.id == targetDocId || (exp.id != null && e.id == exp.id)).toList();
+            final targetDocId =
+                exp.id ??
+                'imp_${fileHashPrefix}_${rawRow.lineNumber}_${validation.deduplicationFingerprint.substring(0, 8)}';
+            final existing = existingExpenses
+                .where(
+                  (e) =>
+                      e.id == targetDocId || (exp.id != null && e.id == exp.id),
+                )
+                .toList();
             if (existing.isNotEmpty) {
-              final isIdentical = existing.first.amountMinor == exp.money.amountMinor &&
+              final isIdentical =
+                  existing.first.amountMinor == exp.money.amountMinor &&
                   existing.first.date == exp.date &&
                   existing.first.categoryId == exp.categoryId;
               if (isIdentical) {
@@ -176,9 +197,12 @@ class ImportService {
                     rawValues: validation.rawValues,
                     parsedItem: exp.copyWith(id: targetDocId),
                     errors: const [],
-                    warnings: ['Registro idêntico já presente no banco de dados.'],
+                    warnings: [
+                      'Registro idêntico já presente no banco de dados.',
+                    ],
                     originalId: exp.id,
-                    deduplicationFingerprint: validation.deduplicationFingerprint,
+                    deduplicationFingerprint:
+                        validation.deduplicationFingerprint,
                     status: ImportRowStatus.skippedDuplicate,
                   ),
                 );
@@ -190,9 +214,12 @@ class ImportService {
                     rawValues: validation.rawValues,
                     parsedItem: exp.copyWith(id: targetDocId),
                     errors: const [],
-                    warnings: ['ID existente no banco porém com valores diferentes.'],
+                    warnings: [
+                      'ID existente no banco porém com valores diferentes.',
+                    ],
                     originalId: exp.id,
-                    deduplicationFingerprint: validation.deduplicationFingerprint,
+                    deduplicationFingerprint:
+                        validation.deduplicationFingerprint,
                     status: ImportRowStatus.conflict,
                   ),
                 );
@@ -212,8 +239,15 @@ class ImportService {
 
           if (validation.isValid && validation.parsedItem != null) {
             final cred = validation.parsedItem!;
-            final targetDocId = cred.id ?? 'cred_imp_${fileHashPrefix}_${rawRow.lineNumber}';
-            final existing = existingCredentials.where((c) => c.id == targetDocId || (cred.id != null && c.id == cred.id)).toList();
+            final targetDocId =
+                cred.id ?? 'cred_imp_${fileHashPrefix}_${rawRow.lineNumber}';
+            final existing = existingCredentials
+                .where(
+                  (c) =>
+                      c.id == targetDocId ||
+                      (cred.id != null && c.id == cred.id),
+                )
+                .toList();
             if (existing.isNotEmpty) {
               lineResults.add(
                 ImportLineValidation<Credential>(
@@ -276,7 +310,8 @@ class ImportService {
       }
 
       final fileHashPrefix = plan.fileHash.substring(0, 8);
-      final operationId = 'import_${fileHashPrefix}_${DateTime.now().millisecondsSinceEpoch}';
+      final operationId =
+          'import_${fileHashPrefix}_${DateTime.now().millisecondsSinceEpoch}';
       final List<String> createdIds = [];
 
       switch (plan.detectedType) {
@@ -285,7 +320,9 @@ class ImportService {
           for (final line in eligibleLines) {
             final exp = line.parsedItem as Expense;
 
-            final docId = exp.id ?? 'imp_${fileHashPrefix}_${line.lineNumber}_${line.deduplicationFingerprint.substring(0, 8)}';
+            final docId =
+                exp.id ??
+                'imp_${fileHashPrefix}_${line.lineNumber}_${line.deduplicationFingerprint.substring(0, 8)}';
             toAdd.add(exp.copyWith(id: docId));
             createdIds.add(docId);
           }
@@ -295,9 +332,13 @@ class ImportService {
         case CsvImportType.credentials:
           for (final line in eligibleLines) {
             final cred = line.parsedItem as Credential;
-            final docId = cred.id ?? 'cred_imp_${fileHashPrefix}_${line.lineNumber}';
+            final docId =
+                cred.id ?? 'cred_imp_${fileHashPrefix}_${line.lineNumber}';
 
-            final encryptedPassword = encryptionService.encryptData(cred.encryptedPassword);
+            final encryptedPassword = encryptionService.encryptData(
+              cred.encryptedPassword,
+              recordId: docId,
+            );
             final readyCred = cred.copyWith(
               id: docId,
               encryptedPassword: encryptedPassword,
@@ -310,7 +351,8 @@ class ImportService {
         case CsvImportType.recurringExpenses:
           for (final line in eligibleLines) {
             final rule = line.parsedItem as RecurringExpense;
-            final docId = rule.id ?? 'rec_imp_${fileHashPrefix}_${line.lineNumber}';
+            final docId =
+                rule.id ?? 'rec_imp_${fileHashPrefix}_${line.lineNumber}';
             await recurringRepository.addRecurringExpense(
               userId,
               rule.copyWith(id: docId),
@@ -338,7 +380,8 @@ class ImportService {
       );
     } catch (e) {
       return OperationResult.failed(
-        safeError: 'Não foi possível concluir a importação. Verifique os dados e tente novamente.',
+        safeError:
+            'Não foi possível concluir a importação. Verifique os dados e tente novamente.',
       );
     }
   }
@@ -372,5 +415,6 @@ final importServiceProvider = Provider<ImportService>((ref) {
     expenseRepository: ref.read(expenseRepositoryProvider),
     credentialRepository: ref.read(credentialRepositoryProvider),
     recurringRepository: ref.read(recurringExpenseRepositoryProvider),
+    encryptionResolver: () => ref.read(vaultSessionProvider).encryption,
   );
 });

@@ -1,5 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:key_budget/core/money/money.dart';
+import 'package:passfin/core/money/money.dart';
 
 enum RecurrenceFrequency { daily, weekly, monthly }
 

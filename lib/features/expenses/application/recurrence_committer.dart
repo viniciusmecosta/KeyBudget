@@ -1,7 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:key_budget/core/models/expense_model.dart';
-import 'package:key_budget/core/models/recurring_expense_model.dart';
-import 'package:key_budget/features/expenses/domain/recurrence_occurrence.dart';
+import 'package:passfin/core/models/expense_model.dart';
+import 'package:passfin/core/models/recurring_expense_model.dart';
+import 'package:passfin/features/expenses/domain/recurrence_occurrence.dart';
 
 enum RecurrenceCommitStatus { committed, conflict }
 

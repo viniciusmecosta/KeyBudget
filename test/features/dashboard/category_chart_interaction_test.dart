@@ -2,9 +2,9 @@ import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:key_budget/core/models/expense_model.dart';
-import 'package:key_budget/features/dashboard/viewmodel/dashboard_viewmodel.dart';
-import 'package:key_budget/features/dashboard/widgets/dashboard_category_summary.dart';
+import 'package:passfin/core/models/expense_model.dart';
+import 'package:passfin/features/dashboard/viewmodel/dashboard_viewmodel.dart';
+import 'package:passfin/features/dashboard/widgets/dashboard_category_summary.dart';
 import 'dashboard_test.dart' show FakeDashboardVM;
 
 void main() {

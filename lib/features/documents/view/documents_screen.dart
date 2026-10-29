@@ -1,20 +1,19 @@
-import 'package:key_budget/core/design_system/widgets/app_loading_shimmer.dart';
-import 'package:key_budget/core/design_system/widgets/app_page_scaffold.dart';
+import 'package:passfin/core/design_system/widgets/app_skeleton_tile.dart';
+import 'package:passfin/core/design_system/widgets/app_page_scaffold.dart';
 import 'package:flutter/material.dart';
-import 'package:key_budget/app/utils/app_animations.dart';
+import 'package:passfin/app/utils/app_animations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:key_budget/app/config/app_theme.dart';
-import 'package:key_budget/app/utils/navigation_utils.dart';
-import 'package:key_budget/app/widgets/animated_item_sliver.dart';
-import 'package:key_budget/app/widgets/empty_state_widget.dart';
-import 'package:key_budget/app/widgets/responsive_center.dart';
-import 'package:key_budget/core/design_system/borders/app_borders.dart';
-import 'package:key_budget/core/design_system/spacing/app_spacing.dart';
-import 'package:key_budget/core/design_system/widgets/app_search_field.dart';
-import 'package:key_budget/core/design_system/widgets/app_feedback_panel.dart';
-import 'package:key_budget/features/auth/viewmodel/auth_viewmodel.dart';
-import 'package:key_budget/features/documents/view/add_document_screen.dart';
-import 'package:key_budget/features/documents/viewmodel/document_viewmodel.dart';
+import 'package:passfin/app/utils/navigation_utils.dart';
+import 'package:passfin/app/widgets/animated_item_sliver.dart';
+import 'package:passfin/app/widgets/empty_state_widget.dart';
+import 'package:passfin/app/widgets/responsive_center.dart';
+import 'package:passfin/core/design_system/borders/app_borders.dart';
+import 'package:passfin/core/design_system/spacing/app_spacing.dart';
+import 'package:passfin/core/design_system/widgets/app_search_field.dart';
+import 'package:passfin/core/design_system/widgets/app_feedback_panel.dart';
+import 'package:passfin/features/auth/viewmodel/auth_viewmodel.dart';
+import 'package:passfin/features/documents/view/add_document_screen.dart';
+import 'package:passfin/features/documents/viewmodel/document_viewmodel.dart';
 
 import '../widgets/document_list_tile.dart';
 
@@ -217,85 +216,20 @@ class _DocumentsScreenState extends ConsumerState<DocumentsScreen> {
   }
 }
 
-class DocumentsListSkeleton extends ConsumerWidget {
+class DocumentsListSkeleton extends StatelessWidget {
   const DocumentsListSkeleton({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final theme = Theme.of(context);
-
-    return SliverPadding(
-      padding: const EdgeInsets.fromLTRB(
-        AppSpacing.md,
-        AppSpacing.lg,
-        AppSpacing.md,
-        96.0,
-      ),
-      sliver: SliverList(
-        delegate: SliverChildBuilderDelegate(
-          (context, index) => AppLoadingShimmer(
-            child: Container(
-              margin: const EdgeInsets.only(bottom: AppSpacing.sm),
-              padding: const EdgeInsets.all(AppSpacing.md),
-              decoration: BoxDecoration(
-                color: theme.colorScheme.surfaceContainerHighest,
-                borderRadius: AppBorders.borderRadiusL,
-              ),
-              child: Row(
-                children: [
-                  Container(
-                    width: 40,
-                    height: 40,
-                    decoration: BoxDecoration(
-                      color: theme.colorScheme.surface,
-                      borderRadius: AppBorders.borderRadiusM,
-                    ),
-                  ),
-                  const SizedBox(width: AppSpacing.md),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Container(
-                          height: 16,
-                          width: double.infinity,
-                          decoration: BoxDecoration(
-                            color: theme.colorScheme.surface,
-                            borderRadius: BorderRadius.circular(
-                              AppTheme.radiusS,
-                            ),
-                          ),
-                        ),
-                        const SizedBox(height: 8),
-                        Container(
-                          height: 12,
-                          width: 100,
-                          decoration: BoxDecoration(
-                            color: theme.colorScheme.surface,
-                            borderRadius: BorderRadius.circular(
-                              AppTheme.radiusS,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(width: AppSpacing.md),
-                  Container(
-                    width: 24,
-                    height: 24,
-                    decoration: BoxDecoration(
-                      color: theme.colorScheme.surface,
-                      shape: BoxShape.circle,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-          childCount: 8,
-        ),
-      ),
-    );
-  }
+  Widget build(BuildContext context) => SliverPadding(
+    padding: const EdgeInsets.fromLTRB(
+      AppSpacing.md,
+      AppSpacing.md,
+      AppSpacing.md,
+      96,
+    ),
+    sliver: SliverList.builder(
+      itemCount: 8,
+      itemBuilder: (context, index) => const AppSkeletonTile(),
+    ),
+  );
 }

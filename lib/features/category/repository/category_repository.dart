@@ -1,6 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:key_budget/core/models/expense_category_model.dart';
+import 'package:passfin/core/models/expense_category_model.dart';
 
 class CategoryRepository {
   final FirebaseFirestore? _customFirestore;

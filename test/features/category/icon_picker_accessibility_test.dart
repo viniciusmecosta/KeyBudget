@@ -2,8 +2,8 @@ import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:key_budget/core/constants/app_icons.dart';
-import 'package:key_budget/features/category/widgets/icon_picker_widget.dart';
+import 'package:passfin/core/constants/app_icons.dart';
+import 'package:passfin/features/category/widgets/icon_picker_widget.dart';
 
 void main() {
   test('every category icon has a descriptive accessible name', () {

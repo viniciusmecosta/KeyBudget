@@ -1,6 +1,6 @@
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:key_budget/core/services/sensitive_clipboard.dart';
+import 'package:passfin/core/services/sensitive_clipboard.dart';
 
 void main() {
   testWidgets('password expires without replacing a newer clipboard value', (

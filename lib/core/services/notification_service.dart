@@ -1,7 +1,7 @@
-import 'package:key_budget/core/notifications/notification_gateway.dart';
-import 'package:key_budget/core/notifications/notification_id_registry.dart';
-import 'package:key_budget/core/notifications/notification_reconciler.dart';
-import 'package:key_budget/core/time/app_clock.dart';
+import 'package:passfin/core/notifications/notification_gateway.dart';
+import 'package:passfin/core/notifications/notification_id_registry.dart';
+import 'package:passfin/core/notifications/notification_reconciler.dart';
+import 'package:passfin/core/time/app_clock.dart';
 
 class NotificationService {
   static NotificationGateway _gateway = FlutterNotificationGateway();

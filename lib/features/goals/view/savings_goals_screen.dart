@@ -1,19 +1,19 @@
-import 'package:key_budget/core/design_system/widgets/app_date_picker.dart';
-import 'package:key_budget/app/utils/app_animations.dart';
-import 'package:key_budget/core/design_system/widgets/app_page_scaffold.dart';
+import 'package:passfin/core/design_system/widgets/app_date_picker.dart';
+import 'package:passfin/app/utils/app_animations.dart';
+import 'package:passfin/core/design_system/widgets/app_page_scaffold.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
-import 'package:key_budget/app/widgets/responsive_center.dart';
-import 'package:key_budget/core/design_system/spacing/app_spacing.dart';
-import 'package:key_budget/core/design_system/widgets/app_card.dart';
-import 'package:key_budget/core/design_system/widgets/app_feedback_panel.dart';
-import 'package:key_budget/core/money/money.dart';
-import 'package:key_budget/core/money/money_parser.dart';
-import 'package:key_budget/core/services/snackbar_service.dart';
-import 'package:key_budget/features/auth/viewmodel/auth_viewmodel.dart';
-import 'package:key_budget/features/goals/model/savings_goal.dart';
-import 'package:key_budget/features/goals/repository/savings_goal_repository.dart';
+import 'package:passfin/app/widgets/responsive_center.dart';
+import 'package:passfin/core/design_system/spacing/app_spacing.dart';
+import 'package:passfin/core/design_system/widgets/app_card.dart';
+import 'package:passfin/core/design_system/widgets/app_feedback_panel.dart';
+import 'package:passfin/core/money/money.dart';
+import 'package:passfin/core/money/money_parser.dart';
+import 'package:passfin/core/services/snackbar_service.dart';
+import 'package:passfin/features/auth/viewmodel/auth_viewmodel.dart';
+import 'package:passfin/features/goals/model/savings_goal.dart';
+import 'package:passfin/features/goals/repository/savings_goal_repository.dart';
 
 class SavingsGoalsScreen extends ConsumerStatefulWidget {
   const SavingsGoalsScreen({super.key});

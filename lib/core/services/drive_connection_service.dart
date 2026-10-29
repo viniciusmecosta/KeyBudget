@@ -7,7 +7,7 @@ import 'package:google_sign_in/google_sign_in.dart';
 import 'package:google_sign_in_platform_interface/google_sign_in_platform_interface.dart'
     as platform;
 import 'package:googleapis/drive/v3.dart' as drive;
-import 'package:key_budget/core/services/google_sign_in_session.dart';
+import 'package:passfin/core/services/google_sign_in_session.dart';
 
 class DriveConnection {
   const DriveConnection({required this.accountId, required this.email})

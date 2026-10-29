@@ -52,7 +52,7 @@ class FlutterNotificationGateway implements NotificationGateway {
       tz.initializeTimeZones();
 
       const AndroidInitializationSettings androidSettings =
-          AndroidInitializationSettings('@mipmap/ic_launcher');
+          AndroidInitializationSettings('ic_stat_passfin');
 
       const DarwinInitializationSettings iosSettings =
           DarwinInitializationSettings(
@@ -151,6 +151,7 @@ class FlutterNotificationGateway implements NotificationGateway {
           AndroidNotificationDetails(
         'recorrentes_channel',
         'Despesas Recorrentes',
+        icon: 'ic_stat_passfin',
         importance: Importance.max,
         priority: Priority.high,
       );

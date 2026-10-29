@@ -5,10 +5,10 @@ import 'dart:typed_data';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:googleapis/drive/v3.dart' as drive;
-import 'package:key_budget/core/import_export/automatic_backup_service.dart';
-import 'package:key_budget/core/import_export/backup_manifest.dart';
-import 'package:key_budget/core/import_export/backup_service.dart';
-import 'package:key_budget/core/services/drive_service.dart';
+import 'package:passfin/core/import_export/automatic_backup_service.dart';
+import 'package:passfin/core/import_export/backup_manifest.dart';
+import 'package:passfin/core/import_export/backup_service.dart';
+import 'package:passfin/core/services/drive_service.dart';
 
 class _MemoryStorage extends Fake implements FlutterSecureStorage {
   final values = <String, String>{};

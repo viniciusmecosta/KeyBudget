@@ -3,11 +3,11 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:key_budget/core/models/user_model.dart';
-import 'package:key_budget/core/services/drive_connection_service.dart';
-import 'package:key_budget/core/services/drive_service.dart';
-import 'package:key_budget/features/auth/viewmodel/auth_viewmodel.dart';
-import 'package:key_budget/features/user/view/drive_connection_screen.dart';
+import 'package:passfin/core/models/user_model.dart';
+import 'package:passfin/core/services/drive_connection_service.dart';
+import 'package:passfin/core/services/drive_service.dart';
+import 'package:passfin/features/auth/viewmodel/auth_viewmodel.dart';
+import 'package:passfin/features/user/view/drive_connection_screen.dart';
 
 class _Connections extends DriveConnectionService {
   DriveConnection? connection;

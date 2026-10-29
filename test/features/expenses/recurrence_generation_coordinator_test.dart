@@ -1,11 +1,11 @@
 import 'dart:async';
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:key_budget/core/models/expense_model.dart';
-import 'package:key_budget/core/models/recurring_expense_model.dart';
-import 'package:key_budget/core/operations/operation_result.dart';
-import 'package:key_budget/features/expenses/application/recurrence_generation_coordinator.dart';
-import 'package:key_budget/features/expenses/application/recurrence_service.dart';
+import 'package:passfin/core/models/expense_model.dart';
+import 'package:passfin/core/models/recurring_expense_model.dart';
+import 'package:passfin/core/operations/operation_result.dart';
+import 'package:passfin/features/expenses/application/recurrence_generation_coordinator.dart';
+import 'package:passfin/features/expenses/application/recurrence_service.dart';
 
 class _PendingRecurrenceService extends Fake implements RecurrenceService {
   final firstResult = Completer<OperationResult<List<Expense>>>();

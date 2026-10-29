@@ -1,12 +1,12 @@
-import 'package:key_budget/app/utils/navigation_utils.dart';
-import 'package:key_budget/core/design_system/widgets/app_form_section_heading.dart';
+import 'package:passfin/app/utils/navigation_utils.dart';
+import 'package:passfin/core/design_system/widgets/app_form_section_heading.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:key_budget/app/widgets/image_picker_widget.dart';
-import 'package:key_budget/core/design_system/spacing/app_spacing.dart';
-import 'package:key_budget/core/design_system/widgets/app_text_field.dart';
-import 'package:key_budget/core/utils/formatters.dart';
-import 'package:key_budget/features/credentials/widgets/saved_logos_screen.dart';
+import 'package:passfin/app/widgets/image_picker_widget.dart';
+import 'package:passfin/core/design_system/spacing/app_spacing.dart';
+import 'package:passfin/core/design_system/widgets/app_text_field.dart';
+import 'package:passfin/core/utils/formatters.dart';
+import 'package:passfin/features/credentials/widgets/saved_logos_screen.dart';
 import 'package:mask_text_input_formatter/mask_text_input_formatter.dart';
 
 class SupplierForm extends ConsumerWidget {

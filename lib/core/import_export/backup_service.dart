@@ -4,11 +4,11 @@ import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:crypto/crypto.dart';
-import 'package:key_budget/core/operations/operation_result.dart';
-import 'package:key_budget/core/operations/session_context.dart';
-import 'package:key_budget/core/services/drive_service.dart';
-import 'package:key_budget/core/services/encryption_service.dart';
-import 'package:key_budget/core/time/app_clock.dart';
+import 'package:passfin/core/operations/operation_result.dart';
+import 'package:passfin/core/operations/session_context.dart';
+import 'package:passfin/core/services/drive_service.dart';
+import 'package:passfin/core/services/encryption_service.dart';
+import 'package:passfin/core/time/app_clock.dart';
 import 'package:path_provider/path_provider.dart';
 
 import 'backup_codec.dart';
@@ -112,19 +112,49 @@ class BackupService {
       final enc = encryptionService;
       if (encryptedPass != null && enc != null) {
         try {
-          final decrypted = enc.decryptData(encryptedPass);
-          if (decrypted != 'ERRO_DECRIPT') {
-            portablePass = decrypted;
-          } else {
-            undecryptableCredentials.add(id);
-          }
+          portablePass = enc.decryptData(encryptedPass, recordId: id);
         } catch (_) {
           undecryptableCredentials.add(id);
         }
       }
 
+      if (portablePass == null && !undecryptableCredentials.contains(id)) {
+        undecryptableCredentials.add(id);
+      }
       credentialRecords.add(
         BackupRecord(id: id, data: raw, portablePassword: portablePass),
+      );
+    }
+
+    final trashRecords = <BackupRecord>[];
+    for (final raw in capturedData['trash'] ?? <Map<String, dynamic>>[]) {
+      final id = raw['id'] as String;
+      final portablePasswords = <String, String>{};
+      if (raw['collection'] == 'credentials') {
+        for (final record in raw['records'] as List? ?? []) {
+          final credentialId = record['id'] as String;
+          try {
+            final encrypted = record['data']['encrypted_password'] as String;
+            if (encryptionService == null) {
+              throw StateError('Vault unavailable');
+            }
+            portablePasswords[credentialId] = encryptionService!.decryptData(
+              encrypted,
+              recordId: credentialId,
+            );
+          } catch (_) {
+            undecryptableCredentials.add('trash/$id/$credentialId');
+          }
+        }
+      }
+      trashRecords.add(
+        BackupRecord(
+          id: id,
+          data: raw,
+          metadata: portablePasswords.isEmpty
+              ? null
+              : {'portablePasswords': portablePasswords},
+        ),
       );
     }
 
@@ -202,12 +232,16 @@ class BackupService {
         counts['credentials'] = credentialRecords.length;
         hashes[filePath] = sha256.convert(bytes).toString();
       } else {
-        final recordsList = (capturedData[mod] ?? [])
-            .map(
-              (raw) =>
-                  BackupRecord(id: (raw['id'] ?? '').toString(), data: raw),
-            )
-            .toList();
+        final recordsList = mod == 'trash'
+            ? trashRecords
+            : (capturedData[mod] ?? [])
+                  .map(
+                    (raw) => BackupRecord(
+                      id: (raw['id'] ?? '').toString(),
+                      data: raw,
+                    ),
+                  )
+                  .toList();
         final jsonStr = BackupCodec.encodeRecords(recordsList);
         final bytes = utf8.encode(jsonStr);
         final filePath = 'records/$mod.json';

@@ -1,7 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:key_budget/core/operations/operation_result.dart';
-import 'package:key_budget/core/operations/session_context.dart';
-import 'package:key_budget/core/time/app_clock.dart';
+import 'package:passfin/core/operations/operation_result.dart';
+import 'package:passfin/core/operations/session_context.dart';
+import 'package:passfin/core/time/app_clock.dart';
 
 void main() {
   group('AppClock', () {

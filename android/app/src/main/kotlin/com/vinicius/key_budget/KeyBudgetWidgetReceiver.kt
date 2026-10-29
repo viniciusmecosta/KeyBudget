@@ -208,12 +208,12 @@ open class KeyBudgetWidgetReceiver : HomeWidgetProvider() {
         val openApp = HomeWidgetLaunchIntent.getActivity(
             context,
             MainActivity::class.java,
-            Uri.parse("keybudget://dashboard"),
+            Uri.parse("passfin://dashboard"),
         )
         val addExpense = HomeWidgetLaunchIntent.getActivity(
             context,
             MainActivity::class.java,
-            Uri.parse("keybudget://addexpense"),
+            Uri.parse("passfin://addexpense"),
         )
         views.setOnClickPendingIntent(R.id.widget_root, openApp)
         views.setOnClickPendingIntent(R.id.btn_add_expense, addExpense)
@@ -256,7 +256,7 @@ open class KeyBudgetWidgetReceiver : HomeWidgetProvider() {
             views.setContentDescription(
                 R.id.btn_toggle_visibility,
                 when (state) {
-                    WidgetDisplayState.SIGNED_OUT -> "Entrar no KeyBudget"
+                    WidgetDisplayState.SIGNED_OUT -> "Entrar no PassFin"
                     WidgetDisplayState.STALE -> "Atualizar valores no aplicativo"
                     WidgetDisplayState.VISIBLE -> "Ocultar valores"
                     WidgetDisplayState.HIDDEN -> "Mostrar valores temporariamente"
@@ -349,7 +349,7 @@ open class KeyBudgetWidgetReceiver : HomeWidgetProvider() {
     ): PendingIntent {
         val intent = Intent(context, javaClass).apply {
             this.action = action
-            data = Uri.parse("keybudget://widget/$action/$widgetId")
+            data = Uri.parse("passfin://widget/$action/$widgetId")
             putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, widgetId)
         }
         return PendingIntent.getBroadcast(

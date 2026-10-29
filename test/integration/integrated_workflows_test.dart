@@ -4,37 +4,37 @@ import 'package:firebase_auth/firebase_auth.dart' as firebase;
 import 'package:flutter/services.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:key_budget/core/import_export/backup_service.dart';
-import 'package:key_budget/core/import_export/csv_import_parser.dart';
-import 'package:key_budget/core/import_export/import_service.dart';
-import 'package:key_budget/core/import_export/raw_storage.dart';
-import 'package:key_budget/core/import_export/restore_service.dart';
-import 'package:key_budget/core/models/credential_model.dart';
-import 'package:key_budget/core/models/expense_model.dart';
-import 'package:key_budget/core/models/recurring_expense_model.dart';
-import 'package:key_budget/core/models/user_model.dart';
-import 'package:key_budget/core/money/money.dart';
-import 'package:key_budget/core/notifications/notification_gateway.dart';
-import 'package:key_budget/core/notifications/notification_id_registry.dart';
-import 'package:key_budget/core/notifications/notification_reconciler.dart';
-import 'package:key_budget/core/operations/session_context.dart';
-import 'package:key_budget/core/services/csv_service.dart';
-import 'package:key_budget/core/services/encryption_service.dart';
-import 'package:key_budget/core/services/home_widget_service.dart';
-import 'package:key_budget/core/services/local_auth_service.dart';
-import 'package:key_budget/core/time/app_clock.dart';
-import 'package:key_budget/features/analysis/domain/analysis_calculator.dart';
-import 'package:key_budget/features/analysis/domain/analysis_query.dart';
-import 'package:key_budget/features/auth/repository/auth_repository.dart';
-import 'package:key_budget/features/auth/viewmodel/auth_viewmodel.dart';
-import 'package:key_budget/features/credentials/repository/credential_repository.dart';
-import 'package:key_budget/features/expenses/application/recurrence_deletion_service.dart';
-import 'package:key_budget/features/expenses/application/recurrence_reconciliation_service.dart';
-import 'package:key_budget/features/expenses/application/recurrence_service.dart';
-import 'package:key_budget/features/expenses/domain/recurrence_occurrence.dart';
-import 'package:key_budget/features/expenses/repository/expense_repository.dart';
-import 'package:key_budget/features/expenses/repository/recurrence_occurrence_repository.dart';
-import 'package:key_budget/features/expenses/repository/recurring_expense_repository.dart';
+import 'package:passfin/core/import_export/backup_service.dart';
+import 'package:passfin/core/import_export/csv_import_parser.dart';
+import 'package:passfin/core/import_export/import_service.dart';
+import 'package:passfin/core/import_export/raw_storage.dart';
+import 'package:passfin/core/import_export/restore_service.dart';
+import 'package:passfin/core/models/credential_model.dart';
+import 'package:passfin/core/models/expense_model.dart';
+import 'package:passfin/core/models/recurring_expense_model.dart';
+import 'package:passfin/core/models/user_model.dart';
+import 'package:passfin/core/money/money.dart';
+import 'package:passfin/core/notifications/notification_gateway.dart';
+import 'package:passfin/core/notifications/notification_id_registry.dart';
+import 'package:passfin/core/notifications/notification_reconciler.dart';
+import 'package:passfin/core/operations/session_context.dart';
+import 'package:passfin/core/services/csv_service.dart';
+import 'package:passfin/core/services/encryption_service.dart';
+import 'package:passfin/core/services/home_widget_service.dart';
+import 'package:passfin/core/services/local_auth_service.dart';
+import 'package:passfin/core/time/app_clock.dart';
+import 'package:passfin/features/analysis/domain/analysis_calculator.dart';
+import 'package:passfin/features/analysis/domain/analysis_query.dart';
+import 'package:passfin/features/auth/repository/auth_repository.dart';
+import 'package:passfin/features/auth/viewmodel/auth_viewmodel.dart';
+import 'package:passfin/features/credentials/repository/credential_repository.dart';
+import 'package:passfin/features/expenses/application/recurrence_deletion_service.dart';
+import 'package:passfin/features/expenses/application/recurrence_reconciliation_service.dart';
+import 'package:passfin/features/expenses/application/recurrence_service.dart';
+import 'package:passfin/features/expenses/domain/recurrence_occurrence.dart';
+import 'package:passfin/features/expenses/repository/expense_repository.dart';
+import 'package:passfin/features/expenses/repository/recurrence_occurrence_repository.dart';
+import 'package:passfin/features/expenses/repository/recurring_expense_repository.dart';
 import 'package:local_auth/local_auth.dart';
 import 'package:local_auth_android/local_auth_android.dart';
 
@@ -245,11 +245,11 @@ class FakeCredentialRepository implements CredentialRepository {
 
 class FakeEncryptionService extends Fake implements EncryptionService {
   @override
-  String encryptData(String plainText) =>
+  String encryptData(String plainText, {String? recordId}) =>
       base64Encode(utf8.encode('cipher_$plainText'));
 
   @override
-  String decryptData(String encryptedText) =>
+  String decryptData(String encryptedText, {String? recordId}) =>
       utf8.decode(base64Decode(encryptedText)).replaceFirst('cipher_', '');
 }
 

@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:key_budget/app/config/app_theme.dart';
-import 'package:key_budget/core/models/expense_model.dart';
-import 'package:key_budget/features/dashboard/domain/dashboard_insights.dart';
-import 'package:key_budget/features/dashboard/widgets/dashboard_insight_chart.dart';
+import 'package:passfin/app/config/app_theme.dart';
+import 'package:passfin/core/models/expense_model.dart';
+import 'package:passfin/features/dashboard/domain/dashboard_insights.dart';
+import 'package:passfin/features/dashboard/widgets/dashboard_insight_chart.dart';
 
 void main() {
   testWidgets('daily chart shows a single day without an invalid axis', (

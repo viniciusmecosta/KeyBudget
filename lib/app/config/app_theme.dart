@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:key_budget/core/design_system/borders/app_borders.dart';
-import 'package:key_budget/core/design_system/colors/app_colors.dart';
-import 'package:key_budget/core/design_system/colors/app_contrast.dart';
-import 'package:key_budget/core/design_system/spacing/app_spacing.dart';
-import 'package:key_budget/core/design_system/theme/app_semantic_colors.dart';
-import 'package:key_budget/core/design_system/typography/app_typography.dart';
+import 'package:passfin/core/design_system/borders/app_borders.dart';
+import 'package:passfin/core/design_system/colors/app_colors.dart';
+import 'package:passfin/core/design_system/colors/app_contrast.dart';
+import 'package:passfin/core/design_system/spacing/app_spacing.dart';
+import 'package:passfin/core/design_system/theme/app_semantic_colors.dart';
+import 'package:passfin/core/design_system/typography/app_typography.dart';
 
 class AppTheme {
   static const double spaceXS = AppSpacing.xxs;
@@ -120,7 +120,12 @@ class AppTheme {
         onError: Colors.white,
         surface: surfaceColor,
         onSurface: onSurfaceColor,
+        surfaceContainerLowest: backgroundColor,
+        surfaceContainerLow: surfaceColor,
+        surfaceContainer: surfaceColor,
+        surfaceContainerHigh: surfaceContainerHighestColor,
         surfaceContainerHighest: surfaceContainerHighestColor,
+        surfaceTint: Colors.transparent,
         onSurfaceVariant: onSurfaceVariantColor,
         outline: onSurfaceVariantColor.withAlpha((255 * 0.15).round()),
         outlineVariant: onSurfaceVariantColor.withAlpha((255 * 0.05).round()),
@@ -274,7 +279,7 @@ class AppTheme {
         hintStyle: textTheme.bodyMedium?.copyWith(color: onSurfaceVariantColor),
       ),
       cardTheme: CardThemeData(
-        elevation: 1,
+        elevation: 0,
         shadowColor: primaryColor.withValues(alpha: 0.08),
         surfaceTintColor: Colors.transparent,
         shape: RoundedRectangleBorder(
@@ -282,7 +287,7 @@ class AppTheme {
           side: BorderSide(
             color: isDark
                 ? onSurfaceColor.withValues(alpha: 0.08)
-                : Colors.white,
+                : onSurfaceColor.withValues(alpha: 0.06),
             width: 1,
           ),
         ),

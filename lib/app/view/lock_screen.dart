@@ -1,13 +1,13 @@
-import 'package:key_budget/core/design_system/widgets/app_page_scaffold.dart';
-import 'package:key_budget/core/design_system/colors/app_contrast.dart';
+import 'package:passfin/core/design_system/widgets/app_page_scaffold.dart';
+import 'package:passfin/core/design_system/widgets/passfin_brand.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:key_budget/app/utils/app_animations.dart';
-import 'package:key_budget/core/services/app_lock_service.dart';
-import 'package:key_budget/core/services/local_auth_service.dart';
-import 'package:key_budget/features/auth/viewmodel/auth_viewmodel.dart';
-import 'package:key_budget/core/design_system/widgets/app_button.dart';
-import 'package:key_budget/core/design_system/widgets/app_centered_scroll.dart';
+import 'package:passfin/app/utils/app_animations.dart';
+import 'package:passfin/core/services/app_lock_service.dart';
+import 'package:passfin/core/services/local_auth_service.dart';
+import 'package:passfin/features/auth/viewmodel/auth_viewmodel.dart';
+import 'package:passfin/core/design_system/widgets/app_button.dart';
+import 'package:passfin/core/design_system/widgets/app_centered_scroll.dart';
 
 class LockScreen extends ConsumerStatefulWidget {
   final LocalAuthService? localAuthService;
@@ -213,23 +213,10 @@ class _LockScreenState extends ConsumerState<LockScreen>
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Container(
-                  padding: const EdgeInsets.all(20),
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(24),
-                    color: AppContrast.primaryWithWhiteText(
-                      theme.colorScheme.primary,
-                    ),
-                  ),
-                  child: Icon(
-                    Icons.lock_person_outlined,
-                    size: 40,
-                    color: Colors.white,
-                  ),
-                ),
+                const PassFinBrand(width: 112),
                 const SizedBox(height: 28),
                 Text(
-                  'KeyBudget bloqueado',
+                  'PassFin bloqueado',
                   textAlign: TextAlign.center,
                   style: theme.textTheme.headlineMedium?.copyWith(
                     fontWeight: FontWeight.bold,

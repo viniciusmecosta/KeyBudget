@@ -1,10 +1,10 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:key_budget/core/models/expense_model.dart';
-import 'package:key_budget/core/money/money.dart';
-import 'package:key_budget/core/operations/operation_result.dart';
-import 'package:key_budget/features/expenses/domain/installment_calculator.dart';
-import 'package:key_budget/features/expenses/repository/expense_repository.dart';
-import 'package:key_budget/features/expenses/viewmodel/expense_viewmodel.dart';
+import 'package:passfin/core/models/expense_model.dart';
+import 'package:passfin/core/money/money.dart';
+import 'package:passfin/core/operations/operation_result.dart';
+import 'package:passfin/features/expenses/domain/installment_calculator.dart';
+import 'package:passfin/features/expenses/repository/expense_repository.dart';
+import 'package:passfin/features/expenses/viewmodel/expense_viewmodel.dart';
 
 class FakeExpenseRepository extends ExpenseRepository {
   final List<Expense> savedExpenses = [];

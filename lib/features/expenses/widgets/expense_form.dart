@@ -1,20 +1,20 @@
-import 'package:key_budget/app/utils/navigation_utils.dart';
-import 'package:key_budget/core/design_system/surfaces/app_surfaces.dart';
-import 'package:key_budget/core/design_system/widgets/app_form_section_heading.dart';
+import 'package:passfin/app/utils/navigation_utils.dart';
+import 'package:passfin/core/design_system/surfaces/app_surfaces.dart';
+import 'package:passfin/core/design_system/widgets/app_form_section_heading.dart';
 import 'package:flutter/material.dart';
-import 'package:key_budget/core/money/brl_input_controller.dart';
+import 'package:passfin/core/money/brl_input_controller.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:key_budget/app/widgets/category_autocomplete_field.dart';
-import 'package:key_budget/app/widgets/category_picker_field.dart';
-import 'package:key_budget/app/widgets/date_picker_field.dart';
-import 'package:key_budget/core/design_system/spacing/app_spacing.dart';
-import 'package:key_budget/core/models/expense_category_model.dart';
-import 'package:key_budget/core/money/money.dart';
-import 'package:key_budget/core/money/money_parser.dart';
-import 'package:key_budget/features/auth/viewmodel/auth_viewmodel.dart';
-import 'package:key_budget/features/category/view/categories_screen.dart';
-import 'package:key_budget/features/category/viewmodel/category_viewmodel.dart';
-import 'package:key_budget/features/expenses/viewmodel/expense_viewmodel.dart';
+import 'package:passfin/app/widgets/category_autocomplete_field.dart';
+import 'package:passfin/app/widgets/category_picker_field.dart';
+import 'package:passfin/app/widgets/date_picker_field.dart';
+import 'package:passfin/core/design_system/spacing/app_spacing.dart';
+import 'package:passfin/core/models/expense_category_model.dart';
+import 'package:passfin/core/money/money.dart';
+import 'package:passfin/core/money/money_parser.dart';
+import 'package:passfin/features/auth/viewmodel/auth_viewmodel.dart';
+import 'package:passfin/features/category/view/categories_screen.dart';
+import 'package:passfin/features/category/viewmodel/category_viewmodel.dart';
+import 'package:passfin/features/expenses/viewmodel/expense_viewmodel.dart';
 
 const _kInstallmentOptions = [
   2,

@@ -1,13 +1,13 @@
-import 'package:key_budget/app/utils/navigation_utils.dart';
+import 'package:passfin/app/utils/navigation_utils.dart';
 import 'package:flutter/material.dart';
-import 'package:key_budget/core/import_export/csv_import_parser.dart';
-import 'package:key_budget/core/import_export/import_preview_screen.dart';
-import 'package:key_budget/core/import_export/import_service.dart';
-import 'package:key_budget/core/models/credential_model.dart';
-import 'package:key_budget/core/services/csv_service.dart';
-import 'package:key_budget/core/services/data_import_service.dart';
-import 'package:key_budget/core/services/pdf_service.dart';
-import 'package:key_budget/core/services/snackbar_service.dart';
+import 'package:passfin/core/import_export/csv_import_parser.dart';
+import 'package:passfin/core/import_export/import_preview_screen.dart';
+import 'package:passfin/core/import_export/import_service.dart';
+import 'package:passfin/core/models/credential_model.dart';
+import 'package:passfin/core/services/csv_service.dart';
+import 'package:passfin/core/services/data_import_service.dart';
+import 'package:passfin/core/services/pdf_service.dart';
+import 'package:passfin/core/services/snackbar_service.dart';
 
 class CredentialTransferService {
   final CsvService csvService;
@@ -25,13 +25,13 @@ class CredentialTransferService {
   Future<bool> exportCsv(
     BuildContext context,
     List<Credential> credentials,
-    String Function(String) decryptPassword,
+    String Function(Credential) decryptPassword,
   ) => csvService.exportCredentials(context, credentials, decryptPassword);
 
   Future<void> exportPdf(
     BuildContext context,
     List<Credential> credentials,
-    String Function(String) decryptPassword,
+    String Function(Credential) decryptPassword,
   ) => pdfService.exportCredentialsPdf(context, credentials, decryptPassword);
 
   Future<int> importCsv(
