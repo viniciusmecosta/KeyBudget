@@ -41,7 +41,7 @@ for mode in ('light', 'dark'):
 for density, size in [('mdpi',24),('hdpi',36),('xhdpi',48),('xxhdpi',72),('xxxhdpi',96)]:
     with Image.open(RES / f'drawable-{density}/ic_stat_passfin.png') as im:
         assert im.size == (size, size)
-        pixels = list(im.convert('RGBA').getdata())
+        pixels = list(im.convert('RGBA').get_flattened_data())
         assert any(a == 0 for r,g,b,a in pixels)
         assert all((r,g,b) == (255,255,255) for r,g,b,a in pixels if a > 0)
 # Parse the actual native resource, not a separate drawing of the icon.
