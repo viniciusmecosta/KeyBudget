@@ -88,7 +88,7 @@ def raster(source, path, width):
 for mode in ('light', 'dark', 'mono', 'inverse'):
     mark = save(f'passfin-mark-{mode}', 512, 512, drawing(mode), 1024)
     # Native Flutter density variants, without a new runtime SVG dependency.
-    for folder, width in [('', 128), ('2.0x/', 256), ('3.0x/', 384)]:
+    for folder, width in [('', 128), ('2.0x/', 256), ('3.0x/', 384), ('4.0x/', 512)]:
         raster(mark, OUT / f'{folder}passfin-symbol-{mode}.png', width)
 for dark in (False, True):
     mode = 'dark' if dark else 'light'
@@ -96,7 +96,7 @@ for dark in (False, True):
         f'<g transform="scale(.5)">{drawing(mode)}</g>' + wordmark(280, 173, 155, dark), 2000)
     save(f'passfin-stacked-{mode}', 640, 650,
         f'<g transform="translate(64 0)">{drawing(mode)}</g>' + wordmark(89, 586, 120, dark), 1280)
-    for folder, width in [('', 250), ('2.0x/', 500), ('3.0x/', 750)]:
+    for folder, width in [('', 250), ('2.0x/', 500), ('3.0x/', 750), ('4.0x/', 1000)]:
         raster(horizontal, OUT / f'{folder}passfin-signature-{mode}.png', width)
 # Full-bleed square icon: launcher applies its own mask. No baked rounded corners.
 launcher = save('passfin-app-icon', 512, 512,
@@ -117,6 +117,15 @@ for version in ('26','33'):
     path.parent.mkdir(parents=True, exist_ok=True)
     mono = '\n  <monochrome android:drawable="@drawable/passfin_monochrome"/>' if version == '33' else ''
     path.write_text('<adaptive-icon xmlns:android="http://schemas.android.com/apk/res/android">\n  <background android:drawable="@color/passfin_launcher_background"/>\n  <foreground android:drawable="@drawable/passfin_foreground"/>'+mono+'\n</adaptive-icon>\n')
+# Android status-bar icons must have transparent backgrounds and a white mask.
+# Raster density variants avoid using the opaque launcher as the small icon.
+notification = save('passfin-notification', 24, 24,
+    f'<g transform="translate(1 1) scale(.043)">{drawing("inverse")}</g>', 96)
+for density, size in [('mdpi',24),('hdpi',36),('xhdpi',48),('xxhdpi',72),('xxxhdpi',96)]:
+    raster(notification, RES / f'drawable-{density}/ic_stat_passfin.png', size)
+keep = RES / 'raw/passfin_keep.xml'
+keep.parent.mkdir(parents=True, exist_ok=True)
+keep.write_text('<resources xmlns:tools="http://schemas.android.com/tools" tools:keep="@drawable/ic_stat_passfin"/>\n')
 # Export an iOS catalog for future integration; no iOS Runner exists in this repo.
 catalog = ROOT / 'docs/branding/ios/AppIcon.appiconset'
 images = []
