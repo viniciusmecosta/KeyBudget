@@ -126,6 +126,9 @@ for density, size in [('mdpi',24),('hdpi',36),('xhdpi',48),('xxhdpi',72),('xxxhd
 keep = RES / 'raw/passfin_keep.xml'
 keep.parent.mkdir(parents=True, exist_ok=True)
 keep.write_text('<resources xmlns:tools="http://schemas.android.com/tools" tools:keep="@drawable/ic_stat_passfin"/>\n')
+# A small fixed-color mark for the spacious widget headings.
+widget_paths = '\n'.join(f'  <path android:fillColor="{fill}" android:fillType="evenOdd" android:pathData="{d}"/>' for fill,d in parts('light'))
+(RES/'drawable/passfin_widget_brand.xml').write_text('<vector xmlns:android="http://schemas.android.com/apk/res/android" android:width="20dp" android:height="20dp" android:viewportWidth="512" android:viewportHeight="512">\n'+widget_paths+'\n</vector>\n')
 # Export an iOS catalog for future integration; no iOS Runner exists in this repo.
 catalog = ROOT / 'docs/branding/ios/AppIcon.appiconset'
 images = []

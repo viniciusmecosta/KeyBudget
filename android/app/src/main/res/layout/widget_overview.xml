@@ -18,6 +18,9 @@
         android:padding="12dp">
         <TextView
             android:id="@+id/tv_title"
+            android:drawableStart="@drawable/passfin_widget_brand"
+            android:drawablePadding="6dp"
+            android:gravity="center_vertical"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:text="Resumo do mês"

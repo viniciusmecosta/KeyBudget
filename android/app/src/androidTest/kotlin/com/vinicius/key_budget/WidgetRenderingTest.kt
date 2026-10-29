@@ -85,6 +85,10 @@ class WidgetRenderingTest {
                     )
                     for ((receiver, width, height) in variants) {
                         val view = render(c, receiver, appearance, width, height)
+                        val title = view.findViewById<TextView>(R.id.tv_title)
+                        if (receiver !is KeyBudgetCompactWidgetReceiver && receiver !is KeyBudgetQuickWidgetReceiver) {
+                            assertNotNull("Spacious widget heading includes the PassFin mark", title.compoundDrawablesRelative[0])
+                        }
                         val bitmap = bitmap(view)
                         assertEquals("Transparent rounded corner", 0, Color.alpha(bitmap.getPixel(0, 0)))
                         assertEquals("Theme surface", palette.getLong("background").toInt(),
