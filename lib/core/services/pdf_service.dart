@@ -32,7 +32,7 @@ class PdfService {
       double currentY = 0;
 
       final ByteData logoData = await rootBundle.load(
-        'assets/brand/passfin-mark-light.png',
+        'assets/brand/passfin-lockup-light.png',
       );
       final PdfBitmap logo = PdfBitmap(logoData.buffer.asUint8List());
 
@@ -72,18 +72,18 @@ class PdfService {
         (AppTheme.surfaceContainerHighest.b * 255.0).round() & 0xff,
       );
 
-      page.graphics.drawImage(logo, const Rect.fromLTWH(0, 0, 40, 40));
+      page.graphics.drawImage(logo, const Rect.fromLTWH(0, 6, 120, 30.72));
       page.graphics.drawString(
         'Relatório de Despesas',
         titleFont,
         brush: PdfSolidBrush(primaryColor),
-        bounds: Rect.fromLTWH(50, 5, pageSize.width - 50, 30),
+        bounds: Rect.fromLTWH(136, 5, pageSize.width - 136, 30),
       );
       page.graphics.drawString(
         'Gerado em: ${DateFormat('dd/MM/yyyy HH:mm').format(DateTime.now())}',
         font,
         brush: PdfSolidBrush(onSurfaceColor),
-        bounds: Rect.fromLTWH(50, 30, pageSize.width - 50, 20),
+        bounds: Rect.fromLTWH(136, 30, pageSize.width - 136, 20),
       );
       currentY += 60;
 
@@ -443,7 +443,7 @@ class PdfService {
       double currentY = 0;
 
       final ByteData logoData = await rootBundle.load(
-        'assets/brand/passfin-mark-light.png',
+        'assets/brand/passfin-lockup-light.png',
       );
       final PdfBitmap logo = PdfBitmap(logoData.buffer.asUint8List());
 
@@ -483,18 +483,18 @@ class PdfService {
         (AppTheme.surfaceContainerHighest.b * 255.0).round() & 0xff,
       );
 
-      page.graphics.drawImage(logo, const Rect.fromLTWH(0, 0, 40, 40));
+      page.graphics.drawImage(logo, const Rect.fromLTWH(0, 6, 120, 30.72));
       page.graphics.drawString(
         'Relatório de Credenciais',
         titleFont,
         brush: PdfSolidBrush(primaryColor),
-        bounds: Rect.fromLTWH(50, 5, pageSize.width - 50, 30),
+        bounds: Rect.fromLTWH(136, 5, pageSize.width - 136, 30),
       );
       page.graphics.drawString(
         'Gerado em: ${DateFormat('dd/MM/yyyy HH:mm').format(DateTime.now())}',
         font,
         brush: PdfSolidBrush(onSurfaceColor),
-        bounds: Rect.fromLTWH(50, 30, pageSize.width - 50, 20),
+        bounds: Rect.fromLTWH(136, 30, pageSize.width - 136, 20),
       );
       currentY = 60;
 
@@ -612,7 +612,7 @@ class PdfService {
       final PdfDocument document = PdfDocument();
 
       final ByteData logoData = await rootBundle.load(
-        'assets/brand/passfin-mark-light.png',
+        'assets/brand/passfin-lockup-light.png',
       );
       final PdfBitmap logo = PdfBitmap(logoData.buffer.asUint8List());
       final ByteData fontData = await rootBundle.load(
@@ -660,18 +660,18 @@ class PdfService {
       final Size pageSize = page1.getClientSize();
       double currentY = 0;
 
-      page1.graphics.drawImage(logo, const Rect.fromLTWH(0, 0, 45, 45));
+      page1.graphics.drawImage(logo, const Rect.fromLTWH(0, 6, 120, 30.72));
       page1.graphics.drawString(
         'Relatório de Análise Financeira',
         titleFont,
         brush: PdfSolidBrush(primaryColor),
-        bounds: Rect.fromLTWH(55, 5, pageSize.width - 55, 26),
+        bounds: Rect.fromLTWH(136, 5, pageSize.width - 136, 26),
       );
       page1.graphics.drawString(
         'Período: $startDateStr até $endDateStr  |  Gerado em: ${DateFormat('dd/MM/yyyy HH:mm').format(snap.capturedAt)}',
         font,
         brush: PdfSolidBrush(onSurfaceColor),
-        bounds: Rect.fromLTWH(55, 32, pageSize.width - 55, 18),
+        bounds: Rect.fromLTWH(136, 32, pageSize.width - 136, 18),
       );
       currentY += 60;
 
