@@ -24,17 +24,6 @@ class VaultSettingsTile extends ConsumerWidget {
             NavigationUtils.push(context, const VaultMigrationScreen()),
       );
     }
-    if (vault.status == VaultStatus.ready) {
-      return SettingsTile(
-        icon: Icons.verified_user_outlined,
-        title: 'Proteção do cofre',
-        subtitle: vault.hasVerifiedBackup
-            ? 'Chave individual e backup da migração verificados'
-            : 'Chave individual salva na sua conta',
-        onTap: () =>
-            NavigationUtils.push(context, const VaultMigrationScreen()),
-      );
-    }
     if (vault.status == VaultStatus.unavailable) {
       return SettingsTile(
         icon: Icons.sync_problem_outlined,
