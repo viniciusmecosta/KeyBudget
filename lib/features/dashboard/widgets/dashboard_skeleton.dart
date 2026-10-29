@@ -1,124 +1,144 @@
 import 'package:flutter/material.dart';
-import 'package:passfin/core/design_system/widgets/app_loading_shimmer.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:passfin/core/design_system/borders/app_borders.dart';
 import 'package:passfin/core/design_system/spacing/app_spacing.dart';
+import 'package:passfin/core/design_system/widgets/app_loading_shimmer.dart';
+import 'package:passfin/core/design_system/widgets/app_skeleton_tile.dart';
 import 'package:passfin/features/auth/viewmodel/auth_viewmodel.dart';
+import 'package:passfin/features/dashboard/repository/dashboard_layout_repository.dart';
 
 class DashboardSkeleton extends ConsumerWidget {
-  final bool? enableIncomesOverride;
+  const DashboardSkeleton({
+    super.key,
+    this.enableIncomesOverride,
+    this.layout = const DashboardLayout(),
+  });
 
-  const DashboardSkeleton({super.key, this.enableIncomesOverride});
+  final bool? enableIncomesOverride;
+  final DashboardLayout layout;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final bool enableIncomes;
-    if (enableIncomesOverride != null) {
-      enableIncomes = enableIncomesOverride!;
-    } else {
-      enableIncomes =
-          ref.watch(authViewModelProvider).currentUser?.enableIncomes ?? false;
+    final colors = Theme.of(context).colorScheme;
+    final enableIncomes =
+        enableIncomesOverride ??
+        (ref.watch(authViewModelProvider).currentUser?.enableIncomes ?? false);
+    final integrated =
+        layout.integratedSummary && layout.cards.contains('balance');
+    Widget bar(double width, double height) => Container(
+      width: width,
+      height: height,
+      decoration: BoxDecoration(
+        color: colors.surfaceContainerHighest,
+        borderRadius: BorderRadius.circular(height / 2),
+      ),
+    );
+    Widget card(String id) {
+      if (id == 'recent') {
+        return Column(
+          key: const ValueKey('skeleton_recent'),
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            bar(150, 16),
+            const SizedBox(height: AppSpacing.md),
+            for (var i = 0; i < 3; i++)
+              const AppSkeletonTile(trailingWidth: 56, animate: false),
+          ],
+        );
+      }
+      if (id == 'quick_actions') {
+        final count = layout.actions.length.clamp(0, 4);
+        if (count == 0) return const SizedBox.shrink();
+        return Container(
+          key: const ValueKey('skeleton_quick_actions'),
+          padding: const EdgeInsets.all(AppSpacing.md),
+          decoration: BoxDecoration(
+            color: colors.surface,
+            borderRadius: AppBorders.borderRadiusL,
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              bar(130, 14),
+              const SizedBox(height: AppSpacing.md),
+              Row(
+                children: [
+                  for (var i = 0; i < count; i++) ...[
+                    if (i > 0) const SizedBox(width: AppSpacing.sm),
+                    Expanded(child: bar(double.infinity, 44)),
+                  ],
+                ],
+              ),
+            ],
+          ),
+        );
+      }
+      final isBalance = id == 'balance';
+      return Container(
+        key: ValueKey('skeleton_$id'),
+        height: isBalance
+            ? (enableIncomes ? 180 : 150)
+            : layout.sizeFor(id).chartHeight + 80,
+        padding: const EdgeInsets.all(AppSpacing.md),
+        decoration: BoxDecoration(
+          color: colors.surface,
+          borderRadius: integrated && isBalance
+              ? AppBorders.borderRadiusVerticalXL
+              : AppBorders.borderRadiusL,
+          border: Border.all(color: colors.outlineVariant),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            bar(130, 14),
+            const SizedBox(height: AppSpacing.md),
+            bar(isBalance ? 180 : 90, isBalance ? 28 : 12),
+            const SizedBox(height: AppSpacing.md),
+            Expanded(
+              child: Container(
+                decoration: BoxDecoration(
+                  color: colors.surfaceContainerHighest.withValues(alpha: .5),
+                  borderRadius: AppBorders.borderRadiusM,
+                ),
+              ),
+            ),
+          ],
+        ),
+      );
     }
 
-    return AppLoadingShimmer(
-      child: AbsorbPointer(
-        child: CustomScrollView(
-          physics: const NeverScrollableScrollPhysics(),
-          slivers: [
-            SliverPadding(
-              padding: const EdgeInsets.fromLTRB(
-                AppSpacing.md,
-                AppSpacing.sm,
-                AppSpacing.md,
-                AppSpacing.lg,
-              ),
-              sliver: SliverList(
-                delegate: SliverChildListDelegate([
-                  _buildBalanceCardSkeleton(context, enableIncomes),
-                  const SizedBox(height: AppSpacing.md),
-                  _buildContainer(
-                    context: context,
-                    height: enableIncomes ? 260 : 230,
-                    radius: AppBorders.borderRadiusL,
+    final ids = [
+      if (integrated) 'balance',
+      ...layout.cards.where((id) => !integrated || id != 'balance'),
+    ];
+    return Semantics(
+      label: 'Carregando painel',
+      child: ExcludeSemantics(
+        child: AppLoadingShimmer(
+          child: AbsorbPointer(
+            child: CustomScrollView(
+              physics: const NeverScrollableScrollPhysics(),
+              slivers: [
+                SliverPadding(
+                  padding: const EdgeInsets.fromLTRB(
+                    AppSpacing.md,
+                    AppSpacing.sm,
+                    AppSpacing.md,
+                    AppSpacing.lg,
                   ),
-                  const SizedBox(height: AppSpacing.md),
-                  _buildQuickActionsSkeleton(context),
-                  const SizedBox(height: AppSpacing.md),
-                  _buildRecentActivitySkeleton(context),
-                ]),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildContainer({
-    required BuildContext context,
-    required double height,
-    double? width,
-    BorderRadiusGeometry? radius,
-    EdgeInsets margin = EdgeInsets.zero,
-  }) {
-    final theme = Theme.of(context);
-    return Container(
-      height: height,
-      width: width ?? double.infinity,
-      margin: margin,
-      decoration: BoxDecoration(
-        color: theme.colorScheme.surfaceContainerHighest,
-        borderRadius: radius ?? AppBorders.borderRadiusM,
-      ),
-    );
-  }
-
-  Widget _buildBalanceCardSkeleton(BuildContext context, bool enableIncomes) {
-    return _buildContainer(
-      context: context,
-      height: enableIncomes ? 180 : 150,
-      radius: AppBorders.borderRadiusXL,
-    );
-  }
-
-  Widget _buildQuickActionsSkeleton(BuildContext context) {
-    return Row(
-      children: [
-        for (var index = 0; index < 3; index++) ...[
-          if (index > 0) const SizedBox(width: AppSpacing.md),
-          Expanded(
-            child: _buildContainer(
-              context: context,
-              height: 80,
-              radius: AppBorders.borderRadiusL,
+                  sliver: SliverList.builder(
+                    itemCount: ids.length,
+                    itemBuilder: (context, index) => Padding(
+                      padding: const EdgeInsets.only(bottom: AppSpacing.md),
+                      child: card(ids[index]),
+                    ),
+                  ),
+                ),
+              ],
             ),
           ),
-        ],
-      ],
-    );
-  }
-
-  Widget _buildRecentActivitySkeleton(BuildContext context) {
-    return Column(
-      children: [
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            _buildContainer(context: context, height: 24, width: 180),
-            _buildContainer(context: context, height: 16, width: 80),
-          ],
         ),
-        const SizedBox(height: AppSpacing.md),
-        ...List.generate(
-          3,
-          (index) => _buildContainer(
-            context: context,
-            height: 70,
-            radius: AppBorders.borderRadiusM,
-            margin: const EdgeInsets.only(bottom: AppSpacing.sm),
-          ),
-        ),
-      ],
+      ),
     );
   }
 }

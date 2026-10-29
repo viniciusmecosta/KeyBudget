@@ -1,4 +1,4 @@
-import 'package:passfin/core/design_system/widgets/app_loading_shimmer.dart';
+import 'package:passfin/core/design_system/widgets/app_skeleton_tile.dart';
 import 'package:passfin/core/design_system/widgets/app_page_scaffold.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -8,6 +8,7 @@ import 'package:passfin/app/utils/navigation_utils.dart';
 import 'package:passfin/app/widgets/empty_state_widget.dart';
 import 'package:passfin/app/widgets/responsive_center.dart';
 import 'package:passfin/core/design_system/borders/app_borders.dart';
+import 'package:passfin/core/design_system/spacing/app_spacing.dart';
 import 'package:passfin/core/design_system/widgets/app_feedback_panel.dart';
 import 'package:passfin/core/design_system/widgets/app_search_field.dart';
 import 'package:passfin/features/auth/viewmodel/auth_viewmodel.dart';
@@ -261,66 +262,20 @@ class _SuppliersScreenState extends ConsumerState<SuppliersScreen> {
   }
 }
 
-class SuppliersSkeleton extends ConsumerWidget {
+class SuppliersSkeleton extends StatelessWidget {
   const SuppliersSkeleton({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final theme = Theme.of(context);
-
-    return SliverPadding(
-      padding: const EdgeInsets.all(AppTheme.defaultPadding),
-      sliver: SliverList(
-        delegate: SliverChildBuilderDelegate((context, index) {
-          return AppLoadingShimmer(
-            child: Container(
-              margin: const EdgeInsets.only(bottom: AppTheme.spaceS),
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: theme.colorScheme.surfaceContainerHighest,
-                borderRadius: BorderRadius.circular(24),
-              ),
-              child: Row(
-                children: [
-                  Container(
-                    width: 48,
-                    height: 48,
-                    decoration: BoxDecoration(
-                      color: theme.colorScheme.surface,
-                      shape: BoxShape.circle,
-                    ),
-                  ),
-                  const SizedBox(width: AppTheme.spaceM),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Container(
-                          height: 16,
-                          width: double.infinity,
-                          decoration: BoxDecoration(
-                            color: theme.colorScheme.surface,
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                        ),
-                        const SizedBox(height: 8),
-                        Container(
-                          height: 12,
-                          width: 120,
-                          decoration: BoxDecoration(
-                            color: theme.colorScheme.surface,
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          );
-        }, childCount: 8),
-      ),
-    );
-  }
+  Widget build(BuildContext context) => SliverPadding(
+    padding: const EdgeInsets.fromLTRB(
+      AppSpacing.md,
+      AppSpacing.md,
+      AppSpacing.md,
+      96,
+    ),
+    sliver: SliverList.builder(
+      itemCount: 8,
+      itemBuilder: (context, index) => const AppSkeletonTile(),
+    ),
+  );
 }

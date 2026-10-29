@@ -298,58 +298,74 @@ class _AnalysisScreenState extends ConsumerState<AnalysisScreen> {
   }
 }
 
-class AnalysisSkeleton extends ConsumerWidget {
+class AnalysisSkeleton extends StatelessWidget {
   final bool enableIncomes;
 
   const AnalysisSkeleton({super.key, required this.enableIncomes});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final theme = Theme.of(context);
-
-    return AppLoadingShimmer(
-      child: CustomScrollView(
-        physics: const NeverScrollableScrollPhysics(),
-        slivers: [
-          SliverPadding(
-            padding: const EdgeInsets.all(AppSpacing.md),
-            sliver: SliverList(
-              delegate: SliverChildListDelegate([
-                Container(
-                  height: 48,
-                  decoration: BoxDecoration(
-                    color: theme.colorScheme.surfaceContainerHighest,
-                    borderRadius: AppBorders.borderRadiusXL,
-                  ),
+  Widget build(BuildContext context) {
+    final colors = Theme.of(context).colorScheme;
+    Widget bar(double width, double height) => Container(
+      width: width,
+      height: height,
+      decoration: BoxDecoration(
+        color: colors.surfaceContainerHighest,
+        borderRadius: BorderRadius.circular(height / 2),
+      ),
+    );
+    Widget card(double height, {bool chart = false}) => Container(
+      height: height,
+      padding: const EdgeInsets.all(AppSpacing.md),
+      decoration: BoxDecoration(
+        color: colors.surface,
+        borderRadius: AppBorders.borderRadiusL,
+        border: Border.all(color: colors.outlineVariant),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          bar(128, 14),
+          const SizedBox(height: AppSpacing.md),
+          bar(chart ? 84 : 160, 20),
+          if (chart) ...[
+            const SizedBox(height: AppSpacing.md),
+            Expanded(
+              child: Container(
+                decoration: BoxDecoration(
+                  color: colors.surfaceContainerHighest.withValues(alpha: .5),
+                  borderRadius: AppBorders.borderRadiusM,
                 ),
-                const SizedBox(height: AppSpacing.xl),
-                Container(
-                  height: 120,
-                  decoration: BoxDecoration(
-                    color: theme.colorScheme.surfaceContainerHighest,
-                    borderRadius: AppBorders.borderRadiusXL,
-                  ),
-                ),
-                const SizedBox(height: AppSpacing.xl),
-                Container(
-                  height: 250,
-                  decoration: BoxDecoration(
-                    color: theme.colorScheme.surfaceContainerHighest,
-                    borderRadius: AppBorders.borderRadiusXL,
-                  ),
-                ),
-                const SizedBox(height: AppSpacing.xl),
-                Container(
-                  height: 250,
-                  decoration: BoxDecoration(
-                    color: theme.colorScheme.surfaceContainerHighest,
-                    borderRadius: AppBorders.borderRadiusXL,
-                  ),
-                ),
-              ]),
+              ),
             ),
-          ),
+          ],
         ],
+      ),
+    );
+    return Semantics(
+      label: 'Carregando análise financeira',
+      child: ExcludeSemantics(
+        child: AppLoadingShimmer(
+          child: CustomScrollView(
+            physics: const NeverScrollableScrollPhysics(),
+            slivers: [
+              SliverPadding(
+                padding: const EdgeInsets.all(AppSpacing.md),
+                sliver: SliverList.list(
+                  children: [
+                    card(88),
+                    const SizedBox(height: AppSpacing.xl),
+                    card(enableIncomes ? 180 : 130),
+                    const SizedBox(height: AppSpacing.xl),
+                    card(250, chart: true),
+                    const SizedBox(height: AppSpacing.xl),
+                    card(250, chart: true),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }

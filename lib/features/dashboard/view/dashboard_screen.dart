@@ -204,7 +204,10 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
       ),
       body: SafeArea(
         child: viewModel.isLoading && !_hasRenderedContent
-            ? const ResponsiveCenter(maxWidth: 1200, child: DashboardSkeleton())
+            ? ResponsiveCenter(
+                maxWidth: 1200,
+                child: DashboardSkeleton(layout: layout),
+              )
             : RefreshIndicator(
                 onRefresh: _fetchInitialData,
                 color: theme.colorScheme.primary,

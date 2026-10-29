@@ -1,7 +1,7 @@
 import 'package:passfin/core/design_system/widgets/app_page_scaffold.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:passfin/core/design_system/widgets/app_loading_shimmer.dart';
+import 'package:passfin/core/design_system/widgets/app_skeleton_tile.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:passfin/app/utils/app_animations.dart';
 import 'package:passfin/app/utils/navigation_utils.dart';
@@ -564,45 +564,21 @@ class _CategoriesScreenState extends ConsumerState<CategoriesScreen> {
   }
 }
 
-class CategoriesSkeleton extends ConsumerWidget {
+class CategoriesSkeleton extends StatelessWidget {
   const CategoriesSkeleton({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final theme = Theme.of(context);
-
-    return SliverPadding(
-      padding: const EdgeInsets.all(AppSpacing.md),
-      sliver: SliverList(
-        delegate: SliverChildBuilderDelegate((context, index) {
-          return AppLoadingShimmer(
-            child: Container(
-              margin: const EdgeInsets.only(bottom: AppSpacing.sm),
-              child: AppCard(
-                padding: const EdgeInsets.all(AppSpacing.md),
-                child: Row(
-                  children: [
-                    CircleAvatar(
-                      backgroundColor:
-                          theme.colorScheme.surfaceContainerHighest,
-                    ),
-                    const SizedBox(width: AppSpacing.md),
-                    Expanded(
-                      child: Container(
-                        height: 16,
-                        decoration: BoxDecoration(
-                          color: theme.colorScheme.surfaceContainerHighest,
-                          borderRadius: AppBorders.borderRadiusS,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          );
-        }, childCount: 8),
-      ),
-    );
-  }
+  Widget build(BuildContext context) => SliverPadding(
+    padding: const EdgeInsets.fromLTRB(
+      AppSpacing.md,
+      AppSpacing.md,
+      AppSpacing.md,
+      96,
+    ),
+    sliver: SliverList.builder(
+      itemCount: 8,
+      itemBuilder: (context, index) =>
+          const AppSkeletonTile(showSubtitle: false, avatarSize: 40),
+    ),
+  );
 }
