@@ -1,7 +1,5 @@
 <div align="center">
 
-# PassFin
-
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="assets/brand/passfin-lockup-dark.svg">
   <img src="assets/brand/passfin-lockup-light.svg" width="320" alt="PassFin: carteira com cédula e chave">
@@ -11,6 +9,8 @@
 [![Dart](https://img.shields.io/badge/Dart-0175C2?style=for-the-badge&logo=dart&logoColor=white)](https://dart.dev/)
 [![Firebase](https://img.shields.io/badge/Firebase-FFCA28?style=for-the-badge&logo=firebase&logoColor=black)](https://firebase.google.com/)
 [![Riverpod](https://img.shields.io/badge/Riverpod-1A73E8?style=for-the-badge&logo=dart&logoColor=white)](https://riverpod.dev/)
+[![Android](https://img.shields.io/badge/Android-3DDC84?style=for-the-badge&logo=android&logoColor=white)](https://www.android.com/)
+[![Google Drive](https://img.shields.io/badge/Google_Drive-4285F4?style=for-the-badge&logo=googledrive&logoColor=white)](https://developers.google.com/drive)
 
 **Senhas, finanças e documentos em um só lugar.**
 
@@ -35,11 +35,13 @@ A identidade visual e os arquivos da marca estão no [guia PassFin](docs/brandin
 
 Capturas de telas Flutter renderizadas com dados fictícios. Em cada par, **tema claro à esquerda** e **escuro à direita**. Clique para ampliar.
 
-### Entrada
+### Entrada e cadastro
 
 <p align="center">
   <a href="docs/branding/login-light.png"><img src="docs/branding/login-light.png" width="23%" alt="Entrada do PassFin, tema claro" /></a>
   <a href="docs/branding/login-dark.png"><img src="docs/branding/login-dark.png" width="23%" alt="Entrada do PassFin, tema escuro" /></a>
+  <a href="docs/branding/register-light.png"><img src="docs/branding/register-light.png" width="23%" alt="Cadastro no PassFin, tema claro" /></a>
+  <a href="docs/branding/register-dark.png"><img src="docs/branding/register-dark.png" width="23%" alt="Cadastro no PassFin, tema escuro" /></a>
 </p>
 
 ### Painel e metas
@@ -71,52 +73,13 @@ Capturas de telas Flutter renderizadas com dados fictícios. Em cada par, **tema
 
 ## Widgets no Android
 
-Adicione pelo **Perfil → Aparência → Widgets do celular** ou pelo seletor de widgets do Android.
-Os cinco modelos acompanham a **cor e o modo de exibição do aplicativo**, com valores ocultos por padrão.
-Usam os lançamentos salvos e recalculam os totais na virada do dia, mesmo com o app fechado; a legenda indica a data dos dados quando necessário.
+Cinco widgets Android exibem gastos, saldo e próximos pagamentos ou permitem adicionar uma despesa. As cores acompanham a aparência do aplicativo, e os valores ficam ocultos por padrão.
 
-| Widget | Tamanho sugerido |
-| --- | --- |
-| Gastos compactos | 3 × 1 |
-| Gastos do mês | 2 × 2 |
-| Resumo financeiro | 4 × 3 |
-| Próximos gastos | 3 × 2 |
-| Nova despesa | 1 × 1 |
+<p align="center">
+  <a href="docs/images/widget-selection-light-current.png"><img src="docs/images/widget-selection-light-current.png" width="23%" alt="Seleção de widgets no PassFin, tema claro" /></a>
+  <a href="docs/images/widget-selection-dark-current.png"><img src="docs/images/widget-selection-dark-current.png" width="23%" alt="Seleção de widgets no PassFin, tema escuro" /></a>
+  <a href="docs/images/widgets-light.jpg"><img src="docs/images/widgets-light.jpg" width="23%" alt="Widgets Android na versão anterior, tema claro" /></a>
+  <a href="docs/images/widgets-dark.jpg"><img src="docs/images/widgets-dark.jpg" width="23%" alt="Widgets Android na versão anterior, tema escuro" /></a>
+</p>
 
-## Tecnologias
-
-| Base | Uso |
-| --- | --- |
-| Flutter, Dart e Material 3 | Interface adaptativa e componentes compartilhados |
-| Riverpod | Estado e dependências, com código organizado por funcionalidade |
-| Firebase Authentication e Cloud Firestore | Autenticação e sincronização |
-| fl_chart, PDF e CSV | Gráficos e relatórios |
-| AES, Secure Storage e local_auth | Criptografia, armazenamento seguro e biometria |
-| Google Drive e home_widget | Documentos, backups e widgets do dispositivo |
-
-## Como Executar
-
-Use Flutter com Dart `>=3.12.0 <4.0.0`, conforme `pubspec.yaml`.
-
-```bash
-git clone https://github.com/viniciusmecosta/KeyBudget.git
-cd KeyBudget
-flutter pub get
-```
-
-Configure o Firebase seguindo o
-[guia de configuração](docs/configuracao.md). Para usar o Drive, configure também a API e o login Google.
-
-```bash
-flutter run
-```
-
-## Desenvolvimento
-
-```bash
-flutter analyze
-flutter test
-```
-
-Código em `lib/features`, com componentes comuns em `lib/core/design_system`.
-[Padrão visual](DESIGN.md) · [Widgets e personalização](docs/engineering/widgets.md)
+As duas últimas imagens mostram os widgets na versão anterior à identidade PassFin.
